@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "cce3eb2f04fa78dec0058493d82fe637f659ca26",
+  "branch": "minkyu/foundation-harness",
+  "phase": "4차 병합 원격 공유 및 정식 SQL 로컬 준비 갱신",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/minkyu-local-refresh-harness.json",
+      "tools/collaboration/check_harness.py",
+      "docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md"
+    ],
+    "A": [
+      "tools/local/prepare_database.py"
+    ],
+    "B": [
+      "tests/database/minkyu/test_database_runner.py"
+    ],
+    "C": [
+      "tools/local/README.md"
+    ]
+  },
+  "preserved": {},
+  "excluded": [
+    "종현 소유 파일",
+    "기존 SQL 이력 26개 및 사본",
+    "검색 연결 구현",
+    "실제 DB 재생/원격 DB/배포/외부 API"
+  ]
+}

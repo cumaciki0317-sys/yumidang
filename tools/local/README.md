@@ -1,6 +1,8 @@
 # 로컬 검증 준비 도구
 
-담당: 민규. Python 3.11 이상 표준 라이브러리와 Git을 사용한다. 명령은 현재 작업 중인 worktree의 최상위에서 실행한다. 환경/복사 도구는 실행 환경을 변경하지 않는다. 아래 실제 실행 절차는 전용 로컬 DB를 시작하고 SQL을 실행한다. 원격 DB 연결은 없다.
+담당: 민규. Python 3.11 이상 표준 라이브러리와 Git을 사용한다. 명령은 현재 작업 중인 worktree의 최상위에서 실행한다. 환경/복사 도구는 DB를 기동하거나 SQL을 실행하지 않는다.
+
+**2026-09-28 현재 작업은 병합본 공유와 로컬 준비 도구 갱신이다.** 실제 DB 재기동·마이그레이션 재생·HTTP 재검증·검색 연결은 이번 작업에서 수행하지 않는다. 아래 실제 실행 절차는 이후 별도 실행 시 참고할 안내이며, 2026-09-23 검증 기록과 현재 준비 결과를 구분한다.
 
 ## 환경 점검
 
@@ -60,11 +62,32 @@ deno task check:common
 
 Node 단위 검증 성공은 Deno 타입 검사나 Supabase 런타임 검증을 대신하지 않는다.
 
-## 전용 로컬 Supabase에서 실제 검증
+## 설정을 포함한 현재 정식 SQL 복사
 
-실제 검증 환경: macOS arm64, Deno 2.9.6, Colima 0.10.3, Docker CLI 29.8.0, Supabase CLI 2.116.0, PostgreSQL 17.6. Homebrew Supabase 설치는 Command Line Tools 버전 요구로 실패했으므로 공식 npm 배포를 `npx --yes supabase@2.116.0`으로 실행했다. 시스템 Command Line Tools를 삭제하거나 교체하지 않았다. 설치 명령을 반복 실행할 필요는 없다.
+2·3차 SQL 6개는 이제 정식 Git 이력에 포함됐다. `prepare_database.py`는 `prepare_migrations.py`의 검사를 거쳐 **현재 Git HEAD와 동일한 정식 SQL 전체**와 로컬 `config.toml`만 새 임시 루트에 복사한다. 2026-09-28 기준 정식 SQL은 26개이며, 고정된 추가 SQL 목록을 다시 붙이지 않는다.
 
-Colima 전용 프로필은 기본 Docker context나 SSH 설정을 바꾸지 않는다. 저장소 worktree와 `/private/tmp`만 mount한다. VM의 2 CPU/4 GiB/20 GiB는 이번 로컬 검증 자원이며 운영 사양이 아니다.
+```sh
+db_output="$(TMPDIR=/private/tmp mktemp -d /private/tmp/yumidang-minkyu-db.XXXXXX)"
+TMPDIR=/private/tmp python3 -B tools/local/prepare_database.py --output "$db_output"
+```
+
+이 명령은 복사만 수행한다. `config.toml`은 저장소 내부 일반 파일이어야 하며 비어 있지 않은 UTF-8 TOML인지 확인한다. 이 검사는 Supabase 설정의 의미·실행 유효성 검증을 대신하지 않는다. 기존 SQL 이력·미추적 사본·`.env`를 수정하지 않으며 변경된 정식 이력은 거절한다. 출력은 시스템 임시 루트 아래의 새 빈 경로여야 한다. 준비에 실패하거나 소스가 바뀌면 새 빈 임시 루트에서 다시 실행하며 기존 결과를 덮어쓰지 않는다.
+
+`migration-manifest.json`에는 선택한 정식 SQL 경로·버전·SHA-256을, `database-manifest.json`에는 같은 목록과 설정 해시를 기록한다. `pending`은 빈 배열이고 `total_count`는 정식 이력의 `count`와 같다. `sql_execution: NOT_RUN`은 준비 후에도 유지하며 이후 DB 실행 성공을 자동 기록하지 않는다. 새 정식 SQL이 커밋되면 현재 HEAD 검사 목록에 포함하므로 단계별 파일명을 도구에 추가할 필요가 없다.
+
+이번 준비에 사용한 새 임시 루트와 실제 결과는 [민규 작업 현황](../../docs/collaboration/minkyu.md)과 [2026-09-28 준비 기록](../../docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md)을 확인한다. 임시 폴더의 장기 보존을 기대하지 말고 위 명령으로 재현한다.
+
+준비 도구 검증:
+
+```sh
+python3 -B tests/database/minkyu/test_database_runner.py
+```
+
+## 전용 로컬 Supabase에서 실제 검증 — 이후 실행 안내
+
+**2026-09-23에 사용한 검증 환경:** macOS arm64, Deno 2.9.6, Colima 0.10.3, Docker CLI 29.8.0, Supabase CLI 2.116.0, PostgreSQL 17.6. Homebrew Supabase 설치는 Command Line Tools 버전 요구로 실패했으므로 공식 npm 배포를 `npx --yes supabase@2.116.0`으로 실행했다. 시스템 Command Line Tools를 삭제하거나 교체하지 않았다. 설치 명령을 반복 실행할 필요는 없다.
+
+아래 명령은 실제 로컬 DB를 기동하고 SQL 검사를 실행한다. **이번 2026-09-28 준비 작업에서는 실행하지 않는다.** Colima 전용 프로필은 기본 Docker context나 SSH 설정을 바꾸지 않는다. 저장소 worktree와 `/private/tmp`만 mount한다. VM의 2 CPU/4 GiB/20 GiB는 2026-09-23 로컬 검증 자원이며 운영 사양이 아니다.
 
 ```sh
 colima start --profile yumidang-minkyu --activate=false --ssh-config=false \
@@ -80,7 +103,7 @@ python3 -B tools/local/run_database_tests.py --run
 
 CLI 시작 출력에는 로컬 키가 포함될 수 있으므로 공유 로그·커밋에 넣지 않는다. 준비 도구는 원본 SQL이나 `.env`를 수정하지 않는다. 출력 폴더는 system temporary root 아래의 빈 경로여야 한다. 준비 결과 `sql_execution: NOT_RUN`은 복사만 했다는 뜻이며 이후 DB 실행 성공을 자동 기록하지 않는다.
 
-`prepare_database.py`는 정식 Git 이력 검사에 더해 **이번 단계의 정확한 신규 파일 6개**만 복사한다. 다른 미추적 SQL·사본은 실행하지 않는다. `database-manifest.json`에 각 신규 파일과 설정 해시를 기록한다. 신규 SQL이 기준 커밋에 들어간 뒤에는 이 단계 목록을 새 기준으로 갱신해야 하며 자동 중복 재생하지 않는다. 수정 후에는 새 임시 루트를 준비한다.
+정식 SQL과 설정의 복사 범위·manifest 필드는 위의 현재 준비 계약을 따른다. 미추적 SQL·사본을 재생 목록에 포함하지 않는다.
 
 같은 project_id의 로컬 DB가 이미 있으면 `start`는 기존 volume을 재사용하므로 신규 SQL 재생을 보장하지 않는다. **테스트만 든 전용 DB임을 확인한 뒤** 새 임시 루트에서 위와 같은 환경 변수로 `npx --yes supabase@2.116.0 db reset --local --workdir "$db_output"`을 실행해 재검증한다. 공유 DB에서 사용하지 않는다.
 
@@ -100,11 +123,9 @@ SUPABASE_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 \
 colima stop --profile yumidang-minkyu
 ```
 
-2차 도구 단위 검증: `python3 -B tests/database/minkyu/test_database_runner.py`.
-
 공식 설치·실행 근거: [Supabase 로컬 개발](https://supabase.com/docs/guides/local-development/cli/getting-started), [Colima](https://github.com/abiosoft/colima#installation).
 
-## 3차: 실제 Auth/JWT와 업무 HTTP 연결
+## 3차 Auth/JWT·업무 HTTP 검증 — 2026-09-23 기록과 재현 안내
 
 ```sh
 node --test tests/functions/minkyu/http.test.ts tests/functions/minkyu/auth_db.test.ts tests/functions/minkyu/service_api.test.ts
@@ -118,4 +139,4 @@ python3 -B tests/integration/minkyu/runtime_e2e.py --workdir "$db_output"
 
 `functions.service-api.verify_jwt=false`는 handler의 사용자 Auth 검증과 별도 내부 비밀 검증을 사용하기 위한 설정이다. gateway가 내부 비밀을 사용자 JWT로 거절하지 않게 한다. 인증을 생략하는 공개 업무 경로는 추가하지 않았다. [Supabase custom 인증 안내](https://supabase.com/docs/guides/functions/auth)를 따른다. Supabase Edge 호스팅 자체는 NOT_RUN이고 로컬 기본 edge_runtime도 비활성이다. 배포 전에 Edge 기동·gateway 경로 검증이 필요하다.
 
-이번 실제 실행 루트는 `/private/tmp/yumidang-minkyu-runtime-20260923-v5`다. 마지막 gateway 설정은 실행 후 보완했으며, 새 복사본에서는 해당 설정도 포함된다. 임시 루트의 보존을 기대하지 말고 준비 도구로 재생성한다. 26개 SQL 재생, rollback 스위트 6개, 경쟁 시나리오 6개, HTTP 시나리오 8개가 각각 PASS이며 외부 공급사·모델·배포는 NOT_RUN이다.
+**2026-09-23 과거 검증 기록:** 당시 실행 루트는 `/private/tmp/yumidang-minkyu-runtime-20260923-v5`였고, 26개 SQL 재생·rollback 스위트 6개·경쟁 시나리오 6개·HTTP 시나리오 8개가 각각 PASS였다. 마지막 gateway 설정은 당시 실행 후 보완했다. 외부 공급사·모델·배포는 NOT_RUN이었다. 이 기록은 2026-09-28 병합본의 DB/HTTP 재검증 결과가 아니다. 현재 준비 복사본에는 현재 설정이 포함되지만 실제 DB·HTTP 실행 여부는 별도로 확인해야 한다.

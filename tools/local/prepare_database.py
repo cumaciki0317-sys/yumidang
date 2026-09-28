@@ -1,49 +1,35 @@
 #!/usr/bin/env python3
-"""기존 Git 이력 + 2·3차의 명시적 SQL 6개를 격리된 임시 폴더에 준비. 실행 없음."""
+"""Git HEAD와 일치하는 정식 SQL 이력과 로컬 설정을 임시 폴더에 준비. 실행 없음."""
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import sys
+import tomllib
 
 from prepare_migrations import PreparationError, prepare
-
-PENDING = (
-    "20260923090000_worker_jobs.sql",
-    "20260923091000_public_post_search.sql",
-    "20260923092000_review_summary_storage.sql",
-    "20260923100000_bilateral_completion.sql",
-    "20260923101000_review_automation.sql",
-    "20260923102000_core_service_api.sql",
-)
 
 
 def prepare_database(repo, output):
     repo = Path(repo).resolve()
-    payloads = []
-    for name in PENDING:
-        path = repo / "backend/supabase/migrations" / name
-        if path.is_symlink() or not path.is_file() or not path.read_bytes().strip():
-            raise PreparationError(f"검토할 신규 SQL이 없습니다: {name}")
-        payloads.append(path.read_bytes())
     config = repo / "backend/supabase/config.toml"
-    if config.is_symlink() or not config.is_file():
-        raise PreparationError("로컬 설정이 없습니다.")
+    if config.is_symlink() or not config.is_file() or not config.resolve().is_relative_to(repo):
+        raise PreparationError("로컬 설정은 저장소 내부의 일반 파일이어야 합니다.")
     config_bytes = config.read_bytes()
+    try:
+        config_data = tomllib.loads(config_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise PreparationError("로컬 설정이 유효한 UTF-8 TOML이 아닙니다.") from exc
+    if not config_data:
+        raise PreparationError("로컬 설정이 비어 있습니다.")
+    # 정식 파일명·HEAD 일치·변경/신규 staged SQL 거절과 사본 제외를 공통 검사에 위임한다.
     report = prepare(repo, output)
     target = Path(report["output_root"])
-    versions = {entry["version"] for entry in report["migrations"]}
-    for name, data in zip(PENDING, payloads):
-        if name[:14] in versions:
-            raise PreparationError(f"이미 기준 이력에 들어간 SQL입니다. 다음 단계 범위를 다시 정의하세요: {name}")
-        with (target / "supabase/migrations" / name).open("xb") as stream:
-            stream.write(data)
     with (target / "supabase/config.toml").open("xb") as stream:
         stream.write(config_bytes)
-    report["pending"] = [{"path": name, "sha256": hashlib.sha256(data).hexdigest()}
-                         for name, data in zip(PENDING, payloads)]
+    report["pending"] = []
     report["config_sha256"] = hashlib.sha256(config_bytes).hexdigest()
-    report["total_count"] = report["count"] + len(payloads)
+    report["total_count"] = report["count"]
     with (target / "database-manifest.json").open("x") as stream:
         json.dump(report, stream, ensure_ascii=False, indent=2)
         stream.write("\n")

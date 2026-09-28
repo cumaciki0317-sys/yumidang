@@ -15,6 +15,14 @@
 
 Always use harness agent team architecture for complex tasks.
 
+### 병합 후 로컬 준비 갱신 — 2026-09-28
+
+- 최신 요청은 ① 민규 전용 브랜치의 병합 결과 푸시 ② 정식 마이그레이션 기준 로컬 준비 도구 갱신이다. 검색 연결·실제 DB 기동/재생·운영 배포는 이번 범위가 아니다.
+- 이번 기준 커밋은 `cce3eb2`, 정확한 수정 목록은 [로컬 갱신 하네스](docs/collaboration/minkyu-local-refresh-harness.json)다. 총괄은 현황/지침/하네스/인계, A는 prepare_database.py, B는 해당 준비 회귀 테스트, C는 로컬 README만 수정한다. 모두 minkyu이며 종현 파일과 SQL 26개는 보존한다.
+- `python3 -B tools/collaboration/check_harness.py --manifest docs/collaboration/minkyu-local-refresh-harness.json --all-changes`로 이 작업의 경계를 검사한다. 각 작업 단위의 manifest는 커밋 전 기준이며 다음 구현에서는 새 baseline과 정확한 수정 목록을 만든다.
+- 현재 준비 도구는 Git HEAD와 일치하는 정식 SQL만 사용한다. 이전 20+미커밋 6개 방식은 과거 기록이며 신규 SQL을 자동 포함하지 않는다. pending=[]와 sql_execution=NOT_RUN을 실제 DB 재생 성공으로 해석하지 않는다.
+- 최신 결과·다음 검색 작업 분리는 [로컬 갱신 인계](docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md)를 따른다. 아래 9월 23일 재개 기록의 PENDING 갱신 요구는 이번에 처리한 사항이다.
+
 ### 민규 작업 재개 — 2026-09-23 대화 기록
 
 - 현재 구현·검증 결과와 다음 작업은 [민규 현황의 재개 메모](docs/collaboration/minkyu.md#다음-대화에서-재개할-순서)를 먼저 읽는다. 이번 100%는 로컬 구현·검증·인계 범위이며 민규 전체 업무나 출시 완료율이 아니다.
