@@ -1,4 +1,5 @@
 import type { JobReference, JobRepository } from "../db/repositories/jobs.ts";
+import { isSourceRevision, isSummaryVersion } from "../db/repositories/review-summaries.ts";
 
 const validString = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
 export function validInstant(value: unknown): value is string {
@@ -14,8 +15,12 @@ export function normalizeJobReference(value: JobReference): JobReference {
   if (!value || typeof value !== "object") throw new Error("INVALID_JOB_REFERENCE");
   switch (value.kind) {
     case "review_summary":
-      if (!validString(value.targetUserId) || !Number.isSafeInteger(value.sourceRevision) || value.sourceRevision < 0) break;
-      return { kind: value.kind, targetUserId: value.targetUserId, sourceRevision: value.sourceRevision };
+      if (!validString(value.targetUserId) || !isSourceRevision(value.sourceRevision) ||
+          !isSummaryVersion(value.modelVersion) || !isSummaryVersion(value.promptVersion)) break;
+      return {
+        kind: value.kind, targetUserId: value.targetUserId, sourceRevision: value.sourceRevision,
+        modelVersion: value.modelVersion, promptVersion: value.promptVersion,
+      };
     case "event_sync":
       if (!validString(value.provider) || !validInstant(value.windowStart) || !validInstant(value.windowEnd) ||
           Date.parse(value.windowStart) >= Date.parse(value.windowEnd)) break;
@@ -30,9 +35,16 @@ export function normalizeJobReference(value: JobReference): JobReference {
 export async function enqueueJob(repository: JobRepository, reference: JobReference, runAt: string) {
   const normalized = normalizeJobReference(reference);
   if (!validInstant(runAt)) throw new Error("INVALID_JOB_RUN_AT");
+  // DB v2 요청용 명시 키. UUID 대상이면 최대201자이며 현재 DB의512자/허용문자 범위에 들어간다.
+  // 나머지 kind의 JSON 키는 기존 가상 코어 호환용이며 실제 DB 등록에 사용하지 않는다.
+  const idempotencyKey = normalized.kind === "review_summary"
+    ? ["review_summary", normalized.targetUserId, normalized.sourceRevision, normalized.modelVersion, normalized.promptVersion].join(":")
+    : JSON.stringify(normalized);
+  if (normalized.kind === "review_summary" &&
+      (idempotencyKey.length > 512 || !/^[A-Za-z0-9_.:-]+$/.test(idempotencyKey))) throw new Error("INVALID_JOB_REFERENCE");
   return repository.enqueue({
     reference: normalized,
-    idempotencyKey: JSON.stringify(normalized),
+    idempotencyKey,
     runAt: new Date(runAt).toISOString(),
   });
 }

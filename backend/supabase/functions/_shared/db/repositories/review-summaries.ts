@@ -6,12 +6,15 @@ export interface ReviewSummaryJob {
   jobId: string;
   leaseToken: string;
   targetUserId: string;
-  sourceRevision: number;
+  sourceRevision: string;
+  /** 요청한 실행 설정 버전. 실제 fallback 모델 목록과 구분한다. */
+  modelVersion: string;
+  promptVersion: string;
 }
 export interface PublicTextReview { evidenceId: string; comment: string | null }
 export interface ReviewSourceSnapshot {
   targetUserId: string;
-  sourceRevision: number;
+  sourceRevision: string;
   /** DB가 회원 공개 자격을 확인한 집합. 당사자 released와 다르다. */
   publicTextReviews: PublicTextReview[];
 }
@@ -24,7 +27,8 @@ export interface SummaryNode {
 export interface SummaryCheckpoint {
   schemaVersion: 1;
   targetUserId: string;
-  sourceRevision: number;
+  sourceRevision: string;
+  modelVersion: string;
   promptVersion: string;
   /** 입력을 자르지 않고 모든 원문을 처리했는지 검증하는 전체 집합. */
   sourceReviewIds: string[];
@@ -59,5 +63,16 @@ export interface ReviewSummaryRepository {
   /** 현재 소유자만 해당 작업의 checkpoint를 삭제; 다른 revision의 새 작업에 영향 금지. */
   discardCheckpoint(job: ReviewSummaryJob): Promise<"applied" | "lease_lost">;
 }
-// 공개 집합 변경의 revision 증가 + 요약 무효화 + checkpoint 삭제 + enqueue는
-// 원문 변경 DB 트랜잭션에 속한다. 이 포트로 순차 호출해 흉내 내지 않는다.
+// 공개 집합 변경의 revision 증가 + 요약 무효화 + checkpoint 삭제 + 재작업 예약(outbox) 기록은
+// 원문 변경 DB 트랜잭션에 속한다. 실제 큐 등록은 이후 maintenance가 수행한다.
+// 이 포트로 순차 호출해 원자적 처리를 흉내 내지 않는다.
+
+/** PostgreSQL bigint revision을 정밀도 손실 없이 검증한다. Number로 변환하지 않는다. */
+export function isSourceRevision(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 19 && /^(0|[1-9][0-9]*)$/.test(value) &&
+    BigInt(value) <= 9223372036854775807n;
+}
+/** 요청 설정 버전의 문자·길이는 민규 DB 계약과 동일하다. */
+export function isSummaryVersion(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Za-z0-9_.-]{1,64}$/.test(value);
+}

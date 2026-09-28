@@ -1,30 +1,26 @@
-/**
- * 공개 검색의 내부 입력과 공개 카드 계약.
- * 실제 인증·DB 필드·RPC·HTTP 오류 형식은 민규 담당 계약과 연결 전이다.
- */
+/** 공개 검색 계약. caller는 HTTP query가 아니라 검증된 공통 인증 문맥에서만 받는다. */
 export type SearchCaller = "anonymous" | "member";
 export type PostAvailability = "all" | "recruiting";
 export type PostDisplayState = "recruiting" | "confirmed" | "closed" | "expired";
 export type PostCostFilter = "all" | "free" | "paid";
+export type AuthorAgeFilter = "all" | "20s" | "30s" | "40plus";
 
 export type PostCost =
+  | { kind: "unknown" }
   | { kind: "free" }
   | { kind: "paid_request"; amount: number }
   | { kind: "paid_offer"; amount: number };
 
-/** 지급 방향은 유형에서 계산하며 계좌·인증 원문은 포함하지 않는다. */
+/** unknown은 과거 비용 미확인이다. 무료로 추정하거나 신청 가능하게 바꾸지 않는다. */
 export type PublicPostCost =
+  | { kind: "unknown" }
   | { kind: "free" }
   | { kind: "paid_request"; amount: number; direction: "author_to_applicant" }
   | { kind: "paid_offer"; amount: number; direction: "applicant_to_author" };
 
-/** 입력 계층이 한국 달력 날짜를 변환한 [시작, 종료) 시각 구간. */
-export interface PostSearchPeriod {
-  startsAt: string;
-  endsAt: string;
-}
+export interface PostSearchPeriod { startsAt: string; endsAt: string; }
 
-/** 검색 저장소가 권한을 적용해 내놓는 값. 검색에 쓰인 주소는 포함하지 않는다. */
+/** 기존 순수 코어·가상 저장소용 행. 실제 RPC는 단일 표시 이름의 PublicPostCard를 반환한다. */
 export interface PublicPostSearchRow {
   id: string;
   title: string;
@@ -36,7 +32,6 @@ export interface PublicPostSearchRow {
   createdAt: string;
   cost: PostCost;
   state: PostDisplayState;
-  /** 인증·공고 상태 외의 신청 조건은 저장소가 판정한다. */
   eligibleToApply: boolean;
 }
 
@@ -53,78 +48,139 @@ export interface PublicPostCard {
 }
 
 export interface PublicPostListInput {
-  /** 공통 인증 계층이 정한다. 클라이언트가 보낸 회원 표시를 신뢰하지 않는다. */
   caller: SearchCaller;
   availability?: PostAvailability;
   query?: string;
   period?: PostSearchPeriod;
-  /** 공통 서비스의 카테고리 식별자와 완전 일치. 자체 enum을 만들지 않는다. */
   category?: string;
   cost?: PostCostFilter;
+  authorAge?: AuthorAgeFilter;
+  cursor?: string;
+  limit?: number;
 }
-
 export interface NormalizedPublicPostListInput extends PublicPostListInput {
   availability: PostAvailability;
   query: string;
   cost: PostCostFilter;
+  authorAge: AuthorAgeFilter;
+  limit: number;
 }
+export interface PublicPostListResult { status: "results" | "no_results"; posts: PublicPostCard[]; }
+export interface PublicPostSearchPage { items: PublicPostCard[]; nextCursor: string | null; }
+export interface PublicPostPageResult extends PublicPostListResult { nextCursor: string | null; }
 
-export interface PublicPostListResult {
-  status: "results" | "no_results";
-  posts: PublicPostCard[];
+/** DB가 계산한 마지막 정렬 위치. 권한 토큰이나 데이터 snapshot이 아니다. */
+export interface PublicPostCursorPosition {
+  periodGroup: 0 | 1;
+  recruitingGroup: 0 | 1;
+  sortAt: string;
+  id: string;
 }
+const categories = new Set(["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"]);
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const maxCursorLength = 4096;
 
-/** 시간대 없는 시각과 Date.parse가 자동 보정하는 잘못된 달력 날짜를 거절한다. */
-export function parseSearchTimestamp(value: string): number {
+/** PostgreSQL의 마이크로초를 반올림하지 않고 비교한다. 외부 반환은 원문 ISO 시각을 유지한다. */
+export function parseSearchTimestampMicroseconds(value: string): bigint {
   if (typeof value !== "string") throw new Error("INVALID_SEARCH_TIMESTAMP");
-  const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
   if (!parts) throw new Error("INVALID_SEARCH_TIMESTAMP");
-  const [, y, m, d, h, min, sec, zone] = parts;
+  const [, y, m, d, h, min, sec, fraction = "", zone] = parts;
   const year = Number(y), month = Number(m), day = Number(d);
   const calendar = new Date(0);
   calendar.setUTCFullYear(year, month - 1, day);
-  if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 ||
+  if (year < 1 || calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 ||
     calendar.getUTCDate() !== day || Number(h) > 23 || Number(min) > 59 || Number(sec) > 59 ||
     (zone !== "Z" && (Number(zone.slice(1, 3)) > 23 || Number(zone.slice(4)) > 59))) {
     throw new Error("INVALID_SEARCH_TIMESTAMP");
   }
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) throw new Error("INVALID_SEARCH_TIMESTAMP");
-  return timestamp;
+  return BigInt(timestamp) * 1000n + BigInt(fraction.padEnd(6, "0").slice(3));
+}
+/** 기존 밀리초 helper 호환. 정렬·기간·커서의 정밀 비교는 위 bigint 함수를 사용한다. */
+export function parseSearchTimestamp(value: string): number {
+  parseSearchTimestampMicroseconds(value);
+  return Date.parse(value);
 }
 
-/** 미지원 조건을 조용히 무시하지 않는다. 나이·커서·주변 검색은 연결 계약 후 추가한다. */
 export function normalizePublicPostListInput(input: PublicPostListInput): NormalizedPublicPostListInput {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("INVALID_FILTER");
-  const allowed = new Set(["caller", "availability", "query", "period", "category", "cost"]);
+  const allowed = new Set(["caller", "availability", "query", "period", "category", "cost", "authorAge", "cursor", "limit"]);
   if (Object.keys(input).some((key) => !allowed.has(key))) throw new Error("UNSUPPORTED_FILTER");
   if (input.caller !== "anonymous" && input.caller !== "member") throw new Error("INVALID_CALLER");
   const availability = input.availability === undefined ? "all" : input.availability;
   if (availability !== "all" && availability !== "recruiting") throw new Error("INVALID_FILTER");
   const cost = input.cost === undefined ? "all" : input.cost;
-  if (cost !== "all" && cost !== "free" && cost !== "paid") throw new Error("INVALID_FILTER");
-  const query = input.query === undefined ? "" : input.query;
-  if (typeof query !== "string") throw new Error("INVALID_FILTER");
-  if (input.category !== undefined && (typeof input.category !== "string" || !input.category.trim())) {
-    throw new Error("INVALID_FILTER");
-  }
+  if (!["all", "free", "paid"].includes(cost)) throw new Error("INVALID_FILTER");
+  const authorAge = input.authorAge === undefined ? "all" : input.authorAge;
+  if (!["all", "20s", "30s", "40plus"].includes(authorAge)) throw new Error("INVALID_FILTER");
+  const rawQuery = input.query === undefined ? "" : input.query;
+  if (typeof rawQuery !== "string" || [...rawQuery].length > 300) throw new Error("INVALID_FILTER");
+  const query = rawQuery.trim().replace(/\s+/gu, " ").toLowerCase();
+  if (input.category !== undefined && !categories.has(input.category)) throw new Error("INVALID_FILTER");
+  const limit = input.limit === undefined ? 20 : input.limit;
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) throw new Error("INVALID_FILTER");
+  if (input.cursor !== undefined && (typeof input.cursor !== "string" || !input.cursor.length ||
+    input.cursor.length > maxCursorLength || !/^[A-Za-z0-9_-]+$/.test(input.cursor))) throw new Error("INVALID_CURSOR");
   let period: PostSearchPeriod | undefined;
   if (input.period !== undefined) {
     if (!input.period || typeof input.period !== "object" || Array.isArray(input.period) ||
-      Object.keys(input.period).some((key) => key !== "startsAt" && key !== "endsAt")) {
-      throw new Error("INVALID_FILTER");
+      Object.keys(input.period).some((key) => key !== "startsAt" && key !== "endsAt")) throw new Error("INVALID_FILTER");
+    if (parseSearchTimestampMicroseconds(input.period.startsAt) >= parseSearchTimestampMicroseconds(input.period.endsAt)) {
+      throw new Error("INVALID_SEARCH_PERIOD");
     }
-    const start = parseSearchTimestamp(input.period.startsAt);
-    const end = parseSearchTimestamp(input.period.endsAt);
-    if (start >= end) throw new Error("INVALID_SEARCH_PERIOD");
     period = { startsAt: input.period.startsAt, endsAt: input.period.endsAt };
   }
-  return {
-    caller: input.caller,
-    availability,
-    query,
-    cost,
+  if (input.caller === "anonymous" && (period !== undefined || authorAge !== "all")) throw new Error("AUTH_REQUIRED");
+  return { caller: input.caller, availability, query, cost, authorAge, limit,
     ...(input.category !== undefined ? { category: input.category } : {}),
-    ...(period ? { period } : {}),
-  };
+    ...(period ? { period } : {}), ...(input.cursor !== undefined ? { cursor: input.cursor } : {}) };
+}
+
+function cursorFilters(input: NormalizedPublicPostListInput) {
+  return { query: input.query, category: input.category ?? null, cost: input.cost,
+    availability: input.availability, period: input.period ?? null, authorAge: input.authorAge };
+}
+function sameJson(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) || Array.isArray(b)) return false;
+  const left = a as Record<string, unknown>, right = b as Record<string, unknown>;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every((key) => Object.hasOwn(right, key) && sameJson(left[key], right[key]));
+}
+function cursorPosition(value: unknown, filters: NormalizedPublicPostListInput): PublicPostCursorPosition {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("INVALID_CURSOR");
+  const p = value as Record<string, unknown>;
+  if (Object.keys(p).length !== 4 || Object.keys(p).some((key) => !["periodGroup", "recruitingGroup", "sortAt", "id"].includes(key)) ||
+    (p.periodGroup !== 0 && p.periodGroup !== 1) || (p.recruitingGroup !== 0 && p.recruitingGroup !== 1) ||
+    (!filters.period && p.periodGroup !== 0) || (filters.availability === "recruiting" && p.recruitingGroup !== 0) ||
+    typeof p.sortAt !== "string" || typeof p.id !== "string" || !uuid.test(p.id)) throw new Error("INVALID_CURSOR");
+  try { parseSearchTimestampMicroseconds(p.sortAt); } catch { throw new Error("INVALID_CURSOR"); }
+  return { periodGroup: p.periodGroup, recruitingGroup: p.recruitingGroup, sortAt: p.sortAt, id: p.id.toLowerCase() };
+}
+
+/** 필터가 바뀌면 새 목록을 요청한다. 입력한 검색어는 cursor에만 포함되고 로그에 기록하지 않는다. */
+export function encodePublicPostCursor(input: PublicPostListInput, position: PublicPostCursorPosition): string {
+  const filters = normalizePublicPostListInput(input);
+  const value = { v: 1, filters: cursorFilters(filters), position: cursorPosition(position, filters) };
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  const encoded = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  if (encoded.length > maxCursorLength) throw new Error("INVALID_CURSOR");
+  return encoded;
+}
+export function decodePublicPostCursor(cursor: string, input: PublicPostListInput): PublicPostCursorPosition {
+  const filters = normalizePublicPostListInput(input);
+  try {
+    if (typeof cursor !== "string" || !cursor.length || cursor.length > maxCursorLength ||
+      !/^[A-Za-z0-9_-]+$/.test(cursor) || cursor.length % 4 === 1) throw new Error();
+    const binary = atob(cursor.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - cursor.length % 4) % 4));
+    const decoded: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, (character) => character.charCodeAt(0))));
+    if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) throw new Error();
+    const value = decoded as Record<string, unknown>;
+    if (Object.keys(value).length !== 3 || !Object.hasOwn(value, "position") || value.v !== 1 ||
+      !sameJson(value.filters, cursorFilters(filters))) throw new Error();
+    return cursorPosition(value.position, filters);
+  } catch { throw new Error("INVALID_CURSOR"); }
 }

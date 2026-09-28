@@ -35,7 +35,7 @@ const period = {
   endsAt: "2026-10-05T00:00:00+09:00",
 };
 const post = (id, overrides = {}) => ({ ...base, id, ...overrides });
-const candidate = (row, category = "exhibition", index = {}) => ({
+const candidate = (row, category = "전시", index = {}) => ({
   publicRow: row,
   category,
   index: { title: row.title, registeredPlaceName: "Art  Hall", registeredAddress: base.registeredAddress, ...index },
@@ -72,6 +72,27 @@ test("무료·유료 요청·유료 제공의 지급 방향을 유형으로 정�
     { kind: "paid_request", amount: -1 }, { kind: "paid_offer", amount: Infinity },
     { kind: "paid_offer", amount: "10000" }, { kind: "other" }]) {
     assert.throws(() => toPublicPostCard(post("invalid", { cost }), "member"), /INVALID_POST_COST/);
+  }
+});
+
+test("비용 미확인 공고는 전체 목록에만 남기고 회원도 신청할 수 없다", async () => {
+  const unknown = post("historical-unknown", {
+    cost: { kind: "unknown", accountNumber: "PRIVATE-ACCOUNT" },
+    eligibleToApply: true,
+  });
+  const repository = createInMemoryPublicPostSearchRepository([
+    candidate(unknown), candidate(base),
+    candidate(post("paid", { cost: { kind: "paid_offer", amount: 12000 } })),
+  ]);
+  for (const caller of ["anonymous", "member"]) {
+    const all = await searchPublicPosts(repository, { caller, cost: "all" });
+    const card = all.posts.find((value) => value.id === unknown.id);
+    assert.ok(card);
+    assert.deepEqual(card.cost, { kind: "unknown" });
+    assert.equal(card.canApply, false);
+    assert.equal(JSON.stringify(card).includes("PRIVATE-ACCOUNT"), false);
+    assert.deepEqual(ids(await searchPublicPosts(repository, { caller, cost: "free" })), [base.id]);
+    assert.deepEqual(ids(await searchPublicPosts(repository, { caller, cost: "paid" })), ["paid"]);
   }
 });
 
@@ -120,11 +141,11 @@ test("빈 검색어는 다른 카테고리·비용·모집 조건을 유지한 �
     candidate(post("paid-request", { cost: { kind: "paid_request", amount: 10000 } })),
     candidate(post("paid-offer", { cost: { kind: "paid_offer", amount: 20000 } })),
     candidate(post("closed-paid", { state: "closed", cost: { kind: "paid_offer", amount: 20000 } })),
-    candidate(post("other-category", { cost: { kind: "paid_request", amount: 10000 } }), "meal"),
+    candidate(post("other-category", { cost: { kind: "paid_request", amount: 10000 } }), "식사"),
   ]);
   assert.equal(matchesPostKeyword({ title: "전시" }, "   "), true);
   assert.deepEqual(ids(await searchPublicPosts(repository, {
-    ...member, query: "   ", category: "exhibition", cost: "paid", availability: "recruiting",
+    ...member, query: "   ", category: "전시", cost: "paid", availability: "recruiting",
   })), ["paid-offer", "paid-request"]);
   assert.deepEqual(ids(await searchPublicPosts(repository, { ...member, cost: "free" })), ["post-01"]);
 });
@@ -206,6 +227,34 @@ test("시간대 누락·존재하지 않는 날짜·역전 기간과 알 수 없
     { startsAt: "2026-10-03T24:00:00+09:00" },
   ]) assert.throws(() => listProjectedPublicPosts([post("bad", overrides)], member), /INVALID_/);
   assert.throws(() => listProjectedPublicPosts([base, base], member), /DUPLICATE_POST_ID/);
+});
+
+test("비로그인 날짜·나이 조건은 저장소 요청 전에 인증 오류로 거절한다", async () => {
+  let calls = 0;
+  const repository = { async search() { calls += 1; return []; } };
+  for (const filters of [{ period }, { authorAge: "20s" }, { authorAge: "30s" }, { authorAge: "40plus" }]) {
+    await assert.rejects(searchPublicPosts(repository, { caller: "anonymous", ...filters }), /AUTH_REQUIRED/);
+  }
+  assert.equal(calls, 0);
+  await searchPublicPosts(repository, { caller: "anonymous", authorAge: "all" });
+  assert.equal(calls, 1);
+});
+
+test("실행할 수 없는 메모리 나이 필터·커서를 조용히 무시하지 않는다", async () => {
+  const repository = createInMemoryPublicPostSearchRepository([candidate(base)]);
+  await assert.rejects(searchPublicPosts(repository, { ...member, authorAge: "20s" }), /UNSUPPORTED_FILTER/);
+});
+
+test("마이크로초 일정·등록 시각 차이는 ID보다 우선하며 문자열 정밀도를 보존한다", () => {
+  const rows = [
+    post("a-later", { startsAt: "2026-10-03T00:00:00.000002Z", endsAt: "2026-10-03T01:00:00Z" }),
+    post("z-earlier", { startsAt: "2026-10-03T00:00:00.000001Z", endsAt: "2026-10-03T01:00:00Z" }),
+    post("a-older", { state: "closed", createdAt: "2026-10-01T00:00:00.000001Z" }),
+    post("z-newer", { state: "closed", createdAt: "2026-10-01T00:00:00.000002Z" }),
+  ];
+  const result = listProjectedPublicPosts(rows, member);
+  assert.deepEqual(ids(result), ["z-earlier", "a-later", "z-newer", "a-older"]);
+  assert.equal(result.posts[0].startsAt, "2026-10-03T00:00:00.000001Z");
 });
 
 test("0건과 저장소 실패를 구분하고 잘못된 조건일 때 저장소를 호출하지 않는다", async () => {

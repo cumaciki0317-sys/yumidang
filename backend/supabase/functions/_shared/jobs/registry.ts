@@ -15,6 +15,7 @@ export interface CommonScheduledRpc {
   /** notification availableAt/분쟁/공개 자격은 RPC가 판단. 워커가 날짜 정책을 복제하지 않는다. */
   releaseReviews(input: { appointmentId: string; expectedDueAt: string; jobId: string; leaseToken: string }): Promise<JobHandlerResult>;
 }
+/** 기존4종 작업의 순수/가상 호환 코어. 현재 실제 DB 실행 등록에 사용하지 않는다. */
 export function createJobRegistry(deps: {
   reviewSummary: JobHandler;
   eventSync: JobHandler;
@@ -40,6 +41,11 @@ export function createJobRegistry(deps: {
   });
 }
 
+/** 실제 연결 준비용 등록 범위. 완료·후기 공개는 별도 maintenance HTTP 경로가 처리한다. */
+export function createReviewSummaryRegistry(deps: ReviewSummaryDependencies): JobRegistry {
+  return Object.freeze({ review_summary: createReviewSummaryHandler(deps) });
+}
+
 /** 분할 요약 결과를 공통 작업 실행기 상태로 연결한다. 실제 HTTP/DB 연결은 포함하지 않는다. */
 export function createReviewSummaryHandler(deps: ReviewSummaryDependencies): JobHandler {
   return async (job) => {
@@ -47,6 +53,7 @@ export function createReviewSummaryHandler(deps: ReviewSummaryDependencies): Job
     const result = await runReviewSummaryStep({
       jobId: job.jobId, leaseToken: job.leaseToken,
       targetUserId: job.reference.targetUserId, sourceRevision: job.reference.sourceRevision,
+      modelVersion: job.reference.modelVersion, promptVersion: job.reference.promptVersion,
     }, deps);
     switch (result.status) {
       case "published": case "insufficient_reviews": return { status: "succeeded" };

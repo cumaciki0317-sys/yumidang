@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "actor": "jonghyun",
+  "branch": "jonghyun/independent-core-handoff",
+  "baseline": "f8d02b8dc6492c1584eed8762728845fe7ae335c",
+  "lanes": {
+    "coordinator": [
+      "backend/contracts/search.md",
+      "backend/contracts/review-summary.md",
+      "docs/collaboration/jonghyun.md",
+      "docs/collaboration/requests/jonghyun/2026-09-28-connection-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-09-28-connection-handoff.md",
+      "backend/supabase/functions/scheduled-jobs/handler.ts",
+      "backend/supabase/functions/scheduled-jobs/index.ts",
+      "tests/functions/jonghyun/scheduled-jobs.test.mjs"
+    ],
+    "A": [
+      "backend/supabase/functions/_shared/contracts/search.ts",
+      "backend/supabase/functions/_shared/services/search-service.ts",
+      "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
+      "backend/supabase/functions/_shared/ai/Agents/review-summary/source-loader.ts",
+      "backend/supabase/functions/_shared/ai/Agents/review-summary/orchestrator.ts",
+      "backend/supabase/functions/_shared/ai/Agents/review-summary/publisher.ts"
+    ],
+    "B": [
+      "backend/supabase/functions/_shared/db/repositories/search.ts",
+      "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+      "backend/supabase/functions/_shared/jobs/enqueue.ts",
+      "backend/supabase/functions/_shared/jobs/registry.ts",
+      "backend/supabase/functions/_shared/jobs/lease.ts",
+      "backend/supabase/functions/_shared/jobs/retry.ts"
+    ],
+    "C": [
+      "tests/functions/jonghyun/search-service.test.mjs",
+      "tests/functions/jonghyun/search-repository.test.mjs",
+      "tests/integration/jonghyun/discovery-flow.test.mjs",
+      "tests/functions/jonghyun/jobs.test.mjs",
+      "tests/ai/jonghyun/review-summary.test.mjs"
+    ]
+  },
+  "verification": "Coordinator compares all changed/untracked paths with this exact allowlist and runs check_ownership.py. Existing minkyu-only check_harness.py is not altered.",
+  "scope": [
+    "public search core and RPC adapter",
+    "review-summary string revision and version contracts",
+    "summary-only runtime registry",
+    "authenticated maintenance HTTP bridge",
+    "owned tests and handoff"
+  ],
+  "excluded": [
+    "minkyu-owned edits",
+    "SQL migrations",
+    "actual DB/API/model calls",
+    "scheduler registration",
+    "remote changes",
+    "commit/push"
+  ]
+}

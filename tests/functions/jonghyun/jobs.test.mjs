@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { enqueueJob } from "../../../backend/supabase/functions/_shared/jobs/enqueue.ts";
 import { runNextJob } from "../../../backend/supabase/functions/_shared/jobs/lease.ts";
-import { createJobRegistry, createReviewSummaryHandler } from "../../../backend/supabase/functions/_shared/jobs/registry.ts";
+import { createJobRegistry, createReviewSummaryRegistry } from "../../../backend/supabase/functions/_shared/jobs/registry.ts";
 import { decideRetry, JobExecutionError } from "../../../backend/supabase/functions/_shared/jobs/retry.ts";
 
+import { REVIEW_SUMMARY_PROMPT_VERSION } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/prompts.ts";
+
+const summaryVersions = { modelVersion: "synthetic-only", promptVersion: REVIEW_SUMMARY_PROMPT_VERSION };
+const summaryReference = { kind: "review_summary", targetUserId: "user-1", sourceRevision: "7", ...summaryVersions };
 const reference = { kind: "auto_complete", appointmentId: "appointment-1", expectedDueAt: "2026-09-23T00:00:00Z" };
 const settings = { leaseDurationMs: 1000, retry: { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 500 } };
 // 명시적인 테스트 수치이며 운영 기본값이 아니다.
@@ -113,7 +117,7 @@ test("알 수 없는 오류 본문은 상태에 저장하지 않고 영구 실�
 
 test("정상 분할 실행은 실패 횟수를 늘리지 않고 다시 점유할 수 있다", async () => {
   const h = fakeJobs();
-  await add(h, { kind: "review_summary", targetUserId: "user-1", sourceRevision: 7 });
+  await add(h, summaryReference);
   let calls = 0;
   const registry = { review_summary: async () => ({ status: ++calls < 5 ? "yielded" : "succeeded" }) };
   for (let i = 0; i < 4; i++) assert.equal((await run(h, registry)).status, "queued");
@@ -171,7 +175,7 @@ test("저장소 장애 메시지는 실행기 밖으로 원문 그대로 전파�
 
 function summaryDependencies(h, count = 3) {
   const state = {
-    revision: 7, checkpoint: null, published: null, publishEffects: 0, modelCalls: 0,
+    revision: "7", checkpoint: null, published: null, publishEffects: 0, modelCalls: 0,
     reviews: Array.from({ length: count }, (_, i) => ({ evidenceId: "r-" + i, comment: "RAW " + i })),
   };
   const current = (job, checkRevision = true) => {
@@ -227,26 +231,19 @@ function summaryDependencies(h, count = 3) {
     },
   };
   const deps = {
-    repository, model, safety: { check: async () => true },
+    repository, model, safety: { check: async () => true }, versions: { ...summaryVersions },
     settings: { maxInputChars: 20000, maxReviewsPerChunk: 1, mergeFanIn: 2, maxOutputTokens: 200, maxOutputChars: 2000, maxCallsPerStep: 1 },
   };
   return { state, deps };
 }
 function withSummary(deps) {
-  return createJobRegistry({
-    reviewSummary: createReviewSummaryHandler(deps),
-    eventSync: async () => ({ status: "succeeded" }),
-    common: {
-      autoComplete: async () => ({ status: "succeeded" }),
-      releaseReviews: async () => ({ status: "succeeded" }),
-    },
-  });
+  return createReviewSummaryRegistry(deps);
 }
 
 test("실행기에서 요약 handler를 거쳐 분할·재점유·게시·완료까지 연결한다", async () => {
   const h = fakeJobs();
   const summary = summaryDependencies(h);
-  await add(h, { kind: "review_summary", targetUserId: "user-1", sourceRevision: 7 });
+  await add(h, summaryReference);
   const registry = withSummary(summary.deps);
   for (let i = 0; i < 4; i++) assert.equal((await run(h, registry)).status, "queued");
   assert.equal((await run(h, registry)).status, "succeeded");
@@ -260,7 +257,7 @@ test("실행기에서 요약 handler를 거쳐 분할·재점유·게시·완료
 test("요약 입력 부족은 작업 성공으로 끝내며 모델을 호출하지 않는다", async () => {
   const h = fakeJobs();
   const summary = summaryDependencies(h, 2);
-  await add(h, { kind: "review_summary", targetUserId: "user-1", sourceRevision: 7 });
+  await add(h, summaryReference);
   assert.equal((await run(h, withSummary(summary.deps))).status, "succeeded");
   assert.equal(summary.state.modelCalls, 0);
 });
@@ -268,7 +265,7 @@ test("요약 입력 부족은 작업 성공으로 끝내며 모델을 호출하�
 test("요약 중 점유를 잃으면 실행기가 settle을 시도하지 않는다", async () => {
   const h = fakeJobs();
   const summary = summaryDependencies(h);
-  await add(h, { kind: "review_summary", targetUserId: "user-1", sourceRevision: 7 });
+  await add(h, summaryReference);
   const generate = summary.deps.model.generate;
   summary.deps.model.generate = async (request) => {
     const response = await generate(request);
@@ -287,10 +284,10 @@ test("요약의 최신 revision 대체·일시 모델 장애·출력 거절을 �
   for (const scenario of ["superseded", "unavailable", "failed"]) {
     const h = fakeJobs();
     const summary = summaryDependencies(h);
-    await add(h, { kind: "review_summary", targetUserId: "user-1", sourceRevision: 7 });
-    if (scenario === "superseded") summary.state.revision++;
+    await add(h, summaryReference);
+    if (scenario === "superseded") summary.state.revision = (BigInt(summary.state.revision) + 1n).toString();
     if (scenario === "unavailable") summary.deps.model.generate = async () => { throw new Error("RAW_SECRET"); };
-    if (scenario === "failed") summary.deps.model.generate = async () => ({ modelVersion: "bad", value: { claims: [] } });
+    if (scenario === "failed") summary.deps.model.generate = async () => ({ modelVersion: summaryVersions.modelVersion, value: { claims: [] } });
     const result = await run(h, withSummary(summary.deps));
     assert.equal(result.status, scenario === "unavailable" ? "retry_wait" : scenario);
     if (scenario === "unavailable") assert.equal(h.writes[0].errorCode, "MODEL_UNAVAILABLE");
@@ -303,7 +300,7 @@ test("게시 후 settle 전 중단되어 재실행해도 게시 효과와 갱신
   const h = fakeJobs();
   const summary = summaryDependencies(h);
   summary.deps.settings.maxCallsPerStep = 10;
-  await add(h, { kind: "review_summary", targetUserId: "user-1", sourceRevision: 7 });
+  await add(h, summaryReference);
   const registry = withSummary(summary.deps);
   const settle = h.repo.settle;
   let first = true;
@@ -331,4 +328,64 @@ test("생성자에 주입되거나 나중에 변조된 오류 코드도 원문�
     assert.equal(h.writes[0].errorCode, "HANDLER_FAILED");
     assert.equal(JSON.stringify(h.writes).includes("RAW_SECRET"), false);
   }
+});
+
+test("요약 등록은 큰 revision과 모델·prompt 버전을 보존하고 버전별 중복 키를 나눈다", async () => {
+  const h = fakeJobs();
+  const large = { ...summaryReference, sourceRevision: "9007199254740993" };
+  assert.equal((await add(h, large)).created, true);
+  assert.equal((await add(h, large)).created, false);
+  assert.equal((await add(h, { ...large, modelVersion: "next-model" })).created, true);
+  assert.equal((await add(h, { ...large, promptVersion: "review-summary-v2" })).created, true);
+  assert.equal(h.rows[0].reference.sourceRevision, "9007199254740993");
+  assert.deepEqual(h.rows[0].reference, large);
+  assert.equal(new Set(h.rows.map((row) => row.idempotencyKey)).size, 3);
+  for (const row of h.rows) {
+    assert.match(row.idempotencyKey, /^[A-Za-z0-9:._-]{1,512}$/);
+    assert.equal(row.idempotencyKey.includes("9007199254740993"), true);
+  }
+});
+
+test("요약 등록의 잘못된 revision·누락 버전은 큐에 저장하지 않는다", async () => {
+  const h = fakeJobs();
+  for (const sourceRevision of [7, "07", "+7", "7.0", "-1", "9223372036854775808"]) {
+    await assert.rejects(add(h, { ...summaryReference, sourceRevision }), /INVALID_JOB_REFERENCE/);
+  }
+  for (const field of ["modelVersion", "promptVersion"]) {
+    const missing = { ...summaryReference }; delete missing[field];
+    await assert.rejects(add(h, missing), /INVALID_JOB_REFERENCE/);
+  }
+  assert.equal(h.rows.length, 0);
+});
+
+test("운영 요약 registry는 요약만 점유하고 완료·공개·행사 작업을 남겨둔다", async () => {
+  const h = fakeJobs();
+  await add(h);
+  await add(h, { ...reference, kind: "review_release" });
+  await add(h, { kind: "event_sync", provider: "synthetic", windowStart: "2026-09-23T00:00:00Z", windowEnd: "2026-09-24T00:00:00Z" });
+  await add(h, summaryReference);
+  const summary = summaryDependencies(h, 2);
+  const registry = withSummary(summary.deps);
+  assert.deepEqual(Object.keys(registry), ["review_summary"]);
+  const claim = h.repo.claim;
+  const requestedKinds = [];
+  h.repo.claim = async (input) => { requestedKinds.push([...input.kinds]); return claim(input); };
+  assert.equal((await run(h, registry)).status, "succeeded");
+  assert.equal((await run(h, registry)).status, "idle");
+  assert.deepEqual(requestedKinds, [["review_summary"], ["review_summary"]]);
+  assert.equal(h.rows.filter((row) => row.reference.kind !== "review_summary").every((row) => row.state === "queued"), true);
+  assert.equal(summary.state.modelCalls, 0);
+});
+
+test("큰 revision과 작업 버전은 점유·요약·게시 경로에서도 변하지 않는다", async () => {
+  const h = fakeJobs();
+  const summary = summaryDependencies(h);
+  const large = { ...summaryReference, sourceRevision: "9007199254740993" };
+  summary.state.revision = large.sourceRevision;
+  summary.deps.settings.maxCallsPerStep = 10;
+  await add(h, large);
+  assert.equal((await run(h, withSummary(summary.deps))).status, "succeeded");
+  assert.equal(summary.state.published.sourceRevision, large.sourceRevision);
+  assert.equal(summary.state.published.modelVersion, summaryVersions.modelVersion);
+  assert.equal(summary.state.published.promptVersion, summaryVersions.promptVersion);
 });

@@ -2,16 +2,26 @@
 
 상태: **종현 독립 요약·작업 코어 구현**. 가상 저장소·모델로 검증하며, 실제 후기 공개 조회·revision·요약 저장·작업 RPC는 아직 연결·검증되지 않았다. 기준: [최신 계획](../../PLAN.md) 3-5·4·6장, [상세 설계](../../PLAN_상세설계.md) 5.4·5.5·7·8·11.3장. 평가 제출·프로필 공개 권한의 원천 계약은 민규 소유 [reviews.md](reviews.md)다.
 
+## 2026-09-28 연결 보완
+
+sourceRevision은 작업·원문 snapshot·중간 저장·게시 전 구간에서 정규 십진 문자열이다. 0 이상 PostgreSQL bigint 최댓값까지 허용하고 Number 변환·선행 0·숫자 입력을 거절한다. 요청 modelVersion/promptVersion은 작업과 checkpoint에 보존하며 `deps.versions`와 일치해야 한다. 실제 사용 모델 목록 modelVersions와 구분한다. 버전 누락/불일치·미지원 프롬프트는 DB·모델 호출 전에 실패한다. 현재 코어 프롬프트는 review-summary-v1이다.
+
+중복 키는 기존 DB와 같은 `review_summary:<targetUserId>:<revision>:<modelVersion>:<promptVersion>`이다. 정상 분할 yielded·재개는 failedAttempts를 늘리지 않는다. 실제 DB는 점유 횟수와 실패 횟수를 별도로 관리해야 한다.
+
+scheduled-jobs POST는 내부 인증 후 설정된 Supabase의 `/functions/v1/service-api/internal/maintenance`만 호출한다. body는 명시적인 limit(1..100)만 허용하고 자동 재시도·기본 배치값을 만들지 않는다. 모델·프롬프트 버전 설정이 없으면 자동 완료도 시작하지 않는 기존 API 전제를 유지한다. 가짜 버전으로 우회하지 않는다. 응답은 완료/공개/처리/등록 건수만 공개하고 원문을 전달하지 않는다. 실제 Cron/Edge 설정·호출은 미실행이다.
+
+DB 구현 전 필수 조건은 현재 작업자·점유 토큰·만료 확인, 원문 없는 중간 저장, 게시 시 현재 revision·공개 자격·전체 근거 재검사, 게시 후 종결 전 중단의 멱등성, 게시/폐기/최종 실패/후기 변경 시 원자적 중간 저장 삭제다. 현재 인터페이스와 가상 검사만으로 이 DB 보장이 구현된 것은 아니다. [이번 연결 요구](../../docs/collaboration/requests/jonghyun/2026-09-28-connection-handoff.md)를 참조한다.
+
 ## 1. 원문 자격과 읽기
 
-AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한마디가 있는 후기 3개 이상**에서만 생성·노출한다. 공개 조건을 충족한 한마디는 로그인 회원에게 자동 공개하고 요약도 이 범위에서만 제공한다(2026-09-23 사용자 확인). 신고 접수만으로 비공개로 바꾸지 않고 운영자가 비공개 조치를 결정하면 공개 상태를 변경한다(2026-09-23 사용자 확인). 이때 공개 원문 revision 증가·이전 요약 무효화·재작업 등록을 같은 트랜잭션에서 처리해야 한다. 공백뿐인 한마디, 한마디 없는 평가, 비공개 후기는 제외한다. 공개 평가 총수와 실제 요약에 사용한 텍스트 후기 수를 분리한다. 기존 후기 RPC의 `released`는 당사자 사이의 상대 후기 열람 조건이며 프로필·제3자 공개 근거로 사용하지 않는다.
+AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한마디가 있는 후기 3개 이상**에서만 생성·노출한다. 공개 조건을 충족한 한마디는 로그인 회원에게 자동 공개하고 요약도 이 범위에서만 제공한다(2026-09-23 사용자 확인). 신고 접수만으로 비공개로 바꾸지 않고 운영자가 비공개 조치를 결정하면 공개 상태를 변경한다(2026-09-23 사용자 확인). 이때 공개 원문 revision 증가·이전 요약 무효화·재작업 예약(outbox) 기록을 같은 트랜잭션에서 처리해야 한다. 공백뿐인 한마디, 한마디 없는 평가, 비공개 후기는 제외한다. 공개 평가 총수와 실제 요약에 사용한 텍스트 후기 수를 분리한다. 기존 후기 RPC의 `released`는 당사자 사이의 상대 후기 열람 조건이며 프로필·제3자 공개 근거로 사용하지 않는다.
 
 종현 로더가 민규의 권한 확인된 내부 조회 계약에서 받기를 제안하는 값:
 
 ```json
 {
   "targetUserId": "user-01",
-  "sourceRevision": 7,
+  "sourceRevision": "7",
   "publicTextReviews": [
     {"evidenceId":"r-01","comment":"일정 조율이 편했어요."},
     {"evidenceId":"r-02","comment":"약속 시간을 잘 지켰어요."},
@@ -24,7 +34,7 @@ AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한�
 
 ## 2. 작업 입력·상태·게시
 
-작업 메시지는 `targetUserId`, `sourceRevision`, `jobId`만 참조하고 **원문을 복제하지 않는다**. 공개 텍스트 후기 집합이 바뀌는 트랜잭션에서 revision 증가·기존 요약 무효화·새 작업 등록을 함께 처리하는 DB 계약이 필요하다. 종현 워커는 작업을 점유한 뒤 최신 원문을 조회하고, 중복·이전 revision 작업은 게시하지 않는다.
+작업 메시지는 `targetUserId`, `sourceRevision`, `jobId`, `modelVersion`, `promptVersion`만 참조하고 **원문을 복제하지 않는다**. 공개 텍스트 후기 집합이 바뀌는 트랜잭션에서 revision 증가·기존 요약 무효화·재작업 예약(outbox) 기록을 함께 처리하는 DB 계약이 필요하다. 종현 워커는 작업을 점유한 뒤 최신 원문을 조회하고, 중복·이전 revision 작업은 게시하지 않는다.
 
 | 순서 | 종현 처리 | 민규 DB 원자성·권한 |
 |---|---|---|
@@ -38,14 +48,14 @@ AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한�
 조건부 게시 요청과 결과의 가상 예:
 
 ```json
-{"jobId":"job-01","leaseToken":"lease-current","targetUserId":"user-01","sourceRevision":7,"summaryText":"시간 약속과 전시 대화에 관한 긍정적 경험이 언급됐어요.","sourceReviewIds":["r-01","r-02","r-03"],"sourceReviewCount":3,"promptVersion":"proposal-1","modelVersions":["mock"]}
+{"jobId":"job-01","leaseToken":"lease-current","targetUserId":"user-01","sourceRevision":"7","summaryText":"시간 약속과 전시 대화에 관한 긍정적 경험이 언급됐어요.","sourceReviewIds":["r-01","r-02","r-03"],"sourceReviewCount":3,"modelVersion":"example-model-v1","promptVersion":"review-summary-v1","modelVersions":["mock"]}
 ```
 
 게시 결과는 `published`, `stale_revision`, `insufficient_reviews`, `not_public`, `invalid_evidence`처럼 **논리적으로 구분**해야 한다. 오류 코드·RPC 반환형은 합의 대상이다. DB는 전달한 후기 ID들이 현재 대상의 공개 텍스트 후기인지, 중복이 없는지, `sourceReviewCount`가 실제 ID 수와 일치하는지 확인해야 한다. 근거 ID가 존재해도 문장 의미가 정확하다는 보장은 없으므로 별도 평가 자료로 확인한다. 공개 조회는 로그인 회원으로 제한하고 요약문·기준 후기 수·갱신 시각·표시 상태만 담으며 내부 후기 ID·모델 버전·작업 상태 세부값은 노출하지 않는다.
 
 ## 3. 예약 작업과 완료·공개 시점의 경계
 
-종현의 `enqueue`·`lease`·`retry`·실행기는 행사 갱신, 자동 완료, 후기 공개 시점, 요약 생성을 각각 구분해 호출한다. **완료·평가 공개 정책의 판정은 민규의 공통 RPC**가 한다. 워커가 개인별 완료 확인을 대신 쓰거나 시각·이의 보류를 자체 계산해 공개하지 않는다.
+기존 순수 코어는 4종 작업을 보존하지만 실제 연결용 `createReviewSummaryRegistry`는 review_summary만 등록한다. 예약 실행기는 내부 인증 후 기존 maintenance HTTP API를 호출한다. 실제 큐 등록은 이 일괄 처리 API가 담당한다. **완료·평가 공개 정책의 판정은 민규의 공통 RPC**가 한다. 워커가 개인별 완료 확인을 대신 쓰거나 시각·이의 보류를 자체 계산해 공개하지 않는다.
 
 | 작업 | 호출 조건·기대 결과 | 중복·실패 경계 |
 |---|---|---|
@@ -72,7 +82,7 @@ AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한�
 - `runReviewSummaryStep(job,deps)`는 명시된 호출 수·입력 크기 안에서 처리하고, 한 번에 끝나지 않으면 `yielded`로 반환한다. 실패 재시도와 정상 분할 실행을 구분한다.
 - 임시 checkpoint에는 생성된 중간 요약·근거 ID·원문 revision·모델/프롬프트 버전·진행 위치만 둔다. 원문 복제·회원 조회는 금지한다. 완료·폐기·revision 변경 시 정리하며 실제 접근 제어와 정리는 민규 DB 계약으로 보장한다.
 - `SummarySafetyPort`는 의미·개인정보 검사를 별도로 수행하는 필수 주입 경계다. 구조·근거 ID 검사만 통과했다고 의미 정확성을 보장하지 않는다. 현재 테스트의 검사기는 가상이며 실제 모델 품질/운영 검사 연결은 별도다.
-- 조건부 게시 입력은 `jobId/leaseToken/targetUserId/sourceRevision/summaryText/claims/sourceReviewIds/sourceReviewCount/promptVersion/modelVersions`다. 여러 묶음/대체 모델을 썼다면 실제 사용 버전을 모두 추적한다. 게시·checkpoint 삭제는 원자 처리하고 작업 settle은 별도다. 게시 뒤 settle 전 중단에도 (jobId,sourceRevision) 기준 게시 멱등성으로 중복 효과를 막아야 한다.
+- 조건부 게시 입력은 `jobId/leaseToken/targetUserId/sourceRevision/summaryText/claims/sourceReviewIds/sourceReviewCount/modelVersion/promptVersion/modelVersions`다. 여러 묶음/대체 모델을 썼다면 실제 사용 버전을 모두 추적한다. 게시·checkpoint 삭제는 원자 처리하고 작업 settle은 별도다. 게시 뒤 settle 전 중단에도 (jobId,sourceRevision) 기준 게시 멱등성으로 중복 효과를 막아야 한다.
 - `createReviewSummaryHandler`가 요약 결과를 작업 상태에 연결하고 점유 손실은 settle 없이 반환한다. `runNextJob`·`createJobRegistry`는 요약·행사 수집·자동 완료·후기 공개 작업을 구분한다. 자동 완료/공개는 공통 RPC만 호출하며 수동 확인·완료 시각을 워커에서 대신 기록하지 않는다.
 - Supabase Cron 등록·원격 실행·실제 DB 잠금/RLS·운영 수치·장애 알림은 아직 연결하지 않았다. [Edge 실행 제한](https://supabase.com/docs/guides/functions/limits)을 고려하여 분할 실행을 실제 런타임에서 검증해야 한다.
 

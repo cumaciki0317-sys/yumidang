@@ -2,11 +2,12 @@ import type { ReviewSummaryRepository, SummaryPublishInput } from "../../../db/r
 import { MIN_PUBLIC_TEXT_REVIEWS } from "./eligibility.ts";
 import { checkEvidence, sameEvidence } from "./evidence-check.ts";
 import { validateSummaryJob } from "./source-loader.ts";
+import { REVIEW_SUMMARY_PROMPT_VERSION } from "./prompts.ts";
 
 export async function publishSummary(repo: ReviewSummaryRepository, input: SummaryPublishInput, expectedIds: string[]) {
   validateSummaryJob(input);
   if (input.sourceReviewCount < MIN_PUBLIC_TEXT_REVIEWS || input.sourceReviewCount !== expectedIds.length ||
-      !sameEvidence(input.sourceReviewIds, expectedIds) || !input.promptVersion ||
+      !sameEvidence(input.sourceReviewIds, expectedIds) || input.promptVersion !== REVIEW_SUMMARY_PROMPT_VERSION ||
       !input.modelVersions.length || input.modelVersions.some((v) => typeof v !== "string" || !v.trim()) ||
       input.summaryText !== input.claims.map((claim) => claim.text).join(" ")) throw new Error("INVALID_SUMMARY_PUBLICATION");
   checkEvidence(input.claims, expectedIds);

@@ -1,3 +1,4 @@
+import { isSummaryVersion } from "../../../db/repositories/review-summaries.ts";
 import type { ModelPort } from "../../providers/model-port.ts";
 import type {
   ReviewSummaryJob, ReviewSummaryRepository, SummaryCheckpoint, SummaryNode, SummaryWriteResult, PublicTextReview,
@@ -27,6 +28,7 @@ export interface ReviewSummaryDependencies {
   model: ModelPort;
   safety: SummarySafetyPort;
   settings: ReviewSummarySettings;
+  versions: { modelVersion: string; promptVersion: string };
   signal?: AbortSignal;
 }
 
@@ -38,7 +40,8 @@ function validateSettings(settings: ReviewSummarySettings) {
 }
 function validateCheckpoint(checkpoint: SummaryCheckpoint, job: ReviewSummaryJob, ids: string[], maxChars: number) {
   if (!checkpoint || checkpoint.schemaVersion !== 1 || checkpoint.targetUserId !== job.targetUserId ||
-      checkpoint.sourceRevision !== job.sourceRevision || checkpoint.promptVersion !== REVIEW_SUMMARY_PROMPT_VERSION ||
+      checkpoint.sourceRevision !== job.sourceRevision || checkpoint.modelVersion !== job.modelVersion ||
+      checkpoint.promptVersion !== job.promptVersion ||
       !Array.isArray(checkpoint.sourceReviewIds) || !sameEvidence(checkpoint.sourceReviewIds, ids) ||
       checkpoint.sourceReviewIds.some((id, i) => id !== ids[i]) || !Array.isArray(checkpoint.nodes) ||
       !Number.isSafeInteger(checkpoint.nextReviewIndex) || checkpoint.nextReviewIndex < 0 || checkpoint.nextReviewIndex > ids.length) {
@@ -78,6 +81,14 @@ async function rejectedWrite(repo: ReviewSummaryRepository, job: ReviewSummaryJo
 export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSummaryDependencies): Promise<ReviewSummaryResult> {
   validateSummaryJob(job);
   validateSettings(deps.settings);
+  // 잘못된 실행 설정으로 다른 버전의 checkpoint를 읽거나 모델을 호출하지 않는다.
+  if (!deps.versions || !isSummaryVersion(deps.versions.modelVersion) || !isSummaryVersion(deps.versions.promptVersion)) {
+    return { status: "failed", code: "INVALID_SUMMARY_VERSIONS" };
+  }
+  if (job.modelVersion !== deps.versions.modelVersion || job.promptVersion !== deps.versions.promptVersion) {
+    return { status: "failed", code: "SUMMARY_VERSION_MISMATCH" };
+  }
+  if (job.promptVersion !== REVIEW_SUMMARY_PROMPT_VERSION) return { status: "failed", code: "UNSUPPORTED_SUMMARY_PROMPT" };
   const { repository, model, safety, settings, signal } = deps;
   try {
     const source = await loadReviewSource(repository, job);
@@ -93,7 +104,7 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
     if (stored === "lease_lost") return { status: "lease_lost" };
     const checkpoint: SummaryCheckpoint = stored ?? {
       schemaVersion: 1, targetUserId: job.targetUserId, sourceRevision: job.sourceRevision,
-      promptVersion: REVIEW_SUMMARY_PROMPT_VERSION, sourceReviewIds: ids, nextReviewIndex: 0, nodes: [],
+      modelVersion: job.modelVersion, promptVersion: job.promptVersion, sourceReviewIds: ids, nextReviewIndex: 0, nodes: [],
     };
     validateCheckpoint(checkpoint, job, ids, settings.maxOutputChars);
     let calls = 0;
@@ -165,7 +176,7 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
     const write = await publishSummary(repository, {
       ...job, summaryText: final.claims.map((claim) => claim.text).join(" "), claims: final.claims,
       sourceReviewIds: final.sourceReviewIds, sourceReviewCount: reviews.length,
-      promptVersion: REVIEW_SUMMARY_PROMPT_VERSION, modelVersions: final.modelVersions,
+      modelVersions: final.modelVersions,
     }, ids);
     return write === "applied" ? { status: "published" } : await rejectedWrite(repository, job, write);
   } catch (error) {

@@ -4,7 +4,10 @@ import { runReviewSummaryStep } from "../../../backend/supabase/functions/_share
 import { publishSummary } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/publisher.ts";
 import { eligibleTextReviews } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/eligibility.ts";
 
-const job = { jobId: "job-1", leaseToken: "lease-1", targetUserId: "user-1", sourceRevision: 7 };
+import { REVIEW_SUMMARY_PROMPT_VERSION } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/prompts.ts";
+
+const versions = { modelVersion: "synthetic-model", promptVersion: REVIEW_SUMMARY_PROMPT_VERSION };
+const job = { jobId: "job-1", leaseToken: "lease-1", targetUserId: "user-1", sourceRevision: "7", ...versions };
 const reviews = (count) => Array.from({ length: count }, (_, i) => ({ evidenceId: "r-" + (i + 1), comment: "RAW_COMMENT_" + (i + 1) }));
 const settings = {
   maxInputChars: 20000, maxReviewsPerChunk: 2, mergeFanIn: 2,
@@ -13,7 +16,7 @@ const settings = {
 
 function harness(count = 5) {
   const state = {
-    token: job.leaseToken, revision: 7, reviews: reviews(count), checkpoint: null,
+    token: job.leaseToken, revision: "7", reviews: reviews(count), checkpoint: null,
     published: null, insufficient: false, snapshots: [], beforePublish: null,
   };
   const current = (input, checkRevision = true) =>
@@ -74,11 +77,11 @@ function harness(count = 5) {
       };
     },
   };
-  return { state, calls, deps: { repository, model, safety: { check: async () => true }, settings } };
+  return { state, calls, deps: { repository, model, safety: { check: async () => true }, settings, versions: { ...versions } } };
 }
-async function finish(h) {
+async function finish(h, summaryJob = job) {
   for (let attempt = 0; attempt < 30; attempt++) {
-    const result = await runReviewSummaryStep(job, h.deps);
+    const result = await runReviewSummaryStep(summaryJob, h.deps);
     if (result.status !== "yielded") return result;
   }
   throw new Error("TEST_DID_NOT_FINISH");
@@ -126,7 +129,7 @@ test("생성 도중 revision이 바뀌면 결과를 폐기하고 게시하지 �
   const generate = h.deps.model.generate;
   h.deps.model.generate = async (request) => {
     const response = await generate(request);
-    h.state.revision++;
+    h.state.revision = (BigInt(h.state.revision) + 1n).toString();
     h.state.reviews.pop();
     return response;
   };
@@ -150,7 +153,7 @@ test("revision이 같아도 점유 토큰을 잃은 워커는 checkpoint/게시�
 
 test("게시 직전 원문 변경도 원자 게시 포트가 거절한다", async () => {
   const h = harness(3);
-  h.state.beforePublish = () => { h.state.revision++; };
+  h.state.beforePublish = () => { h.state.revision = (BigInt(h.state.revision) + 1n).toString(); };
   assert.equal((await finish(h)).status, "superseded");
   assert.equal(h.state.published, null);
   assert.equal(h.state.checkpoint, null);
@@ -172,7 +175,7 @@ test("모델 장애 원문 오류는 노출하지 않고 기존 checkpoint에서
 test("가짜·누락·중복 근거 ID는 폐기하고 게시하지 않는다", async () => {
   for (const evidenceIds of [["foreign"], ["r-1"], ["r-1", "r-1", "r-2"]]) {
     const h = harness(3);
-    h.deps.model.generate = async () => ({ modelVersion: "bad-model", value: { claims: [{ text: "가상 주장", evidenceIds }] } });
+    h.deps.model.generate = async () => ({ modelVersion: versions.modelVersion, value: { claims: [{ text: "가상 주장", evidenceIds }] } });
     const result = await runReviewSummaryStep(job, h.deps);
     assert.equal(result.status, "failed");
     assert.equal(h.state.published, null);
@@ -207,7 +210,7 @@ test("게시 인자의 실제 사용 수·중복 근거 불일치를 DB 호출 �
   const h = harness(3);
   const valid = {
     ...job, summaryText: "가상 요약", claims: [{ text: "가상 요약", evidenceIds: ["r-1", "r-2", "r-3"] }],
-    sourceReviewIds: ["r-1", "r-2", "r-3"], sourceReviewCount: 3, promptVersion: "v1", modelVersions: ["synthetic"],
+    sourceReviewIds: ["r-1", "r-2", "r-3"], sourceReviewCount: 3, promptVersion: versions.promptVersion, modelVersions: [versions.modelVersion],
   };
   await assert.rejects(() => publishSummary(h.deps.repository, { ...valid, sourceReviewCount: 4 }, ["r-1", "r-2", "r-3"]), /INVALID_SUMMARY_PUBLICATION/);
   await assert.rejects(() => publishSummary(h.deps.repository, { ...valid, sourceReviewIds: ["r-1", "r-1", "r-3"] }, ["r-1", "r-2", "r-3"]), /INVALID_SUMMARY_PUBLICATION/);
@@ -225,4 +228,77 @@ test("운영 수치는 명시 설정이 없으면 실행하지 않는다", async
   const h = harness(3);
   h.deps.settings = { ...settings, maxCallsPerStep: undefined };
   await assert.rejects(() => runReviewSummaryStep(job, h.deps), /INVALID_SUMMARY_SETTINGS/);
+});
+
+test("안전 정수 범위를 넘는 revision을 원문·checkpoint·게시까지 문자열로 보존한다", async () => {
+  const h = harness(3);
+  const large = { ...job, sourceRevision: "9007199254740993" };
+  h.state.revision = large.sourceRevision;
+  assert.equal((await runReviewSummaryStep(large, h.deps)).status, "yielded");
+  assert.equal(h.state.checkpoint.sourceRevision, large.sourceRevision);
+  assert.equal(h.state.checkpoint.modelVersion, versions.modelVersion);
+  assert.equal(h.state.checkpoint.promptVersion, versions.promptVersion);
+  assert.equal((await finish(h, large)).status, "published");
+  assert.equal(h.state.published.sourceRevision, "9007199254740993");
+  assert.equal(h.state.published.modelVersion, versions.modelVersion);
+  assert.equal(h.state.published.promptVersion, versions.promptVersion);
+});
+
+test("숫자·비정규 문자열·PostgreSQL bigint 초과 revision을 원문 조회 전에 거절한다", async () => {
+  for (const sourceRevision of [7, "07", "+7", " 7", "7.0", "7e0", "-1", "9223372036854775808"]) {
+    const h = harness(3);
+    let reads = 0;
+    h.deps.repository.loadSource = async () => { reads++; throw new Error("MUST_NOT_READ"); };
+    await assert.rejects(runReviewSummaryStep({ ...job, sourceRevision }, h.deps), /INVALID_SUMMARY_JOB/);
+    assert.equal(reads, 0);
+    assert.equal(h.calls.length, 0);
+  }
+  for (const sourceRevision of ["0", "9223372036854775807"]) {
+    const h = harness(2);
+    h.state.revision = sourceRevision;
+    assert.equal((await runReviewSummaryStep({ ...job, sourceRevision }, h.deps)).status, "insufficient_reviews");
+  }
+});
+
+test("잘못된 원문 revision은 모델 실행 없이 실패하며 숫자로 보정하지 않는다", async () => {
+  const h = harness(3);
+  h.state.revision = 7;
+  assert.deepEqual(await runReviewSummaryStep(job, h.deps), { status: "failed", code: "INVALID_REVIEW_SOURCE" });
+  assert.equal(h.calls.length, 0);
+  assert.equal(h.state.published, null);
+});
+
+test("작업 버전 누락·설정 누락·버전 불일치·미지원 prompt를 모델과 원문 조회 전에 차단한다", async () => {
+  for (const field of ["modelVersion", "promptVersion"]) {
+    const h = harness(3);
+    const missing = { ...job }; delete missing[field];
+    await assert.rejects(runReviewSummaryStep(missing, h.deps), /INVALID_SUMMARY_JOB/);
+    assert.equal(h.calls.length, 0);
+  }
+  const scenarios = [
+    { configured: undefined, expected: "INVALID_SUMMARY_VERSIONS" },
+    { configured: { modelVersion: versions.modelVersion }, expected: "INVALID_SUMMARY_VERSIONS" },
+    { configured: { ...versions, modelVersion: "other-model" }, expected: "SUMMARY_VERSION_MISMATCH" },
+    { configured: { ...versions, promptVersion: "review-summary-v999" }, expected: "SUMMARY_VERSION_MISMATCH" },
+    { configured: { ...versions, promptVersion: "review-summary-v999" }, job: { ...job, promptVersion: "review-summary-v999" }, expected: "UNSUPPORTED_SUMMARY_PROMPT" },
+  ];
+  for (const scenario of scenarios) {
+    const h = harness(3);
+    let reads = 0;
+    h.deps.repository.loadSource = async () => { reads++; throw new Error("MUST_NOT_READ"); };
+    h.deps.versions = scenario.configured;
+    assert.deepEqual(await runReviewSummaryStep(scenario.job ?? job, h.deps), { status: "failed", code: scenario.expected });
+    assert.equal(reads, 0);
+    assert.equal(h.calls.length, 0);
+  }
+});
+
+test("다른 모델 설정으로 만든 checkpoint는 이어 쓰지 않고 폐기한다", async () => {
+  const h = harness(3);
+  assert.equal((await runReviewSummaryStep(job, h.deps)).status, "yielded");
+  h.state.checkpoint.modelVersion = "other-model";
+  assert.deepEqual(await runReviewSummaryStep(job, h.deps), { status: "failed", code: "INVALID_SUMMARY_CHECKPOINT" });
+  assert.equal(h.calls.length, 1);
+  assert.equal(h.state.checkpoint, null);
+  assert.equal(h.state.published, null);
 });
