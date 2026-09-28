@@ -1,9 +1,16 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 요청 기준 시각과 서비스 시간대로 자연어 날짜를 검색 기간으로 계산한다.
- * TODO: 서비스 시간대·구간 경계·날짜만 있는 자료의 처리 계약을 확정한다. 장기 행사와 검색 기간의 겹침을 지원하고 계산은 일반 코드로 수행한다.
- * 참고: PLAN_상세설계.md 6장.
- */
-
-export {};
+import type { DateSelection } from "../../../contracts/ai.ts";
+import { parseCalendarDate, addCalendarDays, seoulCalendarDate, seoulWeekWindow } from "../../../integrations/events/normalize.ts";
+export function resolveDateRange(selection: DateSelection | undefined, now: Date): { startsAt: string; endsAt: string } | undefined {
+  if (!selection) return undefined;
+  const today = seoulCalendarDate(now);
+  let start: string, end: string;
+  switch (selection.kind) {
+    case "today": start = today; end = addCalendarDays(today,1); break;
+    case "tomorrow": start = addCalendarDays(today,1); end = addCalendarDays(today,2); break;
+    case "this_week": { const w = seoulWeekWindow(today); start=w.monday; end=w.nextMonday; break; }
+    case "this_weekend": { const w = seoulWeekWindow(today); start=addCalendarDays(w.monday,5); end=w.nextMonday; break; }
+    case "dates": parseCalendarDate(selection.startsOn); parseCalendarDate(selection.endsOn); if (selection.startsOn > selection.endsOn) throw new Error("INVALID_DATE_RANGE"); start=selection.startsOn; end=addCalendarDays(selection.endsOn,1); break;
+    default: throw new Error("INVALID_DATE_RANGE");
+  }
+  return { startsAt: `${start}T00:00:00+09:00`, endsAt: `${end}T00:00:00+09:00` };
+}

@@ -1,9 +1,14 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 최신 revision과 원문 공개 상태가 유지될 때만 요약을 게시한다.
- * TODO: 민규담당의 조건부 게시 RPC와 연결해 저장 시 revision·공개 상태를 원자적으로 재확인한다. 오래된 결과는 폐기하며 조회에서도 revision 일치를 요구한다. 공개 응답에는 요약문·기준 후기 수·갱신 시각·표시 상태만 포함한다.
- * 참고: PLAN_상세설계.md 7장.
- */
+import type { ReviewSummaryRepository, SummaryPublishInput } from "../../../db/repositories/review-summaries.ts";
+import { MIN_PUBLIC_TEXT_REVIEWS } from "./eligibility.ts";
+import { checkEvidence, sameEvidence } from "./evidence-check.ts";
+import { validateSummaryJob } from "./source-loader.ts";
 
-export {};
+export async function publishSummary(repo: ReviewSummaryRepository, input: SummaryPublishInput, expectedIds: string[]) {
+  validateSummaryJob(input);
+  if (input.sourceReviewCount < MIN_PUBLIC_TEXT_REVIEWS || input.sourceReviewCount !== expectedIds.length ||
+      !sameEvidence(input.sourceReviewIds, expectedIds) || !input.promptVersion ||
+      !input.modelVersions.length || input.modelVersions.some((v) => typeof v !== "string" || !v.trim()) ||
+      input.summaryText !== input.claims.map((claim) => claim.text).join(" ")) throw new Error("INVALID_SUMMARY_PUBLICATION");
+  checkEvidence(input.claims, expectedIds);
+  return repo.publish(input); // DB가 token/revision/현재 공개 집합을 원자적으로 재검사한다.
+}

@@ -1,9 +1,13 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 모델 제공사의 시간 초과·한도·형식 오류를 내부 오류로 구분한다.
- * TODO: 제공사 오류를 재시도 가능 여부와 안전한 사용자 안내에 매핑한다. 원문 요청이나 민감정보를 오류에 포함하지 않고 재시도 상한·예산은 합의된 정책을 적용한다.
- * 참고: PLAN_상세설계.md 6장.
- */
-
-export {};
+/** 제공사 원문 오류·요청 본문을 서비스 오류로 복사하지 않는다. */
+const codes = new Set(["NOT_CONFIGURED", "RETENTION_REVIEW_PENDING", "DAILY_QUOTA_EXHAUSTED", "BUDGET_EXHAUSTED", "CANCELLED", "INVALID_MODEL_RESPONSE", "MODEL_UNAVAILABLE"]);
+export type ModelErrorCode = "NOT_CONFIGURED" | "RETENTION_REVIEW_PENDING" | "DAILY_QUOTA_EXHAUSTED" | "BUDGET_EXHAUSTED" | "CANCELLED" | "INVALID_MODEL_RESPONSE" | "MODEL_UNAVAILABLE";
+export class ModelError extends Error {
+  readonly code: ModelErrorCode;
+  constructor(code: ModelErrorCode) {
+    const safe = codes.has(code) ? code : "MODEL_UNAVAILABLE";
+    super(safe); this.name = "ModelError"; this.code = safe;
+  }
+}
+export function safeModelError(error: unknown): ModelError {
+  return new ModelError(error instanceof ModelError && codes.has(error.code) ? error.code : "MODEL_UNAVAILABLE");
+}

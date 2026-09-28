@@ -1,9 +1,16 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 현재 공개 텍스트 후기 집합과 sourceRevision을 조회한다.
- * TODO: 민규담당의 공개 후기 조회 계약에 따라 일관된 스냅샷을 읽는다. 작업 메시지에 원문을 복제하지 않으며 모델 입력에는 공개 한마디와 임시 근거 ID만 전달한다. released를 제3자 공개 권한으로 해석하지 않는다.
- * 참고: PLAN_상세설계.md 7장.
- */
+import type { ReviewSummaryJob, ReviewSummaryRepository } from "../../../db/repositories/review-summaries.ts";
+import { eligibleTextReviews } from "./eligibility.ts";
 
-export {};
+export function validateSummaryJob(job: ReviewSummaryJob): void {
+  if (!job || ![job.jobId, job.leaseToken, job.targetUserId].every((v) => typeof v === "string" && v.trim()) ||
+      !Number.isSafeInteger(job.sourceRevision) || job.sourceRevision < 0) throw new Error("INVALID_SUMMARY_JOB");
+}
+export async function loadReviewSource(repo: ReviewSummaryRepository, job: ReviewSummaryJob) {
+  validateSummaryJob(job);
+  const source = await repo.loadSource(job);
+  if (source === "lease_lost") return source;
+  if (source.targetUserId !== job.targetUserId || !Number.isSafeInteger(source.sourceRevision) ||
+      source.sourceRevision < 0 || !Array.isArray(source.publicTextReviews)) throw new Error("INVALID_REVIEW_SOURCE");
+  if (source.sourceRevision !== job.sourceRevision) return "stale_revision" as const;
+  return { ...source, publicTextReviews: eligibleTextReviews(source.publicTextReviews) };
+}

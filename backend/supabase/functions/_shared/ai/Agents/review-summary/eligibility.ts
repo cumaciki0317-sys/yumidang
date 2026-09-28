@@ -1,9 +1,18 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 공백을 제외한 공개 텍스트 후기가 3개 이상인지 판단한다.
- * TODO: 별점만 있는 후기와 공백뿐인 한마디를 제외한다. 3개 미만이면 요약을 노출하지 않으며 입력 한도 초과 시 일부 원문만 임의 선택하지 않고 확정된 처리 정책을 적용한다.
- * 참고: PLAN_상세설계.md 7장.
- */
+import type { PublicTextReview } from "../../../db/repositories/review-summaries.ts";
 
-export {};
+export const MIN_PUBLIC_TEXT_REVIEWS = 3;
+/** 입력의 공개 자격은 DB 계약이 보장한다. 여기서는 공백/평가만 있는 행을 제외한다. */
+export function eligibleTextReviews(reviews: readonly PublicTextReview[]): PublicTextReview[] {
+  const seen = new Set<string>();
+  const eligible: PublicTextReview[] = [];
+  for (const review of reviews) {
+    if (!review || typeof review.evidenceId !== "string" || !review.evidenceId.trim() ||
+        (review.comment !== null && typeof review.comment !== "string")) {
+      throw new Error("INVALID_REVIEW_SOURCE");
+    }
+    if (seen.has(review.evidenceId)) throw new Error("DUPLICATE_REVIEW_SOURCE");
+    seen.add(review.evidenceId);
+    if (review.comment?.trim()) eligible.push({ evidenceId: review.evidenceId, comment: review.comment.trim() });
+  }
+  return eligible.sort((a, b) => a.evidenceId < b.evidenceId ? -1 : a.evidenceId > b.evidenceId ? 1 : 0);
+}

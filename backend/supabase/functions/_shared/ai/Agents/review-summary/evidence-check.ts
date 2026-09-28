@@ -1,9 +1,18 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 요약 주장의 근거 ID와 실제 입력 후기를 연결해 검사한다.
- * TODO: 사용 근거 ID가 입력 후기 집합에 속하는지 검증하고 주장별 연결을 기록한다. ID 유효성만으로 의미 정확성을 보장하지 않으며 평가셋을 통한 의미 일치 검증과 연결한다.
- * 참고: PLAN_상세설계.md 7장.
- */
+import type { SummaryClaim } from "../../../db/repositories/review-summaries.ts";
 
-export {};
+export function sameEvidence(actual: readonly string[], expected: readonly string[]): boolean {
+  return actual.length === expected.length && new Set(actual).size === actual.length &&
+    new Set(expected).size === expected.length && actual.every((id) => expected.includes(id));
+}
+/** ID 존재/전체 포함의 구조 검사. 주장의 의미가 사실이라는 보장은 별도 safety 포트에 맡긴다. */
+export function checkEvidence(claims: readonly SummaryClaim[], expected: readonly string[]): void {
+  if (!expected.length || new Set(expected).size !== expected.length) throw new Error("INVALID_EVIDENCE");
+  const allowed = new Set(expected);
+  const covered = new Set<string>();
+  for (const claim of claims) {
+    if (!claim.evidenceIds.length || new Set(claim.evidenceIds).size !== claim.evidenceIds.length ||
+        claim.evidenceIds.some((id) => !allowed.has(id))) throw new Error("INVALID_EVIDENCE");
+    claim.evidenceIds.forEach((id) => covered.add(id));
+  }
+  if (!sameEvidence([...covered], expected)) throw new Error("INCOMPLETE_EVIDENCE");
+}

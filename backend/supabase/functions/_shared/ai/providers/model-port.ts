@@ -1,9 +1,14 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 구조화 생성·취소·사용량을 위한 내부 모델 인터페이스 경계를 정의한다.
- * TODO: 제공사 선정 후 입력·출력·취소·사용량 계약을 정의한다. 모델·공급사·토큰 한도·비용 기본값을 임의 확정하지 않으며 호출자가 취소와 상한을 제어할 수 있도록 한다.
- * 참고: PLAN_상세설계.md 6장.
- */
-
-export {};
+/** 제공사와 독립적인 구조화 생성 계약. 원문은 요청 메모리에서만 사용한다. */
+export interface ModelRequest {
+  task: "intent" | "explanation" | "review_chunk" | "review_merge";
+  system: string;
+  input: unknown;
+  maxOutputTokens: number;
+  signal?: AbortSignal;
+}
+export interface ModelResponse {
+  value: unknown;
+  modelVersion: string;
+  usage: { inputTokens: number; outputTokens: number };
+}
+export interface ModelPort { generate(request: ModelRequest): Promise<ModelResponse>; }

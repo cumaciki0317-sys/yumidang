@@ -1,9 +1,24 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 현재 대화와 서버에서 확인한 허용 프로필 필드만 모델 요청에 구성한다.
- * TODO: 입력 크기·허용 필드를 검증하고 신원·연락처·계좌·비공개 만남 정보·사용자 간 채팅을 제외한다. 대화는 요청 메모리에서만 처리하며 이력·캐시·작업·로그에 저장하지 않는다.
- * 참고: PLAN_상세설계.md 6장.
- */
+import { AiInputError } from "../../../contracts/ai.ts";
+import type { ChatInput, ChatLimits, TrustedChatContext } from "../../../contracts/ai.ts";
+import { validateFilters } from "./intent.ts";
 
-export {};
+export function assertLimits(limits: ChatLimits): void {
+  if (!limits || [limits.maxMessages, limits.maxMessageChars, limits.maxTotalChars, limits.maxOutputTokens].some(v => !Number.isSafeInteger(v) || v < 1)) throw new AiInputError("LIMITS_NOT_CONFIGURED");
+}
+export function buildContext(raw: ChatInput, principal: TrustedChatContext, limits: ChatLimits) {
+  if (!principal || typeof principal.userId !== "string" || !principal.userId.trim()) throw new AiInputError("UNAUTHENTICATED");
+  assertLimits(limits);
+  if (!raw || typeof raw.clientRequestId !== "string" || !raw.clientRequestId.trim() || !Array.isArray(raw.messages) || !raw.messages.length) throw new AiInputError("INVALID_INPUT");
+  const currentFilters = validateFilters(raw.currentFilters);
+  if (raw.messages.some(m => !m || !["user", "assistant"].includes(m.role) || typeof m.content !== "string" || !m.content.trim())) throw new AiInputError("INVALID_MESSAGE");
+  if (raw.messages.length > limits.maxMessages || raw.messages.some(m => m.content.length > limits.maxMessageChars) || raw.messages.reduce((n,m) => n + m.content.length, 0) > limits.maxTotalChars) throw new AiInputError("NEW_EXPLORATION_REQUIRED");
+  const preferences = principal.preferences ?? {};
+  return {
+    messages: raw.messages.map(m => ({ role: m.role, content: m.content })), currentFilters,
+    preferences: {
+      ...(Array.isArray(preferences.interests) && preferences.interests.every(v => typeof v === "string") ? { interests: [...preferences.interests] } : {}),
+      ...(typeof preferences.conversationStyle === "string" ? { conversationStyle: preferences.conversationStyle } : {}),
+      ...(typeof preferences.mbti === "string" ? { mbti: preferences.mbti } : {}),
+    },
+  };
+}

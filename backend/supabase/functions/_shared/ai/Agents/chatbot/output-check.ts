@@ -1,9 +1,16 @@
-/**
- * 상태: 미구현 스캐폴드.
- * 담당: 종현담당.
- * 역할: 탐색 응답 형식과 근거 ID 및 민감정보 유출 여부를 검사한다.
- * TODO: 응답 계약·검색 결과 내 근거 ID·공개 필드를 검증한다. 형식 오류·없는 근거·민감정보를 포함한 출력을 거부하고 설명 실패 시 검증된 카드와 정형 안내만 반환하도록 연결한다.
- * 참고: PLAN_상세설계.md 6장.
- */
-
-export {};
+import type { AiCard } from "../../../contracts/ai.ts";
+export type ExplanationCheck = (text: string, card: AiCard) => Promise<boolean>;
+/** 구조·ID 검사와 의미 검사를 분리한다. 실제 의미 검사기 없이 생성 설명을 노출하지 않는다. */
+export async function checkExplanations(raw: unknown, cards: AiCard[], verify: ExplanationCheck): Promise<{kind:AiCard["kind"];id:string;text:string}[]> {
+  if(!raw || typeof raw!=="object" || !Array.isArray((raw as {explanations?:unknown}).explanations)) throw new Error("INVALID_EXPLANATION");
+  const rows=(raw as {explanations:unknown[]}).explanations;
+  const seen=new Set<string>(); const result: {kind:AiCard["kind"];id:string;text:string}[]=[];
+  for(const row of rows) {
+    if(!row || typeof row!=="object") throw new Error("INVALID_EXPLANATION");
+    const v=row as Record<string,unknown>; const card=cards.find(c=>c.id===v.id && c.kind===v.kind);
+    const key=`${v.kind}:${v.id}`;
+    if(!card || seen.has(key) || typeof v.text!=="string" || !v.text.trim() || !await verify(v.text,card)) throw new Error("INVALID_EXPLANATION");
+    seen.add(key); result.push({kind:card.kind,id:card.id,text:v.text});
+  }
+  return result;
+}

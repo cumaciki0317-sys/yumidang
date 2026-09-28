@@ -1,0 +1,653 @@
+{
+  "status": "SYNTHETIC_CONTRACT_EXAMPLES_NOT_RUN",
+  "version": "confirmed-policy-core-3",
+  "note": "가상 논리 계약 사례 모음이며 이 JSON 전체를 실제 API/DB 테스트로 실행한 결과가 아니다. 별도 Node 테스트 결과는 종현 현황 문서를 따른다.",
+  "confirmedDecisions": {
+    "profileReviewAudience": "authenticated_members",
+    "summaryAudience": "authenticated_members",
+    "preConfirmationPublicArea": "city_county_district_only",
+    "eventNewThisWeekBasis": "event_starts_this_week",
+    "eventWeekBoundary": "Asia/Seoul Monday 00:00 inclusive to next Monday 00:00 exclusive",
+    "postDefaultAvailability": "all_including_confirmed_closed_expired",
+    "reviewPublication": "automatic_to_authenticated_members_after_release_conditions",
+    "reviewNonPublicRoutes": "operator_decision_only",
+    "expiredPostsDefaultVisible": true,
+    "titlePrivateLocationHandling": "input_guidance_and_correction_request_when_found",
+    "reportedReviewVisibility": "visible_until_operator_hides",
+    "detectedPrivateTitleBeforeSubmit": "block_until_revised_keep_input",
+    "postEmptyQuery": "list_with_other_filters",
+    "postSortWithoutPeriod": "recruiting_then_start_asc;other_created_desc;id_tie",
+    "postSortWithPeriod": "starts_inside_then_prestarted_overlap;within_group_recruiting_then_start_asc_or_created_desc",
+    "eventDefaultMode": "overlapping",
+    "eventOngoingOnlyDefault": false,
+    "eventSort": "ongoing_recent_start_then_upcoming_soonest_start_then_ended_recent_end",
+    "eventDateEndInclusive": true,
+    "eventInstantEndExclusive": true,
+    "cancelledEventNewQuery": "hidden",
+    "explicitMbti": "exclude_known_mismatch_keep_missing_with_notice",
+    "chatProfileAllowlist": [
+      "interests",
+      "conversationStyle",
+      "mbti"
+    ],
+    "longChat": "preserve_confirmed_filters_offer_new_exploration",
+    "summaryCoverage": "all_eligible_batched_then_merge",
+    "summaryCheckpoints": "private_generated_only_cleanup_on_finish_discard_revision",
+    "summaryPublishFence": [
+      "sourceRevision",
+      "leaseToken"
+    ],
+    "scheduler": "supabase_cron_job_table_edge_worker",
+    "lateAutomaticCompletionTime": "actual_success_time",
+    "eventKeywordMatch": "title_or_placeName_or_publicAddress_contiguous_substring_case_whitespace_insensitive"
+  },
+  "cases": [
+    {
+      "id": "search_address_match_member",
+      "contract": "search",
+      "input": {
+        "caller": "member",
+        "query": "새문안로",
+        "filters": {}
+      },
+      "syntheticSource": {
+        "postId": "post-01",
+        "title": "전시 같이 보기",
+        "registeredPlaceName": "가상 전시장",
+        "registeredAddress": "서울 종로구 새문안로 00",
+        "privateMeetingPoint": "가상 건물 3층 좌석",
+        "publicArea": "서울특별시 종로구 종로1가",
+        "authorName": "가상 이름"
+      },
+      "expected": {
+        "status": "results",
+        "matchedPostIds": [
+          "post-01"
+        ],
+        "authorDisplayName": "masked_name",
+        "publicArea": "서울특별시 종로구",
+        "mustOmit": [
+          "registeredAddress",
+          "privateMeetingPoint",
+          "authorName"
+        ]
+      }
+    },
+    {
+      "id": "search_anonymous_alias",
+      "contract": "search",
+      "input": {
+        "caller": "anonymous",
+        "query": "전시"
+      },
+      "expected": {
+        "status": "results",
+        "matchedPostIds": [
+          "post-01"
+        ],
+        "authorDisplayName": "시스템 별칭",
+        "canApply": false,
+        "mustOmit": [
+          "authorName",
+          "registeredAddress",
+          "privateMeetingPoint"
+        ]
+      }
+    },
+    {
+      "id": "search_legacy_location_excluded",
+      "contract": "search",
+      "input": {
+        "caller": "member",
+        "query": "3층 좌석"
+      },
+      "syntheticSource": {
+        "postId": "post-legacy",
+        "exact_location": "서울 종로구 가상로 00, 3층 좌석",
+        "publicArea": "서울특별시 종로구 종로1가"
+      },
+      "expected": {
+        "status": "no_results",
+        "matchedPostIds": [],
+        "mustOmit": [
+          "exact_location"
+        ]
+      }
+    },
+    {
+      "id": "search_confirmed_party_card",
+      "contract": "search",
+      "input": {
+        "caller": "confirmed_party",
+        "query": "전시"
+      },
+      "expected": {
+        "status": "results",
+        "matchedPostIds": [
+          "post-01"
+        ],
+        "cardLocation": "서울특별시 종로구",
+        "privateDetailsAccess": "separate_authorized_read",
+        "mustOmit": [
+          "registeredAddress",
+          "privateMeetingPoint"
+        ]
+      }
+    },
+    {
+      "id": "search_confirmed_post_third_party",
+      "contract": "search",
+      "input": {
+        "caller": "third_party",
+        "operation": "authorized_state_read",
+        "postId": "post-01",
+        "postState": "confirmed"
+      },
+      "expected": {
+        "canApply": false,
+        "stateVisible": true,
+        "searchListInclusion": "included_by_default",
+        "mustOmit": [
+          "authorName",
+          "registeredAddress",
+          "privateMeetingPoint"
+        ],
+        "excludedWhenAvailability": "recruiting"
+      }
+    },
+    {
+      "id": "search_unsupported_proximity",
+      "contract": "search",
+      "input": {
+        "caller": "member",
+        "query": "근처 전시",
+        "radiusKm": 3
+      },
+      "expected": {
+        "errorCode": "UNSUPPORTED_PROXIMITY",
+        "nextAction": "ask_for_place_or_address"
+      }
+    },
+    {
+      "id": "events_weekend_overlap",
+      "contract": "search",
+      "input": {
+        "mode": "overlapping",
+        "period": {
+          "start": "2026-10-03",
+          "end": "2026-10-04"
+        }
+      },
+      "syntheticSource": [
+        {
+          "id": "event-long",
+          "startsOn": "2026-09-20",
+          "endsOn": "2026-10-20"
+        },
+        {
+          "id": "event-new",
+          "startsOn": "2026-10-03",
+          "endsOn": "2026-10-04"
+        },
+        {
+          "id": "event-friday",
+          "startsOn": "2026-09-20",
+          "endsOn": "2026-10-02"
+        }
+      ],
+      "expected": {
+        "includedIds": [
+          "event-long",
+          "event-new"
+        ],
+        "excludedIds": [
+          "event-friday"
+        ]
+      }
+    },
+    {
+      "id": "events_new_this_week_by_start_not_collection",
+      "contract": "search",
+      "input": {
+        "mode": "new_this_week",
+        "queryDate": "2026-10-01",
+        "weekBoundary": "Asia/Seoul Monday 00:00 to next Monday 00:00 exclusive"
+      },
+      "syntheticSource": [
+        {
+          "id": "event-starts-now",
+          "startsOn": "2026-10-01",
+          "firstCollectedOn": "2026-09-20"
+        },
+        {
+          "id": "event-old-start",
+          "startsOn": "2026-09-20",
+          "endsOn": "2026-10-20",
+          "firstCollectedOn": "2026-10-01"
+        }
+      ],
+      "expected": {
+        "includedIds": [
+          "event-starts-now"
+        ],
+        "excludedIds": [
+          "event-old-start"
+        ]
+      }
+    },
+    {
+      "id": "events_post_selection",
+      "contract": "search",
+      "input": {
+        "mode": "post_selection",
+        "draft": {
+          "title": "가상 공고",
+          "startsAt": "2026-10-03T14:00:00+09:00"
+        }
+      },
+      "expected": {
+        "newThisWeekRequired": false,
+        "preserveDraft": true,
+        "changePostScheduleAutomatically": false,
+        "separateEventAdmissionFromCompanionCost": true
+      }
+    },
+    {
+      "id": "ai_nearby_clarification",
+      "contract": "ai-chat",
+      "input": {
+        "caller": "member",
+        "messages": [
+          {
+            "role": "user",
+            "content": "근처 전시 같이 갈 사람"
+          }
+        ]
+      },
+      "expected": {
+        "status": "needs_clarification",
+        "askFor": "place_or_address",
+        "cards": [],
+        "mustNotUse": [
+          "radius",
+          "distance_sort"
+        ]
+      }
+    },
+    {
+      "id": "ai_provider_explanation_failure",
+      "contract": "ai-chat",
+      "input": {
+        "caller": "member",
+        "validatedSearchIds": [
+          "post-01"
+        ],
+        "failure": "explanation_model_unavailable"
+      },
+      "expected": {
+        "status": "results",
+        "cardIds": [
+          "post-01"
+        ],
+        "explanation": "fixed_notice_only",
+        "fabricatedCardIds": []
+      }
+    },
+    {
+      "id": "summary_two_valid",
+      "contract": "review-summary",
+      "input": {
+        "targetUserId": "user-01",
+        "sourceRevision": 7,
+        "reviews": [
+          {
+            "id": "r-01",
+            "comment": "시간을 잘 지켰어요.",
+            "profilePublic": true
+          },
+          {
+            "id": "r-02",
+            "comment": "전시 이야기를 나눴어요.",
+            "profilePublic": true
+          },
+          {
+            "id": "r-03",
+            "comment": "  ",
+            "profilePublic": true
+          },
+          {
+            "id": "r-04",
+            "comment": "친절했어요.",
+            "profilePublic": false
+          },
+          {
+            "id": "r-05",
+            "comment": null,
+            "profilePublic": true
+          }
+        ]
+      },
+      "expected": {
+        "status": "insufficient_reviews",
+        "usableTextReviewCount": 2,
+        "summaryVisible": false
+      }
+    },
+    {
+      "id": "summary_three_valid",
+      "contract": "review-summary",
+      "input": {
+        "targetUserId": "user-01",
+        "sourceRevision": 8,
+        "publicTextReviewIds": [
+          "r-01",
+          "r-02",
+          "r-06"
+        ]
+      },
+      "expected": {
+        "status": "ready",
+        "sourceReviewCount": 3,
+        "sourceReviewIds": [
+          "r-01",
+          "r-02",
+          "r-06"
+        ],
+        "publicOutputFields": [
+          "summaryText",
+          "sourceReviewCount",
+          "generatedAt",
+          "status"
+        ]
+      }
+    },
+    {
+      "id": "summary_revision_changed_during_generation",
+      "contract": "review-summary",
+      "input": {
+        "jobId": "job-01",
+        "sourceRevision": 8,
+        "currentRevisionAtPublish": 9,
+        "cause": "review_became_private"
+      },
+      "expected": {
+        "publishResult": "stale_revision",
+        "oldSummaryVisible": false,
+        "retryAgainstCurrentRevision": true
+      }
+    },
+    {
+      "id": "summary_invalid_evidence_ids",
+      "contract": "review-summary",
+      "input": {
+        "targetUserId": "user-01",
+        "sourceRevision": 8,
+        "sourceReviewIds": [
+          "r-01",
+          "r-01",
+          "r-other-user"
+        ],
+        "sourceReviewCount": 3
+      },
+      "expected": {
+        "publishResult": "invalid_evidence",
+        "summaryVisible": false
+      }
+    },
+    {
+      "id": "completion_one_confirmation",
+      "contract": "completion-job",
+      "input": {
+        "appointmentId": "appointment-01",
+        "ended": true,
+        "confirmedBy": [
+          "user-01"
+        ],
+        "beforeAutomaticDueTime": true
+      },
+      "expected": {
+        "completed": false,
+        "manualConfirmationCount": 1,
+        "startReviewWindow": false
+      }
+    },
+    {
+      "id": "completion_automatic_exclusion",
+      "contract": "completion-job",
+      "input": {
+        "appointmentId": "appointment-02",
+        "automaticDueTimeReached": true,
+        "appointmentState": "disputed"
+      },
+      "expected": {
+        "completed": false,
+        "automaticCompletionSkipped": true
+      }
+    },
+    {
+      "id": "completion_one_confirmation_then_auto_due",
+      "contract": "completion-job",
+      "input": {
+        "appointmentId": "appointment-03",
+        "confirmedBy": [
+          "user-01"
+        ],
+        "automaticDueTimeReached": true,
+        "appointmentState": "confirmed"
+      },
+      "expected": {
+        "completed": true,
+        "completionMethod": "automatic",
+        "manualConfirmationCount": 1,
+        "inventSecondManualConfirmation": false
+      }
+    },
+    {
+      "id": "job_duplicate_or_lost_lease",
+      "contract": "review-summary",
+      "input": {
+        "jobId": "job-01",
+        "duplicateClaim": true,
+        "oldLeaseToken": "expired-token"
+      },
+      "expected": {
+        "publishedCopies": 0,
+        "oldWorkerMayPublish": false,
+        "newLeaseRequired": true
+      }
+    },
+    {
+      "id": "search_recruiting_only_filter",
+      "contract": "search",
+      "input": {
+        "caller": "member",
+        "availability": "recruiting",
+        "candidateDisplayStates": {
+          "post-open": "recruiting",
+          "post-closed": "closed",
+          "post-confirmed": "confirmed"
+        }
+      },
+      "expected": {
+        "includedIds": [
+          "post-open"
+        ],
+        "excludedIds": [
+          "post-closed",
+          "post-confirmed"
+        ]
+      }
+    },
+    {
+      "id": "completion_both_manual_confirmations",
+      "contract": "completion-job",
+      "input": {
+        "appointmentId": "appointment-04",
+        "ended": true,
+        "confirmedBy": [
+          "user-01",
+          "user-02"
+        ],
+        "beforeAutomaticDueTime": true
+      },
+      "expected": {
+        "completed": true,
+        "completionMethod": "manual",
+        "manualConfirmationCount": 2,
+        "duplicateCompletion": false
+      }
+    },
+    {
+      "id": "review_public_hold_from_notification_availability",
+      "contract": "completion-job",
+      "input": {
+        "appointmentId": "appointment-04",
+        "completedAt": "2026-10-03T18:00:00+09:00",
+        "notificationAvailableAt": "2026-10-03T18:02:00+09:00",
+        "bothReviewsSubmitted": true,
+        "checkedBefore": "2026-10-04T18:01:00+09:00",
+        "checkedAfter": "2026-10-04T18:03:00+09:00"
+      },
+      "expected": {
+        "publicBefore": false,
+        "publicAfter": true,
+        "holdEndsAt": "2026-10-04T18:02:00+09:00",
+        "usesActualClickTime": false
+      }
+    },
+    {
+      "id": "search_expired_post_visible_by_default",
+      "contract": "search",
+      "input": {
+        "caller": "member",
+        "availability": "all",
+        "candidateDisplayStates": {
+          "post-expired": "expired",
+          "post-open": "recruiting"
+        }
+      },
+      "expected": {
+        "includedIds": [
+          "post-expired",
+          "post-open"
+        ],
+        "expiredStateVisible": true,
+        "canApplyToExpired": false,
+        "excludedWhenAvailabilityRecruiting": [
+          "post-expired"
+        ]
+      }
+    },
+    {
+      "id": "review_report_received_no_immediate_hide",
+      "contract": "review-summary",
+      "input": {
+        "targetUserId": "user-01",
+        "sourceRevision": 8,
+        "reportReceived": true,
+        "operatorAction": "none"
+      },
+      "expected": {
+        "publicTextReviewSetChanged": false,
+        "summaryInvalidated": false,
+        "reviewHidden": false
+      }
+    },
+    {
+      "id": "review_operator_hides_public_text",
+      "contract": "review-summary",
+      "input": {
+        "targetUserId": "user-01",
+        "sourceRevision": 8,
+        "operatorAction": "hide_review",
+        "reviewId": "r-02"
+      },
+      "expected": {
+        "reviewHidden": true,
+        "newSourceRevision": 9,
+        "oldSummaryVisible": false,
+        "newJobRegistered": true,
+        "atomicChangeRequired": true
+      }
+    },
+    {
+      "id": "post_title_private_place_detected_before_submit",
+      "contract": "search",
+      "input": {
+        "operation": "create_post",
+        "draftTitle": "가상 전시장 3층 12번 좌석에서 만나기",
+        "detectedPrivateMeetingPoint": true
+      },
+      "expected": {
+        "postCreated": false,
+        "draftPreserved": true,
+        "correctionRequested": true,
+        "retryAfterCorrection": true
+      }
+    },
+    {
+      "id": "post_empty_keyword",
+      "contract": "search",
+      "input": {
+        "query": "   "
+      },
+      "expected": {
+        "behavior": "apply_other_filters"
+      }
+    },
+    {
+      "id": "post_period_priority_over_status",
+      "contract": "search",
+      "input": {
+        "period": "synthetic_saturday",
+        "availability": "all"
+      },
+      "expected": {
+        "order": [
+          "closed_starts_saturday",
+          "recruiting_started_friday_overlaps"
+        ]
+      }
+    },
+    {
+      "id": "event_past_filter_intersection",
+      "contract": "search",
+      "input": {
+        "period": "past_only",
+        "ongoingOnly": true
+      },
+      "expected": {
+        "status": "no_results",
+        "filtersPreserved": true
+      }
+    },
+    {
+      "id": "summary_expired_lease_same_revision",
+      "contract": "review-summary",
+      "input": {
+        "sourceRevision": 8,
+        "leaseToken": "expired"
+      },
+      "expected": {
+        "status": "lease_lost",
+        "published": false
+      }
+    },
+    {
+      "id": "chat_long_context",
+      "contract": "ai-chat",
+      "input": {
+        "overConfiguredLimit": true
+      },
+      "expected": {
+        "newExplorationRequired": true,
+        "preserveFilters": true,
+        "modelCalls": 0
+      }
+    }
+  ],
+  "pendingTeamReview": {
+    "externalAiOriginalRetention": "undecided_including_requirement_itself_and_exceptions",
+    "reference": "docs/collaboration/requests/jonghyun/2026-09-23-team-ai-retention-review.md"
+  }
+}
