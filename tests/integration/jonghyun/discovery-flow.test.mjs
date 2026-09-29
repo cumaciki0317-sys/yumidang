@@ -13,18 +13,23 @@ const principal={userId:"synthetic-member"};
 const request={clientRequestId:"c1",messages:[{role:"user",content:"이번 주말 전시"}],currentFilters:{target:"posts"}};
 const response=value=>({value,modelVersion:"synthetic",usage:{inputTokens:10,outputTokens:10}});
 function asPost(c){return {kind:"post",id:c.id,title:c.title,locationLabel:c.publicArea,startsAtOrDate:c.startsAt,endsAtOrDate:c.endsAt,costLabel:c.cost.kind==="unknown"?"비용 미확인":c.cost.kind==="free"?"무료":String(c.cost.amount),state:c.state,canApply:c.canApply};}
-test("AI 조건→실제 검색 코어→권한 필드 제거→기간 우선 정렬→재조회",async()=>{
-  const row={id:"friday",title:"가상 전시",anonymousAlias:"별칭",maskedName:"김*현",publicAreaDistrict:"서울특별시 종로구",startsAt:"2026-10-02T18:00:00+09:00",endsAt:"2026-10-03T02:00:00+09:00",createdAt:"2026-10-01T00:00:00+09:00",cost:{kind:"free"},state:"recruiting",eligibleToApply:true};
-  const candidates=[row,{...row,id:"saturday",startsAt:"2026-10-03T12:00:00+09:00",endsAt:"2026-10-03T14:00:00+09:00",state:"closed"}].map(publicRow=>({publicRow,index:{title:publicRow.title,registeredPlaceName:"가상 전시장",registeredAddress:"PRIVATE_REGISTERED_ADDRESS"},category:"전시"}));
-  const repo=createInMemoryPublicPostSearchRepository(candidates); let latest; const calls=[];
-  const discovery={async search(q){latest=q;return (await searchPublicPosts(repo,{caller:"member",query:q.filters.query,period:q.period,availability:q.filters.availability})).posts.map(asPost);},async recheck(){return (await this.search(latest)).reverse();}};
+test("AI 조건→검색 기본 등록일순→공개 동 보존·비공개 입력 제거→재조회 순서 보존",async()=>{
+  const row={id:"friday",title:"가상 전시",anonymousAlias:"별칭",maskedName:"김*현",publicAreaDistrict:"서울특별시 종로구 종로1가",startsAt:"2026-10-02T18:00:00+09:00",endsAt:"2026-10-03T02:00:00+09:00",createdAt:"2026-10-01T00:00:00+09:00",cost:{kind:"free"},state:"recruiting",eligibleToApply:true,rawRealName:"PRIVATE_REAL_NAME",privateMeetingPoint:"PRIVATE_MEETING_POINT"};
+  const candidates=[row,{...row,id:"saturday",startsAt:"2026-10-03T12:00:00+09:00",endsAt:"2026-10-03T14:00:00+09:00",state:"closed",createdAt:"2026-09-29T00:00:00Z"}].map(publicRow=>({publicRow,index:{title:publicRow.title,registeredPlaceName:"가상 전시장",registeredAddress:"PRIVATE_REGISTERED_ADDRESS"},category:"전시"}));
+  const repo=createInMemoryPublicPostSearchRepository(candidates); let latest; let searchCalls=0; const calls=[];
+  const discovery={async search(q){latest=q;searchCalls+=1;return (await searchPublicPosts(repo,{caller:"member",query:q.filters.query,period:q.period,availability:q.filters.availability})).posts.map(asPost);},async recheck(){return (await this.search(latest)).reverse();}};
   const model={async generate(q){calls.push(q);return response(q.task==="intent" ? {status:"search",filters:{target:"posts",query:"전시",date:{kind:"this_weekend"}}} : {explanations:[]});}};
   const r=await runChat(request,principal,{model,discovery,limits,now:()=>now,verifyExplanation:async()=>true},"r1");
-  assert.equal(r.status,"results"); assert.deepEqual(r.cards.map(c=>c.id),["saturday","friday"]);assert.equal(r.cards[0].canApply,false);
-  assert.equal(JSON.stringify(calls).includes("PRIVATE_REGISTERED_ADDRESS"),false);
+  assert.equal(r.status,"results"); assert.deepEqual(r.cards.map(c=>c.id),["friday","saturday"]);
+  assert.equal(r.cards[0].canApply,true);assert.equal(r.cards[1].canApply,false);
+  assert.equal(r.cards[0].locationLabel,"서울특별시 종로구 종로1가");
+  assert.equal(searchCalls,2);assert.equal(latest.filters.sort,undefined);assert.equal(latest.filters.authorAge,undefined);
+  for (const marker of ["PRIVATE_REGISTERED_ADDRESS","PRIVATE_REAL_NAME","PRIVATE_MEETING_POINT"]) {
+    assert.equal(JSON.stringify(calls).includes(marker),false);assert.equal(JSON.stringify(r).includes(marker),false);
+  }
 });
 test("비용 미확인 공고를 AI 카드와 설명 입력에 무료나 신청 가능으로 전달하지 않는다", async () => {
-  const row = {id:"historical-unknown",title:"가상 공고",anonymousAlias:"별칭",maskedName:"김*현",publicAreaDistrict:"서울특별시 종로구",startsAt:"2026-10-03T12:00:00+09:00",endsAt:"2026-10-03T14:00:00+09:00",createdAt:"2026-10-01T00:00:00Z",cost:{kind:"unknown"},state:"recruiting",eligibleToApply:true};
+  const row = {id:"historical-unknown",title:"가상 공고",anonymousAlias:"별칭",maskedName:"김*현",publicAreaDistrict:"서울특별시 종로구 종로1가",startsAt:"2026-10-03T12:00:00+09:00",endsAt:"2026-10-03T14:00:00+09:00",createdAt:"2026-10-01T00:00:00Z",cost:{kind:"unknown"},state:"recruiting",eligibleToApply:true};
   const repo = createInMemoryPublicPostSearchRepository([{publicRow:row,index:{title:row.title},category:"전시"}]);
   let latest;
   const discovery = {

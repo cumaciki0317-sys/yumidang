@@ -1,11 +1,11 @@
 {
   "status": "SYNTHETIC_CONTRACT_EXAMPLES_NOT_RUN",
-  "version": "confirmed-policy-core-3",
+  "version": "confirmed-policy-search-v2-20260929",
   "note": "가상 논리 계약 사례 모음이며 이 JSON 전체를 실제 API/DB 테스트로 실행한 결과가 아니다. 별도 Node 테스트 결과는 종현 현황 문서를 따른다.",
   "confirmedDecisions": {
     "profileReviewAudience": "authenticated_members",
     "summaryAudience": "authenticated_members",
-    "preConfirmationPublicArea": "city_county_district_only",
+    "preConfirmationPublicArea": "city_county_district_dong_eup_myeon_ga",
     "eventNewThisWeekBasis": "event_starts_this_week",
     "eventWeekBoundary": "Asia/Seoul Monday 00:00 inclusive to next Monday 00:00 exclusive",
     "postDefaultAvailability": "all_including_confirmed_closed_expired",
@@ -16,8 +16,8 @@
     "reportedReviewVisibility": "visible_until_operator_hides",
     "detectedPrivateTitleBeforeSubmit": "block_until_revised_keep_input",
     "postEmptyQuery": "list_with_other_filters",
-    "postSortWithoutPeriod": "recruiting_then_start_asc;other_created_desc;id_tie",
-    "postSortWithPeriod": "starts_inside_then_prestarted_overlap;within_group_recruiting_then_start_asc_or_created_desc",
+    "postSortWithoutPeriod": "created_desc_default_or_starts_asc_selected;id_asc_tie",
+    "postSortWithPeriod": "same_selected_sort_after_positive_overlap_filter;no_period_or_recruiting_priority",
     "eventDefaultMode": "overlapping",
     "eventOngoingOnlyDefault": false,
     "eventSort": "ongoing_recent_start_then_upcoming_soonest_start_then_ended_recent_end",
@@ -39,7 +39,9 @@
     ],
     "scheduler": "supabase_cron_job_table_edge_worker",
     "lateAutomaticCompletionTime": "actual_success_time",
-    "eventKeywordMatch": "title_or_placeName_or_publicAddress_contiguous_substring_case_whitespace_insensitive"
+    "eventKeywordMatch": "title_or_placeName_or_publicAddress_contiguous_substring_case_whitespace_insensitive",
+    "postAnonymousPeriodSearch": "allowed",
+    "postAnonymousAuthorAge": "all_only"
   },
   "cases": [
     {
@@ -65,7 +67,7 @@
           "post-01"
         ],
         "authorDisplayName": "masked_name",
-        "publicArea": "서울특별시 종로구",
+        "publicArea": "서울특별시 종로구 종로1가",
         "mustOmit": [
           "registeredAddress",
           "privateMeetingPoint",
@@ -126,7 +128,7 @@
         "matchedPostIds": [
           "post-01"
         ],
-        "cardLocation": "서울특별시 종로구",
+        "cardLocation": "서울특별시 종로구 종로1가",
         "privateDetailsAccess": "separate_authorized_read",
         "mustOmit": [
           "registeredAddress",
@@ -596,18 +598,40 @@
       }
     },
     {
-      "id": "post_period_priority_over_status",
+      "id": "post_period_does_not_override_selected_sort",
       "contract": "search",
       "input": {
-        "period": "synthetic_saturday",
+        "period": {
+          "startsAt": "2026-10-03T00:00:00+09:00",
+          "endsAt": "2026-10-05T00:00:00+09:00"
+        },
         "availability": "all"
       },
       "expected": {
+        "defaultSort": "created_desc",
         "order": [
-          "closed_starts_saturday",
-          "recruiting_started_friday_overlaps"
-        ]
-      }
+          "closed_started_friday_overlaps",
+          "recruiting_starts_saturday"
+        ],
+        "periodGroupPriority": false,
+        "recruitingPriority": false
+      },
+      "syntheticSource": [
+        {
+          "id": "recruiting_starts_saturday",
+          "state": "recruiting",
+          "startsAt": "2026-10-03T12:00:00+09:00",
+          "endsAt": "2026-10-03T14:00:00+09:00",
+          "createdAt": "2026-09-29T00:00:00Z"
+        },
+        {
+          "id": "closed_started_friday_overlaps",
+          "state": "closed",
+          "startsAt": "2026-10-02T18:00:00+09:00",
+          "endsAt": "2026-10-03T02:00:00+09:00",
+          "createdAt": "2026-10-01T00:00:00Z"
+        }
+      ]
     },
     {
       "id": "event_past_filter_intersection",

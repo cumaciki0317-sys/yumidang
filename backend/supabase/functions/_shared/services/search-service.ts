@@ -5,7 +5,8 @@ import type { PublicPostCard, PublicPostCost, PublicPostListInput, PublicPostLis
 import type { PagedPublicPostSearchRepository, PublicPostSearchRepository } from "../db/repositories/search.ts";
 
 const displayStates = new Set(["recruiting", "confirmed", "closed", "expired"]);
-const district = /^[가-힣]+(?:특별시|광역시|특별자치시|특별자치도|도) [가-힣]+(?:시|군|구)(?: [가-힣]+구)?$/;
+/** DB posts_public_area_format과 같은 공개 지역 형식. 원문을 축약하거나 보정하지 않는다. */
+const publicArea = /^[가-힣]+(?:특별시|광역시|특별자치시|특별자치도|도) [가-힣]+(?:시|군|구)(?: [가-힣]+구)? [가-힣0-9]+(?:동|읍|면|가)$/;
 function publicCost(value: unknown): PublicPostCost {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("INVALID_POST_COST");
   const cost = value as Record<string, unknown>;
@@ -25,7 +26,8 @@ export function projectPublicPostCard(value: unknown, caller: SearchCaller): Pub
   const card = value as PublicPostCard;
   if (!displayStates.has(card.state)) throw new Error("INVALID_POST_STATE");
   if ([card.id, card.title, card.publicArea, card.authorDisplayName].some((field) => typeof field !== "string" || !field.trim()) ||
-    typeof card.canApply !== "boolean" || !district.test(card.publicArea)) throw new Error("INVALID_PUBLIC_PROJECTION");
+    typeof card.canApply !== "boolean" || card.publicArea.trim() !== card.publicArea ||
+    [...card.publicArea].length > 60 || !publicArea.test(card.publicArea)) throw new Error("INVALID_PUBLIC_PROJECTION");
   if (parseSearchTimestampMicroseconds(card.startsAt) >= parseSearchTimestampMicroseconds(card.endsAt)) throw new Error("INVALID_POST_PERIOD");
   const cost = publicCost(card.cost);
   return { id: card.id, title: card.title, authorDisplayName: card.authorDisplayName, publicArea: card.publicArea,
@@ -61,13 +63,7 @@ export function listProjectedPublicPosts(rows: readonly PublicPostSearchRow[], i
     (filters.cost === "all" || (filters.cost === "free" ? card.cost.kind === "free" : card.cost.kind === "paid_request" || card.cost.kind === "paid_offer")) &&
     (periodStart === undefined || periodEnd === undefined || (startsAt < periodEnd && endsAt > periodStart)));
   selected.sort((a, b) => {
-    if (periodStart !== undefined) {
-      const group = Number(a.startsAt < periodStart) - Number(b.startsAt < periodStart);
-      if (group) return group;
-    }
-    const recruiting = a.card.state === "recruiting";
-    if (recruiting !== (b.card.state === "recruiting")) return recruiting ? -1 : 1;
-    const difference = recruiting ? a.startsAt - b.startsAt : b.createdAt - a.createdAt;
+    const difference = filters.sort === "starts_asc" ? a.startsAt - b.startsAt : b.createdAt - a.createdAt;
     if (difference !== 0n) return difference < 0n ? -1 : 1;
     return a.card.id < b.card.id ? -1 : a.card.id > b.card.id ? 1 : 0;
   });

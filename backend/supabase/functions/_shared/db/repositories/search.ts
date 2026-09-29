@@ -1,6 +1,6 @@
 /**
  * 검색 저장소의 순수 일치 규칙·가상 어댑터와 v2 RPC 주입 어댑터.
- * v2 RPC와 공통 호출 허용 목록은 민규 인계 대상이며 실제 DB 연결은 검증하지 않았다.
+ * 최신 SQL·공통 클라이언트의 v2 계약을 사용한다. 이 어댑터의 실제 DB 연결은 NOT_RUN이다.
  * 등록 주소는 이 경계에서 일치 판단에만 쓰며 서비스·AI에 전달하지 않는다.
  */
 import {
@@ -155,7 +155,7 @@ function wireCard(value: unknown, caller: PublicPostListInput["caller"]): Public
 
 /**
  * 서버가 인증한 호출자에 맞는 RpcClient를 주입한다. caller를 DB 권한 인수로 전달하지 않는다.
- * 아직 없는 search_public_posts_v2 또는 공통 허용 목록 오류를 가상 자료/기존 RPC로 대체하지 않는다.
+ * search_public_posts_v2 오류나 공통 허용 목록 오류를 가상 자료/기존 RPC로 대체하지 않는다.
  * wire: {items: public card[], nextCursor: cursor position|null}; 비용 미상만 cost:null이다.
  */
 export function createRpcPublicPostSearchRepository(db: RpcClient): PagedPublicPostSearchRepository {
@@ -170,12 +170,12 @@ export function createRpcPublicPostSearchRepository(db: RpcClient): PagedPublicP
           category: filters.category ?? null,
           cost: filters.cost,
           availability: filters.availability,
+          sort: filters.sort,
           periodStart: filters.period?.startsAt ?? null,
           periodEnd: filters.period?.endsAt ?? null,
           authorAge: filters.authorAge,
         },
         p_cursor: cursor === null ? null : {
-          periodGroup: cursor.periodGroup, recruitingGroup: cursor.recruitingGroup,
           sortAt: cursor.sortAt, id: cursor.id,
         },
         p_limit: filters.limit,
@@ -187,16 +187,29 @@ export function createRpcPublicPostSearchRepository(db: RpcClient): PagedPublicP
       let nextCursor: string | null = null;
       if (page.nextCursor !== null) {
         if (!items.length) throw new Error("INVALID_SEARCH_RESPONSE");
-        const next = wireObject(page.nextCursor, ["periodGroup", "recruitingGroup", "sortAt", "id"]);
+        const next = wireObject(page.nextCursor, ["sortAt", "id"]);
         const last = items[items.length - 1];
-        const recruitingGroup = last.state === "recruiting" ? 0 : 1;
-        const periodGroup = filters.period && parseSearchTimestampMicroseconds(last.startsAt) < parseSearchTimestampMicroseconds(filters.period.startsAt) ? 1 : 0;
         if (typeof next.id !== "string" || next.id.toLowerCase() !== last.id ||
-            next.recruitingGroup !== recruitingGroup || next.periodGroup !== periodGroup) throw new Error("INVALID_SEARCH_RESPONSE");
-        if (recruitingGroup === 0 && (typeof next.sortAt !== "string" ||
-            parseSearchTimestampMicroseconds(next.sortAt) !== parseSearchTimestampMicroseconds(last.startsAt))) throw new Error("INVALID_SEARCH_RESPONSE");
-        nextCursor = encodePublicPostCursor(filters, next as unknown as Parameters<typeof encodePublicPostCursor>[1]);
-        if (filters.cursor === nextCursor) throw new Error("INVALID_SEARCH_RESPONSE");
+            typeof next.sortAt !== "string") throw new Error("INVALID_SEARCH_RESPONSE");
+        const position = { sortAt: next.sortAt, id: next.id.toLowerCase() };
+        try {
+          const nextTime = parseSearchTimestampMicroseconds(position.sortAt);
+          // 등록 시각은 공개 카드에 없다. 시작일 정렬일 때만 마지막 카드 시각과 대조한다.
+          if (filters.sort === "starts_asc" && nextTime !== parseSearchTimestampMicroseconds(last.startsAt)) {
+            throw new Error("INVALID_SEARCH_RESPONSE");
+          }
+          if (cursor !== null) {
+            const previousTime = parseSearchTimestampMicroseconds(cursor.sortAt);
+            const forward = nextTime === previousTime
+              ? position.id > cursor.id.toLowerCase()
+              : filters.sort === "created_desc" ? nextTime < previousTime : nextTime > previousTime;
+            if (!forward) throw new Error("INVALID_SEARCH_RESPONSE");
+          }
+          // DB 원문 시각을 그대로 전달하여 마이크로초·offset을 보존한다.
+          nextCursor = encodePublicPostCursor(filters, position);
+        } catch {
+          throw new Error("INVALID_SEARCH_RESPONSE");
+        }
       }
       return { items, nextCursor };
     },
