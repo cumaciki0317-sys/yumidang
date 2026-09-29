@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "actor": "jonghyun",
+  "branch": "jonghyun/independent-core-handoff",
+  "baseline": "03aef5cc06e0bb5bdee594c874a0fed317983c36",
+  "lanes": {
+    "coordinator": [
+      "backend/contracts/search.md",
+      "docs/collaboration/jonghyun.md",
+      "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-handoff.md",
+      "docs/collaboration/requests/jonghyun/2026-09-29-maintenance-decoupling-request.md"
+    ],
+    "A": [
+      "backend/supabase/functions/_shared/contracts/search.ts",
+      "backend/supabase/functions/_shared/services/search-service.ts"
+    ],
+    "B": [
+      "backend/supabase/functions/_shared/db/repositories/search.ts"
+    ],
+    "C": [
+      "tests/functions/jonghyun/search-service.test.mjs",
+      "tests/functions/jonghyun/search-repository.test.mjs",
+      "tests/integration/jonghyun/discovery-flow.test.mjs",
+      "tests/fixtures/jonghyun/contract-cases.json"
+    ]
+  },
+  "preserved_untracked": {
+    "docs/collaboration/requests/jonghyun/2026-09-29-work-design.html": "86300ed7925b41a6389f50ed1f6e9279178a145a5f19d880c8787581f1e5499b",
+    "docs/collaboration/requests/jonghyun/2026-09-29-work-design.md": "2c3c32f6467863b2438b345284bb14e2bd9bc8460ac9d2d4367278f580801816"
+  },
+  "verification": "Coordinator compares baseline changed/untracked paths against exact lanes plus preserved_untracked, verifies hashes, ownership and zero overlap. Existing minkyu-only check_harness.py is not modified.",
+  "scope": [
+    "public search v2 policy alignment",
+    "synthetic search and AI-core regression",
+    "owned contracts/status/handoff",
+    "maintenance separation request only"
+  ],
+  "excluded": [
+    "minkyu-owned edits",
+    "SQL/auth/common clients/GET changes",
+    "actual DB/HTTP/external API/model calls",
+    "AI natural-language sort/age expansion",
+    "scheduled-jobs changes",
+    "frontend",
+    "remote changes",
+    "commit/push"
+  ]
+}

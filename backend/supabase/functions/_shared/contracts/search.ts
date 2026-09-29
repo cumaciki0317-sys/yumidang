@@ -1,6 +1,7 @@
 /** 공개 검색 계약. caller는 HTTP query가 아니라 검증된 공통 인증 문맥에서만 받는다. */
 export type SearchCaller = "anonymous" | "member";
 export type PostAvailability = "all" | "recruiting";
+export type PostSort = "created_desc" | "starts_asc";
 export type PostDisplayState = "recruiting" | "confirmed" | "closed" | "expired";
 export type PostCostFilter = "all" | "free" | "paid";
 export type AuthorAgeFilter = "all" | "20s" | "30s" | "40plus";
@@ -26,6 +27,7 @@ export interface PublicPostSearchRow {
   title: string;
   anonymousAlias: string;
   maskedName: string;
+  /** 기존 내부 필드명. 값은 DB public_area와 같은 동·읍·면·가까지의 공개 지역이다. */
   publicAreaDistrict: string;
   startsAt: string;
   endsAt: string;
@@ -50,6 +52,7 @@ export interface PublicPostCard {
 export interface PublicPostListInput {
   caller: SearchCaller;
   availability?: PostAvailability;
+  sort?: PostSort;
   query?: string;
   period?: PostSearchPeriod;
   category?: string;
@@ -60,6 +63,7 @@ export interface PublicPostListInput {
 }
 export interface NormalizedPublicPostListInput extends PublicPostListInput {
   availability: PostAvailability;
+  sort: PostSort;
   query: string;
   cost: PostCostFilter;
   authorAge: AuthorAgeFilter;
@@ -71,8 +75,6 @@ export interface PublicPostPageResult extends PublicPostListResult { nextCursor:
 
 /** DB가 계산한 마지막 정렬 위치. 권한 토큰이나 데이터 snapshot이 아니다. */
 export interface PublicPostCursorPosition {
-  periodGroup: 0 | 1;
-  recruitingGroup: 0 | 1;
   sortAt: string;
   id: string;
 }
@@ -106,11 +108,13 @@ export function parseSearchTimestamp(value: string): number {
 
 export function normalizePublicPostListInput(input: PublicPostListInput): NormalizedPublicPostListInput {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("INVALID_FILTER");
-  const allowed = new Set(["caller", "availability", "query", "period", "category", "cost", "authorAge", "cursor", "limit"]);
+  const allowed = new Set(["caller", "availability", "sort", "query", "period", "category", "cost", "authorAge", "cursor", "limit"]);
   if (Object.keys(input).some((key) => !allowed.has(key))) throw new Error("UNSUPPORTED_FILTER");
   if (input.caller !== "anonymous" && input.caller !== "member") throw new Error("INVALID_CALLER");
   const availability = input.availability === undefined ? "all" : input.availability;
   if (availability !== "all" && availability !== "recruiting") throw new Error("INVALID_FILTER");
+  const sort = input.sort === undefined ? "created_desc" : input.sort;
+  if (sort !== "created_desc" && sort !== "starts_asc") throw new Error("INVALID_FILTER");
   const cost = input.cost === undefined ? "all" : input.cost;
   if (!["all", "free", "paid"].includes(cost)) throw new Error("INVALID_FILTER");
   const authorAge = input.authorAge === undefined ? "all" : input.authorAge;
@@ -132,15 +136,15 @@ export function normalizePublicPostListInput(input: PublicPostListInput): Normal
     }
     period = { startsAt: input.period.startsAt, endsAt: input.period.endsAt };
   }
-  if (input.caller === "anonymous" && (period !== undefined || authorAge !== "all")) throw new Error("AUTH_REQUIRED");
-  return { caller: input.caller, availability, query, cost, authorAge, limit,
+  if (input.caller === "anonymous" && authorAge !== "all") throw new Error("AUTH_REQUIRED");
+  return { caller: input.caller, availability, sort, query, cost, authorAge, limit,
     ...(input.category !== undefined ? { category: input.category } : {}),
     ...(period ? { period } : {}), ...(input.cursor !== undefined ? { cursor: input.cursor } : {}) };
 }
 
 function cursorFilters(input: NormalizedPublicPostListInput) {
   return { query: input.query, category: input.category ?? null, cost: input.cost,
-    availability: input.availability, period: input.period ?? null, authorAge: input.authorAge };
+    availability: input.availability, sort: input.sort, period: input.period ?? null, authorAge: input.authorAge };
 }
 function sameJson(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -149,21 +153,19 @@ function sameJson(a: unknown, b: unknown): boolean {
   const keys = Object.keys(left);
   return keys.length === Object.keys(right).length && keys.every((key) => Object.hasOwn(right, key) && sameJson(left[key], right[key]));
 }
-function cursorPosition(value: unknown, filters: NormalizedPublicPostListInput): PublicPostCursorPosition {
+function cursorPosition(value: unknown): PublicPostCursorPosition {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("INVALID_CURSOR");
   const p = value as Record<string, unknown>;
-  if (Object.keys(p).length !== 4 || Object.keys(p).some((key) => !["periodGroup", "recruitingGroup", "sortAt", "id"].includes(key)) ||
-    (p.periodGroup !== 0 && p.periodGroup !== 1) || (p.recruitingGroup !== 0 && p.recruitingGroup !== 1) ||
-    (!filters.period && p.periodGroup !== 0) || (filters.availability === "recruiting" && p.recruitingGroup !== 0) ||
+  if (Object.keys(p).length !== 2 || Object.keys(p).some((key) => !["sortAt", "id"].includes(key)) ||
     typeof p.sortAt !== "string" || typeof p.id !== "string" || !uuid.test(p.id)) throw new Error("INVALID_CURSOR");
   try { parseSearchTimestampMicroseconds(p.sortAt); } catch { throw new Error("INVALID_CURSOR"); }
-  return { periodGroup: p.periodGroup, recruitingGroup: p.recruitingGroup, sortAt: p.sortAt, id: p.id.toLowerCase() };
+  return { sortAt: p.sortAt, id: p.id.toLowerCase() };
 }
 
 /** 필터가 바뀌면 새 목록을 요청한다. 입력한 검색어는 cursor에만 포함되고 로그에 기록하지 않는다. */
 export function encodePublicPostCursor(input: PublicPostListInput, position: PublicPostCursorPosition): string {
   const filters = normalizePublicPostListInput(input);
-  const value = { v: 1, filters: cursorFilters(filters), position: cursorPosition(position, filters) };
+  const value = { v: 2, filters: cursorFilters(filters), position: cursorPosition(position) };
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   const encoded = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
@@ -179,8 +181,8 @@ export function decodePublicPostCursor(cursor: string, input: PublicPostListInpu
     const decoded: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, (character) => character.charCodeAt(0))));
     if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) throw new Error();
     const value = decoded as Record<string, unknown>;
-    if (Object.keys(value).length !== 3 || !Object.hasOwn(value, "position") || value.v !== 1 ||
+    if (Object.keys(value).length !== 3 || !Object.hasOwn(value, "position") || value.v !== 2 ||
       !sameJson(value.filters, cursorFilters(filters))) throw new Error();
-    return cursorPosition(value.position, filters);
+    return cursorPosition(value.position);
   } catch { throw new Error("INVALID_CURSOR"); }
 }

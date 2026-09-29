@@ -16,7 +16,7 @@ const base = {
   title: "전시 같이 보기",
   anonymousAlias: "회원 01",
   maskedName: "김*현",
-  publicAreaDistrict: "서울특별시 종로구",
+  publicAreaDistrict: "서울특별시 종로구 종로1가",
   startsAt: "2026-10-03T14:00:00+09:00",
   endsAt: "2026-10-03T17:00:00+09:00",
   createdAt: "2026-09-23T09:00:00+09:00",
@@ -49,7 +49,7 @@ test("비공개 검색 필드와 중첩 비용 여분 필드는 회원·비회�
   for (const caller of ["anonymous", "member"]) {
     const result = listProjectedPublicPosts([row], { caller });
     assert.equal(result.status, "results");
-    assert.equal(result.posts[0].publicArea, "서울특별시 종로구");
+    assert.equal(result.posts[0].publicArea, "서울특별시 종로구 종로1가");
     assert.equal(result.posts[0].authorDisplayName, caller === "anonymous" ? "회원 01" : "김*현");
     assert.equal(result.posts[0].canApply, caller === "member");
     assert.deepEqual(result.posts[0].cost, {
@@ -60,6 +60,27 @@ test("비공개 검색 필드와 중첩 비용 여분 필드는 회원·비회�
       assert.equal(JSON.stringify(result).includes(privateValue), false);
     }
     assert.equal("createdAt" in result.posts[0], false);
+  }
+});
+
+test("SQL 공개 지역 형식의 동·읍·면·숫자 가와 60자 경계를 원문 그대로 보존한다", () => {
+  const sixty = "가".repeat(53) + "도 나군 다동";
+  assert.equal(sixty.length, 60);
+  for (const publicAreaDistrict of [
+    "서울특별시 성동구 성수동", "서울특별시 종로구 종로1가",
+    "경기도 수원시 영통구 영통동", "경기도 양평군 양평읍",
+    "강원특별자치도 홍천군 서면", sixty,
+  ]) {
+    for (const caller of ["anonymous", "member"]) {
+      assert.equal(toPublicPostCard(post("area", { publicAreaDistrict }), caller).publicArea, publicAreaDistrict);
+    }
+  }
+  for (const publicAreaDistrict of [
+    "서울특별시 종로구", "서울특별시 성동구 성수동 12-3", "서울특별시 성동구 성수동 3층",
+    "서울특별시  성동구 성수동", " 서울특별시 성동구 성수동", "서울특별시 성동구 성수동\n",
+    "가" + sixty,
+  ]) {
+    assert.throws(() => toPublicPostCard(post("invalid-area", { publicAreaDistrict }), "member"), /INVALID_PUBLIC_PROJECTION/);
   }
 });
 
@@ -164,38 +185,45 @@ test("등록 주소 일치 후 저장소 경계와 최종 응답 모두에 주�
   }
 });
 
-test("기간 미선택: 모집 중은 빠른 시작순, 나머지는 최근 등록순, 동률은 ID순", () => {
+test("기본 등록일 최신순과 선택 시작일 빠른순은 모집 여부보다 우선하고 동률은 ID순이다", () => {
   const rows = [
-    post("closed-old", { state: "closed", createdAt: "2026-09-20T00:00:00Z" }),
-    post("recruiting-late", { startsAt: "2026-10-04T01:00:00Z", endsAt: "2026-10-04T02:00:00Z" }),
-    post("tie-b"), post("tie-a"),
-    post("confirmed-new", { state: "confirmed", createdAt: "2026-09-25T00:00:00Z" }),
-    post("expired-new", { state: "expired", createdAt: "2026-09-25T00:00:00Z" }),
+    post("old-recruiting", { createdAt: "2026-09-20T00:00:00Z", startsAt: "2026-10-03T13:00:00+09:00" }),
+    post("late-recruiting", { createdAt: "2026-09-23T00:00:00Z", startsAt: "2026-10-04T01:00:00+09:00", endsAt: "2026-10-04T02:00:00+09:00" }),
+    post("tie-b", { createdAt: "2026-09-24T00:00:00Z" }),
+    post("tie-a", { createdAt: "2026-09-24T00:00:00Z", state: "confirmed" }),
+    post("new-closed", { createdAt: "2026-09-25T00:00:00Z", state: "closed", startsAt: "2026-10-03T12:00:00+09:00" }),
   ];
   const original = structuredClone(rows);
-  assert.deepEqual(ids(listProjectedPublicPosts(rows, member)), [
-    "tie-a", "tie-b", "recruiting-late", "confirmed-new", "expired-new", "closed-old",
-  ]);
+  const cases = [
+    [{}, ["new-closed", "tie-a", "tie-b", "late-recruiting", "old-recruiting"]],
+    [{ sort: "created_desc" }, ["new-closed", "tie-a", "tie-b", "late-recruiting", "old-recruiting"]],
+    [{ sort: "starts_asc" }, ["new-closed", "old-recruiting", "tie-a", "tie-b", "late-recruiting"]],
+    [{ sort: "created_desc", availability: "recruiting" }, ["tie-b", "late-recruiting", "old-recruiting"]],
+    [{ sort: "starts_asc", availability: "recruiting" }, ["old-recruiting", "tie-b", "late-recruiting"]],
+  ];
+  for (const [filters, expected] of cases) {
+    assert.deepEqual(ids(listProjectedPublicPosts(rows, { ...member, ...filters })), expected);
+  }
   assert.deepEqual(rows, original);
 });
 
-test("기간 선택: 안에서 시작하는 그룹 우선, 각 그룹은 모집 우선과 시작/등록순 적용", () => {
+test("기간은 겹침 필터이며 기간 안 시작·모집 상태가 선택 정렬을 덮지 않는다", () => {
   const rows = [
-    post("overlap-recruiting", { startsAt: "2026-10-02T23:00:00+09:00" }),
-    post("inside-closed-old", { state: "closed", createdAt: "2026-09-20T00:00:00Z" }),
-    post("inside-closed-new", { state: "closed", createdAt: "2026-09-25T00:00:00Z" }),
-    post("inside-recruiting-late", { startsAt: "2026-10-04T01:00:00+09:00", endsAt: "2026-10-04T02:00:00+09:00" }),
-    post("inside-recruiting-early"),
-    post("overlap-closed-old", { state: "closed", startsAt: "2026-10-02T23:00:00+09:00", createdAt: "2026-09-20T00:00:00Z" }),
-    post("overlap-closed-new", { state: "closed", startsAt: "2026-10-02T23:00:00+09:00", createdAt: "2026-09-25T00:00:00Z" }),
+    post("overlap-closed-new", { state: "closed", startsAt: "2026-10-02T23:00:00+09:00", createdAt: "2026-09-27T00:00:00Z" }),
+    post("inside-recruiting-old", { createdAt: "2026-09-20T00:00:00Z" }),
+    post("inside-confirmed", { state: "confirmed", startsAt: "2026-10-03T10:00:00+09:00", createdAt: "2026-09-25T00:00:00Z" }),
+    post("overlap-recruiting", { startsAt: "2026-10-02T22:00:00+09:00", createdAt: "2026-09-26T00:00:00Z" }),
+    post("outside-newest", { startsAt: "2026-10-05T00:00:00+09:00", endsAt: "2026-10-05T02:00:00+09:00", createdAt: "2026-09-28T00:00:00Z" }),
   ];
-  assert.deepEqual(ids(listProjectedPublicPosts(rows, { ...member, period })), [
-    "inside-recruiting-early", "inside-recruiting-late", "inside-closed-new", "inside-closed-old",
-    "overlap-recruiting", "overlap-closed-new", "overlap-closed-old",
-  ]);
-  assert.deepEqual(ids(listProjectedPublicPosts(rows, { ...member, period, availability: "recruiting" })), [
-    "inside-recruiting-early", "inside-recruiting-late", "overlap-recruiting",
-  ]);
+  const cases = [
+    ["created_desc", "all", ["overlap-closed-new", "overlap-recruiting", "inside-confirmed", "inside-recruiting-old"]],
+    ["starts_asc", "all", ["overlap-recruiting", "overlap-closed-new", "inside-confirmed", "inside-recruiting-old"]],
+    ["created_desc", "recruiting", ["overlap-recruiting", "inside-recruiting-old"]],
+    ["starts_asc", "recruiting", ["overlap-recruiting", "inside-recruiting-old"]],
+  ];
+  for (const [sort, availability, expected] of cases) {
+    assert.deepEqual(ids(listProjectedPublicPosts(rows, { ...member, period, sort, availability })), expected);
+  }
 });
 
 test("기간 겹침은 양의 겹침만 허용하며 같은 시각의 UTC/KST 표현을 동일하게 처리한다", () => {
@@ -205,13 +233,14 @@ test("기간 겹침은 양의 겹침만 허용하며 같은 시각의 UTC/KST �
     post("starts-at-start", { startsAt: "2026-10-02T15:00:00Z", endsAt: "2026-10-02T16:00:00Z" }),
     post("one-ms-overlap", { startsAt: "2026-10-02T14:00:00Z", endsAt: "2026-10-02T15:00:00.001Z" }),
   ];
-  assert.deepEqual(ids(listProjectedPublicPosts(rows, { ...member, period })), ["starts-at-start", "one-ms-overlap"]);
+  assert.deepEqual(ids(listProjectedPublicPosts(rows, { ...member, period })), ["one-ms-overlap", "starts-at-start"]);
 });
 
 test("시간대 누락·존재하지 않는 날짜·역전 기간과 알 수 없는 필터를 거절한다", () => {
   for (const input of [
     { ...member, availability: "closed" }, { ...member, availability: null },
     { ...member, cost: "paid_offer" }, { ...member, query: null },
+    { ...member, sort: "distance" }, { ...member, sort: null },
     { ...member, category: "  " }, { ...member, radius: 1 }, { ...member, authorAge: 30 },
     { ...member, period: null },
     { ...member, period: { ...period, endsAt: period.startsAt } },
@@ -229,15 +258,21 @@ test("시간대 누락·존재하지 않는 날짜·역전 기간과 알 수 없
   assert.throws(() => listProjectedPublicPosts([base, base], member), /DUPLICATE_POST_ID/);
 });
 
-test("비로그인 날짜·나이 조건은 저장소 요청 전에 인증 오류로 거절한다", async () => {
-  let calls = 0;
-  const repository = { async search() { calls += 1; return []; } };
-  for (const filters of [{ period }, { authorAge: "20s" }, { authorAge: "30s" }, { authorAge: "40plus" }]) {
-    await assert.rejects(searchPublicPosts(repository, { caller: "anonymous", ...filters }), /AUTH_REQUIRED/);
+test("비로그인 기간은 허용하고 상세 나이만 저장소 요청 전에 거절한다", async () => {
+  const received = [];
+  const repository = { async search(input) { received.push(input); return []; } };
+  for (const authorAge of ["20s", "30s", "40plus"]) {
+    await assert.rejects(searchPublicPosts(repository, { caller: "anonymous", period, authorAge }), /AUTH_REQUIRED/);
   }
-  assert.equal(calls, 0);
-  await searchPublicPosts(repository, { caller: "anonymous", authorAge: "all" });
-  assert.equal(calls, 1);
+  assert.equal(received.length, 0);
+  assert.deepEqual(await searchPublicPosts(repository, { caller: "anonymous", period }), {
+    status: "no_results", posts: [],
+  });
+  assert.equal(received[0].authorAge, "all");
+  assert.equal(received[0].sort, "created_desc");
+  assert.deepEqual(received[0].period, period);
+  await searchPublicPosts(repository, { caller: "anonymous", period, authorAge: "all", sort: "starts_asc" });
+  assert.equal(received.length, 2);
 });
 
 test("실행할 수 없는 메모리 나이 필터·커서를 조용히 무시하지 않는다", async () => {
@@ -245,16 +280,18 @@ test("실행할 수 없는 메모리 나이 필터·커서를 조용히 무시�
   await assert.rejects(searchPublicPosts(repository, { ...member, authorAge: "20s" }), /UNSUPPORTED_FILTER/);
 });
 
-test("마이크로초 일정·등록 시각 차이는 ID보다 우선하며 문자열 정밀도를 보존한다", () => {
+test("두 정렬 모두 마이크로초 차이를 ID보다 먼저 비교하고 동률 ID와 원문 시각을 보존한다", () => {
   const rows = [
-    post("a-later", { startsAt: "2026-10-03T00:00:00.000002Z", endsAt: "2026-10-03T01:00:00Z" }),
-    post("z-earlier", { startsAt: "2026-10-03T00:00:00.000001Z", endsAt: "2026-10-03T01:00:00Z" }),
-    post("a-older", { state: "closed", createdAt: "2026-10-01T00:00:00.000001Z" }),
-    post("z-newer", { state: "closed", createdAt: "2026-10-01T00:00:00.000002Z" }),
+    post("a-later", { startsAt: "2026-10-03T00:00:00.000002Z", endsAt: "2026-10-03T01:00:00Z", createdAt: "2026-10-01T00:00:00.000001Z" }),
+    post("z-earlier", { startsAt: "2026-10-03T00:00:00.000001Z", endsAt: "2026-10-03T01:00:00Z", createdAt: "2026-10-01T00:00:00.000002Z", state: "closed" }),
+    post("b-tied", { startsAt: "2026-10-03T09:00:00.000001+09:00", endsAt: "2026-10-03T01:00:00Z", createdAt: "2026-10-01T09:00:00.000002+09:00", state: "confirmed" }),
   ];
-  const result = listProjectedPublicPosts(rows, member);
-  assert.deepEqual(ids(result), ["z-earlier", "a-later", "z-newer", "a-older"]);
-  assert.equal(result.posts[0].startsAt, "2026-10-03T00:00:00.000001Z");
+  for (const sort of ["created_desc", "starts_asc"]) {
+    const result = listProjectedPublicPosts(rows, { ...member, sort });
+    assert.deepEqual(ids(result), ["b-tied", "z-earlier", "a-later"]);
+    assert.equal(result.posts[0].startsAt, "2026-10-03T09:00:00.000001+09:00");
+    assert.equal(result.posts[1].startsAt, "2026-10-03T00:00:00.000001Z");
+  }
 });
 
 test("0건과 저장소 실패를 구분하고 잘못된 조건일 때 저장소를 호출하지 않는다", async () => {
