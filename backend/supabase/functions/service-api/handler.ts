@@ -1,9 +1,11 @@
 /** 민규담당. Request → 호출자 인증 → 엄격한 입력 → 서비스 → RPC 연결. 원문 로그 없음. */
+import type { JsonValue } from "../_shared/contracts/common.ts";
 import type { RpcClient } from "../_shared/db/transport.ts";
 import { createCors } from "../_shared/http/cors.ts";
 import { HttpError } from "../_shared/http/errors.ts";
 import { createRequestContext, readJson } from "../_shared/http/request.ts";
 import { jsonFailure, jsonSuccess } from "../_shared/http/response.ts";
+import { mapPublicPostSearchError, parsePublicPostSearchQuery, type PublicPostSearchExecutor } from "./search-http.ts";
 import { resolveRouteForMethod, type MaintenanceConfig } from "./routes.ts";
 
 export interface ServiceApiDependencies {
@@ -12,6 +14,11 @@ export interface ServiceApiDependencies {
   authenticateUser(request: Request): Promise<RpcClient>;
   authenticateInternal(request: Request): Promise<RpcClient>;
   maintenance?: MaintenanceConfig;
+  /** 정책 갱신·검증을 마친 검색 코어만 명시적으로 연결한다. 생략 시 기존 경로 동작을 유지한다. */
+  publicSearch?: {
+    authenticate(request: Request): Promise<{ db: RpcClient; caller: "anonymous" | "member" }>;
+    execute: PublicPostSearchExecutor;
+  };
 }
 export function createServiceApi(dependencies: ServiceApiDependencies) {
   if (!Number.isSafeInteger(dependencies.maxBodyBytes) || dependencies.maxBodyBytes < 1) throw new TypeError("본문 크기 제한이 필요합니다.");
@@ -25,6 +32,19 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
       cors.responseHeaders(request);
       originAllowed = true;
       const url = new URL(request.url);
+      if (request.method === "GET" && dependencies.publicSearch &&
+        ["/service-api/posts", "/functions/v1/service-api/posts"].includes(url.pathname)) {
+        try {
+          if (request.body !== null) throw new HttpError("INVALID_REQUEST");
+          const { db, caller } = await dependencies.publicSearch.authenticate(request);
+          const input = parsePublicPostSearchQuery(url, caller);
+          const data = await dependencies.publicSearch.execute(db, input);
+          // 주입된 검색 코어의 공개 투영 결과만 공통 envelope에 담는다.
+          return cors.apply(jsonSuccess(data as unknown as JsonValue, context), request);
+        } catch (error) {
+          throw mapPublicPostSearchError(error);
+        }
+      }
       const route = resolveRouteForMethod(url, request.method);
       // 내부 secret 경로와 사용자 JWT 경로 사이에 인증 fallback을 하지 않는다.
       const db = await (route.internal ? dependencies.authenticateInternal(request) : dependencies.authenticateUser(request));

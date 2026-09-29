@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "03aef5cc06e0bb5bdee594c874a0fed317983c36",
+  "branch": "minkyu/foundation-harness",
+  "phase": "6차 종현 검색 병렬 작업 중 민규 HTTP 연결 준비",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/minkyu-search-http-harness.json",
+      "docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md",
+      "tools/collaboration/check_harness.py",
+      "backend/contracts/service-api.md"
+    ],
+    "A": [
+      "backend/supabase/functions/service-api/search-http.ts",
+      "backend/supabase/functions/service-api/handler.ts",
+      "backend/supabase/functions/service-api/index.ts"
+    ],
+    "B": [
+      "tests/functions/minkyu/search_http.test.ts",
+      "tests/functions/minkyu/search_runtime.test.ts"
+    ],
+    "C": [
+      "tools/local/check_search_core.ts",
+      "tests/functions/minkyu/search_core_gate.test.ts"
+    ]
+  },
+  "preserved": {},
+  "excluded": [
+    "종현 검색 계약/코어/repository 직접 수정",
+    "기존 SQL 27개 수정",
+    "종현 코어를 우회한 검색 구현 또는 미완성 코어 운영 연결",
+    "원격 DB/외부 메시지/커밋/푸시"
+  ]
+}

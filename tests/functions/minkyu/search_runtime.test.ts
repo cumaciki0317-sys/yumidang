@@ -1,0 +1,122 @@
+/** 민규담당. 실제 인증·DB 클라이언트 조립을 fetch 모형으로 검사한다. 실제 DB나 종현 검색 코어의 통합 성공을 뜻하지 않는다. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createRuntimeHandler } from "../../../backend/supabase/functions/service-api/index.ts";
+import type { PublicPostSearchExecutor } from "../../../backend/supabase/functions/service-api/search-http.ts";
+const uid = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const jwt = "header.verified_by_fixture.signature";
+const env: Record<string, string> = {
+  SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "fixture-anon",
+  SUPABASE_SERVICE_ROLE_KEY: "fixture-private-service", INTERNAL_WORKER_SECRET: "fixture_internal_secret_at_least_32_characters",
+  ALLOWED_ORIGINS: '["https://app.example.test"]', MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000",
+};
+const emptyPage = { status: "no_results" as const, posts: [], nextCursor: null };
+const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
+const request = (authorization?: string, query = "") => new Request(`https://api.example.test/functions/v1/service-api/posts${query}`, { headers: authorization === undefined ? {} : { authorization } });
+
+// 가상 executor는 검색 의미를 구현하지 않는다. 전달받은 client의 RPC 자격 증명만 확인한다.
+const probe: PublicPostSearchExecutor = async (db, input) => {
+  await db.rpc("search_public_posts_v2", { p_filters: { sort: input.sort ?? "created_desc", authorAge: input.authorAge ?? "all" }, p_cursor: null, p_limit: input.limit ?? 20 });
+  return emptyPage;
+};
+
+async function withFetch(mock: typeof fetch, run: () => Promise<void>) {
+  const original = globalThis.fetch;
+  globalThis.fetch = mock;
+  try { await run(); } finally { globalThis.fetch = original; }
+}
+
+test("익명 검색은 Auth 호출 없이 anon 자격 증명으로 공개 RPC에 도달한다", async () => {
+  const calls: string[] = [];
+  await withFetch(async (url, init) => {
+    calls.push(String(url));
+    assert.equal(String(url), `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
+    assert.equal(headers.get("authorization"), `Bearer ${env.SUPABASE_ANON_KEY}`);
+    assert.doesNotMatch(JSON.stringify(init), /fixture-private-service|fixture_internal_secret/);
+    return json({ items: [], nextCursor: null });
+  }, async () => {
+    let caller = "";
+    const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: async (db, input) => { caller = input.caller; return probe(db, input); } });
+    assert.equal((await handler(request(undefined, "?sort=starts_asc"))).status, 200);
+    assert.equal(caller, "anonymous");
+    assert.equal(calls.length, 1);
+  });
+});
+
+test("회원 검색은 Auth 검증 후 같은 JWT를 RPC에 전달하며 서비스 키를 쓰지 않는다", async () => {
+  const calls: string[] = [];
+  await withFetch(async (url, init) => {
+    calls.push(String(url));
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("authorization"), `Bearer ${jwt}`);
+    assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
+    assert.doesNotMatch(JSON.stringify(init), /fixture-private-service|fixture_internal_secret/);
+    if (String(url).endsWith("/auth/v1/user")) return json({ id: uid, role: "authenticated", is_anonymous: false });
+    assert.equal(String(url), `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
+    assert.equal(JSON.parse(String(init?.body)).p_filters.authorAge, "30s");
+    return json({ items: [], nextCursor: null });
+  }, async () => {
+    let caller = "";
+    const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: async (db, input) => { caller = input.caller; return probe(db, input); } });
+    assert.equal((await handler(request(`Bearer ${jwt}`, "?authorAge=30s"))).status, 200);
+    assert.equal(caller, "member");
+    assert.deepEqual(calls, [`${env.SUPABASE_URL}/auth/v1/user`, `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`]);
+  });
+});
+
+test("빈·잘못된 Authorization과 anon·service·worker 키는 익명으로 강등하지 않는다", async () => {
+  await withFetch(async () => assert.fail("금지한 자격 증명으로 외부 호출하지 않는다"), async () => {
+    let executions = 0;
+    const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: async () => { executions++; return emptyPage; } });
+    for (const authorization of ["", "Basic value", "Bearer invalid", `Bearer ${env.SUPABASE_ANON_KEY}`, `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, `Bearer ${env.INTERNAL_WORKER_SECRET}`]) {
+      const response = await handler(request(authorization));
+      assert.equal(response.status, 401);
+      assert.equal((await response.json()).error.code, "AUTH_REQUIRED");
+    }
+    assert.equal(executions, 0);
+  });
+});
+
+test("Auth의 만료·익명 계정·서버 장애는 익명 검색으로 이어지지 않는다", async () => {
+  for (const [upstreamStatus, body, expected] of [[401, { message: "secret-auth-detail" }, 401], [403, { message: "secret-auth-detail" }, 401], [200, { id: uid, role: "authenticated", is_anonymous: true }, 401], [503, { message: "secret-auth-detail" }, 503]] as const) {
+    let requests = 0;
+    await withFetch(async (url) => { requests++; assert.equal(String(url), `${env.SUPABASE_URL}/auth/v1/user`); return json(body, upstreamStatus); }, async () => {
+      const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: async () => assert.fail("Auth 실패 후 검색하지 않는다") });
+      const response = await handler(request(`Bearer ${jwt}`));
+      assert.equal(response.status, expected);
+      assert.doesNotMatch(await response.text(), /secret-auth-detail|verified_by_fixture|private-service/);
+      assert.equal(requests, 1);
+    });
+  }
+});
+
+test("공개 검색 client로 내부·쓰기 RPC를 시도하면 네트워크 전에 거절한다", async () => {
+  await withFetch(async () => assert.fail("공개 client에서 쓰기 요청은 나가지 않는다"), async () => {
+    for (const name of ["create_service_post", "process_due_completions", "get_my_profile"]) {
+      const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: async (db) => { await db.rpc(name, {}); return emptyPage; } });
+      assert.equal((await handler(request())).status, 403, name);
+    }
+  });
+});
+
+test("검색 RPC 권한·유효성·장애 오류는 원문 없이 공통 HTTP 응답이 된다", async () => {
+  for (const [status, code, expected] of [[403, "28000", 401], [403, "42501", 403], [400, "22023", 400], [503, "PGRST000", 503]] as const) {
+    await withFetch(async (url) => { assert.equal(String(url), `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`); return json({ code, message: "SELECT private.address secret-token", details: "민감한 상세" }, status); }, async () => {
+      const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: probe });
+      const response = await handler(request());
+      assert.equal(response.status, expected);
+      assert.doesNotMatch(await response.text(), /SELECT|secret-token|민감한 상세|PGRST000/);
+    });
+  }
+});
+
+test("런타임 기본 조립은 미검증 검색 코어를 연결하지 않고 POST는 계속 보호한다", async () => {
+  await withFetch(async () => assert.fail("검색 미연결/미인증 요청은 외부 호출하지 않는다"), async () => {
+    const handler = createRuntimeHandler((key) => env[key]);
+    assert.equal((await handler(request())).status, 405);
+    const prepared = createRuntimeHandler((key) => env[key], { publicPostSearch: probe });
+    assert.equal((await prepared(new Request("https://api.example.test/service-api/posts", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }))).status, 401);
+  });
+});

@@ -24,7 +24,23 @@
 
 Always use harness agent team architecture for complex tasks.
 
-### 검색 DB·공개 인증 구현 — 2026-09-29 현재 작업
+### 로컬 Supabase Edge 실행 검증 — 2026-09-29 공유 기록
+
+- 사용자가 독립 로컬 Edge 검증을 진행하도록 요청했다. [7차 하네스](docs/collaboration/minkyu-edge-harness.json)에서 총괄은 전용 환경 실행/문서, A는 격리 준비 도구/검사, B는 실제 gateway 통합 검사, C는 호스팅 진입점 호환성 검토를 맡는다.
+- 기준 HEAD는 `03aef5c`다. 아직 미커밋인 6차 HTTP 준비도 보존하며 이번 수정 목록 밖의 이전 파일은 SHA256으로 확인한다. 종현 파일·SQL27개는 수정하지 않는다.
+- 로컬 기본 config는 그대로 두고 새 임시 실행 폴더에서만 edge_runtime.enabled=true로 바꾼다. CLI가 모든 함수 폴더를 실행하므로 service-api와 필요한 정적 의존성만 복사하고 .env/키/다른 함수를 포함하지 않는다.
+- 검증 대상은 Colima yumidang-minkyu / Supabase yumidang-minkyu-db의 로컬 gateway다. 원격 DB·외부 공급사·모델·배포·커밋·푸시는 포함하지 않는다. 가상 사용자와 실행 프로세스를 정리하고 로컬 volume을 보존한다.
+- 검증 이후 사용자가 6차/7차 변경의 커밋·푸시를 명시 요청했다. 대상은 `origin/minkyu/foundation-harness`이며 위 구현 단계의 커밋/푸시 제외보다 이 요청을 우선한다. CORS 미충족 PARTIAL과 검색 코어 미연결을 유지해 기록한다. 커밋 후 하네스는 이전 기준의 검증 기록이므로 다음 구현은 새 기준으로 범위를 정한다.
+- [Edge 검증 인계](docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md)의 실제 결과를 따른다. 로컬 Edge 성공과 원격 운영 배포·검색 코어 연결·PASS 가입 완료를 구분한다.
+
+### 검색 HTTP 병렬 준비 — 2026-09-29 완료 기록
+
+- 사용자가 종현과 민규의 동시 작업을 요청했다. 종현은 검색 계약·코어·repository를 최신 정책으로 수정하고 민규는 GET 요청 경계·인증 조립·검증을 준비한다. 기준 `03aef5c`, 정확한 수정 목록은 [6차 하네스](docs/collaboration/minkyu-search-http-harness.json)다.
+- 총괄은 안내/현황/계약, A는 service-api HTTP 경계/handler/index, B는 HTTP·인증 조립 검사, C는 종현 검색 코어 준비 상태 진단 도구만 수정한다. 종현 파일과 기존 SQL 27개는 읽기만 한다.
+- 검색 executor를 명시 주입한 factory로 연결을 검증한다. 종현 최신 코어가 준비되기 전에는 default fetch에 연결하거나 검색 RPC 직접 호출로 코어를 우회하지 않는다. GET API 전체 완료를 주장하지 않는다.
+- 최신 진행·종현과의 연결 순서는 [HTTP 병렬 인계](docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)를 따른다. 이전 5차 하네스는 커밋 전 기준의 과거 기록이다. 새 구현의 커밋/푸시·원격 DB·배포는 이번 요청에 포함하지 않는다.
+
+### 검색 DB·공개 인증 구현 — 2026-09-29 완료 기록
 
 - 사용자의 코드 수정 요청과 정렬 확정에 따라 민규 소유 검색 기반을 구현한다. 기준 `bd15429`, 정확한 수정 목록은 [5차 하네스](docs/collaboration/minkyu-search-db-harness.json)다.
 - 총괄은 안내·현황·통합 검사, A는 신규 검색 SQL/DB 계약, B는 선택 인증/공개 DB 클라이언트, C는 SQL 회귀 검사를 단독 수정한다. 모두 minkyu이며 종현 파일과 기존 SQL 26개를 보존한다.
@@ -94,7 +110,7 @@ Always use harness agent team architecture for complex tasks.
 
 사용자가 “나 종현이야”, “종현입니다”처럼 자신을 종현이라고 밝히면 다음 인수인계 절차를 따른다. 이 자기소개는 작업 담당 구분이며 시스템 접근 권한을 부여하는 인증이 아니다.
 
-1. 먼저 자기 작업 폴더의 미커밋 변경과 브랜치를 확인하고 `origin/minkyu/foundation-harness`의 최신 인계를 자기 종현 브랜치에 반영했는지 확인한다. 기존 작업을 덮어쓰지 않는다. [2026-09-29 검색 DB 인계](docs/collaboration/requests/minkyu/2026-09-29-search-db-handoff.md)를 우선 읽고, 현재 첫 작업은 검색 계약·코어·repository·테스트를 동 공개/익명 기간 허용/나이 all 제한/선택 정렬/v2 커서에 맞추는 것이다. 민규의 SQL·인증 구현을 다시 만들지 않는다. 이어서 `PLAN.md`와 `PLAN_상세설계.md`를 읽고, 상세 설계 11장의 담당 분류와 현재 저장소 상태를 확인한다. 확정 정책·기술 제안·이미 구현된 내용과 검증 결과를 구분한다.
+1. 먼저 자기 작업 폴더의 미커밋 변경과 브랜치를 확인하고 `origin/minkyu/foundation-harness`의 최신 인계를 자기 종현 브랜치에 반영했는지 확인한다. 기존 작업을 덮어쓰지 않는다. [2026-09-29 검색 DB 인계](docs/collaboration/requests/minkyu/2026-09-29-search-db-handoff.md)를 우선 읽고, 현재 첫 작업은 검색 계약·코어·repository·테스트를 동 공개/익명 기간 허용/나이 all 제한/선택 정렬/v2 커서에 맞추는 것이다. [HTTP 병렬 인계](docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)의 민규 준비 범위도 확인하되 HTTP 파일은 수정하지 않는다. 민규의 SQL·인증 구현을 다시 만들지 않는다. 이어서 `PLAN.md`와 `PLAN_상세설계.md`를 읽고, 상세 설계 11장의 담당 분류와 현재 저장소 상태를 확인한다. 확정 정책·기술 제안·이미 구현된 내용과 검증 결과를 구분한다.
 2. 첫 응답은 한국어로 **담당 범위와 우선 작업 계획**을 명확히 설명한다. 계획을 준비하기 위한 읽기·상태 확인은 가능하지만, 자기소개만으로 코드·DB·환경 변경을 시작하지 않는다.
 3. 설명에는 아래 내용을 포함한다.
    - 문서 안내: 첫 응답에 `PLAN.md`·`PLAN_상세설계.md`·`AGENTS.md`의 클릭 가능한 링크를 포함한다. 링크는 현재 작업 공간의 실제 경로를 사용하고 민규 컴퓨터의 절대 경로를 다른 환경에 그대로 사용하지 않는다.

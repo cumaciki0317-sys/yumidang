@@ -140,3 +140,30 @@ python3 -B tests/integration/minkyu/runtime_e2e.py --workdir "$db_output"
 `functions.service-api.verify_jwt=false`는 handler의 사용자 Auth 검증과 별도 내부 비밀 검증을 사용하기 위한 설정이다. gateway가 내부 비밀을 사용자 JWT로 거절하지 않게 한다. 인증을 생략하는 공개 업무 경로는 추가하지 않았다. [Supabase custom 인증 안내](https://supabase.com/docs/guides/functions/auth)를 따른다. Supabase Edge 호스팅 자체는 NOT_RUN이고 로컬 기본 edge_runtime도 비활성이다. 배포 전에 Edge 기동·gateway 경로 검증이 필요하다.
 
 **2026-09-23 과거 검증 기록:** 당시 실행 루트는 `/private/tmp/yumidang-minkyu-runtime-20260923-v5`였고, 26개 SQL 재생·rollback 스위트 6개·경쟁 시나리오 6개·HTTP 시나리오 8개가 각각 PASS였다. 마지막 gateway 설정은 당시 실행 후 보완했다. 외부 공급사·모델·배포는 NOT_RUN이었다. 이 기록은 2026-09-28 병합본의 DB/HTTP 재검증 결과가 아니다. 현재 준비 복사본에는 현재 설정이 포함되지만 실제 DB·HTTP 실행 여부는 별도로 확인해야 한다.
+
+
+## 실제 로컬 Supabase Edge 검증 — 2026-09-29
+
+`prepare_edge.py`는 기존 정식 SQL 준비를 재사용하며 service-api 진입점의 정적 import로 필요한 소스만 새 임시 루트에 복사한다. 현재 작업 파일을 SHA256으로 고정하므로 미커밋 HTTP 준비도 검사할 수 있다. 준비를 실행 성공으로 표시하지 않으며 `edge_execution/sql_execution=NOT_RUN`을 유지한다.
+
+```sh
+edge_output="$(TMPDIR=/private/tmp mktemp -d /private/tmp/yumidang-edge.XXXXXX)"
+TMPDIR=/private/tmp python3 -B tools/local/prepare_edge.py --output "$edge_output"
+```
+
+원본 config는 보존하고 임시 config만 Edge 활성화한다. `edge-manifest.json`의 최종 config 해시와 `database-manifest.json`의 원본 해시는 구분한다. symlink·외부/동적 import·다른 함수·키/.env·사본은 준비 대상에서 제외하거나 거절한다. 새 소스/설정으로 검증하려면 새 임시 루트를 만든다.
+
+전용 Colima를 위 안내대로 시작한 후 **같은 Edge 준비 루트로** Supabase를 시작하고 검사한다. CLI는 모든 함수 폴더를 실행하므로 함수명 인수만으로 범위를 제한한다고 가정하지 않는다.
+
+```sh
+SUPABASE_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1 \
+  DOCKER_HOST="unix://$HOME/.colima/yumidang-minkyu/docker.sock" \
+  npx --yes supabase@2.116.0 start --workdir "$edge_output"
+python3 -B tests/integration/minkyu/edge_e2e.py --workdir "$edge_output"
+```
+
+기존 volume에 새 SQL이 아직 적용되지 않았다면 빈 전용 DB를 확인하고 로컬 reset을 수행한다. runner는 준비 이후 소스 변동·다른프로젝트/소켓·남은 fixture를 거절한다. 키는 CLI에서 읽어 메모리로 사용하고 내부 설정만0600 임시 env에 기록한다. gateway `/functions/v1/service-api`를 실제 호출하며 standalone Deno 서버로 대체하지 않는다. 사용한 가상 데이터·CLI프로세스그룹·임시env/log를 정리하고, 종료 시 전용 Supabase/Colima stop은 호출자가 수행한다(볼륨 보존).
+
+현재 실제 결과는 **8개 묶음 PASS + 로컬 gateway CORS 미충족1개 = PARTIAL(exit2)**다. CLI Kong이 GET의 Origin을`*`로 바꾸고 OPTIONS를200/`*`/no-store 없이 응답한다. 앱의 미허용Origin403과 인증은 유지됐다. 이 알려진 차이를 검사 성공으로 숨기지 않는다. exit0은 전체 통과, exit1은 시작/기능 실패, exit2는 검사를 완료했으나 미충족 사항 존재다. 원격운영gateway/배포는 NOT_RUN이다.
+
+[실제 실행 근거·상세 결과·CORS 후속](../../docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md)을 따른다. 준비 도구 회귀는 `python3 -B tests/database/minkyu/test_edge_tools.py`로 실행한다.

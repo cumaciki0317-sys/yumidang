@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "03aef5cc06e0bb5bdee594c874a0fed317983c36",
+  "branch": "minkyu/foundation-harness",
+  "phase": "7차 실제 로컬 Supabase Edge 실행·gateway 검증",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/minkyu-edge-harness.json",
+      "docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md",
+      "tools/collaboration/check_harness.py",
+      "backend/contracts/service-api.md",
+      "tools/local/README.md",
+      "backend/supabase/config.toml"
+    ],
+    "A": [
+      "tools/local/prepare_edge.py",
+      "tests/database/minkyu/test_edge_tools.py"
+    ],
+    "B": [
+      "tests/integration/minkyu/edge_e2e.py"
+    ],
+    "C": [
+      "backend/supabase/functions/service-api/index.ts",
+      "tests/functions/minkyu/edge_entrypoint.test.ts",
+      "docs/collaboration/requests/minkyu/2026-09-29-edge-review.md"
+    ]
+  },
+  "preserved": {
+    "docs/collaboration/minkyu-search-http-harness.json": "d1b87f6df17b4ee8a4e05adb49fb49ab13d2d1a707062720874ddec7500be3b7",
+    "docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md": "b4e61061f9eb9d0af6edae0756985b7749347a3ff32f037b5c7931f2152f13ca",
+    "backend/supabase/functions/service-api/search-http.ts": "c6291c47a896acf7c341f0f6814cbd71ecb2b126042da99d5e20662f2b0eeed8",
+    "backend/supabase/functions/service-api/handler.ts": "b6c01bd0b4e96efb053ccee0116f211db504028b293657f21d9a500b4417c8d1",
+    "tests/functions/minkyu/search_http.test.ts": "96edd47c86d80d5a38d064e91a7b935d7a72a6023a7441b24223e3375e5d8a42",
+    "tests/functions/minkyu/search_runtime.test.ts": "9e0cb35880362afef8af3bc3b568080ee5bdb4431655f8ad212a9c33bbc627fa",
+    "tools/local/check_search_core.ts": "9dab7042ce415541a2660124180498a3999966224dfe41808a12d96c1ede7525",
+    "tests/functions/minkyu/search_core_gate.test.ts": "20a638f2240faa9551b3890695beeb9e08185b225e844727e9c4c7174a4cdc86"
+  },
+  "excluded": [
+    "종현 소유 파일 변경",
+    "기존 SQL27개 변경",
+    "원격 DB/운영배포/외부공급사",
+    "커밋/푸시"
+  ]
+}

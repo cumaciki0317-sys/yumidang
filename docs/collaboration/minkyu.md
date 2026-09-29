@@ -2,6 +2,41 @@
 
 수정 담당: 민규만. 종현은 읽기만 한다.
 
+## 2026-09-29 실제 로컬 Edge 검증 — PARTIAL
+
+사용자의 진행 요청으로 전용 Supabase Edge·gateway에서 실제 기존 API를 검증했다. [7차 하네스](minkyu-edge-harness.json)의 총괄/A/B/C 범위만 수정했고 6차 미커밋 파일 중 이번 수정 범위 밖8개는 해시로 보존했다. 자세한 재현·결과·남은 사항은 [Edge 인계](requests/minkyu/2026-09-29-edge-handoff.md)에 있다.
+
+- **실제 통과8묶음:** gateway 진입, 실제 Auth JWT 및 역할 분리, 앱 Origin거절/경로, 무료 공고 멱등·충돌·공개 투영, 양측 매칭과 당사자 정보, 내부secret 권한, 실행소스 보존, 로그 비밀/원문 제외.
+- **미충족1개:** 로컬 Kong의 CORS plugin이 허용Origin GET응답을`*`로 바꾸고 OPTIONS를200/`*`/no-store 없이 반환한다. 앱의 exactOrigin·OPTIONS204 계약과 다르므로 전체 결과를 PARTIAL(exit2)로 기록한다. 미허용Origin의 앱403과 사용자/내부 인증은 유지됐다.
+- **해결한 실행 문제:** 첫 gateway DNS503을 관찰한 뒤 전용환경을 같은 Edge설정으로 재기동해 API도달을 확인했다. CORS를 readiness와 독립 항목으로 검사하도록 runner를 보강해 실제 업무 검사를 끝까지 수행했다. 앱 코드나 생성된 gateway 설정을 바꿔 결과를 감추지 않았다.
+- **새 도구:** `prepare_edge.py` + 회귀검사, 실제 gateway용 `edge_e2e.py`, CLI/Edge공식 근거 독립 검토. 정식SQL27개와 필요한 소스34파일만 준비하며 원본config는 보존하고 임시config만 Edge활성화한다.
+- **추가 검사:** 준비 도구 Python10개 + 하네스6개 PASS, runner 구문/소스해시/수정경계 검사 PASS. TypeScript 앱은6차 이후 변경하지 않아 직전77개 Node검사를 반복실행하지 않았으며 이번 실제Edge검사와 구분한다.
+
+실행환경은 CLI2.116.0·Edge Runtime v1.74.3·Kong2.8.1, 전용 DB는 적용SQL27개다. 가상 사용자·프로필·공고·작업 잔존0, 임시 비밀파일·CLI프로세스 정리 완료. 전용 Supabase와 Colima를 종료했으며 볼륨/이미지는 보존했다. 종현 추적89파일과 SQL27개 원문 일치, 총20개 미커밋 파일의 하네스 경계와 이전8파일 해시 보존도 확인했다. 원격환경을 변경하지 않았다.
+
+**남은 작업:** 운영 gateway 대상을 정한 뒤 Origin·OPTIONS 정책 확인/설정·실제검증, 종현 검색 코어 도착 후 기본 GET검색 연결, PASS/문자/계좌공급사·외부모델·원격배포. 원격 관리형Edge/운영 CORS는 NOT_RUN이고 기본 검색은 아직405다. 이번 로컬결과를 운영배포 준비완료로 해석하지 않는다. 검증 후 사용자가 6차/7차 변경20파일의 커밋·푸시를 요청했다. 공유 대상은 `origin/minkyu/foundation-harness`이며 실제 커밋과 원격 반영은 Git 이력으로 확인한다.
+
+## 2026-09-29 종현과 병렬 작업 — 민규 HTTP 준비 완료
+
+종현의 검색 정책·코어 수정과 동시에 민규의 GET 요청 경계·선택 인증 조립·연결 진단을 구현했다. 기준 `03aef5c`, [6차 하네스](minkyu-search-http-harness.json)에서 총괄6/A3/B2/C2 총13파일을 분리했다. [HTTP 병렬 인계](requests/minkyu/2026-09-29-search-http-handoff.md)가 이번 단계의 최신 연결 순서다.
+
+- **완료:** GET 검색 query·caller 주입 방지·선택 정렬·익명 나이 권한·안전한 오류 변환, 명시된 executor에 실제 공통 인증/DB client를 조립하는 factory, CORS/requestId/no-store 유지, 기존 POST/내부 경로 보호.
+- **완료:** 종현 실제 검색 모듈을 가상 RPC와 대조하는 `node tools/local/check_search_core.ts`. READY는 fixture 계약 호환이며 DB·배포 성공이 아니다.
+- **연결 대기:** 현재 종현 코어 `bd15429`에서는 기본정렬·시작일순·익명기간·동표시·2필드µs커서 5개가 BLOCKED다. 익명 나이 거절과 민감 wire 부가 필드 거절 2개는 PASS다. 종현 파일을 수정해 진단을 억지로 통과시키지 않았다.
+- **아직 미활성:** default fetch에는 검색 executor를 연결하지 않아 GET `/posts`는 기존405를 유지한다. 종현 수정본 검토/병합 후 기존 검색 service/repository를 연결하고 실제 GET→Auth→RPC를 검사한다. 가짜 검색 결과나 별도 검색 코어를 추가하지 않았다.
+
+| 이번 검증 | 실제 결과 |
+|---|---|
+| HTTP 요청 경계·인증 조립 | 새 Node19개 PASS; 가상 executor/fetch 검사 |
+| 코어 진단 도구 회귀 | 새 Node4개 PASS |
+| 기존 HTTP·인증/DB·업무 API 포함 합본 | Node77개 PASS (기존54+신규23) |
+| Deno 타입 검사 | service-api 진입점·진단도구·신규 테스트3파일 PASS |
+| 하네스 회귀 | Python6개 PASS |
+| 정식 SQL 준비 | Git HEAD 정식27개/pending0 복사·해시 검사 PASS, sql_execution=NOT_RUN |
+| 소유권·보존 | 종현 추적89파일·SQL27개 원문 동일, 종현 수정0·에이전트 중복0 |
+
+이번 단계에서 실제 DB·종현 최신 코어를 연결한 GET·Edge 호스팅·AI 전체 흐름·프런트엔드·운영 배포는 **NOT_RUN**이다. 5차 실제 DB/인증 검사와 이번 HTTP 모형 검사를 구분한다. 6차 완료 당시13파일은 미커밋이었다. 이후7차 결과와 함께 공유하도록 사용자가 요청했으며 최신 공유 기록은 위7차 항목을 따른다.
+
 ## 2026-09-29 검색 DB·공개 인증 구현 완료
 
 사용자의 코드 수정 요청과 **등록일 최신순 기본 / 시작일 빠른순 선택** 답변을 적용했다. [5차 하네스](minkyu-search-db-harness.json)에서 총괄 8/A 2/B 6/C 1개 파일을 분리했고 [연결 인계](requests/minkyu/2026-09-29-search-db-handoff.md)를 작성했다. 기준 `bd15429`, 변경 17개 모두 민규 소유, 담당 간 중복 0·종현 파일 변경 0이다.
