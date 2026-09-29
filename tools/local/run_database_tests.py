@@ -14,7 +14,7 @@ CONTEXT = "colima-yumidang-minkyu"
 PROJECT = "yumidang-minkyu-db"
 CONTAINER = "supabase_db_" + PROJECT
 TESTS = ("worker_jobs.sql", "public_post_search.sql", "review_summary_storage.sql",
-         "bilateral_completion.sql", "review_automation.sql", "core_service_api.sql")
+         "bilateral_completion.sql", "review_automation.sql", "core_service_api.sql", "public_search_v2.sql")
 
 
 def require(condition, message):

@@ -15,11 +15,11 @@ export async function fetchJson(url: string, init: RequestInit, timeoutMs: numbe
   finally { clearTimeout(timer); }
 }
 function rpcFailure(status: number, body: JsonValue): never {
-  if (status === 401) throw new HttpError("AUTH_REQUIRED");
-  if (status === 403) throw new HttpError("ACCESS_DENIED");
   const code = body && typeof body === "object" && !Array.isArray(body) ? body.code : null;
+  // PostgREST는 로그인 필요 SQLSTATE도 HTTP 403으로 반환할 수 있다.
+  if (status === 401 || code === "28000") throw new HttpError("AUTH_REQUIRED");
+  if (status === 403) throw new HttpError("ACCESS_DENIED");
   switch (code) {
-    case "28000": throw new HttpError("AUTH_REQUIRED");
     case "PT404": throw new HttpError("RESOURCE_NOT_FOUND");
     case "PT503": throw new HttpError("EXTERNAL_UNAVAILABLE");
     case "42501": throw new HttpError("ACCESS_DENIED");

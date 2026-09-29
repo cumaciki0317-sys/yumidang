@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "bd15429eed4203c15c8b5952a84a6167b0084644",
+  "branch": "minkyu/foundation-harness",
+  "phase": "5차 최신 검색 정책의 민규 DB/RPC 및 공개 인증 기반",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/requests/minkyu/2026-09-29-search-policy-correction.md",
+      "docs/collaboration/minkyu-search-db-harness.json",
+      "tools/collaboration/check_harness.py",
+      "tools/local/run_database_tests.py",
+      "tests/integration/minkyu/search_rpc_e2e.py",
+      "docs/collaboration/requests/minkyu/2026-09-29-search-db-handoff.md"
+    ],
+    "A": [
+      "backend/supabase/migrations/20260929090000_public_search_v2.sql",
+      "backend/contracts/public-post-search-db.md"
+    ],
+    "B": [
+      "backend/supabase/functions/_shared/auth/principal.ts",
+      "backend/supabase/functions/_shared/db/user-client.ts",
+      "backend/supabase/functions/_shared/db/public-client.ts",
+      "tests/functions/minkyu/auth_db.test.ts",
+      "backend/contracts/auth-runtime.md",
+      "backend/supabase/functions/_shared/db/transport.ts"
+    ],
+    "C": [
+      "tests/database/minkyu/public_search_v2.sql"
+    ]
+  },
+  "preserved": {},
+  "excluded": [
+    "종현 소유 검색 계약/코어/테스트 직접 수정",
+    "기존 SQL 26개 변경",
+    "외부 공급사/원격 DB/커밋/푸시",
+    "검색 HTTP의 잘못된 종현 코어 우회/중복 구현"
+  ],
+  "scope_notes": [
+    "실제 PostgREST가 SQLSTATE 28000을 HTTP 403으로 반환하여 로그인 필요 매핑이 가려짐을 확인. 총괄이 민규 소유 transport.ts를 B의 정확한 수정 목록에 추가하고 회귀 검증을 요청함. 종현 소유권·검사 정책은 변경하지 않음."
+  ]
+}

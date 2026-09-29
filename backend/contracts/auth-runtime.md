@@ -32,7 +32,7 @@
 
 ## RPC와 오류
 
-공통 인터페이스는 `RpcClient.rpc(name: string, args: Record<string, JsonValue>): Promise<JsonValue>`다. 성공 JSON을 반환하며 204는 null이다. 사용자/내부 클라이언트 각각의 고정 목록 밖 이름은 요청 전 `ACCESS_DENIED`다. 가입 legacy RPC와 기존 `create_post`·`create_join_request`는 사용자 목록에 넣지 않는다. 새 `create_service_post`·`request_service_post` 경로를 사용한다.
+공통 인터페이스는 `RpcClient.rpc(name: string, args: Record<string, JsonValue>): Promise<JsonValue>`다. 성공 JSON을 반환하며 204는 null이다. 사용자/익명/내부 클라이언트 각각의 고정 목록 밖 이름은 요청 전 `ACCESS_DENIED`다. 가입 legacy RPC와 기존 `create_post`·`create_join_request`는 사용자 목록에 넣지 않는다. 새 `create_service_post`·`request_service_post` 경로를 사용한다.
 
 모든 요청은 timeout과 AbortController를 사용하며 redirect를 따라가지 않는다. 오류 원문·SQL·힌트·토큰·요청 본문을 로그나 공개 오류에 붙이지 않는다. 원문에 포함된 error code 문자열도 알려진 SQLSTATE만 매핑한다.
 
@@ -56,4 +56,26 @@
 
 ## 검증
 
-`node --test tests/functions/minkyu/auth_db.test.ts`의 14개 테스트와 Deno 타입 검사를 통과했다. 원격 검증 모형, 위조 Principal 거절, 역할 혼동 거절, 토큰 전달, allowlist, 네트워크·timeout, SQLSTATE 매핑, 민감정보 제외를 포함한다. 실제 Supabase HTTP/JWT 통합 결과는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에서 별도 기록한다. 모형 테스트 통과만으로 PASS/문자/은행 연동을 완료했다고 판단하지 않는다.
+`node --test tests/functions/minkyu/auth_db.test.ts`의 기존 14개와 공개 검색 인증 7개를 합한 21개 테스트 및 Deno 타입 검사를 통과했다. 원격 검증 모형, 위조 Principal 거절, 역할 혼동 거절, 토큰 전달, allowlist, 네트워크·timeout, SQLSTATE 매핑, 민감정보 제외를 포함한다. 실제 Supabase HTTP/JWT 통합 결과는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에서 별도 기록한다. 모형 테스트 통과만으로 PASS/문자/은행 연동을 완료했다고 판단하지 않는다.
+
+
+## 공개 검색의 선택 인증 — 2026-09-29
+
+`requireOptionalPrincipal(request, config, fetchImpl?)`는 **Authorization 헤더가 아예 없는 요청에만 null**을 반환한다. 헤더가 있다면 기존 `requirePrincipal`을 그대로 호출한다. 빈 헤더·잘못된 형식·만료 JWT·anon key·service role key·내부 작업 secret은 비로그인으로 전환하지 않고 `AUTH_REQUIRED`로 실패한다. Auth 조회 장애도 익명 결과로 대체하지 않으며 `EXTERNAL_UNAVAILABLE`이다. Supabase 익명 Auth 계정 역시 일반 회원으로 인정하지 않는다.
+
+검증된 회원은 `createUserClient(config, principal, fetchImpl?)`를 사용한다. `search_public_posts_v2`를 사용자 RPC 목록에 추가했으며, 기존과 같은 anon apikey 및 검증된 원래 사용자 JWT를 보내 DB의 `auth.uid()`·RLS 문맥을 유지한다.
+
+비로그인은 `createPublicClient(config, fetchImpl?)`를 사용한다. 이 클라이언트는 **`search_public_posts_v2` 한 개만 허용**한다. apikey와 Authorization Bearer에 모두 `supabaseAnonKey`만 쓰고 서비스 키·내부 secret·사용자 토큰을 읽거나 대신 사용하지 않는다. 프로필 조회·공고 쓰기·신청·작업 RPC·이전 검색 RPC도 네트워크 요청 전에 `ACCESS_DENIED`로 거절한다.
+
+호출부 연결 방식은 다음과 같다. 인증 오류를 잡아서 null로 바꾸는 fallback을 추가하면 안 된다.
+
+```ts
+const principal = await requireOptionalPrincipal(request, config);
+const db = principal === null
+  ? createPublicClient(config)
+  : createUserClient(config, principal);
+```
+
+이 변경은 인증과 DB 호출 기반만 제공한다. 검색 입력 정규화·HTTP GET 경로를 새로 구현하거나 종현 담당 검색 코어를 우회하지 않았다. 검색 HTTP 연결 완료와 실제 RPC 통합 결과는 총괄의 작업 현황에서 별도로 기록한다.
+
+추가 7개 모형 테스트는 헤더 부재/빈 값 구분, 잘못된 인증의 익명 fallback 차단, 서비스 키를 읽지 않는 익명 전송, 공개 RPC 목록 제한, 검증된 회원 JWT 보존을 확인한다. PostgREST의 HTTP403 응답에서도 문자열 SQLSTATE `28000`은 로그인 필요로 분류하고, 다른 403은 접근 거절을 유지한다. 실제 SQL 권한 검증은 이 모형 테스트와 구분한다.

@@ -24,6 +24,13 @@ export async function requirePrincipal(request: Request, config: RuntimeConfig, 
   tokens.set(principal, token);
   return principal;
 }
+/** 공개 경로에서는 Authorization 헤더가 아예 없는 요청만 비로그인으로 취급한다. */
+export async function requireOptionalPrincipal(request: Request, config: RuntimeConfig, fetchImpl: FetchLike = fetch): Promise<Principal | null> {
+  if (!request.headers.has("authorization")) return null;
+  // 빈 헤더·만료·잘못된 토큰·Auth 장애를 익명 조회로 강등하지 않는다.
+  return requirePrincipal(request, config, fetchImpl);
+}
+
 /** 프런트 입력으로 구성한 Principal 객체는 이 함수를 통과할 수 없다. */
 export function getPrincipalToken(principal: Principal): string {
   const token = tokens.get(principal);

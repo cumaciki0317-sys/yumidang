@@ -3,6 +3,7 @@ import type { RuntimeConfig } from "../config/env.ts";
 import { getPrincipalToken, type Principal } from "../auth/principal.ts";
 import { createRpcTransport, type FetchLike, type RpcClient } from "./transport.ts";
 const userRpcs = new Set([
+  "search_public_posts_v2",
   "list_my_appointments", "get_appointment_state", "confirm_appointment_completion",
   "get_appointment_review_state", "submit_appointment_review", "get_public_profile_reviews",
   "get_my_profile", "set_my_profile_avatar", "list_my_notifications", "mark_my_notification_read", "mark_all_my_notifications_read",

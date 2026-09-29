@@ -2,9 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadRuntimeConfig, type RuntimeConfig } from "../../../backend/supabase/functions/_shared/config/env.ts";
-import { requirePrincipal, getPrincipalToken, type Principal } from "../../../backend/supabase/functions/_shared/auth/principal.ts";
+import { requirePrincipal, requireOptionalPrincipal, getPrincipalToken, type Principal } from "../../../backend/supabase/functions/_shared/auth/principal.ts";
 import { requireInternalCaller } from "../../../backend/supabase/functions/_shared/auth/internal-caller.ts";
 import { evaluateTrustedEligibility } from "../../../backend/supabase/functions/_shared/auth/eligibility.ts";
+import { createPublicClient } from "../../../backend/supabase/functions/_shared/db/public-client.ts";
 import { createUserClient } from "../../../backend/supabase/functions/_shared/db/user-client.ts";
 import { createInternalClient } from "../../../backend/supabase/functions/_shared/db/internal-client.ts";
 import type { FetchLike } from "../../../backend/supabase/functions/_shared/db/transport.ts";
@@ -170,4 +171,82 @@ test("PASS 근거 해석은 legacy·다른 사용자·불완전 DI를 자격으�
   assert.equal(evaluateTrustedEligibility(p, { ...proof, source: "female_direct" } as unknown as typeof proof), "verification_required");
   assert.equal(evaluateTrustedEligibility(p, { ...proof, profilePhotoPresent: false }), "photo_required");
   assert.equal(evaluateTrustedEligibility(p, proof), "eligible");
+});
+
+
+test("선택 인증은 Authorization 헤더가 없는 경우만 네트워크 없이 null이다", async () => {
+  const request = new Request("https://api.example.test", { headers: { "x-user-id": uid, "x-role": "authenticated", apikey: env.SUPABASE_ANON_KEY } });
+  const result = await requireOptionalPrincipal(request, config(), async () => assert.fail("must not request"));
+  assert.equal(result, null);
+});
+
+test("빈 Authorization·잘못된 형식·각종 서버 키는 익명으로 강등하지 않는다", async () => {
+  const noNetwork: FetchLike = async () => assert.fail("must not request");
+  for (const authorization of ["", " ", "Bearer", "Basic value", "Bearer invalid", `Bearer ${env.SUPABASE_ANON_KEY}`, `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, `Bearer ${env.INTERNAL_WORKER_SECRET}`]) {
+    const request = new Request("https://api.example.test", { headers: { authorization } });
+    await assert.rejects(requireOptionalPrincipal(request, config(), noNetwork), code("AUTH_REQUIRED"));
+  }
+});
+
+test("선택 인증도 만료 JWT·익명 Auth 계정·서버 장애를 그대로 거절한다", async () => {
+  for (const status of [401, 403]) {
+    await assert.rejects(requireOptionalPrincipal(bearer(), config(), async () => json({ message: "sensitive-detail" }, status)), code("AUTH_REQUIRED"));
+  }
+  await assert.rejects(requireOptionalPrincipal(bearer(), config(), async () => json({ id: uid, role: "authenticated", is_anonymous: true })), code("AUTH_REQUIRED"));
+  await assert.rejects(requireOptionalPrincipal(bearer(), config(), async () => json({ message: "sensitive-detail" }, 503)), code("EXTERNAL_UNAVAILABLE"));
+});
+
+test("익명 검색 클라이언트는 anon key만 전달하고 서비스·내부 비밀을 읽지 않는다", async () => {
+  const c = { ...config() };
+  Object.defineProperty(c, "supabaseServiceRoleKey", { get() { assert.fail("must not read service key"); } });
+  Object.defineProperty(c, "internalWorkerSecret", { get() { assert.fail("must not read internal secret"); } });
+  const args = { p_query: "전시" };
+  const client = createPublicClient(c, async (url, init) => {
+    assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
+    assert.equal(headers.get("authorization"), `Bearer ${env.SUPABASE_ANON_KEY}`);
+    assert.equal(init?.method, "POST");
+    assert.deepEqual(JSON.parse(String(init?.body)), args);
+    assert.doesNotMatch(JSON.stringify(init), /private-service|internal_random|validated_by_remote/);
+    return json({ items: [], nextCursor: null });
+  });
+  assert.deepEqual(await client.rpc("search_public_posts_v2", args), { items: [], nextCursor: null });
+});
+
+test("익명 클라이언트는 공개 검색 한 개 외 읽기·쓰기·내부 RPC 모두 요청 전에 차단한다", async () => {
+  const client = createPublicClient(config(), async () => assert.fail("must not request"));
+  for (const name of ["search_public_posts", "get_service_post", "get_my_profile", "create_service_post", "request_service_post", "confirm_appointment_completion", "enqueue_job", "process_due_completions", "complete_signup", "../profiles", "search_public_posts_v2?select=*"]) {
+    await assert.rejects(client.rpc(name, {}), code("ACCESS_DENIED"));
+  }
+});
+
+test("선택 인증의 검증된 회원 검색은 원래 JWT로 RLS 문맥을 유지한다", async () => {
+  const p = await requireOptionalPrincipal(bearer(), config(), authFetch);
+  assert.ok(p);
+  assert.equal(p.userId, uid);
+  assert.equal(getPrincipalToken(p), jwt);
+  const client = createUserClient(config(), p, async (url, init) => {
+    assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
+    assert.equal(headers.get("authorization"), `Bearer ${jwt}`);
+    assert.notEqual(headers.get("authorization"), `Bearer ${env.SUPABASE_ANON_KEY}`);
+    assert.doesNotMatch(JSON.stringify(init), /private-service|internal_random/);
+    return json({ items: [] });
+  });
+  assert.deepEqual(await client.rpc("search_public_posts_v2", {}), { items: [] });
+});
+
+
+test("익명 검색의 HTTP403 + SQLSTATE28000은 로그인 필요이며 다른403은 접근 거절이다", async () => {
+  for (const [body, expected] of [
+    [{ code: "28000", message: "sensitive-detail" }, "AUTH_REQUIRED"],
+    [{ code: "42501", message: "sensitive-detail" }, "ACCESS_DENIED"],
+    [{ code: "unknown", message: "28000 sensitive-detail" }, "ACCESS_DENIED"],
+    [{ code: 28000, message: "sensitive-detail" }, "ACCESS_DENIED"],
+  ] as const) {
+    const client = createPublicClient(config(), async () => json(body, 403));
+    await assert.rejects(client.rpc("search_public_posts_v2", {}), code(expected));
+  }
 });
