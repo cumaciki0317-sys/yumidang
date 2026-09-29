@@ -2,6 +2,33 @@
 
 수정 담당: 민규만. 종현은 읽기만 한다.
 
+**최신 공유 요청:** 사용자가 현재 검색 연결·외부 API 설정·포텐스닷 확인 결과를 민규 브랜치에 커밋·푸시한 뒤 민규의 카카오/행사 API 검증을 이어가도록 요청했다. 아래 미커밋/미푸시는 각 단계 당시 기록이다. 공유 후 종현은 AGENTS의 최신 첫 작업과 공급사 인계를 따른다.
+
+## 2026-09-29 포텐스닷 Sonnet 5 최소 호출 확인
+
+공개 웹앱 모델 목록에서 채팅용 `claude-5-sonnet`을 확인해 사용자 루트 `.env`와 양식에 반영했다. 통합 키 + 모델 ID로 `/api/chat`에 합성 입력1회 호출하여 HTTP200·message·token_usage 반환을 확인했다. 키/본문 로그·저장 없음. 내부 모델 echo와 사용량 세부 매핑은 미확인이고 종현 AI 어댑터·런타임 연결은 별도다. [최신 근거와 인계](requests/minkyu/2026-09-29-provider-config-handoff.md)를 따른다. 아래 Potens 주소·모델 미입력/NOT_RUN은 이전 단계 기록이다.
+
+## 2026-09-29 외부 API 설정 기반 완료·연결 확인 진행
+
+사용자가 5개 공급사 키 입력과 포텐스닷 LLM/Sonnet 5 선택 후 다음 작업을 요청했다. [9차 하네스](minkyu-provider-config-harness.json)에서 기능별 서버 설정 loader, 비밀값을 출력하지 않는 로컬 .env 검사, 공식 공급사 규격 검토를 구현했다. 최신 입력 파일은 사용자가 여는 저장소 최상위 `.env`이며 worktree 내부 사본과 구분한다.
+
+- 완료: 설정5개, Tourunknown 원문 보존, 미확인 Potens URL/model 자동호출 차단, 로그 비밀 제외. Node29/Python18/Deno PASS, 이전11파일 해시 보존.
+- 입력 확인: Kakao/KOPIS/서울/Tour/Potens 키present. Potens는 Sonnet5 선택을 기록했으나 캡처로 baseURL 확인·반영, 정확한 공급사모델ID 미입력, Tour형식unknown으로 오프라인 결과INCOMPLETE.
+- 실제 호출: Kakao 공식 HTTPS 최소조회403. 권한 원인은 미확정이며 앱설정 확인 필요. 나머지 공급사 실키호출NOT_RUN.
+- 다음: 캡처의 Sonnet4.6 대신 사용자 재확정 Sonnet5의 지원·정확한ID 확인, 종현 공급사 어댑터·런타임 연결, 민규 설정 조정/통합검증. 실제 실행 성공이나 전체 서비스 완료로 표현하지 않는다.
+
+[API 설정 인계·담당별 연결·검증 근거](requests/minkyu/2026-09-29-provider-config-handoff.md)를 따른다. 이번 커밋·푸시·배포는 수행하지 않았다.
+
+## 2026-09-29 검색 v2 병합·실제 GET 연결 완료
+
+종현 `129a871`을 충돌 없이 병합했다(로컬 병합 `2a53097`). 기본 GET `/posts`가 종현 검색 service/repository와 민규 선택 인증·DB v2를 실제로 연결한다. [8차 하네스](minkyu-search-connect-harness.json), [검색 연결 인계·재현·다음 작업](requests/minkyu/2026-09-29-search-connected.md)이 최신 기준이다. 아래 6·7차의 검색 미연결/405는 당시 기록이다.
+
+- **완료:** 동·익명 별칭/회원 마스킹·기간/나이 권한·전체/모집·두 정렬·v2 커서·등록주소 검색과 반환 권한 분리. 실제 Edge 검색4묶음과 기존 업무8묶음 PASS, fixture잔존0.
+- **검증:** 종현 Node31 + 민규 Node83 PASS, 연결 진단7 PASS, Deno 타입검사 PASS, Python16 PASS. 종현94파일·SQL27개·병합14파일 원문 보존, 담당 중복0.
+- **미해결:** 기존 로컬 gateway CORS1건으로 전체 환경은 PARTIAL(exit2). 종현 repository의 잘못된 응답 시각 오류400→500 구분은 비차단 변경 요청으로 기록했다.
+- **다음:** 자동 완료·후기 공개와 모델 설정을 분리하는 민규 DB/API·종현 작업 실행 연결을 별도 작업으로 진행한다. PASS/문자·계좌·외부모델·프런트·운영 배포는 이번 완료 범위 밖이다.
+- **공유 상태:** 병합만 로컬 커밋, 연결 구현·문서는 미커밋이며 이번 푸시는 수행하지 않았다. 전용 환경은 검증 후 종료하며 볼륨은 보존한다.
+
 ## 2026-09-29 실제 로컬 Edge 검증 — PARTIAL
 
 사용자의 진행 요청으로 전용 Supabase Edge·gateway에서 실제 기존 API를 검증했다. [7차 하네스](minkyu-edge-harness.json)의 총괄/A/B/C 범위만 수정했고 6차 미커밋 파일 중 이번 수정 범위 밖8개는 해시로 보존했다. 자세한 재현·결과·남은 사항은 [Edge 인계](requests/minkyu/2026-09-29-edge-handoff.md)에 있다.

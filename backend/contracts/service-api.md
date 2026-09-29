@@ -5,7 +5,7 @@
 ## HTTP 및 인증
 
 - Supabase 경로는 `/functions/v1/service-api`이며 직접 실행용 `/service-api`도 지원한다. 아래 표의 경로를 뒤에 붙인다. 임의 suffix, 인코딩 우회, 알 수 없는 경로는 404다.
-- 기존 사용자 경로는 `Authorization: Bearer <검증되는 사용자 access token>`을 요구한다. 공개 검색의 선택 인증은 아래 병렬 준비 계약을 따르며 종현 검색 코어와 민규 HTTP 경계를 연결한다. DB `get_service_post`의 비로그인 공개 반환 지원과 이 API의 사용자 인증 요구는 별개다.
+- 기존 사용자 경로는 `Authorization: Bearer <검증되는 사용자 access token>`을 요구한다. 공개 검색의 선택 인증은 아래 검색 연결 계약을 따르며 종현 검색 코어와 민규 HTTP 경계를 연결한다. DB `get_service_post`의 비로그인 공개 반환 지원과 이 API의 사용자 인증 요구는 별개다.
 - 내부 유지보수는 별도 내부 secret을 Bearer로 받는다. 사용자 JWT·서비스 역할 키 자체를 내부 비밀로 대신 사용하지 않는다. 사용자 경로가 실패해도 내부 클라이언트로 재시도하지 않는다.
 - 허용된 정확한 Origin만 CORS 응답을 받는다. preflight 허용 헤더는 `authorization, content-type, apikey`다. apikey 자체는 사용자 인증이 아니다.
 - POST는 `application/json`과 객체 본문을 사용한다. 인자가 없는 POST도 `{}`를 보낸다. 초과 필드·타입 불일치·중복 query는 400이다. 크기 한도는 `MAX_REQUEST_BYTES` 설정값이다.
@@ -108,18 +108,16 @@ rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선�
 Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supabase의 실제 HTTP/JWT/DB 통합 결과를 관리형 Edge hosting 결과와 구분한다. **원격 관리형 Edge hosting 및 운영 배포는 NOT_RUN**이다. 2026-09-29 로컬 Supabase Edge/gateway에서 실제 인증·업무 검사를 수행했으며 아래 결과를 따른다.
 
 
-## 검색 HTTP 병렬 준비 — 2026-09-29
+## 검색 HTTP 연결 — 2026-09-29
 
-종현의 최신 검색 코어와 별도로 민규가 요청 경계와 인증 조립을 준비한다. `createRuntimeHandler(read, { publicPostSearch })`에 검증된 검색 executor를 명시 주입할 때만 GET `/posts`를 처리한다. 검색 executor는 `(db, input) => Promise<PublicPostPageResult>`이며 종현의 검색 service/repository를 호출하도록 후속 연결한다. 이 옵션은 서버 코드 의존성이며 URL/본문/환경값으로 클라이언트가 활성화하는 기능이 아니다.
+종현 검색 v2 코어(`129a871`)를 민규 기본 런타임에 연결한다. `createRuntimeHandler(read)`와 `default.fetch`의 GET `/posts`는 `searchPublicPosts(createRpcPublicPostSearchRepository(db), input)`을 실행한다. `createRuntimeHandler(read, { publicPostSearch })`의 명시 의존성 주입은 검사·조립 용도로 유지하며 URL/본문/환경값으로 실행기를 교체하지 못한다. POST `/posts`와 다른 업무 경로는 기존 로그인 요구를 유지한다.
 
-기본 `default.fetch`는 아직 검색 executor를 주입하지 않는다. 따라서 종현 최신 코어 통합 전 기본 GET `/posts`는 기존 405를 유지하며, 이번 준비를 서비스 검색 활성화나 실제 DB를 통과한 GET 검증으로 해석하지 않는다. POST `/posts`와 다른 업무 경로는 기존 로그인 요구를 유지한다.
-
-명시 주입 시 공개 GET 요청은 다음 순서로 처리한다.
+공개 GET 요청은 다음 순서로 처리한다.
 
 1. 기존 정확한 경로·메서드·CORS 검사.
 2. Authorization 헤더가 없으면 익명 client, 있으면 실제 Auth 검증 후 사용자 client를 만든다. 빈 값·위조·만료·서비스 키 등 실패를 익명으로 바꾸지 않는다.
 3. 중복/알 수 없는 query와 caller/userId 주입을 거절하고 HTTP 문자열을 검색 입력으로 변환한다.
-4. 주입한 종현 executor가 조건 정규화·커서·공개 투영·repository를 담당한다. HTTP 코드에 SQL 호출·정렬·페이지 나누기를 복제하지 않는다.
+4. 종현 executor가 조건 정규화·커서·공개 투영·repository를 담당한다. HTTP 코드에 SQL 호출·정렬·페이지 나누기를 복제하지 않는다.
 5. 기존 `{data,requestId}`/`{error,requestId}`·no-store·CORS를 적용한다. 조회 결과는 `data:{status,posts,nextCursor}`다.
 
 | query | HTTP 처리 |
@@ -136,13 +134,15 @@ Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supaba
 
 잘못된 입력으로 정의한 검색 코어 오류만 공통 INVALID_REQUEST로 변환한다. AUTH_REQUIRED는 401, 이미 정해진 HttpError는 유지하고 응답/투영 불일치 및 알 수 없는 오류는 원문 없이 500으로 처리한다. 외부 오류 메시지·검색어·토큰을 로그에 출력하지 않는다.
 
-검증 방법과 실제 결과, default 연결을 완료할 다음 순서는 [HTTP 병렬 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)를 따른다.
+최신 검증 방법·결과·남은 사항은 [검색 연결 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-connected.md)를 따른다. 이전 [HTTP 병렬 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)는 연결 전 기록이다.
+
+독립 검토에서 응답 카드의 잘못된 시각이 입력 오류와 같은 코드를 던져400으로 분류되는 예외를 확인했다. 정상 SQL timestamp와는 별개이며 종현 repository의 응답 오류 구분 요청으로 기록했다. [재현·완료 조건](../../docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md)
 
 
-## 실제 로컬 Edge/gateway 결과 — 2026-09-29
+## 연결 전 로컬 Edge/gateway 결과 — 2026-09-29
 
 CLI2.116.0 / Edge Runtime v1.74.3 / Kong2.8.1에서 기존 default fetch를 변경 없이 실행했다. 실제 gateway→Edge→Auth/PostgREST로 사용자JWT·역할 분리·무료 공고·양측 매칭·당사자 정보 권한·내부secret 등을 확인했다. 8개 묶음 PASS, 가상 데이터 잔존0이며 상세 결과는 [Edge 인계](../../docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md)에 있다.
 
 전체 결과는 **PARTIAL**이다. 위 HTTP 계약의 정확한 Origin/no-store/OPTIONS204는 앱 응답 기준이며, 로컬 Kong은 허용 Origin GET의 ACAO를 `*`로 변경하고 OPTIONS를200/`*`/no-store 없이 먼저 응답한다. 애플리케이션의 미허용 Origin403과 자체 인증은 실제로 유지됐다. 이 로컬 gateway 차이를 CORS 전체 통과로 기록하지 않는다. 운영 gateway의 허용 Origin·OPTIONS 정책은 대상 선정 후 확인해야 하며 원격 결과는 NOT_RUN이다.
 
-기본 GET 검색405는 종현 최신 코어 미연결 상태를 확인한 것이며 검색 전체 검증 성공이 아니다. PASS/문자·계좌 공급사, 외부 모델, 운영 데이터·배포를 실행하지 않았다.
+이전 검사 당시 기본 GET 검색405는 종현 최신 코어 미연결 상태를 확인한 것이었다. 위 검색 연결 이후의 결과는 최신 인계를 따른다. PASS/문자·계좌 공급사, 외부 모델, 운영 데이터·배포를 실행하지 않았다.

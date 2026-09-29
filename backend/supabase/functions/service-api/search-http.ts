@@ -3,8 +3,8 @@ import type { PublicPostListInput, PublicPostPageResult, SearchCaller } from "..
 import type { RpcClient } from "../_shared/db/transport.ts";
 import { HttpError } from "../_shared/http/errors.ts";
 
-/** 종현의 정렬 계약 갱신 전 연결 경계. 기본 런타임에는 미완성 코어를 주입하지 않는다. */
-export type HttpPostSearchInput = PublicPostListInput & { sort?: "created_desc" | "starts_asc" };
+/** HTTP 입력은 종현의 v2 검색 계약과 동일하며 caller만 검증된 인증 문맥에서 채운다. */
+export type HttpPostSearchInput = PublicPostListInput;
 export type PublicPostSearchExecutor = (db: RpcClient, input: HttpPostSearchInput) => Promise<PublicPostPageResult>;
 const allowedKeys = new Set(["query", "category", "cost", "availability", "periodStart", "periodEnd", "authorAge", "sort", "cursor", "limit"]);
 const categories = ["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"] as const;

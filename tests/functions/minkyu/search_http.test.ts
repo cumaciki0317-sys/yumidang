@@ -38,7 +38,7 @@ test("정확한 두 prefix의 GET 목록만 선택 인증으로 처리한다", a
   assert.deepEqual(auth, ["search", "search"]);
 });
 
-test("검색 executor가 없으면 기존 GET 목록 405를 유지한다", async () => {
+test("저수준 handler factory에 검색 의존성을 생략하면 GET 목록은 405다", async () => {
   const { send, auth } = setup(undefined, false);
   assert.equal((await send()).status, 405);
   assert.deepEqual(auth, []);

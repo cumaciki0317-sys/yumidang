@@ -1,0 +1,50 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "2a530970fcd098156172eefc723504535bb44888",
+  "branch": "minkyu/foundation-harness",
+  "phase": "9차 외부 API 서버 설정·안전한 로컬 준비 검사",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/minkyu-provider-config-harness.json",
+      "tools/collaboration/check_harness.py",
+      "backend/.env.example",
+      "backend/API_INPUT.md",
+      "docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "backend/README.md"
+    ],
+    "A": [
+      "backend/supabase/functions/_shared/config/providers.ts",
+      "tests/functions/minkyu/provider_config.test.ts"
+    ],
+    "B": [
+      "tools/local/check_api_env.py",
+      "tests/functions/minkyu/test_api_env.py"
+    ],
+    "C": [
+      "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md"
+    ]
+  },
+  "preserved": {
+    "backend/contracts/service-api.md": "506372b9f267acc8c070e34e6f647ef061cd23cf44b8649f9a9a6196939b3709",
+    "tests/functions/minkyu/search_runtime.test.ts": "b6e17421eae59124153e606016798cf0c719518c5ba74799543a2d36c109faea",
+    "tests/functions/minkyu/search_http.test.ts": "a69085f2e63d9ae2dd37119528360a6a0655874fc62d274d7de55f89acf880d7",
+    "tests/integration/minkyu/edge_e2e.py": "fa703868c6a05d168b378d35273de7eec9152b9d43ecc2c6ddb8e2185da7250f",
+    "backend/supabase/functions/service-api/search-http.ts": "6441a0a3dee09c726de897405261b053e372d47b2e993f61439a43c156753805",
+    "tools/local/check_search_core.ts": "bd13595654a34cfcd5443493f41d243459fd063c909de110c5b18626374c3009",
+    "docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md": "714c73a76286159a5306410325d03550e108cdca84d061fe2dfb767c7b0e780f",
+    "backend/supabase/functions/service-api/index.ts": "4a1315ce403fca855eafdd75e814c00951a48922494874458b2b9dc56a9934d3",
+    "docs/collaboration/requests/minkyu/2026-09-29-search-connected.md": "459e03ca3b8630ce64315ea00b742e41ad9a5ec478df34c0f8e671083b5c9f87",
+    "docs/collaboration/minkyu-search-connect-harness.json": "1de0b86660a6f9865a70770650ab1827b4003e29329be4aa1369b44bea398733"
+  },
+  "excluded": [
+    "종현파일 수정",
+    "공급사어댑터/작업진입점 대신구현",
+    "원격DB·배포·커밋·푸시"
+  ],
+  "local_input": "사용자 지정 저장소 루트 .env는 ignore된 비밀 입력이다. 키 원문 보존 및 마스킹 점검만 하며 키를 문서/하네스에 기록하지 않는다.",
+  "publication_note": "사용자 최신 커밋/푸시 요청의 사전검토에서 backend/README.md의 오래된 backend/.env 링크를 발견했다. 공유 안내를 저장소 루트 .env 기준으로 정정하며 다른 이전 10파일은 보존한다.",
+  "readme_before_publication_sha256": "45aa6aafb2fb1594ba1272c5e7fb8152ca49bb06bc26a4d2fda9b8041786f84f"
+}

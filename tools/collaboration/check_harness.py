@@ -67,7 +67,7 @@ def check_paths(files, lane, paths):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", choices=[MANIFEST, "docs/collaboration/minkyu-db-harness.json", "docs/collaboration/minkyu-runtime-harness.json", "docs/collaboration/minkyu-local-refresh-harness.json", "docs/collaboration/minkyu-search-db-harness.json", "docs/collaboration/minkyu-search-http-harness.json", "docs/collaboration/minkyu-edge-harness.json"], default=MANIFEST)
+    parser.add_argument("--manifest", choices=[MANIFEST, "docs/collaboration/minkyu-db-harness.json", "docs/collaboration/minkyu-runtime-harness.json", "docs/collaboration/minkyu-local-refresh-harness.json", "docs/collaboration/minkyu-search-db-harness.json", "docs/collaboration/minkyu-search-http-harness.json", "docs/collaboration/minkyu-edge-harness.json", "docs/collaboration/minkyu-search-connect-harness.json", "docs/collaboration/minkyu-provider-config-harness.json"], default=MANIFEST)
     parser.add_argument("--lane", choices=["coordinator", "A", "B", "C"])
     parser.add_argument("--paths", nargs="+")
     parser.add_argument("--all-changes", action="store_true")

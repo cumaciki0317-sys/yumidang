@@ -5,6 +5,7 @@ DB 시작/종료는 호출자가 담당한다. 이 runner는 functions serve만 
 원격 배포·실제 PASS/문자·외부 모델 검증을 의미하지 않는다.
 """
 import argparse
+import base64
 from datetime import datetime, timedelta, timezone
 import json
 import os
@@ -16,6 +17,7 @@ import tempfile
 import time
 import tomllib
 import uuid
+from urllib.parse import urlencode
 from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
@@ -96,6 +98,92 @@ def verify_snapshot(root):
     db.require(prepare_edge.digest(original) == report["source_config_sha256"], "준비 후 원본 config 변경")
     db.require(prepare_edge.digest(rendered) == report["config_sha256"] and
                rendered == prepare_edge.edge_config(original), "준비 후 실행 config 변경")
+
+
+def search_scenarios(call, author, tokens, sensitive, passed):
+    """실제 GET → 종현 코어 → 민규 RPC. 동률·마이크로초를 가진 독립 가상 자료."""
+    ids = sorted(str(uuid.uuid4()) for _ in range(4))
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    created = [(now - timedelta(hours=1)).replace(microsecond=123456)] * 2
+    created += [created[0].replace(microsecond=123457), now - timedelta(days=1)]
+    starts = [(now + timedelta(days=1)).replace(microsecond=123456)] * 2
+    starts += [starts[0].replace(microsecond=123457), now - timedelta(days=3)]
+    address, detail, description = "검색비공개주소 123", "검색비공개상세지점", "검색제외소개문구"
+    sensitive.extend([address, detail, description])
+    values = []
+    for index, post_id in enumerate(ids):
+        cost = "null,null" if index == 3 else "'free',0"
+        deadline = starts[index] - timedelta(hours=2)
+        values.append(f"('{post_id}','{author}','엣지검색전시{index}','{description}','전시',"
+                      f"'{starts[index].isoformat()}','{(starts[index] + timedelta(hours=1)).isoformat()}',"
+                      f"'{deadline.isoformat()}','서울특별시 종로구 삼청동','{created[index].isoformat()}',{cost})")
+    db.sql("begin; insert into public.posts(id,author_id,title,description,category,starts_at,ends_at,recruitment_ends_at,public_area,created_at,cost_type,amount) values " +
+           ",".join(values) + f"; insert into private.post_search_locations(post_id,registered_place_name,registered_address) "
+           f"values('{ids[0]}','검색전시장','{address}'); insert into public.post_private_details(post_id,exact_location) "
+           f"values('{ids[0]}','{detail}'); commit;")
+
+    def search(params=None, token=None, expected=200):
+        query = urlencode(params or {})
+        return call("/posts" + ("?" + query if query else ""), token=token, expected=expected)
+
+    def card_ids(page):
+        return [post["id"] for post in page["posts"]]
+
+    anonymous = search()
+    db.require(anonymous["status"] == "results" and card_ids(anonymous) == [ids[2], ids[0], ids[1], ids[3]], "검색 기본 등록일 순서 오류")
+    fields = {"id", "title", "authorDisplayName", "publicArea", "startsAt", "endsAt", "cost", "state", "canApply"}
+    for card in anonymous["posts"]:
+        alias = card["authorDisplayName"]
+        db.require(set(card) == fields and card["publicArea"] == "서울특별시 종로구 삼청동", "검색 공개 투영/동 누락")
+        db.require(alias.startswith("동행 ") and alias[3:].isdigit() and card["canApply"] is False, "익명 별칭/신청 권한 오류")
+    serialized = json.dumps(anonymous, ensure_ascii=False)
+    db.require(not any(value in serialized for value in ["엣지검증회원", address, detail, description]), "익명 검색 비공개 원문 노출")
+    db.require(anonymous["posts"][-1]["cost"] == {"kind": "unknown"}, "NULL 비용을 미상으로 반환하지 않음")
+    db.require(card_ids(search({"availability": "recruiting"})) == [ids[2], ids[0], ids[1]], "모집 필터 오류")
+    db.require(len(search({"cost": "free"})["posts"]) == 3 and search({"cost": "paid"})["status"] == "no_results", "비용 필터 오류")
+    passed("search_anonymous_dong_alias_privacy_all_states_and_unknown_cost")
+
+    age = (datetime.now(timezone.utc).year - 1990)
+    age_filter = "30s" if age < 40 else "40plus"
+    member = search({"authorAge": age_filter}, token=tokens[1])
+    db.require(len(member["posts"]) == 4 and all(card["authorDisplayName"] == "엣****원" for card in member["posts"]), "회원 나이 필터/마스킹 오류")
+    db.require(member["posts"][0]["canApply"] is True and member["posts"][-1]["canApply"] is False, "회원 검색 신청 권한 오류")
+    db.require(search({"authorAge": "20s"}, token=tokens[1])["status"] == "no_results", "작성자 나이 필터 미적용")
+    period = {"periodStart": (now + timedelta(hours=1)).isoformat(), "periodEnd": (now + timedelta(days=2)).isoformat()}
+    db.require(len(search(period)["posts"]) == 3, "익명 기간 검색 거절/범위 오류")
+    db.require(search({"authorAge": age_filter}, expected=401)["code"] == "AUTH_REQUIRED", "익명 상세 나이 제한 누락")
+    search(token=tokens[0][:-8] + "AAAAAAAA", expected=401)
+    passed("search_member_mask_age_anonymous_period_and_invalid_jwt")
+
+    address_page = search({"query": "검색비공개주소"})
+    db.require(card_ids(address_page) == [ids[0]] and address not in json.dumps(address_page, ensure_ascii=False), "등록 주소 검색/반환 권한 분리 실패")
+    db.require(search({"query": detail})["status"] == "no_results" and search({"query": description})["status"] == "no_results", "상세 지점/소개가 검색됨")
+    passed("search_registered_address_match_without_private_fields")
+
+    first_cursor = None
+    for sort, expected in (("created_desc", [ids[2], ids[0], ids[1], ids[3]]), ("starts_asc", [ids[3], ids[0], ids[1], ids[2]])):
+        seen, cursor = [], None
+        for _ in range(5):
+            params = {"sort": sort, "limit": 1}
+            if cursor:
+                params["cursor"] = cursor
+            page = search(params)
+            seen.extend(card_ids(page))
+            cursor = page["nextCursor"]
+            if first_cursor is None:
+                first_cursor = cursor
+                decoded = json.loads(base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4)))
+                db.require(decoded["v"] == 2 and ".123457" in decoded["position"]["sortAt"], "v2 커서의 마이크로초 손실")
+            if cursor is None:
+                break
+        db.require(seen == expected and cursor is None and len(set(seen)) == 4, "정렬/동률/마이크로초 페이지 중복·누락")
+    for changed in ({"sort": "starts_asc"}, {"availability": "recruiting"}, {"query": "검색전시장"}):
+        db.require(search({"cursor": first_cursor, **changed}, expected=400)["code"] == "INVALID_REQUEST", "필터 변경 커서 거절 실패")
+    old = json.loads(base64.urlsafe_b64decode(first_cursor + "=" * (-len(first_cursor) % 4)))
+    old["v"] = 1
+    old_cursor = base64.urlsafe_b64encode(json.dumps(old).encode()).decode().rstrip("=")
+    search({"cursor": old_cursor}, expected=400)
+    passed("search_v2_sort_microseconds_ties_pagination_and_cursor_rejection")
 
 
 def main():
@@ -236,8 +324,9 @@ def main():
                 call("/me/extra", expected=404)
                 call("/evil/service-api/me", expected=404)
                 call("/me", body={}, expected=405)
-                call("/posts", token=None, expected=405)
-                passed("application_origin_denial_exact_routes_and_unconnected_search")
+                db.require(call("/posts", token=None)["status"] == "no_results", "빈 DB 공개 검색 연결 실패")
+                passed("application_origin_denial_exact_routes_and_connected_search")
+                search_scenarios(call, author, tokens, sensitive, passed)
 
                 now, post_id = datetime.now(timezone.utc), str(uuid.uuid4())
                 post = dict(postId=post_id, title="엣지 통합 동행", description="원문로그제외검증 " + secrets.token_hex(8), category="산책",
@@ -289,7 +378,7 @@ def main():
         db.require(db.sql("select (select count(*) from auth.users)+(select count(*) from public.profiles)+(select count(*) from public.posts)+(select count(*) from private.worker_jobs);").stdout.strip() == "0", "Edge fixture 잔존")
     print(json.dumps({"status": "PARTIAL" if findings else "PASS", "scenarios_passed": len(checks),
         "findings": findings, "fixtures_remaining": 0, "runtime": "local Supabase Edge and gateway",
-        "remote_deploy": "NOT_RUN", "public_search": "NOT_CONNECTED"}))
+        "remote_deploy": "NOT_RUN", "public_search": "LOCAL_EDGE_VERIFIED"}))
     return 2 if findings else 0
 
 

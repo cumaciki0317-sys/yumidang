@@ -101,8 +101,8 @@ export async function checkSearchCore(dependencies: Partial<SearchCoreDependenci
   });
   await probe("microsecond_two_field_cursor_roundtrip", async () => {
     const input: V2Input = { caller: "anonymous" };
-    // 동 검사는 별도 실행한다. 이 검사는 이전 지역 검증에서 멈추지 않고 커서 차이를 진단한다.
-    const cursorFixture = { ...fixture, publicArea: "서울특별시 종로구" };
+    // SQL의 공개 지역 제약에 맞는 동 fixture로 커서 정밀도·필터 결합을 검사한다.
+    const cursorFixture = { ...fixture };
     const first = await deps.search(deps.repository(rpc({ items: [cursorFixture], nextCursor: { sortAt, id } })), input);
     expect(typeof first.nextCursor === "string", "CURSOR_MISSING");
     let called = false;
