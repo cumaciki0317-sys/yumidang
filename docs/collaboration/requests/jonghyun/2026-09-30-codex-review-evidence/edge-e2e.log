@@ -1,0 +1,17 @@
+▶ 실제 Edge: 종현 함수 5개의 인증·입력 검사·비활성 응답·함수 간 호출
+  ✔ ai-chat (116.2465ms)
+  ✔ places (72.900833ms)
+  ✔ event-sync (54.785417ms)
+  ✔ review-summary-worker (53.832334ms)
+  ✔ scheduled-jobs/daily → service-api maintenance·worker 함수 간 호출 (105.581ms)
+{"cors":{"allowed":{"status":200,"allowOrigin":"*"},"disallowed":{"status":200,"allowOrigin":"*"}}}
+  ✔ CORS 관찰(판정은 기록만) (4.838709ms)
+✔ 실제 Edge: 종현 함수 5개의 인증·입력 검사·비활성 응답·함수 간 호출 (636.599542ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 702.863375

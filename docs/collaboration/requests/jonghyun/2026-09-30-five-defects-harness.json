@@ -1,0 +1,34 @@
+{
+  "baseline": "ff9c14fec069dc03b575cfd33d9deb62625fd924",
+  "actor": "jonghyun",
+  "task": "사용자 승인 결함 F1~F5 수정 및 로컬 재검증",
+  "preexisting_sha256_snapshot": "/private/tmp/yumidang-fix-0930-baseline.json",
+  "lanes": {
+    "root": [
+      "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/03_review_summary_worker.sql",
+      "tests/integration/jonghyun/summary-lock-regression.mjs",
+      "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md",
+      "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-evidence.json"
+    ],
+    "ai_design_audit": [
+      "backend/supabase/functions/_shared/ai/Agents/chatbot/preference-match.ts",
+      "backend/supabase/functions/_shared/ai/Agents/chatbot/discovery.ts",
+      "tests/ai/jonghyun/chatbot-semantic.test.mjs"
+    ],
+    "events_jobs_audit": [
+      "backend/supabase/functions/_shared/integrations/events/tourapi.ts",
+      "tests/functions/jonghyun/event-provider-tourapi.test.mjs",
+      "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/04_events.sql",
+      "tests/database/jonghyun/events.sql"
+    ],
+    "review_policy_docs": []
+  },
+  "excluded": [
+    "commit",
+    "push",
+    "remote DB",
+    "provider requests",
+    "minkyu owned file edits"
+  ]
+}

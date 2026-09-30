@@ -1,0 +1,9 @@
+✔ 동시 예약은 원장 한도를 넘지 않고, 같은 예약의 동시 정산은 한 번만 성립 (379.4665ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 452.7925

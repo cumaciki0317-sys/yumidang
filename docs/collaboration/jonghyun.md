@@ -1,5 +1,11 @@
 # 종현 작업 현황
 
+## 2026-09-30 Codex 인수·결함 수정·Git 통합 — 최신
+
+Claude 구현 인수 검토에서 확인한 F1~F5를 수정했다. Node 265/265, Deno 진입점 5개, 실제 SQL·DB/REST·잠금 회귀는 PASS다. [수정 결과·명령](requests/jonghyun/2026-09-30-five-defects-fixed.md), [실행 근거](requests/jonghyun/2026-09-30-five-defects-evidence.json), [커밋·통합 인계](requests/jonghyun/2026-09-30-jonghyun-integration-handoff.md)를 먼저 읽는다.
+
+사용자 승인으로 기존 `ff9c14f`에서 `jonghyun/claude-handoff-20260930`을 만들고 후기 정책과 종현 구현·수정, 검증 기록을 분리해 `minkyu/foundation-harness`로 통합한다. 이는 Git 소스 통합이며 제안 SQL 5개의 정식 채택·운영 활성화가 아니다. 민규 연결·service-api 타입/CORS 문제·팀 결정은 대기 중이다. 실제 AI 호출·원문 전송·원격 DB·배포는 하지 않았다. 아래 날짜별 미커밋·미실행 표시는 당시 기록이며 최신 범위는 위 인계를 따른다.
+
 ## 2026-09-30 잔여 작업 구현(Claude) — 최신
 
 [260929 설계](../../260929_종현담당_PLAN.md) 5.1~5.7을 로컬에서 구현·검증했다. 실제 결과·재현 명령·남은 조건은 [Codex 인계](requests/jonghyun/2026-09-29-claude-implementation-handoff.md), 민규 변경 요청은 [통합 요청](requests/jonghyun/2026-09-29-claude-minkyu-requests.md), 화면 계약은 [유미·성호 전달](requests/jonghyun/2026-09-29-claude-frontend-contract.md), 사용자 답변(2026-09-30: Q1·Q4·Q9 반영, Q2·Q3 유지)은 [질문 HTML](requests/jonghyun/2026-09-29-claude-implementation-questions.html), 남은 결정은 [미정사항](requests/jonghyun/미정사항.md)에 모았다.
