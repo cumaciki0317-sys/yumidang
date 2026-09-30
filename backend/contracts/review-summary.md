@@ -1,5 +1,14 @@
 # AI 리뷰 요약·작업 연결 계약 초안
 
+## 2026-09-30 현재 구현 — 중간 저장·worker·24시간 실행 (Claude 구현, 종현 범위)
+
+아래 9/29·9/28 절의 “중간 저장 DB 보완 대기·모델 미정” 문구는 당시 기록이다. 현재 상태는 [lane S 기록](../../docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md)과 [전체 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md)를 따른다.
+
+- **DB(제안, 민규 채택 대기):** [03_review_summary_worker.sql](../../docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/03_review_summary_worker.sql). 점유 횟수(`attempt`)와 실제 실패 횟수(`failed_attempts`) 분리, 정상 양보 `yield_job`(실패 미증가), 실패 `retry_job`/`fail_job`, 대체 `supersede_job`. 원문 없는 비공개 중간 저장과 점유 토큰·DB 시각·문자열 revision·근거 전체집합 확인 RPC. 게시·중간 저장 삭제·`(jobId, sourceRevision)` 표식을 한 트랜잭션으로 처리해 settle 전 중단 뒤 재실행에도 게시 시각·요약이 바뀌지 않는다. 원문 변경 트랜잭션에서 옛 revision 중간 저장을 삭제한다.
+- **worker:** `POST /functions/v1/review-summary-worker`(내부 인증, 빈 본문). 설정·버전·모델·승인된 안전 검사기·RPC 허용 중 하나라도 없으면 작업을 점유하지 않고 `not_enabled`. 실행당 작업 수·시간 한도 안에서 정상 분할을 이어 처리하고, 예산 소진은 실패가 아니라 명시 지연(`REVIEW_SUMMARY_BUDGET_DEFER_MS`) 뒤 재개다.
+- **24시간:** `POST /functions/v1/scheduled-jobs/daily {limit}` = 공개 정리·요약 등록(모델 무관) → 설정된 행사 갱신 → worker 명시 횟수 호출. 단계 독립, 단계별 상태. 실제 cron 등록·시작 시각은 운영 결정(미실행).
+- **현재 제품 동작:** 안전(의미·개인정보) 검사 방법이 미확정이라 `APPROVED_SUMMARY_SAFETY_CHECKER = null` → 요약을 생성·게시하지 않는다. 후기 공개·원문·칭찬 차트는 영향 없다. 모델은 포텐스닷 `claude-5-sonnet`이며 `REVIEW_SUMMARY_MODEL_VERSION`은 `potens.claude-5-sonnet` 표식과 같아야 한다.
+
 상태: **종현 독립 요약·작업 코어 구현**. 가상 저장소·모델로 검증하며, 실제 후기 공개 조회·revision·요약 저장·작업 RPC는 아직 연결·검증되지 않았다. 기준: [최신 계획](../../PLAN.md) 3-5·4·6장, [상세 설계](../../PLAN_상세설계.md) 5.4·5.5·7·8·11.3장. 평가 제출·프로필 공개 권한의 원천 계약은 민규 소유 [reviews.md](reviews.md)다.
 
 ## 2026-09-29 후기 공개·실행 경계 정정

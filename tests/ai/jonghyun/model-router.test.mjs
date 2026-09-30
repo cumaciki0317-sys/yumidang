@@ -44,7 +44,17 @@ test("예산 소진은 제공사를 호출하지 않고 대체도 차단",async(
 test("취소·잘못된 사용량은 안전하게 종료하고 실패 예약을 무조건 환불하지 않음",async()=>{
  const s=setup();const c=new AbortController();c.abort();await assert.rejects(createModelRouter(s).generate({...req,signal:c.signal}),/CANCELLED/);
  s.primary.model.generate=async()=>({...result,usage:{inputTokens:1,outputTokens:999}});
- await assert.rejects(createModelRouter(s).generate(req),/INVALID_MODEL_RESPONSE/);assert.equal(s.settlements[0].outcome,"unknown");
+ // 출력 한도 초과 응답은 거절하지만 공급사가 보고한 실제 소비량(예약보다 큼)으로 정산한다.
+ await assert.rejects(createModelRouter(s).generate(req),/INVALID_MODEL_RESPONSE/);
+ assert.deepEqual(s.settlements[0],{reservationId:s.settlements[0].reservationId,outcome:"success",usage:{inputTokens:1,outputTokens:999}});
+});
+test("사용량 미보고(null)는 성공 응답이어도 unknown 정산으로 예약 전체를 유지하고 0으로 채우지 않음",async()=>{
+ const s=setup();s.primary.model.generate=async()=>({...result,usage:null});
+ const response=await createModelRouter(s).generate(req);
+ assert.equal(response.usage,null);assert.deepEqual(s.settlements,[{reservationId:s.settlements[0].reservationId,outcome:"unknown"}]);
+ assert.equal(typeof s.reservations[0].inputBytes,"number");assert.ok(s.reservations[0].inputBytes>=s.reservations[0].inputChars);
+ s.primary.model.generate=async()=>({...result,usage:{inputTokens:-1,outputTokens:1}});
+ await assert.rejects(createModelRouter(s).generate(req),/INVALID_MODEL_RESPONSE/);assert.equal(s.settlements.at(-1).outcome,"unknown");
 });
 
 test("JS 경계에서 변조한 오류 코드는 고정 오류로 치환",async()=>{

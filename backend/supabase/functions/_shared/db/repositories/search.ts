@@ -1,6 +1,6 @@
 /**
  * 검색 저장소의 순수 일치 규칙·가상 어댑터와 v2 RPC 주입 어댑터.
- * 최신 SQL·공통 클라이언트의 v2 계약을 사용한다. 이 어댑터의 실제 DB 연결은 NOT_RUN이다.
+ * 최신 SQL·공통 클라이언트의 v2 계약을 사용한다. 실제 로컬 GET 연결 검증은 민규 검색 연결 인계(2026-09-29)를 따른다.
  * 등록 주소는 이 경계에서 일치 판단에만 쓰며 서비스·AI에 전달하지 않는다.
  */
 import {
@@ -146,11 +146,17 @@ function wireCard(value: unknown, caller: PublicPostListInput["caller"]): Public
     else throw new Error("INVALID_SEARCH_RESPONSE");
     cost = raw.cost as PublicPostCard["cost"];
   }
-  return projectPublicPostCard({
-    id: raw.id.toLowerCase(), title: raw.title, authorDisplayName: raw.authorDisplayName,
-    publicArea: raw.publicArea, startsAt: raw.startsAt, endsAt: raw.endsAt,
-    cost, state: raw.state, canApply: raw.canApply,
-  } as PublicPostCard, caller);
+  // DB 카드의 날짜·지역·상태 투영 실패는 사용자 입력 오류(INVALID_SEARCH_TIMESTAMP 등, 400)가 아니라
+  // 내부 응답 오류다. 투영 검증만 좁게 감싸며 입력 정규화·커서·db.rpc 오류는 여기서 바꾸지 않는다.
+  try {
+    return projectPublicPostCard({
+      id: raw.id.toLowerCase(), title: raw.title, authorDisplayName: raw.authorDisplayName,
+      publicArea: raw.publicArea, startsAt: raw.startsAt, endsAt: raw.endsAt,
+      cost, state: raw.state, canApply: raw.canApply,
+    } as PublicPostCard, caller);
+  } catch {
+    throw new Error("INVALID_SEARCH_RESPONSE");
+  }
 }
 
 /**

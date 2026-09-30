@@ -114,6 +114,8 @@ export function assertSourceEventRecord(event: SourceEventRecord): void {
   if (event.admission.kind === "described" && (
     typeof event.admission.text !== "string" || event.admission.text.trim() === "" || /<[^>]*>/.test(event.admission.text)
   )) throw new Error("INVALID_EVENT_ADMISSION");
+  // 공식 상세 주소 규칙이 확인되지 않은 제공처는 null이다. 값이 있으면 자격 증명 없는 http(s) 주소만 허용한다.
+  if (event.sourceUrl === null) return;
   let url: URL;
   try { url = new URL(event.sourceUrl); } catch { throw new Error("INVALID_EVENT_SOURCE_URL"); }
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) {

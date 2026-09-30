@@ -78,7 +78,9 @@ export interface PublicPostCursorPosition {
   sortAt: string;
   id: string;
 }
-const categories = new Set(["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"]);
+/** 공고 분류 고정 목록. 검색 v2 SQL·HTTP와 같으며 AI 조건 해석도 이 목록만 사용한다. */
+export const POST_CATEGORIES = ["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"] as const;
+const categories: ReadonlySet<string> = new Set(POST_CATEGORIES);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const maxCursorLength = 4096;
 

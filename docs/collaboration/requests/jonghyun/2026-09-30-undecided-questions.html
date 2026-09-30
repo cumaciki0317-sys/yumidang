@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미정사항 결정표</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--text:#1d1d1f;--muted:#5d5d63;--line:#dcdcd6;--accent:#2f5d9e;--accent-soft:#e8eef8;--warn:#8a5a00;--warn-soft:#fff4dc;--tag:#eef0f3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--card:#1e1e22;--text:#ececef;--muted:#a3a3ad;--line:#34343b;--accent:#8fb2ec;--accent-soft:#223149;--warn:#f0c46b;--warn-soft:#3a2f17;--tag:#2a2a30}}
+:root[data-theme="dark"]{--bg:#141416;--card:#1e1e22;--text:#ececef;--muted:#a3a3ad;--line:#34343b;--accent:#8fb2ec;--accent-soft:#223149;--warn:#f0c46b;--warn-soft:#3a2f17;--tag:#2a2a30}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+main{max-width:880px;margin:0 auto;padding:24px 16px 130px}
+h1{font-size:1.5rem;margin:0 0 8px}
+h2{font-size:1.1rem;margin:28px 0 10px;color:var(--muted)}
+.lead{color:var(--muted);margin:0 0 16px}
+.note{background:var(--warn-soft);border-left:4px solid var(--warn);padding:10px 14px;border-radius:6px;margin-bottom:18px}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+nav a{font-size:.85rem;padding:3px 8px;border-radius:999px;background:var(--tag);color:var(--text);text-decoration:none}
+nav a.done{background:var(--accent-soft);color:var(--accent)}
+fieldset{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 18px;scroll-margin-top:16px}
+legend{font-weight:700;font-size:1.05rem;padding:0 6px}
+.meta{font-size:.88rem;color:var(--muted);margin:4px 0 10px}
+dl{margin:0 0 12px}dt{font-weight:600;margin-top:10px}dd{margin:2px 0 0}
+.opt{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.opt input{margin-right:8px}
+.opt small{display:block;color:var(--muted);margin:4px 0 0 26px}
+textarea{width:100%;min-height:70px;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px}
+.bar div{max-width:880px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+button{font:inherit;padding:10px 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
+#status{color:var(--muted)}
+#out{width:100%;min-height:200px;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>미정사항 결정표 — 13개 질문</h1>
+<p class="lead">민규·팀과 논의하려던 <a href="미정사항.md">미정사항</a>을 사용자가 직접 결정할 수 있게 질문으로 풀었습니다. 각 질문에 A(추천)·B·C·D(직접 작성) 네 가지가 있습니다. 다 고른 뒤 아래 “답변 전체 복사”를 눌러 대화에 붙여 넣으세요. 모르겠거나 팀과 먼저 상의할 항목은 D에 “팀 논의”라고 적거나 비워 두면 됩니다.</p>
+<p class="note">비워 둔 질문은 “미응답”으로 복사되며 승인으로 처리하지 않습니다. 이 페이지는 아무 데도 전송하지 않습니다. 이미 정한 것(C 의미 비교, 정렬, 24시간 주기, 포텐스닷 Sonnet 5, 추가 지출 0원·합성 입력만, 일부 결과 표시, 링크 없는 행사 카드, 성향 20개·40자, KOPIS HTTPS)은 다시 묻지 않습니다.</p>
+<nav id="nav"></nav>
+<form id="f"></form>
+<textarea id="out" readonly aria-label="복사할 답변"></textarea>
+</main>
+<div class="bar"><div><button type="button" id="copy">답변 전체 복사</button><span id="status" role="status"></span></div></div>
+<script>
+const G=[
+["AI 켜기에 필요한 결정",[
+{id:"U1",ref:"미정사항 2",title:"포텐스닷 ‘추가 지출 0원’ 근거를 어떻게 확보할까요?",
+fact:"포텐스닷 공개 사이트에는 요금제·무료 범위·최대 출력 제한·사용량 필드 설명이 없습니다. 코드는 준비돼 있지만, 0원 근거가 없어서 실제 AI 호출은 한 번도 하지 않았습니다. 근거가 생기면 서버가 미리 정한 가상 사례로 10번만 호출하는 계획이 준비돼 있습니다.",
+before:"실제 AI 호출 0회. AI 탐색·요약은 켜지지 않습니다.",
+impact:"근거가 생겨야 첫 실제 결과를 볼 수 있고, 그 결과로 U6(품질 기준)을 정할 수 있습니다. 응답에서 사용량 필드 이름도 확인됩니다.",
+opts:[["A. 계정 보유자가 포텐스닷 마이페이지의 요금제·일일 한도·API 무료 포함 여부 화면을 키가 안 보이게 캡처해 공유 → 확인 후 합성 10회만 호출 (추천)","가장 빠르고 확인 가능한 근거입니다. 한계: 화면에 출력 상한·과금 단위가 없으면 B를 추가로 해야 할 수 있습니다."],
+["B. 포텐스닷 고객지원에 요금·API 무료 포함·출력 제한·사용량 필드 규격을 공식 문의한 뒤 진행","가장 확실하지만 답변을 기다리는 동안 AI 검증이 멈춥니다."],
+["C. 실제 AI 검증을 당분간 미루고 가상 검사만 유지","비용 위험은 0이지만 품질 기준과 AI 기능 출시가 계속 미뤄집니다."]]},
+{id:"U2",ref:"미정사항 5",title:"실제 회원의 대화·후기를 외부 AI(포텐스닷)에 보내도 되는 조건은?",
+fact:"지금은 팀 검토 전이라 서버가 만든 가상 입력만 보낼 수 있게 막혀 있습니다. 포텐스닷과 그 뒤의 모델 제공사가 입력을 보관하는지, 학습에 쓰는지는 확인되지 않았습니다. 유미당 서버는 대화 원문을 저장하지 않습니다(확정).",
+before:"회원이 AI 탐색을 써도 ‘탐색 불가’로 응답하고 요약도 만들지 않습니다.",
+impact:"이 기준이 정해져야 실제 회원에게 AI 기능을 켤 수 있습니다. 기준이 엄격할수록 쓸 수 있는 공급사가 줄어듭니다.",
+opts:[["A. 공급사가 ‘학습에 쓰지 않음’과 ‘보관 기간’을 문서로 확인해 주면, 팀이 그 조건을 검토·승인한 뒤 실제 입력 허용 (추천)","현실적인 기준이며 근거가 남습니다. 한계: 공급사 답변을 받아야 합니다."],
+["B. ‘보관하지 않음(0일)’이 확인될 때만 허용","개인정보 보호는 가장 강하지만, 이 조건을 보장하는 공급사를 찾기 어려울 수 있습니다."],
+["C. ‘학습에 쓰지 않음’만 확인되면 보관 기간과 무관하게 허용","빨리 켤 수 있지만 원문이 외부에 얼마나 남는지 모르는 상태가 됩니다."]]},
+{id:"U3",ref:"미정사항 7",title:"AI가 만든 요약·설명이 괜찮은지 첫 결과를 어떻게 검사할까요?",
+fact:"‘첫 합성 결과를 함께 본 뒤 검사 방법과 품질 목표를 정한다’는 기존 합의가 있습니다. 여기서는 첫 결과를 어떤 방식으로 볼지만 정합니다. 합격률 같은 숫자는 결과를 본 뒤 정합니다. 지금은 안전 검사기가 없어서 요약 생성과 AI 설명이 꺼져 있습니다. 연락처 노출·‘100% 안전’ 같은 과장·근거 없는 문장을 거르는 기본 규칙은 이미 있습니다.",
+before:"요약 없음, AI 설명 없음. 원문 후기·칭찬 차트는 그대로 보입니다.",
+impact:"검사 방식이 정해지면 제가 그 방식대로 검사기를 구현하고 요약·설명을 켤 수 있습니다.",
+opts:[["A. 사람 검토 + 자동 규칙: 팀 2명 이상이 합성 결과표를 사례별로 적절/부적절 판정하고, 자동 규칙은 계속 적용 (추천)","의미가 맞는지는 사람이 가장 정확하게 봅니다. 한계: 초기 검토 시간이 들고, 운영 중 자동 검사는 별도로 정해야 합니다."],
+["B. A에 더해 AI가 한 번 더 검사(두 번째 호출로 근거와 맞는지 확인)","자동화 수준이 높지만 호출이 두 배가 되어 비용·한도를 더 씁니다."],
+["C. 자동 규칙만으로 판단","빠르고 저렴하지만 ‘말은 되는데 틀린 요약’을 잡지 못합니다."]]}]],
+["운영 방식",[
+{id:"U4",ref:"미정사항 3",title:"하루 한 번 실행(행사 갱신·새 요약 등록)을 언제 시작할까요?",
+fact:"하루 한 번 실행하는 기능은 구현됐고, 실제 예약 등록만 안 된 상태입니다(민규 작업). 같은 날 두 번 실행돼도 중복 등록되지 않습니다. 후기 공개와 자동 완료는 이 시각을 기다리지 않습니다.",
+before:"자동 실행 없음. 행사 갱신과 새 요약 등록이 일어나지 않습니다.",
+impact:"새 행사와 새 요약이 반영되는 시각이 정해집니다.",
+opts:[["A. 매일 새벽 03:00 (한국 시간) (추천)","이용이 적은 시간에 처리하고 아침에 반영됩니다. 한계: 공급사 점검 시간과 겹치면 그날은 실패로 기록되고 다음 날 다시 시도합니다."],
+["B. 매일 06:00 (한국 시간)","출근 시간 전에 반영되고 심야 점검 시간은 피할 가능성이 큽니다."],
+["C. 매일 00:10 (한국 시간)","날짜가 바뀌자마자 반영되지만 심야 이용 시간과 겹칠 수 있습니다."]]},
+{id:"U5",ref:"미정사항 6",title:"멈춰 버린 ‘중간 요약’은 얼마나 보관할까요?",
+fact:"후기가 많으면 요약을 여러 번에 나눠 만들며, 그 중간 결과(생성된 문장과 후기 번호, 원문 사본 없음)를 비공개로 저장합니다. 완료·폐기·후기 변경·실패 시에는 이미 자동 삭제됩니다. 남는 경우는 AI가 꺼지거나 한도가 계속 부족해 작업이 오래 멈춘 때뿐입니다.",
+before:"오래 멈춘 중간 요약은 삭제하지 않고 남아 있습니다.",
+impact:"기간을 정하면 제가 일일 실행에 ‘기간 지난 중간 요약 삭제’를 추가합니다. 삭제된 작업은 다음 등록 때 처음부터 다시 요약합니다.",
+opts:[["A. 마지막 갱신 뒤 7일 지나면 삭제 (추천)","하루 한 번 실행 기준으로 여러 번 이어갈 기회를 주면서 생성 문장이 오래 남지 않습니다. 한계: 7일 넘게 AI가 꺼져 있으면 처음부터 다시 만들어 호출이 늘어납니다."],
+["B. 30일 지나면 삭제","다시 만드는 일이 줄지만 생성 문장이 더 오래 남습니다."],
+["C. 자동 삭제 없이 작업이 끝날 때만 삭제(현재 방식 유지)","추가 작업이 없지만 멈춘 작업의 중간 결과가 계속 남습니다."]]},
+{id:"U6",ref:"미정사항 8",title:"운영 한도 숫자(한 번에 볼 공고 수, 호출 횟수, 재시도 등)는 누가 어떻게 정할까요?",
+fact:"AI 탐색 11개, 요약 13개, 행사·장소 5개, 일일 실행 7개, 예산 원장 한도 등 모든 숫자를 ‘기본값 없이 환경값으로만’ 받게 했습니다. 값이 없으면 그 기능만 꺼집니다.",
+before:"실제 서버에서는 해당 기능이 꺼져 있습니다(값이 들어가면 켜짐).",
+impact:"숫자에 따라 응답 속도, 비용, 찾는 결과 수, 요약이 끝나는 시간이 달라집니다.",
+opts:[["A. Claude가 합성 검증과 공급사 한도를 바탕으로 보수적인 제안값 표(항목별 이유 포함)를 만들고 민규·팀이 검토해 확정 (추천)","빠르게 시작하면서 결정권은 팀에 남습니다. 한계: 실제 사용량 데이터가 없어 출시 후 조정이 필요합니다."],
+["B. 민규가 운영 환경을 준비하면서 직접 정한다","환경 제약을 가장 잘 반영하지만 민규 일정에 달려 있습니다."],
+["C. 출시 초기에는 모두 아주 작게 시작하고 관찰 후 늘린다(값은 팀이 정함)","안전하지만 초기 사용자 경험(결과 수·속도)이 떨어질 수 있습니다."]]},
+{id:"U7",ref:"미정사항 9",title:"AI 예산 원장에서 ‘중단된 호출 예약’을 어떻게 정리할까요?",
+fact:"AI를 부르기 전에 예산을 먼저 예약하고, 끝나면 실제 사용량으로 정산합니다. 서버가 중간에 멈추면 사용량을 모르므로, 안전하게 예약량 전체를 쓴 것으로 남겨 둡니다(환불하지 않음). 그래서 오래 쓰면 쓰지 않은 예산도 소진된 것으로 쌓일 수 있습니다.",
+before:"중단된 예약은 계속 ‘사용함’으로 남습니다. 초과 지출 위험은 없습니다.",
+impact:"정리 방식에 따라 운영자 작업과 예산을 얼마나 정확히 관리할지가 달라집니다.",
+opts:[["A. 기간(예: 매월)마다 새 원장으로 교체하고 이전 원장은 기록으로 보존 (추천)","단순하고 안전하며 기간별 사용량도 확인할 수 있습니다. 한계: 교체 시점을 운영자가 챙겨야 합니다."],
+["B. 운영자가 확인한 중단 예약만 해제하는 기능을 추가","정확하지만 제가 기능을 만들어야 하고, 운영자가 판단해야 합니다."],
+["C. 정리하지 않는다(현재 유지)","작업이 없지만 한도가 점점 줄어들 수 있습니다."]]},
+{id:"U8",ref:"미정사항 9",title:"요약 worker가 실행할 때마다 하는 ‘DB 권한 확인’(가벼운 호출 9번)을 유지할까요?",
+fact:"worker는 요약 작업을 가져가기 전에, 필요한 DB 기능을 쓸 권한이 있는지 아무것도 바꾸지 않는 방식으로 9번 확인합니다. 권한이 빠진 채 작업을 가져가 실패 처리되는 일을 막기 위해서입니다. 하루 몇 번 실행 기준으로 부담은 작습니다.",
+before:"매 실행마다 9번 확인합니다.",
+impact:"유지하면 설정 실수를 미리 막고, 줄이면 호출이 조금 줄어듭니다.",
+opts:[["A. 유지 (추천)","설정 실수로 작업이 실패 처리되는 것을 미리 막습니다. 한계: 실행마다 가벼운 DB 호출 9번이 추가됩니다."],
+["B. 서버가 뜬 뒤 첫 실행 때만 확인","호출은 줄지만, 실행 중 설정이 바뀌면 잡지 못합니다."],
+["C. 민규 권한 반영이 끝나면 제거","가장 가볍지만 이후 설정 실수를 미리 잡지 못합니다."]]}]],
+["행사·장소",[
+{id:"U9",ref:"미정사항 4",title:"행사의 지역·분류를 화면 필터와 어떻게 연결할까요?",
+fact:"KOPIS는 지역을 ‘서울특별시’, 분류를 ‘서양음악(클래식)’·‘연극’처럼 자기 용어로 줍니다. 지금은 원문 그대로 저장만 하고, 앱의 공고 분류(전시·공연 등)나 동 단위 지역으로 바꾸지 않았습니다.",
+before:"행사 조회 기능은 지역·분류 값이 정확히 같을 때만 거르며, 화면에서 무엇을 보여줄지는 정해지지 않았습니다.",
+impact:"화면 필터 구성과 검색 결과가 달라집니다. 공급사가 늘어날수록 차이가 커집니다.",
+opts:[["A. 행사 전용 필터로 원문 값을 그대로 보여주고, 필터 값 목록 조회를 추가 (추천)","추측 매핑이 없어 정확하고 작업이 작습니다. 한계: 공급사가 늘면 값 체계가 섞입니다."],
+["B. 앱 분류(공연·전시 등)로 바꾸는 매핑표를 만들어 공고와 같은 필터를 사용","화면이 일관되지만 매핑표를 만들고 유지해야 하며, 애매한 분류는 팀이 정해야 합니다."],
+["C. 지역·분류 필터 없이 키워드·기간만 제공","가장 단순하지만 찾기 기능이 약해집니다."]]},
+{id:"U10",ref:"미정사항 10",title:"두 번째 행사 공급사를 연결할까요?",
+fact:"지금은 KOPIS 하나만 연결돼 있습니다(공연 중심). TourAPI(관광공사, 축제·전시 등)는 공공데이터포털에서 받은 키가 인코딩/디코딩 중 어느 형식인지 몰라서 보류 중입니다. 서울 열린데이터는 암호화(HTTPS) 연결이 없어 키 보호를 위해 연결하지 않았습니다.",
+before:"행사는 KOPIS 공연만 수집합니다.",
+impact:"전시·축제 등 행사 폭이 넓어집니다. 공급사마다 정규화 작업과 검사가 추가됩니다.",
+opts:[["A. TourAPI: 공공데이터포털 마이페이지에서 입력한 키가 ‘Encoding’인지 ‘Decoding’인지 확인해 알려주면 제가 연결 (추천)","공식 HTTPS 공급사이고 확인이 간단합니다. 한계: 활용 신청 승인 상태에 따라 추가 확인이 필요할 수 있습니다."],
+["B. 서울 열린데이터에 HTTPS 지원을 문의하고, 지원되면 연결","서울 문화행사에 강하지만 답변이 올 때까지 보류됩니다."],
+["C. 당분간 KOPIS만 유지","작업은 없지만 행사 종류가 공연에 치우칩니다."]]},
+{id:"U11",ref:"미정사항 10",title:"KOPIS 행사의 공식 상세 링크는 어떻게 할까요?",
+fact:"KOPIS 목록 자료와 공식 가이드에는 공연 상세 페이지 주소 규칙이 없습니다. 그래서 지금은 링크 없이 ‘출처: KOPIS’만 표시합니다(결정 Q4-A).",
+before:"행사 카드에 링크 없음.",
+impact:"링크가 있으면 사용자가 공연 정보를 바로 확인할 수 있습니다.",
+opts:[["A. KOPIS에 HTTPS 지원 문의와 함께 공식 상세 링크 규칙도 문의하고, 확인 전까지 링크 없음 유지 (추천)","추측 주소를 넣지 않고 공식 근거를 남깁니다. 한계: 답변 전까지 링크가 없습니다."],
+["B. KOPIS 공개 사이트의 공연 상세 주소 형태를 직접 확인해 적용","빠르지만 비공식 규칙이라 사이트 개편 때 깨질 수 있습니다."],
+["C. KOPIS 상세 조회 기능에 공식 링크 정보가 있는지 조사해, 있으면 사용","공식 자료 기반이지만 공연마다 추가 호출이 생깁니다."]]},
+{id:"U12",ref:"미정사항 10",title:"Kakao 장소 검색의 예전 403 오류는 어떻게 처리할까요?",
+fact:"민규의 이전 확인에서는 403(거절)이 났지만, 이번 작업 환경의 키로 1번 호출했을 때는 정상(200)이었습니다. 원인(키 차이, 콘솔 설정 변경, 일시 상태)은 특정하지 못했습니다.",
+before:"코드는 403을 ‘공급사 인증 거절’로 안전하게 처리합니다.",
+impact:"운영 환경 키에서 다시 403이 나면 장소 검색이 막힙니다.",
+opts:[["A. 운영 키를 넣을 때 1회 확인하고, 403이 다시 나면 그때 오류 유형을 기록해 원인 추적 (추천)","불필요한 작업 없이 실제 운영 키 기준으로 확인합니다. 한계: 문제가 운영 직전에 드러날 수 있습니다."],
+["B. 민규 환경의 키와 이번 키를 지금 비교해 원인 확인","미리 원인을 알 수 있지만 두 환경을 맞춰 봐야 합니다."],
+["C. 키를 새로 발급해 모든 환경에서 통일","깔끔하지만 키 교체와 환경 재설정이 필요합니다."]]}]],
+["민규 영역과 겹치는 결정",[
+{id:"U13",ref:"미정사항 9",title:"회원 성향(관심사·대화 방식·MBTI)을 어느 조회에서 제공할까요?",
+fact:"지금은 성향 전용 조회를 따로 만들었습니다(본인 성향, 공고 작성자 성향). 기존 ‘내 프로필 조회’와 ‘공개 프로필(S14)’ 응답에는 성향이 없습니다. 화면(S13·S14·S15-2)과 AI 판단은 같은 저장값을 써야 합니다.",
+before:"성향 저장·조회 기능은 제안 상태이며, 화면에서 쓸 경로는 민규 작업을 기다립니다.",
+impact:"민규의 기존 조회 기능을 얼마나 바꿀지, 화면이 몇 번 조회해야 하는지가 달라집니다.",
+opts:[["A. 성향 전용 조회는 유지하고, 공개 프로필(S14) 응답에만 성향을 추가 (추천)","AI와 화면이 같은 값을 쓰고 기존 ‘내 프로필’은 그대로 둡니다. 한계: 내 성향 편집 화면은 전용 조회를 따로 부릅니다."],
+["B. ‘내 프로필’과 ‘공개 프로필’ 모두에 성향을 넣고 전용 조회는 AI용으로만 사용","화면 호출이 줄지만 민규의 기존 기능 수정 범위가 커집니다."],
+["C. 화면도 성향 전용 조회만 사용","기존 기능 변경이 없지만 화면이 여러 번 조회해야 합니다."]]}]]];
+const f=document.getElementById("f"),nav=document.getElementById("nav"),all=[];
+for(const [group,qs] of G){
+  const h=document.createElement("h2");h.textContent=group;f.appendChild(h);
+  for(const q of qs){
+    all.push(q);
+    const a=document.createElement("a");a.href="#"+q.id;a.textContent=q.id;a.id="nav-"+q.id;nav.appendChild(a);
+    const fs=document.createElement("fieldset");fs.id=q.id;
+    fs.innerHTML=`<legend>${q.id}. ${q.title}</legend><p class="meta">관련: ${q.ref}</p>
+    <dl><dt>지금 확인된 사실</dt><dd>${q.fact}</dd><dt>결정 전 동작</dt><dd>${q.before}</dd><dt>선택에 따른 영향</dt><dd>${q.impact}</dd></dl>`;
+    q.opts.forEach(([label,desc],i)=>{const l=document.createElement("label");l.className="opt";
+      l.innerHTML=`<input type="radio" name="${q.id}" value="${"ABC"[i]}"><b>${label}</b><small>${desc}</small>`;fs.appendChild(l);});
+    const d=document.createElement("label");d.className="opt";
+    d.innerHTML=`<input type="radio" name="${q.id}" value="D"><b>D. 기타 — 직접 작성</b><textarea name="${q.id}-other" aria-label="${q.id} 기타 답변" placeholder="원하는 방식을 적어 주세요 (예: 팀 논의)"></textarea>`;
+    d.querySelector("textarea").addEventListener("input",e=>{if(e.target.value.trim())d.querySelector("input").checked=true;mark();});
+    fs.appendChild(d);f.appendChild(fs);
+  }
+}
+function mark(){for(const q of all){document.getElementById("nav-"+q.id).classList.toggle("done",!!f.querySelector(`input[name="${q.id}"]:checked`));}}
+f.addEventListener("change",mark);
+document.getElementById("copy").addEventListener("click",async()=>{
+  const lines=["[미정사항 결정 답변 — 2026-09-30]"];let n=0;
+  for(const q of all){
+    const v=f.querySelector(`input[name="${q.id}"]:checked`)?.value;
+    const other=f.querySelector(`textarea[name="${q.id}-other"]`).value.trim();
+    if(!v){lines.push(`${q.id}(${q.ref}): 미응답`);continue;}n++;
+    lines.push(v==="D"?`${q.id}(${q.ref}): D(기타) — ${other||"(내용 없음)"}`:`${q.id}(${q.ref}): ${q.opts["ABC".indexOf(v)][0]}`);
+  }
+  const text=lines.join("\n"),out=document.getElementById("out");out.value=text;out.style.display="block";
+  let ok=false;try{await navigator.clipboard.writeText(text);ok=true;}catch{out.select();try{ok=document.execCommand("copy");}catch{}}
+  document.getElementById("status").textContent=(ok?"복사했습니다":"아래 상자의 내용을 직접 복사해 주세요")+` · 응답 ${n}/${all.length}`;
+});
+</script>
+</body>
+</html>
