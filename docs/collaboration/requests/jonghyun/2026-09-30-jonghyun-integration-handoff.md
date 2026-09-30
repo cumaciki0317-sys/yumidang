@@ -7,7 +7,7 @@
 1. [결함 5건 수정 결과](2026-09-30-five-defects-fixed.md): 현재 수정·검증 상태와 실행 명령.
 2. [실행 근거 JSON](2026-09-30-five-defects-evidence.json): 검사 로그·코드 해시·DB 복구 결과.
 3. [Claude 인계 ①~⑥](2026-09-29-claude-implementation-handoff.md), [사용자 설계 결정](../../../../260929_종현담당_PLAN.md).
-4. [민규 R1~R7](2026-09-29-claude-minkyu-requests.md), [팀·민규 T1~T5/M1~M6](미정사항.md).
+4. [민규 R1~R7](2026-09-29-claude-minkyu-requests.md), [팀·민규 T1~T5/M1~M6](../../../../정책.md#follow-ups).
 
 과거 문서의 “미커밋·커밋/푸시 제외”는 당시 작업 범위다. 이번 사용자 승인과 실제 Git 기록을 우선한다. 과거 인수 검토의 F1~F5 FAIL은 재현 근거로 보존했고, 현재 상태는 수정 결과의 PASS다. AGENTS의 포텐스닷 어댑터 첫 구현 안내도 이전 기록이다.
 

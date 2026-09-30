@@ -4,6 +4,7 @@
 
 ## 기획과 화면 기준
 
+- [정책 — 확정·미정·검토 필요](정책.md): 팀 전체가 현재 정책과 남은 결정을 확인하는 문서
 - [PRD](docs/planning/requirements/PRD.md): 팀의 제품 목적·대상·핵심 흐름
 - [추가 요구 사항](<docs/planning/requirements/추가 요구 사항.md>): 추가 기능과 결정 이유
 - [화면 수정 요청](docs/planning/requirements/전달.md): 구체적인 요청과 검토 사항

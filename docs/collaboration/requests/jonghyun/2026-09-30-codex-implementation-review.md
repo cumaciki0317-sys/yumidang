@@ -140,4 +140,4 @@ docker --context colima-yumidang-minkyu exec -i supabase_db_yumidang-minkyu-db \
 
 최신 사용자 결정은 [설계 1절](../../../../260929_종현담당_PLAN.md)을 기준으로 인수했다. Q1 일부 결과, U4 매일 00:01 Asia/Seoul, U5 자동 TTL 없음·종결 시 정리, U9 원문 필터값 목록, U10 TourAPI, U13 공개 프로필 성향 추가를 옛 미정으로 되돌리지 않는다. U5와 관련해 설계의 앞선 일반 행·일부 주석에는 ‘보관기간 팀 검토’라는 이전 문구가 남아 있다. 새 운영 보관기간을 만들지 않고 최신 결정과 맞추는 문서 동기화가 필요하다. 외부 AI 보관 기간 T1은 별개의 미해결 사항이다.
 
-현재 발견한 다섯 항목은 구현 결함이므로 사용자에게 새로운 제품 정책을 선택하게 할 필요가 없다. 이미 답변한 질문 HTML을 다시 제시하지 않는다. 민규 요청·팀 결정 목록은 [미정사항](미정사항.md), [R1~R7](2026-09-29-claude-minkyu-requests.md), [운영 제안](2026-09-30-operational-values-proposal.md), [재개 목록](2026-09-30-resume-todo.md), [프론트 계약](2026-09-29-claude-frontend-contract.md)을 이어받는다.
+현재 발견한 다섯 항목은 구현 결함이므로 사용자에게 새로운 제품 정책을 선택하게 할 필요가 없다. 이미 답변한 질문 HTML을 다시 제시하지 않는다. 민규 요청·팀 결정 목록은 [미정사항](../../../../정책.md#follow-ups), [R1~R7](2026-09-29-claude-minkyu-requests.md), [운영 제안](2026-09-30-operational-values-proposal.md), [재개 목록](2026-09-30-resume-todo.md), [프론트 계약](2026-09-29-claude-frontend-contract.md)을 이어받는다.

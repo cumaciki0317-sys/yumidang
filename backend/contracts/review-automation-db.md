@@ -1,12 +1,14 @@
 # 후기 공개·재요약 자동화 DB 계약
 
-현재 정책 변경: `20260929120000_review_release_and_completion_reservations.sql`. 기존 `20260923101000_review_automation.sql`은 이력으로 보존한다. 이번 사용자 승인으로 하네스 범위 안 담당 경계 예외를 적용하며 실제 실행 결과는 [새 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md)를 따른다.
+현재 적용할 서비스 정책은 [정책.md](../../정책.md)를 따른다. 한쪽 후기 공개는 **실제 동행 완료 시각 +24시간**, 양쪽 제출은 즉시다. 당도는 상대 후기를 열람할 수 있게 될 때 동시에 반영하고, 완료 횟수는 후기와 관계없이 동행 완료 즉시 반영한다. 당도 산식은 민규·팀 검토 필요다. 아래 RPC·구현·검증 기록과 정책의 확정은 구분하며, 이번 문서 동기화에서 코드·DB·화면의 최신 정책 일치 여부는 검증하지 않았다. [반영 확인 작업](../../정책.md#follow-ups)을 확인한다.
+
+2026-09-29 구현 migration: `20260929120000_review_release_and_completion_reservations.sql`. 기존 `20260923101000_review_automation.sql`은 이력으로 보존한다. 해당 작업은 사용자 승인 하네스 범위의 담당 경계 예외로 수행했으며 당시 실제 실행 결과는 [새 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md)를 따른다.
 
 ## 공개 기준과 보존
 
 기존 후기를 일괄 공개하지 않는다. 기존 `review_publication` 행은 `publication_source=override`로 보존한다. 이후 제출된 후기는 `policy`, `is_public=false`의 명시적 공개 후보로 등록된다. 사용자에게 새 선택 동의를 요구하는 정책을 추가하지 않는다.
 
-양쪽 후기를 제출하면 완료 알림 기준 24시간 전이어도 즉시 공개한다. 한쪽만 제출하면 완료 알림 확인 가능 시각 +24시간부터 공개하고, 그 이후 작성 기한 안에 제출한 후기는 즉시 열람할 수 있다. 미완료·실제 분쟁·불발/노쇼는 제외하며 수동 완료는 양측 완료 확인을 요구한다. 일반 후기 작성 기간은 실제 완료 시각부터 7일이다. 분쟁 중 작성·기한·공개 보류, 동행 인정 후 남은 기간 재개·최소 24시간 보장의 기존 예외는 유지한다. 한쪽 7일 대기와 양쪽 24시간 대기 조건은 제거한다. 기존 policy 대기 후기에도 적용하며 당사자 열람·공개 프로필·칭찬·AI 입력 적격성이 같은 공개 조건을 따른다. policy 행은 is_public 정리 배치가 아직 실행되지 않아도 조회 시 현재 조건으로 판단한다. 명시적 override 숨김과 공개 후보가 없는 과거 후기는 보존한다. 한마디 없는 공개 평가는 칭찬 집계에 포함하고 AI 입력에는 제외한다.
+현재 적용할 공개 정책: 양쪽 후기를 제출하면 완료 후 24시간 전이어도 즉시 공개한다. 한쪽만 제출하면 실제 동행 완료 시각 +24시간부터 공개하고, 그 이후 작성 기한 안에 제출한 후기는 즉시 열람할 수 있다. 미완료·실제 분쟁·불발/노쇼는 제외하며 수동 완료는 양측 완료 확인을 요구한다. 일반 후기 작성 기간은 실제 완료 시각부터 7일이다. 분쟁 중 작성·기한·공개 보류, 동행 인정 후 남은 기간 재개·최소 24시간 보장의 기존 예외는 유지한다. 한쪽 7일 대기와 양쪽 24시간 대기 조건은 제거한다. 기존 policy 대기 후기에도 적용하며 당사자 열람·공개 프로필·칭찬·AI 입력 적격성이 같은 공개 조건을 따른다. policy 행은 is_public 정리 배치가 아직 실행되지 않아도 조회 시 현재 조건으로 판단한다. 명시적 override 숨김과 공개 후보가 없는 과거 후기는 보존한다. 한마디 없는 공개 평가는 칭찬 집계에 포함하고 AI 입력에는 제외한다.
 
 `set_review_publication(p_review_id,p_is_public)`은 기존 서비스 역할 전용 호출이며 명시적 `override`로 저장한다. 한 번 숨긴 후기는 이후 자동화가 다시 공개하지 않는다. 조회마다 현재 완료/분쟁/시간 조건도 확인해 과거 공개 플래그가 현재 공개를 보장하지 않는다.
 
@@ -27,7 +29,7 @@
 
 공개 후기 원문/공개 상태/완료/확인/분쟁 변경은 기존 BEFORE trigger에서 projection revision 증가·요약 무효화와 `private.review_refresh_outbox` 기록을 함께 수행한다. outbox는 profile별 최신 처리 필요를 합쳐 보관하며 후기 원문이나 대화 내용을 저장하지 않는다. 트랜잭션 실패 시 모두 롤백된다.
 
-`process_due_review_publications(p_limit integer)`는 모델 설정 없이 공개 정리만 수행하고 `{publishedCount}`를 반환한다. `process_review_summary_refresh(p_limit integer,p_model_version text,p_prompt_version text)`는 outbox 소비·요약 작업 등록만 수행하며 `{processedCount,enqueuedCount}`를 반환한다. 모두 service_role 전용이고 limit는 1~1000이다. 요약 버전은 명시적 1~64자 `[A-Za-z0-9_.-]` 필수이며 가짜 기본값을 넣지 않는다. 기존 `process_review_automation`은 호환용 합성 wrapper로 세 count를 반환한다. 공개는 제출·조회 조건에 따라 즉시 적용되며, 요약 등록의 하루 한 번 주기가 공개를 지연시키지 않는다.
+`process_due_review_publications(p_limit integer)`는 모델 설정 없이 공개 정리만 수행하고 `{publishedCount}`를 반환한다. `process_review_summary_refresh(p_limit integer,p_model_version text,p_prompt_version text)`는 outbox 소비·요약 작업 등록만 수행하며 `{processedCount,enqueuedCount}`를 반환한다. 모두 service_role 전용이고 limit는 1~1000이다. 요약 버전은 명시적 1~64자 `[A-Za-z0-9_.-]` 필수이며 가짜 기본값을 넣지 않는다. 기존 `process_review_automation`은 호환용 합성 wrapper로 세 count를 반환한다. 공개는 제출·조회 조건에 따라 즉시 적용되며, 매일 00:01 Asia/Seoul의 새 요약 작업 등록이 공개를 지연시키지 않는다.
 
 1. 공개 정리 RPC가 약속 행을 `SKIP LOCKED`로 점유해 policy 후보의 공개 조건을 확인한다. 이 단계에는 모델/프롬프트 버전이 필요 없다.
 2. 별도 요약 등록 RPC는 profile projection을 먼저 잠근 뒤 최신 snapshot/revision을 계산한다. source 작성과 동일한 projection→outbox 순서로 잠근다.

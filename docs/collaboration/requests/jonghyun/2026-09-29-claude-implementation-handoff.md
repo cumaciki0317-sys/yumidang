@@ -1,5 +1,7 @@
 # 종현 잔여 작업 구현 인계 — Claude → Codex (2026-09-29 시작, 2026-09-30 종료)
 
+현재 확정 정책·남은 결정·팀 후속 작업은 [정책.md](../../../../정책.md#follow-ups)에서 확인한다. 아래는 당시의 구현·검증 기록이며, 미정사항 관련 링크는 통합 정책 문서로 연결한다.
+
 설계 [260929_종현담당_PLAN.md](../../../../260929_종현담당_PLAN.md) 5.1~5.7의 로컬 구현·검증 기록이다. 대화 요약이 아니라 **재확인 가능한 변경·명령·근거**를 모은다. 커밋·푸시·원격 DB 변경·운영 배포·실제 AI 호출은 하지 않았다. 사용자 답변(Q1~Q9)까지 반영한 최종본이다.
 
 ## ① 시작·종료 상태
@@ -27,7 +29,7 @@
 - **5.5·5.6:** `_shared/db/repositories/{jobs,review-summaries}.ts`, `_shared/jobs/{lease,registry}.ts`, `_shared/jobs/daily.ts` 신규, `_shared/ai/Agents/review-summary/{orchestrator,source-loader}.ts`, `review-summary-worker/{handler,index}.ts`, `scheduled-jobs/{handler,index}.ts`
 - **제안 SQL(민규 채택 대기):** `2026-09-29-claude-proposed-sql/{01_ai_budget,02_profile_traits,03_review_summary_worker,04_events}.sql`
 - **검사:** `tests/database/jonghyun/{run_proposals.py,run_minkyu_regression.py,ai_budget.sql,profile_traits.sql,review_summary_worker.sql,events.sql}`; `tests/ai/jonghyun/{potens-adapter,budget-runtime,chatbot-semantic,synthetic-eval,event-discovery}.test.mjs`·`synthetic-eval.mjs` 신규, `chatbot.test.mjs`·`model-router.test.mjs` 수정; `tests/functions/jonghyun/{search-response-errors,ai-chat-http,places-http,event-provider,event-sync,summary-repository,review-summary-worker,daily-run}.test.mjs` 신규; `tests/integration/jonghyun/{ai-budget-concurrency,summary-worker-concurrency,summary-worker-rest,ai-discovery-rest,events-rest,ai-event-discovery-rest,edge-functions-e2e}.mjs` 신규, `discovery-flow.test.mjs` 수정; `tests/fixtures/jonghyun/synthetic-eval-cases.json` 신규
-- **문서:** `backend/contracts/{search,ai-chat,review-summary}.md`, `docs/collaboration/jonghyun.md`, 이 폴더의 하네스·lane 기록 3개·[민규 요청](2026-09-29-claude-minkyu-requests.md)·[화면 계약](2026-09-29-claude-frontend-contract.md)·[질문 HTML](2026-09-29-claude-implementation-questions.html)·[미정사항](미정사항.md)·scheduled-jobs 패치·이 인계
+- **문서:** `backend/contracts/{search,ai-chat,review-summary}.md`, `docs/collaboration/jonghyun.md`, 이 폴더의 하네스·lane 기록 3개·[민규 요청](2026-09-29-claude-minkyu-requests.md)·[화면 계약](2026-09-29-claude-frontend-contract.md)·[질문 HTML](2026-09-29-claude-implementation-questions.html)·[미정사항](../../../../정책.md#follow-ups)·scheduled-jobs 패치·이 인계
 
 ## ② 설계 대비 구현 현황
 
@@ -39,7 +41,7 @@
 | 5.4 장소·첫 행사 | **부분 완료** | `createPlacesHandler/Runtime`, `createKopisEventProvider`, `createRpcEventRepository`, `createEventSyncRuntime`, 제안 `upsert_events`·`list_public_events` | KOPIS 검증 기간(2026-10-05~11) 1페이지 실호출 5건, 로컬 DB 재저장 중복 0, 실제 PostgREST 저장·조회 | Kakao 이전 403 원인 미특정, KOPIS HTTPS는 A로 결정(공식 문의·인증서 재확인 남음), 서울 HTTPS 없음, Tour 키 형식 unknown, 작업 큐 미연결, 공개 조회 HTTP는 민규 |
 | 5.5 요약 중간 저장·게시 | **완료(로컬)**, 허용 목록 대기 | 제안 SQL 03, `createRpcReviewSummaryRepository`, `createRpcJobRepository` | 점유 만료·옛 토큰 거절·원문 변경 시 삭제·재개·게시 후 중단 재실행 멱등·정상 양보 실패 미증가·bigint 문자열, **실제 두 세션 경쟁·PostgREST 전체 흐름** | 허용 목록(민규), 방치 중간 저장 보관기간(미정사항 6) |
 | 5.6 worker·24시간 | **부분 완료** | `createReviewSummaryWorkerRuntime`, `runDaily`(`POST /scheduled-jobs/daily`) | 정상 분할이 같은 실행에서 이어짐(실제 DB: 양보 여러 번 → 게시, 실패 0, 모델 3회), 한도 소진 시 추가 호출 없음 | cron 등록·시각(미정사항 3), 안전 검사기 없음 → `SAFETY_CHECK_NOT_APPROVED` |
-| 5.7 평가·화면·운영 | **부분 완료** | 합성 사례·실행기(dry-run 10회), [화면 계약](2026-09-29-claude-frontend-contract.md), [미정사항](미정사항.md) | 유미·성호 인계 | 실제 모델 평가·품질 기준·공개 활성화, 우편번호 연결 확인, gateway CORS·Edge, 완료 실행기 운영 준비 — 미실행 |
+| 5.7 평가·화면·운영 | **부분 완료** | 합성 사례·실행기(dry-run 10회), [화면 계약](2026-09-29-claude-frontend-contract.md), [미정사항](../../../../정책.md#follow-ups) | 유미·성호 인계 | 실제 모델 평가·품질 기준·공개 활성화, 우편번호 연결 확인, gateway CORS·Edge, 완료 실행기 운영 준비 — 미실행 |
 
 ### 설계에서 달라진 점과 근거
 
@@ -58,15 +60,15 @@
 | Q2 제외 조건 결합 | A | 현재 규칙 유지(제외는 항상 모두 적용, 애매하면 질문). 설계 결정 표에 기록 |
 | Q3 공개 필드만 바뀐 카드 | A | 현재 동작 유지. 설계 결정 표에 기록 |
 | Q4 링크 없는 행사 카드 | A | `AiCard.sourceName` 필수(행사), `sourceUrl: string \| null`; `result-builder.ts` 검사 변경; 행사 AI 포트 `createEventDiscovery`를 ai-chat 기본 포트로 연결 |
-| Q5 KOPIS HTTPS | 설명 후 A(2026-09-30) | 코드 변경 없음(이미 고정 HTTPS·redirect 거부·HTTP 대체 없음). 결정과 키 노출 상태, 남은 일(KOPIS 공식 문의·인증서 만료 전 재확인)을 [미정사항 1](미정사항.md)·설계 결정 표에 기록 |
-| Q6 0원 근거 | A | 팀 자료 대기. 필요한 자료 목록을 [미정사항 2](미정사항.md)에 기록. 실제 호출 0회 유지 |
-| Q7 일일 실행 시각 | D(C + 미정사항 문서) | 민규·팀 결정. [미정사항.md](미정사항.md) 신규 작성(회의용 통합) |
-| Q8 행사 지역·분류 매핑 | D(민규·팀 논의) | [미정사항 4](미정사항.md) |
+| Q5 KOPIS HTTPS | 설명 후 A(2026-09-30) | 코드 변경 없음(이미 고정 HTTPS·redirect 거부·HTTP 대체 없음). 결정과 키 노출 상태, 남은 일(KOPIS 공식 문의·인증서 만료 전 재확인)을 [미정사항 1](../../../../정책.md#follow-ups)·설계 결정 표에 기록 |
+| Q6 0원 근거 | A | 팀 자료 대기. 필요한 자료 목록을 [미정사항 2](../../../../정책.md#follow-ups)에 기록. 실제 호출 0회 유지 |
+| Q7 일일 실행 시각 | D(C + 미정사항 문서) | 민규·팀 결정. 당시 `미정사항.md`를 신규 작성했으며 현재 확인 위치는 [정책.md](../../../../정책.md#follow-ups) |
+| Q8 행사 지역·분류 매핑 | D(민규·팀 논의) | [미정사항 4](../../../../정책.md#follow-ups) |
 | Q9 성향 입력 상한 | A | 20개·40자를 제품 기준으로 채택. `traits.ts`·`intent.ts`·`02_profile_traits.sql` 주석, 화면 계약 갱신 |
 
 ### 임의로 결정하지 않고 남긴 부분
 
-[미정사항.md](미정사항.md)에 통합: KOPIS HTTPS 운영, 0원 근거 자료, 일일 실행 시각, 행사 지역·분류 매핑, 외부 보관 기준, 방치 중간 저장 보관기간, 의미 검사·품질 목표, 운영 한도 숫자, 민규 연결 작업, 공급사 확인 사항.
+[미정사항.md](../../../../정책.md#follow-ups)에 통합: KOPIS HTTPS 운영, 0원 근거 자료, 일일 실행 시각, 행사 지역·분류 매핑, 외부 보관 기준, 방치 중간 저장 보관기간, 의미 검사·품질 목표, 운영 한도 숫자, 민규 연결 작업, 공급사 확인 사항.
 
 ## ③ 검증 근거
 
@@ -118,7 +120,7 @@
 
 ## ⑤ 남은 질문과 다음 순서
 
-남은 결정은 [미정사항.md](미정사항.md)(민규·팀 회의용)에 모았다. 질문 HTML은 [2026-09-29-claude-implementation-questions.html](2026-09-29-claude-implementation-questions.html)(답변 완료).
+남은 결정은 [미정사항.md](../../../../정책.md#follow-ups)(민규·팀 회의용)에 모았다. 질문 HTML은 [2026-09-29-claude-implementation-questions.html](2026-09-29-claude-implementation-questions.html)(답변 완료).
 
 **Codex가 먼저 검토할 위험 지점**
 
@@ -147,7 +149,7 @@ node tests/ai/jonghyun/synthetic-eval.mjs            # 계획 확인(호출 없�
 
 ## ⑥ 2026-09-30 미정사항 결정 후속(자동 재개 포함)
 
-사용자 결정표 U1~U13 답변을 [설계 결정 표](../../../../260929_종현담당_PLAN.md)에 기록하고, [미정사항](미정사항.md)을 민규·팀 처리 목록(T1~T5, M1~M6)으로 정리했다. 진행 기록은 [재개 목록](2026-09-30-resume-todo.md).
+사용자 결정표 U1~U13 답변을 [설계 결정 표](../../../../260929_종현담당_PLAN.md)에 기록하고, [미정사항](../../../../정책.md#follow-ups)을 민규·팀 처리 목록(T1~T5, M1~M6)으로 정리했다. 진행 기록은 [재개 목록](2026-09-30-resume-todo.md).
 
 | 항목 | 구현·결과 |
 |---|---|
