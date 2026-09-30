@@ -15,19 +15,33 @@ function count(value: JsonValue | undefined): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) return unavailable();
   return value;
 }
-/** 민규 API의 집계만 반환한다. 임의 upstream 필드·원문·상세 오류는 전달하지 않는다. */
+/** 민규 API의 집계와 정형 상태만 반환한다. 임의 upstream 필드·원문은 전달하지 않는다. */
 function projectMaintenance(body: JsonValue): JsonValue {
   const envelope = record(body);
   if (Object.hasOwn(envelope, "error")) return unavailable();
   const data = record(envelope.data);
-  const completion = record(data.completion), reviews = record(data.reviews);
+  const completion = record(data.completion), reviews = record(data.reviews), summary = record(data.summary);
+  if (completion.status !== "managed_by_reservation" || reviews.status !== "published") return unavailable();
+  let projectedSummary: JsonValue;
+  if (summary.status === "queued") {
+    if (data.status !== "ok") return unavailable();
+    projectedSummary = { status: "queued", processedCount: count(summary.processedCount), enqueuedCount: count(summary.enqueuedCount) };
+  } else {
+    if (data.status !== "partial") return unavailable();
+    if (summary.status === "pending_configuration" || summary.status === "configuration_error") {
+      projectedSummary = { status: summary.status };
+    } else if (summary.status === "failed") {
+      const codes = new Set(["AUTH_REQUIRED", "ACCESS_DENIED", "RESOURCE_NOT_FOUND", "INVALID_REQUEST", "STATE_CONFLICT",
+        "EXTERNAL_UNAVAILABLE", "INTERNAL_ERROR", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "METHOD_NOT_ALLOWED"]);
+      if (typeof summary.code !== "string" || !codes.has(summary.code) || typeof summary.retryable !== "boolean") return unavailable();
+      projectedSummary = { status: "failed", code: summary.code, retryable: summary.retryable };
+    } else return unavailable();
+  }
   return {
-    completion: { completedCount: count(completion.completedCount) },
-    reviews: {
-      publishedCount: count(reviews.publishedCount),
-      processedCount: count(reviews.processedCount),
-      enqueuedCount: count(reviews.enqueuedCount),
-    },
+    status: data.status,
+    completion: { status: "managed_by_reservation" },
+    reviews: { status: "published", publishedCount: count(reviews.publishedCount) },
+    summary: projectedSummary,
   };
 }
 
@@ -39,10 +53,7 @@ export function createScheduledJobsRuntime(read: EnvReader, fetchImpl: FetchLike
     maxBodyBytes: config.maxRequestBytes,
     authenticateInternal: (request) => requireInternalCaller(request, config),
     maintenance: async (limit) => {
-      // 기존 API는 두 버전 없이 완료 처리도 시작하지 않는다. 가상 버전으로 우회하지 않는다.
-      const version = /^[A-Za-z0-9_.-]{1,64}$/;
-      if (!config.reviewSummaryModelVersion || !config.reviewSummaryPromptVersion ||
-          !version.test(config.reviewSummaryModelVersion) || !version.test(config.reviewSummaryPromptVersion)) return unavailable();
+      // 공개는 모델 설정과 무관하다. 요약 설정의 대기·오류 상태는 API가 공개 후 판정한다.
       const result = await fetchJson(`${config.supabaseUrl}/functions/v1/service-api/internal/maintenance`, {
         method: "POST",
         headers: { Authorization: `Bearer ${workerSecret}`, "Content-Type": "application/json", Accept: "application/json" },

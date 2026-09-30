@@ -1,7 +1,7 @@
 /** 민규담당: 인증 서버/DB 경계의 실패·권한 혼동·비밀 비노출을 네트워크 모형으로 검증. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { loadRuntimeConfig, type RuntimeConfig } from "../../../backend/supabase/functions/_shared/config/env.ts";
+import { loadRuntimeConfig, inspectReviewSummaryConfig, type RuntimeConfig } from "../../../backend/supabase/functions/_shared/config/env.ts";
 import { requirePrincipal, requireOptionalPrincipal, getPrincipalToken, type Principal } from "../../../backend/supabase/functions/_shared/auth/principal.ts";
 import { requireInternalCaller } from "../../../backend/supabase/functions/_shared/auth/internal-caller.ts";
 import { evaluateTrustedEligibility } from "../../../backend/supabase/functions/_shared/auth/eligibility.ts";
@@ -134,13 +134,13 @@ test("내부 인증은 별도 비밀만 받으며 역할 헤더·사용자 JWT·
 
 test("내부 DB는 고정 RPC 목록과 서비스 키만 사용한다", async () => {
   const client = createInternalClient(config(), async (url, init) => {
-    assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/process_due_completions`);
+    assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/process_due_review_publications`);
     assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`);
     assert.equal(new Headers(init?.headers).get("apikey"), env.SUPABASE_SERVICE_ROLE_KEY);
     return json({ processed: 1 });
   });
-  assert.deepEqual(await client.rpc("process_due_completions", { p_limit: 1 }), { processed: 1 });
-  for (const name of ["get_my_profile", "sql", "profiles", "complete_signup"]) await assert.rejects(client.rpc(name, {}), code("ACCESS_DENIED"));
+  assert.deepEqual(await client.rpc("process_due_review_publications", { p_limit: 1 }), { processed: 1 });
+  for (const name of ["get_my_profile", "sql", "profiles", "complete_signup", "process_due_completions", "process_review_automation"]) await assert.rejects(client.rpc(name, {}), code("ACCESS_DENIED"));
 });
 
 test("DB SQLSTATE는 고정 공개 오류로 변환하고 상세·힌트를 버린다", async () => {
@@ -249,4 +249,25 @@ test("익명 검색의 HTTP403 + SQLSTATE28000은 로그인 필요이며 다른4
     const client = createPublicClient(config(), async () => json(body, 403));
     await assert.rejects(client.rpc("search_public_posts_v2", {}), code(expected));
   }
+});
+
+
+test("요약 전용 설정 오류는 공통 환경 시작을 막지 않고 별도 검사한다", () => {
+  for (const value of [undefined, "", " unsafe", "unsafe\nvalue", "unsafe\n", "x".repeat(65), "valid-version"]) {
+    const config = loadRuntimeConfig((key) => key === "REVIEW_SUMMARY_MODEL_VERSION" ? value : key === "REVIEW_SUMMARY_PROMPT_VERSION" ? "review-summary-v1" : env[key]);
+    assert.equal(config.reviewSummaryModelVersion, value);
+    const result = inspectReviewSummaryConfig({ modelVersion: config.reviewSummaryModelVersion, promptVersion: config.reviewSummaryPromptVersion });
+    assert.equal(result.status, value === undefined ? "pending_configuration" : value === "valid-version" ? "ready" : "configuration_error");
+    assert.equal(JSON.stringify(config), '{"configured":true}');
+  }
+});
+
+test("분리된 후기 공개·요약 RPC만 내부 allowlist를 통과한다", async () => {
+  const calls: string[] = [];
+  const client = createInternalClient(config(), async (url) => {
+    calls.push(String(url).split("/").at(-1)!);
+    return json({ processedCount: 1, enqueuedCount: 1 });
+  });
+  for (const name of ["process_due_review_publications", "process_review_summary_refresh"]) await client.rpc(name, {});
+  assert.deepEqual(calls, ["process_due_review_publications", "process_review_summary_refresh"]);
 });

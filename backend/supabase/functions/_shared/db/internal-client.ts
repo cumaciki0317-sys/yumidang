@@ -4,7 +4,7 @@ import { createRpcTransport, type FetchLike, type RpcClient } from "./transport.
 const internalRpcs = new Set([
   "enqueue_job", "claim_job", "complete_job", "retry_job",
   "load_public_review_snapshot", "publish_review_summary", "set_review_publication",
-  "set_post_search_location", "process_due_completions", "process_review_automation",
+  "set_post_search_location", "process_due_review_publications", "process_review_summary_refresh",
 ]);
 /** HTTP 호출부는 requireInternalCaller 성공 뒤에만 생성한다. 내부 워커도 같은 제한을 받는다. */
 export function createInternalClient(config: RuntimeConfig, fetchImpl: FetchLike = fetch): RpcClient {

@@ -28,6 +28,10 @@ begin
     insert into public.appointment_reviews(id, appointment_id, reviewer_id, rating, comment)
       values (v_review, v_appointment, v_author, 5, case when v_i = 4 then null else '친절한 동행이었어요 ' || v_i end);
   end loop;
+  -- 이 suite는 역사/운영자 공개 근거를 검증한다. 새 policy 후보와 구분한다.
+  update private.review_publication set publication_source='override',is_public=false
+    where review_id in(select id from public.appointment_reviews where appointment_id in
+      (select id from public.appointments where join_request_id in(select id from public.join_requests where requester_id=v_target)));
   v_snap := public.load_public_review_snapshot(v_target);
   assert (v_snap->>'eligibleCount')::integer = 0, 'No legacy review may be auto-published';
   for v_i in 1..2 loop perform public.set_review_publication(md5('summary-review-' || v_i)::uuid, true); end loop;

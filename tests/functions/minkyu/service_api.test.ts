@@ -9,7 +9,7 @@ const otherId = "22222222-2222-4222-8222-222222222222";
 function setup(overrides: Partial<ServiceApiDependencies> = {}) {
   const calls: { name: string; args: Record<string, JsonValue>; role: string }[] = [];
   const auth: string[] = [];
-  const client = (role: string) => ({ rpc: async (name: string, args: Record<string, JsonValue>) => { calls.push({ name, args, role }); return { ok: true }; } });
+  const client = (role: string) => ({ rpc: async (name: string, args: Record<string, JsonValue>) => { calls.push({ name, args, role }); return name === "process_due_review_publications" ? { publishedCount: 2 } : name === "process_review_summary_refresh" ? { processedCount: 3, enqueuedCount: 1 } : { ok: true }; } });
   const handler = createServiceApi({
     allowedOrigins: ["https://app.example.test"], maxBodyBytes: 8192,
     authenticateUser: async (request) => { auth.push("user"); if (request.headers.get("authorization") !== "Bearer member") throw new HttpError("AUTH_REQUIRED"); return client("user"); },
@@ -61,24 +61,84 @@ test("내부 worker를 사용자 JWT 대신 쓰거나 사용자 JWT로 내부 �
   assert.equal(calls.length, 0);
 });
 
-test("maintenance는 명시된 서버 버전만 쓰고 완료 다음 공개 처리를 한다", async () => {
+test("maintenance는 공개 후 명시된 버전으로 요약을 예약하며 자동 완료를 호출하지 않는다", async () => {
   const { send, calls } = setup();
-  assert.equal((await send("/internal/maintenance", "POST", { limit: 3 }, { authorization: "Bearer worker" })).status, 200);
+  const response = await send("/internal/maintenance", "POST", { limit: 3 }, { authorization: "Bearer worker" });
+  assert.equal(response.status, 200);
   assert.deepEqual(calls, [
-    { name: "process_due_completions", args: { p_limit: 3 }, role: "internal" },
-    { name: "process_review_automation", args: { p_limit: 3, p_model_version: "fixture-model", p_prompt_version: "fixture-prompt" }, role: "internal" },
+    { name: "process_due_review_publications", args: { p_limit: 3 }, role: "internal" },
+    { name: "process_review_summary_refresh", args: { p_limit: 3, p_model_version: "fixture-model", p_prompt_version: "fixture-prompt" }, role: "internal" },
   ]);
+  assert.deepEqual((await response.json()).data, {
+    status: "ok", completion: { status: "managed_by_reservation" },
+    reviews: { status: "published", publishedCount: 2 },
+    summary: { status: "queued", processedCount: 3, enqueuedCount: 1 },
+  });
 });
 
-test("모델 설정 누락·주입·잘못된 작업 한도는 쓰기 전에 차단한다", async () => {
-  const absent = setup({ maintenance: undefined });
-  assert.equal((await absent.send("/internal/maintenance", "POST", { limit: 1 }, { authorization: "Bearer worker" })).status, 503);
-  assert.equal(absent.calls.length, 0);
+test("요약 설정 누락·빈 값·잘못된 값은 공개를 실행한 뒤 별도 상태이며 outbox 처리를 호출하지 않는다", async () => {
+  for (const [maintenance, expected] of [
+    [undefined, "pending_configuration"],
+    [{ modelVersion: "valid" }, "pending_configuration"],
+    [{ modelVersion: "", promptVersion: "valid" }, "configuration_error"],
+    [{ modelVersion: "unsafe version", promptVersion: "valid" }, "configuration_error"],
+    [{ modelVersion: "valid", promptVersion: "bad\nvalue" }, "configuration_error"],
+  ] as const) {
+    const { send, calls } = setup({ maintenance });
+    const response = await send("/internal/maintenance", "POST", { limit: 1 }, { authorization: "Bearer worker" });
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).data, {
+      status: "partial", completion: { status: "managed_by_reservation" },
+      reviews: { status: "published", publishedCount: 2 }, summary: { status: expected },
+    });
+    assert.deepEqual(calls.map((call) => call.name), ["process_due_review_publications"]);
+  }
+});
+
+test("maintenance 본문 주입·잘못된 작업 한도는 공개 쓰기 전에 차단한다", async () => {
   const { send, calls } = setup();
   for (const body of [{}, { limit: 0 }, { limit: 101 }, { limit: 1, modelVersion: "attacker" }, { limit: "1" }]) {
     assert.equal((await send("/internal/maintenance", "POST", body, { authorization: "Bearer worker" })).status, 400);
   }
   assert.equal(calls.length, 0);
+});
+
+test("공개 실패는 요약을 실행하지 않고 실제 오류로 반환한다", async () => {
+  for (const result of ["throw", "malformed"]) {
+    const calls: string[] = [];
+    const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name) => {
+      calls.push(name);
+      if (result === "throw") throw new HttpError("EXTERNAL_UNAVAILABLE");
+      return { publishedCount: -1, privateDetail: "never-echo" };
+    } }) });
+    const response = await send("/internal/maintenance", "POST", { limit: 2 }, { authorization: "Bearer worker" });
+    assert.equal(response.status, 503);
+    assert.deepEqual(calls, ["process_due_review_publications"]);
+    assert.ok(!(await response.text()).includes("never-echo"));
+  }
+});
+
+test("공개 후 요약 실패·비정상 응답은 공개 결과와 정형 partial 오류로 구분한다", async () => {
+  for (const kind of ["timeout", "malformed", "unknown"]) {
+    const calls: string[] = [];
+    const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name) => {
+      calls.push(name);
+      if (name === "process_due_review_publications") return { publishedCount: 1, secret: "never-echo" };
+      if (kind === "timeout") throw new HttpError("EXTERNAL_UNAVAILABLE");
+      if (kind === "unknown") throw new Error("never-echo");
+      return { processedCount: 2, enqueuedCount: "2", secret: "never-echo" };
+    } }) });
+    const response = await send("/internal/maintenance", "POST", { limit: 2 }, { authorization: "Bearer worker" });
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.deepEqual(body.data, {
+      status: "partial", completion: { status: "managed_by_reservation" },
+      reviews: { status: "published", publishedCount: 1 },
+      summary: { status: "failed", code: kind === "unknown" ? "INTERNAL_ERROR" : "EXTERNAL_UNAVAILABLE", retryable: kind !== "unknown" },
+    });
+    assert.equal(calls.length, 2);
+    assert.ok(!JSON.stringify(body).includes("never-echo"));
+  }
 });
 
 test("사용자·상태·개인정보 필드 주입과 비객체 본문을 거절한다", async () => {
@@ -226,4 +286,34 @@ test("진입점 import는 Deno 환경 조회·서버 시작 없이 factory와 fe
   assert.equal(typeof entry.createRuntimeHandler, "function");
   assert.equal(typeof entry.default.fetch, "function");
   assert.equal(Object.keys(entry.default).join(","), "fetch");
+});
+
+test("실제 런타임 조립도 빈 요약 환경을 보존하고 내부 공개 RPC만 실행한다", async () => {
+  const { createRuntimeHandler } = await import("../../../backend/supabase/functions/service-api/index.ts");
+  const secret = "fixture_internal_" + "a".repeat(32);
+  const environment: Record<string, string> = {
+    SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "public-anon",
+    SUPABASE_SERVICE_ROLE_KEY: "fixture-service", INTERNAL_WORKER_SECRET: secret,
+    ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000",
+    REVIEW_SUMMARY_MODEL_VERSION: "", REVIEW_SUMMARY_PROMPT_VERSION: "review-summary-v1",
+  };
+  const previous = globalThis.fetch;
+  const calls: string[] = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push(String(url));
+    assert.equal(new Headers(init?.headers).get("authorization"), "Bearer fixture-service");
+    return Response.json({ publishedCount: 1 });
+  };
+  try {
+    const handler = createRuntimeHandler((key) => environment[key]);
+    const response = await handler(new Request("https://api.example.test/functions/v1/service-api/internal/maintenance", {
+      method: "POST", headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" }, body: JSON.stringify({ limit: 1 }),
+    }));
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.data.status, "partial");
+    assert.deepEqual(body.data.summary, { status: "configuration_error" });
+    assert.deepEqual(body.data.reviews, { status: "published", publishedCount: 1 });
+    assert.deepEqual(calls, ["https://project.example.test/rest/v1/rpc/process_due_review_publications"]);
+  } finally { globalThis.fetch = previous; }
 });
