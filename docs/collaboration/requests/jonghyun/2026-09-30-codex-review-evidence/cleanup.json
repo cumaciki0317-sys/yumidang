@@ -1,0 +1,28 @@
+{
+  "before_restore": {
+    "jobs": 0,
+    "posts": 0,
+    "users": 0,
+    "events": 0,
+    "reviews": 0,
+    "profiles": 0,
+    "summaries": 0,
+    "checkpoints": 0,
+    "appointments": 0,
+    "reservations": 0
+  },
+  "after_restore": {
+    "jobs": 0,
+    "posts": 0,
+    "users": 0,
+    "reviews": 0,
+    "profiles": 0,
+    "summaries": 0,
+    "appointments": 0,
+    "reservations": 0
+  },
+  "restored_migrations": 28,
+  "supabase_stop": 0,
+  "colima_stop": 0,
+  "volumes": "preserved"
+}

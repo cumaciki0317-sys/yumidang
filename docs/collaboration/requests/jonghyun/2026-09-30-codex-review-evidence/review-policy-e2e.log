@@ -1,0 +1,17 @@
+▶ real DB notifications, due timers, reschedule/cancel, reconnect, races and immediate review reads
+  ✔ committed reservation wakes LISTEN worker and completes at due time (538.811083ms)
+  ✔ reschedule rejects old generation; cancellation and dispute remove reservations (1055.039167ms)
+  ✔ connection loss resubscribes and recovers overdue committed reservation (152.85525ms)
+  ✔ appointment creation waits for concurrent end-time update and reserves the committed time (25.248375ms)
+  ✔ two sessions execute same reservation only once (8.048708ms)
+  ✔ both real submissions release immediately; post-hold submission also releases without maintenance (22.167542ms)
+  ✔ process restart recovers reservations committed while stopped (16.052459ms)
+✔ real DB notifications, due timers, reschedule/cancel, reconnect, races and immediate review reads (1871.949208ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1953.564125

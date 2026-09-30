@@ -1,0 +1,78 @@
+{
+  "name": "2026-09-30 Codex Claude 구현 인수 검토",
+  "actor": "jonghyun",
+  "baseline": {
+    "head": "ff9c14fec069dc03b575cfd33d9deb62625fd924",
+    "branch": "minkyu/foundation-harness",
+    "uncommitted_paths": 134,
+    "hashes": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/review-input-sha256.json"
+  },
+  "lanes": {
+    "lead": "검증 실행·재현·로컬 복구·보고서",
+    "ai_design_audit": "AI/예산 읽기 검토, 사용량 한도로 중단 후 총괄 재현",
+    "events_jobs_audit": "행사/일일 실행 읽기 검토, 사용량 한도로 중단 후 총괄 재현",
+    "review_policy_docs": "요약 SQL 읽기 검토, 사용량 한도로 중단 후 총괄 재현"
+  },
+  "allowed_new_files": [
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-harness.json",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-lease.mjs",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-lease.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-deadlock.mjs",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-deadlock.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-partial.mjs",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-partial.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-tourapi.mjs",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-tourapi.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-event-admission.sql",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-event-admission.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/proposals-rollback.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/minkyu-regression.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/committed-proposals-tests.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/committed-regression.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/review-policy-e2e.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/ai-budget-concurrency.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/summary-worker-concurrency.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/summary-worker-rest.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/ai-discovery-rest.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/events-rest.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/ai-event-discovery-rest.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/edge-e2e.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/minkyu-node.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/cleanup.json",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/manifest.json",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/jonghyun-node.log",
+    "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/review-input-sha256.json"
+  ],
+  "modified_product_files": [],
+  "external_provider_calls": 0,
+  "remote_changes": false,
+  "cleanup": {
+    "before_restore": {
+      "jobs": 0,
+      "posts": 0,
+      "users": 0,
+      "events": 0,
+      "reviews": 0,
+      "profiles": 0,
+      "summaries": 0,
+      "checkpoints": 0,
+      "appointments": 0,
+      "reservations": 0
+    },
+    "after_restore": {
+      "jobs": 0,
+      "posts": 0,
+      "users": 0,
+      "reviews": 0,
+      "profiles": 0,
+      "summaries": 0,
+      "appointments": 0,
+      "reservations": 0
+    },
+    "restored_migrations": 28,
+    "supabase_stop": 0,
+    "colima_stop": 0,
+    "volumes": "preserved"
+  }
+}

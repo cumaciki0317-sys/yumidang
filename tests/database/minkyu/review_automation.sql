@@ -1,7 +1,7 @@
 begin;
 do $$
 declare target uuid:=md5('automation-target')::uuid; a uuid; p uuid; r uuid; ap uuid; rv uuid;
- x jsonb; old_revision text; ids uuid[]; submission jsonb; count_before bigint;
+ x jsonb; old_revision text; ids uuid[]; submission jsonb; count_before bigint; review_state record;
 begin
  insert into auth.users(id) values(target);
  insert into public.profiles(id,real_name,birth_date) values(target,'후기대상','1990-01-01');
@@ -24,13 +24,13 @@ begin
  -- Both deadline/hold still in the future: no public output.
  update public.appointments set completion_notified_at=now(),dispute_deadline_at=now()+interval '24 hours',review_deadline_at=now()+interval '7 days'
  where id=md5('automation-ap6')::uuid;
- -- One review, hold elapsed but 7-day deadline has not elapsed: stays pending.
+ -- 한쪽 후기: 7일 작성기한 전이어도 24시간 보류가 끝나면 공개한다.
  update public.appointments set review_deadline_at=now()+interval '1 day' where id=md5('automation-ap7')::uuid;
  assert exists(select 1 from private.review_refresh_outbox where profile_id=target),'Source changes enqueue durable intent';
  x:=public.process_review_automation(1000,'test_model','test_prompt');
- assert (x->>'publishedCount')::int=4,'Only eligible policy records publish';
+ assert (x->>'publishedCount')::int=5,'Only eligible policy records publish';
  assert not(select is_public from private.review_publication where review_id=md5('automation-rv5')::uuid);
- x:=public.load_public_review_snapshot(target); assert (x->>'eligibleCount')::int=3,'Blank text not AI evidence';
+ x:=public.load_public_review_snapshot(target); assert (x->>'eligibleCount')::int=4,'Blank text not AI evidence';
  old_revision:=x->>'sourceRevision';
  assert (select count(*) from private.worker_jobs where payload->>'profileId'=target::text)=1;
  perform public.process_review_automation(1000,'test_model','test_prompt');
@@ -38,10 +38,11 @@ begin
  perform set_config('request.jwt.claim.sub',target::text,true);
  x:=public.get_public_profile_reviews(target,2,null);
  assert jsonb_array_length(x->'reviews')=2 and x->>'nextCursor' is not null;
- assert (x->'praisesTop5'->0->>'count')::int=4,'Blank text included in praise aggregation';
+ assert (x->'praisesTop5'->0->>'count')::int=5,'Blank text included in praise aggregation';
  assert not((x->'reviews'->0)?'reviewerId');
  select array_agg((e->>'reviewId')::uuid) into ids from jsonb_array_elements(public.load_public_review_snapshot(target)->'reviews') e;
  perform public.publish_review_summary(target,old_revision,ids,'테스트 요약','test_model','test_prompt');
+ perform public.set_review_publication(md5('automation-rv7')::uuid,false);
  perform public.set_review_publication(md5('automation-rv1')::uuid,false);
  assert public.get_visible_review_summary(target)->'summary'='null'::jsonb;
  assert exists(select 1 from private.review_refresh_outbox where profile_id=target);
@@ -62,6 +63,10 @@ begin
  ap:=md5('automation-ap6')::uuid;
  submission:=public.submit_appointment_review(ap,4,'내 후기','positive',array['test_time']);
  assert not(submission->>'deduplicated')::boolean;
+ -- 같은 PL/pgSQL 호출 안의 제출 직후에도 STABLE 조회가 새 양측 후기를 본다.
+ select * into review_state from public.get_appointment_review_state(ap);
+ assert review_state.released and review_state.release_reason='mutual' and review_state.peer_review is not null;
+ assert review_state.hold_until>clock_timestamp();
  assert (public.submit_appointment_review(ap,4,'내 후기','positive',array['test_time'])->>'deduplicated')::boolean;
  begin perform public.submit_appointment_review(ap,3,'다른 후기','neutral','{}'); raise exception 'mutation allowed'; exception when unique_violation then null; end;
  begin perform public.submit_appointment_review(md5('automation-ap7')::uuid,3,null,'neutral',array['test_kind']); raise exception 'neutral praise allowed'; exception when invalid_parameter_value then null; end;

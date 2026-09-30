@@ -1,5 +1,6 @@
 import { isSummaryVersion } from "../../../db/repositories/review-summaries.ts";
 import type { ModelPort } from "../../providers/model-port.ts";
+import { ModelError } from "../../providers/provider-errors.ts";
 import type {
   ReviewSummaryJob, ReviewSummaryRepository, SummaryCheckpoint, SummaryNode, SummaryWriteResult, PublicTextReview,
 } from "../../../db/repositories/review-summaries.ts";
@@ -19,8 +20,12 @@ export interface ReviewSummarySettings {
   maxOutputChars: number;
   maxCallsPerStep: number;
 }
+/**
+ * budget_exhausted: 예산 원장 예약 거절(BUDGET_EXHAUSTED) 또는 공급사 일일 한도(DAILY_QUOTA_EXHAUSTED).
+ * 실패가 아니며 중간 저장을 보존한다. 같은 실행에서 추가 모델 호출을 하지 않는다.
+ */
 export type ReviewSummaryResult = {
-  status: "published" | "yielded" | "insufficient_reviews" | "superseded" | "lease_lost" | "failed" | "unavailable";
+  status: "published" | "yielded" | "insufficient_reviews" | "superseded" | "lease_lost" | "failed" | "unavailable" | "budget_exhausted";
   code?: string;
 };
 export interface ReviewSummaryDependencies {
@@ -93,6 +98,8 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
   try {
     const source = await loadReviewSource(repository, job);
     if (source === "lease_lost") return { status: "lease_lost" };
+    // 같은 작업·revision 게시가 이미 원자 처리됨(settle 전 중단 후 재실행). 모델을 다시 호출하지 않는다.
+    if (source === "already_published") return { status: "published" };
     if (source === "stale_revision") return await rejectedWrite(repository, job, source);
     const reviews = source.publicTextReviews;
     if (reviews.length < MIN_PUBLIC_TEXT_REVIEWS) {
@@ -102,6 +109,7 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
     const ids = reviews.map((review) => review.evidenceId);
     const stored = await repository.loadCheckpoint(job);
     if (stored === "lease_lost") return { status: "lease_lost" };
+    if (stored === "stale_revision") return await rejectedWrite(repository, job, stored);
     const checkpoint: SummaryCheckpoint = stored ?? {
       schemaVersion: 1, targetUserId: job.targetUserId, sourceRevision: job.sourceRevision,
       modelVersion: job.modelVersion, promptVersion: job.promptVersion, sourceReviewIds: ids, nextReviewIndex: 0, nodes: [],
@@ -142,8 +150,12 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
           system: merged ? REVIEW_MERGE_SYSTEM : REVIEW_CHUNK_SYSTEM,
           input, maxOutputTokens: settings.maxOutputTokens, signal,
         });
-      } catch {
-        return signal?.aborted ? { status: "yielded" } : { status: "unavailable", code: "MODEL_UNAVAILABLE" };
+      } catch (error) {
+        if (signal?.aborted) return { status: "yielded" };
+        if (error instanceof ModelError && (error.code === "BUDGET_EXHAUSTED" || error.code === "DAILY_QUOTA_EXHAUSTED")) {
+          return { status: "budget_exhausted", code: error.code };
+        }
+        return { status: "unavailable", code: "MODEL_UNAVAILABLE" };
       }
       calls += 1;
       if (!response || typeof response.modelVersion !== "string" || !response.modelVersion.trim()) throw new Error("INVALID_SUMMARY_OUTPUT");

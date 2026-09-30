@@ -34,9 +34,7 @@ export function createRuntimeHandler(
       await requireInternalCaller(request, config);
       return createInternalClient(config);
     },
-    maintenance: config.reviewSummaryModelVersion && config.reviewSummaryPromptVersion
-      ? { modelVersion: config.reviewSummaryModelVersion, promptVersion: config.reviewSummaryPromptVersion }
-      : undefined,
+    maintenance: { modelVersion: config.reviewSummaryModelVersion, promptVersion: config.reviewSummaryPromptVersion },
   });
 }
 

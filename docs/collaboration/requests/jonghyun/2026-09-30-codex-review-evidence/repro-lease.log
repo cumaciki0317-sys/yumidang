@@ -1,0 +1,32 @@
+{"projection_lock_wait_observed":true,"lease_expired":true,"status":"applied","publications":1}
+✖ audit: projection lock wait must recheck expired lease (2291.528125ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2366.718042
+
+✖ failing tests:
+
+test at ../../../../../private/tmp/yumidang-codex-audit-0930-k2mnitvh/repro-lease.mjs:19:1
+✖ audit: projection lock wait must recheck expired lease (2291.528125ms)
+  AssertionError [ERR_ASSERTION]: expired during projection lock wait must reject publication
+  + actual - expected
+  
+  + 'applied'
+  - 'lease_lost'
+  
+      at TestContext.<anonymous> (file:///private/tmp/yumidang-codex-audit-0930-k2mnitvh/repro-lease.mjs:70:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'applied',
+    expected: 'lease_lost',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

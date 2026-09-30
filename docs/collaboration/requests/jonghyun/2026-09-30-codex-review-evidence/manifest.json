@@ -1,0 +1,40 @@
+{
+  "head": "ff9c14fec069dc03b575cfd33d9deb62625fd924",
+  "baseline_sql": {
+    "backend/supabase/migrations/20260916080335_create_profiles.sql": "da19b1a471feeb92279b95e37c71cd6b337657639da803a807e7b1bff9514de2",
+    "backend/supabase/migrations/20260916081429_remove_profiles_neighborhood.sql": "61a12907ee1d3c5a338d9de0e37b30b19afb422d31e9eee427a8504252c9b9d2",
+    "backend/supabase/migrations/20260916081750_restrict_profiles_column_writes.sql": "f88de84f8b85bef01d312003ee3827226e65d8b1b9258eb6e061e547efa30427",
+    "backend/supabase/migrations/20260916101123_profiles_real_name_contract.sql": "7dfc98ef2db697246e814a10d68ef0f3761c9f7bdbf43f7d39949c5632aa6673",
+    "backend/supabase/migrations/20260916105220_feature03_posts.sql": "e8765b87bc2f37a95086f74f2273cfdb0a0e1137f21066f6a89794c655440709",
+    "backend/supabase/migrations/20260916105738_feature04_post_author_profile.sql": "2321bc7328f946281312a7dae13c3538d12a97a1ab13a5de31146feaf17db25a",
+    "backend/supabase/migrations/20260916105916_feature05_join_requests.sql": "09c13dd6ead99c4d7d92edfa754761758fbb22065be0a66e11f36ab06d385a01",
+    "backend/supabase/migrations/20260916110052_feature06_matching_chat.sql": "30943796bb28009963d2ae68f7674ef3eb6a4c50808f6916b340e6f034a760ec",
+    "backend/supabase/migrations/20260916110758_feature07_final_match.sql": "344f2909fcf075084e78a42325388bccf2092f4073975aff61fbc3d266e49f64",
+    "backend/supabase/migrations/20260916110943_feature08_completion.sql": "57995918ad709cbb6ac6f011eaa5f156db88d6b67ed9d5d10882d3a825907d64",
+    "backend/supabase/migrations/20260916111030_feature09_mutual_review.sql": "dd4ef8e0c1ec10111ac872283b77f8f2cc6c19f77574ed14183388d31e4be879",
+    "backend/supabase/migrations/20260916111437_appointments_request_post_fk_index.sql": "8faeb187b204aa81d2a8c2248931440ec631eed6a6b9822049d8f9fe70a0fb40",
+    "backend/supabase/migrations/20260916114036_rpc_unavailable_errors_as_404.sql": "bf5f8e62e668f777ff8774ae3239775ef8dd4c84ac23722db746c2430926c21e",
+    "backend/supabase/migrations/20260916131906_existing_ui_gender_category_author_cards.sql": "7fec3aee4a304eefe00e3153b85c4890c4e12486951210d92e5fb49de0fa2ca0",
+    "backend/supabase/migrations/20260917005621_retry_completion_dispute_review_policy.sql": "9dc9f8b9f9d259cc38a8d9f18450b29822565f112864050f7e3cd4fd4a543487",
+    "backend/supabase/migrations/20260917043418_signup_eligibility_author_demographics.sql": "12b9decaead249eadad008cf9131244b5a1620544a3a4fc8344d924c3cd74c9e",
+    "backend/supabase/migrations/20260917052827_profile_images_required.sql": "0797f8e416ca2a6b56e3fdd4a0cadc2d713349416a685ee14949c13bcdd69a8f",
+    "backend/supabase/migrations/20260917094753_disable_legacy_signup_without_avatar.sql": "75b2765d9fd426104b50eb9f12ef4a30d0797a6c30943fa839c8b3336575d24d",
+    "backend/supabase/migrations/20260917122744_ut_notifications_and_discovery.sql": "cfc1e00de60da0f953843a3dcc86467cb0f515520da855dd0ab0b5be64bd74b8",
+    "backend/supabase/migrations/20260917141449_notifications_join_request_index.sql": "978376c0c1d725441b474886df72ffe590ccc803894d12d0e8a2aa9d3c6059c9",
+    "backend/supabase/migrations/20260923090000_worker_jobs.sql": "35cc37ed31145fc59ec5ee0580db3f49ccfd36ca19abe2208eccc5f9fe7bee5f",
+    "backend/supabase/migrations/20260923091000_public_post_search.sql": "3d95413693ed39cccf4c40c9a4c642f8d75cf9c53590c35495a7c0f1cd0a5822",
+    "backend/supabase/migrations/20260923092000_review_summary_storage.sql": "71c58e1587d2949ed7292d591a5505cbc33b53fab2a9ae5ac38a77f68e6d5d52",
+    "backend/supabase/migrations/20260923100000_bilateral_completion.sql": "d49cd183f46738412f2fb5fff8737dee5bac30431011c18f939671ba3d7a8cd2",
+    "backend/supabase/migrations/20260923101000_review_automation.sql": "499a5f5867540179301f34ec82d5d6f15934e026febeaf267781c62fe5543e5b",
+    "backend/supabase/migrations/20260923102000_core_service_api.sql": "17039dccff591f32e05f8fd8af83cea729cd1b51721f8ac8ad9a6b388e045133",
+    "backend/supabase/migrations/20260929090000_public_search_v2.sql": "7291d87a34c6cdef707d97af502f7097ac6edf6ff2fd6fe34023116959683525",
+    "backend/supabase/migrations/20260929120000_review_release_and_completion_reservations.sql": "8cd13df2cfa9e92a8a3ea0e21d2917cdc32d03441cb5a2957665fbbee60366b2"
+  },
+  "proposal_sql": {
+    "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/04_events.sql": "fde2317c35a5420a21654a48d091ef90457af7778b17304fd6a696c7c791601b",
+    "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/05_event_filter_values.sql": "9592090cc33feb21be7ae442794a35e1eb23f36daf08ff49eaa99364f9a82fc7",
+    "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/01_ai_budget.sql": "1f319e7dc9be2a2e399419adbd67473f4279e482263553042eaeaf3ca9436eda",
+    "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/03_review_summary_worker.sql": "311e059c6dabb4a075ac630b42d0fcae11c43665975f41a52d6998cc9d82e8d3",
+    "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/02_profile_traits.sql": "7d469375cc6e4bbdc1863b0fba88a9fe7c7a93e31bfe6ac9ee23354416a03e0f"
+  }
+}

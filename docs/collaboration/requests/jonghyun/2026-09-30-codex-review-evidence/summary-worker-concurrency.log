@@ -1,0 +1,9 @@
+✔ 두 세션 경쟁: 단일 점유, 동시 중복 게시 멱등, 원문 변경과 게시 경쟁 후 불변식 (81.94275ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 156.582709

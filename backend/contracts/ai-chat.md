@@ -1,5 +1,19 @@
 # AI 탐색 연결 계약 초안
 
+## 2026-09-29 현재 구현 — C 방식 의미 비교·HTTP 연결 (Claude 구현, 종현 범위)
+
+아래 1~6절의 “모델 미정·실제 연결 대기·`preferenceMatch`” 문구는 당시 기록이다. 현재 계약은 이 절과 [lane C 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-c-notes.md)·[전체 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md)를 따른다. 서비스 모델은 포텐스닷 Sonnet 5(요청 ID `claude-5-sonnet`)이며 실제 호출은 추가 지출 0원 근거 확인 전 **NOT_RUN**이다.
+
+- **필터(공고 전용 추가):** `sort`(`created_desc` 기본/`starts_asc`), `authorAge`, `interests`, `conversationStyles`. 성향 조건은 `{values:[{text, polarity:"include"|"exclude"}], combine?:"any"|"all"}`이며 include 2개 이상이면 `combine` 필수(없으면 질문으로 끝냄). exclude는 항상 모두 적용한다. 공고 `category`는 검색 v2 고정 목록만 허용한다.
+- **판단(C):** 모델은 요청 값마다 후보 작성자의 등록값과 의미가 비슷한지만 답한다(`preference_match`). 부정·any/all·미입력은 서버가 계산한다. 불일치 → 제외, 등록값 없음 → 해당 조건 `needs_check`(후보 유지, 모델에 보내지 않음), 모델 오류·형식 위반·예산 소진 → `unavailable`. MBTI는 기존 정확 일치 규칙. 모델 입력에는 불투명 ref와 요청·등록값만 넣고 공고 ID·제목·이름을 넣지 않는다.
+- **순서·페이지:** 결과 순서는 검색 v2 순서 그대로이며 유사도로 재정렬하지 않는다. 반환 분량을 채우거나 끝까지 확인할 때까지 다음 페이지를 처리한다. 한도에 먼저 닿으면 `unavailable`(해석 조건 보존)이며 `no_results`는 끝까지 확인한 실제 0건일 때만이다.
+- **응답 직전 재확인:** 같은 회원 권한으로 검색을 다시 확인하고 작성자 성향 `traitsVersion`을 비교한다. 사라진 카드·성향이 바뀐 카드는 제외하고 새 ID를 넣지 않는다.
+- **카드:** `conditionStatus:{mbti?,interests?,conversationStyles?}` 값은 `match`/`needs_check`. 원본 성향 목록·유사도·모델 추론·`traitsVersion`은 반환하지 않는다. `preferenceMatch`는 폐기했다.
+- **HTTP:** `POST /functions/v1/ai-chat`, 회원 인증 필수(401), 본문 `{clientRequestId, messages, currentFilters}`만(여분 필드 400, 초과 413), 성공은 공통 envelope의 `AiChatResult`. 모델·한도·본인 성향 조회가 준비되지 않으면 검색 없이 200 `unavailable`. 대화 원문을 로그·오류에 넣지 않는다.
+- **2026-09-30 사용자 답변 반영:** Q1-A 한도·예산으로 끝까지 확인하지 못했어도 찾은 카드가 있으면 `status:"results"`, `partial:true`, “일부만 확인” 안내로 보여준다(찾은 카드가 없으면 `unavailable`). Q2-A 제외 조건은 항상 모두 적용, 애매하면 질문. Q3-A 재확인에서 공개 정보만 바뀐 카드는 최신 값으로 유지하고 설명만 제거. Q4-A 행사 카드는 `sourceName`(예: KOPIS) 필수, 공식 링크가 없으면 `sourceUrl:null`. 행사 AI 탐색은 행사 저장소 `list_public_events` 기반 기본 포트로 연결했다(`event-discovery.ts`).
+- **현재 차단:** 민규 허용 목록에 `get_post_author_traits`·`get_my_profile_traits`(회원)·`reserve_ai_budget`·`settle_ai_budget`(내부)이 없고 제안 SQL(`02_profile_traits.sql`, `01_ai_budget.sql`)이 정식 마이그레이션이 아니므로 실제 런타임은 항상 `unavailable`이다. 행사 AI 탐색은 회원 user-client 허용 목록에 `list_public_events`가 들어와야 실제로 동작한다.
+- **설정 이름(값 없음):** `AI_CHAT_MAX_MESSAGES`, `AI_CHAT_MAX_MESSAGE_CHARS`, `AI_CHAT_MAX_TOTAL_CHARS`, `AI_CHAT_MAX_OUTPUT_TOKENS`, `AI_CHAT_SEARCH_PAGE_SIZE`, `AI_CHAT_MAX_SEARCH_PAGES`, `AI_CHAT_RECHECK_MAX_PAGES`, `AI_CHAT_MAX_RESULT_CARDS`, `AI_CHAT_MATCH_BATCH_SIZE`, `AI_CHAT_MAX_MATCH_CALLS`, `AI_CHAT_MATCH_MAX_OUTPUT_TOKENS`, 모델용 `AI_RETENTION_DECISION_ID`, `AI_COST_EVIDENCE_ID`, `AI_BUDGET_LEDGER_ID`, 선택 `POTENS_USAGE_INPUT_FIELD`/`POTENS_USAGE_OUTPUT_FIELD`. 기본값이 없다.
+
 상태: **종현 내부 탐색 코어 구현**. 가상 모델·검색 포트로 처리 경로를 검증하며 실제 모델·HTTP·DB·보관 설정은 미연결이다. 기준: [최신 계획](../../PLAN.md) 4·6장, [상세 설계](../../PLAN_상세설계.md) 6·9·11.3장, [공개 검색 계약](search.md). HTTP 경로·실제 모델·운영 한도는 연결 전 확정한다. 포텐스닷은 우선 연결 대상이다. 사용자 제공 기본 호출 안내를 받았으며 상세 응답·계정 조건은 미확인이다.
 
 ## 1. 입력과 호출자

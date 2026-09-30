@@ -10,8 +10,9 @@ const fixture = {
   REVIEW_SUMMARY_MODEL_VERSION: "fixture-model", REVIEW_SUMMARY_PROMPT_VERSION: "review-summary-v1",
 };
 const good = { data: {
-  completion: { completedCount: 1, appointments: [{ appointmentId: "fixture", completedAt: "2099-01-01T00:00:00Z" }], secret: "must-not-echo" },
-  reviews: { publishedCount: 2, processedCount: 3, enqueuedCount: 1 },
+  status: "ok", completion: { status: "managed_by_reservation", appointments: [{ appointmentId: "fixture", completedAt: "2099-01-01T00:00:00Z" }], secret: "must-not-echo" },
+  reviews: { status: "published", publishedCount: 2 },
+  summary: { status: "queued", processedCount: 3, enqueuedCount: 1 },
 }, requestId: "upstream-id", raw: "must-not-echo" };
 function request(body = { limit: 7 }, token = secret, method = "POST", suffix = "") {
   return new Request("https://project.example.invalid/functions/v1/scheduled-jobs" + suffix, {
@@ -33,7 +34,7 @@ test("authenticated scheduler forwards explicit limit to fixed maintenance URL a
   const response = await handler(request());
   assert.equal(response.status, 200);
   const body = await response.json();
-  assert.deepEqual(body.data, { completion: { completedCount: 1 }, reviews: { publishedCount: 2, processedCount: 3, enqueuedCount: 1 } });
+  assert.deepEqual(body.data, { status: "ok", completion: { status: "managed_by_reservation" }, reviews: { status: "published", publishedCount: 2 }, summary: { status: "queued", processedCount: 3, enqueuedCount: 1 } });
   assert.equal(body.requestId, response.headers.get("x-request-id"));
   assert.notEqual(body.requestId, good.requestId);
   assert.equal(calls.length, 1);
@@ -67,14 +68,30 @@ test("limit is mandatory and request cannot override URL, model, caller or opera
   assert.equal(calls, 0);
 });
 
-test("missing or invalid server versions blocks invocation without fixture fallback", async () => {
-  for (const overrides of [{ REVIEW_SUMMARY_MODEL_VERSION: undefined }, { REVIEW_SUMMARY_PROMPT_VERSION: undefined }, { REVIEW_SUMMARY_PROMPT_VERSION: "unsafe version" }]) {
+test("missing, blank or invalid local model versions do not block the publication bridge", async () => {
+  for (const overrides of [{ REVIEW_SUMMARY_MODEL_VERSION: undefined }, { REVIEW_SUMMARY_PROMPT_VERSION: undefined },
+    { REVIEW_SUMMARY_MODEL_VERSION: "" }, { REVIEW_SUMMARY_PROMPT_VERSION: "unsafe version" }]) {
     let calls = 0;
     const handler = runtime(async () => { calls++; return Response.json(good); }, overrides);
+    assert.equal((await handler(request())).status, 200);
+    assert.equal(calls, 1);
+  }
+});
+
+test("partial upstream state remains explicit and does not fabricate successful zero counts", async () => {
+  for (const summary of [
+    { status: "pending_configuration" }, { status: "configuration_error" },
+    { status: "failed", code: "EXTERNAL_UNAVAILABLE", retryable: true },
+  ]) {
+    const data = { ...good.data, status: "partial", summary: { ...summary, raw: "must-not-echo" } };
+    const handler = runtime(async () => Response.json({ data }));
     const response = await handler(request());
-    assert.equal(response.status, 503);
-    assert.equal((await response.json()).error.code, "EXTERNAL_UNAVAILABLE");
-    assert.equal(calls, 0);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.data.status, "partial");
+    assert.deepEqual(body.data.summary, summary);
+    assert.deepEqual(body.data.reviews, { status: "published", publishedCount: 2 });
+    assert.ok(!JSON.stringify(body).includes("must-not-echo"));
   }
 });
 
@@ -94,8 +111,13 @@ test("upstream failure is safe and does not create hidden retry; next invocation
 
 test("malformed successful upstream data never becomes a success response", async () => {
   for (const body of [{}, { data: { completion: {}, reviews: {} } }, { ...good, error: {} },
-    { data: { completion: { completedCount: -1 }, reviews: good.data.reviews } },
-    { data: { completion: good.data.completion, reviews: { ...good.data.reviews, enqueuedCount: "1" } } }]) {
+    { data: { ...good.data, reviews: { status: "published", publishedCount: -1 } } },
+    { data: { ...good.data, summary: { ...good.data.summary, enqueuedCount: "1" } } },
+    { data: { ...good.data, summary: { status: "pending_configuration" } } },
+    { data: { ...good.data, status: "partial", summary: { status: "failed", code: "private SQL", retryable: true } } },
+    { data: { ...good.data, status: "partial", summary: { status: "failed", code: "INTERNAL_ERROR", retryable: "true" } } },
+    { data: { ...good.data, status: "partial" } },
+    { data: { ...good.data, completion: { completedCount: 0 } } }]) {
     const handler = runtime(async () => Response.json(body));
     assert.equal((await handler(request())).status, 503);
   }

@@ -1,0 +1,8 @@
+PASS tests/database/minkyu/bilateral_completion.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/core_service_api.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/public_post_search.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/public_search_v2.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/review_automation.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/review_release_policy.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/review_summary_storage.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])
+PASS tests/database/minkyu/worker_jobs.sql (proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'])

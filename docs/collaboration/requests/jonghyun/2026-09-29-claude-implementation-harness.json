@@ -1,0 +1,236 @@
+{
+  "name": "2026-09-29 종현 잔여 작업 구현 (Claude)",
+  "actor": "jonghyun",
+  "design": "260929_종현담당_PLAN.md 5.1~5.7",
+  "baseline": {
+    "workspace": "/Users/b/Documents/Antigravity/yumidang",
+    "branch": "minkyu/foundation-harness",
+    "head": "ff9c14fec069dc03b575cfd33d9deb62625fd924",
+    "recorded_at_utc": "2026-09-29T13:08Z",
+    "preexisting_uncommitted_paths": 37,
+    "preexisting_hashes": "시작 시 SHA256 37개를 세션 scratchpad baseline_hashes.txt에 기록. 인계 문서에 보존 결과를 적는다.",
+    "separate_worktree": false
+  },
+  "rules": [
+    "종현 소유 경로만 수정한다(backend/ownership.json). 민규 소유 파일·마이그레이션·소유권 정책·hook은 수정하지 않는다.",
+    "DB 변경은 docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/의 제안 SQL(트랜잭션 제어문 없음)로 작성하고 민규 채택을 요청한다.",
+    "제안 SQL은 tests/database/jonghyun/run_proposals.py로 전용 로컬 DB에서 BEGIN→적용→검사→ROLLBACK 검증한다. 채택·원격 반영이 아니다.",
+    "운영 수치·보관기간·품질 기준·공급사·모델을 임의 확정하지 않는다. 한도는 명시 환경값으로만 받고 기본값을 만들지 않는다.",
+    "실제 AI 호출은 추가 지출 0원 근거·출력 상한 확인 전 NOT_RUN. 외부 공급사 호출은 lane E의 명시된 최소 확인만 허용한다.",
+    "git commit/push/reset/checkout/clean/stash·전체 포맷 금지. 기존 미커밋 변경 보존."
+  ],
+  "lanes": {
+    "LEAD": {
+      "owner": "총괄(메인 세션)",
+      "sections": [
+        "5.1",
+        "5.2",
+        "통합",
+        "5.7 문서"
+      ],
+      "files": [
+        "backend/supabase/functions/_shared/db/repositories/search.ts",
+        "backend/supabase/functions/_shared/ai/providers/model-port.ts",
+        "backend/supabase/functions/_shared/ai/providers/provider-adapter.ts",
+        "backend/supabase/functions/_shared/ai/providers/provider-errors.ts",
+        "backend/supabase/functions/_shared/ai/providers/potens-adapter.ts",
+        "backend/supabase/functions/_shared/ai/providers/budget.ts",
+        "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+        "backend/supabase/functions/_shared/jobs/settings.ts",
+        "backend/contracts/search.md",
+        "backend/contracts/ai-chat.md",
+        "backend/contracts/review-summary.md",
+        "docs/collaboration/jonghyun.md",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-harness.json",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-questions.html",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/01_ai_budget.sql",
+        "tests/database/jonghyun/run_proposals.py",
+        "tests/database/jonghyun/ai_budget.sql",
+        "tests/ai/jonghyun/model-router.test.mjs",
+        "tests/ai/jonghyun/potens-adapter.test.mjs",
+        "tests/ai/jonghyun/budget-runtime.test.mjs",
+        "tests/ai/jonghyun/synthetic-eval.mjs",
+        "tests/fixtures/jonghyun/synthetic-eval-cases.json",
+        "tests/functions/jonghyun/search-response-errors.test.mjs",
+        "tests/integration/jonghyun/ai-budget-concurrency.mjs",
+        "260929_종현담당_PLAN.md (체크박스만)",
+        "tests/ai/jonghyun/synthetic-eval.test.mjs",
+        "tests/integration/jonghyun/summary-worker-concurrency.mjs",
+        "backend/supabase/functions/_shared/ai/Agents/README.md",
+        "tests/integration/jonghyun/ai-event-discovery-rest.mjs",
+        "tests/integration/jonghyun/edge-functions-e2e.mjs",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-baseline-sha256.txt"
+      ]
+    },
+    "C": {
+      "owner": "에이전트 C",
+      "sections": [
+        "5.3"
+      ],
+      "files": [
+        "backend/supabase/functions/_shared/contracts/ai.ts",
+        "backend/supabase/functions/_shared/ai/Agents/chatbot/*",
+        "backend/supabase/functions/ai-chat/handler.ts",
+        "backend/supabase/functions/ai-chat/index.ts",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/02_profile_traits.sql",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-c-notes.md",
+        "tests/database/jonghyun/profile_traits.sql",
+        "tests/ai/jonghyun/chatbot.test.mjs",
+        "tests/ai/jonghyun/chatbot-semantic.test.mjs",
+        "tests/functions/jonghyun/ai-chat-http.test.mjs",
+        "tests/integration/jonghyun/discovery-flow.test.mjs"
+      ]
+    },
+    "E": {
+      "owner": "에이전트 E",
+      "sections": [
+        "5.4"
+      ],
+      "files": [
+        "backend/supabase/functions/places/handler.ts",
+        "backend/supabase/functions/places/index.ts",
+        "backend/supabase/functions/event-sync/handler.ts",
+        "backend/supabase/functions/event-sync/index.ts",
+        "backend/supabase/functions/_shared/integrations/events/*",
+        "backend/supabase/functions/_shared/integrations/places/*",
+        "backend/supabase/functions/_shared/db/repositories/events.ts",
+        "backend/supabase/functions/_shared/services/event-service.ts",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/04_events.sql",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+        "tests/database/jonghyun/events.sql",
+        "tests/functions/jonghyun/places-http.test.mjs",
+        "tests/functions/jonghyun/event-sync.test.mjs",
+        "tests/functions/jonghyun/event-provider.test.mjs"
+      ]
+    },
+    "S": {
+      "owner": "에이전트 S",
+      "sections": [
+        "5.5",
+        "5.6"
+      ],
+      "files": [
+        "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
+        "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+        "backend/supabase/functions/_shared/jobs/enqueue.ts",
+        "backend/supabase/functions/_shared/jobs/lease.ts",
+        "backend/supabase/functions/_shared/jobs/registry.ts",
+        "backend/supabase/functions/_shared/jobs/retry.ts",
+        "backend/supabase/functions/_shared/jobs/daily.ts",
+        "backend/supabase/functions/_shared/ai/Agents/review-summary/*",
+        "backend/supabase/functions/review-summary-worker/handler.ts",
+        "backend/supabase/functions/review-summary-worker/index.ts",
+        "backend/supabase/functions/scheduled-jobs/handler.ts",
+        "backend/supabase/functions/scheduled-jobs/index.ts",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/03_review_summary_worker.sql",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md",
+        "tests/database/jonghyun/review_summary_worker.sql",
+        "tests/functions/jonghyun/jobs.test.mjs",
+        "tests/functions/jonghyun/scheduled-jobs.test.mjs",
+        "tests/functions/jonghyun/summary-repository.test.mjs",
+        "tests/functions/jonghyun/review-summary-worker.test.mjs",
+        "tests/ai/jonghyun/review-summary.test.mjs"
+      ]
+    }
+  },
+  "shared_contracts_fixed_by_lead": {
+    "ModelPort": "model-port.ts: task에 preference_match 추가, usage는 null 허용(미보고), reportedModel 선택",
+    "ModelBudgetPort.reserve": "inputBytes 추가",
+    "createConfiguredModel(read,{budgetDb,fetch})": "runtime.ts: ready | disabled(RETENTION_REVIEW_PENDING/COST_EVIDENCE_MISSING/NOT_CONFIGURED)",
+    "settings": "jobs/settings.ts requiredPositiveInt/optionalToken/requiredToken, 기본값 없음",
+    "event-sync HTTP": "POST {provider, period:{start,end}, page} 내부 인증 → {status:'synced', provider, fetchedCount, savedCount, hasMore}"
+  },
+  "external_calls_allowed": {
+    "potens": "금지(NOT_RUN): 추가 지출 0원 계정 근거·출력 상한 미확인",
+    "kakao": "403 원인 진단용 공식 endpoint 1회, 합성 검색어, 키는 argv/출력 금지, 상태·오류 유형만 기록",
+    "event_providers": "키 없는 HTTPS 지원 확인. HTTPS 확인된 공급사만 검증용 1개 기간·1페이지 실키 호출, 원문 출력 금지"
+  },
+  "lead_takeover_after_lane_completion": [
+    {
+      "lane": "C",
+      "files": [
+        "backend/supabase/functions/_shared/contracts/search.ts",
+        "backend/supabase/functions/_shared/ai/Agents/chatbot/intent.ts",
+        "backend/supabase/functions/_shared/ai/Agents/chatbot/prompts.ts",
+        "tests/ai/jonghyun/chatbot-semantic.test.mjs"
+      ],
+      "reason": "lane C 보고의 분류값 불일치(모델이 검색 v2 고정 목록 밖 값을 내면 unavailable) 보완: POST_CATEGORIES 공유, posts 분류 검사, 프롬프트 목록 명시. contracts/search.ts는 종현 소유이며 lane 목록 밖이라 총괄이 수정."
+    },
+    {
+      "lane": "S",
+      "status": "에이전트가 사용 한도로 중단(테스트 작성 초입). 총괄이 코드 검토 후 이어받음",
+      "files": [
+        "backend/supabase/functions/_shared/db/repositories/jobs.ts (타입 명시만)",
+        "tests/functions/jonghyun/review-summary-worker.test.mjs",
+        "tests/functions/jonghyun/daily-run.test.mjs",
+        "tests/database/jonghyun/run_minkyu_regression.py",
+        "tests/integration/jonghyun/summary-worker-concurrency.mjs",
+        "tests/integration/jonghyun/summary-worker-rest.mjs",
+        "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md"
+      ]
+    },
+    {
+      "lane": "E",
+      "status": "에이전트가 노트 작성 직후 사용 한도로 중단(노트 완성 확인). 총괄이 실제 PostgREST 검사만 추가",
+      "files": [
+        "tests/integration/jonghyun/events-rest.mjs"
+      ]
+    },
+    {
+      "lane": "C",
+      "status": "완료 보고 후 총괄 보완",
+      "files": [
+        "tests/integration/jonghyun/ai-discovery-rest.mjs"
+      ]
+    },
+    {
+      "lane": "E",
+      "status": "2026-09-30 실제 Edge 검사에서 공급사 설정 누락 시 인증 전 503 발견 → 총괄 수정",
+      "files": [
+        "backend/supabase/functions/event-sync/index.ts",
+        "tests/functions/jonghyun/event-sync.test.mjs"
+      ]
+    }
+  ],
+  "team_execution": "Agent 도구로 lane C·E·S 에이전트 3개를 병렬 실행. C는 완료 보고, E·S는 사용 한도로 중단되어 총괄이 이어받음.",
+  "user_answers_2026_09_30": {
+    "applied": [
+      "Q1-A partial",
+      "Q2-A 유지",
+      "Q3-A 유지",
+      "Q4-A sourceName·null 링크·행사 AI 포트",
+      "Q9-A 20개·40자 제품 기준",
+      "Q5-A KOPIS HTTPS 사용(코드 변경 없음, 문서 기록)"
+    ],
+    "deferred_to_team": [
+      "Q6 0원 근거 자료",
+      "Q7 일일 실행 시각",
+      "Q8 지역·분류 매핑"
+    ],
+    "files": [
+      "backend/supabase/functions/_shared/ai/Agents/chatbot/event-discovery.ts",
+      "tests/ai/jonghyun/event-discovery.test.mjs",
+      "docs/collaboration/requests/jonghyun/미정사항.md"
+    ]
+  },
+  "undecided_followup_2026_09_30": {
+    "decisions": "U1~U13 (설계 결정 표)",
+    "files": [
+      "backend/supabase/functions/_shared/integrations/events/tourapi.ts",
+      "backend/supabase/functions/event-sync/index.ts",
+      "backend/supabase/functions/_shared/ai/Agents/chatbot/event-discovery.ts",
+      "backend/supabase/functions/_shared/db/repositories/events.ts",
+      "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/05_event_filter_values.sql",
+      "tests/database/jonghyun/event_filter_values.sql",
+      "tests/functions/jonghyun/event-provider-tourapi.test.mjs",
+      "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "docs/collaboration/requests/jonghyun/2026-09-30-resume-todo.md",
+      "docs/collaboration/requests/jonghyun/2026-09-30-undecided-questions.html",
+      "docs/collaboration/requests/jonghyun/미정사항.md",
+      ".env (TOUR_API_KEY_FORMAT 한 줄, 로컬·Git 제외)"
+    ]
+  }
+}

@@ -51,7 +51,7 @@
 {"rating":5,"experience":"positive","comment":"편안하게 대화했어요","praises":[]}
 ```
 
-rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선택/null 또는1..300자다. praises는 최대3개이며 positive에만 허용한다. 실제 칭찬 목록이 아직 확정되지 않아 DB는 현재 비어 있지 않은 praises를 거절한다. 별점을 당도로 환산하지 않는다. 후기 제출 성공을 공개 완료로 표현하지 않는다.
+rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선택/null 또는1..300자다. praises는 최대3개이며 positive에만 허용한다. 실제 칭찬 목록이 아직 확정되지 않아 DB는 현재 비어 있지 않은 praises를 거절한다. 별점을 당도로 환산하지 않는다. 제출 성공 뒤 현재 공개 상태를 조회한다. 양쪽 제출은 24시간 전이어도 즉시 공개하고, 한쪽은 완료 알림 확인 가능+24시간부터 공개하며 그 이후 기한 내 제출은 즉시 열람한다. 실제 분쟁·미완료·불발/노쇼는 제외한다. 일반 후기 작성 기간은 실제 완료부터 7일이다. 실제 분쟁 중 기한 보류와 동행 인정 후 남은 기간 재개·최소 24시간의 기존 예외는 유지한다.
 
 공고 입력 예시(가상):
 
@@ -81,18 +81,20 @@ rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선�
 
 ## 내부 유지보수
 
-`POST /internal/maintenance` 본문은 `{ "limit": 20 }`이며 정수1..100이다. `REVIEW_SUMMARY_MODEL_VERSION`, `REVIEW_SUMMARY_PROMPT_VERSION`은 서버 설정으로만 받는다. 모델 공급사를 선택하거나 실행하는 API가 아니다.
+`POST /internal/maintenance` 본문은 `{ "limit": 20 }`이며 정수1..100이다. 별도 내부 secret·DB 설정은 필수다. 모델/프롬프트 버전 누락이나 모델 전용 설정 오류가 후기 공개 정리를 막지 않는다. 자동 완료는 [건별 예약 실행기](completion-db.md)가 담당하며 여기서 `process_due_completions`를 호출하지 않는다.
 
-1. 내부 호출자 검증 및 모든 입력·설정 확인.
-2. `process_due_completions(p_limit)` 호출.
-3. `process_review_automation(p_limit,p_model_version,p_prompt_version)` 호출.
-4. `{completion: <RPC 결과>, reviews: <RPC 결과>}` 반환.
+1. 내부 호출자·공통 설정·본문을 검증한다.
+2. 모델 없이 `process_due_review_publications(p_limit)`를 호출한다. 실패하면 기존 HTTP 오류를 반환하고 요약 등록을 시작하지 않는다.
+3. 서버의 `REVIEW_SUMMARY_MODEL_VERSION`, `REVIEW_SUMMARY_PROMPT_VERSION`이 유효하면 `process_review_summary_refresh(p_limit,p_model_version,p_prompt_version)`를 별도 트랜잭션으로 호출한다. 이 연산은 모델 생성이 아니라 작업 등록이다.
+4. HTTP 200의 data는 `{status:"ok"|"partial",completion:{status:"managed_by_reservation"},reviews:{status:"published",publishedCount},summary:...}`다.
 
-두 RPC는 각각 트랜잭션이며 전체 HTTP 요청이 하나의 DB 트랜잭션은 아니다. 2번 후 3번이 실패하면 앞 단계 완료 처리는 유지되고 HTTP는 실패를 반환한다. 재호출은 DB의 조건·중복 방지를 따른다. 자동 완료 시각과 7일 기한은 사용자가 확정한 **실제 처리 시각**을 기준으로 DB에서 계산한다.
+summary 결과는 성공 시 `{status:"queued",processedCount,enqueuedCount}`, 설정 누락/오류 시 `{status:"pending_configuration"|"configuration_error"}`, 실행 실패 시 `{status:"failed",code,retryable}`다. 공개 정리 이후 요약 대기·실패는 `partial`이며 가짜 0건으로 숨기지 않는다. 공개 성공은 요약 실패로 롤백하지 않고 outbox를 보존한다. 버전 문자열을 실제 모델 호출 승인으로 해석하지 않는다.
 
-이 경로는 호출 가능한 실행 진입점이다. 종현 소유 `scheduled-jobs`의 배포·예약 등록은 변경하지 않았으며 자동 주기 실행이 이미 연결됐다는 뜻이 아니다. 요약 생성 모델과 작업 소비자는 종현의 후속 연결이 필요하다.
+후기 자체의 공개는 양쪽 제출 즉시/한쪽 알림 가능+24시간 조건을 제출·조회에서 적용하므로 이 정리 API나 하루 한 번 요약 등록을 기다리지 않는다. 행사·AI 후기 요약 등록은 하루 한 번 정책이며 실제 운영 일일 스케줄러 배포는 이번에 수행하지 않는다. 자동 완료는 실제 성공 시각부터 작성 7일을 계산한다.
 
-## 검증
+## 검증 이력과 이번 변경
+
+아래 기존 PASS는 변경 전 검사 이력이다. 이번 공개/예약·모델 분리 변경의 실제 결과는 [새 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md)를 따른다.
 
 - `node --test tests/functions/minkyu/service_api.test.ts`: handler·서비스·repository 단위 검사22개 PASS. 실제 Web API, 인증 실패·권한 경로 분리·엄격한 입력·RPC 매핑·민감정보 제외를 검증한다.
 - `deno check --no-remote backend/supabase/functions/service-api/index.ts`: 런타임 전체 모듈 타입 검사 PASS.

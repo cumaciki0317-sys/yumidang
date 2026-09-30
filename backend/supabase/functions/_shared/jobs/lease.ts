@@ -1,12 +1,17 @@
 import type { ClaimedJob, JobRepository, JobKind, JobSettlement } from "../db/repositories/jobs.ts";
-import type { JobRegistry, JobHandlerResult } from "./registry.ts";
+import type { JobRegistry, JobHandlerResult, JobStopReason } from "./registry.ts";
 import { normalizeJobReference, validInstant } from "./enqueue.ts";
 import { decideRetry, validateRetrySettings, JobExecutionError } from "./retry.ts";
 import type { RetrySettings } from "./retry.ts";
 
 const kinds: JobKind[] = ["review_summary", "event_sync", "auto_complete", "review_release"];
 export interface JobRunnerSettings { leaseDurationMs: number; retry: RetrySettings }
-export type JobRunResult = { status: "idle" | "lease_lost" | "succeeded" | "queued" | "retry_wait" | "failed" | "superseded"; jobId?: string };
+/** reason은 handler가 알린 정형 중단 사유(예: 예산 소진)이며 settle 결과와 함께 반환한다. */
+export type JobRunResult = {
+  status: "idle" | "lease_lost" | "succeeded" | "queued" | "retry_wait" | "failed" | "superseded";
+  jobId?: string;
+  reason?: JobStopReason;
+};
 
 function settlementFor(result: JobHandlerResult, now: Date): Pick<JobSettlement, "status" | "retryAt"> {
   switch (result?.status) {
@@ -40,6 +45,7 @@ export async function runNextJob(input: {
   if (!Number.isFinite(now.getTime())) throw new Error("INVALID_RUNNER_CLOCK");
   if (Date.parse(job.leaseUntil) <= now.getTime()) return { status: "lease_lost", jobId: job.jobId };
   let transition: Pick<JobSettlement, "status" | "retryAt" | "errorCode">;
+  let reason: JobStopReason | undefined;
   try {
     const reference = normalizeJobReference(job.reference);
     const handler = registry[reference.kind];
@@ -50,6 +56,7 @@ export async function runNextJob(input: {
     });
     if (handled?.status === "lease_lost") return { status: "lease_lost", jobId: job.jobId };
     transition = settlementFor(handled, input.now());
+    if ((handled.status === "yielded" || handled.status === "deferred") && handled.reason === "budget_exhausted") reason = handled.reason;
   } catch (error) {
     transition = decideRetry({ failedAttempts: job.failedAttempts, now: input.now(), error, settings: settings.retry });
   }
@@ -59,5 +66,6 @@ export async function runNextJob(input: {
   } catch {
     throw new JobExecutionError("DEPENDENCY_UNAVAILABLE", true);
   }
-  return { status: written === "lease_lost" ? "lease_lost" : transition.status, jobId: job.jobId };
+  if (written === "lease_lost") return { status: "lease_lost", jobId: job.jobId };
+  return reason ? { status: transition.status, jobId: job.jobId, reason } : { status: transition.status, jobId: job.jobId };
 }

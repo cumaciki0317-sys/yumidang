@@ -11,7 +11,7 @@ export function validateSummaryJob(job: ReviewSummaryJob): void {
 export async function loadReviewSource(repo: ReviewSummaryRepository, job: ReviewSummaryJob) {
   validateSummaryJob(job);
   const source = await repo.loadSource(job);
-  if (source === "lease_lost") return source;
+  if (source === "lease_lost" || source === "already_published" || source === "stale_revision") return source;
   if (!source || source.targetUserId !== job.targetUserId || !isSourceRevision(source.sourceRevision) ||
     !Array.isArray(source.publicTextReviews)) throw new Error("INVALID_REVIEW_SOURCE");
   if (source.sourceRevision !== job.sourceRevision) return "stale_revision" as const;

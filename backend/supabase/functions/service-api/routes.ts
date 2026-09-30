@@ -2,7 +2,8 @@
 import type { JsonValue } from "../_shared/contracts/common.ts";
 import type { FreePostInput } from "../_shared/contracts/posts.ts";
 import type { RpcClient } from "../_shared/db/transport.ts";
-import { HttpError } from "../_shared/http/errors.ts";
+import { HttpError, toPublicError } from "../_shared/http/errors.ts";
+import { inspectReviewSummaryConfig } from "../_shared/config/env.ts";
 import * as completion from "../_shared/services/completion-service.ts";
 import * as reviews from "../_shared/services/review-service.ts";
 import * as profiles from "../_shared/services/profile-service.ts";
@@ -11,7 +12,7 @@ import * as conversations from "../_shared/services/conversation-service.ts";
 import * as posts from "../_shared/services/post-service.ts";
 import * as matching from "../_shared/services/matching-service.ts";
 
-export interface MaintenanceConfig { modelVersion: string; promptVersion: string }
+export interface MaintenanceConfig { modelVersion?: string; promptVersion?: string }
 interface RouteContext {
   db: RpcClient;
   url: URL;
@@ -153,10 +154,31 @@ export function resolveRoute(url: URL): Route {
   }
   if (path === "/internal/maintenance") return route("POST", async ({ db, body, maintenance }) => {
     const limit = integer(object(body, ["limit"]).limit, 1, 100);
-    if (!maintenance?.modelVersion || !maintenance.promptVersion) throw new HttpError("EXTERNAL_UNAVAILABLE");
-    const completed = await completion.processDueCompletions(db, limit);
-    const published = await reviews.processReviewAutomation(db, limit, maintenance.modelVersion, maintenance.promptVersion);
-    return { completion: completed, reviews: published };
+    const counts = (value: JsonValue, keys: string[]): Record<string, number> => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) throw new HttpError("EXTERNAL_UNAVAILABLE");
+      const result: Record<string, number> = {};
+      for (const key of keys) {
+        const count = value[key];
+        if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) throw new HttpError("EXTERNAL_UNAVAILABLE");
+        result[key] = count;
+      }
+      return result;
+    };
+    // 공개 규칙은 DB에서 판단한다. 공개 실패 뒤 요약을 진행하거나 빈 성공으로 바꾸지 않는다.
+    const published = counts(await reviews.processDueReviewPublications(db, limit), ["publishedCount"]);
+    const result = {
+      completion: { status: "managed_by_reservation" },
+      reviews: { status: "published", ...published },
+    };
+    const settings = inspectReviewSummaryConfig(maintenance);
+    if (settings.status !== "ready") return { ...result, status: "partial", summary: { status: settings.status } };
+    try {
+      const queued = counts(await reviews.processReviewSummaryRefresh(db, limit, settings.modelVersion, settings.promptVersion), ["processedCount", "enqueuedCount"]);
+      return { ...result, status: "ok", summary: { status: "queued", ...queued } };
+    } catch (error) {
+      const safe = toPublicError(error).error;
+      return { ...result, status: "partial", summary: { status: "failed", code: safe.code, retryable: safe.retryable } };
+    }
   }, true);
   throw new HttpError("RESOURCE_NOT_FOUND");
 }

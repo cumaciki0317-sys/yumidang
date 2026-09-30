@@ -1,4 +1,7 @@
-/** 종현: 내부 인증 후 민규 maintenance HTTP를 호출한다. 시간·공개 정책은 DB에 둔다. */
+/**
+ * 종현: 내부 인증 후 민규 maintenance HTTP를 호출한다. 시간·공개 정책은 DB에 둔다.
+ * `/daily`는 24시간 주기 묶음(공개·요약 등록 → 행사 갱신 → 요약 worker 제한 호출)을 단계별 상태로 실행한다.
+ */
 import type { JsonValue } from "../_shared/contracts/common.ts";
 import { createCors } from "../_shared/http/cors.ts";
 import { HttpError } from "../_shared/http/errors.ts";
@@ -10,7 +13,11 @@ export interface ScheduledJobsDependencies {
   maxBodyBytes: number;
   authenticateInternal(request: Request): Promise<void>;
   maintenance(limit: number): Promise<JsonValue>;
+  /** 일일 묶음. limit은 maintenance에 그대로 전달하고 나머지 수치는 서버 환경값만 사용한다. */
+  daily(limit: number): Promise<JsonValue>;
 }
+const MAINTENANCE_PATHS = ["/functions/v1/scheduled-jobs", "/scheduled-jobs"];
+const DAILY_PATHS = ["/functions/v1/scheduled-jobs/daily", "/scheduled-jobs/daily"];
 
 export function createScheduledJobsHandler(deps: ScheduledJobsDependencies) {
   if (!Number.isSafeInteger(deps.maxBodyBytes) || deps.maxBodyBytes < 1) {
@@ -26,7 +33,8 @@ export function createScheduledJobsHandler(deps: ScheduledJobsDependencies) {
       cors.responseHeaders(request);
       originAllowed = true;
       const url = new URL(request.url);
-      if (!["/functions/v1/scheduled-jobs", "/scheduled-jobs"].includes(url.pathname)) throw new HttpError("RESOURCE_NOT_FOUND");
+      const daily = DAILY_PATHS.includes(url.pathname);
+      if (!daily && !MAINTENANCE_PATHS.includes(url.pathname)) throw new HttpError("RESOURCE_NOT_FOUND");
       if (request.method !== "POST") throw new HttpError("METHOD_NOT_ALLOWED");
       await deps.authenticateInternal(request);
       if (url.search) throw new HttpError("INVALID_REQUEST");
@@ -37,7 +45,7 @@ export function createScheduledJobsHandler(deps: ScheduledJobsDependencies) {
         throw new HttpError("INVALID_REQUEST");
       }
       // limit은 명시적 입력이다. 기본 주기·배치·자동 재시도를 만들지 않는다.
-      return cors.apply(jsonSuccess(await deps.maintenance(body.limit), context), request);
+      return cors.apply(jsonSuccess(daily ? await deps.daily(body.limit) : await deps.maintenance(body.limit), context), request);
     } catch (error) {
       const response = jsonFailure(error, context);
       return originAllowed ? cors.apply(response, request) : response;

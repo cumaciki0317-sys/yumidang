@@ -1,0 +1,6 @@
+PASS tests/database/jonghyun/ai_budget.sql
+PASS tests/database/jonghyun/event_filter_values.sql
+PASS tests/database/jonghyun/events.sql
+PASS tests/database/jonghyun/profile_traits.sql
+PASS tests/database/jonghyun/review_summary_worker.sql
+proposals=['01_ai_budget.sql', '02_profile_traits.sql', '03_review_summary_worker.sql', '04_events.sql', '05_event_filter_values.sql'] tests=5 failed=0 (transaction rolled back)

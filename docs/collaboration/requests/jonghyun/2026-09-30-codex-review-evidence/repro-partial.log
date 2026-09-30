@@ -1,0 +1,21 @@
+{"case":"budget_exhausted_after_one_accepted","judgeCalls":2,"status":"unavailable","cards":0,"partial":false}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'unavailable'
+- 'results'
+
+    at file:///private/tmp/yumidang-codex-audit-0930-k2mnitvh/repro-partial.mjs:105:8 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'unavailable',
+  expected: 'results',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.5.0

@@ -50,7 +50,11 @@ export type SourceEventRecord = EventTiming & {
   placeName: string | null;
   publicAddress: string | null;
   admission: EventAdmission;
-  sourceUrl: string;
+  /**
+   * 공식 상세 페이지 주소. 제공처가 공식 상세 주소 규칙을 문서로 제공하지 않으면 null이다.
+   * 키가 포함된 API 주소나 추정한 포털 주소를 넣지 않는다.
+   */
+  sourceUrl: string | null;
   collectedAt: string;
 };
 export type StoredEventRecord = SourceEventRecord & { id: string };
@@ -58,6 +62,8 @@ export type StoredEventRecord = SourceEventRecord & { id: string };
 export interface EventFetchRequest {
   cursor?: string;
   period?: EventPeriod;
+  /** 1부터 시작하는 제공처 페이지 번호. 페이지 방식 제공처는 명시 입력만 사용한다. */
+  page?: number;
   signal?: AbortSignal;
 }
 export interface EventProviderPage {
@@ -67,4 +73,27 @@ export interface EventProviderPage {
 export interface EventProviderPort {
   provider: string;
   fetchPage(request: EventFetchRequest): Promise<EventProviderPage>;
+}
+
+export type EventProviderErrorCode =
+  | "INVALID_EVENT_REQUEST"
+  | "EVENT_PROVIDER_UNCONFIGURED"
+  | "SOURCE_AUTH_REJECTED"
+  | "SOURCE_RATE_LIMITED"
+  | "SOURCE_REJECTED"
+  | "SOURCE_UNAVAILABLE"
+  | "SOURCE_INVALID_RESPONSE"
+  | "SOURCE_TIMEOUT"
+  | "CANCELLED";
+
+/** 공급사 본문·키·요청 주소를 메시지/cause에 넣지 않는다. HTTP 200 안의 공급사 오류도 이 오류로 드러낸다. */
+export class EventProviderError extends Error {
+  readonly code: EventProviderErrorCode;
+  readonly retryable: boolean;
+  constructor(code: EventProviderErrorCode) {
+    super(code);
+    this.name = "EventProviderError";
+    this.code = code;
+    this.retryable = ["SOURCE_RATE_LIMITED", "SOURCE_UNAVAILABLE", "SOURCE_TIMEOUT"].includes(code);
+  }
 }

@@ -3,9 +3,12 @@ import { runReviewSummaryStep } from "../ai/Agents/review-summary/orchestrator.t
 import type { ReviewSummaryDependencies } from "../ai/Agents/review-summary/orchestrator.ts";
 import { JobExecutionError } from "./retry.ts";
 
+/** reason은 실행기의 반복 중단 판단용 정형 값이다. 실패 횟수·DB 상태에는 영향이 없다. */
+export type JobStopReason = "budget_exhausted";
 export type JobHandlerResult =
-  | { status: "succeeded" | "yielded" | "superseded" | "lease_lost" }
-  | { status: "deferred"; retryAt: string };
+  | { status: "succeeded" | "superseded" | "lease_lost" }
+  | { status: "yielded"; reason?: JobStopReason }
+  | { status: "deferred"; retryAt: string; reason?: JobStopReason };
 export type JobHandler = (job: ClaimedJob) => Promise<JobHandlerResult>;
 export type JobRegistry = Readonly<Partial<Record<JobKind, JobHandler>>>;
 
@@ -42,12 +45,21 @@ export function createJobRegistry(deps: {
 }
 
 /** 실제 연결 준비용 등록 범위. 완료·후기 공개는 별도 maintenance HTTP 경로가 처리한다. */
-export function createReviewSummaryRegistry(deps: ReviewSummaryDependencies): JobRegistry {
-  return Object.freeze({ review_summary: createReviewSummaryHandler(deps) });
+export function createReviewSummaryRegistry(deps: ReviewSummaryDependencies, options: ReviewSummaryHandlerOptions = {}): JobRegistry {
+  return Object.freeze({ review_summary: createReviewSummaryHandler(deps, options) });
 }
 
+/**
+ * 예산 소진 시 연기 설정. budgetDeferMs는 운영자가 명시한 값만 사용한다(기본값 없음).
+ * 설정이 없으면 연기 시각을 만들지 않고 정상 양보(yielded)+reason으로 돌려 실행기가 반복을 멈추게 한다.
+ */
+export interface ReviewSummaryHandlerOptions { budgetDeferMs?: number; now?: () => Date }
+
 /** 분할 요약 결과를 공통 작업 실행기 상태로 연결한다. 실제 HTTP/DB 연결은 포함하지 않는다. */
-export function createReviewSummaryHandler(deps: ReviewSummaryDependencies): JobHandler {
+export function createReviewSummaryHandler(deps: ReviewSummaryDependencies, options: ReviewSummaryHandlerOptions = {}): JobHandler {
+  if (options.budgetDeferMs !== undefined && (!Number.isSafeInteger(options.budgetDeferMs) || options.budgetDeferMs < 1)) {
+    throw new Error("INVALID_SUMMARY_HANDLER_OPTIONS");
+  }
   return async (job) => {
     if (job.reference.kind !== "review_summary") throw new JobExecutionError("INVALID_JOB", false);
     const result = await runReviewSummaryStep({
@@ -58,6 +70,14 @@ export function createReviewSummaryHandler(deps: ReviewSummaryDependencies): Job
     switch (result.status) {
       case "published": case "insufficient_reviews": return { status: "succeeded" };
       case "yielded": case "superseded": case "lease_lost": return { status: result.status };
+      // 예산·공급사 한도 소진은 실패가 아니다. 명시 지연이 있으면 그 시각까지 미룬다(실패 횟수 미증가).
+      case "budget_exhausted": {
+        if (options.budgetDeferMs === undefined) return { status: "yielded", reason: "budget_exhausted" };
+        const now = (options.now ?? (() => new Date()))();
+        const retryAt = new Date(now.getTime() + options.budgetDeferMs);
+        if (!Number.isFinite(retryAt.getTime())) throw new JobExecutionError("HANDLER_FAILED", false);
+        return { status: "deferred", retryAt: retryAt.toISOString(), reason: "budget_exhausted" };
+      }
       case "unavailable":
         throw new JobExecutionError(result.code === "MODEL_UNAVAILABLE" ? "MODEL_UNAVAILABLE" : "DEPENDENCY_UNAVAILABLE", true);
       case "failed": throw new JobExecutionError("HANDLER_FAILED", false);

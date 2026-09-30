@@ -1,0 +1,8 @@
+{"status": "PASS", "test": "worker_jobs.sql"}
+{"status": "PASS", "test": "public_post_search.sql"}
+{"status": "PASS", "test": "review_summary_storage.sql"}
+{"status": "PASS", "test": "bilateral_completion.sql"}
+{"status": "PASS", "test": "review_automation.sql"}
+{"status": "PASS", "test": "core_service_api.sql"}
+{"status": "PASS", "test": "public_search_v2.sql"}
+{"status": "PASS", "checks": ["worker_jobs.sql", "public_post_search.sql", "review_summary_storage.sql", "bilateral_completion.sql", "review_automation.sql", "core_service_api.sql", "public_search_v2.sql", "concurrent_enqueue_deduplicates", "concurrent_claim_skips_locked_job", "publish_then_private_hides_summary", "private_then_publish_rejects_revision", "concurrent_match_blocks_overlapping_schedule", "bilateral_manual_and_automatic_completion_serialize"], "fixtures_remaining": 0}

@@ -1,10 +1,18 @@
 # 유미당 백엔드 작업 안내
 
-상태: 민규의 공통 HTTP·인증/DB 클라이언트·무료 공고/양측 매칭·완료·후기 공개/재요약 큐·채팅/알림 API를 구현하고 실제 로컬 Auth/JWT/DB로 검증했다. 외부 인증/계좌 공급사, 종현의 검색·AI·예약 실행 연결과 운영 배포는 남아 있다.
+현재 정책: 양쪽 후기는 24시간 전이어도 즉시 공개, 한쪽은 완료 알림 확인 가능+24시간 공개, 이후 기한 내 제출은 즉시 열람한다. 일반 작성 기간은 실제 완료부터 7일이며 실제 분쟁·미완료·불발/노쇼를 제외한다. 분쟁 중 기한 보류와 동행 인정 후 남은 기간 재개·최소 24시간의 기존 예외는 유지한다. 기존 policy 대기 후보에도 적용하고 override 숨김과 과거 비후보 후기는 보존한다.
+
+자동 완료는 DB 건별 예약·Node 상주 실행기의 LISTEN/NOTIFY·예약 타이머로 분리한다. 공개 정리와 요약 등록은 별도 RPC이며 모델 설정이 공개를 막지 않는다. 행사 갱신·AI 후기 요약 등록은 하루 한 번이지만 실제 일일 스케줄러·공급사/모델 연결·운영 배포는 미실행이다. 이번 사용자 승인 하네스에서만 담당 경계 예외를 적용하며 정책·hook·과거 인계는 보존한다. [변경 범위·실제 검증 결과](../docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md)를 확인한다.
+
+아래 구현·검사 건수는 각 단계 당시 기록이다. 공통 HTTP·인증/DB·무료 공고/양측 매칭·채팅/알림과 검색의 실제 로컬 검증 이력은 유지하며, 새 정책의 검증 결과와 구분한다. 외부 인증/계좌·AI·화면 연결·운영 배포는 별도다.
 
 기준 문서는 [최신 계획](../PLAN.md), [상세 설계](../PLAN_상세설계.md), [프로젝트 지침](../AGENTS.md)이다. 담당 업무와 연결 계약은 상세 설계 11장을 먼저 확인한다.
 
 **동시 수정 방지:** [ownership.json](ownership.json)이 파일별 단독 수정 담당을 정의한다. [협업 규칙](../docs/collaboration/README.md)에 따라 자기 파일만 수정하고 상대 담당 변경은 각자의 요청 폴더에 기록한다. AI 수정 전 경로 검사와 Git 커밋 검사를 사용한다.
+
+## 자동 완료 실행기
+
+[완료 DB 계약](contracts/completion-db.md#상주-실행기-준비와-운영-전환)에 `completion-runner.mjs` 실행 명령과 필수 환경값을 정리했다. `COMPLETION_DATABASE_URL`, `COMPLETION_RECONNECT_MS`, `COMPLETION_QUERY_TIMEOUT_MS`는 기본값 없이 명시 설정한다. LISTEN은 PostgreSQL direct/session 연결이 필요하며 transaction pool은 사용하지 않는다. 운영 전환 때 runner 준비·기동과 기존 cron 해제를 함께 진행해야 자동 완료 처리가 비는 상황을 줄일 수 있다. 이번 운영 배포는 미실행이다.
 
 ## 수집한 API 입력
 
@@ -59,7 +67,7 @@
 
 모델 호출 계약은 `_shared/ai/providers/model-port.ts`, 제공사 연결은 `provider-adapter.ts`, 오류 변환은 `provider-errors.ts`에 작성한다. 모델·공급사·예산은 아직 선정하지 않았다.
 
-## 설정과 기존 자료
+## 설정과 기존 자료 — 과거 검증 이력
 
 - `supabase/config.toml`은 민규 전용 로컬 설정이다. 55421/55422 포트와 격리된 project_id를 사용한다. 일반 가입은 차단하고 로컬 Auth admin이 만든 가상 계정만 비밀번호로 검사했다. 운영 PASS/문자 인증을 대신하지 않는다. service-api는 자체 인증을 사용하도록 gateway JWT 검사만 해제하며 Edge 호스팅 검증은 NOT_RUN이다.
 - `supabase/functions/deno.json`의 `check:common`, `check:service`는 Deno 2.9.6에서 PASS다. 실제 HTTP 검증은 같은 런타임 factory를 독립 Deno 서버에서 실행했다.

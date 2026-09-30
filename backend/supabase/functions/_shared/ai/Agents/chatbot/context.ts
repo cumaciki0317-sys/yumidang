@@ -17,7 +17,7 @@ export function buildContext(raw: ChatInput, principal: TrustedChatContext, limi
     messages: raw.messages.map(m => ({ role: m.role, content: m.content })), currentFilters,
     preferences: {
       ...(Array.isArray(preferences.interests) && preferences.interests.every(v => typeof v === "string") ? { interests: [...preferences.interests] } : {}),
-      ...(typeof preferences.conversationStyle === "string" ? { conversationStyle: preferences.conversationStyle } : {}),
+      ...(Array.isArray(preferences.conversationStyles) && preferences.conversationStyles.every(v => typeof v === "string") ? { conversationStyles: [...preferences.conversationStyles] } : {}),
       ...(typeof preferences.mbti === "string" ? { mbti: preferences.mbti } : {}),
     },
   };
