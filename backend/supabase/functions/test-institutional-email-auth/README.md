@@ -1,8 +1,9 @@
-# test-institutional-email-auth
+# 기관 이메일 테스트 함수 — 현재 서비스에서 제외
 
-Authenticated, test-only institutional-email eligibility check. No email is sent; the fixed code is `246810`.
+현재 로그인은 [네이버 전용](../../../../정책.md)이며 학교·직장 이메일 배지는 추후 도입 검토다. 이 함수는 로그인 대안이나 현재 배지 발급 경로로 연결하지 않는다. 실제 이메일 소유·재학·재직·가입 자격을 검증한 것으로 표시하지 않는다.
 
-The function must be deployed with JWT verification enabled and is additionally guarded by
-`TEST_INSTITUTIONAL_EMAIL_AUTH_ENABLED=true` and a future ISO timestamp in
-`TEST_INSTITUTIONAL_EMAIL_AUTH_EXPIRES_AT`. The browser never receives a service key, raw JWT,
-or stored email record.
+## 남아 있는 코드의 성격
+
+이 함수는 인증된 사용자용 테스트 검사다. 실제 메일을 보내지 않고 고정 코드 `246810`을 사용한다. 기존 코드가 요구하는 `TEST_INSTITUTIONAL_EMAIL_AUTH_ENABLED`, `TEST_INSTITUTIONAL_EMAIL_AUTH_EXPIRES_AT`과 JWT 검사는 실제 소유 확인을 대체하지 않는다. 브라우저에 서비스 키·원본 JWT·저장 이메일 기록을 전달하지 않는 경계는 유지한다.
+
+코드·원격 배포·환경 설정은 이번 문서 작업에서 삭제하거나 변경하지 않았다. 기존 활성화 상태의 점검·정리는 별도 작업이며 이 안내로 함수를 새로 배포·활성화하지 않는다. 추후 도입 시 지원 기관·효력·갱신·코드 처리와 실제 발송 제공사를 별도로 검토한다.

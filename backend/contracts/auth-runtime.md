@@ -1,6 +1,6 @@
 # 인증·DB 실행 계약 — 민규담당
 
-상태: 기존 Supabase 사용자 세션 검증과 제한된 RPC 전송을 구현했다. PASS 신규 가입·문자 코드 발급·번호 변경·복구·은행 제공사 연결은 포함하지 않는다. 가입 공급사와 세션 연결 방식은 미정이다.
+상태: 기존 Supabase 세션 검증과 제한된 RPC 전송 계약을 유지한다. 현재 가입·로그인은 네이버만 사용하며 여성·만 19세 이상, 네이버 필수 이름·성별·생일·출생연도와 필수 사진을 확인해야 한다. 네이버와 Supabase 세션 연결의 실제 적용·검증은 별도이며 [가입 계약](signup.md)을 따른다.
 
 ## 호출자와 권한
 
@@ -48,15 +48,15 @@
 
 `40001`은 현재 요약 revision·업무 상태 충돌에 사용되므로 409다. 호출자는 최신 상태를 다시 조회하며 무조건 성공으로 변환하지 않는다. 요청 자동 재전송은 없다. 변경 RPC의 중복/재시도 안전성은 DB 계약이 보장한다.
 
-## 가입 자격 경계
+## 가입 자격 목표와 기존 함수의 차이
 
-`evaluateTrustedEligibility(principal, proof)`는 신뢰된 미래 공급사 어댑터/비공개 DB 조회의 PASS 근거를 해석하는 순수 함수다. 검증된 동일 사용자·자격 확인·DI 중복 확인·필수 사진이 모두 충족되어야 eligible을 반환한다. 요청 본문이나 사용자 metadata를 proof로 넘겨서는 안 된다. 이 반환값은 DB 가입 허가 또는 실제 PASS 검증 결과가 아니다.
+현재 자격 정책은 검증된 네이버 정보·여성 만 19세 이상·네이버 계정당 하나·필수 사진이다. PASS·DI·문자 인증을 요구하지 않는다. 기존 `evaluateTrustedEligibility(principal, proof)`에는 이전 신원·DI 전제의 검사 구조가 남아 있으므로 네이버 자격 경계로 개편해야 한다. 이 함수의 기존 `eligible`만으로 최신 가입 자격을 충족했다고 보지 않는다. 요청 본문이나 사용자 metadata를 신뢰된 proof로 넘기지 않는다.
 
-현재 근거 조회 어댑터와 신규 가입 endpoint에는 연결하지 않았다. 근거 없음은 `verification_required`이며 기존 female_direct/referral/이메일 가입 기록은 PASS 검증 기록으로 승격하지 않는다. 사진이 없는 경우 photo_required, 선택 성향은 자격을 차단하지 않는다.
+기존 `verification_required`·`photo_required` 결과와 네이버 정보 누락 시 가입 보류의 매핑은 후속 연결 대상이다. 기존 female_direct/referral/이메일 기록을 네이버 자격 확인으로 자동 승격하지 않는다. 기존 계정은 네이버 확인 전 새 등록·신청·확정을 제한하되 진행 중 약속·대화 확인과 취소·지원 요청은 허용한다. 선택 성향은 자격을 차단하지 않는다.
 
 ## 검증
 
-`node --test tests/functions/minkyu/auth_db.test.ts`의 기존 14개와 공개 검색 인증 7개를 합한 21개 테스트 및 Deno 타입 검사를 통과했다. 원격 검증 모형, 위조 Principal 거절, 역할 혼동 거절, 토큰 전달, allowlist, 네트워크·timeout, SQLSTATE 매핑, 민감정보 제외를 포함한다. 실제 Supabase HTTP/JWT 통합 결과는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에서 별도 기록한다. 모형 테스트 통과만으로 PASS/문자/은행 연동을 완료했다고 판단하지 않는다.
+`node --test tests/functions/minkyu/auth_db.test.ts`의 기존 14개와 공개 검색 인증 7개를 합한 21개 테스트 및 Deno 타입 검사를 통과했다. 원격 검증 모형, 위조 Principal 거절, 역할 혼동 거절, 토큰 전달, allowlist, 네트워크·timeout, SQLSTATE 매핑, 민감정보 제외를 포함한다. 실제 Supabase HTTP/JWT 통합 결과는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에서 별도 기록한다. 모형 테스트 통과를 네이버 가입·세션 연결이나 추후 계좌 인증의 성공으로 판단하지 않는다.
 
 
 ## 공개 검색의 선택 인증 — 2026-09-29

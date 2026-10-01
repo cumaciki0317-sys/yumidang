@@ -1,8 +1,8 @@
-# 종현 → 민규 변경 요청 (2026-09-29 Claude 구현분 통합)
+# 종현 → 민규 연결·정책 적용 요청
 
-작성: 종현 범위 구현(Claude). 민규 소유 파일은 직접 수정하지 않았다. 아래가 반영되기 전까지 새 AI 탐색·요약 worker·행사 저장/조회의 **실제 런타임은 안전하게 비활성(unavailable / not_enabled / 500)** 상태다. 외부 메시지는 보내지 않았다. 세부 근거는 lane별 기록([C](2026-09-29-claude-lane-c-notes.md), [E](2026-09-29-claude-lane-e-notes.md), [S](2026-09-29-claude-lane-s-notes.md))과 [전체 인계](2026-09-29-claude-implementation-handoff.md)를 따른다.
+현재 정책은 [정책.md](../../../../정책.md), 당시 구현·검증 근거는 lane별 기록([C](2026-09-29-claude-lane-c-notes.md), [E](2026-09-29-claude-lane-e-notes.md), [S](2026-09-29-claude-lane-s-notes.md))과 [9월 30일 통합 인계](2026-09-30-jonghyun-integration-handoff.md)를 따른다. 이 요청은 남은 연결과 최신 정책 적용을 관리한다. 아래 제안 SQL·기존 API를 최신 정책 검토 없이 그대로 채택하지 않는다. 실제 회원 AI 원문 전송은 공급사 보관 조건 검토·사용자 확인 전 보류한다. 이번 문서 작업은 코드·DB·배포 변경이 아니다.
 
-## R1. 제안 SQL 4개의 정식 마이그레이션 채택
+## R1. 제안 SQL 5개의 검토·정식 마이그레이션 채택
 
 | 순서 | 제안 파일 | 내용 | 권한 |
 |---|---|---|---|
@@ -12,8 +12,10 @@
 | 4 | [04_events.sql](2026-09-29-claude-proposed-sql/04_events.sql) | `private.events`, `upsert_events`(service_role), `list_public_events`(anon·authenticated) | 표 참조 |
 | 5 | [05_event_filter_values.sql](2026-09-29-claude-proposed-sql/05_event_filter_values.sql) | 행사 필터 값 목록(제공처별 지역·분류 원문 값, 취소만 가진 값 제외) — 사용자 결정 U9 | anon·authenticated |
 
-- 파일에는 BEGIN/COMMIT이 없다. 채택 시 감싸고 `20260929120000` 뒤 버전으로 둔다. 03은 기존 `worker_jobs_status_check`, `worker_jobs_check1` 제약 이름을 교체하고 `claim_job`·`complete_job`·`retry_job`·`private.invalidate_appointment_review_summaries`·`private.refresh_review_summary_state`를 `create or replace`한다(기존 outbox 동작 보존).
+- 아래 파일은 검토 대상 원본이다. 현재 브랜치의 마지막 정식 마이그레이션 이후 충돌하지 않는 새 버전을 정하고, 이미 채택된 항목은 중복 생성하지 않는다. 과거 날짜를 새 마이그레이션 순서로 고정하지 않는다.
+- 파일에는 BEGIN/COMMIT이 없다. 채택 시 트랜잭션 경계와 최신 정식 이력 순서를 검토한다. 03은 기존 `worker_jobs_status_check`, `worker_jobs_check1` 제약 이름을 교체하고 `claim_job`·`complete_job`·`retry_job`·`private.invalidate_appointment_review_summaries`·`private.refresh_review_summary_state`를 `create or replace`한다(기존 outbox 동작 보존).
 - **실제 검증(2026-09-30, 전용 로컬 DB):** 28개 + 제안 4개를 처음부터 재생 PASS. 제안 적용 상태에서 `tools/local/run_database_tests.py --run` PASS(SQL 7 + 동시성 6), `review-policy-e2e.mjs` 8/8, 종현 SQL 4개·실제 다중 세션 2개·PostgREST 경유 3개 PASS. 원격 DB 적용은 NOT_RUN.
+- 위 9월 30일 실검증의 4개 제안 범위와 추가 05를 구분한다. 기존 성공 기록은 아래 최신 정책 변경의 검증이 아니다.
 - 완료 조건: 정식 SQL로 로컬 재생 + `python3 -B tests/database/jonghyun/run_proposals.py --all`이 제안 없이도(정식 적용 후에는 `--proposal` 없이 `--test`만) PASS.
 
 ## R2. RPC 허용 목록
@@ -24,7 +26,7 @@
 | `_shared/db/user-client.ts` | `get_post_author_traits`, `get_my_profile_traits`, `set_my_profile_traits`, `list_public_events`, `list_event_filter_values` | AI 탐색 후보 성향·본인 성향, S15-2 저장, 회원 행사 조회 |
 | `_shared/db/public-client.ts` | `list_public_events`, `list_event_filter_values` | 비로그인 행사 조회 |
 
-운영 코드는 이 목록을 우회하지 않는다(테스트만 전용 허용 목록 transport를 명시적으로 만든다). 완료 조건: `tests/functions/jonghyun/ai-chat-http.test.mjs`·`review-summary-worker.test.mjs`·`event-sync.test.mjs`의 “허용 목록 대기” 기대값을 성공 기대로 바꿔 통과.
+운영 코드는 이 목록을 우회하지 않는다(테스트만 전용 허용 목록 transport를 명시적으로 만든다). 완료 조건: `tests/functions/jonghyun/ai-chat-http.test.mjs`·`review-summary-worker.test.mjs`·`event-sync.test.mjs`에서 허용된 요청의 실제 연결과 미허용 요청 차단을 모두 검증한다. 기존 실패 기대값을 성공으로 바꾸는 것만으로 연결 성공을 판단하지 않는다.
 
 ## R3. HTTP 경로·함수 설정
 
@@ -41,7 +43,7 @@
 - 장소·행사: `PLACES_PAGE_SIZE`, `EVENT_SYNC_PROVIDERS`, `EVENT_SYNC_MAX_PERIOD_DAYS`, `EVENT_SYNC_MAX_PAGE`, `EVENT_SYNC_PAGE_ROWS`.
 - 일일 실행: `EVENT_SYNC_DAILY_PROVIDERS`, `EVENT_SYNC_DAILY_TIME_ZONE`, `EVENT_SYNC_DAILY_WINDOW_DAYS`, `EVENT_SYNC_DAILY_MAX_PAGES`, `EVENT_SYNC_DAILY_TIMEOUT_MS`, `DAILY_SUMMARY_WORKER_MAX_INVOCATIONS`, `DAILY_SUMMARY_WORKER_TIMEOUT_MS`.
 
-모든 수치에 기본값이 없다. 없으면 해당 기능이 not_configured/unavailable이며 다른 기능(특히 후기 공개)은 막지 않는다.
+기존 구현의 필수 환경값 부재 시 해당 기능을 not_configured/unavailable로 두고 다른 기능, 특히 후기 공개를 막지 않는다. 운영 수치는 팀 검토 상태이며 코드 기술 한도·합성 테스트값을 서비스 정책으로 승인하지 않는다. 매일 00:01 Asia/Seoul, Sonnet 5 선택, 요약 자동 TTL 없음은 이미 확정되어 재질문하지 않는다.
 
 ## R5. 민규 소유 계약 문서 동기화
 
@@ -54,3 +56,16 @@ Deno 2.9.7 `deno check --no-remote service-api/index.ts`가 `service-api/routes.
 ## R7. 로컬 gateway CORS 재현 기록 (2026-09-30)
 
 임시 Edge 실행에서 `OPTIONS /functions/v1/ai-chat`에 허용되지 않은 Origin을 보내도 게이트웨이가 200과 `Access-Control-Allow-Origin: *`를 돌려줬다. 기존 민규 Edge 인계의 CORS 미충족과 같은 현상이며, 종현 함수 자체의 Origin 검사는 게이트웨이 뒤에서만 동작한다. 운영 gateway 정책 결정이 필요하다.
+
+## R8. 최신 답변에 따른 현재 적용 요구
+
+- **인증·프로필:** 네이버만 사용한다. 이름·성별·생일·출생연도 필수, 여성 만 19세 이상, 누락·확인 불가 보류, 네이버 계정별 계정 하나다. 사진 필수·성향 선택을 연결하고 재로그인 자격 변동·복구 제한을 반영한다. 이메일 배지는 미래 검토다.
+- **무료·공개:** 현재 무료 공고만 제공한다. 유료 신청·제안의 1원 인증은 추후 도입 시 필수이며 지금 화면·서버에서 유료 흐름을 다시 켜지 않는다. 별칭/마스킹/확정 당사자 전체 이름, 동 공개/정확한 주소 당사자 공개와 취소 즉시 재마스킹을 일관되게 적용한다.
+- **검색:** 연결 행사명도 공고 검색 대상에 포함한다. 작성자 만 나이 19~99 직접 범위·전체, 비로그인 나이 전체, 등록일 최신순 기본/시작일 빠른순 선택, 전체 상태 기본을 유지한다.
+- **공고·매칭:** 모집 마감은 미입력 시 시작 시각이며 시작보다 늦을 수 없다. 신청 거절은 재신청 불가, 본인 철회는 가능하다. 최종 동의 거절·철회·만료는 신청을 유지하고 시작 전 재요청할 수 있다. 공고당 최종 동의 대기 하나, 요청 후 24시간/시작 중 이른 만료, 수동 모집 마감 후 기존 신청자의 동의 요청·재요청, 확정 시간 겹침 차단을 반영한다.
+- **완료·후기:** 예상 종료 후 본인의 완료 확인으로 선제 후기 작성 가능, 실제 동행 완료는 양쪽 확인 또는 종료+24시간 자동 처리다. 완료 전 비공개, 실제 완료+7일 작성 기한, 양쪽 후기+완료 시 즉시/한쪽은 실제 완료+24시간 공개다. 당도는 상대 후기 열람 가능 시, 완료 횟수는 실제 완료 즉시 반영하며 계산식은 팀 검토다. 신고만으로 비공개하지 않는다.
+- **AI·보관:** 근거 있는 추천 이유·주의점 방향을 반영하되 반환 직전 재확인·일부 결과·실패 세부 동작과 품질 기준은 팀 검토다. 입력 개인정보 발견 시 전송 중단, 출력 발견 시 숨김·재시도, 첫 이용 전 고지·확인을 구현 대상으로 둔다. 실제 회원 원문은 보관 조건 확인·사용자 확인 전 전송하지 않는다. 요약 중간 결과 자동 TTL을 추가하지 않는다. 원장 보존기간·교체·운영 한도를 임의 확정하지 않는다.
+- **행사:** 진행 중→예정→종료와 최근 시작/빠른 시작/최근 종료 순서를 반영한다. 서울 연결 조건·연결 여부는 팀 검토다. 공식 KOPIS 전국 전체 공연 Top 10 기본/뮤지컬 전환, 어제까지 최근 7일·매일 갱신을 별도 연결한다. API의 실제 지표·기간·장르 응답을 확인한다.
+- **신고·분쟁:** 일반 신고 확인용 운영자 고객 DB 채팅 직접 조회를 만들지 않는다. 당사자가 제출한 스크린샷만 확인하며 접근·보존·삭제·법률 예외는 팀 검토다.
+
+각 항목은 담당 코드·정식 SQL·HTTP·화면 계약을 함께 점검하고 기존 로컬 검증과 새 정책 검증을 구분한다. R6·R7의 오류는 아래 날짜에 관찰한 근거이며 현재 재현·해결 여부를 별도 확인한다.

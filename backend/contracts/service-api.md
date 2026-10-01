@@ -1,5 +1,17 @@
 # 민규 서비스 API 런타임 계약
 
+## 현재 정책에 맞출 API 차이
+
+현재 무료 1:1만 제공하며 가입은 네이버 전용이다. 공고 목록·상세는 비로그인도 볼 수 있어야 한다. 아래 기존 상세 GET의 회원 인증 요구는 이 정책에 맞춰 점검할 차이다. 검색은 연결 행사명까지 포함하고 작성자 만 나이 19~99 숫자 범위를 받아야 한다. 모집 마감 입력 생략 시 시작 시각 기본값, 선택 행사 연결, 개인 완료 후 후기 제출·확정 칭찬 6개·24시간 동의 만료·미선정 종료는 후속 구현 대상이다.
+
+아래 경로·signature·필드 길이·limit는 기존 실행 코드의 기술 계약이다. 이번 사용자 결정으로 제품상 글자 수·페이지 수·새 필드 이름을 확정한 것이 아니며 코드·SQL은 수정하지 않았다. 일반 목록 더 보기·AI 추가 요청 수량은 팀 검토다.
+
+## 개인 완료·후기 제출과 실제 완료의 경계
+
+예상 종료 후 본인 완료 확인을 마친 당사자는 상대방 완료를 기다리지 않고 후기를 제출할 수 있다. 한 명만 확인한 상태는 동행 전체 완료가 아니며 해당 후기는 비공개다. 두 사람 확인 또는 예상 종료+24시간 자동 처리(취소·불발·분쟁 제외)로 실제 완료한다. 지연 처리면 실제 성공 시각을 완료 시각으로 기록한다. 실제 완료부터 작성 마감 7일·한쪽 후기 공개 24시간을 계산하며 양쪽 제출은 완료 조건 충족 후 즉시 공개한다. 완료 횟수는 실제 완료 즉시, 당도는 상대 후기 열람 가능 시 반영한다.
+
+개인 확인 후 선제 제출과 현재 DB/API 제출 조건의 일치 여부는 후속 코드·SQL 검증 대상이다. 기존 `completed` 상태만 받는 구현을 새 정책 완료로 간주하지 않는다.
+
 현재 적용할 서비스 정책은 [정책.md](../../정책.md)를 따른다. 한쪽 후기 공개는 **실제 동행 완료 시각 +24시간**, 양쪽 제출은 즉시다. 당도는 상대 후기를 열람할 수 있게 될 때 동시에 반영하고, 완료 횟수는 후기와 관계없이 동행 완료 즉시 반영한다. 당도 산식은 민규·팀 검토 필요다. 아래 RPC·구현·검증 기록과 정책의 확정은 구분하며, 이번 문서 동기화에서 코드·DB·화면의 최신 정책 일치 여부는 검증하지 않았다. [반영 확인 작업](../../정책.md#follow-ups)을 확인한다.
 
 현재 구현은 `Request → 인증 → 입력 검증 → service → repository → 고정 RPC`로 연결된다. 시간·관계·동시성·상태 전이는 DB RPC가 결정하며 서비스 모듈은 같은 정책을 복제하지 않는다. 실제 로컬 Auth/JWT/DB 통합 결과는 [민규 현황](../../docs/collaboration/minkyu.md)에 별도로 기록한다.
@@ -53,7 +65,7 @@
 {"rating":5,"experience":"positive","comment":"편안하게 대화했어요","praises":[]}
 ```
 
-rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선택/null 또는1..300자다. praises는 최대3개이며 positive에만 허용한다. 실제 칭찬 목록이 아직 확정되지 않아 DB는 현재 비어 있지 않은 praises를 거절한다. 별점을 당도로 환산하지 않는다. 현재 적용할 정책에 따라 제출 성공 뒤 공개 상태를 조회해야 한다. 양쪽 제출은 24시간 전이어도 즉시 공개하고, 한쪽은 실제 동행 완료+24시간부터 공개하며 그 이후 기한 내 제출은 즉시 열람한다. 실제 분쟁·미완료·불발/노쇼는 제외한다. 일반 후기 작성 기간은 실제 완료부터 7일이다. 실제 분쟁 중 기한 보류와 동행 인정 후 남은 기간 재개·최소 24시간의 기존 예외는 유지한다.
+rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선택/null 또는1..300자다. praises는 최대3개이며 positive에만 허용한다. 칭찬 6개는 [후기 계약](reviews.md)에 확정됐다. 기존 DB 카탈로그 기본값은 비어 있으므로 구성 전에는 비어 있지 않은 praises가 거절될 수 있다. 후속 SQL/설정 적용 없이 지원 완료로 표시하지 않는다. 별점을 당도로 환산하지 않는다. 현재 적용할 정책에 따라 제출 성공 뒤 공개 상태를 조회해야 한다. 양쪽 제출은 24시간 전이어도 즉시 공개하고, 한쪽은 실제 동행 완료+24시간부터 공개하며 그 이후 기한 내 제출은 즉시 열람한다. 실제 분쟁·미완료·불발/노쇼는 제외한다. 일반 후기 작성 기간은 실제 완료부터 7일이다. 실제 분쟁 중 기한 보류와 동행 인정 후 남은 기간 재개·최소 24시간의 기존 예외는 유지한다.
 
 공고 입력 예시(가상):
 
@@ -79,7 +91,7 @@ rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선�
 
 제목2..80자, 소개1..2000자, 공개지역 최대60자, 장소명 최대200자, 등록주소1..300자, 만남상세2..200자, 선택 선호문구 최대300자, 태그 최대5개·각20자다. 문자열은 앞뒤 공백을 허용하지 않는다. 시간은 offset 또는 Z가 있는 ISO 문자열이며 종료가 시작보다 늦고 모집 종료가 시작 이하여야 한다. 현재 지역 형식은 기존 DB 제약을 따르며 임의로 바꾸지 않는다.
 
-유료 `paid_request|paid_offer`는 503이며 공급사 연결 없이 성공 처리하지 않는다. 신규 무료 공고와 달리 비용 미상인 기존 공고는 `request_service_post`에서 차단된다. 클라이언트 `authorId`, `userId`, 권한·성별·확정 상태 필드는 허용하지 않는다. PASS 가입, 공고 수정·삭제, 은행 확인, 분쟁 판정, 당도 산식 경로는 미정 사항을 임의 결정해 추가하지 않았다.
+유료 `paid_request|paid_offer`는 503이며 공급사 연결 없이 성공 처리하지 않는다. 신규 무료 공고와 달리 비용 미상인 기존 공고는 `request_service_post`에서 차단된다. 클라이언트 `authorId`, `userId`, 권한·성별·확정 상태 필드는 허용하지 않는다. 네이버 가입·세션 연결, 새 공고 수정·삭제·동의 만료·미선정 종료 규칙은 후속 구현·검증 대상이다. 은행 확인은 추후 유료 도입 검토이며 분쟁 판정 세부·당도 산식은 팀 검토다.
 
 ## 내부 유지보수
 
@@ -112,6 +124,7 @@ summary 결과는 성공 시 `{status:"queued",processedCount,enqueuedCount}`, �
 Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supabase의 실제 HTTP/JWT/DB 통합 결과를 관리형 Edge hosting 결과와 구분한다. **원격 관리형 Edge hosting 및 운영 배포는 NOT_RUN**이다. 2026-09-29 로컬 Supabase Edge/gateway에서 실제 인증·업무 검사를 수행했으며 아래 결과를 따른다.
 
 
+<a id="검색-http-병렬-준비--2026-09-29"></a>
 ## 검색 HTTP 연결 — 2026-09-29
 
 종현 검색 v2 코어(`129a871`)를 민규 기본 런타임에 연결한다. `createRuntimeHandler(read)`와 `default.fetch`의 GET `/posts`는 `searchPublicPosts(createRpcPublicPostSearchRepository(db), input)`을 실행한다. `createRuntimeHandler(read, { publicPostSearch })`의 명시 의존성 주입은 검사·조립 용도로 유지하며 URL/본문/환경값으로 실행기를 교체하지 못한다. POST `/posts`와 다른 업무 경로는 기존 로그인 요구를 유지한다.
@@ -131,16 +144,16 @@ Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supaba
 | cost | all/free/paid |
 | availability | all/recruiting |
 | periodStart, periodEnd | 두 문자열을 함께 전달해 `period:{startsAt,endsAt}`로 변환. 날짜 유효성·겹침 계산은 검색 코어 |
-| authorAge | all/20s/30s/40plus. 익명 상세 나이는 HTTP 경계에서도 AUTH_REQUIRED로 거절 |
+| authorAge | 기존 구현은 all/20s/30s/40plus. 현재 목표는 작성자 만 나이 19~99 숫자 범위(전체 상한 없음)이며 실제 wire 변경·검증 필요. 익명은 전체만 허용 |
 | sort | 생략 시 created_desc, 선택 starts_asc |
 | cursor | 불투명 문자열. 해석·필터 결합·버전 검사는 검색 코어 |
 | limit | 정수 1..50. 생략하면 검색 코어의 기본값 |
 
 잘못된 입력으로 정의한 검색 코어 오류만 공통 INVALID_REQUEST로 변환한다. AUTH_REQUIRED는 401, 이미 정해진 HttpError는 유지하고 응답/투영 불일치 및 알 수 없는 오류는 원문 없이 500으로 처리한다. 외부 오류 메시지·검색어·토큰을 로그에 출력하지 않는다.
 
-최신 검증 방법·결과·남은 사항은 [검색 연결 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-connected.md)를 따른다. 이전 [HTTP 병렬 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)는 연결 전 기록이다.
+현재 요구사항은 [검색 계약](search.md)과 [정책](../../정책.md#posts), 후속 반영 범위는 [민규 현황](../../docs/collaboration/minkyu.md)을 따른다. [검색 연결 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-connected.md)는 당시 연결 검증의 근거이고, [HTTP 병렬 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)는 연결 전 기록이다. 두 기록의 당시 남은 작업을 현재 상태로 사용하지 않는다.
 
-독립 검토에서 응답 카드의 잘못된 시각이 입력 오류와 같은 코드를 던져400으로 분류되는 예외를 확인했다. 정상 SQL timestamp와는 별개이며 종현 repository의 응답 오류 구분 요청으로 기록했다. [재현·완료 조건](../../docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md)
+당시 독립 검토는 응답 카드의 잘못된 시각이 400으로 분류되는 문제를 기록했다. 현재 repository는 잘못된 응답을 `INVALID_SEARCH_RESPONSE`로 구분하므로 해당 요청을 미수정 작업으로 안내하지 않는다. [당시 재현 기록](../../docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md)은 보존하고, 새 검색 정책의 적용·검증 범위는 현재 검색 계약을 따른다.
 
 
 ## 연결 전 로컬 Edge/gateway 결과 — 2026-09-29
@@ -149,4 +162,4 @@ CLI2.116.0 / Edge Runtime v1.74.3 / Kong2.8.1에서 기존 default fetch를 변�
 
 전체 결과는 **PARTIAL**이다. 위 HTTP 계약의 정확한 Origin/no-store/OPTIONS204는 앱 응답 기준이며, 로컬 Kong은 허용 Origin GET의 ACAO를 `*`로 변경하고 OPTIONS를200/`*`/no-store 없이 먼저 응답한다. 애플리케이션의 미허용 Origin403과 자체 인증은 실제로 유지됐다. 이 로컬 gateway 차이를 CORS 전체 통과로 기록하지 않는다. 운영 gateway의 허용 Origin·OPTIONS 정책은 대상 선정 후 확인해야 하며 원격 결과는 NOT_RUN이다.
 
-이전 검사 당시 기본 GET 검색405는 종현 최신 코어 미연결 상태를 확인한 것이었다. 위 검색 연결 이후의 결과는 최신 인계를 따른다. PASS/문자·계좌 공급사, 외부 모델, 운영 데이터·배포를 실행하지 않았다.
+이전 검사 당시 기본 GET 검색405는 종현 최신 코어 미연결 상태를 확인한 것이었다. 위 검색 연결 이후의 결과는 최신 인계를 따른다. 현재 네이버 연동·추후 계좌 공급사·외부 모델·운영 데이터·배포의 성공 근거로 이 검증 이력을 사용하지 않는다.

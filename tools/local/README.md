@@ -1,8 +1,14 @@
 # 로컬 검증 준비 도구
 
+## 현재 정책을 검증할 때
+
+현재 로그인은 네이버만, 현재 동행은 무료 1:1이다. 과거 테스트 Auth/비밀번호 세션은 로컬 권한 검사 도구이며 네이버 필수 정보·성인 여성 자격·필수 사진의 실제 연동 성공이 아니다. 이메일·계좌 인증은 추후 도입 검토다.
+
+기존 SQL/HTTP 검사가 통과해도 작성자 만 나이 19~99 숫자 범위·연결 행사명 검색·개인 완료 후 선제 후기 제출·칭찬 6개·동의 만료/미선정 종료의 최신 정책 반영을 보장하지 않는다. 이 경계는 후속 코드 변경과 함께 검사한다. 문서 동기화 작업에서는 아래 DB 기동·reset·원격 호출을 실행하지 않는다. 구성·길이·배치 한도와 제품상 표시 수량·운영 보관 수치는 별도로 관리한다.
+
 담당: 민규. Python 3.11 이상 표준 라이브러리와 Git을 사용한다. 명령은 현재 작업 중인 worktree의 최상위에서 실행한다. 환경/복사 도구는 DB를 기동하거나 SQL을 실행하지 않는다.
 
-**2026-09-28 현재 작업은 병합본 공유와 로컬 준비 도구 갱신이다.** 실제 DB 재기동·마이그레이션 재생·HTTP 재검증·검색 연결은 이번 작업에서 수행하지 않는다. 아래 실제 실행 절차는 이후 별도 실행 시 참고할 안내이며, 2026-09-23 검증 기록과 현재 준비 결과를 구분한다.
+아래는 격리 로컬 환경을 준비하고 검증하는 실행 절차다. 사용 시 현재 HEAD·작업 공간·설정을 확인하고 과거 검증 환경·결과를 현재 재현 결과로 대신하지 않는다. 문서 최신화 자체는 DB 재기동·마이그레이션 재생·HTTP 재검증을 수행하지 않는다.
 
 ## 환경 점검
 
@@ -135,7 +141,7 @@ python3 -B tests/integration/minkyu/runtime_e2e.py --workdir "$db_output"
 
 빈 전용 DB와 같은 Docker socket을 사용한다. 통합 검사는 로컬 Auth admin API로 가상 사용자 3명을 만들고 실제 비밀번호 로그인 토큰을 발급받는다. 동일한 `createRuntimeHandler`를 127.0.0.1의 임시 Deno 서버에서 실행하고 실제 Auth/PostgREST/RPC로 무료 공고→신청→양측 매칭→완료→후기 공개→중복 없는 요약 큐를 검증한다. SQL 보조 fixture로 시간과 후기 개수 조건을 준비하므로 실제 24시간 대기나 모델 생성 검사가 아니다. 서버·가상 사용자는 finally에서 정리한다. 자격 증명·본문을 로그로 출력하지 않는다.
 
-로컬 `auth.enable_signup=false`는 일반 가입을 차단한다. `auth.email.enable_signup=true`는 CLI의 이메일/비밀번호 provider를 켜기 위한 설정이다. Mailpit은 로컬 수집기이며 외부 SMTP가 아니다. PASS/문자 로그인 경로를 구현하거나 승인한 것으로 해석하지 않는다.
+로컬 `auth.enable_signup=false`는 일반 가입을 차단한다. `auth.email.enable_signup=true`는 CLI의 이메일/비밀번호 provider를 켜기 위한 설정이다. Mailpit은 로컬 수집기이며 외부 SMTP가 아니다. 현재 네이버 가입·로그인 연동을 구현·검증한 것으로 해석하지 않는다.
 
 `functions.service-api.verify_jwt=false`는 handler의 사용자 Auth 검증과 별도 내부 비밀 검증을 사용하기 위한 설정이다. gateway가 내부 비밀을 사용자 JWT로 거절하지 않게 한다. 인증을 생략하는 공개 업무 경로는 추가하지 않았다. [Supabase custom 인증 안내](https://supabase.com/docs/guides/functions/auth)를 따른다. Supabase Edge 호스팅 자체는 NOT_RUN이고 로컬 기본 edge_runtime도 비활성이다. 배포 전에 Edge 기동·gateway 경로 검증이 필요하다.
 
@@ -164,6 +170,6 @@ python3 -B tests/integration/minkyu/edge_e2e.py --workdir "$edge_output"
 
 기존 volume에 새 SQL이 아직 적용되지 않았다면 빈 전용 DB를 확인하고 로컬 reset을 수행한다. runner는 준비 이후 소스 변동·다른프로젝트/소켓·남은 fixture를 거절한다. 키는 CLI에서 읽어 메모리로 사용하고 내부 설정만0600 임시 env에 기록한다. gateway `/functions/v1/service-api`를 실제 호출하며 standalone Deno 서버로 대체하지 않는다. 사용한 가상 데이터·CLI프로세스그룹·임시env/log를 정리하고, 종료 시 전용 Supabase/Colima stop은 호출자가 수행한다(볼륨 보존).
 
-현재 실제 결과는 **8개 묶음 PASS + 로컬 gateway CORS 미충족1개 = PARTIAL(exit2)**다. CLI Kong이 GET의 Origin을`*`로 바꾸고 OPTIONS를200/`*`/no-store 없이 응답한다. 앱의 미허용Origin403과 인증은 유지됐다. 이 알려진 차이를 검사 성공으로 숨기지 않는다. exit0은 전체 통과, exit1은 시작/기능 실패, exit2는 검사를 완료했으나 미충족 사항 존재다. 원격운영gateway/배포는 NOT_RUN이다.
+2026-09-29 당시 결과는 **8개 묶음 PASS + 로컬 gateway CORS 미충족1개 = PARTIAL(exit2)**다. CLI Kong이 GET의 Origin을`*`로 바꾸고 OPTIONS를200/`*`/no-store 없이 응답한다. 앱의 미허용Origin403과 인증은 유지됐다. 이 알려진 차이를 검사 성공으로 숨기지 않는다. exit0은 전체 통과, exit1은 시작/기능 실패, exit2는 검사를 완료했으나 미충족 사항 존재다. 원격운영gateway/배포는 NOT_RUN이다.
 
 [실제 실행 근거·상세 결과·CORS 후속](../../docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md)을 따른다. 준비 도구 회귀는 `python3 -B tests/database/minkyu/test_edge_tools.py`로 실행한다.

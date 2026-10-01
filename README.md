@@ -1,32 +1,22 @@
 # 유미당
 
-현재 와이어프레임을 개선해 프로토타입을 만들고, 기존 Supabase에 연결합니다.
+성인 여성의 무료 1:1 동행을 준비하는 서비스입니다. 현재 정책과 검토 항목은 [정책.md](정책.md) 한 곳에서 확인합니다.
 
-## 기획과 화면 기준
+## 현재 문서
 
-- [정책 — 확정·미정·검토 필요](정책.md): 팀 전체가 현재 정책과 남은 결정을 확인하는 문서
-- [PRD](docs/planning/requirements/PRD.md): 팀의 제품 목적·대상·핵심 흐름
-- [추가 요구 사항](<docs/planning/requirements/추가 요구 사항.md>): 추가 기능과 결정 이유
-- [화면 수정 요청](docs/planning/requirements/전달.md): 구체적인 요청과 검토 사항
-- [IA](docs/planning/design/IA.md): 화면과 정보 구조
-- [사용자 흐름](docs/planning/design/USER_FLOW.md): 행동 순서와 예외
-- [와이어프레임](docs/planning/design/yumidang-wireframes.html): 프론트 담당자가 개선하는 HTML 시안
+- [정책](정책.md): 확정 정책, 팀 보류, 추후 기능, 사실·구현 확인의 구분
+- [PRD](docs/planning/requirements/PRD.md): 제품 목적·대상·범위와 요구사항
+- [IA](docs/planning/design/IA.md)·[사용자 흐름](docs/planning/design/USER_FLOW.md): 화면 구조·행동·예외·복귀
+- [서비스 계획](PLAN.md)·[상세 설계](PLAN_상세설계.md): 적용할 흐름·기술 경계·담당 연결
+- [프로젝트 지침](AGENTS.md)·[협업 규칙](docs/collaboration/README.md): 작업 범위와 결과 기록
+- [종현 현황](docs/collaboration/jonghyun.md)·[민규 현황](docs/collaboration/minkyu.md): 후속 연결과 제한
 
-와이어프레임은 HTML 파일을 브라우저에서 열어 확인합니다. 실제 서비스 연결 완료를 의미하지 않습니다.
+[와이어프레임](docs/planning/design/yumidang-wireframes.html)은 프론트 담당자가 관리하는 시안입니다. 현재 정책 문서와 화면 표현·실제 연결·운영 검증은 각각 확인해야 합니다.
 
-## 보존한 기술 자료
+## 연결 및 검증 상태
 
-- `backend/supabase/migrations/`: 기존 DB 변경 이력. 새 요구사항에 맞는 후속 변경을 설계합니다.
-- `backend/supabase/functions/`: 기존 테스트용 인증 서버 함수와 신규 기능의 미구현 골격. 실제 본인인증이나 기능 완료의 근거로 사용하지 않습니다.
-- `frontend/src/assets/logo.jpg`: 사용할 로고
-- `.env.local`: 로컬 연결 설정. Git에 올리지 않습니다.
-- [.env.example](.env.example): 기존 환경 항목 안내. 새 연결 방식에 맞춰 갱신할 대상입니다.
-- `.gitignore`, `.git/`: 제외 규칙과 버전 이력
+네이버 전용 가입·로그인, 현재 무료 범위, 19~99세 검색 범위, 연결 행사명 검색, 한 사람의 완료 확인 후 선제 후기 제출, 최신 행사 정렬·Top 10은 적용할 요구사항입니다. 이번 문서 변경은 코드·DB·HTML·운영 설정을 변경하지 않았습니다.
 
-## 현재 작업 경계
+기존 구현은 전부 골격인 상태가 아닙니다. [결함 수정 근거](docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md)와 [Git 통합 인계](docs/collaboration/requests/jonghyun/2026-09-30-jonghyun-integration-handoff.md)에 당시 로컬 검증 범위가 있습니다. 해당 결과를 새 정책의 구현·운영 완료로 확대하지 않습니다.
 
-2026-09-22 사용자 지시에 따라 기존 React 앱, 프론트 API 연결·인증·사진 처리 코드, 테스트, 실행·빌드·배포 설정, 과거 문서와 생성물을 삭제했습니다. 별도 백업은 만들지 않았습니다. 새로운 연결 코드·테스트·실행 환경은 현재 프로토타입에 맞춰 구성합니다.
-
-최신 백엔드 계획은 [PLAN.md](PLAN.md), 파일별 책임·AI 구조·연결 계약은 [PLAN_상세설계.md](PLAN_상세설계.md), 작업 기준과 추가 사용자 결정은 [AGENTS.md](AGENTS.md)를 확인합니다. 신규 구현용 파일은 골격만 준비되어 있으며 작성 위치는 [백엔드 안내](backend/README.md)를 따릅니다.
-
-이번 정리에서는 원격 Supabase와 Vercel을 변경하지 않았으며, 커밋·푸시·배포도 실행하지 않았습니다.
+`backend/supabase/migrations/`의 기존 이력과 테스트·실행 자료는 보존하고, 승인된 후속 구현에서 영향을 확인합니다. 실제 작성 위치는 [백엔드 안내](backend/README.md)를 따릅니다. 비밀 환경 파일은 Git에 넣지 않습니다. 사용자는 전체 문서 검토 후 커밋·푸시를 요청했습니다. 실제 공유 결과는 최종 인계와 Git 이력에서 확인하며 원격 DB 변경·배포는 별도입니다.

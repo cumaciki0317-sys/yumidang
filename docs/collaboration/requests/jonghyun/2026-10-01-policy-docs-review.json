@@ -1,0 +1,2754 @@
+{
+  "record_type": "2026-10-01 문서 동기화 작업·검토 기록. 현재 정책은 정책.md 참조",
+  "baseline_commit": "e2cbf4c436b0139280fee4883fd96939910222ab",
+  "publish_branch": "minkyu/foundation-harness",
+  "authorization": {
+    "actor": "jonghyun",
+    "scope": "사용자가 담당 구역 구분 없는 전체 현재·미래 문서 수정, 두 전달 문서 삭제, 검토 후 커밋·푸시를 명시 승인",
+    "ownership_check": "일반 jonghyun 소유권 검사는 공통 문서에서 불일치. 정책·hook·작업자 설정을 바꾸지 않고 사용자 승인 문서 예외로 처리; 일반 소유권 PASS로 보고하지 않음"
+  },
+  "sources": [
+    {
+      "name": "유미당-정책-전체답변.md",
+      "sha256": "f6f7b53c5998f4cf5a9aeef0fe9dd1b6a5d375d82c84b86e8687ce37e7d78ff7"
+    },
+    {
+      "name": "유미당-정책-추가답변.md",
+      "sha256": "84823afc0febe7899f1eddaf4b4c94c0f515369863810c96bb0591db6c527965"
+    }
+  ],
+  "source_priority": [
+    "최신 직접 답변: 54A 확정, 34 서울 연결 조건 팀 검토",
+    "추가 답변과 사용자 메모",
+    "전체 답변과 사용자 메모",
+    "상충하지 않는 기존 확정 기준"
+  ],
+  "counts": {
+    "baseline_markdown_reviewed": 75,
+    "update": 46,
+    "remove": 2,
+    "preserve": 27,
+    "new_work_records": 2,
+    "protected_non_markdown": 336
+  },
+  "coverage": [
+    {
+      "question": 1,
+      "title": "가입 자격",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 2,
+      "title": "필수 정보 누락·확인불가",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 3,
+      "title": "중복 가입",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 4,
+      "title": "유료 동행 범위",
+      "policy_anchor": "payment",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 5,
+      "title": "모집 자동 마감",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 6,
+      "title": "재신청",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 7,
+      "title": "행사 정렬",
+      "policy_anchor": "events",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 8,
+      "title": "사진·성향",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 9,
+      "title": "이름·장소 공개",
+      "policy_anchor": "disclosure",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 10,
+      "title": "동행 인원 범위",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 11,
+      "title": "가입 완료와 로그인 후 복귀",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 12,
+      "title": "성향 입력 형식·수량·공개",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 13,
+      "title": "네이버 정보 변경과 가입 자격 재확인",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 14,
+      "title": "네이버 계정 접근 불가·연결 변경·복구",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 15,
+      "title": "학교·직장 이메일 선택 인증의 제공 범위",
+      "policy_anchor": "payment",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 16,
+      "title": "이메일 인증 지원 기관·효력·갱신·코드 처리",
+      "policy_anchor": "payment",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 17,
+      "title": "비로그인 이용 가능 기능",
+      "policy_anchor": "disclosure",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 18,
+      "title": "공고·행사 키워드 검색 대상",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 19,
+      "title": "나이 필터의 기준 대상",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 20,
+      "title": "공고 기본 정렬과 선택 정렬",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 21,
+      "title": "공고 목록의 기본 모집 상태",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 22,
+      "title": "주변·반경·거리 검색 제공 범위",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 23,
+      "title": "장소명·주소 입력 방식과 공급사",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 24,
+      "title": "공고 작성 항목·시간·행사 연결·등록 결과",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 25,
+      "title": "신청 소개 메시지의 필수 여부",
+      "policy_anchor": "matching",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 26,
+      "title": "상대 선택과 양쪽 최종 동의 절차",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 27,
+      "title": "신청·최종 확정 시 일정 겹침 처리",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 28,
+      "title": "수동·자동 완료 조건과 완료 시각",
+      "policy_anchor": "reviews",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 29,
+      "title": "평가 작성 기간과 분쟁 보류·재개",
+      "policy_anchor": "reviews",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 30,
+      "title": "평가 입력·제출 후 수정·칭찬 집계 기준",
+      "policy_anchor": "reviews",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 31,
+      "title": "AI 탐색의 기능·데이터·행동 권한 범위",
+      "policy_anchor": "ai-search",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 32,
+      "title": "AI 조건 우선순위·성향 매칭·미입력 처리",
+      "policy_anchor": "ai-search",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 33,
+      "title": "AI 정렬·권한 재확인·일부 결과·실패 처리",
+      "policy_anchor": "ai-search",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 34,
+      "title": "행사 공급사와 연결 보류 범위",
+      "policy_anchor": "events",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 35,
+      "title": "행사 지역·유형 분류와 표시 기준",
+      "policy_anchor": "events",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 36,
+      "title": "출시 목표일과 단계별 공개 방향",
+      "policy_anchor": "operations",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 37,
+      "title": "기존 미검증·자격 미충족 계정 전환",
+      "policy_anchor": "account",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 38,
+      "title": "확정 전 공고 수정과 기존 신청자 처리",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 39,
+      "title": "공고 수동 마감·삭제와 연결 자료 처리",
+      "policy_anchor": "posts",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 40,
+      "title": "최종 동의 요청 만료·철회",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 41,
+      "title": "동시에 여러 확정이 시도될 때 처리",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 42,
+      "title": "동행 확정 후 미선정 신청·대화 종료",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 43,
+      "title": "확정 후 일정 변경·재동의·미응답",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 44,
+      "title": "확정 후 취소의 허용 시점·주체·알림",
+      "policy_anchor": "matching",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 45,
+      "title": "불발·노쇼 인정·신고·소명",
+      "policy_anchor": "matching",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 46,
+      "title": "분쟁 판단·증거·처리 기한·종결·이의 제기",
+      "policy_anchor": "matching",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 47,
+      "title": "금지 행위·경고·일시 제한·영구 제한",
+      "policy_anchor": "operations",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 48,
+      "title": "취소 이후 이름·정확한 주소 접근 종료",
+      "policy_anchor": "disclosure",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 49,
+      "title": "당도 변경 내역의 제공·표시 범위",
+      "policy_anchor": "reviews",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 50,
+      "title": "최근 검색의 저장·기간·삭제·복구",
+      "policy_anchor": "retention",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 51,
+      "title": "공고 임시저장의 저장·기간·삭제·복구",
+      "policy_anchor": "retention",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 52,
+      "title": "검색 결과의 제품상 표시 수량·추가 조회",
+      "policy_anchor": "posts",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 53,
+      "title": "AI 사용 정보의 고지 내용·위치·시점",
+      "policy_anchor": "ai-search",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 54,
+      "title": "공연·뮤지컬 Top 10의 도입·선정·기간·표시",
+      "policy_anchor": "events",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 55,
+      "title": "공고 본문의 개인정보 처리·오탐 대응",
+      "policy_anchor": "posts",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 56,
+      "title": "AI 입력·출력 개인정보 발견 시 처리",
+      "policy_anchor": "ai-search",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 57,
+      "title": "탈퇴·재가입과 회원·인증 기록 보관·삭제·복구",
+      "policy_anchor": "retention",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 58,
+      "title": "회원 간 채팅의 보관·삭제·운영 접근",
+      "policy_anchor": "retention",
+      "disposition": "확정 원칙과 후속 검토 분리",
+      "audit": "PASS"
+    },
+    {
+      "question": 59,
+      "title": "운영 로그의 식별자·보관·접근",
+      "policy_anchor": "retention",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 60,
+      "title": "이전 AI 예산 원장의 보존·삭제·열람",
+      "policy_anchor": "retention",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 61,
+      "title": "베타 대상·기능·고지·테스트 데이터 처리",
+      "policy_anchor": "operations",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 62,
+      "title": "웹·Android 제공·패키징·실시간 채팅 방향",
+      "policy_anchor": "operations",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 63,
+      "title": "Google Play 공식 게시자·소유·책임·이전",
+      "policy_anchor": "operations",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 64,
+      "title": "신고·차단의 대상·효과·신청·대화·접근",
+      "policy_anchor": "operations",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 65,
+      "title": "고객지원 경로·지원 범위·운영자 권한",
+      "policy_anchor": "operations",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 66,
+      "title": "칭찬 키워드의 실제 목록",
+      "policy_anchor": "reviews",
+      "disposition": "확정 반영",
+      "audit": "PASS"
+    },
+    {
+      "question": 67,
+      "title": "추후 계좌 인증·명의 대조·효력·갱신·취소",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 68,
+      "title": "계좌 효력 상실 시 공고·신청·최종 확정 처리",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 69,
+      "title": "계좌 문제·해지 확인 불가의 상대방 안내",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 70,
+      "title": "확정 후 금액 변경·재동의·거부·미응답",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 71,
+      "title": "사업자·법인 회원·계좌 도입과 권한·심사",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 72,
+      "title": "수수료·앱 내 결제 도입 여부·시점·예산",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 73,
+      "title": "수수료율·구간·부담 주체",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 74,
+      "title": "결제 시점·수단·대금 보관·정산 구조",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 75,
+      "title": "정산 시점·실패·보류·계좌 변경·수동 처리",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 76,
+      "title": "환불·분쟁·부정 거래·실패 대응",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 77,
+      "title": "거래 내역·영수증·기록 보존·운영 접근",
+      "policy_anchor": "payment",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    },
+    {
+      "question": 78,
+      "title": "외부 AI 실제 보관 조건 확인 후 회원 정보 전송 허용 여부",
+      "policy_anchor": "ai-search",
+      "disposition": "팀 검토 유지",
+      "audit": "PASS"
+    }
+  ],
+  "classifications": [
+    {
+      "path": "260929_종현담당_PLAN.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "완료체크박스/기록 유지, 실제남은연결과신규정책·고정시각·TTL·통합상태 동기화",
+      "before_sha256": "75661f045b46bf56d031e1e7fbe166ece8677bd8c6c35f6c0a4eda002f5fdd5c",
+      "after_sha256": "ffb6f8a75cad0df6540975316d3ce1bee7e5bdabc0e15c23d7599a08e420afd7",
+      "changed": true
+    },
+    {
+      "path": "AGENTS.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "현재정책·작업재개절차 갱신, 날짜별실행기록 원문별도구획 보존",
+      "before_sha256": "1a328a6c1cb02328afa26a498849c98d7c36291d6a91adc05579add790e03df9",
+      "after_sha256": "404416269ef15d0c6ae76d205552b09e7896610c9fde329a81591af50bc7a9ec",
+      "changed": true
+    },
+    {
+      "path": "PLAN.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "네이버·무료·공고매칭·선제후기·검색·행사Top10·보관의 현재 적용계획 전면동기화",
+      "before_sha256": "e0488df77c542762bc8cc9653121397a24af942be7ddcb0dced9a8ce3cabcadd",
+      "after_sha256": "d7df7c7311d32519229acd8d3bea88ed69459a48de0ab702ccdfeebbef203735",
+      "changed": true
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "구조·파일·기술계약 보존하며 현행인증/무료/검색/매칭/선제후기/AI/Top10/채팅접근/검증표와온보딩 실질갱신",
+      "before_sha256": "c03a42dc6fec19debb0ad8b277d99c6f8e94cf5f95071d3d107e0a188956e4d0",
+      "after_sha256": "6b42b24c42821212e591196f08fc5dc44dcd8328711f441be9c9c31156f0529e",
+      "changed": true
+    },
+    {
+      "path": "README.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "현재진입점과 최신정책/실행상태 분리, 폐기예정요구문서 링크제거",
+      "before_sha256": "804224c133a268a5a4a11a6119b6d5ac5e4d4cb8eba6e5a80d4424047d4a9a84",
+      "after_sha256": "28f88ad9970adfd6b1796ac5bcd95bc4f27b215e212afd7b35d25a4418303069",
+      "changed": true
+    },
+    {
+      "path": "backend/API_INPUT.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "fe980fec92fb22cc880f27d1bf9c9bd6ba5be32ed514fecc2e7291c032efe7e0",
+      "after_sha256": "1cb33fec69a7dadc667b5e747e29abd1010d38b11b7e97fb25829138a6e629ed"
+    },
+    {
+      "path": "backend/README.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "f73800d409cca508f83e0602ce9c3d8b9da304e9e4310726821f3dac8b1e8e09",
+      "after_sha256": "74f9dfa650cea956808cbb1c982e51e1c79b90d90015a317df13dd5ac4545778"
+    },
+    {
+      "path": "backend/contracts/ai-chat.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "cda1b6a9a67e19029d480e2ee06d23dbdc68fc425a90a9ea7ae5fef6f6237612",
+      "after_sha256": "0afdc65769f2b123641968f7b915c8f407678073fdbbb870bea91dfa45b2d8dc"
+    },
+    {
+      "path": "backend/contracts/auth-runtime.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "9792a4b78568381a2321c3f64e3b09e61d1615296e5eb3ddb417f3ad61c96d59",
+      "after_sha256": "5020efce4bad2eae4d77fb92f9d830af4b0567c594bb6b77ea2a4c49ad47ce5a"
+    },
+    {
+      "path": "backend/contracts/completion-db.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "165c0fe0b7ce01b1994ae317134959744744e7aed6296cef935a952e2320650e",
+      "after_sha256": "c00faf9914f52372d10097d162d227343826d060e3475d2a466fa1c981def9c7"
+    },
+    {
+      "path": "backend/contracts/conventions.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "ab5d49a0c62732eba362aee07947d9dbfa0e603bfb6bdee6f2ade10d5aceed10",
+      "after_sha256": "8ce00e3462524883d54d06e96f8587f7a8dda6387366556f8783d5157788f652"
+    },
+    {
+      "path": "backend/contracts/core-service-db.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "65296f872851753f830b9bc13dc36a007005e545219035882472df84d30b39fb",
+      "after_sha256": "7f8342f570eda111179abe71c174be0c6f2feb9231deb5910cc5a4601b6190a2"
+    },
+    {
+      "path": "backend/contracts/db-foundation.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "8929411ef331c6f0aa93ddd33ee14f83d0f43da6f437c76a56b48d9ae2efd54f",
+      "after_sha256": "11031b79324b7646621915b0f5440079ec9e1906267526df0fc4219570af4105"
+    },
+    {
+      "path": "backend/contracts/matching.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "9e13d25d8f656508427a8aa78fa6cd1d1db36fb0a340ba749ecff6759353dc4a",
+      "after_sha256": "1ce6a391be5e8e37a25d8fe085e610b31779c3ed6ba36cf097634da495d69f19"
+    },
+    {
+      "path": "backend/contracts/posts-search.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "5f972472d6802f6a433c4d422767acace1976ea12d26396362886f388acb3e3a",
+      "after_sha256": "c4cd872755e512e5ec3aa78319715d84198aab8337258c08e0fa9fca4fb96eaf"
+    },
+    {
+      "path": "backend/contracts/public-post-search-db.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "7231ca3f96f71b3edf6cde9c858d433844cc7ec5318eb8a8c7be7658d18f720f",
+      "after_sha256": "e70613de5d7e152051563da7e03265d724d38c3feb909a4fe90dcb1199ed9ea1"
+    },
+    {
+      "path": "backend/contracts/review-automation-db.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "7722f009ed1fbbe3beef86b35d7d0425f5cd7fa95799d553dc200dae8cf5e8ab",
+      "after_sha256": "f9a401d46057e10ff596fa47da11e831cf196c41d8b5941e89b841c9bdb14b22"
+    },
+    {
+      "path": "backend/contracts/review-summary-db.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "0e0673cf90fdc712ecce11da2054648bbc563fa80c3a9e23ec51f1efeb285efe",
+      "after_sha256": "ba1120b81f35b58b709b9f512a970ee8099741fe0a14b9f77572f98a0a0827a6"
+    },
+    {
+      "path": "backend/contracts/review-summary.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "75fe048766af0063baad257bab6604048e39d89d4f0504260be38c85b9ab9035",
+      "after_sha256": "8d6eb54722e6e006b259c417215c6ac99f22a3ae64dcf5f68eed5360d0911730"
+    },
+    {
+      "path": "backend/contracts/reviews.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "354eee1b165983d6248fd96555816f0254c30c9f5a6f7bfb2b353d370a3a0764",
+      "after_sha256": "57adff5813542f30625cde753bf17b41a868a6d988cbf128e8b68a5eea6134b3"
+    },
+    {
+      "path": "backend/contracts/search.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "032e4cbd1f5ed840f56a051e4f09ef8727ec23ae6fc5a535afd2bc78cb2f05bf",
+      "after_sha256": "759888fb2ea4fb76a76ad81668284ddfa72169a3ad33db7ec5961ba3b27f8792"
+    },
+    {
+      "path": "backend/contracts/service-api.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "39228b72d2b61a22f585c0e97dae4c87c4796f29169797d5a8f965fe00943e72",
+      "after_sha256": "20f9375c22fbe07a8b54c8c8debeab1013b9bb409bf5d40b579b82370497d00a"
+    },
+    {
+      "path": "backend/contracts/signup.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "41f1d5a9248bb3fe3ea5d60ab182aa8786b3829a79ec9ae6bb724127330565f8",
+      "after_sha256": "e262941b77b0242a16107c313a50d213eff3797d29640a9b3eef40ff7875a5e0"
+    },
+    {
+      "path": "backend/contracts/verification.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "25711ea1332887854430b553b5d17e86ca49fc1f0848936bf06c4cfcbb2ea61f",
+      "after_sha256": "7c434b5a3e3c74b6e906dc0e1cb37acd822c6124c158e186d55602fea5e58055"
+    },
+    {
+      "path": "backend/contracts/worker-jobs.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "97fdb5220bf582778165d0a36f1cf71d227139a6163802c0185152283c37e8ca",
+      "after_sha256": "18aa75add38aeaf4cd5387ce5f447e0b468eeafe5c636313212e20639313967c"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/README.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "b4ffbe4ed457c0575e1e6e8dc3e5ccc63c650fa837c5199623a71de1433c0807",
+      "after_sha256": "584f2154f27b839c3ff3606f60d4bf30f830e1550bfbc845afcedb73c48d7113"
+    },
+    {
+      "path": "backend/supabase/functions/test-institutional-email-auth/README.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "ff3347d33a6901b4b1e9cdc7514f8a0e1c506b489c18be3d23d716f5c982663a",
+      "after_sha256": "b301f12a0a92c31799e13dfd815b41a248ac1acc960cfdb96e4fae100d867510"
+    },
+    {
+      "path": "backend/supabase/functions/test-phone-auth/README.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "e6acc1db5c6e7e030f35a0e1392ed33a327d76cc75d5b29c7bafdfbae728c7e8",
+      "after_sha256": "3378a9d64c84a458e2bb9cc1c40fd5425c7db09d5059844441ea8321875ecc51"
+    },
+    {
+      "path": "backend/supabase/seeds/README.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "e9724e58df36298f4cf742562f39ba8b6721c211ec873c17608fc39745515bb0",
+      "after_sha256": "45252a070f386621d659fdaf62550aa9ba2c1360de9f61052a9424f29341c222"
+    },
+    {
+      "path": "docs/collaboration/README.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "명시문서예외와현재참조 추가, 잘못된초기골격/미커밋 주장 정정",
+      "before_sha256": "12afb5421e2b2ed5aba0a4c1ca67a522f08ccd900617b7937ab0703e8e91954d",
+      "after_sha256": "9e2780dfa56a8c69dc968035d013c5b3486084ab3a387558f6a5fa11383f344e",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/jonghyun.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "현재진입점/후속업무 최신화, 과거현황본문 원문구획 보존",
+      "before_sha256": "24234f3b3570273710cf75162023c87a6f3d3bb16afe391011356ee5b726c083",
+      "after_sha256": "433066d940ba904b24ce4b29bd15824f56c3ce78980838670fc3d6fb637638e8",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/minkyu-progress.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "현재진입점/후속업무 최신화, 과거현황본문 원문구획 보존",
+      "before_sha256": "9d8f18bfb220aa09b19db87bd9b839ca16be7d23df731a077edb162d50755f3a",
+      "after_sha256": "ce9256aaaaef4c39bd2067b2ae0c01532d5d4a247e196e72da6bc4e23ac1b888",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/minkyu.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "현재진입점/후속업무 최신화, 과거현황본문 원문구획 보존",
+      "before_sha256": "40daf79e113f5064b248b06b1c419a0e40b9814aada7210a2800e90cd34eef22",
+      "after_sha256": "2ccfe9090f97728beaf2d79a984920e5c6a4ad08670c1fc5decf6de1b15758c8",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-ai-cost-and-retention.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "과거 가격·외부조건 원문 보존, 현재 확정모델과 계정비용/보관/평가 후속 요구를 분리",
+      "before_sha256": "537335445b4f95ed53b8e01485140c20013b2f7bcc5239671e247f8cfd727944",
+      "after_sha256": "1bf7851875f8c39fcfc8e7752b9e54a20f55e02def7e187a07f2f4afbaf132d9",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-connection-contracts.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "초기 검토 요청 기록이라고 본문에서 선언하고 현재 연결 조건은 independent-core-integration을 우선하도록 명시한 원출처. 해당 활성 연결 요청은 이번에 갱신함.",
+      "evidence": {
+        "line": 3,
+        "quote": "상태: **초기 검토 요청 기록**. 이후 확정 정책과 현재 구현 연결 조건은 [최신 연결 요청](2026-09-23-independent-core-integration.md)을 우선한다. 이 문서는 외부 메시지를 보낸 기록이 아니며 DB·공통 파일을 변경한 결과도 아니다. 종현이 작성한 [공개 검색](../../../../backend/contracts/search.md)·[AI 탐색](../../../../backend/contracts/ai-chat.md)"
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "before_sha256": "dce2afe216fda04e7ea6bacc534c9899375079ef1240ea043c45c4f84e13eb5b",
+      "after_sha256": "dce2afe216fda04e7ea6bacc534c9899375079ef1240ea043c45c4f84e13eb5b",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "활성 독립 연결 요청의 오래된 검색·인증·완료·공급사·보관 TODO를 현재 실질 요구로 갱신",
+      "before_sha256": "d2ad8f0fce4126fa9246db458a0423bcf2ce8bf8df5729fc2ed45aa521bcc79f",
+      "after_sha256": "973597c0b0b926a92b242fee05fe1317bbfdcf43577c8a2f869720e6df261257",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-potens-api-reference.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "사용자 제공 API 안내를 수령한 당시 원본 요약. 모델 선택·실호출 이전 안내를 보존하고 현재 연결과 미확인은 갱신된 공급사/보관 요청에서 처리함.",
+      "evidence": {
+        "line": 3,
+        "quote": "상태: 2026-09-23 **사용자 제공 안내 수령**. 실제 API 호출·계정 승인·모델 품질·응답 검증은 수행하지 않았다. 아래는 전달받은 안내의 요약이며 공개 공식 문서나 실제 계정 확인 결과로 확대하지 않는다. 실제 DB·외부 API 연결은 사용자 지시로 대기한다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "before_sha256": "8e772786244133ff7f8a1cc8358e51cc2e037fba6fd38284754f7d03990913c3",
+      "after_sha256": "8e772786244133ff7f8a1cc8358e51cc2e037fba6fd38284754f7d03990913c3",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-team-ai-retention-review.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "활성 보관 검토에 모델확정·실회원전송보류·합성평가·개인정보고지와 실제확인 경계를 반영",
+      "before_sha256": "118a3554993c4b7d926bee356ffa7f95e9445453575439f9767305633420378a",
+      "after_sha256": "13596814123f0a3ee843b3fb78a42fda378055ec2df6f11ab20d0e656306e677",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-28-connection-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "742a393→f8d02b8 기준 독립 코어의 구현·검증·Git 승인 기록. 옛 검색/모델/어댑터 연결 TODO는 후속 search-v2·9월30일 구현과 활성 연결 요청으로 대체됨.",
+      "evidence": {
+        "line": 7,
+        "quote": "사용자 승인에 따라 설계안을 종현 소유 코드·계약·검사로 구현했다. 시작 시 깨끗한 전용 복제본의 `742a393`에서 민규 복제본의 커밋 `f8d02b8dc6492c1584eed8762728845fe7ae335c`를 로컬 fetch와 fast-forward로 반영했다. 이력을 보존했다. 구현 단계의 커밋·푸시 제외는 아래 최신 승인으로 갱신됐다. 민규 원본 복제본은 수정하지 않았다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "before_sha256": "6d6ef2873f151e7b8b44a94c57e74d8dd27dea728fb0d3c7067dea0de50baff1",
+      "after_sha256": "6d6ef2873f151e7b8b44a94c57e74d8dd27dea728fb0d3c7067dea0de50baff1",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "활성 화면 계약의 가입·무료·나이·AI팀검토·행사순위·후기시각을 최신답변으로 실질갱신",
+      "before_sha256": "4801a7657a342fbc2025794c1fe8ec94be62e10c35cd0e99889e48d5d46df02d",
+      "after_sha256": "4d979b7a0468921aefaf2334cccb7d36eb512b4a3212dcdfadf689b8682af7f1",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "9월29~30일 명시 시작·종료 상태/해시/검사 명령과 Q답변을 기록한 완료 인계. 본문이 당시 기록이라고 선언. 남은 R요청·화면 계약·운영값 제안은 활성 문서에서 갱신함.",
+      "evidence": {
+        "line": 3,
+        "quote": "현재 확정 정책·남은 결정·팀 후속 작업은 [정책.md](../../../../정책.md#follow-ups)에서 확인한다. 아래는 당시의 구현·검증 기록이며, 미정사항 관련 링크는 통합 정책 문서로 연결한다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "before_sha256": "2fc712927bc99dcf1b616c5977e293aa1184758cc0c6f359db529b6ee99e8122",
+      "after_sha256": "2fc712927bc99dcf1b616c5977e293aa1184758cc0c6f359db529b6ee99e8122",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-c-notes.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "Claude lane C의 제한된 변경 파일·검사·인수 기록. 통합 인계와 후속 결함 수정의 입력 근거이며 현재 화면/연결 요구는 별도로 갱신함.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 2026-09-29 lane C 인계 — C 방식 자연어 탐색의 실제 검색·성향·HTTP 연결 (설계 5.3)"
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "before_sha256": "90dad444cd203b0ff9e3c57ca8756fa0da03b42386e1e1d014b2f797f59b0de7",
+      "after_sha256": "90dad444cd203b0ff9e3c57ca8756fa0da03b42386e1e1d014b2f797f59b0de7",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "Claude lane E의 장소/행사 구현·가상 검사 범위를 남긴 완료 근거. 새 행사 정렬·공식 Top10·서울 보류는 활성 화면/연결 요구로 관리함.",
+      "evidence": {
+        "line": 3,
+        "quote": "- 작성: 2026-09-29, 종현 담당(lane E). 기준 HEAD `ff9c14f`, 브랜치 `minkyu/foundation-harness`. 기존 미커밋 37개 파일의 SHA256은 작업 종료 시점에도 모두 일치했다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "before_sha256": "de86562e80a09de5a75d28e2380ca5ecf5fddd3dfc56cf5b225238b75df1bf19",
+      "after_sha256": "de86562e80a09de5a75d28e2380ca5ecf5fddd3dfc56cf5b225238b75df1bf19",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "Claude lane S의 요약/작업 구현·검사·총괄 인수 시점 기록. 해당 입력/실행 흔적을 보존하고 현재 완료·후기 및 worker 요구는 활성 문서에 반영함.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 2026-09-29 lane S 기록 — 후기 요약 중간 저장·worker·24시간 실행 (설계 5.5·5.6)"
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "before_sha256": "21a75f5bcc7374cfa325acf2dbf45d321521f74b0dda4f9f0e259b57a5525878",
+      "after_sha256": "21a75f5bcc7374cfa325acf2dbf45d321521f74b0dda4f9f0e259b57a5525878",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "R1~R7 기존증거 보존하며 실제남은연결·제안5개범위·최신정책 R8 명확화",
+      "before_sha256": "36f439766d147353f24a58bdb937a4b1f06c56e154aedf462ab21ffb79383810",
+      "after_sha256": "86f49b2ba3d529d1b1e4bfe61dce9b852c55396ed4fd703406a05e046009962e",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-maintenance-decoupling-request.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "시간 처리/요약 분리의 당시 사용자 선택과 인수 요구 원문. review-policy-handoff에서 해당 분리를 구현·검증했고 현재 활성 문서는 분리 재구현을 요구하지 않음. 미정 모델/시간 시점 문구는 당시 상태다.",
+      "evidence": {
+        "line": 7,
+        "quote": "사용자가 시간 처리와 요약 처리를 분리하도록 설계를 선택했고, 이번 구현에서는 요청 명세를 인계하도록 승인했다. 실제 SQL·공통 설정·maintenance·scheduled-jobs 코드는 이번 검색 작업에서 변경하지 않았다. 외부 전송·DB 실행·Cron 등록도 하지 않았다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md",
+      "before_sha256": "38a31e2798d93e396f2dd2c17164627a1c0f1f61b7d6c57ef04b933b50d5cfd9",
+      "after_sha256": "38a31e2798d93e396f2dd2c17164627a1c0f1f61b7d6c57ef04b933b50d5cfd9",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "9월29일 승인된 후기 공개/건별 자동 완료 구현·실제 검사 기록. 당시 알림 기준과 현재 실제 완료 기준을 구분해야 하므로 성공 기록을 최신 정책으로 고쳐 쓰지 않음.",
+      "evidence": {
+        "line": 3,
+        "quote": "기준: 2026-09-29 / `ff9c14f` / `minkyu/foundation-harness`. 이번 변경은 미커밋이다."
+      },
+      "current_or_successor_reference": "정책.md",
+      "before_sha256": "00974509a4d60ac9e2ad7c08d38885f8422d0df3d1f3e01ecfa32afcf3318e05",
+      "after_sha256": "00974509a4d60ac9e2ad7c08d38885f8422d0df3d1f3e01ecfa32afcf3318e05",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "기준 하네스의 검색 v2 코어 변경·검사·질문 원본 해시 보존 기록. 이후 실제 GET 통합 증거와 구분해 보존.",
+      "evidence": {
+        "line": 3,
+        "quote": "2026-09-29 · actor jonghyun · jonghyun/independent-core-handoff"
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "before_sha256": "9cd2905dbb48ca471b35c0904a7feaa5352edaefc7d719cff4c314fe8553ee7e",
+      "after_sha256": "9cd2905dbb48ca471b35c0904a7feaa5352edaefc7d719cff4c314fe8553ee7e",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "검색 v2 작업 전 설계·Q1~Q6 질문 원본. search-v2-handoff의 해시 보존 대상이며 이후 답변·구현으로 대체된 질문을 다시 활성화하지 않음. 날짜가 아니라 원본 보존 근거와 후속 구현으로 분류함.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 종현 담당 작업 설계"
+      },
+      "current_or_successor_reference": "260929_종현담당_PLAN.md",
+      "before_sha256": "2c3c32f6467863b2438b345284bb14e2bd9bc8460ac9d2d4367278f580801816",
+      "after_sha256": "2c3c32f6467863b2438b345284bb14e2bd9bc8460ac9d2d4367278f580801816",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "ff9c14f 및 당시134개 입력을 검토해 F1~F5 실패를 재현한 독립 감사 증거. 후속 five-defects-fixed의 수정 성공으로 대체되었으나 실패 근거는 원문 보존.",
+      "evidence": {
+        "line": 5,
+        "quote": "기준: `minkyu/foundation-harness` / `ff9c14fec069dc03b575cfd33d9deb62625fd924`. 검토 시작 시 미커밋·미추적 파일은 134개였다. [검토 하네스](2026-09-30-codex-review-harness.json), [입력 파일 해시](2026-09-30-codex-review-evidence/review-input-sha256.json), [Claude 인계 ①~⑥](2026-09-29-claude-i"
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md",
+      "before_sha256": "8b8d18eb0abfc60ad26d01316bff23bd546d24af3860d55f195dd67a17e4ccac",
+      "after_sha256": "8b8d18eb0abfc60ad26d01316bff23bd546d24af3860d55f195dd67a17e4ccac",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "F1~F5 수정 명령·코드·실제 로컬 검사와 복구 결과를 보존하는 완료 증거. 현재 진입점은 이를 기존 코드 재사용 증거로만 연결함.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 인수 검토 결함 5건 수정 — 2026-09-30"
+      },
+      "current_or_successor_reference": "docs/collaboration/jonghyun.md",
+      "before_sha256": "52d31d903f1ecafd64c1f84cc71119d951fc5cc3da1840c233cd742cfb067fd5",
+      "after_sha256": "52d31d903f1ecafd64c1f84cc71119d951fc5cc3da1840c233cd742cfb067fd5",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-jonghyun-integration-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "지정 종현/민규 브랜치의 소스 통합·커밋 구분·보존 해시·검사 재사용·환경 복구를 기록. 살아 있는 R1~R7 후속 문서를 별도로 갱신했으며 과거 Git 실행 지시를 새 승인으로 재사용하지 않음.",
+      "evidence": {
+        "line": 16,
+        "quote": "- 시작 기준: `minkyu/foundation-harness` / `ff9c14fec069dc03b575cfd33d9deb62625fd924`. 첫 원격 조회에서도 같은 HEAD를 확인했다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "before_sha256": "feee433cb1fafa291c4362629f7d2a0d93233a489fb32aaf7659d5e3ce73f7b8",
+      "after_sha256": "feee433cb1fafa291c4362629f7d2a0d93233a489fb32aaf7659d5e3ce73f7b8",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "운영후보 보존하되 확정시각·모델·자동TTL없음과 분리, 원장무기한보존 미승격, 최신팀보류 반영",
+      "before_sha256": "53d683f5d8a033f2b7f9ada74d4b32f90ce8788d8aa728fa466b54678a7c70fb",
+      "after_sha256": "204c14146162bf1207b9e58fc2a2b0d0047a415a7ca442d372f665a4abd5cebf",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-resume-todo.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "본문이 체크박스를 당시 실행 기록이라고 선언하며 U1~U13 후속 체크박스가 모두 완료됨. 완료 증거와 당시 외부 호출 범위를 보존; 운영 후보는 활성 제안 문서에서 갱신.",
+      "evidence": {
+        "line": 3,
+        "quote": "현재 확정 정책·미정·검토 필요·팀 후속 작업은 [정책.md](../../../../정책.md#follow-ups)에서 확인한다. 아래 체크박스는 해당 작업 당시의 실행 기록이다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "before_sha256": "40b76da02f57372fab1adc27dadd54e77a9b576f8184e897619d90264c0b04e6",
+      "after_sha256": "40b76da02f57372fab1adc27dadd54e77a9b576f8184e897619d90264c0b04e6",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-db-rpc-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "민규 2차 DB/RPC 하네스의 당시 SQL·로컬 실행·미연결 경계를 기록한 완료 인계. 현재 인증·매칭·후기는 PLAN/상세설계와 최신 연결 요구를 따름.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 종현 연결 전달: 실제 DB RPC 2차"
+      },
+      "current_or_successor_reference": "PLAN_상세설계.md",
+      "before_sha256": "767d6f1f00daf62109f4fda337f3c000929f31e361e325f96bd268610b661b26",
+      "after_sha256": "767d6f1f00daf62109f4fda337f3c000929f31e361e325f96bd268610b661b26",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-foundation-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "민규 1차 foundation 기준의 공통 HTTP/DB/로컬 준비 구현·검사 기록. 이후 DB/런타임/Edge 통합으로 대체된 다음 작업을 현재 지침으로 사용하지 않음.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 종현 연결 전달 — 민규 foundation 1차"
+      },
+      "current_or_successor_reference": "docs/collaboration/minkyu.md",
+      "before_sha256": "c2a2d24f4681275f91a9effa381716e3c0aa1a065f7b6e7012859b8590e61cf8",
+      "after_sha256": "c2a2d24f4681275f91a9effa381716e3c0aa1a065f7b6e7012859b8590e61cf8",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-runtime-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "민규 3차 runtime 하네스의 실제 JWT·로컬DB/HTTP 증거와 상태 전이 구현 기록. 이전 인증/후기 시간 기준은 당시 성공의 대상이라 보존.",
+      "evidence": {
+        "line": 3,
+        "quote": "2026-09-23. 민규 worktree `minkyu/foundation-harness`에서 구현했다. 작성 당시 미커밋이었으며 이후 사용자가 구현과 재개 기록의 커밋·푸시를 요청했다. 최신 상태는 Git 로그와 민규 현황을 확인한다. 외부 메시지 전송 없이 이 문서로 전달한다. 종현 담당 파일은 수정하지 않았다. 1차 가상 사례와 2차 DB 계약에 이어 아래 실제 런타임 계약을 사용한다."
+      },
+      "current_or_successor_reference": "PLAN_상세설계.md",
+      "before_sha256": "0dabf59554d76722d6a338a55040c332c91d70a6af6f1138f440a5e2d64709f9",
+      "after_sha256": "0dabf59554d76722d6a338a55040c332c91d70a6af6f1138f440a5e2d64709f9",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-jonghyun-merge-review.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "특정 종현/민규 커밋의 병합 가능성·변경 경계·검사 검토 기록. 이후 병합과 실제 검색 연결이 이뤄졌고 현재 후속은 갱신된 상태 문서로 안내.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 종현 독립 코어 병합 검토 — 2026-09-28"
+      },
+      "current_or_successor_reference": "docs/collaboration/minkyu.md",
+      "before_sha256": "bf5ec970fb5c6488cf5bf5360981accdabcbe1c4c328ca8785a48aaab6dd2412",
+      "after_sha256": "bf5ec970fb5c6488cf5bf5360981accdabcbe1c4c328ca8785a48aaab6dd2412",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "정식 SQL26개/pending0 준비 도구 변경 및 당시 소스 보존 검사 기록. 현재 SQL 수나 DB 재생 성공으로 확대하지 않음.",
+      "evidence": {
+        "line": 1,
+        "quote": "# 병합 공유와 로컬 준비 갱신 — 2026-09-28"
+      },
+      "current_or_successor_reference": "docs/collaboration/minkyu.md",
+      "before_sha256": "5f844b37e3bece6cccb7106197d89a962f36701caf7c81a27c559b72ae5515c6",
+      "after_sha256": "5f844b37e3bece6cccb7106197d89a962f36701caf7c81a27c559b72ae5515c6",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "7차 격리 Supabase Edge 실행의 CLI/환경·8묶음 PASS·CORS PARTIAL·정리 기록. 후속 실제 검색 연결과 현재 인증 요구를 과거 실행에 소급하지 않음.",
+      "evidence": {
+        "line": 3,
+        "quote": "민규담당. 사용자의 로컬 Edge 실행 검증 요청에 따라 전용 Colima `yumidang-minkyu`와 Supabase `yumidang-minkyu-db`를 사용한다. 기준 HEAD `03aef5c`와 미커밋 6차 HTTP 준비를 보존하며 [7차 하네스](../../minkyu-edge-harness.json)의 총괄/A/B/C 허용 파일만 수정한다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "before_sha256": "fd74dd45fb15600024ea9507d0a36d871b4a4f7543a44f8c28366510d0a185c2",
+      "after_sha256": "fd74dd45fb15600024ea9507d0a36d871b4a4f7543a44f8c28366510d0a185c2",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-edge-review.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "7차 lane C의 진입점 호환성·DNS 실패·재기동·CORS 독립 검토 증거. 현재 CORS 후속은 활성 R7에서 검증 대상으로 유지.",
+      "evidence": {
+        "line": 3,
+        "quote": "작성: 2026-09-29, 민규 7차 하네스 C. 대상 CLI는 캐시에서 확인한 Supabase 2.116.0이다. 코드 호환 근거와 실제 실행 결과를 구분한다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "before_sha256": "b73b538701aa3a4e2501682813801d6ea79dfc3da8054815a5f8f0a5d5c3835a",
+      "after_sha256": "b73b538701aa3a4e2501682813801d6ea79dfc3da8054815a5f8f0a5d5c3835a",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "혼합문서의 현재후속을 최신계약으로 실질갱신하고 공급사조사·최소호출·설정검사 원문 전체 보존",
+      "before_sha256": "f53567e1640630d32b349b41cf3343233f14c40e4f7505bf75a83e775ac5b163",
+      "after_sha256": "172a2e4ea5e6dc2326cb68a55f6f5f438bbadec3fe63c493a0dfebf7833ecd8b",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "classification": "update",
+      "role": "current_or_mixed_current_history",
+      "reason": "혼합문서의 현재후속을 최신계약으로 실질갱신하고 공급사조사·최소호출·설정검사 원문 전체 보존",
+      "before_sha256": "a5fb37eb79684ae6695bccc0d4d4c863c975a0e3f3a729241e5091e18cf6a998",
+      "after_sha256": "64584fe7743e045846356edf3b9ab8ff0ad9eae8b106e41e4aa19f07794fa62a",
+      "changed": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "129a871/2a53097 검색 연결 전 독립 검토 및 P2 오류 재현 기록. 해당 P2는 이후 Claude 구현에서 보완되어 현재 잔여 구현으로 다시 지시하지 않음.",
+      "evidence": {
+        "line": 3,
+        "quote": "작성: 2026-09-29, 민규 8차 하네스 C. 종현 원격 브랜치는 `origin/jonghyun/independent-core-handoff`이며 검토 커밋은 `129a8713da513faa59f55d3fc87231ce05fa2038`이다. 민규의 병합 기준은 `2a530970fcd098156172eefc723504535bb44888`이다."
+      },
+      "current_or_successor_reference": "260929_종현담당_PLAN.md",
+      "before_sha256": "714c73a76286159a5306410325d03550e108cdca84d061fe2dfb767c7b0e780f",
+      "after_sha256": "714c73a76286159a5306410325d03550e108cdca84d061fe2dfb767c7b0e780f",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-connected.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "2a53097 이후 실제 GET→Auth→RPC 및 gateway CORS PARTIAL 기록. 이전 다음작업인 시간/모델 분리는 후속 완료 근거로 대체; 최신 상태 진입점에서 이를 첫 작업으로 안내하지 않음.",
+      "evidence": {
+        "line": 7,
+        "quote": "- 종현 `129a871`의 14파일과 민규 `5d43a46`의 20파일은 수정 경로가 겹치지 않았다. 병합 커밋은 `2a53097`이며 종현 14파일은 원문 그대로 반영했다."
+      },
+      "current_or_successor_reference": "docs/collaboration/minkyu.md",
+      "before_sha256": "459e03ca3b8630ce64315ea00b742e41ad9a5ec478df34c0f8e671083b5c9f87",
+      "after_sha256": "459e03ca3b8630ce64315ea00b742e41ad9a5ec478df34c0f8e671083b5c9f87",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-db-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "bd15429 이후 5차 검색 SQL·선택 인증 구현과 실제 로컬 검증 기록. 당시 종현 다음수정은 search-v2와 GET 통합으로 완료; 현재 19~99세·행사명 요구는 별도 활성 계약에서 관리.",
+      "evidence": {
+        "line": 3,
+        "quote": "담당 민규. `minkyu/foundation-harness`의 기준 `bd15429` 이후 로컬 구현이다. [5차 하네스](../../minkyu-search-db-harness.json)에서 총괄/A/B/C 수정 파일을 분리했다. 구현 완료 후 사용자가 커밋·푸시를 요청했으며 공유 대상은 `origin/minkyu/foundation-harness`다. 원격 DB 변경·배포는 포함하지 않는다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "before_sha256": "fe8529570dc26f72fe43797714ab50d1e916e3fd8da0756a476081791f565a77",
+      "after_sha256": "fe8529570dc26f72fe43797714ab50d1e916e3fd8da0756a476081791f565a77",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "03aef5c 이후 6차 HTTP 준비와 미연결/BLOCKED 진단을 기록한 완료 인계. 후속 GET 통합 성공의 전단계 증거이므로 옛405/BLOCKED를 현재 상태로 고쳐 쓰지 않음.",
+      "evidence": {
+        "line": 3,
+        "quote": "민규담당. 사용자가 종현과 동시에 작업을 시작하도록 요청했다. 기준 커밋은 검색 DB·인증 구현이 푸시된 `03aef5c`이고 이번 작업은 그 이후 로컬 변경이다. [6차 하네스](../../minkyu-search-http-harness.json)에서 총괄/A/B/C의 파일을 분리하며 종현 파일과 SQL 27개는 보존한다. 이번 구현의 커밋·푸시·원격 DB 변경·배포는 수행하지 않는다."
+      },
+      "current_or_successor_reference": "docs/collaboration/requests/minkyu/2026-09-29-search-connected.md",
+      "before_sha256": "b4e61061f9eb9d0af6edae0756985b7749347a3ff32f037b5c7931f2152f13ca",
+      "after_sha256": "b4e61061f9eb9d0af6edae0756985b7749347a3ff32f037b5c7931f2152f13ca",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-policy-correction.md",
+      "classification": "preserve",
+      "role": "completed_history_or_superseded_source",
+      "reason": "bd15429 기준 사용자 검색 정정의 원문 출처 대조·후속 5차 구현 요청 기록. 현행 정책은 정책.md로 통합되어 있고 :34의 삭제된 추가 요구 사항 링크는 당시 원출처 참조로만 보존.",
+      "evidence": {
+        "line": 3,
+        "quote": "사용자가 공개지역·이름·정렬·비로그인 필터 기준을 직접 정정하고 검색 조건의 출처 설명을 요청했다. 최초 정정은 민규 현황·AGENTS·이 요청 문서에 기록했다. 이후 코드 수정 요청으로 [5차 하네스](../../minkyu-search-db-harness.json)에 따라 민규 DB/인증 구현을 진행한다. 종현 코드는 직접 수정하지 않는다. 기준 HEAD는 병합한 `bd15429`다."
+      },
+      "current_or_successor_reference": "정책.md",
+      "before_sha256": "a581224558c00de8911c0b3da58acaf84662644ea16b37fe7d5646b85703e5ee",
+      "after_sha256": "a581224558c00de8911c0b3da58acaf84662644ea16b37fe7d5646b85703e5ee",
+      "byte_preserved": true
+    },
+    {
+      "path": "docs/planning/design/IA.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 제품·화면·흐름 요구 반영 및 중복 전달 원본 정리",
+      "before_sha256": "88a83256c7924c0338aa9f180d47706f0aa6b17ac092f02864d69b726094d271",
+      "after_sha256": "ea39c9f2ea39941bad17dcfc283f9627323256ef49ca5b858f5e02514dff8d3a"
+    },
+    {
+      "path": "docs/planning/design/USER_FLOW.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 제품·화면·흐름 요구 반영 및 중복 전달 원본 정리",
+      "before_sha256": "67016a810a7874a65fdabe8241dfba181e6c121b838f7336fea3062f81f18b98",
+      "after_sha256": "704c505cc78cf30729fdd61144428f0c49d7348379b16e3678d821512225743c"
+    },
+    {
+      "path": "docs/planning/requirements/PRD.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 제품·화면·흐름 요구 반영 및 중복 전달 원본 정리",
+      "before_sha256": "6208fd81faf5845d8ef5dad1efe1679489b5d1eb2a7bc5d78cdd4d17c86724b7",
+      "after_sha256": "957d4e79fd2962d0f0c6a40af615d3cde04d43f6de0222b68909be36209f289b"
+    },
+    {
+      "path": "docs/planning/requirements/전달.md",
+      "classification": "remove",
+      "role": "current_document",
+      "reason": "현재 제품·화면·흐름 요구 반영 및 중복 전달 원본 정리",
+      "before_sha256": "82da8994ceca70ff5805b8f62ce71a659f41d674201c3b47cf1efa2367e4dd25",
+      "after_sha256": null
+    },
+    {
+      "path": "docs/planning/requirements/추가 요구 사항.md",
+      "classification": "remove",
+      "role": "current_document",
+      "reason": "현재 제품·화면·흐름 요구 반영 및 중복 전달 원본 정리",
+      "before_sha256": "2be312feb608028898c203e905956d2ebb7ec923470d3e2d1b4ec1960bf8d51f",
+      "after_sha256": null
+    },
+    {
+      "path": "tools/local/README.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "현재 기능 계약과 기존 구현의 차이 구분",
+      "before_sha256": "20405a3a5cce95cd19d021bf2ee580eeed1f77235ed03db1fab576ba486e9f0f",
+      "after_sha256": "227dff893ecc5d68e1f0a0ab0f1a11468ad0506d2263315c107a18b45a4cdb55"
+    },
+    {
+      "path": "정책.md",
+      "classification": "update",
+      "role": "current_document",
+      "reason": "사용자 확정·추후·팀 검토·외부 확인의 단일 기준",
+      "before_sha256": "6aa085801ca3b231dd32d4f06a10a3ac0274695944845939521b3c512fd4a833",
+      "after_sha256": "ba9755f3cf9e70e8f717290d37eb63d0ec200fcbe9cebe86550d4b47017b26bc"
+    }
+  ],
+  "protected_non_markdown": [
+    {
+      "path": ".env.example",
+      "sha256": "d3440abe6611f6d71726d6f8c47433caa6d18f050e0f77a83aa1d21836d4355c"
+    },
+    {
+      "path": ".githooks/pre-commit",
+      "sha256": "4404ff74e12237ce12d4dce327a4347f5ea0f7eb42d00a88fc57b3eec31ca0ee"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "f208b2b47c2384e538f74df1c5f22ae71b9405cbf6b2633c24a110cbfd16b0bb"
+    },
+    {
+      "path": "backend/.env.example",
+      "sha256": "2f55c7b875498016d51a3d843c382d0cc51875f87edb3956aa12127c01396d39"
+    },
+    {
+      "path": "backend/contracts/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/ownership.json",
+      "sha256": "6bf81ed37dbaf5941c81c1e06e30bda9b16778884e032aac0d1e048dbd2038cd"
+    },
+    {
+      "path": "backend/package-lock.json",
+      "sha256": "62f1407bf8a2bef19f502c5b1b03ea1705e3ebf26380fb0e3e14c798831606ae"
+    },
+    {
+      "path": "backend/package.json",
+      "sha256": "f8c99ef370432028e1cdf700f0750bbe17bfda0e11b33b8373d9b5866bce54fc"
+    },
+    {
+      "path": "backend/supabase/config.toml",
+      "sha256": "6692e1c5b35c4693d9b3add0567fa9a4b3d0f243abf415f4f63635fd80e1c6e0"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/context.ts",
+      "sha256": "ac675ff1f716b9cbbe850b49f05d870521527af3155a4e92a20a1e42b2201c6b"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/date-range.ts",
+      "sha256": "a70282ade9cdfad26a69e3fe63d8049feb96b6f5664a45b9925b4065f67771e7"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/discovery.ts",
+      "sha256": "9c30ffa251ed0cd2b5756a0d2f30dbb43eb3c36d4443ed4cc1957deda4863fda"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/event-discovery.ts",
+      "sha256": "ac4c42a3222021acb72378984fbd7afae381e76dc3e41432c57effabf4e22445"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/intent.ts",
+      "sha256": "2d609017192aec2958cd6b07b690fe035b087dbf6d171cc2ea4cf65f26708a70"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/orchestrator.ts",
+      "sha256": "5c3670feafb88b8f019e80b820a4b9e0a941f25f2193ac581cc43bb1be931130"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/output-check.ts",
+      "sha256": "43c3ef544e7872f6443f445f0393ed11f694a9c0887aed9bd4a1ecd3a6a9b53b"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/preference-match.ts",
+      "sha256": "48385957b8c4991bf2fd44ed3fd57c8de4dbe7792404256155f2a25beacb93ec"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/prompts.ts",
+      "sha256": "7a8b88b327d0ac642cf22ec22ab06a87e45485b9c8bb26cfe831dddf37071d2f"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/result-builder.ts",
+      "sha256": "ddf97498707222cfa7d297d4db92486ec17d9f9a702167e8e347a41926e901fd"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/settings.ts",
+      "sha256": "87164aac56cd66f563651be08a0cd684825759bd0088277b287db6ee1ac38a94"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/tools.ts",
+      "sha256": "92ebaaa43a4cd946c3bf0109a09ec14d7c2fbccef0d67abe648fc8314d7b6b8e"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/traits.ts",
+      "sha256": "d0ff94e9e1b4fb2249ca45fa421a97b8cc70f2664c75cf0ae417b2fa791019ba"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/eligibility.ts",
+      "sha256": "655213747d630d45e971af6389ca2376e676d34683dd7328036ccd65f08a1ad3"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/evidence-check.ts",
+      "sha256": "7b6405891c1ebf1a04b22735ec51677fd6c2d6db95649dd873e360920ffdad01"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/orchestrator.ts",
+      "sha256": "156956996304413d0cbae30ce1949695832b18c19e7a02b7ee9a4c55012f86b8"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/output-check.ts",
+      "sha256": "540a8cf05284e641638611f3f5b8e44530abc752a07e646a751f122c38be1cd2"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/prompts.ts",
+      "sha256": "30595f0b5d4b94fc49529ff8288740e21da8a1bb03e880585e23beba4cec5370"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/publisher.ts",
+      "sha256": "a85ecee4446782bf1c68885d83c902731df0237f3c06ea5d433110b002043505"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/source-loader.ts",
+      "sha256": "683f0b4485d8ac6259925d8669fc28abf6222c070bf51f9a825863ca362159de"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/budget.ts",
+      "sha256": "fbaa7f95ad9c46aa20b09eb5ff3848399fb5bf71bac2fe16ac575c3587e9a8be"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/model-port.ts",
+      "sha256": "b825ab9eb2fdc91649e6fa56a9e3d1a05396b9ae5a427315224fbedcda254420"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/potens-adapter.ts",
+      "sha256": "8b95d2b779b94b868eafbb96de89b1b520b67f12dbd5a7b251e4bc497d26808c"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/provider-adapter.ts",
+      "sha256": "ee3839d1de66e944df31c1f167f8c4d3484e51c4cff5be064bfcaf5d0839a637"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/provider-errors.ts",
+      "sha256": "50f8cd6158ef6d9cd72d0000b1e2a5045518ea0e00189a3abc3a8a3b14f5751b"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+      "sha256": "29b65eeb71b103670bc4267e83829662adc3c6a2a3528eca14a893f68189f4ea"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/auth/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/auth/eligibility.ts",
+      "sha256": "e64c56cff4035b94575b09d7d2fde5a8b0d8a0ba77248fa4a4c7492d7502083f"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/auth/internal-caller.ts",
+      "sha256": "88d86eb50a74d5792103de1ee25cd0cafd383a336cbda90d08f5b82872753903"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/auth/principal.ts",
+      "sha256": "cafce32258e83060cbc9490cf0ffaec972b59550d1768de224d24725e84b009a"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/auth/session-bridge.ts",
+      "sha256": "7904cc360c7699e192fd07742889f3d3b109d1a47f9ed23d94e2f953e4525b6a"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/config/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/config/env.ts",
+      "sha256": "bfe9eb358051efdb136e5c0cff0a1decfc773e9970989000206df51c10cf380b"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/config/providers.ts",
+      "sha256": "221e59449399965e734fcca1974558d81bbd4a836bb3adaf3e72beab272796c9"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/ai.ts",
+      "sha256": "876e8dedec3a69a0d879719d4227fa5ff227c41a4f1a50e745d2e951bd5460b3"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/common.ts",
+      "sha256": "eea4763f6e0c8931daf8dc09d613fc48ccb9e0d9c84552021067a1256e5ca7db"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/matching.ts",
+      "sha256": "e470e88169b4355c188e3aa19a95f08fb2a8c16923d9145f7be6602cbd23a57d"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+      "sha256": "a995ae916891320a4bc333ae1c1965f71b8c53b927598a2414ab3b0f3b8f9503"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/reviews.ts",
+      "sha256": "b66fe49df32189cb2b96a4b0fbbb7553444b9eadc75e42305bbe1cbf08245edd"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/search.ts",
+      "sha256": "1639b77817b22a766d20092158b48823974f45f5c4b970d09ecf6dd3de2e3bbd"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/signup.ts",
+      "sha256": "92e49c11b78a369fd202877c9a69cbb3bc746d53561b8af8b23e416a32ef67fc"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/contracts/verification.ts",
+      "sha256": "ae714907f13e05fbad0e2748c402e71d0bd2a5f25dce4fbacf5a4c30ba43fe36"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/internal-client.ts",
+      "sha256": "fb4ab4e6f9b2b33505a9b3d3cf28f7d57baece356b9aec275949b6d9115acee4"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/public-client.ts",
+      "sha256": "f8ef2813d7639c624197a9de9056bb01c25d2afb15298befec494db3c1d1a6e7"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/completion.ts",
+      "sha256": "4c115031052c546a6e5417187af40d689fd0cc68d8ccbeea05796885dbeeb410"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/conversations.ts",
+      "sha256": "c14d6e5bb0c0d9f08e6de0fda38c9eb33e69c55b1fa599df515e340fa506eff7"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/events.ts",
+      "sha256": "894b0454ced80ed2cb9624ba23ab8ef9df71fdd4ec1b316fed1537620cb60fdf"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+      "sha256": "b18ffc8b77a4279792e4d2e52d44de9dc0f9ffce26c869ccbe43f651f51725a3"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/matching.ts",
+      "sha256": "3bec29281cc647f89516476227475b29e1c9faa07ccacd2c602a5535d76db9f1"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/notifications.ts",
+      "sha256": "efe9ee83d69308ef0eb8534742bee9dcdbd38b3a4ecbdec393f468c744814bb7"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/posts.ts",
+      "sha256": "5bf2eb0fdf3fe156df8c4439a6c89c1c9021b3b5347fc30101b5e788c87a5267"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/profiles.ts",
+      "sha256": "08f0dca5a5b3abea22ce2601334422535ca36cabc232aad1ae86a0596606bb2c"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
+      "sha256": "13fc6488cbc2969db0c7c9951054b316ae0cdee4ae3c8a6894a0b070502e8047"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/reviews.ts",
+      "sha256": "14d5fdf2499a8635cd2393432445cfd89a479aca3be0e81830577b3300e0fafb"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/search.ts",
+      "sha256": "68325b8552de21b1b1c35cd91f395899ea8da26b39c42544d75fdf0a2a573a7f"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/verifications.ts",
+      "sha256": "102d732e6b1e1ae677e2c55529603f58d508ee6acf46c725ff4f13e658dc5ada"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/transport.ts",
+      "sha256": "fdff10a5e9317b552e40b45f8de13b3ff8d63be9364ebc9b31e58d11457fc78a"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/db/user-client.ts",
+      "sha256": "e1301845cef4720c580d6ee59492e3f575107cee22630f5042b12b7f4c76102c"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/http/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/http/cors.ts",
+      "sha256": "3e5df751763eecaa1a3720f7913320895a194b89f15ebd23fce0ac5d3d8f1cde"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/http/errors.ts",
+      "sha256": "8239a09ce20bf7b9d8500cfdafc2ad905a673c210ead99f60dba6542e77df025"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/http/request.ts",
+      "sha256": "c2aefeb7d5e88fa03da4dd5e2ad438afd5318b31e735a870a69b403bd2fed630"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/http/response.ts",
+      "sha256": "924eab0b9d18580d6da8fc0ef5fb5c34264f29d3cc4d2dd8947e19e8bb959b08"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/bank/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/bank/adapter.ts",
+      "sha256": "2631b235372adf7b76e4147a43df95c1ceb0c6bd034ca0938308a132a3dc4a67"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/bank/port.ts",
+      "sha256": "aef9a2bdf85bd4ca0dd136fb7eaab197871bf88a2e52f19822acf9f34ef19a0d"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/email/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/email/adapter.ts",
+      "sha256": "3f733a7b671053ebb3ea184ca7db821f6080c27aac3423c441e8fe79e70b63d2"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/email/port.ts",
+      "sha256": "8f544f2be0d8711ba0411a378adfd7b8b5bc786ab15250d83f4d59ab6db70c4a"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/events/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/events/adapter.ts",
+      "sha256": "de8e1399de9a1e62a1a58036eea5d3728a871a97787f4ca6095e95f08d31aab3"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/events/kopis.ts",
+      "sha256": "28eb887176b3887d78783dc8517c8ed8bca91e83a5e7c71f505ad1c38557934e"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/events/normalize.ts",
+      "sha256": "0b6b93201459bb0e71f83966a7b750840854504c54271826c710fbb5213d6da6"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+      "sha256": "2078c48cd4bfe01ace9f8ef5e8c78b3776568adf32fa80dea05a241c2c624ee1"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/events/tourapi.ts",
+      "sha256": "31ecc65154c56c84f5ef8266320b07bc2b869be26a510818159abdafd098f4cb"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/identity/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/identity/adapter.ts",
+      "sha256": "c6090d14b2b901dffb321ac92af33dcfb2c7dd964d57c7f71f16d6655ff75ad3"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/identity/port.ts",
+      "sha256": "42f5d6384543aebf15706bbe3539f79fc64994b809b24d8cc3951412247c1965"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/phone/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/phone/adapter.ts",
+      "sha256": "eec8c599f5a8699d6c718216d3e662d1c6b20610ae763054c6b4c94213e3a15e"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/phone/port.ts",
+      "sha256": "82c8f561b82d520d243c6ffca0e43acc7d2ac99fe2cbfff4cb0261b102cdac67"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/places/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/places/adapter.ts",
+      "sha256": "d7f9e5c848df01b339479536a752968cd38b5536d4019a63c7f488c8c3d8fced"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/integrations/places/port.ts",
+      "sha256": "c2ccf6e91e135222dc753dbb30cea4f812ff98f430e0906a404391322939dee1"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/completion-scheduler.mjs",
+      "sha256": "159794276b3c175ccb976619b02e1fb0bbd867ed05de823bc5f7b1b19a344250"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+      "sha256": "c9836288f68daeb6f171198cf9fad9f51f363d7cd26341c2c91d8624308eb0a4"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/enqueue.ts",
+      "sha256": "19efd8cc4679d87fddc72d3e3ce9104b9df189ff0cb13984a53e6d023e55da9a"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/lease.ts",
+      "sha256": "7281cbdcd70565e3cb14cb3bf6ce6fc24c8e407b02ebf4002503e53184651fb3"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/registry.ts",
+      "sha256": "2b8b589b341eb0026206fd281704659b8e12bdabbdf3d56ebcfd5d10f8f3a2cf"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/retry.ts",
+      "sha256": "323019959fae39f69b3f7b3e6ee795a202c2a8440531d4b1a489f5270c462157"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/settings.ts",
+      "sha256": "d617fb3de85c161875762978b6b38b6c9eb852f0493b77c4cd96426300aecdde"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/observability/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/observability/logger.ts",
+      "sha256": "c5b05016ee1fd8aeca6fc6aa24050626144cb5256e973798dc95238bb7decf1b"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/observability/metrics.ts",
+      "sha256": "a1ac90382dfb7d973692bdd98abfab624667dd9b74bd97e39c0e5259bf18f4cd"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/observability/redaction.ts",
+      "sha256": "3afcda13cb6d2baf6ddfd9ed1133a6ad25ffbaf190a2fffc7c508887bcd4289a"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/completion-service.ts",
+      "sha256": "85a144efd6bd975ff1392ed849d0d8e265a12096f1fa7ce345f89a2b29cbd134"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/conversation-service.ts",
+      "sha256": "6b0e6bab33b857e0074c5d7a9490b0307156213454f9d354ef5db1e41edcdfea"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/event-service.ts",
+      "sha256": "099341cfe1d85d430c346ebe278e7dfafabbcf0eb8105c572f5fad242439d08d"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/matching-service.ts",
+      "sha256": "3a2ccce9231afaeeb2e416b215a56c41b07eba66d07c2cd47cd2c9a83719234c"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/notification-service.ts",
+      "sha256": "02650b04af3254683cb5080f3f7b2b47e9f72dd44d7fa307fbef1f551cf14471"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/post-service.ts",
+      "sha256": "70e95cb35c4bfe6f2ff63ac9b230a9b3d7305b1c9c1a6a74d8c2a5fcb5358086"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/profile-service.ts",
+      "sha256": "91b7f840efa1e0ad1105689a0d15df9c299fc2922c4c7e066e099da55eb90b21"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/review-service.ts",
+      "sha256": "3bedaabb9ae34f6b04c03c75ced5a2dc4c3248d6cb9ba49af33336699b959b2b"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/search-service.ts",
+      "sha256": "2312a2460a29771be11c8d382eb0be3170d60233e277fbc5292f9c9d63b43f94"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+      "sha256": "a7dd7ceeff4f154793144197cd008cb74138c7d24cd56cfd0d49164b6e975be1"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/services/verification-service.ts",
+      "sha256": "090c5f8248973fb099a8aa0e77b94d9ce47a34d0dcf2f23aa589dfe072891f94"
+    },
+    {
+      "path": "backend/supabase/functions/ai-chat/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/ai-chat/handler.ts",
+      "sha256": "aa0ee5f47d182967010ee0a956d8803b5ad4c9a3cd688c36faf67fcf6c972d3d"
+    },
+    {
+      "path": "backend/supabase/functions/ai-chat/index.ts",
+      "sha256": "28dc4788c3fb41d552507e4605a1112e317ad861b4ad7f2319e53ea34777da67"
+    },
+    {
+      "path": "backend/supabase/functions/deno.json",
+      "sha256": "9a0926e6ee343eb4293eb7aef3f2aac1cd0554c9b30d54d915e5e74015740d6c"
+    },
+    {
+      "path": "backend/supabase/functions/event-sync/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/event-sync/handler.ts",
+      "sha256": "7ed3248290e58b3eed406ff8eeb77a4bfe244289dfe0bfe53c4984eaaddc695e"
+    },
+    {
+      "path": "backend/supabase/functions/event-sync/index.ts",
+      "sha256": "97656e7a0d3044c922fb5cc404c36d154814606e3aa0fc43e14bea101ba2e154"
+    },
+    {
+      "path": "backend/supabase/functions/places/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/places/handler.ts",
+      "sha256": "e31f66a48aec730a7438d9e6a8a07cd5ad983269753792e6f824f16cd9416360"
+    },
+    {
+      "path": "backend/supabase/functions/places/index.ts",
+      "sha256": "aadb8d3ca158915ece2de8660f66802ab96177bec3bacec1cdc189a4b1ed450e"
+    },
+    {
+      "path": "backend/supabase/functions/review-summary-worker/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/review-summary-worker/handler.ts",
+      "sha256": "310b92cbe71dc8faeda5cba36ba202bffc564a9b327dffc5f6dc6a7c86606001"
+    },
+    {
+      "path": "backend/supabase/functions/review-summary-worker/index.ts",
+      "sha256": "c0b208e5da6151694472d76992ade0190f17589945647fcb84bbf8e8bb06f6b8"
+    },
+    {
+      "path": "backend/supabase/functions/scheduled-jobs/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
+      "sha256": "2d1447564edeb7524d686a507c22b4fc7820074f5d6768dbd947d239cb1503d0"
+    },
+    {
+      "path": "backend/supabase/functions/scheduled-jobs/handler.ts",
+      "sha256": "8c3b8594d9c685cef733ea0e849c3856a182230cc755b6449772b34a99278312"
+    },
+    {
+      "path": "backend/supabase/functions/scheduled-jobs/index.ts",
+      "sha256": "c3cc3b368b60b5924530ba261e6e37c0e59d0296f7603ae1b4fcdbee7efbaa93"
+    },
+    {
+      "path": "backend/supabase/functions/service-api/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/service-api/handler.ts",
+      "sha256": "b6c01bd0b4e96efb053ccee0116f211db504028b293657f21d9a500b4417c8d1"
+    },
+    {
+      "path": "backend/supabase/functions/service-api/index.ts",
+      "sha256": "84da73ba95f705643828bbec1e739dce172c7c4e020fa8e871592ab691216a5c"
+    },
+    {
+      "path": "backend/supabase/functions/service-api/routes.ts",
+      "sha256": "dfab9ebe766a568949ab0da9a93bf1a4e1035a34ff015fa5d3639ff6222522f4"
+    },
+    {
+      "path": "backend/supabase/functions/service-api/search-http.ts",
+      "sha256": "6441a0a3dee09c726de897405261b053e372d47b2e993f61439a43c156753805"
+    },
+    {
+      "path": "backend/supabase/functions/signup/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/signup/handler.ts",
+      "sha256": "f8148f344b4872148eb903c7a27b7f0059c06ea7f21cfaf090d04be18fad7db4"
+    },
+    {
+      "path": "backend/supabase/functions/signup/index.ts",
+      "sha256": "c06b172e58bf3a29eb70280bf1da65871d9bcc99566ff2248044486028ea7672"
+    },
+    {
+      "path": "backend/supabase/functions/test-institutional-email-auth/handler.ts",
+      "sha256": "47f0955c0990592b7ff1b25b197308827b0dcf7b61e81bf3a391bfa8d91ac8b0"
+    },
+    {
+      "path": "backend/supabase/functions/test-institutional-email-auth/index.ts",
+      "sha256": "3645781c0f8a02b4d1a02871ca5f3b7562e08129a675b5a9ad3d254d72dccd2e"
+    },
+    {
+      "path": "backend/supabase/functions/test-phone-auth/handler.ts",
+      "sha256": "78d69e3996911080f99817dedde13ef4b46dc001b06fe8bd02b6fcd2e5a9b4fc"
+    },
+    {
+      "path": "backend/supabase/functions/test-phone-auth/index.ts",
+      "sha256": "b1652bfdc64b7a0570a767ad03dc547b73ee832c2840f5e4094f7a8f17681848"
+    },
+    {
+      "path": "backend/supabase/functions/verification/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/functions/verification/handler.ts",
+      "sha256": "463f5cfafbf37428e83a3e2ff18fbe675981f3980219f17e8c93468dacc750ba"
+    },
+    {
+      "path": "backend/supabase/functions/verification/index.ts",
+      "sha256": "1292eb072dcb76f49e1acd927c0fb20b5c6f1ac3aa8b9e05b4786004407b0527"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916080335_create_profiles.sql",
+      "sha256": "da19b1a471feeb92279b95e37c71cd6b337657639da803a807e7b1bff9514de2"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916081429_remove_profiles_neighborhood.sql",
+      "sha256": "61a12907ee1d3c5a338d9de0e37b30b19afb422d31e9eee427a8504252c9b9d2"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916081750_restrict_profiles_column_writes.sql",
+      "sha256": "f88de84f8b85bef01d312003ee3827226e65d8b1b9258eb6e061e547efa30427"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916101123_profiles_real_name_contract.sql",
+      "sha256": "7dfc98ef2db697246e814a10d68ef0f3761c9f7bdbf43f7d39949c5632aa6673"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916105220_feature03_posts.sql",
+      "sha256": "e8765b87bc2f37a95086f74f2273cfdb0a0e1137f21066f6a89794c655440709"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916105738_feature04_post_author_profile.sql",
+      "sha256": "2321bc7328f946281312a7dae13c3538d12a97a1ab13a5de31146feaf17db25a"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916105916_feature05_join_requests.sql",
+      "sha256": "09c13dd6ead99c4d7d92edfa754761758fbb22065be0a66e11f36ab06d385a01"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916110052_feature06_matching_chat.sql",
+      "sha256": "30943796bb28009963d2ae68f7674ef3eb6a4c50808f6916b340e6f034a760ec"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916110758_feature07_final_match.sql",
+      "sha256": "344f2909fcf075084e78a42325388bccf2092f4073975aff61fbc3d266e49f64"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916110943_feature08_completion.sql",
+      "sha256": "57995918ad709cbb6ac6f011eaa5f156db88d6b67ed9d5d10882d3a825907d64"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916111030_feature09_mutual_review.sql",
+      "sha256": "dd4ef8e0c1ec10111ac872283b77f8f2cc6c19f77574ed14183388d31e4be879"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916111437_appointments_request_post_fk_index.sql",
+      "sha256": "8faeb187b204aa81d2a8c2248931440ec631eed6a6b9822049d8f9fe70a0fb40"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916114036_rpc_unavailable_errors_as_404.sql",
+      "sha256": "bf5f8e62e668f777ff8774ae3239775ef8dd4c84ac23722db746c2430926c21e"
+    },
+    {
+      "path": "backend/supabase/migrations/20260916131906_existing_ui_gender_category_author_cards.sql",
+      "sha256": "7fec3aee4a304eefe00e3153b85c4890c4e12486951210d92e5fb49de0fa2ca0"
+    },
+    {
+      "path": "backend/supabase/migrations/20260917005621_retry_completion_dispute_review_policy.sql",
+      "sha256": "9dc9f8b9f9d259cc38a8d9f18450b29822565f112864050f7e3cd4fd4a543487"
+    },
+    {
+      "path": "backend/supabase/migrations/20260917043418_signup_eligibility_author_demographics.sql",
+      "sha256": "12b9decaead249eadad008cf9131244b5a1620544a3a4fc8344d924c3cd74c9e"
+    },
+    {
+      "path": "backend/supabase/migrations/20260917052827_profile_images_required.sql",
+      "sha256": "0797f8e416ca2a6b56e3fdd4a0cadc2d713349416a685ee14949c13bcdd69a8f"
+    },
+    {
+      "path": "backend/supabase/migrations/20260917094753_disable_legacy_signup_without_avatar.sql",
+      "sha256": "75b2765d9fd426104b50eb9f12ef4a30d0797a6c30943fa839c8b3336575d24d"
+    },
+    {
+      "path": "backend/supabase/migrations/20260917122744_ut_notifications_and_discovery.sql",
+      "sha256": "cfc1e00de60da0f953843a3dcc86467cb0f515520da855dd0ab0b5be64bd74b8"
+    },
+    {
+      "path": "backend/supabase/migrations/20260917141449_notifications_join_request_index.sql",
+      "sha256": "978376c0c1d725441b474886df72ffe590ccc803894d12d0e8a2aa9d3c6059c9"
+    },
+    {
+      "path": "backend/supabase/migrations/20260923090000_worker_jobs.sql",
+      "sha256": "35cc37ed31145fc59ec5ee0580db3f49ccfd36ca19abe2208eccc5f9fe7bee5f"
+    },
+    {
+      "path": "backend/supabase/migrations/20260923091000_public_post_search.sql",
+      "sha256": "3d95413693ed39cccf4c40c9a4c642f8d75cf9c53590c35495a7c0f1cd0a5822"
+    },
+    {
+      "path": "backend/supabase/migrations/20260923092000_review_summary_storage.sql",
+      "sha256": "71c58e1587d2949ed7292d591a5505cbc33b53fab2a9ae5ac38a77f68e6d5d52"
+    },
+    {
+      "path": "backend/supabase/migrations/20260923100000_bilateral_completion.sql",
+      "sha256": "d49cd183f46738412f2fb5fff8737dee5bac30431011c18f939671ba3d7a8cd2"
+    },
+    {
+      "path": "backend/supabase/migrations/20260923101000_review_automation.sql",
+      "sha256": "499a5f5867540179301f34ec82d5d6f15934e026febeaf267781c62fe5543e5b"
+    },
+    {
+      "path": "backend/supabase/migrations/20260923102000_core_service_api.sql",
+      "sha256": "17039dccff591f32e05f8fd8af83cea729cd1b51721f8ac8ad9a6b388e045133"
+    },
+    {
+      "path": "backend/supabase/migrations/20260929090000_public_search_v2.sql",
+      "sha256": "7291d87a34c6cdef707d97af502f7097ac6edf6ff2fd6fe34023116959683525"
+    },
+    {
+      "path": "backend/supabase/migrations/20260929120000_review_release_and_completion_reservations.sql",
+      "sha256": "8cd13df2cfa9e92a8a3ea0e21d2917cdc32d03441cb5a2957665fbbee60366b2"
+    },
+    {
+      "path": "backend/supabase/seeds/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/seeds/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/supabase/seeds/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/collaboration/minkyu-db-harness.json",
+      "sha256": "2dbadef22ac1a8c6cfc14346eece9e4750a8890e9510e27c8f3e617c391c98f5"
+    },
+    {
+      "path": "docs/collaboration/minkyu-edge-harness.json",
+      "sha256": "97baec652d0cdd076a3a664fc5c7719039d156d56dd52f3bee9df666ad765221"
+    },
+    {
+      "path": "docs/collaboration/minkyu-foundation-harness.json",
+      "sha256": "70a02c4b96c0fe3933d3e74cf978fd38a394f58a73f0e55d0be304f5bd89644c"
+    },
+    {
+      "path": "docs/collaboration/minkyu-local-refresh-harness.json",
+      "sha256": "313381e6505c08710e2df3938908533ab2a897ac3591311e50174a1b03173c6d"
+    },
+    {
+      "path": "docs/collaboration/minkyu-provider-config-harness.json",
+      "sha256": "a85cd329e8ecd754a2a888adc85f2186cb31d122d6a8fe35d1aafa19c48f2072"
+    },
+    {
+      "path": "docs/collaboration/minkyu-runtime-harness.json",
+      "sha256": "a77b7447e00176769927ea5a9087cc922fb0e988adf44da83529a210f31c5b3e"
+    },
+    {
+      "path": "docs/collaboration/minkyu-search-connect-harness.json",
+      "sha256": "1de0b86660a6f9865a70770650ab1827b4003e29329be4aa1369b44bea398733"
+    },
+    {
+      "path": "docs/collaboration/minkyu-search-db-harness.json",
+      "sha256": "8080781f01f87a8fcbbc6426d037e0263dd89452def2ebbc86e1e93aafdeaad5"
+    },
+    {
+      "path": "docs/collaboration/minkyu-search-http-harness.json",
+      "sha256": "d1b87f6df17b4ee8a4e05adb49fb49ab13d2d1a707062720874ddec7500be3b7"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-28-connection-harness.json",
+      "sha256": "591e9d87a674ad66a005b293d02d32d9fc2ef7c1b186a68a230c21d6fdfe5112"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-baseline-sha256.txt",
+      "sha256": "d283c5101d493756958c979ee14c30157079c1356fe53a540256b38f9b60f7b7"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-harness.json",
+      "sha256": "fee13b355b042bffa8577105f74bcc43d3a275854e1100f27d0ed216f1d6d2a5"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-questions.html",
+      "sha256": "196bce744b26907273182564a86cc27c63d2627b0aea5319b4a9fdacf997cb5b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/01_ai_budget.sql",
+      "sha256": "1f319e7dc9be2a2e399419adbd67473f4279e482263553042eaeaf3ca9436eda"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/02_profile_traits.sql",
+      "sha256": "7d469375cc6e4bbdc1863b0fba88a9fe7c7a93e31bfe6ac9ee23354416a03e0f"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/03_review_summary_worker.sql",
+      "sha256": "d3e06891c19fd0afaeafc57ad24363428888b6bc9ac588df6d692159ada2ed4b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/04_events.sql",
+      "sha256": "487751d157fa44bde9a69e67f02ca06af6a3f90c64557bd90a9655aca29bbc31"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-proposed-sql/05_event_filter_values.sql",
+      "sha256": "9592090cc33feb21be7ae442794a35e1eb23f36daf08ff49eaa99364f9a82fc7"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-scheduled-jobs-index.diff",
+      "sha256": "ecd14c67fe985af3a18c597b7c46b7b9defd05f9397a88a8b54c909f6b328ad0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-review-policy-harness.json",
+      "sha256": "2d2d54e6021d0acfc7dd8eeb116b9b90394c9f657b1df0db78ad979e710458f2"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-harness.json",
+      "sha256": "0025ca4fa533134a8af211d967dd56dda34e2173de610e31211a672169e1d0ba"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.html",
+      "sha256": "86300ed7925b41a6389f50ed1f6e9279178a145a5f19d880c8787581f1e5499b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/ai-budget-concurrency.log",
+      "sha256": "4fa20c4a9f042cf8433fb3ea204fd1ec2e1f874517c7341125d3263de3f010fa"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/ai-discovery-rest.log",
+      "sha256": "aaf3849ded3fa61e0c4412c4764a52d4e6dcf29bd0ceaca265f0fdc5e6c02787"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/ai-event-discovery-rest.log",
+      "sha256": "a5581c748a49236f6fc8a491f9d80bd64eef6dc89d17c79d6bddbff79977f076"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/cleanup.json",
+      "sha256": "840f1b0b417cbc00b64721c6cd1580a6cc4ac8c6eabb8e95277e9d36a2b8051c"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/committed-proposals-tests.log",
+      "sha256": "c9120df4ed84b329042604d5c4417ded90b2d8547b87ebb1ce4c270dafadc838"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/committed-regression.log",
+      "sha256": "b84bee5bc1bffa0e6801683be601a6482a94921ced63b83e3a29a6d9e2759500"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/edge-e2e.log",
+      "sha256": "e2c9d9a53edf953c1a92acce6aa1b54a98b190ef5b2b833aab635ded0352fc26"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/events-rest.log",
+      "sha256": "cf1c2cde42bf2d3b27bcd7e1fdfe4464093c74cbf4983e637f294d0632ed4bff"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/jonghyun-node.log",
+      "sha256": "6f8cc57216fa8fd45588eefb7ef9554500d346ae035e51046907ba27f2087911"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/manifest.json",
+      "sha256": "aec056a641ac32321883c395608a2abd752f7f311362856ffb5cf33fe7761f28"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/minkyu-node.log",
+      "sha256": "d938375181e53eba8ebd0804735a50175d126deea6e99467d08165e45deec807"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/minkyu-regression.log",
+      "sha256": "d6628c40f5b197bea82c1ba8f48f3873c3559bbaf6a63978378d40af4f67d0a8"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/proposals-rollback.log",
+      "sha256": "bc4aa3f696926d45b65d86d929e47b2a6105c389a81bf73487be33251c86d474"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-deadlock.log",
+      "sha256": "af90db7ebad9fa1e50753ae24d120b329b3ebef2df9c261dbcb610a7a4ac0b34"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-deadlock.mjs",
+      "sha256": "02f834bc578a8b085a1caa80508c69c0098190a34e08c3c753f2a0400a1bf80b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-event-admission.log",
+      "sha256": "7c851ea5b3e3f784508baf8fed619fd4d2910f1f5980414c4a48ccd764001eea"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-event-admission.sql",
+      "sha256": "bc7b4727522eefc0869a3031c658c7d5f3930c40f1ac4b45b4ca69599f4d62db"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-lease.log",
+      "sha256": "dcf31dc175fa8f13fb20ef3a202aafa71cf2019a20c1f54e98919967ccb4fc0a"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-lease.mjs",
+      "sha256": "f8b9bb8da12de46eabf65f8fdb918abcf0542c8263e9402cf44418e4ce72295a"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-partial.log",
+      "sha256": "186491fff2414e8755668534815bfdf32c61d7260189860021f4428be5b48373"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-partial.mjs",
+      "sha256": "96343e884a1825e3bfc63e7c5f81f94a7a87b074eaeea859713174bff8faa156"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-tourapi.log",
+      "sha256": "7def099a7c218adbd2fa5de96d057220458e87db157bbdf4106b3e1d3fb29abf"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/repro-tourapi.mjs",
+      "sha256": "2e5f300d00c613a75f73ceea976961128e1ab3f3ad4f7cf4aaedc7cd21e9808e"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/review-input-sha256.json",
+      "sha256": "d2fb858ad7cb8c6cc0830711f16b517c33b3963ef081ce847355ab2b305c0ded"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/review-policy-e2e.log",
+      "sha256": "9a5e04aa310cee3c3fc957ec663f10108a0dede8ac76e720a5e04e677895e15b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/summary-worker-concurrency.log",
+      "sha256": "955b651a52f10c426fd61cb83c6ba76eb134456effce444cd8ffa08da75c3293"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-evidence/summary-worker-rest.log",
+      "sha256": "4c8becce9deeef1c9cf98a137b9ce768ebeb2498e3111182ea636aa3fb5c7a0e"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-harness.json",
+      "sha256": "0d97fde0fe98d07a95588653d755e90d10dba84894f718117267c5935497bc0d"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-evidence.json",
+      "sha256": "95257a03c5a4d982e424633ebfc13a87a17979aa97d7c9464956f31b168030a8"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-harness.json",
+      "sha256": "e904b8159a1d36bf6ba420bf5b92fe03c17776cce4b6673b01f25c9a23c0b199"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-jonghyun-integration-harness.json",
+      "sha256": "cbfdcfd72b2d77d9ab99b6fbc9d7f0bb675ed9873a6a8c92bd9cd3aea8fab5d1"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-undecided-questions.html",
+      "sha256": "3dc968ccfc759bfe732170a102ac12caecc60d9293d60cab848804a87e02d660"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/planning/design/yumidang-wireframes.html",
+      "sha256": "b7b5bb3708517164995c9fbcf419f78a8dbb7afa6a3c77af9e532535dbfaf823"
+    },
+    {
+      "path": "docs/planning/design/yumidang-wireframes_구버전.html",
+      "sha256": "0a59b655e28b1eb1bad319ae44f4a8cebc86b4033d7d1666e3647c60d57015f8"
+    },
+    {
+      "path": "frontend/src/assets/logo.jpg",
+      "sha256": "050b7c8298864b4893bbdec7be203af39a557abc273e3a5a6da66c9a2e0c0bc6"
+    },
+    {
+      "path": "tests/ai/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/ai/jonghyun/budget-runtime.test.mjs",
+      "sha256": "85cf4b21efa1cdf8a805b0acd46563b119a78a2f795cc27851d33cd3ceb38e37"
+    },
+    {
+      "path": "tests/ai/jonghyun/chatbot-semantic.test.mjs",
+      "sha256": "b4307d51ce722bc927509dc6663dd28526c284141a078fbf2d5e3de9a8c12c47"
+    },
+    {
+      "path": "tests/ai/jonghyun/chatbot.test.mjs",
+      "sha256": "5ee70aa96f74c38e666eeaff3280585d66090bd2fefb4cfb0b12bb7f198d8be2"
+    },
+    {
+      "path": "tests/ai/jonghyun/event-discovery.test.mjs",
+      "sha256": "8c29854b6401b37282e94e539998425d210b9e6ea418ae9054c6aeea4b06cc9a"
+    },
+    {
+      "path": "tests/ai/jonghyun/model-router.test.mjs",
+      "sha256": "f224e6520fe46cd16f2c7233fba5c5aa052108fb3d697cbb0ac05bcb98ed3f7b"
+    },
+    {
+      "path": "tests/ai/jonghyun/potens-adapter.test.mjs",
+      "sha256": "ee8c1d2cd19d1718a771e2b7ea8b5505e5cc13c69bfe37b6ddf02b37931d00a2"
+    },
+    {
+      "path": "tests/ai/jonghyun/review-summary.test.mjs",
+      "sha256": "fe97cbcb83d72049fa1b9b4a3a52722c6e81f06399f39d8cc6a141f5661d9def"
+    },
+    {
+      "path": "tests/ai/jonghyun/synthetic-eval.mjs",
+      "sha256": "97690141b58ec22a2ecb1aea5842c3ec40b06a1a328403f448ccab44ae89037f"
+    },
+    {
+      "path": "tests/ai/jonghyun/synthetic-eval.test.mjs",
+      "sha256": "81d54aad01aed524644495ee3b23774b50d550e674011bd92d1651424f52f350"
+    },
+    {
+      "path": "tests/ai/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contracts/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contracts/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/contracts/minkyu/test_db_foundation.py",
+      "sha256": "79af7d3473c45634f588d367815ded3dff7bdbb1a805ff84a8bf51623a880fe0"
+    },
+    {
+      "path": "tests/database/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/database/jonghyun/ai_budget.sql",
+      "sha256": "ca41ffe9a4a6f8212ee711f9288f1238f1f2b8df03b0fd0c9c621380f80d97fe"
+    },
+    {
+      "path": "tests/database/jonghyun/event_filter_values.sql",
+      "sha256": "37c3f6699ad48ee4f14d5287228a311a57d32e43dce78c7f3ed699de4200d102"
+    },
+    {
+      "path": "tests/database/jonghyun/events.sql",
+      "sha256": "525070bf3b6d4d194a5e561877f7fa698790564e2b563990c07a3b13f449318c"
+    },
+    {
+      "path": "tests/database/jonghyun/profile_traits.sql",
+      "sha256": "e1056d687f29fb1c40e19ecfc6f2f6472a78de92e99e7028b4cff871561cc62f"
+    },
+    {
+      "path": "tests/database/jonghyun/review_summary_worker.sql",
+      "sha256": "93959722ec48d90d5bd03888e60ec5ed470f89fdc7e900f34efa89b41cd98416"
+    },
+    {
+      "path": "tests/database/jonghyun/run_minkyu_regression.py",
+      "sha256": "15b9544a55f94d0842e74ff98fb5d78372fab914ca9aecfde3f1cb219162ac83"
+    },
+    {
+      "path": "tests/database/jonghyun/run_proposals.py",
+      "sha256": "75683be418b1b8c89f5dbfb9b94b5caa65b5df3c1d85ff6d6bcc6dada80616d3"
+    },
+    {
+      "path": "tests/database/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/database/minkyu/bilateral_completion.sql",
+      "sha256": "481ed65ecb42081fd7647a931c7bfc3ad2933891740ea215637395d5bff52fd5"
+    },
+    {
+      "path": "tests/database/minkyu/core_service_api.sql",
+      "sha256": "41d5e9c73a7c7e369cdb51ee6978b9678666d50565093a96360dd6b2a1dd2d62"
+    },
+    {
+      "path": "tests/database/minkyu/public_post_search.sql",
+      "sha256": "704ce543489a4d018fa63dd50f17757baa73271bcbe8b7e89aeca69bd2e555e4"
+    },
+    {
+      "path": "tests/database/minkyu/public_search_v2.sql",
+      "sha256": "c72a6d8632666189a5ffe4173de47462e415bad254881530bc544c5ca53e1a43"
+    },
+    {
+      "path": "tests/database/minkyu/review_automation.sql",
+      "sha256": "bee0089675b07dbb944238ea69427f64d6ca92175678b19a18bfbd8d1d4c10b3"
+    },
+    {
+      "path": "tests/database/minkyu/review_release_policy.sql",
+      "sha256": "f895d2c759e308062a3cd415df363868dafdba715f6ae90f3caada47e143bd7e"
+    },
+    {
+      "path": "tests/database/minkyu/review_summary_storage.sql",
+      "sha256": "3cee39ffb3ff1b1df2bd924e9e0406e9c9e6233dc057a60a550394ad4fc21a27"
+    },
+    {
+      "path": "tests/database/minkyu/test_database_runner.py",
+      "sha256": "0cfbc8b6041e7459a17630785f18ffeb167fc28fd987a0c185fefbd27db8473c"
+    },
+    {
+      "path": "tests/database/minkyu/test_edge_tools.py",
+      "sha256": "23db703e2ae0be0d0a9189c7a3d013646d6c72aab47cdb10fe7f181f7a7cea03"
+    },
+    {
+      "path": "tests/database/minkyu/test_local_tools.py",
+      "sha256": "516c5e8ff443b5f14f6c9e6b0a3b4de4e9ec980a86eb287704ee7067492f4f39"
+    },
+    {
+      "path": "tests/database/minkyu/worker_jobs.sql",
+      "sha256": "d873ae33d67a7b69c4bb949f44ff890aa42ee8ed34cce276a1107527cd4e3b8a"
+    },
+    {
+      "path": "tests/fixtures/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fixtures/jonghyun/contract-cases.json",
+      "sha256": "4f7d917f5b87101506b992ac3295e92c7e9e19def71abc319b0f8b5b8532dbdc"
+    },
+    {
+      "path": "tests/fixtures/jonghyun/synthetic-eval-cases.json",
+      "sha256": "bed39085a7e58bf018594daf3b89fb1cf8116a14a5946c42a287ebc8028febd1"
+    },
+    {
+      "path": "tests/fixtures/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fixtures/minkyu/db-foundation.json",
+      "sha256": "88cb0571cb2cef89e5b6d726a7e2facb7b0f634e5c58a340a8577e9c6512a016"
+    },
+    {
+      "path": "tests/functions/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/functions/jonghyun/ai-chat-http.test.mjs",
+      "sha256": "39f32e3e18903e9ee18d93dae3dc6015b3bb40eadf7b34e583fd028be3bf96d9"
+    },
+    {
+      "path": "tests/functions/jonghyun/completion-scheduler.test.mjs",
+      "sha256": "fd58f02e82ae671c443a19cc8e4b3abf1f17ea3e5015d4683dc1834ec91da929"
+    },
+    {
+      "path": "tests/functions/jonghyun/daily-run.test.mjs",
+      "sha256": "b1f99338937d4215c434ef57e5ab6fd0d9f4e06a67c3e5a00f6d2c4439c6359d"
+    },
+    {
+      "path": "tests/functions/jonghyun/event-provider-tourapi.test.mjs",
+      "sha256": "5af88e276d50bd3cc4b9fffd3cc1b38c976857e887f3a388a28ad4ec4477ff58"
+    },
+    {
+      "path": "tests/functions/jonghyun/event-provider.test.mjs",
+      "sha256": "9b0d059ee1d2a3474589abe67aa19a46179cb2eb679038dfc95e726281c93591"
+    },
+    {
+      "path": "tests/functions/jonghyun/event-service.test.mjs",
+      "sha256": "51d027910d8c3b549f69dc0dfb154de4fb7be773388d92d84ce127fc75a8bf76"
+    },
+    {
+      "path": "tests/functions/jonghyun/event-sync.test.mjs",
+      "sha256": "251b80ac771a3b7e7b71aedc088b76a5121b6547d5af064189c52674963c0af7"
+    },
+    {
+      "path": "tests/functions/jonghyun/jobs.test.mjs",
+      "sha256": "2933660d16bcb64943842d5876f10532ec1eeed9d253c047bb7e8ce98d4cd8ad"
+    },
+    {
+      "path": "tests/functions/jonghyun/metrics.test.mjs",
+      "sha256": "feb44b002408342aaa0e695ce42be01266cb6b8bb773c45e97caf4ede9489bcb"
+    },
+    {
+      "path": "tests/functions/jonghyun/places-http.test.mjs",
+      "sha256": "a9c4126c4844f9676659528d36a7353067044d6de2d99c458115da00482f3598"
+    },
+    {
+      "path": "tests/functions/jonghyun/places.test.mjs",
+      "sha256": "89a35ecee585b4c4220e97cd830a68b7215f2dd18b413bcf1fcb744f827e192c"
+    },
+    {
+      "path": "tests/functions/jonghyun/review-summary-worker.test.mjs",
+      "sha256": "942b22bb895164308a5a2c224ece8132436dbc0ef5fa6c108a6691e3fc3d5303"
+    },
+    {
+      "path": "tests/functions/jonghyun/scheduled-jobs.test.mjs",
+      "sha256": "f2422b0bd53b1fe2a6e7801f6718f9b2ceeda875d82642cf570a05f5fc5b8fe6"
+    },
+    {
+      "path": "tests/functions/jonghyun/search-repository.test.mjs",
+      "sha256": "e4f0a25d99926699ba3dce44ab73c85d01a39a0cfcace4a6aa577d7eb4bcb382"
+    },
+    {
+      "path": "tests/functions/jonghyun/search-response-errors.test.mjs",
+      "sha256": "de2ecb4cb3e840316899db1261634c801b8e8cafaa2859935cfc555c77b72e92"
+    },
+    {
+      "path": "tests/functions/jonghyun/search-service.test.mjs",
+      "sha256": "6ea883a5febaf360854e86213071fcf1b7fe3b1c9ccf791894e47829d74c2004"
+    },
+    {
+      "path": "tests/functions/jonghyun/summary-repository.test.mjs",
+      "sha256": "c71e4f9a6691ad6eb037fdfd8e1d061c3b447f246e225cb979f19a0ae546ac38"
+    },
+    {
+      "path": "tests/functions/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/functions/minkyu/auth_db.test.ts",
+      "sha256": "2933c09ea76caeb23c6982446fd4e34d6921f8ed47f8ab9ca8feef54b45a7b62"
+    },
+    {
+      "path": "tests/functions/minkyu/http.test.ts",
+      "sha256": "b804ec38401ca4bb959f94fc0d97ea79fc8e295f11905162ccfafbf4cbdfa199"
+    },
+    {
+      "path": "tests/functions/minkyu/provider_config.test.ts",
+      "sha256": "720c774a15d4232972f9e8a7d5cf1c4481140c27723af736d1586aca0f173e61"
+    },
+    {
+      "path": "tests/functions/minkyu/search_core_gate.test.ts",
+      "sha256": "20a638f2240faa9551b3890695beeb9e08185b225e844727e9c4c7174a4cdc86"
+    },
+    {
+      "path": "tests/functions/minkyu/search_http.test.ts",
+      "sha256": "a69085f2e63d9ae2dd37119528360a6a0655874fc62d274d7de55f89acf880d7"
+    },
+    {
+      "path": "tests/functions/minkyu/search_runtime.test.ts",
+      "sha256": "b6e17421eae59124153e606016798cf0c719518c5ba74799543a2d36c109faea"
+    },
+    {
+      "path": "tests/functions/minkyu/service_api.test.ts",
+      "sha256": "768ba2d207249a56991eef289a6afbeac2b2e0703f3eda7a827a90e562a96958"
+    },
+    {
+      "path": "tests/functions/minkyu/test_api_env.py",
+      "sha256": "06ea0e18a74630a006f799be5356c36bd6d0a9f8dfd4051d133d6927b00ee259"
+    },
+    {
+      "path": "tests/functions/minkyu/test_harness.py",
+      "sha256": "21d1113a4adbac92f84b4a4122ecf717329f250a97dae9a6ce9a5581eac6442d"
+    },
+    {
+      "path": "tests/integration/jonghyun/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/jonghyun/ai-budget-concurrency.mjs",
+      "sha256": "6a4ac77d4f52ad2dd093df7768ccd5b4f46a6809cdb09e72f86c3ceb44516919"
+    },
+    {
+      "path": "tests/integration/jonghyun/ai-discovery-rest.mjs",
+      "sha256": "1df0438107bd4d64ee1ba38e17bb42002d97cbd45f075650474665fdbf06643d"
+    },
+    {
+      "path": "tests/integration/jonghyun/ai-event-discovery-rest.mjs",
+      "sha256": "6a156b7c542ba894954dc568f2d6b2783878ac1d5fc1947184c8a64e98fdcc44"
+    },
+    {
+      "path": "tests/integration/jonghyun/discovery-flow.test.mjs",
+      "sha256": "26118af8af389deb1aa2b5d5691710845a57831d43f02ebeae5029a4bca5ea24"
+    },
+    {
+      "path": "tests/integration/jonghyun/edge-functions-e2e.mjs",
+      "sha256": "0817e8f488ba0be391a6006874973ad98d74e070a5e72140d7fb07f9b5447a35"
+    },
+    {
+      "path": "tests/integration/jonghyun/events-rest.mjs",
+      "sha256": "2e24dd66d38f4ce41d6aa96f6686e741191b65231eb88cec9776beedb7c1d984"
+    },
+    {
+      "path": "tests/integration/jonghyun/review-policy-e2e.mjs",
+      "sha256": "792b0c011cc216d45172439947ca46a4d45f7b40ca4a2123a3b16dbe3b304bc4"
+    },
+    {
+      "path": "tests/integration/jonghyun/summary-lock-regression.mjs",
+      "sha256": "1bd8f5ef26173d5ca36590b2eb2c56a413d998e5465f6a2c91f20faa0a5114a2"
+    },
+    {
+      "path": "tests/integration/jonghyun/summary-worker-concurrency.mjs",
+      "sha256": "1b23e51017a8318e2f377acec1858c9efe643b774b215d47a1f62773f89d4931"
+    },
+    {
+      "path": "tests/integration/jonghyun/summary-worker-rest.mjs",
+      "sha256": "b4ba2b13a0c78bf2aba20b847217a47f11e2d2e1c469846c3737ed6a6f5fc10b"
+    },
+    {
+      "path": "tests/integration/minkyu/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/integration/minkyu/edge_e2e.py",
+      "sha256": "fa703868c6a05d168b378d35273de7eec9152b9d43ecc2c6ddb8e2185da7250f"
+    },
+    {
+      "path": "tests/integration/minkyu/runtime_e2e.py",
+      "sha256": "b9012bfb27db4e1b5cfc369db859753611044e68df879645815481da51ea3983"
+    },
+    {
+      "path": "tests/integration/minkyu/search_rpc_e2e.py",
+      "sha256": "dbc25768a3323053ab30e850f60954bbe60c8ae1b30bed4c22aa5c92ab735876"
+    },
+    {
+      "path": "tools/collaboration/check_harness.py",
+      "sha256": "776dc17765827ca6729edc6c82d730df7fa310b2d453996af12089344679ba14"
+    },
+    {
+      "path": "tools/collaboration/check_ownership.py",
+      "sha256": "7c26cadcd5012b4cb920b4eccdd4a5c7ffe500ca6ac27c3adbb25897401015ac"
+    },
+    {
+      "path": "tools/collaboration/test_ownership.py",
+      "sha256": "481c0dfc028e69d725787d7dc3e6a226d28d8f0776559af5c1ba038b680dfb4f"
+    },
+    {
+      "path": "tools/local/check_api_env.py",
+      "sha256": "b820e96ada9a1d3cfcb4aedc7d4300c82fbc5970f6b220aa93d7ef26b6854d04"
+    },
+    {
+      "path": "tools/local/check_environment.py",
+      "sha256": "10f4fe57f62ca8c12f24e3307c484dd75c235db4121d5896d331b7a61126be75"
+    },
+    {
+      "path": "tools/local/check_search_core.ts",
+      "sha256": "bd13595654a34cfcd5443493f41d243459fd063c909de110c5b18626374c3009"
+    },
+    {
+      "path": "tools/local/prepare_database.py",
+      "sha256": "3a9ffda42dc4f6f5bf12c8c622ddb2f0ebc83d28e8488ca85bfb1346161384ef"
+    },
+    {
+      "path": "tools/local/prepare_edge.py",
+      "sha256": "58d80684a0b4ade52fcb25e30284f4d18d33aa47be4a7aff06aff8a663da6063"
+    },
+    {
+      "path": "tools/local/prepare_migrations.py",
+      "sha256": "be07feeff30eeb61e34b6741b1636cea675b43a368404c99c4d7205ec3d93fcc"
+    },
+    {
+      "path": "tools/local/run_database_tests.py",
+      "sha256": "243f84b8e70ea4e32a6a632a2cace6f8e2ef45c7456aea756bc433d9fdf85194"
+    }
+  ],
+  "checks": {
+    "decision_coverage": "78개 결정군 대조 완료. 1~9 재확정 요구 없음",
+    "memo_precedence": "19B, 28 선제 후기, 31A, 39A 기존 신청 재요청, 56A 및 54A 최신 직접 답변 적용. 50~52 수치·67~78 보류 유지",
+    "planning_screen_ids": "26개 보존: 현재 24, 추후 S07·S22",
+    "current_links": "PASS; 최종 수치는 아래 link_check 참조",
+    "diff_check": "PASS",
+    "protected_source_sql_html_config": "PASS SHA256 동일",
+    "historical_documents": "27개 SHA256 동일",
+    "runtime_db_provider_deployment": "NOT_RUN 문서 작업",
+    "added_cjk_kana": "PASS 없음",
+    "scope": "PASS 기준 75개 모두 분류, 변경 48개 모두 승인 문서, 신규 작업 기록 2개"
+  },
+  "resolved_findings": [
+    "실제 동행 완료 전 후기 비공개로 정정; 상대 미확인이라도 자동 완료 이후 공개 가능",
+    "최근 검색 기한 삭제·민감정보 제외 보완",
+    "미래 무효 계좌 배지 숨김 복원",
+    "과거 인계를 현행 요구사항으로 연결하던 링크·미해결 상태 5건 정정",
+    "행사 신규 모드의 기존 미종료 조건과 제품 정책 차이 명시",
+    "서울 HTTPS 미지원 단정 제거",
+    "요약 DB 작업 등록과 실제 모델·운영 연결 분리"
+  ],
+  "open_new_user_questions": [],
+  "historical_link_exception": {
+    "path": "docs/collaboration/requests/minkyu/2026-09-29-search-policy-correction.md",
+    "line": 34,
+    "deleted_target": "docs/planning/requirements/추가 요구 사항.md",
+    "reason": "당시 원출처의 역사적 참조. 원문 보존 범위이며 현행 명세 연결에서 제외. 기준 커밋의 Git 이력으로 조회 가능"
+  },
+  "limits": [
+    "현재 코드·SQL wire를 새 정책으로 변경한 작업이 아니다. 문서에 반영 필요 범위를 명시했다.",
+    "팀 보류·외부 확인 사항을 실행 승인으로 확정하지 않았다."
+  ],
+  "link_check": {
+    "markdown_scanned": 74,
+    "local_links_checked": 627,
+    "current_errors": 0,
+    "historical_exceptions": [
+      {
+        "file": "docs/collaboration/requests/minkyu/2026-09-29-search-policy-correction.md",
+        "line": 34,
+        "target": "../../../planning/requirements/추가 요구 사항.md",
+        "kind": "missing_file"
+      }
+    ]
+  }
+}

@@ -1,25 +1,28 @@
 # 민규 DB 연결 기반 — 종현 어댑터용 제안
 
-상태: **제안 v1 / 실제 SQL·RPC·DB 연결 미구현**. 담당: 민규. 2026-09-23 정식 Git 이력의 정적 조사 결과다. 원격·로컬 DB의 실제 적용 상태를 뜻하지 않는다. 검색·AI 제품 계약은 종현 소유 문서를 유지하며, 이 문서는 DB 제공 경계만 정의한다.
+## 현재 DB 정책 요구
+
+현재 무료 1:1·네이버 전용 가입, 작성자 만 나이 19~99 숫자 필터(전체는 상한 없음), 연결 행사명 검색을 지원해야 한다. 개인 완료 확인 후 선제 후기 제출은 허용하되 실제 완료 전 공개하지 않는다. 실제 완료는 양쪽 확인 또는 종료+24시간 자동 처리이며 완료 시 횟수, 후기 열람 가능 시 당도를 반영한다. 구조화된 이름·주소는 관계 권한과 취소 후 접근 종료를 검사한다. 기존 SQL 조사 표는 그 파일의 동작 설명이며 현재 정식 RPC 전체가 미구현이라는 뜻이 아니다.
+
+상태: DB 어댑터의 책임·권한을 정의하는 설계 계약. 담당: 민규. 실제 RPC는 [검색 DB](public-post-search-db.md)·[후기 DB](review-summary-db.md)·[작업 큐](worker-jobs.md)·[완료 DB](completion-db.md)를 따른다. 의미 이름·가상 예시를 실제 실행 경로로 사용하지 않는다.
 
 기준: [PLAN](../../PLAN.md) 3~6장, [상세 설계](../../PLAN_상세설계.md) 5.5·11.3장, [AGENTS](../../AGENTS.md)의 추가 사용자 결정. 공통 응답은 [conventions](conventions.md)를 따른다. [가상 사례](../../tests/fixtures/minkyu/db-foundation.json)는 어댑터 작성용이며 운영 데이터가 아니다.
 
-## 1. 기존 이력과 필요한 차이
+## 1. 현재 연결 책임과 필요한 차이
 
-| 정적 근거 | 현재 이력의 동작 | 후속 DB 구현에 필요한 차이 |
+| 영역 | 실제 계약 | 현재 정책 반영 시 확인할 차이 |
 |---|---|---|
-| [공고 이력](../supabase/migrations/20260916105220_feature03_posts.sql)의 `posts`, `post_private_details`, `list_posts` | 공개 지역과 `exact_location` 분리. 검색은 제목·소개·공개 지역 | 등록 장소명·등록 주소와 상세 만남 지점 분리, 제목·장소명·주소만 일치 판단. 과거 `exact_location`에서 주소 자동 추출 금지 |
-| [탐색 카드](../supabase/migrations/20260917122744_ut_notifications_and_discovery.sql)의 `get_post_author_discovery_cards` | 로그인 대상 마스킹 이름 반환 | 비로그인 별칭과 회원 마스킹 이름의 일관된 공개 카드. 전체 실명·주소는 별도 당사자 상세 경로 |
-| [평가 이력](../supabase/migrations/20260916111030_feature09_mutual_review.sql)의 `appointment_reviews`와 [후속 정책](../supabase/migrations/20260917005621_retry_completion_dispute_review_policy.sql)의 `get_appointment_review_state` | 별점·한마디, 당사자 역할 확인 후 `released`이면 상대 평가 반환 | `released`만으로 프로필 공개·AI 입력 허용 불가. 프로필 공개 자격·공개 텍스트 집합·revision·무효화의 명시적 경로 필요 |
-| 위 후속 정책의 `confirm_appointment_completion` | 첫 당사자 확인 시 바로 완료 | 최신 결정에 따라 양쪽 확인을 기록하고 둘 다 확인한 때 수동 완료. 종료 +24시간 자동 완료와 경쟁·예외 상태 검사 |
-| 위 후속 정책의 완료·평가 시각 | 앱에서 확인 가능 시각·보류·7일·이의 상태 일부 존재 | 새 공개 집합과 집계를 해당 공통 시간 정책에 연결. 워커가 시간 정책 재구현 금지 |
-| 정식 `git ls-files backend/supabase/migrations/` 전체, 요약·작업 저장소 골격 | 공개 후기 revision·요약 테이블·일반 작업 lease RPC 없음 | 아래 원자적 계약과 권한·후속 migration 필요. 기존 예약 완료 cron은 일반 작업 큐 구현이 아님 |
+| 공개 검색 | `search_public_posts_v2`, [검색 DB](public-post-search-db.md) | 기존 연령대 wire를 작성자 만 나이 19~99 숫자 범위로 연결하고 연결 행사명 검색 추가. 정확한 주소는 일치 판단에만 사용 |
+| 핵심 서비스 | `create_service_post`·`request_service_post`·`propose_match`·`accept_match`, [핵심 DB](core-service-db.md) | 마감 기본값·핵심 조건 변경·동의 만료/한 명 제한·미선정 종료·취소 후 정보 숨김을 확정 정책과 대조 |
+| 완료 | `confirm_appointment_completion`·건별 예약, [완료 DB](completion-db.md) | 개인 완료 확인과 전체 완료를 구분하고 지연 시 실제 완료 시각 사용 |
+| 후기 | `submit_appointment_review`·공개 적격성, [후기 DB](review-automation-db.md) | 개인 확인 후 선제 제출·미완료 비공개·완료+24시간·칭찬 6개 구성·지표 시점 구분 |
+| 요약·작업 | [요약 DB](review-summary-db.md), [작업 큐](worker-jobs.md) | 공개 적격성·revision·점유·중간 저장·삭제 원자성 및 실제 정식 적용 상태 확인 |
 
-위 발견은 기존 파일 수정 없이 기록했다. 사용자 승인 없는 PASS 공급사·세션 연결, 계좌 효력 변경 후 확정, 분쟁 판단·종결 정책을 여기서 결정하지 않는다.
+기존 `exact_location` 같은 혼합 자료에서 주소를 임의 추출하거나 기존 후기·가입 기록을 새 자격으로 자동 승격하지 않는다. 네이버 계정·세션 연결과 추후 계좌 효력·분쟁 판정의 세부 검토는 각 계약에서 구분한다. 코드/SQL을 이번 문서 변경으로 갱신한 것은 아니다.
 
 ## 2. 공통 호출·오류 경계
 
-아래 이름은 **어댑터 의미 이름**이다. 실제 SQL 함수명·스키마·HTTP URL로 사용하지 않는다. 실제 RPC 매핑은 후속 구현에서 명세에 추가한다. 모든 반환 예시는 HTTP 어댑터 관점의 `{data, requestId}` 또는 `{error:{code,message,retryable},requestId}`다. SQL 오류 원문·내부 상태·자격정보를 클라이언트로 전달하지 않는다.
+아래 이름은 **어댑터 의미 이름**이다. 실제 SQL 함수명·스키마·HTTP URL로 사용하지 않는다. 실제 RPC 매핑은 위 영역별 계약을 따르며 의미 이름을 네트워크 호출에 그대로 쓰지 않는다. 모든 반환 예시는 HTTP 어댑터 관점의 `{data, requestId}` 또는 `{error:{code,message,retryable},requestId}`다. SQL 오류 원문·내부 상태·자격정보를 클라이언트로 전달하지 않는다.
 
 - `caller`는 문서·가상 사례의 검증 전제다. 클라이언트 body의 역할·사용자 ID를 신뢰하지 않고 서버가 인증 결과에서 도출한다. `internal`은 검증된 전용 서비스 호출자이며 공개 API 역할이 아니다.
 - 로그인 필요는 `AUTH_REQUIRED`/401, 내부 권한 불충족은 `ACCESS_DENIED`/403, revision·점유 경쟁은 `STATE_CONFLICT`/409로 변환한다. 충돌은 같은 입력의 자동 재전송 대상으로 보지 않아 `retryable:false`다. 최신 상태를 새로 조회한 후 새 요청을 만든다.
@@ -30,8 +33,8 @@
 
 `searchPublicPosts({query, filters, cursor}) → {items, nextCursor}`. 일반 탐색은 비로그인·회원 모두 가능하고 AI HTTP 진입점은 별도 로그인 검사를 적용한다. `filters`의 제품 정의는 종현 검색 계약과 연결하며 주변·좌표·반경·거리순 정렬은 제공하지 않는다.
 
-- 일치 판단은 제목·등록 장소명·등록 주소에 한정한다. 소개·후기·상세 만남 지점은 검색하지 않는다. 등록 주소는 DB 내부 비교에만 사용하며 주소가 검색어와 같더라도 응답에 추가하지 않는다.
-- 가상 공개 카드는 `postId,title,publicArea,authorDisplayName`만 사용한다. 제품의 비용·일정 카드 필드는 후속 검색 계약에 합의한 공개 필드만 추가한다. 비로그인은 시스템 별칭, 로그인은 마스킹 이름이다. `nextCursor`는 마지막 페이지에서 null이다.
+- 일치 판단은 제목·등록 장소명·등록 주소·연결된 행사명에 한정한다. 소개·후기·상세 만남 지점은 검색하지 않는다. 등록 주소는 DB 내부 비교에만 사용하며 주소가 검색어와 같더라도 응답에 추가하지 않는다.
+- 가상 공개 카드는 `postId,title,publicArea,authorDisplayName`만 사용한다. 실제 제품의 비용·일정 카드 필드는 검색 DB 계약에 명시된 공개 필드를 따른다. 비로그인은 시스템 별칭, 로그인은 마스킹 이름이다. `nextCursor`는 마지막 페이지에서 null이다.
 - 정확주소·상세지점·전체실명·원본 `exact_location`·주소 일치 조각·내부 검색 레코드는 일반/AI 검색 결과에서 제외한다. 양쪽 확정 당사자도 이 **공개 검색 경로**에서는 같은 최소 카드를 받고 권한 있는 별도 상세 화면에서 추가 정보를 확인한다.
 - 기존 공고의 주소가 분리되지 않았다면 알려진 제목·장소명으로만 일치시킨다. 기존 `exact_location`을 대신 검색하지 않는다. 주소 일치를 통한 위치 추정 가능성이 있으므로 완전한 위치 비밀 보장을 주장하지 않는다.
 - 0건은 성공 `{items:[],nextCursor:null}`이다. 관련 예시: `search_address_anon`, `search_address_member`, `search_empty`.
@@ -80,6 +83,6 @@
 python3 -m unittest discover -s tests/contracts/minkyu -p 'test_db_foundation.py' -v
 ```
 
-이 검사는 가상 계약의 공개 필드·snapshot 적격성·revision/근거 거절·중복키·lease 경쟁 사례 불변조건과 잘못된 사례를 거절하는 능력을 확인한다. SQL·RLS·실제 경쟁 상태·모델 품질 검증은 아니다. 실제 DB 실행, 기존 migration 재생, 네트워크 연결은 **NOT_RUN**이다.
+이 검사는 가상 계약의 공개 필드·snapshot 적격성·revision/근거 거절·중복키·lease 경쟁 사례 불변조건과 잘못된 사례를 거절하는 능력을 확인한다. SQL·RLS·실제 경쟁 상태·모델 품질 검증은 아니다. 이 가상 계약 검사에서는 실제 DB·migration 재생·네트워크를 실행하지 않는다. 별도 실행 이력은 영역별 계약·인계에 있고 이번 문서 작업에서 재실행하지 않았다.
 
-후속 실제 연결의 완료 조건은 익명/일반/당사자/내부 권한 테스트, 주소 일치 후 비공개 반환 차단, 같은 transaction의 revision·공개 상태 재검증, 비공개 전환 중 생성 경쟁, 두 worker 동시 claim·만료 토큰 차단, 양쪽 수동 완료·자동 완료 경쟁의 로컬 DB 테스트다. 종현은 이 제안·가상 자료로 자기 파일에서 어댑터를 작성하고 실제 RPC가 생기기 전에는 가상 결과를 운영 성공으로 노출하지 않는다. 실제 RPC 이름·공개 카드 확장·운영 작업 수치·대규모 요약은 연결 단계에서 합의해 버전을 올린다.
+후속 실제 연결의 완료 조건은 익명/일반/당사자/내부 권한 테스트, 주소 일치 후 비공개 반환 차단, 같은 transaction의 revision·공개 상태 재검증, 비공개 전환 중 생성 경쟁, 두 worker 동시 claim·만료 토큰 차단, 양쪽 수동 완료·자동 완료 경쟁의 로컬 DB 테스트다. 종현은 이 제안·가상 자료로 자기 파일에서 어댑터를 작성하고 실제 RPC가 생기기 전에는 가상 결과를 운영 성공으로 노출하지 않는다. 실제 RPC 이름·공개 카드는 영역별 계약을 따르고, 새로운 필드·운영 수치·대규모 요약 연결 변경은 후속 계약과 검증으로 반영한다.
