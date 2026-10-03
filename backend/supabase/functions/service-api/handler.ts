@@ -7,6 +7,7 @@ import { createRequestContext, readJson } from "../_shared/http/request.ts";
 import { jsonFailure, jsonSuccess } from "../_shared/http/response.ts";
 import { mapPublicPostSearchError, parsePublicPostSearchQuery, type PublicPostSearchExecutor } from "./search-http.ts";
 import { resolveRouteForMethod, type MaintenanceConfig } from "./routes.ts";
+import { assertEventFilterQuery, mapEventHttpError, parseEventQuery, type PublicEventExecutor, type EventFilterExecutor } from "./events-http.ts";
 
 export interface ServiceApiDependencies {
   allowedOrigins: readonly string[];
@@ -18,6 +19,15 @@ export interface ServiceApiDependencies {
   publicSearch?: {
     authenticate(request: Request): Promise<{ db: RpcClient; caller: "anonymous" | "member" }>;
     execute: PublicPostSearchExecutor;
+  };
+  publicEvents?: {
+    authenticate(request: Request): Promise<{ db: RpcClient; caller: "anonymous" | "member" }>;
+    execute: PublicEventExecutor;
+    filters: EventFilterExecutor;
+  };
+  /** 명시적으로 연결한 공고 상세 GET만 헤더 없는 익명 요청을 허용한다. 생략 시 기존 회원 인증을 쓴다. */
+  publicPostDetails?: {
+    authenticate(request: Request): Promise<{ db: RpcClient; caller: "anonymous" | "member" }>;
   };
 }
 export function createServiceApi(dependencies: ServiceApiDependencies) {
@@ -32,6 +42,19 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
       cors.responseHeaders(request);
       originAllowed = true;
       const url = new URL(request.url);
+      if (dependencies.publicEvents && ["/service-api/events", "/functions/v1/service-api/events", "/service-api/events/filters", "/functions/v1/service-api/events/filters"].includes(url.pathname)) {
+        try {
+          if (request.method !== "GET") throw new HttpError("METHOD_NOT_ALLOWED");
+          if (request.body !== null) throw new HttpError("INVALID_REQUEST");
+          const { db } = await dependencies.publicEvents.authenticate(request);
+          let data;
+          if (url.pathname.endsWith("/filters")) {
+            assertEventFilterQuery(url);
+            data = await dependencies.publicEvents.filters(db);
+          } else data = await dependencies.publicEvents.execute(db, parseEventQuery(url));
+          return cors.apply(jsonSuccess(data as unknown as JsonValue, context), request);
+        } catch (error) { throw mapEventHttpError(error); }
+      }
       if (request.method === "GET" && dependencies.publicSearch &&
         ["/service-api/posts", "/functions/v1/service-api/posts"].includes(url.pathname)) {
         try {
@@ -46,6 +69,13 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
         }
       }
       const route = resolveRouteForMethod(url, request.method);
+      if (route.publicPostDetail && dependencies.publicPostDetails) {
+        if (request.body !== null) throw new HttpError("INVALID_REQUEST");
+        // 잘못된 토큰·Auth 장애는 그대로 오류다. 회원 인증 실패를 익명으로 재시도하지 않는다.
+        const { db } = await dependencies.publicPostDetails.authenticate(request);
+        const data = await route.execute({ db, url, body: null, maintenance: dependencies.maintenance });
+        return cors.apply(jsonSuccess(data, context), request);
+      }
       // 내부 secret 경로와 사용자 JWT 경로 사이에 인증 fallback을 하지 않는다.
       const db = await (route.internal ? dependencies.authenticateInternal(request) : dependencies.authenticateUser(request));
       if (request.method === "GET" && request.body !== null) throw new HttpError("INVALID_REQUEST");

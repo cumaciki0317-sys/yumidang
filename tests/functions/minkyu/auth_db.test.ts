@@ -9,6 +9,7 @@ import { createPublicClient } from "../../../backend/supabase/functions/_shared/
 import { createUserClient } from "../../../backend/supabase/functions/_shared/db/user-client.ts";
 import { createInternalClient } from "../../../backend/supabase/functions/_shared/db/internal-client.ts";
 import type { FetchLike } from "../../../backend/supabase/functions/_shared/db/transport.ts";
+import type { JsonValue } from "../../../backend/supabase/functions/_shared/contracts/common.ts";
 import { toPublicError } from "../../../backend/supabase/functions/_shared/http/errors.ts";
 const uid = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const jwt = "header.validated_by_remote.signature";
@@ -162,14 +163,17 @@ test("204 RPC 응답은 null이며 JSON 없는 오류는 원문 없이 실패한
   await assert.rejects(createUserClient(config(), p, async () => new Response("sensitive-detail", { status: 502 })).rpc("get_my_profile", {}), code("EXTERNAL_UNAVAILABLE"));
 });
 
-test("PASS 근거 해석은 legacy·다른 사용자·불완전 DI를 자격으로 바꾸지 않는다", async () => {
+test("네이버 근거 해석은 legacy·다른 사용자·미연결·사진/완료 누락을 허용하지 않는다", async () => {
   const p = await principal();
-  const proof = { source: "pass" as const, userId: uid, qualificationVerified: true, diUnique: true, profilePhotoPresent: true };
+  const proof = { source: "naver" as const, userId: uid, qualificationVerified: true, accountLinked: true, profilePhotoPresent: true, signupCompleted: true };
   assert.equal(evaluateTrustedEligibility(p, null), "verification_required");
   assert.equal(evaluateTrustedEligibility(p, { ...proof, userId: "other" }), "verification_required");
-  assert.equal(evaluateTrustedEligibility(p, { ...proof, diUnique: false }), "verification_required");
+  assert.equal(evaluateTrustedEligibility(p, { ...proof, accountLinked: false }), "verification_required");
+  assert.equal(evaluateTrustedEligibility(p, { ...proof, qualificationVerified: false }), "verification_required");
+  assert.equal(evaluateTrustedEligibility(p, { ...proof, source: "pass" } as unknown as typeof proof), "verification_required");
   assert.equal(evaluateTrustedEligibility(p, { ...proof, source: "female_direct" } as unknown as typeof proof), "verification_required");
   assert.equal(evaluateTrustedEligibility(p, { ...proof, profilePhotoPresent: false }), "photo_required");
+  assert.equal(evaluateTrustedEligibility(p, { ...proof, signupCompleted: false }), "completion_required");
   assert.equal(evaluateTrustedEligibility(p, proof), "eligible");
 });
 
@@ -196,27 +200,43 @@ test("선택 인증도 만료 JWT·익명 Auth 계정·서버 장애를 그대�
   await assert.rejects(requireOptionalPrincipal(bearer(), config(), async () => json({ message: "sensitive-detail" }, 503)), code("EXTERNAL_UNAVAILABLE"));
 });
 
-test("익명 검색 클라이언트는 anon key만 전달하고 서비스·내부 비밀을 읽지 않는다", async () => {
-  const c = { ...config() };
-  Object.defineProperty(c, "supabaseServiceRoleKey", { get() { assert.fail("must not read service key"); } });
-  Object.defineProperty(c, "internalWorkerSecret", { get() { assert.fail("must not read internal secret"); } });
-  const args = { p_query: "전시" };
-  const client = createPublicClient(c, async (url, init) => {
-    assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
-    const headers = new Headers(init?.headers);
-    assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
-    assert.equal(headers.get("authorization"), `Bearer ${env.SUPABASE_ANON_KEY}`);
-    assert.equal(init?.method, "POST");
-    assert.deepEqual(JSON.parse(String(init?.body)), args);
-    assert.doesNotMatch(JSON.stringify(init), /private-service|internal_random|validated_by_remote/);
-    return json({ items: [], nextCursor: null });
+const publicReadCases: { name: string; args: Record<string, JsonValue>; result: JsonValue }[] = [
+  { name: "search_public_posts_v2", args: { p_filters: { query: "전시", authorAge: "all" }, p_cursor: null, p_limit: 2 }, result: { items: [], nextCursor: null } },
+  { name: "get_service_post", args: { p_post_id: uid }, result: { postId: uid, title: "합성 상세", authorDisplayName: "동행-합성별칭" } },
+  { name: "list_event_candidates_v1", args: { p_region: "서울", p_category: null }, result: [] },
+  { name: "list_public_events", args: { p_filters: {}, p_cursor: null, p_limit: 2 }, result: { items: [], nextCursor: null } },
+  { name: "list_event_filter_values", args: {}, result: { regions: [], categories: [] } },
+];
+for (const { name, args, result } of publicReadCases) {
+  test(`익명 공개 읽기 ${name}는 anon key와 정확한 endpoint만 사용하며 서버 비밀을 읽지 않는다`, async () => {
+    const c = { ...config() };
+    Object.defineProperty(c, "supabaseServiceRoleKey", { get() { assert.fail("must not read service key"); } });
+    Object.defineProperty(c, "internalWorkerSecret", { get() { assert.fail("must not read internal secret"); } });
+    let requests = 0;
+    const client = createPublicClient(c, async (url, init) => {
+      requests++;
+      assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/${name}`);
+      const headers = new Headers(init?.headers);
+      assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
+      assert.equal(headers.get("authorization"), `Bearer ${env.SUPABASE_ANON_KEY}`);
+      assert.equal(headers.get("content-type"), "application/json");
+      assert.equal(headers.get("accept"), "application/json");
+      assert.equal(init?.method, "POST");
+      assert.equal(init?.redirect, "error");
+      assert.equal(init?.body, JSON.stringify(args));
+      assert.deepEqual(JSON.parse(String(init?.body)), args);
+      assert.doesNotMatch(JSON.stringify(init), /private-service|internal_random|validated_by_remote/);
+      return json(result);
+    });
+    assert.deepEqual(await client.rpc(name, args), result);
+    assert.equal(requests, 1);
   });
-  assert.deepEqual(await client.rpc("search_public_posts_v2", args), { items: [], nextCursor: null });
-});
+}
 
-test("익명 클라이언트는 공개 검색 한 개 외 읽기·쓰기·내부 RPC 모두 요청 전에 차단한다", async () => {
+test("익명 클라이언트는 공개 읽기 다섯 개 외 개인·쓰기·내부·임의 RPC를 요청 전에 차단한다", async () => {
   const client = createPublicClient(config(), async () => assert.fail("must not request"));
-  for (const name of ["search_public_posts", "get_service_post", "get_my_profile", "create_service_post", "request_service_post", "confirm_appointment_completion", "enqueue_job", "process_due_completions", "complete_signup", "../profiles", "search_public_posts_v2?select=*"]) {
+  for (const name of ["search_public_posts", "get_my_profile", "create_service_post", "request_service_post", "confirm_appointment_completion", "enqueue_job", "process_due_completions", "complete_signup", "../profiles", "search_public_posts_v2?select=*",
+    "get_service_post?select=*", "get_service_post/..", "get_service_post/../get_my_profile", "GET_SERVICE_POST", " get_service_post"]) {
     await assert.rejects(client.rpc(name, {}), code("ACCESS_DENIED"));
   }
 });

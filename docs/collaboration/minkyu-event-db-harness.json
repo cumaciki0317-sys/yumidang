@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "ff9c14fec069dc03b575cfd33d9deb62625fd924",
+  "branch": "minkyu/foundation-harness",
+  "phase": "11차 행사 DB 저장·공개 후보 조회 및 CORS 후속 검토",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/minkyu-event-db-harness.json",
+      "tools/collaboration/check_harness.py",
+      "docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md",
+      "backend/supabase/functions/_shared/db/internal-client.ts",
+      "backend/supabase/functions/_shared/db/public-client.ts",
+      "backend/supabase/functions/_shared/db/user-client.ts",
+      "tests/functions/minkyu/event_db_client.test.ts"
+    ],
+    "A": [
+      "backend/supabase/migrations/20260929100000_event_storage.sql",
+      "backend/contracts/event-storage.md"
+    ],
+    "B": [
+      "tests/database/minkyu/event_storage.sql",
+      "tools/local/run_event_database_tests.py",
+      "tests/database/minkyu/test_event_database_runner.py"
+    ],
+    "C": [
+      "docs/collaboration/requests/minkyu/2026-09-29-cors-followup.md"
+    ]
+  },
+  "preserved": {
+    "docs/collaboration/minkyu-live-api-harness.json": "e287ac8fc1caaaca641047a6cc8be1205fc73089c730305b02480a1bff20bd8f",
+    "docs/collaboration/requests/minkyu/2026-09-29-events-live.md": "a1b22ddab22622656e5a116d0512d55896ec9f8f04147ce88a4373a95c057d3c",
+    "docs/collaboration/requests/minkyu/2026-09-29-kakao-live.md": "2020f6fa635981adc0a3e35e72386d2e2e48f8ebd23ed3740fa8d69d5bef4b79",
+    "docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md": "5cd1f4f58f74bd003ebd4494b2139f2eb6a85b4ae48741126dd07f01b497c713",
+    "docs/collaboration/requests/minkyu/2026-09-29-tour-live.md": "81be4991ff341e007e3e15599aa02c0b5d619f9877e19dc69b16787bc92070fe",
+    "tests/functions/minkyu/test_event_apis.py": "a742ab02263619ddfbe11ca2b4a1001db2c1927d225b315be2409b6c8f85b47d",
+    "tests/functions/minkyu/test_kakao_api.py": "fb22ff3e881750f717d84a28eb9542fa81d83a4b6ffe99d7ff95ef22758dc5bb",
+    "tests/functions/minkyu/test_tour_api.py": "d61e01ba42925f74cecfe06ffe80a2a8bae5207e8db557006e1a1866651c6799",
+    "tools/local/check_event_apis.py": "d9c91507ad6c2ed46b37d25147b5281fe92aa7c4fb82c6c0e58515a238de3e3b",
+    "tools/local/check_kakao_api.py": "7ca74f6ba7c50f41273bb54eb1de9bb700adf03dd6f35c0bdb9f5d72e430bddc",
+    "tools/local/check_tour_api.py": "cd485f700df47ca7d899851ebf47f30a1d8977afe1f49f5547405982192f36e5"
+  },
+  "excluded": [
+    "종현 소유 파일 변경",
+    "기존 SQL 27개 변경",
+    "실제 공급사 추가 호출",
+    "원격 DB·배포",
+    "커밋·푸시"
+  ],
+  "notes": "새 SQL은 별도 로컬 검증에서만 명시 적용. 기존 정식 마이그레이션 준비 목록을 변경하지 않는다. 이전 10차 미커밋 산출물11개 해시 보존. 행사 RPC의 사용에 필수인 민규 공통 client 허용 목록3개와 독립 역할검사1개를 총괄 범위로 추가. 종현 저장소 구현은 제외."
+}

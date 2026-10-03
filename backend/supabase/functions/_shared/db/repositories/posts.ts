@@ -3,3 +3,6 @@ import type { RpcClient } from "../transport.ts";
 import type { FreePostInput } from "../../contracts/posts.ts";
 export const getPost = (db: RpcClient, id: string) => db.rpc("get_service_post", { p_post_id: id });
 export const createPost = (db: RpcClient, id: string, input: FreePostInput) => db.rpc("create_service_post", { p_post_id: id, p_input: { ...input } });
+export const updatePost = (db: RpcClient, id: string, input: FreePostInput, expectedUpdatedAt: string) => db.rpc("update_service_post", { p_post_id: id, p_input: { ...input }, p_expected_updated_at: expectedUpdatedAt });
+export const closePost = (db: RpcClient, id: string) => db.rpc("close_service_post", { p_post_id: id });
+export const deletePost = (db: RpcClient, id: string) => db.rpc("delete_service_post", { p_post_id: id });

@@ -4,7 +4,7 @@
 
 예상 종료 후 본인 완료 확인을 마친 당사자는 상대방 완료를 기다리지 않고 후기를 제출할 수 있다. 한 명만 확인한 상태는 동행 전체 완료가 아니며 해당 후기는 비공개다. 두 사람 확인 또는 예상 종료+24시간 자동 처리(취소·불발·분쟁 제외)로 실제 완료한다. 지연 처리면 실제 성공 시각을 완료 시각으로 기록한다. 실제 완료부터 작성 마감 7일·한쪽 후기 공개 24시간을 계산하며 양쪽 제출은 완료 조건 충족 후 즉시 공개한다. 완료 횟수는 실제 완료 즉시, 당도는 상대 후기 열람 가능 시 반영한다.
 
-개인 확인 후 선제 제출과 현재 DB/API 제출 조건의 일치 여부는 후속 코드·SQL 검증 대상이다. 기존 `completed` 상태만 받는 구현을 새 정책 완료로 간주하지 않는다.
+20261002110000_completion_review_policy.sql이 개인 확인 후 선제 제출·미완료 비공개와 실제 완료+24시간 조건을 구현한다. 현재 추가 변경은 이 공통 적격성 검사를 보존한다. 앞 단계와 이번 워커의 실제 검증 결과는 총괄 인계에서 구분한다.
 
 현재 적용할 서비스 정책은 [정책.md](../../정책.md)를 따른다. 한쪽 후기 공개는 **실제 동행 완료 시각 +24시간**, 양쪽 제출은 즉시다. 당도는 상대 후기를 열람할 수 있게 될 때 동시에 반영하고, 완료 횟수는 후기와 관계없이 동행 완료 즉시 반영한다. 당도 산식은 민규·팀 검토 필요다. 아래 RPC·구현·검증 기록과 정책의 확정은 구분하며, 이번 문서 동기화에서 코드·DB·화면의 최신 정책 일치 여부는 검증하지 않았다. [반영 확인 작업](../../정책.md#follow-ups)을 확인한다.
 
@@ -50,3 +50,30 @@
 ## 검증
 
 `tests/database/minkyu/review_summary_storage.sql`은 로컬 정식 migration 재생 후 DB 소유자로 실행하며 트랜잭션을 rollback한다. 기본 비공개, 2/3개 경계, 한마디 없는 평가·비공개 제외, 근거 중복, 중복 게시, 개인정보 필드 제외, 비공개/텍스트 변경/분쟁/삭제 무효화, 보류 기간, 실제 service_role·authenticated 호출 및 ACL을 검사한다. 실행 결과는 민규 현황 문서의 실제 검증 기록을 따른다. 파일 존재만으로 실행 완료로 보지 않는다.
+
+## 작업별 원자 요약 — 20261002130000
+
+종현 제안03을 채택하되 기존 private.is_review_public_eligible/private.review_summary_sources를 유지한다. 완료 알림 시각으로 공개 기준을 되돌리지 않는다. 기존 set_review_publication/load_public_review_snapshot/publish_review_summary/get_visible_review_summary 계약과 후기 공개 물질화 RPC는 보존한다. 구형 별도 게시 RPC는 service_role의 명시 작업용이며 신규 worker는 아래 job-aware RPC를 사용한다.
+
+모든 신규 함수는 service_role 전용이며 인수 이름은 아래와 같다. J는 p_job_id uuid,p_lease_token uuid이고 R은 p_source_revision text다. job의 모델·prompt 버전과 revision을 그대로 돌려준다.
+
+| RPC | 인수 | 반환 |
+|---|---|---|
+| load_review_summary_source | J | {status:"applied",profileId,sourceRevision,reviews:[{reviewId,text}],eligibleCount}, 또는 {status:"lease_lost"\|"stale_revision"\|"already_published"} |
+| load_review_summary_checkpoint | J,R | {status:"applied",checkpoint:null\|object}, 또는 lease_lost/stale_revision |
+| save_review_summary_checkpoint | J,R,p_checkpoint jsonb | {status:"applied"\|"lease_lost"\|"stale_revision"\|"insufficient_reviews"\|"invalid_evidence"} |
+| discard_review_summary_checkpoint | J,R | {status:"applied"\|"lease_lost"} |
+| mark_review_summary_insufficient | J,R | applied/lease_lost/stale_revision/invalid_evidence status 객체 |
+| publish_review_summary_for_job | J,R,p_evidence_review_ids uuid[],p_summary text,p_model_version text,p_prompt_version text | {status:"applied",summaryId,sourceRevision,sourceCount,publishedAt}, 또는 lease_lost/stale_revision/insufficient_reviews/invalid_evidence |
+
+기대 상태는 JSON status로 반환하고 잘못된 인수·job payload와 다른 revision/model/prompt는 22023이다. 오래된 작업의 현재 snapshot은 현재 revision을 반환하므로 워커가 자기 payload와 비교한 뒤 supersede한다. 그 작업의 쓰기 RPC는 stale_revision으로 거절한다. 이미 같은 job/revision이 게시되었으면 source는 already_published를 반환하여 모델을 다시 호출하지 않는다. 새 token으로 재점유한 경우에도 현재 공개 자격·revision이 맞아야 한다.
+
+checkpoint 객체는 저장 시 `{schemaVersion:1,sourceReviewIds:[uuid],nextReviewIndex:number,nodes:[{sourceReviewIds:[uuid],claims:[{text,evidenceIds:[uuid]}],modelVersions:[label]}]}`만 허용한다. 조회 반환은 profileId/sourceRevision/modelVersion/promptVersion을 더한다. 임의 원문·작성자·위치 필드와 추가 키를 거절한다. 각 주장은 모델이 생성한 비공개 중간 결과이고 근거는 전체 공개 ID 집합의 하위 집합이다. 전체 sourceReviewIds는 현재 적격 공개 텍스트 집합과 정확히 일치하고 3개 이상이어야 한다. 원문과 완전히 같은 claim은 거절하지만 이 검사가 부분 복사·의역·민감정보·사실성 탐지 전체를 보장하지 않는다. 워커도 원문 사본을 넣지 않고 출력 검증 후 저장할 책임이 있다.
+
+잠금은 review_summary_state → worker_jobs → checkpoint/publication marker 순서다. 식별용 job 조회 후 projection과 job을 잠그고 토큰·DB 시각·running·프로필을 다시 검사한다. save/publish는 실제 저장 직전 lease 만료를 다시 검사한다. 원문·공개 상태가 바뀌면 기존 트리거와 같은 트랜잭션에서 revision 증가·visible_summary_id 해제·outbox 기록·이전 checkpoint 삭제가 이뤄진다. 원문 변경은 job 행을 잠그지 않는다.
+
+publish는 현재 전체 근거 ID·3개 기준·revision·버전을 검증한 뒤 요약 삽입(동일 revision/model/prompt는 최초 내용 보존), 표시 연결, checkpoint 삭제와 (jobId,sourceRevision) 게시 표식을 한 트랜잭션에서 기록한다. 같은 job 재게시도 현재 공개 자격을 검사하고 첫 publishedAt을 유지한다. 게시와 큐 complete는 별도다. 게시 후 complete 전에 중단되어도 marker를 읽어 모델을 재호출하지 않고 작업을 종결한다. 별도 publish_review_summary와의 동일버전 경쟁도 최초 요약과 게시 시각을 보존한다.
+
+성공·폐기·공개 원문 변경·실패 종결·supersede 때 checkpoint를 지우고 retry/yield는 재개를 위해 남긴다. 자동 TTL·임의 삭제 주기·새 작업 kind를 추가하지 않는다. private checkpoint와 publication marker에 외부 역할의 직접 권한을 주지 않는다. job_id FK를 두지 않으며 등록·변경은 현재 job을 검증하는 RPC로만 가능하다. 기존 테스트의 TRUNCATE 작업에 맞춘 결정이고 운영 job 삭제 API를 제공하지 않는다.
+
+추가 검증: 기존 공개/칭찬과 같은 Phase1 gate, 잘못된 token/lease 탈취, source 2/3개, 숨김·원문 변경의 revision과 checkpoint 삭제, 정상 양보와 실패 수 분리, job-aware 게시 중복 시각 보존, publish 대 숨김·lease 재점유 경합, private ACL. tests/database/minkyu/common_connections.sql과 별도 경합 runner의 실제 결과를 총괄이 기록한다. SQL 작성·정적 검사와 모델 실호출·운영 공개 활성화는 구분한다.

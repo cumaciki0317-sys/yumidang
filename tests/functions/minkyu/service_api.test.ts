@@ -9,7 +9,7 @@ const otherId = "22222222-2222-4222-8222-222222222222";
 function setup(overrides: Partial<ServiceApiDependencies> = {}) {
   const calls: { name: string; args: Record<string, JsonValue>; role: string }[] = [];
   const auth: string[] = [];
-  const client = (role: string) => ({ rpc: async (name: string, args: Record<string, JsonValue>) => { calls.push({ name, args, role }); return name === "process_due_review_publications" ? { publishedCount: 2 } : name === "process_review_summary_refresh" ? { processedCount: 3, enqueuedCount: 1 } : { ok: true }; } });
+  const client = (role: string) => ({ rpc: async (name: string, args: Record<string, JsonValue>) => { calls.push({ name, args, role }); return name === "expire_match_consents" || name === "expire_appointment_changes" ? { expiredCount: 1 } : name === "process_due_review_publications" ? { publishedCount: 2 } : name === "process_review_summary_refresh" ? { processedCount: 3, enqueuedCount: 1 } : { ok: true }; } });
   const handler = createServiceApi({
     allowedOrigins: ["https://app.example.test"], maxBodyBytes: 8192,
     authenticateUser: async (request) => { auth.push("user"); if (request.headers.get("authorization") !== "Bearer member") throw new HttpError("AUTH_REQUIRED"); return client("user"); },
@@ -61,16 +61,18 @@ test("내부 worker를 사용자 JWT 대신 쓰거나 사용자 JWT로 내부 �
   assert.equal(calls.length, 0);
 });
 
-test("maintenance는 공개 후 명시된 버전으로 요약을 예약하며 자동 완료를 호출하지 않는다", async () => {
+test("maintenance는 동의 만료·공개·요약을 순서대로 실행하며 자동 완료를 호출하지 않는다", async () => {
   const { send, calls } = setup();
   const response = await send("/internal/maintenance", "POST", { limit: 3 }, { authorization: "Bearer worker" });
   assert.equal(response.status, 200);
   assert.deepEqual(calls, [
+    { name: "expire_match_consents", args: { p_limit: 3 }, role: "internal" },
+    { name: "expire_appointment_changes", args: { p_limit: 3 }, role: "internal" },
     { name: "process_due_review_publications", args: { p_limit: 3 }, role: "internal" },
     { name: "process_review_summary_refresh", args: { p_limit: 3, p_model_version: "fixture-model", p_prompt_version: "fixture-prompt" }, role: "internal" },
   ]);
   assert.deepEqual((await response.json()).data, {
-    status: "ok", completion: { status: "managed_by_reservation" },
+    status: "ok", completion: { status: "managed_by_reservation" }, consent: { status: "expired", expiredCount: 1 }, scheduleChange: { status: "expired", expiredCount: 1 },
     reviews: { status: "published", publishedCount: 2 },
     summary: { status: "queued", processedCount: 3, enqueuedCount: 1 },
   });
@@ -88,10 +90,10 @@ test("요약 설정 누락·빈 값·잘못된 값은 공개를 실행한 뒤 �
     const response = await send("/internal/maintenance", "POST", { limit: 1 }, { authorization: "Bearer worker" });
     assert.equal(response.status, 200);
     assert.deepEqual((await response.json()).data, {
-      status: "partial", completion: { status: "managed_by_reservation" },
+      status: "partial", completion: { status: "managed_by_reservation" }, consent: { status: "expired", expiredCount: 1 }, scheduleChange: { status: "expired", expiredCount: 1 },
       reviews: { status: "published", publishedCount: 2 }, summary: { status: expected },
     });
-    assert.deepEqual(calls.map((call) => call.name), ["process_due_review_publications"]);
+    assert.deepEqual(calls.map((call) => call.name), ["expire_match_consents", "expire_appointment_changes", "process_due_review_publications"]);
   }
 });
 
@@ -108,12 +110,13 @@ test("공개 실패는 요약을 실행하지 않고 실제 오류로 반환한�
     const calls: string[] = [];
     const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name) => {
       calls.push(name);
+      if (name === "expire_match_consents" || name === "expire_appointment_changes") return { expiredCount: 1 };
       if (result === "throw") throw new HttpError("EXTERNAL_UNAVAILABLE");
       return { publishedCount: -1, privateDetail: "never-echo" };
     } }) });
     const response = await send("/internal/maintenance", "POST", { limit: 2 }, { authorization: "Bearer worker" });
     assert.equal(response.status, 503);
-    assert.deepEqual(calls, ["process_due_review_publications"]);
+    assert.deepEqual(calls, ["expire_match_consents", "expire_appointment_changes", "process_due_review_publications"]);
     assert.ok(!(await response.text()).includes("never-echo"));
   }
 });
@@ -123,6 +126,7 @@ test("공개 후 요약 실패·비정상 응답은 공개 결과와 정형 part
     const calls: string[] = [];
     const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name) => {
       calls.push(name);
+      if (name === "expire_match_consents" || name === "expire_appointment_changes") return { expiredCount: 1 };
       if (name === "process_due_review_publications") return { publishedCount: 1, secret: "never-echo" };
       if (kind === "timeout") throw new HttpError("EXTERNAL_UNAVAILABLE");
       if (kind === "unknown") throw new Error("never-echo");
@@ -132,11 +136,11 @@ test("공개 후 요약 실패·비정상 응답은 공개 결과와 정형 part
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.deepEqual(body.data, {
-      status: "partial", completion: { status: "managed_by_reservation" },
+      status: "partial", completion: { status: "managed_by_reservation" }, consent: { status: "expired", expiredCount: 1 }, scheduleChange: { status: "expired", expiredCount: 1 },
       reviews: { status: "published", publishedCount: 1 },
       summary: { status: "failed", code: kind === "unknown" ? "INTERNAL_ERROR" : "EXTERNAL_UNAVAILABLE", retryable: kind !== "unknown" },
     });
-    assert.equal(calls.length, 2);
+    assert.equal(calls.length, 4);
     assert.ok(!JSON.stringify(body).includes("never-echo"));
   }
 });
@@ -302,7 +306,7 @@ test("실제 런타임 조립도 빈 요약 환경을 보존하고 내부 공개
   globalThis.fetch = async (url, init) => {
     calls.push(String(url));
     assert.equal(new Headers(init?.headers).get("authorization"), "Bearer fixture-service");
-    return Response.json({ publishedCount: 1 });
+    return Response.json(/\/expire_(match_consents|appointment_changes)$/.test(String(url)) ? { expiredCount: 0 } : { publishedCount: 1 });
   };
   try {
     const handler = createRuntimeHandler((key) => environment[key]);
@@ -314,6 +318,8 @@ test("실제 런타임 조립도 빈 요약 환경을 보존하고 내부 공개
     assert.equal(body.data.status, "partial");
     assert.deepEqual(body.data.summary, { status: "configuration_error" });
     assert.deepEqual(body.data.reviews, { status: "published", publishedCount: 1 });
-    assert.deepEqual(calls, ["https://project.example.test/rest/v1/rpc/process_due_review_publications"]);
+    assert.deepEqual(body.data.consent, { status: "expired", expiredCount: 0 });
+    assert.deepEqual(body.data.scheduleChange, { status: "expired", expiredCount: 0 });
+    assert.deepEqual(calls, ["https://project.example.test/rest/v1/rpc/expire_match_consents", "https://project.example.test/rest/v1/rpc/expire_appointment_changes", "https://project.example.test/rest/v1/rpc/process_due_review_publications"]);
   } finally { globalThis.fetch = previous; }
 });

@@ -1,6 +1,6 @@
 # 공고 작성·공개 데이터 계약
 
-주담당: 민규. 기준: [정책.md](../../정책.md), [상세 설계](../../PLAN_상세설계.md). 이 문서는 현재 확정 정책을 구현할 계약이다. API·SQL·배포를 이번 문서 작업에서 수정하거나 검증하지 않았다. 검색의 실제 API·카드·커서는 [검색 계약](search.md)을 함께 따른다.
+주담당: 민규. 기준: [정책.md](../../정책.md), [상세 설계](../../PLAN_상세설계.md). 2026-10-02 선택 모집 마감·공고 수정/마감/삭제와 동의 무효화를 구현했다. 실제 검사 범위는 [이번 인계](../../docs/collaboration/requests/minkyu/2026-10-02-matching-lifecycle-handoff.md), 검색의 실제 API·카드·커서는 [검색 계약](search.md)을 따른다. 화면·배포 완료를 뜻하지 않는다.
 
 ## 작성·등록
 
@@ -26,4 +26,16 @@
 
 ## 실제 API 차이
 
-현재 `create_service_post`의 필드와 길이·타입 제한은 [서비스 API](service-api.md), 실제 저장·권한은 [핵심 DB](core-service-db.md)에 명시한다. 연결 행사명 검색·19~99 범위·선택 마감 기본값·수정/삭제의 새 규칙은 실제 코드/SQL 적용과 확인이 별도로 필요하다.
+현재 `create_service_post`의 필드와 길이·타입 제한은 [서비스 API](service-api.md), 실제 저장·권한은 [핵심 DB](core-service-db.md)에 명시한다. HTTP에서 모집 마감을 생략하면 시작 시각으로 채운다. 수정은 경로의 공고 ID와 전체 입력, 상세 조회의 `updatedAt`을 `expectedUpdatedAt`으로 보내며 오래된 입력은 충돌로 거절한다. 핵심 조건 변경은 해당 공고 잠금 아래 동의를 무효화하고 알린다. 최초 생성 재시도용 입력은 수정해 덮어쓰지 않는다.
+
+마감·삭제는 각각 빈 본문을 받는 별도 POST 경로다. 삭제는 행·대화를 보존하는 숨김 처리이며 확정 이력의 약속 종료 전에는 거절한다. 행사 연결·행사명 검색은 아래 후속에서 연결했다. 숫자 나이 범위는 DB 검사까지 통과했으며 HTTP·AI 연결은 남아 있다. 개인정보 탐지·기기 임시저장은 별도 후속이다. 확정 후 일정 변경/취소는 서비스 API의 기존 연결 계약을 따른다.
+
+## 행사 연결·최신 표시 — 2026-10-03 실제 로컬 검증
+
+생성·수정 HTTP 입력의 `eventId?: string | null`을 기존 RPC의 `p_input`에 전달한다. 생성에서 생략하면 연결 없음, 수정에서 생략하면 기존 연결 보존, `null`이면 해제, UUID면 명시 선택이다. HTTP는 생략을 `null`로 바꾸지 않는다. 새 선택은 canonical 저장소의 활성·미종료 행사만 허용하며 이미 연결한 동일 ID의 취소/종료나 최초 생성의 동일 입력 재시도는 기존 연결을 보존한다. 동일 생성 ID에 다른 행사 입력을 보내면 충돌한다.
+
+공고에는 `source_event_id`만 저장한다. `get_service_post`는 `eventId`와 현재 canonical 자료의 `linkedEvent`를 반환하며 연결 없으면 둘 다 `null`이다. `linkedEvent`에는 행사 식별자·제목·공개 장소/주소·일정·`sourceStatus`·`state`가 포함된다. 표시를 과거 snapshot으로 고정하지 않는다. 행사 공급자 갱신은 공고의 등록 입력·동행 일정·`updatedAt`·동의 지문을 변경하지 않는다. 사용자가 연결 UUID를 교체/해제/새로 선택하면 기존 동의를 무효화하고 새 버전으로 다시 동의해야 한다. 동의 지문에는 선택 UUID만 추가하며 공급자의 최신 필드를 넣지 않는다.
+
+연결 행사명은 기존 `search_public_posts_v2`의 검색 일치에 포함한다. 현재 공개 검색 카드는 `id,title,authorDisplayName,publicArea,startsAt,endsAt,cost,state,canApply` 9개 필드를 유지한다. 행사 정보를 카드에 추가하는 종현 decoder·AI 연결은 별도 후속이다. 공고의 비공개 실명·정확한 장소 권한은 행사 공개 정보와 독립이며 확정/취소 관계 권한을 유지한다.
+
+[이번 인계](../../docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md): 신규 단위8개, 실제 전용38 SQL 환경의 행사 SQL12그룹·순위 SQL5그룹과 gateway82확인 PASS. 통합 runner는 **8그룹·769확인 PASS**, 원형 HTTP factory·실제 로컬 gateway·native Auth/RPC와 정확한 fixture 정리 후 관련23테이블0을 확인했다. 합성 자격·사진 metadata·행사/순위 자료를 사용했으며 외부 행사 수집·실제 네이버/사진·원격 운영은 이 검사 범위 밖이다. 전체 체크리스트는43%·6/14를 유지한다.

@@ -8,3 +8,7 @@ export const declineRequest = (db: RpcClient, id: string) => db.rpc("decline_joi
 export const proposeMatch = (db: RpcClient, id: string) => db.rpc("propose_match", { p_request_id: id });
 export const acceptMatch = (db: RpcClient, id: string, version: string) => db.rpc("accept_match", { p_request_id: id, p_condition_version: version });
 export const getMatchConsent = (db: RpcClient, id: string) => db.rpc("get_match_consent", { p_request_id: id });
+export const withdrawMatchConsent = (db: RpcClient, id: string, version: string) => db.rpc("withdraw_match_consent", { p_request_id: id, p_condition_version: version });
+export const declineMatchConsent = (db: RpcClient, id: string, version: string) => db.rpc("decline_match_consent", { p_request_id: id, p_condition_version: version });
+/** 별도 내부 인증 클라이언트만 이 RPC를 허용한다. */
+export const expireMatchConsents = (db: RpcClient, limit: number) => db.rpc("expire_match_consents", { p_limit: limit });

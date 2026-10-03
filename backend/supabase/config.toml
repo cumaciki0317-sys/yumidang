@@ -72,6 +72,23 @@ enabled = false
 # Supabase Edge 호스팅 실행 검증은 별도 필요하며 로컬 기본 실행은 비활성이다.
 verify_jwt = false
 
+[functions.signup]
+# 시작/코드 교환은 일회용 state+verifier, 상태/완료는 Auth /user로 JWT를 검증한다.
+verify_jwt = false
+
+# 회원 JWT는 각 handler의 Auth /user, 내부 작업은 별도 secret으로 검사한다.
+# 설정 추가는 원격 배포·운영 gateway CORS 검증을 뜻하지 않는다.
+[functions.ai-chat]
+verify_jwt = false
+[functions.places]
+verify_jwt = false
+[functions.event-sync]
+verify_jwt = false
+[functions.review-summary-worker]
+verify_jwt = false
+[functions.scheduled-jobs]
+verify_jwt = false
+
 [analytics]
 enabled = false
 port = 55427

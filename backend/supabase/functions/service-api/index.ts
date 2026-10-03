@@ -9,6 +9,7 @@ import { createInternalClient } from "../_shared/db/internal-client.ts";
 import { createServiceApi } from "./handler.ts";
 import { createRpcPublicPostSearchRepository } from "../_shared/db/repositories/search.ts";
 import { searchPublicPosts } from "../_shared/services/search-service.ts";
+import { createRpcEventRepository, listEventFilterValues } from "../_shared/db/repositories/events.ts";
 
 /** 실제 실행과 통합 검증이 같은 설정·인증·DB 의존성 조립을 사용한다. */
 export function createRuntimeHandler(
@@ -16,19 +17,26 @@ export function createRuntimeHandler(
   options: { publicPostSearch?: PublicPostSearchExecutor } = {},
 ): (request: Request) => Promise<Response> {
   const config = loadRuntimeConfig(read);
+  const authenticatePublic = async (request: Request) => {
+    const principal = await requireOptionalPrincipal(request, config);
+    return principal
+      ? { db: createUserClient(config, principal), caller: "member" as const }
+      : { db: createPublicClient(config), caller: "anonymous" as const };
+  };
   return createServiceApi({
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
     publicSearch: {
-      authenticate: async (request) => {
-        const principal = await requireOptionalPrincipal(request, config);
-        return principal
-          ? { db: createUserClient(config, principal), caller: "member" }
-          : { db: createPublicClient(config), caller: "anonymous" };
-      },
+      authenticate: authenticatePublic,
       execute: options.publicPostSearch ?? ((db, input) =>
         searchPublicPosts(createRpcPublicPostSearchRepository(db), input)),
     },
+    publicEvents: {
+      authenticate: authenticatePublic,
+      execute: (db, input) => createRpcEventRepository(db).listPage(input.query, input.cursor, input.limit),
+      filters: listEventFilterValues,
+    },
+    publicPostDetails: { authenticate: authenticatePublic },
     authenticateUser: async (request) => createUserClient(config, await requirePrincipal(request, config)),
     authenticateInternal: async (request) => {
       await requireInternalCaller(request, config);

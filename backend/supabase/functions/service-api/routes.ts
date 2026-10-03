@@ -1,5 +1,6 @@
 /** 민규담당. 명시된 경로·메서드·입력만 허용하며 임의 RPC 전달 기능은 없다. */
 import type { JsonValue } from "../_shared/contracts/common.ts";
+import { parseProfileTraits } from "../_shared/contracts/signup.ts";
 import type { FreePostInput } from "../_shared/contracts/posts.ts";
 import type { RpcClient } from "../_shared/db/transport.ts";
 import { HttpError, toPublicError } from "../_shared/http/errors.ts";
@@ -22,6 +23,8 @@ interface RouteContext {
 export interface Route {
   method: "GET" | "POST";
   internal: boolean;
+  /** 경로·UUID·메서드 검증을 마친 공개 공고 상세 GET에만 표시한다. */
+  publicPostDetail?: true;
   execute(context: RouteContext): Promise<JsonValue>;
 }
 const invalid = (): never => { throw new HttpError("INVALID_REQUEST"); };
@@ -56,6 +59,9 @@ function optionalText(value: JsonValue | undefined, max: number): string | null 
 function timestamp(value: JsonValue | undefined): string {
   const result = text(value, 20, 35);
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(result) || !Number.isFinite(Date.parse(result))) return invalid();
+  // Date.parse는 2월 30일을 다음 달로 보정할 수 있으므로 달력 날짜도 검사한다.
+  const date = result.slice(0, 10);
+  if (new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date) return invalid();
   return result;
 }
 function query(url: URL, allowed: string[]) {
@@ -69,20 +75,22 @@ function page(url: URL): [number, string | null] {
   const before = url.searchParams.get("before");
   return [integer(limit === null ? 20 : Number(limit), 1, 100), before === null ? null : uuid(before)];
 }
-function postInput(body: JsonValue): { id: string; input: FreePostInput } {
-  const data = object(body, ["postId", "title", "description", "category", "startsAt", "endsAt", "recruitmentEndsAt", "publicArea", "registeredAddress", "meetingDetail", "costType", "amount"], ["registeredPlaceName", "preferenceNote", "tags"]);
+function postInput(body: JsonValue, postId?: string): { id: string; input: FreePostInput; expectedUpdatedAt?: string } {
+  const data = object(body, [postId === undefined ? "postId" : "expectedUpdatedAt", "title", "description", "category", "startsAt", "endsAt", "publicArea", "registeredAddress", "meetingDetail", "costType", "amount"], ["recruitmentEndsAt", "registeredPlaceName", "preferenceNote", "tags", "eventId"]);
   if (["paid_request", "paid_offer"].includes(String(data.costType))) throw new HttpError("EXTERNAL_UNAVAILABLE");
   if (data.costType !== "free" || data.amount !== 0) invalid();
-  const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt), recruitmentEndsAt = timestamp(data.recruitmentEndsAt);
+  const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt), recruitmentEndsAt = data.recruitmentEndsAt === undefined ? startsAt : timestamp(data.recruitmentEndsAt);
   if (Date.parse(startsAt) >= Date.parse(endsAt) || Date.parse(recruitmentEndsAt) > Date.parse(startsAt)) invalid();
   const category = text(data.category, 1, 20);
   if (!["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"].includes(category)) invalid();
-  return { id: uuid(data.postId), input: {
+  return { id: postId ?? uuid(data.postId), ...(postId === undefined ? {} : { expectedUpdatedAt: timestamp(data.expectedUpdatedAt) }), input: {
     title: text(data.title, 2, 80), description: text(data.description, 1, 2000), category,
     startsAt, endsAt, recruitmentEndsAt, publicArea: text(data.publicArea, 1, 60),
     registeredPlaceName: optionalText(data.registeredPlaceName, 200), registeredAddress: text(data.registeredAddress, 1, 300),
     meetingDetail: text(data.meetingDetail, 2, 200), preferenceNote: optionalText(data.preferenceNote, 300),
     tags: strings(data.tags ?? [], 5, 20), costType: "free", amount: 0,
+    // 키를 생략한 기존 수정 요청은 연결을 보존한다. 명시 null로 바꾸지 않는다.
+    ...(Object.hasOwn(data, "eventId") ? { eventId: data.eventId === null ? null : uuid(data.eventId) } : {}),
   } };
 }
 
@@ -106,8 +114,34 @@ export function resolveRoute(url: URL): Route {
     return profiles.setProfileAvatar(db, avatarPath);
   });
   if (path === "/me") return route("GET", ({ db }) => profiles.getOwnProfile(db));
+  if (path === "/me/traits") return route("GET", ({ db }) => db.rpc("get_my_profile_traits", {}));
+  if (path === "/reviews/praises") return route("GET", ({ db }) => reviews.getPraiseCatalog(db));
   if (path === "/appointments") return route("GET", ({ db }) => completion.listAppointments(db));
-  let match = /^\/appointments\/([^/]+)(?:\/(confirm-completion|reviews))?$/.exec(path);
+  let match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|decline))?$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]), action = match[2];
+    if (!action) return route("GET", ({ db }) => completion.getAppointmentChangeState(db, id));
+    return route("POST", ({ db, body }) => {
+      if (action === "propose") {
+        const data = object(body, ["changeId", "startsAt", "endsAt", "expectedUpdatedAt"]);
+        const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt);
+        if (Date.parse(startsAt) >= Date.parse(endsAt)) invalid();
+        return completion.proposeAppointmentScheduleChange(db, id, { changeId: uuid(data.changeId), startsAt, endsAt, expectedUpdatedAt: timestamp(data.expectedUpdatedAt) });
+      }
+      const data = object(body, ["changeId", "conditionVersion"]);
+      const input = { changeId: uuid(data.changeId), conditionVersion: text(data.conditionVersion, 1, 200) };
+      return action === "accept" ? completion.acceptAppointmentScheduleChange(db, id, input) : completion.declineAppointmentScheduleChange(db, id, input);
+    });
+  }
+  match = /^\/appointments\/([^/]+)\/cancel$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]);
+    return route("POST", ({ db, body }) => {
+      const data = object(body, ["cancellationId", "reason"]);
+      return completion.cancelAppointment(db, id, { cancellationId: uuid(data.cancellationId), reason: text(data.reason, 1, 300) });
+    });
+  }
+  match = /^\/appointments\/([^/]+)(?:\/(confirm-completion|reviews))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]);
     if (match[2] === "confirm-completion") return route("POST", ({ db, body }) => { empty(body); return completion.confirmCompletion(db, id); });
@@ -119,11 +153,18 @@ export function resolveRoute(url: URL): Route {
   }
   match = /^\/profiles\/([^/]+)\/reviews$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("GET", ({ db, url }) => reviews.getPublicReviews(db, id, ...page(url)), false, true); }
+  match = /^\/profiles\/([^/]+)$/.exec(path);
+  if (match) { const id = uuid(match[1]); return route("GET", ({ db }) => profiles.getPublicProfile(db, id)); }
   if (path === "/notifications") return route("GET", ({ db, url }) => notifications.listNotifications(db, ...page(url)), false, true);
   if (path === "/notifications/read-all") return route("POST", ({ db, body }) => { empty(body); return notifications.readAllNotifications(db); });
   match = /^\/notifications\/([^/]+)\/read$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("POST", ({ db, body }) => { empty(body); return notifications.readNotification(db, id); }); }
   if (path === "/conversations") return route("GET", ({ db }) => conversations.listConversations(db));
+  match = /^\/conversations\/([^/]+)\/leave$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]);
+    return route("POST", ({ db, body }) => { empty(body); return conversations.leaveConversation(db, id); });
+  }
   match = /^\/conversations\/([^/]+)(?:\/(messages))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]);
@@ -132,9 +173,17 @@ export function resolveRoute(url: URL): Route {
       : route("GET", ({ db }) => conversations.getConversation(db, id));
   }
   if (path === "/posts") return route("POST", ({ db, body }) => { const { id, input } = postInput(body); return posts.createPost(db, id, input); });
-  match = /^\/posts\/([^/]+)(?:\/(requests))?$/.exec(path);
+  match = /^\/posts\/([^/]+)(?:\/(requests|update|close|delete))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]);
+    if (match[2] === "update") return route("POST", ({ db, body }) => {
+      const { input, expectedUpdatedAt } = postInput(body, id);
+      return posts.updatePost(db, id, input, expectedUpdatedAt!);
+    });
+    if (match[2] === "close" || match[2] === "delete") {
+      const action = match[2];
+      return route("POST", ({ db, body }) => { empty(body); return action === "close" ? posts.closePost(db, id) : posts.deletePost(db, id); });
+    }
     return match[2] === "requests"
       ? route("POST", ({ db, body }) => matching.createRequest(db, id, text(object(body, ["message"]).message, 10, 300)))
       : route("GET", ({ db }) => posts.getPost(db, id));
@@ -143,6 +192,14 @@ export function resolveRoute(url: URL): Route {
   if (path === "/requests/received") return route("GET", ({ db }) => matching.listReceivedRequests(db));
   match = /^\/requests\/([^/]+)\/consent$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("GET", ({ db }) => matching.getMatchConsent(db, id)); }
+  match = /^\/requests\/([^/]+)\/consent\/(withdraw|decline)$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]), action = match[2];
+    return route("POST", ({ db, body }) => {
+      const version = text(object(body, ["conditionVersion"]).conditionVersion, 1, 200);
+      return action === "withdraw" ? matching.withdrawMatchConsent(db, id, version) : matching.declineMatchConsent(db, id, version);
+    });
+  }
   match = /^\/requests\/([^/]+)\/(withdraw|decline|propose|accept)$/.exec(path);
   if (match) {
     const id = uuid(match[1]), action = match[2];
@@ -152,7 +209,19 @@ export function resolveRoute(url: URL): Route {
       return action === "withdraw" ? matching.withdrawRequest(db, id) : action === "decline" ? matching.declineRequest(db, id) : matching.proposeMatch(db, id);
     });
   }
-  if (path === "/internal/maintenance") return route("POST", async ({ db, body, maintenance }) => {
+  if (path === "/internal/events/kopis-top10") return route("POST", ({ db, body }) => {
+    const snapshot = object(body, ["snapshot"]).snapshot;
+    if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) invalid();
+    // 순위·기간·수집 시각의 기술 검증은 service_role 전용 RPC가 수행한다.
+    return db.rpc("store_kopis_top10_snapshot", { p_snapshot: snapshot });
+  }, true);
+  match = /^\/internal\/events\/kopis-top10\/([^/]+)$/.exec(path);
+  if (match) {
+    const mode = match[1];
+    if (mode !== "all" && mode !== "musical") invalid();
+    return route("GET", ({ db }) => db.rpc("get_kopis_top10_snapshot", { p_mode: mode }), true);
+  }
+  if (path === "/internal/maintenance") return route("POST", async ({ db, body, maintenance }): Promise<JsonValue> => {
     const limit = integer(object(body, ["limit"]).limit, 1, 100);
     const counts = (value: JsonValue, keys: string[]): Record<string, number> => {
       if (!value || typeof value !== "object" || Array.isArray(value)) throw new HttpError("EXTERNAL_UNAVAILABLE");
@@ -164,10 +233,15 @@ export function resolveRoute(url: URL): Route {
       }
       return result;
     };
-    // 공개 규칙은 DB에서 판단한다. 공개 실패 뒤 요약을 진행하거나 빈 성공으로 바꾸지 않는다.
+    // 만료 시각·관계·알림은 DB가 판단한다. 모델 설정과 무관하게 만료를 먼저 처리한다.
+    const expired = counts(await matching.expireMatchConsents(db, limit), ["expiredCount"]);
+    const scheduleExpired = counts(await completion.expireAppointmentChanges(db, limit), ["expiredCount"]);
+    // 공개 실패 뒤 요약을 진행하거나 빈 성공으로 바꾸지 않는다.
     const published = counts(await reviews.processDueReviewPublications(db, limit), ["publishedCount"]);
     const result = {
       completion: { status: "managed_by_reservation" },
+      consent: { status: "expired", ...expired },
+      scheduleChange: { status: "expired", ...scheduleExpired },
       reviews: { status: "published", ...published },
     };
     const settings = inspectReviewSummaryConfig(maintenance);
@@ -185,6 +259,13 @@ export function resolveRoute(url: URL): Route {
 
 export function resolveRouteForMethod(url: URL, method: string): Route {
   const base = resolveRoute(url);
+  if (method === "POST" && /^(?:\/functions\/v1)?\/service-api\/me\/traits$/.test(url.pathname)) {
+    return { method: "POST", internal: false, execute: ({ db, body, url }) => {
+      query(url, []);
+      const traits = parseProfileTraits(body);
+      return db.rpc("set_my_profile_traits", { p_interests: traits.interests, p_conversation_styles: traits.conversationStyles, p_mbti: traits.mbti });
+    } };
+  }
   if (method === "POST" && base.method === "GET") {
     const review = /\/appointments\/([^/]+)\/reviews$/.exec(url.pathname);
     if (review) return { method: "POST", internal: false, execute: ({ db, body, url }) => {
@@ -204,5 +285,10 @@ export function resolveRouteForMethod(url: URL, method: string): Route {
     } };
   }
   if (method !== base.method) throw new HttpError("METHOD_NOT_ALLOWED");
+  if (method === "GET" && /^(?:\/functions\/v1)?\/service-api\/posts\/[^/]+$/.test(url.pathname)) {
+    // resolveRoute의 정확한 prefix/UUID 검사 뒤에만 허용한다. 잘못된 query는 공개 인증 전에 거절한다.
+    query(url, []);
+    return { ...base, publicPostDetail: true };
+  }
   return base;
 }

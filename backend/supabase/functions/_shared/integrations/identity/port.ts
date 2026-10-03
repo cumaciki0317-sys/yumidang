@@ -1,9 +1,13 @@
-/**
- * 상태: 미구현 스캐폴드 — 실제 동작은 아직 없습니다.
- * 담당: 민규담당
- * 역할: PASS 본인인증의 내부 연동 계약
- * TODO: 요청·응답·오류의 내부 인터페이스를 합의; 거래 귀속·검증 결과·재사용을 검사하고 브라우저 자기신고를 신뢰하지 않음
- * 기준: PLAN_상세설계.md 3~5장, 11장 / backend/README.md
- * 구현 시 이 파일을 채우고 관련 계약·검증을 함께 갱신합니다.
- */
-export {};
+/** 민규담당. 서버가 네이버에서 직접 확인한 최소 회원 정보. 외부 토큰은 반환하지 않는다. */
+export interface NaverProfile {
+  subject: string;
+  name: string | null;
+  gender: "F" | "M" | "U" | null;
+  /** 유효한 달력 날짜 YYYY-MM-DD. 가입 자격·한국 기준 만 나이는 DB가 판정한다. */
+  birthDate: string | null;
+}
+export interface NaverIdentityPort {
+  authorizationUrl(state: string): string;
+  /** state의 브라우저 귀속·만료·단일 사용 검사는 호출 서비스가 먼저 수행한다. */
+  exchange(code: string, state: string): Promise<NaverProfile>;
+}

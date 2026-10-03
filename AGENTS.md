@@ -75,6 +75,21 @@ Always use harness agent team architecture for complex tasks.
 
 Always use harness agent team architecture for complex tasks.
 
+### 행사 DB 연결 기반 — 2026-09-29 현재 작업
+
+- 사용자가 후속 작업을 더 진행하고 커밋·푸시는 이후로 미루도록 요청했다. [11차 하네스](docs/collaboration/minkyu-event-db-harness.json)에서 A는 신규 행사 SQL·DB 계약, B는 독립 SQL 검증·전용 로컬 실행 도구, C는 CORS 후속 검토, 총괄은 공통 client의 행사 RPC 허용 목록·역할 검사·로컬 실제 검증·인계를 담당한다.
+- 이전 10차 미커밋 산출물11개와 기존 SQL27개·종현 파일을 보존한다. 새 SQL은 Git 정식 목록에 몰래 포함하지 않고, 전용 로컬 DB 한 트랜잭션에서 명시 적용·검증·rollback한다. 원격 DB·운영 gateway·계정은 변경하지 않는다.
+- 제공처+원천ID 저장·공개 후보 조회까지만 민규가 구현한다. 종현의 기존 EventRepositoryPort와 행사 필터/정렬 코어를 재사용하도록 연결 계약을 전달하고, 해당 소유 파일을 직접 수정하지 않는다. 실 공급사 수집/서비스 HTTP 연결 성공과 DB 검증을 구분한다.
+- 카카오는 사용자 사용 설정 ON 후 같은 최소요청 HTTP200 PASS로 재검증됐다. 커밋·푸시는 이번 작업에서 수행하지 않는다.
+- [행사 DB 연결 인계](docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md): 로컬 DB6묶음·Node51개·Python14개·Deno 검사 PASS, 신규 객체 롤백·전용 환경 종료 완료. SQL의 정식 이력/원격 적용과 종현 저장소·서비스 연결은 후속이며, 현재 로컬 추가 변경을 이미 공유한 것으로 안내하지 않는다.
+
+### 공급사 실제 요청 진단 — 2026-09-29 현재 작업
+
+- 사용자의 “종현이 작업할 수 있게 커밋푸쉬하고 내 할일 바로 진행” 요청으로 `ff9c14f`를 `origin/minkyu/foundation-harness`에 푸시하고 원격 SHA를 확인했다. 검색/공급사 설정 인계23파일과 이전 종현 병합이 공유됐다. 실제 `.env`는 제외했다.
+- [10차 하네스](docs/collaboration/minkyu-live-api-harness.json)의 새 baseline에서 A는 Kakao403, B는 KOPIS/서울, C는 TourAPI의 최소 실호출·안전한 검사 도구·테스트·근거를 단독 작성한다. 총괄은 안내·통합/보존 검사만 수정한다.
+- 키는 현재 사용자 저장소 루트 `.env`에서 읽고 검증된 공급사 HTTPS에만 보낸다. 자동redirect/HTTPdowngrade/무한재시도 없이 최소공개조회한다. 응답 원문·전체 키 포함URL·키를 출력하지 않는다. 외부 계정설정은 변경하지 않는다.
+- 종현 adapter/AI/runtime 및 SQL은 변경하지 않는다. [실제 API 검증 인계](docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md)에서 PASS·공급사 거절·미확인/NOT_RUN을 구분한다. 이번 추가 진단 변경은 자동 커밋·푸시하지 않는다.
+
 ### 외부 API 서버 설정 — 2026-09-29 최신 작업
 
 - 최신 사용자 요청: 종현이 작업할 수 있도록 현재 민규 변경을 `origin/minkyu/foundation-harness`에 커밋·푸시한 뒤 민규 API 검증을 계속한다. 이전 단계의 커밋·푸시 제외보다 이 요청이 우선한다. 비밀 `.env`는 공유하지 않는다. 이후 새 작업은 새 baseline 하네스로 분리한다.

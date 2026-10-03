@@ -1,6 +1,6 @@
 # 인증·DB 실행 계약 — 민규담당
 
-상태: 기존 Supabase 세션 검증과 제한된 RPC 전송 계약을 유지한다. 현재 가입·로그인은 네이버만 사용하며 여성·만 19세 이상, 네이버 필수 이름·성별·생일·출생연도와 필수 사진을 확인해야 한다. 네이버와 Supabase 세션 연결의 실제 적용·검증은 별도이며 [가입 계약](signup.md)을 따른다.
+상태: 기존 Supabase 세션 검증과 제한된 RPC 전송 계약을 유지한다. 현재 가입·로그인은 네이버만 사용하며 여성·만 19세 이상, 네이버 필수 이름·성별·생일·출생연도와 필수 사진을 확인해야 한다. 네이버와 Supabase 세션 연결은 서버 브리지·private 예약/세션 RPC로 구현했으며 실제 네이버 앱과 운영 배포 검증은 별도다. 상세는 [가입 계약](signup.md)을 따른다.
 
 ## 호출자와 권한
 
@@ -48,24 +48,36 @@
 
 `40001`은 현재 요약 revision·업무 상태 충돌에 사용되므로 409다. 호출자는 최신 상태를 다시 조회하며 무조건 성공으로 변환하지 않는다. 요청 자동 재전송은 없다. 변경 RPC의 중복/재시도 안전성은 DB 계약이 보장한다.
 
-## 가입 자격 목표와 기존 함수의 차이
+## 네이버 가입 자격과 활동 제한
 
-현재 자격 정책은 검증된 네이버 정보·여성 만 19세 이상·네이버 계정당 하나·필수 사진이다. PASS·DI·문자 인증을 요구하지 않는다. 기존 `evaluateTrustedEligibility(principal, proof)`에는 이전 신원·DI 전제의 검사 구조가 남아 있으므로 네이버 자격 경계로 개편해야 한다. 이 함수의 기존 `eligible`만으로 최신 가입 자격을 충족했다고 보지 않는다. 요청 본문이나 사용자 metadata를 신뢰된 proof로 넘기지 않는다.
+`evaluateTrustedEligibility`는 `source: naver`, 사용자 귀속·자격 확인·계정 연결·사진·명시 완료를 확인한다. PASS/DI·수기·referral·user_metadata를 증거로 사용하지 않는다. 이 순수 계산 결과로 쓰기를 허가하지 않으며 실제 DB가 매번 확인한다.
 
-기존 `verification_required`·`photo_required` 결과와 네이버 정보 누락 시 가입 보류의 매핑은 후속 연결 대상이다. 기존 female_direct/referral/이메일 기록을 네이버 자격 확인으로 자동 승격하지 않는다. 기존 계정은 네이버 확인 전 새 등록·신청·확정을 제한하되 진행 중 약속·대화 확인과 취소·지원 요청은 허용한다. 선택 성향은 자격을 차단하지 않는다.
+네이버 전용 signup runtime만 서비스 키로 `begin_naver_login`, `consume_naver_login`, `resolve_naver_account`, `record_naver_session`을 호출한다. 내부 워커 클라이언트에 이 계정/세션 RPC를 추가하지 않았다. 사용자 클라이언트는 `get_naver_signup_state`, `complete_naver_signup`과 성향 조회/저장 RPC를 허용한다.
+
+private `naver_sessions`는 Auth의 session_id·user_id와 계정 예약을 확인한다. Auth JWT를 직접 만들거나 사용자 metadata를 신뢰하지 않는다. 사진·가입 완료·최신 자격이 없는 회원과 네이버 미등록 Auth 세션은 새 공고·신청·최종 동의/확정에서 거절한다. 기존 사용자 자료의 읽기·대화 권한을 일괄 제거하지 않는다. 기존 일반 JWT 인증 계약과 RLS는 유지한다.
+
+기존 계정은 이름·실제 이메일로 자동 연결하지 않는다. 계정 확인/전환의 운영 절차는 별도다. `auth.sessions` 내부 테이블과 Auth REST 평면 응답에 의존하므로 Auth 버전 변경 시 로컬 통합 검증을 다시 수행한다. 실제 네이버 필수 정보 제공·브라우저·운영 gateway CORS 검증은 별도다.
 
 ## 검증
 
 `node --test tests/functions/minkyu/auth_db.test.ts`의 기존 14개와 공개 검색 인증 7개를 합한 21개 테스트 및 Deno 타입 검사를 통과했다. 원격 검증 모형, 위조 Principal 거절, 역할 혼동 거절, 토큰 전달, allowlist, 네트워크·timeout, SQLSTATE 매핑, 민감정보 제외를 포함한다. 실제 Supabase HTTP/JWT 통합 결과는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에서 별도 기록한다. 모형 테스트 통과를 네이버 가입·세션 연결이나 추후 계좌 인증의 성공으로 판단하지 않는다.
 
 
-## 공개 검색의 선택 인증 — 2026-09-29
+## 공개 읽기의 선택 인증 — 현재 연결
 
 `requireOptionalPrincipal(request, config, fetchImpl?)`는 **Authorization 헤더가 아예 없는 요청에만 null**을 반환한다. 헤더가 있다면 기존 `requirePrincipal`을 그대로 호출한다. 빈 헤더·잘못된 형식·만료 JWT·anon key·service role key·내부 작업 secret은 비로그인으로 전환하지 않고 `AUTH_REQUIRED`로 실패한다. Auth 조회 장애도 익명 결과로 대체하지 않으며 `EXTERNAL_UNAVAILABLE`이다. Supabase 익명 Auth 계정 역시 일반 회원으로 인정하지 않는다.
 
 검증된 회원은 `createUserClient(config, principal, fetchImpl?)`를 사용한다. `search_public_posts_v2`를 사용자 RPC 목록에 추가했으며, 기존과 같은 anon apikey 및 검증된 원래 사용자 JWT를 보내 DB의 `auth.uid()`·RLS 문맥을 유지한다.
 
-비로그인은 `createPublicClient(config, fetchImpl?)`를 사용한다. 이 클라이언트는 **`search_public_posts_v2` 한 개만 허용**한다. apikey와 Authorization Bearer에 모두 `supabaseAnonKey`만 쓰고 서비스 키·내부 secret·사용자 토큰을 읽거나 대신 사용하지 않는다. 프로필 조회·공고 쓰기·신청·작업 RPC·이전 검색 RPC도 네트워크 요청 전에 `ACCESS_DENIED`로 거절한다.
+비로그인은 `createPublicClient(config, fetchImpl?)`를 사용한다. 이 클라이언트는 아래 **정확한 5개 읽기 RPC만 허용**한다. apikey와 Authorization Bearer에 모두 `supabaseAnonKey`만 쓰고 서비스 키·내부 secret·사용자 토큰을 읽거나 대신 사용하지 않는다. 일반 사용자·프로필 조회·공고 쓰기·신청·작업 RPC·임의 이름·구형 `search_public_posts`는 네트워크 요청 전에 `ACCESS_DENIED`로 거절한다. 테이블·SQL·자유 URL 전달 경로는 제공하지 않는다.
+
+| 허용 RPC | 범위 |
+|---|---|
+| `search_public_posts_v2` | 공개 공고 카드 검색. 비로그인 나이 전체·공개 필드는 DB 계약 적용 |
+| `get_service_post` | 기존 공고 상세의 호출자별 공개 투영 |
+| `list_event_candidates_v1` | 기존 행사 후보 읽기 호환 경로 |
+| `list_public_events` | 공개 행사 목록 읽기 |
+| `list_event_filter_values` | 공개 행사 필터 값 읽기 |
 
 호출부 연결 방식은 다음과 같다. 인증 오류를 잡아서 null로 바꾸는 fallback을 추가하면 안 된다.
 
@@ -76,6 +88,18 @@ const db = principal === null
   : createUserClient(config, principal);
 ```
 
-이 변경은 인증과 DB 호출 기반만 제공한다. 검색 입력 정규화·HTTP GET 경로를 새로 구현하거나 종현 담당 검색 코어를 우회하지 않았다. 검색 HTTP 연결 완료와 실제 RPC 통합 결과는 총괄의 작업 현황에서 별도로 기록한다.
+실제 `createRuntimeHandler`는 공개 검색·행사와 공고 상세에 같은 `authenticatePublic`을 연결한다. 공고 상세는 `resolveRouteForMethod`에서 정확한 prefix·UUID·GET·query 없음 검사를 통과한 `/service-api/posts/:uuid` 또는 `/functions/v1/service-api/posts/:uuid`에만 `publicPostDetail:true`를 표시한다. handler는 본문 없음도 확인한 뒤 선택 인증을 수행하고 기존 `get_service_post` 경로를 실행한다. 잘못된 메서드·query·본문·인코딩된 경로·다른 prefix·비공개/내부 경로는 이 선택 인증 경로에 들어가지 않는다.
+
+`ServiceApiDependencies.publicPostDetails.authenticate`를 명시적으로 연결하지 않은 factory는 기존 회원 인증을 유지한다. 이는 구성 호환이며 인증 실패를 익명·내부·서비스 역할로 재시도하는 fallback이 아니다. 작성자/일반 회원/양쪽 확정/취소 후 재마스킹/삭제·없는 공고의 권한과 공개 필드는 기존 RPC가 판단한다. 별도 상세 projection이나 새 RPC를 추가하지 않았다.
+
+이 연결은 종현 담당 검색 코어를 우회하지 않는다. 연결 행사명 검색은 기존9필드 카드를 유지하며 2026-10-03 실제 로컬 통합에서 확인했다. 숫자 나이 범위의 HTTP·AI 연결과 행사 카드 확장은 별도 미완료 범위이며 [공개 검색 DB 계약](public-post-search-db.md)을 따른다. 익명 상세 연결을 전체 프론트·AI·운영 배포 완료로 판단하지 않는다.
 
 추가 7개 모형 테스트는 헤더 부재/빈 값 구분, 잘못된 인증의 익명 fallback 차단, 서비스 키를 읽지 않는 익명 전송, 공개 RPC 목록 제한, 검증된 회원 JWT 보존을 확인한다. PostgREST의 HTTP403 응답에서도 문자열 SQLSTATE `28000`은 로그인 필요로 분류하고, 다른 403은 접근 거절을 유지한다. 실제 SQL 권한 검증은 이 모형 테스트와 구분한다.
+
+[공개 상세 인계](../../docs/collaboration/requests/minkyu/2026-10-02-public-detail-handoff.md)에 신규 단위 15개 PASS와 실제 격리 Auth·PostgREST·DB·기본 HTTP runtime 통합 346개 확인 PASS를 기록했다. 합성 계정/공고/사진 metadata의 권한 검증과 정리까지 수행했으며 외부 네이버·실제 사용자 사진 업로드·Edge gateway·운영 배포는 해당 runner 범위가 아니다. 이전 익명 client의 `get_service_post` 차단 기대를 현재 5개 허용 목록에 맞추는 기존 인증 회귀는 [별도 인계](../../docs/collaboration/requests/minkyu/2026-10-02-public-client-regression-handoff.md)에서 실행 결과를 구분한다. 이 문서 갱신은 제품 코드나 SQL을 변경하지 않는다.
+
+## 내부 Top10과 행사 연결 검증 — 2026-10-03
+
+`/internal/events/kopis-top10` 두 경로는 `requireInternalCaller` 성공 뒤에만 기존 내부 client의 `store_kopis_top10_snapshot`·`get_kopis_top10_snapshot`을 호출한다. Bearer 헤더 없음은401, 사용자 JWT·anon/service 역할 키·잘못된 secret은403이며 Auth/공개 client로 fallback하지 않는다. 공개 읽기5개·사용자 RPC 목록은 그대로다. 직접 PostgREST 호출도 native 권한 거절을 확인했다(회원403/42501, anon401/42501). HTTP의 내부 인증과 직접 DB 역할 거절은 별도 검사다.
+
+[이번 인계](../../docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md)의 실제 통합8그룹·769확인 PASS는 실제 로컬 Auth·원형 factory/native RPC·배포된 gateway 호출을 포함한다. 합성 회원3명의 자격과 사진 metadata만 주입했고 실제 외부 네이버·사진 업로드는 실행하지 않았다. 행사 연결의 최신 정보·수동 교체 재동의와 확정/취소 후 이름·정확 장소 권한을 확인했으며, 생성 식별자로만 정리한 뒤 관련23테이블0을 확인했다. 최신38 SQL·원본135개 보존 검사를 적용했다. 이 결과는 외부 AI·공식 행사 수집·원격 운영 배포의 성공 증거가 아니다.

@@ -2,6 +2,11 @@
 -- Synthetic state/schedule combinations intentionally distinguish state and sort priorities.
 -- No permanent data or permission changes survive this suite.
 begin;
+-- Owner setup uses maintenance claims; member probes below use actual authenticated role.
+do $$ begin
+  perform set_config('request.jwt.claim.sub','',true);
+  perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+end $$;
 insert into auth.users(id)
 select ('51000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid from generate_series(1,5) n;
 insert into public.profiles(id,real_name,birth_date,gender)
@@ -214,6 +219,47 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','51000000-0000-4000-8000-000000000004',true);
 select set_config('request.jwt.claims','{"role":"authenticated","sub":"51000000-0000-4000-8000-000000000004"}',true);
 do $$
+declare v_result jsonb; v_item jsonb;
+begin
+  v_result:=public.search_public_posts_v2('{"query":"회귀검색","authorAge":"20s"}',null);
+  assert jsonb_array_length(v_result->'items')=4, 'legacy member age search was blocked';
+  for v_item in select value from jsonb_array_elements(v_result->'items') loop
+    assert v_item->'canApply'='false'::jsonb, 'unregistered legacy session advertised new activity';
+  end loop;
+  assert v_result#>>'{items,3,id}'='52000000-0000-4000-8000-000000000001',
+    'eligible post missing from unregistered-session comparison';
+end;
+$$;
+reset role;
+select 'PASS public_search_v2_unregistered_session';
+
+-- Synthetic SQL metadata verifies canonical permission; it does not simulate an actual JPEG upload.
+do $$ begin
+  perform set_config('request.jwt.claim.sub','',true);
+  perform set_config('request.jwt.claims','{"role":"service_role"}',true);
+end $$;
+insert into auth.sessions(id,user_id) values
+('55000000-0000-4000-8000-000000000004','51000000-0000-4000-8000-000000000004');
+insert into private.naver_accounts(subject,user_id,real_name,birth_date,gender,verification_status,completed_at)
+select 'public-search-v2-qualified','51000000-0000-4000-8000-000000000004',real_name,birth_date,
+  'female','qualified',now()
+from public.profiles where id='51000000-0000-4000-8000-000000000004';
+update auth.users set email=(select auth_email from private.naver_accounts where subject='public-search-v2-qualified')
+where id='51000000-0000-4000-8000-000000000004';
+insert into private.naver_sessions(session_id,user_id,subject) values
+('55000000-0000-4000-8000-000000000004','51000000-0000-4000-8000-000000000004','public-search-v2-qualified');
+insert into storage.objects(bucket_id,name,owner_id,metadata) values
+('profile-images','51000000-0000-4000-8000-000000000004/56000000-0000-4000-8000-000000000004.jpg',
+  '51000000-0000-4000-8000-000000000004','{"mimetype":"image/jpeg","size":100}');
+update public.profiles set avatar_url='51000000-0000-4000-8000-000000000004/56000000-0000-4000-8000-000000000004.jpg'
+where id='51000000-0000-4000-8000-000000000004';
+
+set local role authenticated;
+do $$ begin
+  perform set_config('request.jwt.claim.sub','51000000-0000-4000-8000-000000000004',true);
+  perform set_config('request.jwt.claims','{"role":"authenticated","sub":"51000000-0000-4000-8000-000000000004","session_id":"55000000-0000-4000-8000-000000000004","is_anonymous":false}',true);
+end $$;
+do $$
 declare v_result jsonb; v_item jsonb; v_ids integer[];
 begin
   v_result:=public.search_public_posts_v2('{"query":"회귀검색","authorAge":"20s"}',null);
@@ -269,4 +315,5 @@ begin
     'legacy null cost was backfilled';
 end;
 $$;
+select 'PASS public_search_v2_regression';
 rollback;

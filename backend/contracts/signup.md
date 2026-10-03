@@ -1,22 +1,55 @@
 # 가입·로그인 계약
 
-주담당: 민규. 기준: [정책.md](../../정책.md), [상세 설계](../../PLAN_상세설계.md). 이 문서는 현재 확정 정책을 구현할 계약이다. API·SQL·배포를 이번 문서 작업에서 수정하거나 검증하지 않았다.
+주담당: 민규. 기준: [정책.md](../../정책.md), [상세 설계](../../PLAN_상세설계.md). 네이버 전용 가입·세션 연결과 사진/성향 완료를 구현했다. 실제 네이버 앱 동의·콜백, 브라우저 연결·운영 배포는 별도다.
 
 ## 현재 가입과 로그인
 
-- 로그인은 네이버만 제공한다. 네이버에서 회원 이름·성별·생일·출생연도를 필수로 받아 여성·만 19세 이상인지 확인한다. 필수 정보 누락·확인 불가는 가입 완료를 보류하고 네이버 정보 확인·재시도를 안내한다. 수기 정보 입력으로 우회하지 않는다.
-- 네이버 계정 하나당 유미당 계정 하나를 연결한다. 동일인 여러 네이버 계정까지 차단하는 실명 중복 보장으로 표현하지 않는다.
-- 사진은 필수, 관심사·대화 방식·MBTI는 선택이다. 관심사·대화 방식은 기본 선택지와 직접 추가를 각각 최대 20개·값당 40자로 제공하고 MBTI는 네 쌍에서 선택한다. 성향은 프로필 열람 권한이 있는 회원에게 공개한다.
-- 네이버 정보 확인 → 사진 등록 → 가입 완료 버튼 → 완료 안내 → 홈 순서다. 기존 회원은 로그인 전 목적 화면으로 복귀하고 목적이 없으면 홈으로 간다.
-- 로그인 시 받은 최신 정보로 갱신하고 자격을 재확인한다. 정보 누락·자격 미충족이면 새 공고·신청·확정을 제한한다. 진행 중 약속·기존 대화 확인, 취소·지원 요청은 허용하고 자격 미충족 기존 약속은 운영 검토로 정리한다.
-- 네이버 계정 접근 불가 시 네이버 복구를 안내한다. 유미당의 네이버 연결 변경·계정 간 활동 기록 이전은 현재 제공하지 않는다.
+- 네이버 이름·성별·생일·출생연도를 서버에서 받아 여성·만 19세 이상인지 확인한다. 달력 날짜와 한국 날짜 기준 만 나이를 확인한다. 누락·확인 불가면 완료를 보류하며 수기 입력·metadata로 대체하지 않는다.
+- 네이버 공급사 계정 ID당 회원 하나다. 다른 네이버 계정의 동일인까지 차단하는 보장은 아니다. 이름·실제 이메일로 과거 계정을 자동 병합하지 않는다.
+- 사진 필수, 관심사·대화 방식·MBTI 선택이다. 관심사·대화 방식 각각 최대 20개·값당 40자이며 대소문자만 다른 중복도 거절한다. MBTI는 네 쌍의 네 글자다.
+- 로그인 때 자격을 다시 확인한다. 기존 회원의 누락·자격 불충족은 새 공고·신청·최종 동의를 막지만 기존 조회·대화·약속 처리의 권한을 일괄 제거하지 않는다.
+- 네이버 확인 → 세션 → 사진·선택 성향 → 가입 완료 버튼 → 완료 안내 → 홈이다. 사진 업로드만으로 완료하지 않는다. 기존 완료 회원은 로그인 전 목적 화면, 없으면 홈으로 복귀한다.
 
-## 신뢰·세션 연결 경계
+## HTTP 계약
 
-이름·성별·생년 정보는 검증된 네이버 응답에서 받는다. 사용자 본문·임의 metadata를 자격 증거로 쓰지 않는다. 네이버 응답과 Supabase 사용자 세션의 연결, 기존 회원 전환·중복 처리, 사진 필수 검사, 로그인 실패 복귀의 실제 API 계약·검증은 민규 연결 작업이다. 기존 Supabase JWT 확인만 통과했다고 네이버 가입 자격까지 확인했다고 표시하지 않는다.
+기본 prefix는 `/functions/v1/signup`이다. 로컬 직접 서버는 `/signup`도 지원한다. 공통 `{data,requestId}` 또는 `{error,requestId}`, no-store, 정확한 Origin 정책을 사용한다. OAuth 시작·교환에는 허용 Origin이 필수다.
 
-현재 로그인에 PASS·문자 코드·카카오 로그인이나 테스트 고정 코드 경로를 연결하지 않는다. 관련 기존 코드·SQL·환경 필드는 이번 문서 작업에서 삭제하지 않았으며 새 정책에 맞춘 코드 정리는 별도다. 학교·직장 이메일 인증은 로그인 수단이 아니며 추후 도입 검토다.
+| 메서드·경로 | 본문 | 결과 |
+|---|---|---|
+| POST `/naver/start` | `codeChallenge`(verifier SHA-256 소문자 hex), 선택 `returnTo`(내부 절대 경로, 기본 `/`) | `authorizationUrl`, `expiresAt` |
+| POST `/naver/callback` | `code`, `state`, `codeVerifier` | `status`, `returnTo`, `userId`, `session` 또는 null |
+| GET `/state` | 없음, Supabase 사용자 Bearer JWT | `status`, `avatarPath`, `interests`, `conversationStyles`, `mbti` |
+| POST `/complete` | `avatarPath`, 선택 `interests`·`conversationStyles`·`mbti` | 완료된 가입 상태 |
 
-## 남은 계약·검증
+callback의 `session`은 `accessToken`, `refreshToken`, `expiresIn`, `tokenType`만 포함한다. 생년월일·네이버 계정 ID·원본 응답·네이버 토큰·Auth 일회용 해시·내부 이메일 별칭을 반환하지 않는다. 세션은 DB가 Auth 세션과 계정 귀속을 확인한 뒤에만 공개한다.
 
-네이버 실제 필수 동의·응답·토큰 교환, 회원 식별자와 세션 연결, 같은 계정 재로그인·동시 가입·중복 요청, 필수 사진 실패·복구, 자격 변경 시 권한 제한을 구현·검증해야 한다. 임의 성공 응답으로 대체하지 않는다. 개인정보·인증 응답·토큰을 로그에 남기지 않는다. 정확한 endpoint·오류 코드·제한 수치는 구현 검토 전 임의로 확정하지 않는다.
+`information_required`: 필수 정보 누락/확인 불가, `ineligible`: 자격 불충족, `photo_required`: 사진/신규 가입 필요, `completion_required`: 사진은 있으나 명시 완료 필요, `ready`: 자격·사진·명시 완료 충족. 신규 부적격자는 계정이나 세션을 만들지 않는다. 기존 부적격자는 제한된 세션으로 기존 자료를 볼 수 있다.
+
+성향은 `service-api`의 GET/POST `/me/traits`로 조회/전체 교체한다. POST는 `interests`, `conversationStyles`, `mbti`를 모두 요구한다. 빈 배열/null MBTI는 선택 성향 삭제다. 기존 사진 교체 RPC·최종 사진 삭제 차단을 유지한다.
+
+## 브라우저 연결 순서
+
+1. 브라우저에서 무작위 32바이트를 base64url로 바꿔 verifier(43자)를 만들고 SHA-256 hex challenge를 계산한다. 시작 요청 후 state별 verifier를 현재 탭의 sessionStorage에 보관하고 인증 URL로 이동한다. 요청·콜백 원문을 분석 로그에 남기지 않는다.
+2. `NAVER_REDIRECT_URI`의 프론트 콜백에서 code/state를 읽고 같은 Origin에서 callback POST를 보낸다. 쿼리를 주소창 이력에서 제거하고 verifier를 폐기한다. 거절·취소는 세션을 생성하지 않고 다시 시작한다.
+3. 세션이 있으면 Supabase `setSession`에 전달한다. 제한 상태면 네이버 정보 확인·복구 안내, 사진/완료 상태면 가입 입력으로 연결한다. ready일 때 저장된 목적 경로로 복귀한다.
+4. 신규 사진은 현재 사용자 UUID/새 이미지 UUID.jpg로 private `profile-images` 버킷에 업로드한다. 완료 버튼에서 `/complete`를 호출한다. 실패한 입력은 화면에 보존한다. 소유자·객체 존재·JPEG·용량은 기존 DB 이미지 검사로 검증한다.
+
+이 challenge는 서비스의 브라우저 귀속 증명이다. 네이버가 PKCE를 지원한다고 가정하거나 네이버 토큰 API에 임의 PKCE 필드를 보내지 않는다. 서버는 state hash·verifier hash·시작 Origin·복귀 경로·만료만 저장하며 state 원문과 네이버 토큰은 저장하지 않는다. 같은 state의 재시도는 거절하므로 실패 후 새 로그인부터 시작한다.
+
+## 세션·DB 신뢰 경계
+
+`identity/adapter.ts`는 공식 고정 HTTPS에 토큰 POST와 프로필 GET을 수행한다. 사용자 본문의 이름·생일·성별을 받지 않는다. 서버 전용 `resolve_naver_account`가 자격을 판단하고 고유 내부 UUID 이메일 별칭을 예약한다. 이 별칭은 이메일 주소 확인이나 이메일 로그인 기능을 뜻하지 않는다.
+
+`session-bridge.ts`는 Supabase Auth의 admin generate_link와 verify를 서버 내부에서만 사용한다. 실제 이메일 발송·비밀번호 입력·추가 인증을 요구하지 않는다. Auth에서 받은 사용자·별칭·역할·세션을 확인한 뒤 `record_naver_session`이 private 예약과 auth.sessions를 대조한다. 직접 password 등으로 만든 별도 세션은 네이버 활동 세션으로 등록되지 않는다.
+
+새 SQL은 `20261002090000_naver_signup.sql`이다. private 계정/세션/챌린지는 일반 사용자와 서비스 역할의 직접 테이블 접근을 금지하고 제한된 RPC만 허용한다. 사진·성향·프로필 생성·완료 표시는 원자적이다. 예전 수기/PASS/추천·학교메일 자격을 네이버 확인 근거로 승격하지 않는다.
+
+## 네이버 앱 등록·남은 실제 확인
+
+[네이버 앱 등록](https://developers.naver.com/apps/#/register)에서 네이버 로그인을 선택하고 이름·성별·생일·출생연도를 필수 제공 항목으로 설정한다. 서비스 웹 URL과 프론트 콜백 URL을 등록하고 동일 URL을 서버 `NAVER_REDIRECT_URI`에 넣는다. Client ID/Secret은 채팅·Git에 붙이지 않고 로컬 `.env`/배포 Secrets에 입력한다. callback Origin은 `ALLOWED_ORIGINS`에 있어야 한다.
+
+`NAVER_STATE_TTL_SECONDS`는 운영자가 명시하며 기본값은 없다(1..3600초 기술 범위). 단위·합성 검사값 600초를 운영 정책으로 확정한 것이 아니다. 공통 Supabase URL·anon/service 키·Origin·본문 크기·timeout도 필요하다.
+
+실제 네이버 동의와 누락 정보 응답, 앱 심사/운영 권한·콜백, 기존 계정 확인 절차, 브라우저 화면·gateway CORS·배포는 별도 검증이다. 사용자는 2026-10-02 현재 앱 미등록이라고 확인했다. 가상 네이버 응답이나 로컬 Auth 성공을 실제 네이버 로그인 성공으로 표시하지 않는다.
+
+공식 계약: [네이버 로그인 API](https://developers.naver.com/docs/login/api/api.md), [프로필 조회](https://developers.naver.com/docs/login/profile/profile.md), [Supabase Auth API](https://supabase.github.io/auth/). 검증 결과는 [이번 인계](../../docs/collaboration/requests/minkyu/2026-10-02-naver-signup-handoff.md)에 기록한다.

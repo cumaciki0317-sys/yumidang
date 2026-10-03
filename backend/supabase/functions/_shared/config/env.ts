@@ -27,7 +27,11 @@ function positive(read: EnvReader, key: string, maximum = 2147483647): number {
   return number;
 }
 function optional(read: EnvReader, key: string): string | undefined {
-  return read(key) === undefined ? undefined : required(read, key);
+  const value = read(key);
+  // 빈 example 항목은 미설정이다. 내부 기능의 누락이 공개·사용자 기능을 막지 않는다.
+  if (value === undefined || value === "") return undefined;
+  if (value.trim() !== value || /[\r\n]/.test(value)) return fail();
+  return value;
 }
 export function loadRuntimeConfig(read: EnvReader): RuntimeConfig {
   try {

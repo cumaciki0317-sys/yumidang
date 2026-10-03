@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "ff9c14fec069dc03b575cfd33d9deb62625fd924",
+  "branch": "minkyu/foundation-harness",
+  "phase": "10차 민규 담당 공급사 실호출·권한/입력 진단",
+  "lanes": {
+    "coordinator": [
+      "AGENTS.md",
+      "docs/collaboration/minkyu.md",
+      "docs/collaboration/minkyu-live-api-harness.json",
+      "tools/collaboration/check_harness.py",
+      "docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md"
+    ],
+    "A": [
+      "tools/local/check_kakao_api.py",
+      "tests/functions/minkyu/test_kakao_api.py",
+      "docs/collaboration/requests/minkyu/2026-09-29-kakao-live.md"
+    ],
+    "B": [
+      "tools/local/check_event_apis.py",
+      "tests/functions/minkyu/test_event_apis.py",
+      "docs/collaboration/requests/minkyu/2026-09-29-events-live.md"
+    ],
+    "C": [
+      "tools/local/check_tour_api.py",
+      "tests/functions/minkyu/test_tour_api.py",
+      "docs/collaboration/requests/minkyu/2026-09-29-tour-live.md"
+    ]
+  },
+  "preserved": {},
+  "excluded": [
+    "종현 파일/어댑터/런타임 변경",
+    "SQL 변경",
+    "외부 계정설정 변경",
+    "원격 DB/배포",
+    "키/응답 원문 기록",
+    "추가 자동 커밋/푸시"
+  ],
+  "inputs": "사용자 루트 .env read-only. 키는 공식 공급사HTTPS에만 전송. 최소 공개조회·명시적 재검증만 하며 자동 fallback/무한재시도/HTTP downgrade 없음."
+}

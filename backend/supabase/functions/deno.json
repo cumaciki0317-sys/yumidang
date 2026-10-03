@@ -1,6 +1,7 @@
 {
   "tasks": {
     "check:common": "deno check --no-remote _shared/contracts/common.ts _shared/http/cors.ts _shared/http/errors.ts _shared/http/request.ts _shared/http/response.ts",
-    "check:service": "deno check --no-remote service-api/index.ts"
+    "check:service": "deno check --no-remote service-api/index.ts",
+    "check:signup": "deno check --no-remote signup/index.ts"
   }
 }
