@@ -1,3 +1,4 @@
+import type { AuthorAgeFilter, PostRegion } from "./search.ts";
 /** 서버 내부 계약. HTTP 인증·DB·제공사 스키마와는 별도로 연결한다. */
 export type DateSelection = { kind: "this_week" | "this_weekend" | "today" | "tomorrow" } | { kind: "dates"; startsOn: string; endsOn: string };
 /** 관심사·대화 방식 요청 값 하나. exclude는 "시끄러운 대화는 싫어요" 같은 부정 표현이다. */
@@ -11,24 +12,26 @@ export interface AiFilters {
   target: "posts" | "events";
   query?: string;
   category?: string;
-  region?: string;
+  region?: PostRegion;
   cost?: "all" | "free" | "paid";
   availability?: "all" | "recruiting";
   date?: DateSelection;
   mbti?: string;
   ongoingOnly?: boolean;
+  includeOngoing?: boolean;
+  performanceGenre?: "concert" | "musical" | "play";
   newThisWeek?: boolean;
   /** 공고만. 생략은 등록일 최신순(created_desc). 의미 유사도로 재정렬하지 않는다. */
   sort?: "created_desc" | "starts_asc";
   /** 공고만. 로그인 회원 전용 검색 v2 조건. */
-  authorAge?: "all" | "20s" | "30s" | "40plus";
+  authorAge?: AuthorAgeFilter;
   /** 공고만. 작성자가 등록한 관심사와의 의미 비교. */
   interests?: PreferenceCondition;
   /** 공고만. 작성자가 등록한 대화 방식과의 의미 비교. */
   conversationStyles?: PreferenceCondition;
 }
 export interface ChatMessage { role: "user" | "assistant"; content: string; }
-export interface ChatInput { clientRequestId: string; messages: ChatMessage[]; currentFilters: AiFilters; }
+export interface ChatInput { outputRetryOf?: string; clientRequestId: string; messages: ChatMessage[]; currentFilters: AiFilters; }
 export interface ChatLimits { maxMessages: number; maxMessageChars: number; maxTotalChars: number; maxOutputTokens: number; }
 /** 서버가 인증 주체의 본인 성향 RPC로 읽은 값만 넣는다. 요청 본문에서 받지 않는다. */
 export interface TrustedChatContext { userId: string; preferences?: { interests?: string[]; conversationStyles?: string[]; mbti?: string }; }
@@ -59,6 +62,7 @@ export interface AiCard {
   conditionStatus?: CardConditionStatus;
 }
 export interface AiChatResult {
+  recovery?: { reason: "input_privacy" | "output_privacy" | "daily_limit" | "concurrent" | "consent" | "temporary"; retryAllowed: boolean };
   requestId: string;
   status: "needs_clarification" | "results" | "no_results" | "unavailable";
   interpretedFilters: AiFilters;
@@ -73,3 +77,12 @@ export interface AiChatResult {
   partial?: true;
 }
 export class AiInputError extends Error { constructor(code: string) { super(code); this.name = "AiInputError"; } }
+
+/** AI 문제 접수는 사용자가 확인한 답변 일부 또는 캡처 하나만 받는다. 전체 대화는 없다. */
+export type AiFeedbackAttachment = { kind: "answer"; text: string } | { kind: "capture"; assetId: string };
+export type AiFeedbackInput =
+  | { clientRequestId: string; requestId: string; action: "helpful" }
+  | { clientRequestId: string; requestId: string; action: "report"; confirmed: true; attachment: AiFeedbackAttachment };
+export type AiFeedbackResult =
+  | { status: "accepted"; feedbackId: string; hideAnswer: boolean }
+  | { status: "not_enabled"; reason: "AI_REPORT_EVIDENCE_HANDLING_NOT_CONNECTED" | "AI_FEEDBACK_STORAGE_NOT_CONNECTED" };

@@ -50,8 +50,8 @@ test("비공개 검색 필드와 중첩 비용 여분 필드는 회원·비회�
     const result = listProjectedPublicPosts([row], { caller });
     assert.equal(result.status, "results");
     assert.equal(result.posts[0].publicArea, "서울특별시 종로구 종로1가");
-    assert.equal(result.posts[0].authorDisplayName, caller === "anonymous" ? "회원 01" : "김*현");
-    assert.equal(result.posts[0].canApply, caller === "member");
+    assert.equal(result.posts[0].authorDisplayName, caller === "anonymous" ? null : "김*현");
+    assert.equal(result.posts[0].canApply, false);
     assert.deepEqual(result.posts[0].cost, {
       kind: "paid_request", amount: 15000, direction: "author_to_applicant",
     });
@@ -69,7 +69,7 @@ test("SQL 공개 지역 형식의 동·읍·면·숫자 가와 60자 경계를 �
   for (const publicAreaDistrict of [
     "서울특별시 성동구 성수동", "서울특별시 종로구 종로1가",
     "경기도 수원시 영통구 영통동", "경기도 양평군 양평읍",
-    "강원특별자치도 홍천군 서면", sixty,
+    "강원특별자치도 홍천군 서면", "세종특별자치시 아름동", "세종특별자치시 조치원읍", sixty,
   ]) {
     for (const caller of ["anonymous", "member"]) {
       assert.equal(toPublicPostCard(post("area", { publicAreaDistrict }), caller).publicArea, publicAreaDistrict);
@@ -258,26 +258,21 @@ test("시간대 누락·존재하지 않는 날짜·역전 기간과 알 수 없
   assert.throws(() => listProjectedPublicPosts([base, base], member), /DUPLICATE_POST_ID/);
 });
 
-test("비로그인 기간은 허용하고 상세 나이만 저장소 요청 전에 거절한다", async () => {
+test("비로그인 기간·상세 숫자 나이는 저장소 요청 전에 거절하고 전체만 허용한다", async () => {
   const received = [];
   const repository = { async search(input) { received.push(input); return []; } };
-  for (const authorAge of ["20s", "30s", "40plus"]) {
-    await assert.rejects(searchPublicPosts(repository, { caller: "anonymous", period, authorAge }), /AUTH_REQUIRED/);
+  for (const input of [{ caller: "anonymous", period }, { caller: "anonymous", authorAge: { min: 19, max: 99 } }]) {
+    await assert.rejects(searchPublicPosts(repository, input), /AUTH_REQUIRED/);
   }
   assert.equal(received.length, 0);
-  assert.deepEqual(await searchPublicPosts(repository, { caller: "anonymous", period }), {
-    status: "no_results", posts: [],
-  });
+  assert.deepEqual(await searchPublicPosts(repository, { caller: "anonymous" }), { status: "no_results", posts: [] });
   assert.equal(received[0].authorAge, "all");
-  assert.equal(received[0].sort, "created_desc");
-  assert.deepEqual(received[0].period, period);
-  await searchPublicPosts(repository, { caller: "anonymous", period, authorAge: "all", sort: "starts_asc" });
-  assert.equal(received.length, 2);
+  assert.equal(received[0].limit, 10);
 });
 
-test("실행할 수 없는 메모리 나이 필터·커서를 조용히 무시하지 않는다", async () => {
+test("메모리 나이 범위는 내부 근거가 없으면 조용히 무시하지 않는다", async () => {
   const repository = createInMemoryPublicPostSearchRepository([candidate(base)]);
-  await assert.rejects(searchPublicPosts(repository, { ...member, authorAge: "20s" }), /UNSUPPORTED_FILTER/);
+  await assert.rejects(searchPublicPosts(repository, { ...member, authorAge: { min: 19, max: 99 } }), /INVALID_SEARCH_SOURCE/);
 });
 
 test("두 정렬 모두 마이크로초 차이를 ID보다 먼저 비교하고 동률 ID와 원문 시각을 보존한다", () => {

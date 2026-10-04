@@ -21,7 +21,7 @@ export function checkSummaryOutput(value: unknown, expectedIds: string[], maxOut
     return { text: item.text.trim(), evidenceIds: [...item.evidenceIds] };
   });
   const text = claims.map((claim) => claim.text).join(" ");
-  if (text.length > maxOutputChars) throw new Error("SUMMARY_OUTPUT_TOO_LARGE");
+  if ([...text].length > Math.min(maxOutputChars, 300)) throw new Error("SUMMARY_OUTPUT_TOO_LARGE");
   // 명백한 연락처·안전 보장만 방어적으로 검사. 이것만으로 개인정보/의미 검증을 통과시키지 않는다.
   if (/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/u.test(text) ||
       /(?:\+82[-\s]?)?0?1[016789][-\s]?\d{3,4}[-\s]?\d{4}/u.test(text) ||

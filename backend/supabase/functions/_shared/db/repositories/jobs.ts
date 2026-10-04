@@ -98,8 +98,10 @@ function isStateConflict(error: unknown): boolean {
  * 제안 SQL 03의 작업 RPC 연결. payload.profileId ↔ reference.targetUserId, leaseExpiresAt → leaseUntil 등
  * DB 계약과 내부 계약의 이름 차이를 명시적으로 변환한다. RPC 'state_conflict'는 lease_lost로 바꾼다.
  */
-export function createRpcJobRepository(db: RpcClient): JobRepository {
+export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?: string } = {}): JobRepository {
   if (!db || typeof db.rpc !== "function") throw new TypeError("INVALID_JOB_DB");
+  if (options.workerRunToken !== undefined && !UUID.test(options.workerRunToken)) throw new Error("INVALID_WORKER_RUN_TOKEN");
+  const fence: Record<string, JsonValue> = options.workerRunToken ? { p_worker_run_token: options.workerRunToken } : {};
   // 포트 타입을 명시해 claim 결과의 kind 리터럴 등 계약을 정적 검사한다.
   const repository: JobRepository = {
     async enqueue(input: EnqueuedJob) {
@@ -128,7 +130,7 @@ export function createRpcJobRepository(db: RpcClient): JobRepository {
       // DB claim_job은 kind 필터가 없다. 요청 kinds에 DB 지원 kind가 없으면 점유하지 않는다.
       if (!input.kinds.some((kind) => DB_KINDS.has(kind))) return null;
       const envelope = object(await db.rpc("claim_job", {
-        p_worker_id: input.workerId, p_lease_seconds: input.leaseDurationMs / 1000,
+        p_worker_id: input.workerId, p_lease_seconds: input.leaseDurationMs / 1000, ...fence,
       }), ["job"]);
       if (envelope.job === null) return null;
       const job = object(envelope.job, ["jobId", "kind", "payload", "leaseToken", "leaseExpiresAt", "attempt", "failedAttempts"]);
@@ -159,7 +161,7 @@ export function createRpcJobRepository(db: RpcClient): JobRepository {
         if (!mapped) throw new Error("INVALID_SETTLEMENT");
         return mapped;
       };
-      const base = { p_job_id: input.jobId, p_lease_token: input.leaseToken };
+      const base = { p_job_id: input.jobId, p_lease_token: input.leaseToken, ...fence };
       let name: string;
       let args: Record<string, JsonValue>;
       switch (input.status) {

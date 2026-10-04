@@ -1,16 +1,16 @@
 /**
  * 담당: 종현담당. 내부 행사 수집 런타임 진입점. import는 환경을 읽거나 서버를 시작하지 않는다.
  * 필수 환경값(기본값 없음):
- *  - EVENT_SYNC_PROVIDERS: 쉼표로 구분한 허용 제공처. 현재 구현은 kopis만 있다.
+ *  - EVENT_SYNC_PROVIDERS: 쉼표로 구분한 허용 제공처. kopis·tour-api 및 보안 연결 전 미설정 서울 포트.
  *  - EVENT_SYNC_MAX_PERIOD_DAYS / EVENT_SYNC_MAX_PAGE / EVENT_SYNC_PAGE_ROWS: 허용한 제공처 규격 상한 이하.
  *  - 제공처 키: KOPIS_API_KEY(loadKopisConfig), 공통 SUPABASE_*·INTERNAL_WORKER_SECRET·UPSTREAM_TIMEOUT_MS 등.
  * DB 저장은 내부 RPC 클라이언트(createInternalClient)로 upsert_events를 호출한다. 민규 허용 목록에 upsert_events가
- * 추가되기 전에는 저장 단계가 500(INTERNAL_ERROR)으로 실패하며 0건 성공으로 바꾸지 않는다.
+ * 연결 실패를 0건 성공으로 바꾸지 않는다.
  * 테스트는 createRpcClient를 주입한다. 운영 코드는 자체 transport를 만들어 허용 목록을 우회하지 않는다.
  */
 import { loadRuntimeConfig, requireInternalConfig, type EnvReader, type RuntimeConfig } from "../_shared/config/env.ts";
 import { loadKopisConfig, loadTourApiConfig } from "../_shared/config/providers.ts";
-import { createTourApiEventProvider, TOUR_API_MAX_PAGE, TOUR_API_MAX_PERIOD_DAYS, TOUR_API_MAX_ROWS, TOUR_API_PROVIDER } from "../_shared/integrations/events/tourapi.ts";
+import { createTourApiEventProvider, createTourApiDetailProvider, TOUR_API_MAX_PAGE, TOUR_API_MAX_PERIOD_DAYS, TOUR_API_MAX_ROWS, TOUR_API_PROVIDER } from "../_shared/integrations/events/tourapi.ts";
 import { requireInternalCaller } from "../_shared/auth/internal-caller.ts";
 import { createInternalClient } from "../_shared/db/internal-client.ts";
 import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
@@ -24,6 +24,12 @@ import {
 import type { EventProviderPort } from "../_shared/integrations/events/port.ts";
 import { requiredPositiveInt, requiredToken } from "../_shared/jobs/settings.ts";
 import { createEventSyncHandler } from "./handler.ts";
+import { createSeoulEventProvider, SEOUL_PROVIDER, SEOUL_MAX_PAGE, SEOUL_MAX_PERIOD_DAYS, SEOUL_MAX_ROWS, type ReviewedSeoulTransport } from "../_shared/integrations/events/seoul.ts";
+
+import { createEventOperations, createKopisOngoingProvider, createStoredOngoingProvider } from "../_shared/jobs/event-runtime.ts";
+import { createKopisRankingProvider } from "../_shared/integrations/events/kopis-ranking.ts";
+import { createKopisDetailProvider } from "../_shared/integrations/events/detail.ts";
+import { withEventOperations } from "./operations.ts";
 
 interface ProviderDefinition {
   maxPeriodDays: number;
@@ -31,8 +37,12 @@ interface ProviderDefinition {
   maxRows: number;
   create(read: EnvReader, settings: { rows: number; timeoutMs: number; fetch: FetchLike; now: () => Date }): EventProviderPort;
 }
-/** HTTPS·응답 형식을 실제 확인한 제공처만 등록한다. 서울 열린데이터(HTTPS 없음)는 없다. TourAPI는 2026-09-30 키 형식 확인 후 추가(U10). */
+/** 서울은 공식 보안 경로 확인 transport 없으면 미설정 오류로 중단한다. */
 const registry: Readonly<Record<string, ProviderDefinition>> = Object.freeze({
+  [SEOUL_PROVIDER]: {
+    maxPeriodDays: SEOUL_MAX_PERIOD_DAYS, maxPage: SEOUL_MAX_PAGE, maxRows: SEOUL_MAX_ROWS,
+    create: (_read, settings) => createSeoulEventProvider({ now: settings.now }),
+  },
   [KOPIS_PROVIDER]: {
     maxPeriodDays: KOPIS_MAX_PERIOD_DAYS, maxPage: KOPIS_MAX_PAGE, maxRows: KOPIS_MAX_ROWS,
     create: (read, settings) => createKopisEventProvider({
@@ -56,6 +66,11 @@ export interface EventSyncRuntimeOptions {
   /** 테스트용 RPC 주입. 생략하면 민규 createInternalClient를 사용한다. */
   createRpcClient?: (config: RuntimeConfig) => RpcClient;
   now?: () => Date;
+  /** 공식 HTTPS 경로 확인 전에는 기본 서울 제공처가 미설정 오류로 중단한다. */
+  seoulTransport?: ReviewedSeoulTransport;
+  ongoingProviders?: Map<string, EventProviderPort>;
+  /** 실제 공통 client allowlist 검사. 테스트에서만 명시 주입하며 HTTP 입력은 받지 않는다. */
+  rpcAvailable?: (name: string) => boolean;
 }
 
 export function createEventSyncRuntime(read: EnvReader, fetchImpl: FetchLike = fetch, options: EventSyncRuntimeOptions = {}) {
@@ -71,8 +86,9 @@ export function createEventSyncRuntime(read: EnvReader, fetchImpl: FetchLike = f
     const definitions = names.map((name) => registry[name]);
     maxPeriodDays = requiredPositiveInt(read, "EVENT_SYNC_MAX_PERIOD_DAYS", Math.min(...definitions.map((d) => d.maxPeriodDays)));
     maxPage = requiredPositiveInt(read, "EVENT_SYNC_MAX_PAGE", Math.min(...definitions.map((d) => d.maxPage)));
-    const rows = requiredPositiveInt(read, "EVENT_SYNC_PAGE_ROWS", Math.min(...definitions.map((d) => d.maxRows)));
-    providers = new Map(names.map((name) => [name, registry[name].create(read, {
+    const rows = requiredPositiveInt(read, "EVENT_SYNC_PAGE_ROWS", Math.min(100, ...definitions.map((d) => d.maxRows)));
+    providers = new Map(names.map((name) => [name, name === SEOUL_PROVIDER && options.seoulTransport
+      ? createSeoulEventProvider({ transport: options.seoulTransport, now }) : registry[name].create(read, {
       rows, timeoutMs: config.upstreamTimeoutMs, fetch: fetchImpl, now,
     })]));
   } catch {
@@ -90,7 +106,7 @@ export function createEventSyncRuntime(read: EnvReader, fetchImpl: FetchLike = f
       sync: async () => { throw new HttpError("EXTERNAL_UNAVAILABLE"); },
     });
   }
-  return createEventSyncHandler({
+  const base = createEventSyncHandler({
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
     authenticateInternal: (request) => requireInternalCaller(request, config),
@@ -106,6 +122,28 @@ export function createEventSyncRuntime(read: EnvReader, fetchImpl: FetchLike = f
       return { fetchedCount: result.fetchedCount, savedCount: result.savedCount, hasMore: result.nextCursor !== undefined };
     },
   });
+  let rankingProvider, detailProvider;
+  if (providers.has(KOPIS_PROVIDER)) {
+    const key = loadKopisConfig(read).apiKey;
+    const settings = { apiKey: key, timeoutMs: Math.min(config.upstreamTimeoutMs, 15_000), fetch: fetchImpl, now };
+    rankingProvider = createKopisRankingProvider(settings); detailProvider = createKopisDetailProvider(settings);
+  }
+  const detailProviders = detailProvider ? new Map([[KOPIS_PROVIDER, detailProvider]]) : new Map();
+  if (providers.has(TOUR_API_PROVIDER)) {
+    const tour = loadTourApiConfig(read);
+    detailProviders.set(TOUR_API_PROVIDER, createTourApiDetailProvider({serviceKey:tour.serviceKey,keyFormat:tour.keyFormat,timeoutMs:config.upstreamTimeoutMs,rows:1,fetch:fetchImpl,now}));
+  }
+  const db = makeClient(config);
+  const ongoingProviders = options.ongoingProviders ?? new Map();
+  if (detailProvider && !ongoingProviders.has(KOPIS_PROVIDER)) ongoingProviders.set(KOPIS_PROVIDER, createKopisOngoingProvider(db, detailProvider));
+  const tourDetails = detailProviders.get(TOUR_API_PROVIDER);
+  if (tourDetails && !ongoingProviders.has(TOUR_API_PROVIDER)) ongoingProviders.set(TOUR_API_PROVIDER, createStoredOngoingProvider(db,tourDetails));
+  const supportsRpc = (db as RpcClient & { supportsRpc?: (name:string)=>boolean }).supportsRpc;
+  const rpcAvailable = options.rpcAvailable ?? (typeof supportsRpc === "function" ? (name:string)=>supportsRpc.call(db,name) : ()=>false);
+  const operations = createEventOperations({ db, rpcAvailable, providers, providerMaxPage: maxPage, providerMaxPages: new Map([...providers.keys()].map(name => [name, registry[name].maxPage])), maxPages: 5, now,
+    ongoingProviders, rankingProvider,
+    detailProviders });
+  return withEventOperations(base, { authenticate: (request) => requireInternalCaller(request, config), maxBytes: config.maxRequestBytes, operations });
 }
 
 let runtimeHandler: ((request: Request) => Promise<Response>) | undefined;

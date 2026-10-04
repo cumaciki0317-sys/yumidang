@@ -112,15 +112,15 @@ test("DB 마이크로초 시각은 밀리초로 내림 변환한다(만료 이�
 
 test("loadSource는 reviewId→evidenceId, text→comment, profileId→targetUserId로 변환한다", async () => {
   const db = fakeDb({ load_review_summary_source: {
-    status: "applied", profileId: PROFILE, sourceRevision: BIG, eligibleCount: 3,
+    status: "applied", profileId: PROFILE, sourceRevision: BIG, eligibleCount: 3, processingAllowed: true,
     reviews: R.map((reviewId, i) => ({ reviewId, text: "가상 후기 " + i })),
   } });
   const repo = createRpcReviewSummaryRepository(db);
   assert.deepEqual(await repo.loadSource(job), {
-    targetUserId: PROFILE, sourceRevision: BIG,
+    targetUserId: PROFILE, sourceRevision: BIG, processingAllowed: true,
     publicTextReviews: R.map((evidenceId, i) => ({ evidenceId, comment: "가상 후기 " + i })),
   });
-  assert.deepEqual(db.calls[0], { name: "load_review_summary_source", args: { p_job_id: JOB, p_lease_token: TOKEN } });
+  assert.deepEqual(db.calls[0], { name: "load_review_summary_source", args: { p_job_id: JOB, p_lease_token: TOKEN, p_contract_version: "2026-10-05" } });
   for (const status of ["lease_lost", "already_published", "stale_revision"]) {
     assert.equal(await createRpcReviewSummaryRepository(fakeDb({ load_review_summary_source: { status } })).loadSource(job), status);
   }
@@ -152,7 +152,7 @@ test("checkpoint 저장은 원문 없는 허용 필드만 보내고 조회는 �
   const repo = createRpcReviewSummaryRepository(db);
   assert.equal(await repo.saveCheckpoint(job, checkpoint), "applied");
   const sent = db.calls[0].args;
-  assert.deepEqual(Object.keys(sent).sort(), ["p_checkpoint", "p_job_id", "p_lease_token", "p_source_revision"]);
+  assert.deepEqual(Object.keys(sent).sort(), ["p_checkpoint", "p_contract_version", "p_job_id", "p_lease_token", "p_source_revision"]);
   assert.equal(sent.p_source_revision, BIG);
   assert.deepEqual(Object.keys(sent.p_checkpoint).sort(), ["nextReviewIndex", "nodes", "schemaVersion", "sourceReviewIds"]);
   assert.equal(JSON.stringify(sent).includes("PRIVATE"), false);
@@ -172,7 +172,7 @@ test("publish·부족·폐기는 DB 상태를 안전한 결과로 옮기고 게�
   const db = fakeDb({ publish_review_summary_for_job: { status: "applied", summaryId: JOB, sourceRevision: BIG, sourceCount: 3, publishedAt: "2026-09-29T00:00:00+00:00" } });
   assert.equal(await createRpcReviewSummaryRepository(db).publish(input), "applied");
   assert.deepEqual(db.calls[0].args, {
-    p_job_id: JOB, p_lease_token: TOKEN, p_source_revision: BIG, p_evidence_review_ids: R, p_summary: "가상 요약",
+    p_job_id: JOB, p_lease_token: TOKEN, p_source_revision: BIG, p_contract_version: "2026-10-05", p_evidence_review_ids: R, p_summary: "가상 요약",
     p_model_version: job.modelVersion, p_prompt_version: job.promptVersion,
   });
   for (const status of ["lease_lost", "stale_revision", "insufficient_reviews", "invalid_evidence"]) {

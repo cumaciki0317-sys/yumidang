@@ -13,7 +13,7 @@ export function eventStateAt(event: NormalizedEvent, now: Date): EventState {
 
 export function selectEvents<T extends NormalizedEvent>(events: readonly T[], query: EventTimingQuery): T[] {
   if (!query || typeof query !== "object" || Array.isArray(query)) throw new Error("INVALID_EVENT_QUERY");
-  if (Object.keys(query).some((key) => !["mode", "now", "period", "ongoingOnly"].includes(key))) {
+  if (Object.keys(query).some((key) => !["mode", "now", "period", "ongoingOnly", "includeOngoing"].includes(key))) {
     throw new Error("UNSUPPORTED_EVENT_FILTER");
   }
   if (query.period !== undefined && (!query.period || typeof query.period !== "object" || Array.isArray(query.period) ||
@@ -21,6 +21,8 @@ export function selectEvents<T extends NormalizedEvent>(events: readonly T[], qu
   const today = seoulCalendarDate(query.now);
   if (!["overlapping", "new_this_week", "post_selection"].includes(query.mode)) throw new Error("INVALID_EVENT_MODE");
   if (query.ongoingOnly !== undefined && typeof query.ongoingOnly !== "boolean") throw new Error("INVALID_EVENT_FILTER");
+  if (query.includeOngoing !== undefined && typeof query.includeOngoing !== "boolean") throw new Error("INVALID_EVENT_FILTER");
+  if (query.includeOngoing && (query.ongoingOnly || query.mode !== "new_this_week")) throw new Error("INVALID_EVENT_FILTER");
   const period = query.period ? queryPeriodInterval(query.period) : undefined;
   const week = seoulWeekWindow(today);
   const weekStart = seoulDateStart(week.monday);
@@ -38,7 +40,8 @@ export function selectEvents<T extends NormalizedEvent>(events: readonly T[], qu
     if (query.ongoingOnly && item.state !== "ongoing") return false;
     if (query.mode === "post_selection" && item.state === "ended") return false;
     if (query.mode === "new_this_week") {
-      return item.start >= weekStart && item.start < weekEnd && item.state !== "ended";
+      return item.state !== "ended" && ((item.start >= weekStart && item.start < weekEnd) ||
+        (query.includeOngoing === true && item.state === "ongoing"));
     }
     return true;
   });

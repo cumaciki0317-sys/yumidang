@@ -108,13 +108,13 @@ test("DB 저장 실패·집계 불일치는 성공으로 바꾸지 않는다", a
   assert.equal((await invalid.handler(post(body))).status, 400);
 });
 
-test("기본 내부 클라이언트는 upsert_events가 허용 목록에 없어 500으로 실패한다(민규 요청 전 상태)", async () => {
+test("기본 내부 클라이언트의 DB 오류는 성공으로 바꾸지 않는다", async () => {
   const { handler, fetches } = runtime({ inject: false });
   const res = await read(await handler(post(body)));
-  assert.equal(res.status, 500);
-  assert.equal(res.body.error.code, "INTERNAL_ERROR");
-  // 공급사 조회 후 DB 전송 전에 거절되며 자체 transport로 우회하지 않는다.
-  assert.deepEqual(fetches.map((f) => f.url.origin), ["https://kopis.or.kr"]);
+  assert.equal(res.status, 503);
+  assert.equal(res.body.error.code, "EXTERNAL_UNAVAILABLE");
+  // 공통 내부 클라이언트의 허용된 RPC 경로를 사용한다.
+  assert.deepEqual(fetches.map((f) => f.url.origin), ["https://kopis.or.kr", "http://127.0.0.1:54321"]);
 });
 
 test("내부 인증: 없음 401, 다른 비밀 403, 본문 검사 전에 거절", async () => {
@@ -155,7 +155,7 @@ test("설정: 필수 환경값·허용 제공처·공급사 규격 상한, 기�
   }
   // 공급사 설정 누락·형식 오류: 잘못된 비밀은 403, 올바른 비밀만 503. 설정 상태·키를 인증 전에 드러내지 않는다.
   for (const env of [
-    { EVENT_SYNC_PROVIDERS: undefined }, { EVENT_SYNC_PROVIDERS: "" }, { EVENT_SYNC_PROVIDERS: "seoul-open-data" },
+    { EVENT_SYNC_PROVIDERS: undefined }, { EVENT_SYNC_PROVIDERS: "" },
     { EVENT_SYNC_PROVIDERS: "tour-api" }, { EVENT_SYNC_PROVIDERS: "kopis,kopis" }, { EVENT_SYNC_PROVIDERS: "kopis " },
     { EVENT_SYNC_MAX_PERIOD_DAYS: undefined }, { EVENT_SYNC_MAX_PERIOD_DAYS: "32" }, { EVENT_SYNC_MAX_PAGE: undefined },
     { EVENT_SYNC_MAX_PAGE: "1000" }, { EVENT_SYNC_PAGE_ROWS: undefined }, { EVENT_SYNC_PAGE_ROWS: "101" }, { EVENT_SYNC_PAGE_ROWS: "0" },
@@ -245,7 +245,7 @@ test("repository listPage: 정규화된 조건 전달, 불투명 커서, 조건 
     p_filters: { mode: "post_selection", ongoingOnly: false, query: "art hall", period: { start: "2026-10-01", end: "2026-10-31" }, region: "서울특별시" },
     p_cursor: null, p_limit: 2 } });
   const second = await repo.listPage(query, first.nextCursor, 2);
-  assert.deepEqual(second, { events: [item(3)], nextCursor: null });
+  assert.deepEqual(second, { events: [{ ...item(3), performanceGenre: "play" }], nextCursor: null });
   assert.deepEqual(fake.calls[1].args.p_cursor, { rank: 1, key: upcomingKey, id: uuid(2) });
   // 같은 의미의 검색어는 같은 조건이다. 다른 조건·변조 커서는 첫 페이지로 바꾸지 않는다.
   await repo.listPage({ ...query, query: "art hall" }, first.nextCursor, 2);
@@ -287,4 +287,24 @@ test("repository listPage: DB 응답이 조건·정렬·형식을 어기면 거�
   const ok = await list({ items: [timed, item(1), item(2, "ended")], nextCursor: null }, { mode: "overlapping" }, 3);
   assert.deepEqual(ok.events.map((e) => e.state), ["ongoing", "upcoming", "ended"]);
   await rejects({ items: [item(1), timed], nextCursor: null }, { mode: "overlapping" }, 3);
+});
+
+test("공개 행사 extras는 원천 텍스트/HTTPS만 허용하고 장르 필터를 RPC와 커서에 포함", async () => {
+ const calls=[];const data={...item(3),category:"한국음악(국악)",description:"가상 소개",operatingInfo:null,posterUrl:"https://kopis.or.kr/upload/fixture.jpg"};
+ const repo=createRpcEventRepository({async rpc(name,args){calls.push(args);return {items:[data],nextCursor:null};}});
+ const page=await repo.listPage({mode:"overlapping",region:"서울",performanceGenre:"concert"},undefined,10);
+ assert.equal(page.events[0].performanceGenre,"concert");assert.equal(calls[0].p_filters.performanceGenre,"concert");assert.equal(calls[0].p_filters.region,"서울특별시");
+ for(const bad of [{...data,description:"<b>소개</b>"},{...data,posterUrl:"http://kopis.or.kr/upload/fixture.jpg"},{...data,performanceGenre:"play"}]){
+  const invalid=createRpcEventRepository({async rpc(){return {items:[bad],nextCursor:null};}});
+  await assert.rejects(invalid.listPage({mode:"overlapping"},undefined,10),/INVALID_EVENT_REPOSITORY_RESPONSE/);
+ }
+});
+
+test('무료 필터는 DB 페이징 이전 전달하고 unknown/described를 무료로 추정하지 않는다',async()=>{
+ let last;const repo=createRpcEventRepository({async rpc(_name,args){last=args;return {items:[{...item(1),admission:{kind:'free'}}],nextCursor:null};}});
+ assert.equal((await repo.listPage({mode:'overlapping',freeOnly:true},undefined,10)).events.length,1);
+ assert.equal(last.p_filters.freeOnly,true);
+ const unknown=createRpcEventRepository({async rpc(){return {items:[item(1)],nextCursor:null};}});
+ await assert.rejects(unknown.listPage({mode:'overlapping',freeOnly:true},undefined,10),/INVALID_EVENT_REPOSITORY_RESPONSE/);
+ await assert.rejects(repo.listPage({mode:'overlapping',freeOnly:'yes'},undefined,10),/INVALID_EVENT_FILTER/);
 });

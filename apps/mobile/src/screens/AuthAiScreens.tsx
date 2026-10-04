@@ -1,3 +1,5 @@
+import { serviceMode } from "../remote";
+import { RemoteAiScreen } from "./RemoteScreens";
 import React, { useCallback, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -284,7 +286,8 @@ export function SignupScreen() {
   );
 }
 
-export function AiScreen() {
+export function AiScreen() { return serviceMode ? <RemoteAiScreen /> : <PreviewAiScreen />; }
+function PreviewAiScreen() {
   const app = useApp();
   const { clearAi } = app;
   const [input, setInput] = useState("");

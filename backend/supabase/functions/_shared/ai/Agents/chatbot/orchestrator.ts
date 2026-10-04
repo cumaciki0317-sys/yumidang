@@ -1,3 +1,5 @@
+import { ModelError } from "../../providers/provider-errors.ts";
+import { AiPrivacyError } from "../../providers/privacy.ts";
 import { AiInputError } from "../../../contracts/ai.ts";
 import type { AiChatResult, ChatInput, ChatLimits, TrustedChatContext } from "../../../contracts/ai.ts";
 import type { ModelPort } from "../../providers/model-port.ts";
@@ -34,6 +36,9 @@ export async function runChat(input: ChatInput, principal: TrustedChatContext, d
     if(error instanceof Error && error.message==="NEW_EXPLORATION_REQUIRED") return {...base,status:"needs_clarification",clarificationQuestion:"확정한 조건을 유지한 채 새 탐색을 시작할까요?",notice:"대화 길이 한도에 도달했습니다."};
     throw error;
   }
+  if (initial.target === "events" && initial.cost === "paid") return { ...base, status:"needs_clarification", clarificationQuestion:"공식 무료 여부만 확인할 수 있어요. 무료 행사만 찾거나 비용 조건 없이 볼까요?" };
+  // 지역을 추정하기 위한 외부 모델 전송도 하지 않는다.
+  if (!initial.region) return { ...base, status: "needs_clarification", clarificationQuestion: "어느 지역에서 동행이나 행사를 찾을까요?" };
   const checkCancelled=()=>{if(signal?.aborted) throw new Error("CANCELLED");};
   try {
     checkCancelled(); const now=deps.now();
@@ -46,6 +51,7 @@ export async function runChat(input: ChatInput, principal: TrustedChatContext, d
       if(error instanceof AiInputError && error.message==="PREFERENCE_COMBINE_REQUIRED") return {...base,status:"needs_clarification",clarificationQuestion:CHAT_NOTICES.combineQuestion};
       throw error;
     }
+    intent.filters.region ??= initial.region;
     base.interpretedFilters=intent.filters;
     if(intent.status==="clarify") return {...base,status:"needs_clarification",clarificationQuestion:intent.question};
     const port=intent.filters.target==="events" ? deps.events : deps.discovery;
@@ -56,7 +62,7 @@ export async function runChat(input: ChatInput, principal: TrustedChatContext, d
     if(!found || !Array.isArray(found.cards) || !["exhausted","filled","incomplete"].includes(found.coverage)) throw new Error("INVALID_DISCOVERY_RESULT");
     // 한도·예산으로 후보 확인을 끝내지 못했으면(incomplete) 찾은 카드만 ‘일부 확인’으로 보여준다(Q1-A).
     // 찾은 카드가 없으면 결과 없음이 아니라 unavailable이다.
-    const partial=found.coverage==="incomplete";
+    let partial=found.coverage==="incomplete";
     const versions=new Map(found.cards.map(c=>[`${c?.kind}:${c?.id}`,c?.traitsVersion]));
     const cards=projectCards(found.cards,intent.filters);
     if(!cards.length) {
@@ -70,7 +76,7 @@ export async function runChat(input: ChatInput, principal: TrustedChatContext, d
       try {
         const response=await deps.model.generate({task:"explanation",system:EXPLANATION_PROMPT,input:{cards},maxOutputTokens:deps.limits.maxOutputTokens,signal});
         explanations=await checkExplanations(response.value,cards,deps.verifyExplanation); notice="";
-      } catch { notice="설명을 만들지 못했습니다. 검색 결과를 확인해주세요."; }
+      } catch (error) { if (error instanceof AiPrivacyError || (error instanceof ModelError && ["MEMBER_DAILY_LIMIT", "AI_CONSENT_REVOKED", "REQUEST_LEASE_LOST"].includes(error.code))) throw error; notice="설명을 만들지 못했습니다. 검색 결과를 확인해주세요."; }
     }
     checkCancelled();
     const allowed=new Map(cards.map(c=>[`${c.kind}:${c.id}`,JSON.stringify(c)]));
@@ -78,7 +84,10 @@ export async function runChat(input: ChatInput, principal: TrustedChatContext, d
       ...(typeof versions.get(`${c.kind}:${c.id}`)==="string" ? {traitsVersion:versions.get(`${c.kind}:${c.id}`)} : {}),
       ...(c.conditionStatus ? {conditionStatus:{...c.conditionStatus}} : {})}))});
     if(!rechecked || !Array.isArray(rechecked.cards) || typeof rechecked.complete!=="boolean") throw new Error("INVALID_RECHECK");
-    if(!rechecked.complete) return {...base,status:"unavailable",notice:CHAT_NOTICES.incomplete};
+    if (!rechecked.complete) {
+      if (!rechecked.cards.length) return {...base,status:"unavailable",notice:CHAT_NOTICES.incomplete};
+      partial = true;
+    }
     const refreshed=projectCards(rechecked.cards,intent.filters);
     // 재조회로 새 ID가 섞이면 반환하지 않으며 변경된 카드의 옛 설명도 제거한다.
     if(refreshed.some(c=>!allowed.has(`${c.kind}:${c.id}`))) throw new Error("INVALID_RECHECK");
@@ -96,5 +105,15 @@ export async function runChat(input: ChatInput, principal: TrustedChatContext, d
     const needsCheck=refreshed.some(c=>c.conditionStatus && Object.values(c.conditionStatus).includes("needs_check"));
     const notices=[...(partial ? [CHAT_NOTICES.partial] : []),...(needsCheck ? [CHAT_NOTICES.needsCheck] : []),...(!partial && !needsCheck && notice ? [notice] : [])];
     return {...base,status:"results",cards:refreshed,explanations,notice:notices.join(" "),...(partial ? {partial:true as const} : {})};
-  } catch { return {...base,status:"unavailable",notice:CHAT_NOTICES.generic}; }
+  } catch (error) {
+    if (error instanceof AiPrivacyError) return { ...base, status: "unavailable", cards: [], explanations: [],
+      notice: error.direction === "input" ? "개인정보가 포함되어 전송하지 않았어요. 내용을 수정해주세요." : "개인정보가 포함된 답변을 숨겼어요.",
+      recovery: { reason: error.direction === "input" ? "input_privacy" : "output_privacy", retryAllowed: error.direction === "output" } };
+    if (error instanceof ModelError && ["MEMBER_DAILY_LIMIT", "AI_CONSENT_REVOKED", "REQUEST_LEASE_LOST"].includes(error.code)) {
+      const reason = error.code === "MEMBER_DAILY_LIMIT" ? "daily_limit" : error.code === "AI_CONSENT_REVOKED" ? "consent" : "temporary";
+      return { ...base, status: "unavailable", notice: reason === "daily_limit" ? "오늘의 AI 이용 한도에 도달했어요. 한국시간 자정 이후 다시 이용해주세요." : reason === "consent" ? "AI 동의 철회로 새 전송이 중단됐어요. 일반 탐색을 이용해주세요." : CHAT_NOTICES.generic,
+        recovery: { reason, retryAllowed: false } };
+    }
+    return {...base,status:"unavailable",notice:CHAT_NOTICES.generic, recovery: { reason: "temporary", retryAllowed: true }};
+  }
 }

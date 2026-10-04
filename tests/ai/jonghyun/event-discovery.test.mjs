@@ -46,7 +46,7 @@ test("공식 링크가 없는 KOPIS 행사: sourceUrl null + 출처 이름 KOPIS
 test("행사도 한도에 닿으면 찾은 카드를 partial로 보여주고, 0건이면 unavailable", async () => {
   const model = { async generate() { return { value: { status: "search", filters: { target: "events", query: "공연" } }, modelVersion: "fake", usage: null }; } };
   const chatLimits = { maxMessages: 5, maxMessageChars: 200, maxTotalChars: 500, maxOutputTokens: 50 };
-  const input = { clientRequestId: "r", messages: [{ role: "user", content: "공연 찾아줘" }], currentFilters: { target: "events" } };
+  const input = { clientRequestId: "r", messages: [{ role: "user", content: "공연 찾아줘" }], currentFilters: { target: "events", region: "서울특별시" } };
   const principal = { userId: "u1" };
   const noPosts = { async search() { throw new Error("no"); }, async recheck() { throw new Error("no"); } };
   const limited = createEventDiscovery({ source: source([item(1), item(2), item(3)]), limits: { ...limits, maxSearchPages: 1 } });
@@ -56,4 +56,34 @@ test("행사도 한도에 닿으면 찾은 카드를 partial로 보여주고, 0�
   const empty = createEventDiscovery({ source: { async listPage() { return { events: [], nextCursor: "2" }; } }, limits: { ...limits, maxSearchPages: 1 } });
   const e = await runChat(input, principal, { model, discovery: noPosts, events: empty, limits: chatLimits, now: () => new Date("2026-10-01T00:00:00Z") }, "req");
   assert.equal(e.status, "unavailable"); assert.equal(e.partial, undefined);
+});
+
+test("서울 원천 카드의 출처 이름·비신청 상태와 진행 중 포함·콘서트 그룹을 전달한다", () => {
+  const card = toAiEventCard(item(1, { provider: "seoul-open-data", sourceId: "seoul-1" }));
+  assert.equal(card.sourceName, "서울 열린데이터광장"); assert.equal(card.canApply, false);
+  assert.deepEqual(eventQueryFromFilters({ target: "events", includeOngoing: true, performanceGenre: "concert" }),
+    { mode: "new_this_week", includeOngoing: true, performanceGenre: "concert" });
+});
+
+test("무료 행사만 DB 조건으로 전달하며 미확인 입장료와 유료 추정 조건으로 조회하지 않는다", () => {
+  assert.deepEqual(eventQueryFromFilters({ target: "events", cost: "free" }), { mode: "overlapping", freeOnly: true });
+  assert.throws(() => eventQueryFromFilters({ target: "events", cost: "paid" }), /UNSUPPORTED_FILTER/);
+});
+
+test("행사 재조회도 확인한 부분집합을 반환하고 확인하지 못한 카드를 넣지 않는다", async () => {
+  const items = [1, 2, 3].map(n => item(n));
+  const discovery = createEventDiscovery({ source: source(items), limits: { ...limits, recheckMaxPages: 1 } });
+  const result = await discovery.recheck({ principal: { userId: "synthetic" }, filters: { target: "events" }, now: new Date(),
+    cards: items.map(event => ({ kind: "event", id: event.id })) });
+  assert.equal(result.complete, false); assert.deepEqual(result.cards.map(card => card.id), items.slice(0, 2).map(event => event.id));
+});
+
+test("무료 조건을 무시한 저장소 응답을 후단 제거로 정상 페이지처럼 보이지 않는다", async () => {
+  for (const admission of [{ kind: "unknown" }, { kind: "described", text: "무료" }]) {
+    const discovery = createEventDiscovery({ source: source([item(1, { admission })]), limits });
+    await assert.rejects(discovery.search({ principal: { userId: "synthetic" }, filters: { target: "events", cost: "free" }, now: new Date() }), /EVENT_COST_FILTER_NOT_APPLIED/);
+  }
+  const discovery = createEventDiscovery({ source: source([item(1, { admission: { kind: "free" } })]), limits });
+  const found = await discovery.search({ principal: { userId: "synthetic" }, filters: { target: "events", cost: "free" }, now: new Date() });
+  assert.equal(found.cards[0].costLabel, "무료");
 });

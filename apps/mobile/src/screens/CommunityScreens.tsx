@@ -1,3 +1,5 @@
+import { serviceMode } from "../remote";
+import { RemoteProfileScreen } from "./RemoteScreens";
 import React, { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import {
@@ -18,6 +20,7 @@ import {
   PRAISES,
   reviewDeadline,
   reviewVisible,
+  summarySources,
 } from "../domain";
 import {
   Avatar,
@@ -1161,7 +1164,8 @@ export function MeScreen() {
   );
 }
 
-export function ProfileScreen({ id }: { id?: string }) {
+export function ProfileScreen({ id }: { id?: string }) { return serviceMode ? <RemoteProfileScreen id={id || ""} /> : <PreviewProfileScreen id={id} />; }
+function PreviewProfileScreen({ id }: { id?: string }) {
   const app = useApp();
   const [limit, setLimit] = useState(5);
   const [expanded, setExpanded] = useState(false);
@@ -1195,7 +1199,7 @@ export function ProfileScreen({ id }: { id?: string }) {
       r.targetId === member.id &&
       app.appointments.some((a) => reviewVisible(a, app.reviews, r, app.now)),
   );
-  const texts = reviews.filter((r) => r.comment.trim());
+  const texts = summarySources(reviews, member.id, app.aiSummaryWithdrawnIds);
   const counts = PRAISES.map((name) => ({
     name,
     count: reviews.filter((r) => r.praises.includes(name)).length,
@@ -1203,7 +1207,7 @@ export function ProfileScreen({ id }: { id?: string }) {
     .filter((x) => x.count)
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
-  const summaryEligible = texts.length >= 3 && app.aiSummaryAllowed;
+  const summaryEligible = texts.length >= 3;
   return (
     <Screen
       title="프로필"
@@ -1310,7 +1314,7 @@ export function ProfileScreen({ id }: { id?: string }) {
           </>
         ) : (
           <Body small muted>
-            {!app.aiSummaryAllowed
+            {app.aiSummaryWithdrawnIds.includes(member.id)
               ? "후기 요약 사용을 철회한 상태예요. 공개 원문과 칭찬은 계속 볼 수 있어요."
               : "공개 텍스트 후기 3개부터 요약을 준비해요."}
           </Body>

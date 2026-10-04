@@ -4,7 +4,10 @@ export type PostAvailability = "all" | "recruiting";
 export type PostSort = "created_desc" | "starts_asc";
 export type PostDisplayState = "recruiting" | "confirmed" | "closed" | "expired";
 export type PostCostFilter = "all" | "free" | "paid";
-export type AuthorAgeFilter = "all" | "20s" | "30s" | "40plus";
+export type AuthorAgeFilter = "all" | { min: number; max: number };
+export const POST_SEARCH_PAGE_SIZE = 10;
+export const POST_REGIONS = ["서울특별시", "부산광역시", "대구광역시", "인천광역시", "광주광역시", "대전광역시", "울산광역시", "세종특별자치시", "경기도", "강원특별자치도", "충청북도", "충청남도", "전북특별자치도", "전라남도", "경상북도", "경상남도", "제주특별자치도"] as const;
+export type PostRegion = typeof POST_REGIONS[number];
 
 export type PostCost =
   | { kind: "unknown" }
@@ -25,8 +28,8 @@ export interface PostSearchPeriod { startsAt: string; endsAt: string; }
 export interface PublicPostSearchRow {
   id: string;
   title: string;
-  anonymousAlias: string;
-  maskedName: string;
+  anonymousAlias?: string;
+  maskedName: string | null;
   /** 기존 내부 필드명. 값은 DB public_area와 같은 동·읍·면·가까지의 공개 지역이다. */
   publicAreaDistrict: string;
   startsAt: string;
@@ -40,7 +43,7 @@ export interface PublicPostSearchRow {
 export interface PublicPostCard {
   id: string;
   title: string;
-  authorDisplayName: string;
+  authorDisplayName: string | null;
   publicArea: string;
   startsAt: string;
   endsAt: string;
@@ -56,6 +59,7 @@ export interface PublicPostListInput {
   query?: string;
   period?: PostSearchPeriod;
   category?: string;
+  region?: PostRegion;
   cost?: PostCostFilter;
   authorAge?: AuthorAgeFilter;
   cursor?: string;
@@ -78,8 +82,8 @@ export interface PublicPostCursorPosition {
   sortAt: string;
   id: string;
 }
-/** 공고 분류 고정 목록. 검색 v2 SQL·HTTP와 같으며 AI 조건 해석도 이 목록만 사용한다. */
-export const POST_CATEGORIES = ["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"] as const;
+/** 정책의 16개 분류. 민규 SQL·HTTP도 이 목록으로 연결하며 AI 조건 해석은 같은 값을 사용한다. */
+export const POST_CATEGORIES = ["지금이당", "전시", "축제", "팝업", "공연", "영화", "맛집", "카페", "쇼핑", "여행", "운동", "산책", "게임", "반려동물", "스터디", "기타"] as const;
 const categories: ReadonlySet<string> = new Set(POST_CATEGORIES);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const maxCursorLength = 4096;
@@ -110,7 +114,7 @@ export function parseSearchTimestamp(value: string): number {
 
 export function normalizePublicPostListInput(input: PublicPostListInput): NormalizedPublicPostListInput {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("INVALID_FILTER");
-  const allowed = new Set(["caller", "availability", "sort", "query", "period", "category", "cost", "authorAge", "cursor", "limit"]);
+  const allowed = new Set(["caller", "availability", "sort", "query", "period", "category", "region", "cost", "authorAge", "cursor", "limit"]);
   if (Object.keys(input).some((key) => !allowed.has(key))) throw new Error("UNSUPPORTED_FILTER");
   if (input.caller !== "anonymous" && input.caller !== "member") throw new Error("INVALID_CALLER");
   const availability = input.availability === undefined ? "all" : input.availability;
@@ -119,13 +123,21 @@ export function normalizePublicPostListInput(input: PublicPostListInput): Normal
   if (sort !== "created_desc" && sort !== "starts_asc") throw new Error("INVALID_FILTER");
   const cost = input.cost === undefined ? "all" : input.cost;
   if (!["all", "free", "paid"].includes(cost)) throw new Error("INVALID_FILTER");
-  const authorAge = input.authorAge === undefined ? "all" : input.authorAge;
-  if (!["all", "20s", "30s", "40plus"].includes(authorAge)) throw new Error("INVALID_FILTER");
+  let authorAge: AuthorAgeFilter = "all";
+  if (input.authorAge !== undefined && input.authorAge !== "all") {
+    const age = input.authorAge;
+    if (!age || typeof age !== "object" || Array.isArray(age) ||
+      Object.keys(age).length !== 2 || Object.keys(age).some((key) => key !== "min" && key !== "max") ||
+      !Number.isSafeInteger(age.min) || !Number.isSafeInteger(age.max) ||
+      age.min < 19 || age.max > 99 || age.min > age.max) throw new Error("INVALID_FILTER");
+    authorAge = { min: age.min, max: age.max };
+  }
   const rawQuery = input.query === undefined ? "" : input.query;
   if (typeof rawQuery !== "string" || [...rawQuery].length > 300) throw new Error("INVALID_FILTER");
   const query = rawQuery.trim().replace(/\s+/gu, " ").toLowerCase();
   if (input.category !== undefined && !categories.has(input.category)) throw new Error("INVALID_FILTER");
-  const limit = input.limit === undefined ? 20 : input.limit;
+  if (input.region !== undefined && !POST_REGIONS.includes(input.region)) throw new Error("INVALID_FILTER");
+  const limit = input.limit === undefined ? POST_SEARCH_PAGE_SIZE : input.limit;
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) throw new Error("INVALID_FILTER");
   if (input.cursor !== undefined && (typeof input.cursor !== "string" || !input.cursor.length ||
     input.cursor.length > maxCursorLength || !/^[A-Za-z0-9_-]+$/.test(input.cursor))) throw new Error("INVALID_CURSOR");
@@ -138,14 +150,15 @@ export function normalizePublicPostListInput(input: PublicPostListInput): Normal
     }
     period = { startsAt: input.period.startsAt, endsAt: input.period.endsAt };
   }
-  if (input.caller === "anonymous" && authorAge !== "all") throw new Error("AUTH_REQUIRED");
+  if (input.caller === "anonymous" && (authorAge !== "all" || period !== undefined)) throw new Error("AUTH_REQUIRED");
   return { caller: input.caller, availability, sort, query, cost, authorAge, limit,
     ...(input.category !== undefined ? { category: input.category } : {}),
+    ...(input.region !== undefined ? { region: input.region } : {}),
     ...(period ? { period } : {}), ...(input.cursor !== undefined ? { cursor: input.cursor } : {}) };
 }
 
 function cursorFilters(input: NormalizedPublicPostListInput) {
-  return { query: input.query, category: input.category ?? null, cost: input.cost,
+  return { caller: input.caller, region: input.region ?? null, query: input.query, category: input.category ?? null, cost: input.cost,
     availability: input.availability, sort: input.sort, period: input.period ?? null, authorAge: input.authorAge };
 }
 function sameJson(a: unknown, b: unknown): boolean {
@@ -167,7 +180,7 @@ function cursorPosition(value: unknown): PublicPostCursorPosition {
 /** 필터가 바뀌면 새 목록을 요청한다. 입력한 검색어는 cursor에만 포함되고 로그에 기록하지 않는다. */
 export function encodePublicPostCursor(input: PublicPostListInput, position: PublicPostCursorPosition): string {
   const filters = normalizePublicPostListInput(input);
-  const value = { v: 2, filters: cursorFilters(filters), position: cursorPosition(position) };
+  const value = { v: 3, filters: cursorFilters(filters), position: cursorPosition(position) };
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   const encoded = btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
@@ -183,7 +196,7 @@ export function decodePublicPostCursor(cursor: string, input: PublicPostListInpu
     const decoded: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(binary, (character) => character.charCodeAt(0))));
     if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) throw new Error();
     const value = decoded as Record<string, unknown>;
-    if (Object.keys(value).length !== 3 || !Object.hasOwn(value, "position") || value.v !== 2 ||
+    if (Object.keys(value).length !== 3 || !Object.hasOwn(value, "position") || value.v !== 3 ||
       !sameJson(value.filters, cursorFilters(filters))) throw new Error();
     return cursorPosition(value.position);
   } catch { throw new Error("INVALID_CURSOR"); }

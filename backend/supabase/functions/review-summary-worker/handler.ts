@@ -18,8 +18,8 @@ export const REVIEW_SUMMARY_WORKER_PATHS = ["/functions/v1/review-summary-worker
 export type WorkerNotEnabledReason =
   | "WORKER_NOT_CONFIGURED" | "WORKER_SETTINGS_INVALID"
   | "SUMMARY_VERSIONS_NOT_CONFIGURED" | "SUMMARY_VERSIONS_INVALID" | "SUMMARY_PROMPT_UNSUPPORTED"
-  | "MODEL_RETENTION_REVIEW_PENDING" | "MODEL_COST_EVIDENCE_MISSING" | "MODEL_NOT_CONFIGURED" | "MODEL_VERSION_MISMATCH"
-  | "SAFETY_CHECK_NOT_APPROVED" | "DB_RPC_NOT_ALLOWED" | "DB_RPC_UNAVAILABLE";
+  | "MODEL_RETENTION_REVIEW_PENDING" | "MODEL_COST_EVIDENCE_MISSING" | "MODEL_LEGAL_REVIEW_PENDING" | "MODEL_MEMBER_TRANSMISSION_NOT_APPROVED" | "MODEL_NOT_CONFIGURED" | "MODEL_OUTPUT_LIMIT_NOT_VERIFIED" | "MODEL_VERSION_MISMATCH"
+  | "SAFETY_CHECK_NOT_APPROVED" | "PRIVACY_CHECK_NOT_APPROVED" | "WORKER_RUN_BUSY" | "DB_RPC_NOT_ALLOWED" | "DB_RPC_UNAVAILABLE";
 /**
  * idle: 지금 처리할 작업 없음. max_jobs/time_budget: 실행당 한도 도달(남은 작업은 다음 실행에서 이어감).
  * budget_exhausted: AI 예산·공급사 한도 소진(추가 모델 호출 없이 중단, 실패 아님).
@@ -86,10 +86,13 @@ const NIL = "00000000-0000-0000-0000-000000000000";
  * 허용 목록에 없는 RPC(ACCESS_DENIED)나 미적용 함수가 있으면 작업을 점유하기 전에 멈춘다.
  */
 export async function probeSummaryWorkerRpcs(db: RpcClient): Promise<"ready" | "DB_RPC_NOT_ALLOWED" | "DB_RPC_UNAVAILABLE"> {
-  const job = { p_job_id: NIL, p_lease_token: NIL };
-  const withRevision = { ...job, p_source_revision: "0" };
+  const job = { p_job_id: NIL, p_lease_token: NIL, p_worker_run_token: NIL };
+  const summaryJob = { ...job, p_worker_run_token: NIL, p_contract_version: "2026-10-05" };
+  const withRevision = { ...summaryJob, p_source_revision: "0" };
   const probes: Array<[string, Record<string, JsonValue>, "lease_lost" | "state_conflict"]> = [
-    ["load_review_summary_source", job, "lease_lost"],
+    ["reserve_review_summary_model", { ...withRevision, p_target_user_id: NIL, p_source_review_ids: [], p_model_version: "probe",
+      p_prompt_version: "probe", p_ledger_id: "probe", p_provider_id: "probe", p_task: "review_chunk", p_units: 1 }, "lease_lost"],
+    ["load_review_summary_source", summaryJob, "lease_lost"],
     ["load_review_summary_checkpoint", withRevision, "lease_lost"],
     ["save_review_summary_checkpoint", { ...withRevision, p_checkpoint: { schemaVersion: 1, sourceReviewIds: [], nextReviewIndex: 0, nodes: [] } }, "lease_lost"],
     ["discard_review_summary_checkpoint", withRevision, "lease_lost"],
@@ -118,12 +121,12 @@ export interface ReviewSummaryWorkerDependencies {
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
   authenticateInternal(request: Request): Promise<void>;
-  run(): Promise<WorkerRunResult>;
+  run(existingToken?: string): Promise<WorkerRunResult>;
 }
 
 export function createReviewSummaryWorkerHandler(deps: ReviewSummaryWorkerDependencies) {
   if (!Number.isSafeInteger(deps.maxBodyBytes) || deps.maxBodyBytes < 1) throw new TypeError("본문 크기 제한이 필요합니다.");
-  const cors = createCors({ allowedOrigins: deps.allowedOrigins, allowedMethods: ["POST"], allowedHeaders: ["authorization", "content-type", "apikey"] });
+  const cors = createCors({ allowedOrigins: deps.allowedOrigins, allowedMethods: ["POST"], allowedHeaders: ["authorization", "content-type", "apikey", "x-worker-run-token"] });
   return async (request: Request): Promise<Response> => {
     const context = createRequestContext();
     const preflight = cors.preflight(request, context);
@@ -140,7 +143,9 @@ export function createReviewSummaryWorkerHandler(deps: ReviewSummaryWorkerDepend
       const body = await readJson(request, { maxBytes: deps.maxBodyBytes });
       // 실행 설정은 서버 환경에서만 읽는다. 요청 본문으로 한도·모델·토큰을 바꾸지 못한다.
       if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== 0) throw new HttpError("INVALID_REQUEST");
-      const result = await deps.run();
+      const token = request.headers.get("x-worker-run-token") ?? undefined;
+      if (token !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(token)) throw new HttpError("INVALID_REQUEST");
+      const result = await deps.run(token);
       return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
     } catch (error) {
       const response = jsonFailure(error, context);

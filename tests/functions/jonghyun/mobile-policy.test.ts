@@ -4,7 +4,7 @@ import {
   CATEGORIES, PRAISES, DAY, HOUR, canAutoComplete, canWriteReview,
   changeExpiresAt, currentWeek, detectPersonalInfo, filterPosts,
   finalRequestExpiresAt, kstDay, maskName, monthWeek, parseDateInput,
-  reviewDeadline, reviewVisible, selectEvents, sweetness, validateDraft,
+  reviewDeadline, reviewVisible, selectEvents, sweetness, validateDraft, summarySources,
 } from '../../../apps/mobile/src/domain.ts';
 import type { Appointment, Draft, EventItem, Filters, Member, Post, Review } from '../../../apps/mobile/src/types.ts';
 
@@ -144,4 +144,21 @@ test('draft validation preserves valid times and finds bad bounds or private dis
   assert.ok(validateDraft({ ...draft, deadlineAt: '2026-10-07T12:00' }, now).deadlineAt);
   assert.ok(validateDraft({ ...draft, introduction: '01012345678로 연락주세요' }, now).personalInfo);
   assert.ok(validateDraft({ ...draft, title: draft.meetingPoint }, now).personalInfo);
+});
+
+
+test('search does not match across fields and uses positive overlap and server tie order', () => {
+  assert.equal(filterPosts([post], { ...filters, query: '보기 미술관' }, { host: member }, 'guest').length, 0);
+  assert.equal(filterPosts([{ ...post, endsAt: now, startsAt: now - HOUR }], { ...filters, from: '2026-10-05T12:00' }, { host: member }, 'guest').length, 0);
+  const sameStart = [{ ...post, id: 'b', createdAt: now + HOUR }, { ...post, id: 'a', createdAt: now }];
+  assert.deepEqual(filterPosts(sameStart, { ...filters, sort: 'starts_asc' }, { host: member }, 'guest').map((item) => item.id), ['a', 'b']);
+});
+
+test('review AI withdrawal excludes written sources and owner summary but keeps public reviews intact', () => {
+  const written = { ...review, authorId: 'withdrawn', targetId: 'target' };
+  const other = { ...review, id: 'other', authorId: 'allowed', targetId: 'target' };
+  assert.deepEqual(summarySources([written, other], 'target', ['withdrawn']), [other]);
+  assert.deepEqual(summarySources([written, other], 'target', ['target']), []);
+  assert.equal([written, other].length, 2);
+  assert.equal(written.hidden, false);
 });

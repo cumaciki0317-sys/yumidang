@@ -12,7 +12,7 @@ const JWT = "aaaa.bbbb.cccc";
 const baseEnv = {
   SUPABASE_URL: "http://127.0.0.1:54321", SUPABASE_ANON_KEY: "synthetic-anon", UPSTREAM_TIMEOUT_MS: "1000",
   MAX_REQUEST_BYTES: "4096", ALLOWED_ORIGINS: JSON.stringify([ORIGIN]),
-  KAKAO_REST_API_KEY: KAKAO_KEY, PLACES_PAGE_SIZE: "5",
+  KAKAO_REST_API_KEY: KAKAO_KEY, PLACES_PAGE_SIZE: "10",
 };
 const kakaoDocument = {
   id: "fake-1", place_name: "가상 전시관", address_name: "가상시 예시구 10", road_address_name: "가상시 예시로 10",
@@ -61,7 +61,7 @@ test("회원 검색: 공개 후보 필드만 반환하고 CORS·요청 ID를 붙
   for (const secret of [KAKAO_KEY, "PRIVATE-PHONE", "127.1", "discard.example", JWT]) assert.equal(res.text.includes(secret), false, secret);
   assert.equal(calls.kakao.length, 1);
   const { url, init } = calls.kakao[0];
-  assert.deepEqual(Object.fromEntries(url.searchParams), { query: "전시", page: "1", size: "5", sort: "accuracy" });
+  assert.deepEqual(Object.fromEntries(url.searchParams), { query: "전시", page: "1", size: "10", sort: "accuracy" });
   assert.equal(init.headers.Authorization, `KakaoAK ${KAKAO_KEY}`);
   assert.equal(init.redirect, "error");
   // /places 경로도 같은 처리.
@@ -133,7 +133,7 @@ test("공급사 거절·장애·형식 오류는 503이며 키·원문을 응답
 
 test("장소 설정 누락은 인증 후 503, 인증 전에는 401. PLACES_PAGE_SIZE는 기본값이 없다", async () => {
   for (const env of [{ KAKAO_REST_API_KEY: undefined }, { KAKAO_REST_API_KEY: " key" }, { PLACES_PAGE_SIZE: undefined },
-    { PLACES_PAGE_SIZE: "0" }, { PLACES_PAGE_SIZE: "16" }, { PLACES_PAGE_SIZE: "5.0" }, { PLACES_PAGE_SIZE: "" }]) {
+    { PLACES_PAGE_SIZE: "0" }, { PLACES_PAGE_SIZE: "5" }, { PLACES_PAGE_SIZE: "15" }, { PLACES_PAGE_SIZE: "16" }, { PLACES_PAGE_SIZE: "5.0" }, { PLACES_PAGE_SIZE: "" }]) {
     const { handler, calls } = setup({ env });
     assert.equal((await handler(get("/functions/v1/places?query=a&page=1", { auth: false }))).status, 401);
     const res = await read(await handler(get("/functions/v1/places?query=a&page=1")));

@@ -305,7 +305,8 @@ export function createKopisTransport(config: KopisConfig): EventProviderTranspor
           try { body = await response.text(); } catch { return invalid(); }
           const items = classifyKopisListResponse(parseFlatDbsXml(body), rows);
           // 공급사가 전체 건수를 주지 않는다. 꽉 찬 페이지만 다음 페이지 가능성이 있다.
-          const hasMore = items.length === rows && page < KOPIS_MAX_PAGE;
+          // 공급사 페이지 상한 도달은 전체 수집 완료가 아니다. 수집 코어가 미수집 범위로 남긴다.
+          const hasMore = items.length === rows;
           return { items, ...(hasMore ? { nextCursor: String(page + 1) } : {}) };
         })();
         return await Promise.race([work, aborted]);

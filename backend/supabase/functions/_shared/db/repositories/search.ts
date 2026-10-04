@@ -1,6 +1,6 @@
 /**
  * 검색 저장소의 순수 일치 규칙·가상 어댑터와 v2 RPC 주입 어댑터.
- * 최신 SQL·공통 클라이언트의 v2 계약을 사용한다. 실제 로컬 GET 연결 검증은 민규 검색 연결 인계(2026-09-29)를 따른다.
+ * 정책 버전 인수를 요구하는 v2 계약을 사용한다. 민규의 새 SQL 시그니처·HTTP 연결이 필요하다.
  * 등록 주소는 이 경계에서 일치 판단에만 쓰며 서비스·AI에 전달하지 않는다.
  */
 import {
@@ -22,6 +22,7 @@ export interface PostSearchIndexFields {
   title: string;
   registeredPlaceName?: string | null;
   registeredAddress?: string | null;
+  linkedEventName?: string | null;
 }
 
 /** DB 내부 검색 후보. 상세 만남 지점·기존 exact_location을 추가하지 않는다. */
@@ -29,6 +30,9 @@ export interface PostSearchCandidate {
   publicRow: PublicPostSearchRow;
   index: PostSearchIndexFields;
   category: string;
+  /** 가상 검색 내부 검증용. 실제 만 나이는 DB 한국 날짜 기준으로 계산한다. */
+  authorAge?: number;
+  region?: string;
 }
 
 /**
@@ -48,12 +52,12 @@ export function normalizePostKeyword(value: string): string {
 export function matchesPostKeyword(fields: PostSearchIndexFields, rawQuery: string): boolean {
   const query = normalizePostKeyword(rawQuery);
   if (!fields || typeof fields.title !== "string" ||
-    [fields.registeredPlaceName, fields.registeredAddress]
+    [fields.registeredPlaceName, fields.registeredAddress, fields.linkedEventName]
       .some((value) => value != null && typeof value !== "string")) {
     throw new Error("INVALID_SEARCH_INDEX");
   }
   if (!query) return true;
-  return [fields.title, fields.registeredPlaceName, fields.registeredAddress]
+  return [fields.title, fields.registeredPlaceName, fields.registeredAddress, fields.linkedEventName]
     .some((value) => value != null && normalizePostKeyword(value).includes(query));
 }
 
@@ -66,24 +70,29 @@ export function filterPostSearchCandidates(
   input: PublicPostListInput,
 ): PublicPostSearchRow[] {
   const filters = normalizePublicPostListInput(input);
-  if (filters.authorAge !== "all" || filters.cursor !== undefined) throw new Error("UNSUPPORTED_FILTER");
+  if (filters.cursor !== undefined) throw new Error("UNSUPPORTED_FILTER");
   return candidates.filter((candidate) => {
     if (!candidate?.publicRow || !candidate.index ||
       candidate.index.title !== candidate.publicRow.title ||
       typeof candidate.category !== "string" || !candidate.category.trim()) {
       throw new Error("INVALID_SEARCH_SOURCE");
     }
+    if (filters.authorAge !== "all" && (!Number.isSafeInteger(candidate.authorAge) || candidate.authorAge! < 0)) {
+      throw new Error("INVALID_SEARCH_SOURCE");
+    }
+    if (filters.region !== undefined && typeof candidate.region !== "string") throw new Error("INVALID_SEARCH_SOURCE");
     const matchesQuery = matchesPostKeyword(candidate.index, filters.query);
     return matchesQuery &&
       (filters.category === undefined || candidate.category === filters.category) &&
+      (filters.region === undefined || candidate.region === filters.region) &&
+      (filters.authorAge === "all" || (candidate.authorAge! >= filters.authorAge.min && candidate.authorAge! <= filters.authorAge.max)) &&
       (filters.cost === "all" || (filters.cost === "free"
         ? candidate.publicRow.cost.kind === "free"
         : ["paid_request", "paid_offer"].includes(candidate.publicRow.cost.kind)));
   }).map(({ publicRow }) => ({
     id: publicRow.id,
     title: publicRow.title,
-    anonymousAlias: publicRow.anonymousAlias,
-    maskedName: publicRow.maskedName,
+    maskedName: filters.caller === "anonymous" ? null : publicRow.maskedName,
     publicAreaDistrict: publicRow.publicAreaDistrict,
     startsAt: publicRow.startsAt,
     endsAt: publicRow.endsAt,
@@ -130,6 +139,7 @@ function wireCard(value: unknown, caller: PublicPostListInput["caller"]): Public
   if (typeof raw.id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw.id)) {
     throw new Error("INVALID_SEARCH_RESPONSE");
   }
+  if (caller === "anonymous" && raw.authorDisplayName !== null) throw new Error("INVALID_SEARCH_RESPONSE");
   let cost: PublicPostCard["cost"];
   if (raw.cost === null) {
     cost = { kind: "unknown" };
@@ -162,6 +172,7 @@ function wireCard(value: unknown, caller: PublicPostListInput["caller"]): Public
 /**
  * 서버가 인증한 호출자에 맞는 RpcClient를 주입한다. caller를 DB 권한 인수로 전달하지 않는다.
  * search_public_posts_v2 오류나 공통 허용 목록 오류를 가상 자료/기존 RPC로 대체하지 않는다.
+ * 새 필수 정책 버전·지역 인수가 구 SQL의 성공을 막는다. 실패를 다른 RPC로 대체하지 않는다.
  * wire: {items: public card[], nextCursor: cursor position|null}; 비용 미상만 cost:null이다.
  */
 export function createRpcPublicPostSearchRepository(db: RpcClient): PagedPublicPostSearchRepository {
@@ -171,6 +182,8 @@ export function createRpcPublicPostSearchRepository(db: RpcClient): PagedPublicP
       const filters = normalizePublicPostListInput(input);
       const cursor = filters.cursor === undefined ? null : decodePublicPostCursor(filters.cursor, filters);
       const result = await db.rpc("search_public_posts_v2", {
+        p_contract_version: "2026-10-05",
+        p_region: filters.region ?? null,
         p_filters: {
           query: filters.query,
           category: filters.category ?? null,

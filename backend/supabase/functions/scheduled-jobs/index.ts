@@ -7,7 +7,7 @@ import { requireInternalCaller } from "../_shared/auth/internal-caller.ts";
 import { fetchJson, type FetchLike } from "../_shared/db/transport.ts";
 import type { JsonValue } from "../_shared/contracts/common.ts";
 import { HttpError } from "../_shared/http/errors.ts";
-import { loadDailySettings, runDaily, type EventSyncPageResult, type WorkerInvocationResult } from "../_shared/jobs/daily.ts";
+import { loadDailySettings, runDaily, type EventSyncPageResult, type WorkerInvocationResult, type EventDailySettings } from "../_shared/jobs/daily.ts";
 import { createScheduledJobsHandler } from "./handler.ts";
 
 const unavailable = (): never => { throw new HttpError("EXTERNAL_UNAVAILABLE"); };
@@ -86,7 +86,11 @@ function projectMaintenance(body: JsonValue): JsonValue {
   };
 }
 
-export function createScheduledJobsRuntime(read: EnvReader, fetchImpl: FetchLike = fetch, options: { now?: () => Date } = {}) {
+export function createScheduledJobsRuntime(read: EnvReader, fetchImpl: FetchLike = fetch, options: {
+  now?: () => Date;
+  /** 테스트/전용 연결 주입. 기본 운영은 event-sync/register의 계약 확인 뒤 영속 예약한다. */
+  runEventCollections?: (settings: EventDailySettings, now: Date) => Promise<Record<string, JsonValue>>;
+} = {}) {
   const config = loadRuntimeConfig(read);
   const { workerSecret } = requireInternalConfig(config);
   const post = (path: string, body: JsonValue, timeoutMs: number) => fetchJson(`${config.supabaseUrl}/functions/v1/${path}`, {
@@ -118,6 +122,19 @@ export function createScheduledJobsRuntime(read: EnvReader, fetchImpl: FetchLike
         return projectWorker(result.body);
       },
       now: options.now ?? (() => new Date()),
+      runEventCollections: options.runEventCollections ?? (async (settings): Promise<Record<string, JsonValue>> => {
+        const result = await post("event-sync/register", { providers: settings.providers, maxPeriodDays: settings.windowDays }, settings.timeoutMs);
+        if (result.status !== 200) return upstreamFailure(result.body);
+        const value = record(exact(result.body, ["requestId", "data"]).data);
+        if (value.status === "not_enabled") {
+          const data = exact(value, ["status", "reason"]);
+          if (typeof data.reason !== "string" || !/^[A-Z_]{1,64}$/.test(data.reason)) return unavailable();
+          return { status: "not_enabled", reason: data.reason };
+        }
+        const data = exact(value, ["status", "createdCount", "existingCount"]);
+        if (data.status !== "registered") return unavailable();
+        return { status: "ok", registration: "registered", createdCount: count(data.createdCount), existingCount: count(data.existingCount) };
+      }),
     }, loadDailySettings(read)),
   });
 }

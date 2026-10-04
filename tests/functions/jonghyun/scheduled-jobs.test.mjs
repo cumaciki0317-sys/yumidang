@@ -130,3 +130,16 @@ test("transport exceptions are redacted and internal secret configuration cannot
   assert.ok(!(await response.text()).includes("private detail"));
   assert.throws(() => runtime(async () => Response.json(good), { INTERNAL_WORKER_SECRET: fixture.SUPABASE_ANON_KEY }));
 });
+
+
+test("정책 내부 정리는 최대20건이며 초과 요청은 일일/직접 경로 모두 외부 호출 전 거부한다", async () => {
+  let calls = 0;
+  const handler = runtime(async () => { calls++; return Response.json(good); });
+  for (const suffix of ["", "/daily"]) {
+    assert.equal((await handler(request({limit:21}, secret, "POST", suffix))).status, 400);
+    assert.equal((await handler(request({limit:100}, secret, "POST", suffix))).status, 400);
+  }
+  assert.equal(calls,0);
+  assert.equal((await handler(request({limit:20}))).status,200);
+  assert.equal(calls,1);
+});

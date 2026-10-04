@@ -24,8 +24,12 @@ export interface EventTimingQuery {
   /** 한국 달력 날짜, 양 끝 날짜 포함. 진행 중 필터와 교집합으로 적용한다. */
   period?: EventPeriod;
   ongoingOnly?: boolean;
+  /** 기본 신규 목록과 이전 주부터 진행 중인 행사의 합집합. ongoingOnly와 함께 쓰지 않는다. */
+  includeOngoing?: boolean;
 }
 export interface EventQuery extends EventTimingQuery {
+  performanceGenre?: "concert" | "musical" | "play";
+  freeOnly?: boolean;
   /** 행사명·장소명·공개 주소 중 한 필드에 부분 일치. 빈 검색어는 다른 필터만 적용한다. */
   query?: string;
   /** 제공처 어댑터가 정규화한 값과 정확히 일치. 지역/종류 매핑은 이 계층에서 만들지 않는다. */
@@ -56,6 +60,10 @@ export type SourceEventRecord = EventTiming & {
    */
   sourceUrl: string | null;
   collectedAt: string;
+  /** 원천에서 확인한 선택 필드. 미제공 값은 기존 저장값을 지우지 않는다. */
+  operatingInfo?: string | null;
+  description?: string | null;
+  posterUrl?: string | null;
 };
 export type StoredEventRecord = SourceEventRecord & { id: string };
 

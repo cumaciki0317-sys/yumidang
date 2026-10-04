@@ -197,6 +197,7 @@ export type AppState = {
   aiBusy: boolean;
   aiDiscoveryAllowed: boolean;
   aiSummaryAllowed: boolean;
+  aiSummaryWithdrawnIds: string[];
   failNext: boolean;
   now: number;
   toast: string;

@@ -41,10 +41,10 @@ export function createScheduledJobsHandler(deps: ScheduledJobsDependencies) {
       const body = await readJson(request, { maxBytes: deps.maxBodyBytes });
       if (!body || typeof body !== "object" || Array.isArray(body) ||
           Object.keys(body).length !== 1 || !Object.hasOwn(body, "limit") ||
-          typeof body.limit !== "number" || !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 100) {
+          typeof body.limit !== "number" || !Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 20) {
         throw new HttpError("INVALID_REQUEST");
       }
-      // limit은 명시적 입력이다. 기본 주기·배치·자동 재시도를 만들지 않는다.
+      // 정책14 내부 정리 상한20. limit은 명시적 입력이며 자동 기본값을 만들지 않는다.
       return cors.apply(jsonSuccess(daily ? await deps.daily(body.limit) : await deps.maintenance(body.limit), context), request);
     } catch (error) {
       const response = jsonFailure(error, context);

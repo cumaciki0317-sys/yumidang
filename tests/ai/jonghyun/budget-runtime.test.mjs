@@ -82,8 +82,8 @@ test("보관 검토 결정·추가 지출 0원 근거·원장이 없으면 모�
 test("모든 명시 설정이 있으면 예산 예약 후 포텐스닷으로 호출(가상 fetch)", async () => {
   const calls = [];
   const budgetDb = { rpc: async (name) => name === "reserve_ai_budget" ? { reservationId: RID } : { settled: true } };
-  const runtime = createConfiguredModel(env({ ...potensEnv, AI_RETENTION_DECISION_ID: "d", AI_COST_EVIDENCE_ID: "e", AI_BUDGET_LEDGER_ID: "l" }), {
-    budgetDb, fetch: async (url, init) => { calls.push(url); return Response.json({ message: "{\"ok\":true}", token_usage: {} }); },
+  const runtime = createConfiguredModel(env({ ...potensEnv, AI_RETENTION_DECISION_ID: "d", AI_COST_EVIDENCE_ID: "e", AI_BUDGET_LEDGER_ID: "l", AI_PROCESSING_LEGAL_DECISION_ID:"synthetic", AI_MEMBER_TRANSMISSION_APPROVAL_ID:"synthetic" }), {
+    budgetDb, outputLimit: { decisionId: "synthetic-only", apply: (body, limit) => ({ ...body, synthetic_max_tokens: limit }) }, fetch: async (url, init) => { calls.push(url); return Response.json({ message: "{\"ok\":true}", token_usage: {} }); },
   });
   assert.equal(runtime.status, "ready");
   const response = await runtime.model.generate({ task: "intent", system: "s", input: {}, maxOutputTokens: 5 });

@@ -5,7 +5,6 @@
 import type { EnvReader } from "../../../config/env.ts";
 import type { ChatLimits } from "../../../contracts/ai.ts";
 import { requiredPositiveInt } from "../../../jobs/settings.ts";
-import { AUTHOR_TRAITS_MAX_IDS } from "./traits.ts";
 import type { DiscoveryLimits } from "./discovery.ts";
 
 /** 설정 변수 이름과 용도. 값은 문서·로그·저장소에 기록하지 않는다. */
@@ -24,23 +23,24 @@ export const AI_CHAT_ENV = {
 } as const;
 
 export function loadAiChatSettings(read: EnvReader): { limits: ChatLimits; discovery: DiscoveryLimits } {
+  // max 설정은 더 낮은 양수를 허용하되 정책11·14와 현 검색 계약 상한을 넘지 않는다.
   const value = (key: string, maximum?: number) => requiredPositiveInt(read, key, maximum);
   return {
     limits: {
-      maxMessages: value(AI_CHAT_ENV.maxMessages),
-      maxMessageChars: value(AI_CHAT_ENV.maxMessageChars),
-      maxTotalChars: value(AI_CHAT_ENV.maxTotalChars),
-      maxOutputTokens: value(AI_CHAT_ENV.maxOutputTokens),
+      maxMessages: value(AI_CHAT_ENV.maxMessages, 20),
+      maxMessageChars: value(AI_CHAT_ENV.maxMessageChars, 500),
+      maxTotalChars: value(AI_CHAT_ENV.maxTotalChars, 4000),
+      maxOutputTokens: value(AI_CHAT_ENV.maxOutputTokens, 800),
     },
     discovery: {
-      // 검색 v2·성향 RPC의 기술 상한(50)을 넘을 수 없다.
-      pageSize: value(AI_CHAT_ENV.pageSize, AUTHOR_TRAITS_MAX_IDS),
-      maxSearchPages: value(AI_CHAT_ENV.maxSearchPages),
-      recheckMaxPages: value(AI_CHAT_ENV.recheckMaxPages),
-      maxResultCards: value(AI_CHAT_ENV.maxResultCards),
-      matchBatchSize: value(AI_CHAT_ENV.matchBatchSize),
-      maxMatchCalls: value(AI_CHAT_ENV.maxMatchCalls),
-      matchMaxOutputTokens: value(AI_CHAT_ENV.matchMaxOutputTokens),
+      // 정책/계약의 페이지 상한10을 넘을 수 없다.
+      pageSize: value(AI_CHAT_ENV.pageSize, 10),
+      maxSearchPages: value(AI_CHAT_ENV.maxSearchPages, 3),
+      recheckMaxPages: value(AI_CHAT_ENV.recheckMaxPages, 3),
+      maxResultCards: value(AI_CHAT_ENV.maxResultCards, 5),
+      matchBatchSize: value(AI_CHAT_ENV.matchBatchSize, 5),
+      maxMatchCalls: value(AI_CHAT_ENV.maxMatchCalls, 3),
+      matchMaxOutputTokens: value(AI_CHAT_ENV.matchMaxOutputTokens, 600),
     },
   };
 }

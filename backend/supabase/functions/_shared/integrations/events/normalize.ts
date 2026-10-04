@@ -38,6 +38,27 @@ export function seoulWeekWindow(today: string): { monday: string; nextMonday: st
   return { monday, nextMonday: addCalendarDays(monday, 7) };
 }
 
+/** 서비스 월별 표기: 목요일 귀속. ISO가 월별 주차를 직접 정의한다는 뜻은 아니다. */
+export function seoulMonthWeek(today: string): { year: number; month: number; week: number; label: string; monday: string; nextMonday: string } {
+  const window = seoulWeekWindow(today);
+  const thursday = parseCalendarDate(addCalendarDays(window.monday, 3));
+  const year = thursday.getUTCFullYear(), month = thursday.getUTCMonth() + 1;
+  const first = parseCalendarDate(`${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-01`);
+  const firstThursday = 1 + ((4 - first.getUTCDay() + 7) % 7);
+  const week = 1 + Math.floor((thursday.getUTCDate() - firstThursday) / 7);
+  return { ...window, year, month, week, label: `${month}월 ${week}주차` };
+}
+
+/** 달력상 한 달 이동하며 없는 날짜는 대상 월 마지막 날로 제한한다. */
+export function addCalendarMonths(value: string, months: number): string {
+  const original = parseCalendarDate(value);
+  if (!Number.isSafeInteger(months)) throw new Error("INVALID_EVENT_DATE");
+  const target = new Date(original); target.setUTCDate(1); target.setUTCMonth(target.getUTCMonth() + months);
+  const last = new Date(target); last.setUTCMonth(last.getUTCMonth() + 1); last.setUTCDate(0);
+  target.setUTCDate(Math.min(original.getUTCDate(), last.getUTCDate()));
+  const result = target.toISOString().slice(0, 10); parseCalendarDate(result); return result;
+}
+
 export function assertDateOnlyEvent(startsOn: string, endsOn: string): void {
   parseCalendarDate(startsOn);
   parseCalendarDate(endsOn);
@@ -114,6 +135,14 @@ export function assertSourceEventRecord(event: SourceEventRecord): void {
   if (event.admission.kind === "described" && (
     typeof event.admission.text !== "string" || event.admission.text.trim() === "" || /<[^>]*>/.test(event.admission.text)
   )) throw new Error("INVALID_EVENT_ADMISSION");
+  for (const value of [event.operatingInfo, event.description]) {
+    if (value != null && (typeof value !== "string" || value.length > 10000 || /[<>\u0000-\u001f]/u.test(value))) throw new Error("INVALID_EVENT_PUBLIC_TEXT");
+  }
+  if (event.posterUrl != null) {
+    let poster: URL;
+    try { poster = new URL(event.posterUrl); } catch { throw new Error("INVALID_EVENT_SOURCE_URL"); }
+    if (poster.protocol !== "https:" || poster.username || poster.password || poster.search || poster.hash || !["kopis.or.kr", "www.kopis.or.kr"].includes(poster.hostname) || !poster.pathname.startsWith("/upload/")) throw new Error("INVALID_EVENT_SOURCE_URL");
+  }
   // 공식 상세 주소 규칙이 확인되지 않은 제공처는 null이다. 값이 있으면 자격 증명 없는 http(s) 주소만 허용한다.
   if (event.sourceUrl === null) return;
   let url: URL;
@@ -121,4 +150,25 @@ export function assertSourceEventRecord(event: SourceEventRecord): void {
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) {
     throw new Error("INVALID_EVENT_SOURCE_URL");
   }
+}
+
+/** 확정 시·도 이름의 명시적 별칭만 통합한다. 구·동 이름으로 시·도를 추측하지 않는다. */
+const EVENT_REGION_ALIASES: Record<string, string> = Object.fromEntries([
+  ["서울특별시", "서울"], ["부산광역시", "부산"], ["대구광역시", "대구"], ["인천광역시", "인천"],
+  ["광주광역시", "광주"], ["대전광역시", "대전"], ["울산광역시", "울산"], ["세종특별자치시", "세종"],
+  ["경기도", "경기"], ["강원특별자치도", "강원"], ["충청북도", "충북"], ["충청남도", "충남"],
+  ["전북특별자치도", "전북"], ["전라남도", "전남"], ["경상북도", "경북"], ["경상남도", "경남"],
+  ["제주특별자치도", "제주"],
+].flatMap(([official, short]) => [[official, official], [short, official]]));
+export function normalizeEventRegion(value: string | null): string | null {
+  if (value === null) return null;
+  return EVENT_REGION_ALIASES[value] ?? value;
+}
+
+export type PerformanceGenre = "concert" | "musical" | "play";
+/** 최신 사용자 확정: 콘서트는 대중음악·클래식·국악. 원천 장르 자체는 보존한다. */
+export function performanceGenreForSource(provider: string, category: string | null): PerformanceGenre | null {
+  if (provider !== "kopis") return null;
+  if (["대중음악", "서양음악(클래식)", "한국음악(국악)"].includes(category ?? "")) return "concert";
+  return category === "뮤지컬" ? "musical" : category === "연극" ? "play" : null;
 }

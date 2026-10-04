@@ -9,7 +9,13 @@ import { ModelError } from "./provider-errors.ts";
 
 export type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 export interface PotensUsageFields { input: string; output: string }
+/** 공식 규격 검토 후 주입할 출력 상한 인코더. 필드명은 이 코드가 추측하지 않는다. */
+export interface PotensOutputLimit {
+  decisionId: string;
+  apply(body: { prompt: string; model: string }, maxOutputTokens: number): Record<string, unknown>;
+}
 export interface PotensAdapterConfig {
+  outputLimit?: PotensOutputLimit;
   apiKey: string;
   /** loadPotensLlmConfig가 검증한 HTTPS origin. 이 어댑터는 확인된 공급사 origin만 허용한다. */
   baseUrl: string;
@@ -64,7 +70,7 @@ export function createPotensModel(config: PotensAdapterConfig): ModelPort {
     throw new ModelError("NOT_CONFIGURED");
   }
   // 호출 도중 외부 객체 변경으로 목적지·키·모델이 바뀌지 않게 복사한다.
-  const { apiKey, model, timeoutMs, fetch: transport } = config;
+  const { apiKey, model, timeoutMs, fetch: transport, outputLimit } = config;
   const usageFields = config.usageFields ? { input: config.usageFields.input, output: config.usageFields.output } : undefined;
   const endpoint = origin + "/api/chat";
   const modelVersion = "potens." + model;
@@ -72,7 +78,13 @@ export function createPotensModel(config: PotensAdapterConfig): ModelPort {
     async generate(request): Promise<ModelResponse> {
       if (request.signal?.aborted) throw new ModelError("CANCELLED");
       let body: string;
-      try { body = JSON.stringify({ prompt: buildPotensPrompt(request), model }); } catch { throw new ModelError("INVALID_MODEL_RESPONSE"); }
+      try {
+        const payload = { prompt: buildPotensPrompt(request), model };
+        if (!Number.isSafeInteger(request.maxOutputTokens) || request.maxOutputTokens < 1) throw new Error();
+        const encoded = outputLimit ? outputLimit.apply(payload, request.maxOutputTokens) : payload;
+        if (!encoded || encoded.prompt !== payload.prompt || encoded.model !== model) throw new Error();
+        body = JSON.stringify(encoded);
+      } catch { throw new ModelError("INVALID_MODEL_RESPONSE"); }
       const controller = new AbortController();
       let timedOut = false;
       const cancel = () => controller.abort();

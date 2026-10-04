@@ -1,6 +1,6 @@
 /** 제공사별 실제 HTTP 형식은 미연결. 검증된 transport/정규화 함수를 주입한다. */
 import type { EventFetchRequest, EventProviderPort, SourceEventRecord } from "./port.ts";
-import { assertSourceEventRecord, queryPeriodInterval } from "./normalize.ts";
+import { assertSourceEventRecord, normalizeEventRegion, queryPeriodInterval } from "./normalize.ts";
 
 export interface EventProviderTransport<Raw> {
   fetchPage(request: EventFetchRequest): Promise<{ items: readonly Raw[]; nextCursor?: string }>;
@@ -27,7 +27,7 @@ export function createEventProviderAdapter<Raw>(options: {
         if (event.provider !== options.provider || event.collectedAt !== collectedAt) {
           throw new Error("EVENT_PROVIDER_CONTEXT_MISMATCH");
         }
-        return event;
+        return { ...event, region: normalizeEventRegion(event.region) };
       });
       return { events, ...(page.nextCursor !== undefined ? { nextCursor: page.nextCursor } : {}) };
     },

@@ -66,6 +66,7 @@ function searchInput(filters: AiFilters, period: Period, limit: number, cursor?:
     caller: "member", limit,
     ...(filters.query !== undefined ? { query: filters.query } : {}),
     ...(filters.category !== undefined ? { category: filters.category } : {}),
+    ...(filters.region !== undefined ? { region: filters.region } : {}),
     ...(filters.cost !== undefined ? { cost: filters.cost } : {}),
     ...(filters.availability !== undefined ? { availability: filters.availability } : {}),
     ...(filters.sort !== undefined ? { sort: filters.sort } : {}),
@@ -215,7 +216,7 @@ export function createPostDiscovery(deps: { db: RpcClient; model: ModelPort; lim
         cursor = result.nextCursor;
       }
       // 한도 안에 찾지 못한 카드는 보이는지 확인하지 못한 것이다. 사라진 것으로 단정하지 않는다.
-      if (remaining.size && !exhausted) return { cards: [], complete: false };
+      const complete = !remaining.size || exhausted;
       let traits: Map<string, AuthorTraits> | undefined;
       if (needsTraits(filters) && found.size) {
         cancelled(signal);
@@ -232,7 +233,7 @@ export function createPostDiscovery(deps: { db: RpcClient; model: ModelPort; lim
           fresh.push({ ...card, ...(target.conditionStatus ? { conditionStatus: { ...target.conditionStatus } } : {}) });
         } else fresh.push(card);
       }
-      return { cards: fresh, complete: true };
+      return { cards: fresh, complete };
     },
   };
 }

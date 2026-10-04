@@ -31,7 +31,7 @@ export interface PlaceLookupPort {
   lookup(input: PlaceLookupInput, context: PlaceLookupContext): Promise<PlaceLookupResult>;
 }
 
-/** 우편번호 제공사 선정 전에는 구체적인 공급사 응답·페이지 규격을 만들지 않는다. */
+/** 카카오 우편번호는 client JS 선택 콜백이며 서버 REST lookup으로 가장하지 않는다. postal.ts에서 선택 값을 검증한다. */
 export interface PostalAddressLookupPort {
   readonly configured: false;
   lookup(input: { query: string }, context: PlaceLookupContext): Promise<{

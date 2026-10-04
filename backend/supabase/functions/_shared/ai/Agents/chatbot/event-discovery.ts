@@ -11,7 +11,7 @@ import type { DiscoveryResult, PublicDiscoveryPort } from "./tools.ts";
 
 export interface EventListSource { listPage(query: EventPageQuery, cursor: string | undefined, limit: number): Promise<EventPage> }
 /** 제공처 표시 이름. 목록에 없는 제공처는 식별자를 그대로 쓰지 않고 카드 생성을 거절한다. */
-const SOURCE_NAMES: Readonly<Record<string, string>> = Object.freeze({ kopis: "KOPIS", "tour-api": "한국관광공사" });
+const SOURCE_NAMES: Readonly<Record<string, string>> = Object.freeze({ kopis: "KOPIS", "tour-api": "한국관광공사", "seoul-open-data": "서울 열린데이터광장" });
 
 function admissionLabel(item: PublicEventItem): string {
   switch (item.admission.kind) {
@@ -36,9 +36,13 @@ export function toAiEventCard(item: PublicEventItem): AiCard {
 
 /** AI 조건을 행사 조회 조건으로 바꾼다. 기간은 한국 달력 날짜(양 끝 포함)다. */
 export function eventQueryFromFilters(filters: AiFilters, period: { startsAt: string; endsAt: string } | undefined): EventPageQuery {
+  if (filters.cost === "paid") throw new Error("UNSUPPORTED_FILTER");
   if (filters.target !== "events") throw new Error("UNSUPPORTED_TARGET");
   return {
-    mode: filters.newThisWeek ? "new_this_week" : "overlapping",
+    mode: filters.newThisWeek || filters.includeOngoing ? "new_this_week" : "overlapping",
+    ...(filters.cost === "free" ? { freeOnly: true } : {}),
+    ...(filters.includeOngoing !== undefined ? { includeOngoing: filters.includeOngoing } : {}),
+    ...(filters.performanceGenre !== undefined ? { performanceGenre: filters.performanceGenre } : {}),
     ...(filters.ongoingOnly !== undefined ? { ongoingOnly: filters.ongoingOnly } : {}),
     ...(filters.query !== undefined ? { query: filters.query } : {}),
     ...(filters.region !== undefined ? { region: filters.region } : {}),
@@ -62,6 +66,7 @@ export function createEventDiscovery(deps: { source: EventListSource; limits: Pi
       for (let page = 1; page <= limits.maxSearchPages; page += 1) {
         cancelled(signal);
         const result = await source.listPage(query, cursor, limits.pageSize);
+        if (filters.cost === "free" && result.events.some(item => item.admission.kind !== "free")) throw new Error("EVENT_COST_FILTER_NOT_APPLIED");
         for (const item of result.events) {
           cards.push(toAiEventCard(item));
           if (cards.length >= limits.maxResultCards) return { cards, coverage: "filled" };
@@ -81,13 +86,13 @@ export function createEventDiscovery(deps: { source: EventListSource; limits: Pi
       for (let page = 1; page <= limits.recheckMaxPages && remaining.size; page += 1) {
         cancelled(signal);
         const result = await source.listPage(query, cursor, limits.pageSize);
+        if (filters.cost === "free" && result.events.some(item => item.admission.kind !== "free")) throw new Error("EVENT_COST_FILTER_NOT_APPLIED");
         for (const item of result.events) if (remaining.delete(item.id)) found.set(item.id, toAiEventCard(item));
         if (result.nextCursor === null) { exhausted = true; break; }
         cursor = result.nextCursor;
       }
       // 한도 안에 확인하지 못한 카드는 사라졌다고 단정하지 않는다.
-      if (remaining.size && !exhausted) return { cards: [], complete: false };
-      return { cards: cards.flatMap((card) => found.has(card.id) ? [found.get(card.id)!] : []), complete: true };
+      return { cards: cards.flatMap((card) => found.has(card.id) ? [found.get(card.id)!] : []), complete: !remaining.size || exhausted };
     },
   };
 }

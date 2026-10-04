@@ -10,7 +10,7 @@ export interface RecheckTarget { kind: AiCard["kind"]; id: string; traitsVersion
 /** 검색 및 재확인은 같은 인증 주체·공개 권한으로 실행한다. 재확인은 새 ID를 추가하지 않는다. */
 export interface PublicDiscoveryPort {
   search(input: { principal: TrustedChatContext; filters: AiFilters; period?: { startsAt: string; endsAt: string }; now: Date; signal?: AbortSignal }): Promise<DiscoveryResult>;
-  /** complete=false는 재확인 한도 안에 모든 카드의 현재 상태를 확인하지 못했다는 뜻이다. */
+  /** complete=false는 재확인 한도 안에 모든 카드의 현재 상태를 확인하지 못했다는 뜻이다. cards에는 현재 자격 검증을 마친 부분집합만 담는다. */
   recheck(input: { principal: TrustedChatContext; filters: AiFilters; period?: { startsAt: string; endsAt: string }; now: Date; cards: RecheckTarget[]; signal?: AbortSignal }): Promise<{ cards: AiCard[]; complete: boolean }>;
 }
 export function matchesExplicitMbti(requested: string, actual: string | null | undefined): "match" | "missing" | "mismatch" {

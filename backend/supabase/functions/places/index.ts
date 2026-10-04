@@ -1,7 +1,7 @@
 /**
  * 담당: 종현담당. 장소 검색 런타임 진입점. import는 환경을 읽거나 서버를 시작하지 않는다.
  * 공통 설정(loadRuntimeConfig)·Auth(requirePrincipal)·Kakao 설정(loadKakaoConfig)을 조립한다.
- * PLACES_PAGE_SIZE(1..15)는 명시 환경값이며 기본값이 없다. Kakao 키·페이지 크기 누락은 인증된 요청에서 503이다.
+ * PLACES_PAGE_SIZE는 제품 정책10과 같아야 한다. 공급사 기술 상한15와 구분한다. Kakao 키·페이지 크기 누락은 인증된 요청에서 503이다.
  */
 import { loadRuntimeConfig, type EnvReader } from "../_shared/config/env.ts";
 import { loadKakaoConfig } from "../_shared/config/providers.ts";
@@ -26,6 +26,7 @@ export function createPlacesRuntime(read: EnvReader, fetchImpl: FetchLike = fetc
     try {
       apiKey = loadKakaoConfig(read).apiKey;
       pageSize = requiredPositiveInt(read, "PLACES_PAGE_SIZE", 15);
+      if (pageSize !== 10) throw new Error("INVALID_PLACE_PRODUCT_PAGE_SIZE");
     } catch {
       throw new HttpError("EXTERNAL_UNAVAILABLE");
     }

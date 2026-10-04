@@ -7,7 +7,7 @@ import { createServiceApi } from "../../../backend/supabase/functions/service-ap
 import { HttpError } from "../../../backend/supabase/functions/_shared/http/errors.ts";
 
 const card = (overrides = {}) => ({
-  id: "11111111-1111-4111-8111-111111111111", title: "가상 전시", authorDisplayName: "김*수",
+  id: "11111111-1111-4111-8111-111111111111", title: "가상 전시", authorDisplayName: null,
   publicArea: "서울특별시 강남구 역삼동", startsAt: "2026-10-03T01:00:00.000000Z", endsAt: "2026-10-03T03:00:00.000000Z",
   cost: { kind: "free" }, state: "recruiting", canApply: true, ...overrides,
 });

@@ -10,6 +10,10 @@ import { createInternalClient } from "../_shared/db/internal-client.ts";
 import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
 import { createRpcJobRepository } from "../_shared/db/repositories/jobs.ts";
 import { createRpcReviewSummaryRepository } from "../_shared/db/repositories/review-summaries.ts";
+import { createWorkerRunScope } from "../_shared/jobs/worker-run.ts";
+import { toPublicError } from "../_shared/http/errors.ts";
+import { assertPrivacy, AiPrivacyError, type ApprovedPrivacyCheck } from "../_shared/ai/providers/privacy.ts";
+import type { PotensOutputLimit } from "../_shared/ai/providers/potens-adapter.ts";
 import { createConfiguredModel, type ModelRuntime } from "../_shared/ai/providers/runtime.ts";
 import { REVIEW_SUMMARY_PROMPT_VERSION } from "../_shared/ai/Agents/review-summary/prompts.ts";
 import type { SummarySafetyPort } from "../_shared/ai/Agents/review-summary/output-check.ts";
@@ -55,22 +59,22 @@ export function loadWorkerSettings(read: EnvReader): WorkerSettings | WorkerNotE
   let settings: WorkerSettings;
   try {
     settings = {
-      maxJobsPerRun: requiredPositiveInt(read, e.maxJobsPerRun),
-      timeBudgetMs: requiredPositiveInt(read, e.timeBudgetMs),
-      leaseSeconds: requiredPositiveInt(read, e.leaseSeconds, 86_400),
-      budgetDeferMs: requiredPositiveInt(read, e.budgetDeferMs),
+      maxJobsPerRun: requiredPositiveInt(read, e.maxJobsPerRun, 10),
+      timeBudgetMs: requiredPositiveInt(read, e.timeBudgetMs, 60000),
+      leaseSeconds: requiredPositiveInt(read, e.leaseSeconds, 180),
+      budgetDeferMs: requiredPositiveInt(read, e.budgetDeferMs, 3600000),
       retry: {
-        maxAttempts: requiredPositiveInt(read, e.retryMaxAttempts),
-        baseDelayMs: requiredPositiveInt(read, e.retryBaseDelayMs),
-        maxDelayMs: requiredPositiveInt(read, e.retryMaxDelayMs),
+        maxAttempts: requiredPositiveInt(read, e.retryMaxAttempts, 3),
+        baseDelayMs: requiredPositiveInt(read, e.retryBaseDelayMs, 600000),
+        maxDelayMs: requiredPositiveInt(read, e.retryMaxDelayMs, 21600000),
       },
       summary: {
-        maxInputChars: requiredPositiveInt(read, e.maxInputChars),
-        maxReviewsPerChunk: requiredPositiveInt(read, e.maxReviewsPerChunk),
-        mergeFanIn: requiredPositiveInt(read, e.mergeFanIn),
-        maxOutputTokens: requiredPositiveInt(read, e.maxOutputTokens),
-        maxOutputChars: requiredPositiveInt(read, e.maxOutputChars),
-        maxCallsPerStep: requiredPositiveInt(read, e.maxCallsPerStep),
+        maxInputChars: requiredPositiveInt(read, e.maxInputChars, 12000),
+        maxReviewsPerChunk: requiredPositiveInt(read, e.maxReviewsPerChunk, 20),
+        mergeFanIn: requiredPositiveInt(read, e.mergeFanIn, 4),
+        maxOutputTokens: requiredPositiveInt(read, e.maxOutputTokens, 800),
+        maxOutputChars: requiredPositiveInt(read, e.maxOutputChars, 300),
+        maxCallsPerStep: requiredPositiveInt(read, e.maxCallsPerStep, 3),
       },
     };
   } catch (error) {
@@ -78,7 +82,11 @@ export function loadWorkerSettings(read: EnvReader): WorkerSettings | WorkerNotE
     throw error;
   }
   try { validateRetrySettings(settings.retry); } catch { return "WORKER_SETTINGS_INVALID"; }
-  // 수치 자체는 정하지 않지만 서로 모순되는 조합은 거절한다: 실행 중 점유가 만료되면 모든 쓰기가 거절된다.
+  // 정책14의 고정 점유/첫 재시도/예산 재확인 주기는 낮은 값으로도 바꾸지 않는다.
+  if (settings.leaseSeconds !== 180 || settings.retry.baseDelayMs !== 600_000 || settings.budgetDeferMs !== 3_600_000) {
+    return "WORKER_SETTINGS_INVALID";
+  }
+  // max 설정의 더 낮은 값은 허용하지만 관계가 모순되면 실행 전에 거절한다.
   if (settings.leaseSeconds * 1000 <= settings.timeBudgetMs || settings.summary.mergeFanIn < 2) return "WORKER_SETTINGS_INVALID";
   return settings;
 }
@@ -89,6 +97,8 @@ export interface WorkerRuntimeOverrides {
   createDb?(config: RuntimeConfig): RpcClient;
   createModel?(read: EnvReader, deps: { budgetDb: RpcClient; fetch?: FetchLike }): ModelRuntime;
   safety?: SummarySafetyPort | null;
+  outputLimit?: PotensOutputLimit;
+  privacy?: ApprovedPrivacyCheck;
   now?(): Date;
   elapsedMs?(): number;
   workerId?(): string;
@@ -105,7 +115,7 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
   const elapsedMs = overrides.elapsedMs ?? (() => performance.now());
   const workerId = overrides.workerId ?? (() => crypto.randomUUID());
 
-  async function run(): Promise<WorkerRunResult> {
+  async function run(existingToken?: string): Promise<WorkerRunResult> {
     const notEnabled = (reason: WorkerNotEnabledReason): WorkerRunResult => ({ status: "not_enabled", reason });
     const settings = loadWorkerSettings(read);
     if (typeof settings === "string") return notEnabled(settings);
@@ -117,22 +127,42 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
     // 지원하지 않는 prompt 버전으로 점유하면 모든 작업이 영구 실패하므로 점유 전에 멈춘다.
     if (versions.promptVersion !== REVIEW_SUMMARY_PROMPT_VERSION) return notEnabled("SUMMARY_PROMPT_UNSUPPORTED");
     const db = createDb(config);
-    const model = createModel(read, { budgetDb: db, fetch: fetchImpl });
+    const model = createModel(read, { budgetDb: db, fetch: fetchImpl, outputLimit: overrides.outputLimit });
     if (model.status !== "ready") return notEnabled(`MODEL_${model.code}` as WorkerNotEnabledReason);
     // 작업에 기록되는 요청 모델 버전과 실제 조립된 모델 표식이 다르면 다른 모델의 결과를 그 버전으로 게시하게 된다.
     if (model.modelVersion !== versions.modelVersion) return notEnabled("MODEL_VERSION_MISMATCH");
     if (!safety || typeof safety.check !== "function") return notEnabled("SAFETY_CHECK_NOT_APPROVED");
+    if (!overrides.privacy?.decisionId || typeof overrides.privacy.check !== "function") return notEnabled("PRIVACY_CHECK_NOT_APPROVED");
     const probe = await probeSummaryWorkerRpcs(db);
     if (probe !== "ready") return notEnabled(probe);
 
+    const scope = createWorkerRunScope(db);
+    let lease;
+    try { lease = await scope.open(existingToken); }
+    catch (error) { return notEnabled(toPublicError(error).error.code === "ACCESS_DENIED" ? "DB_RPC_NOT_ALLOWED" : "DB_RPC_UNAVAILABLE"); }
+    if (!lease) return notEnabled("WORKER_RUN_BUSY");
+    const protectedModel = { async generate(request: Parameters<typeof model.model.generate>[0]) {
+      try {
+        if (!request.summaryRequest || request.summaryRequest.workerRunToken !== lease.token) throw new Error("SUMMARY_MODEL_SCOPE_MISSING");
+        await assertPrivacy(request.input, overrides.privacy!, "input");
+        const response = await model.model.generate(request);
+        await assertPrivacy(response.value, overrides.privacy!, "output");
+        return response;
+      } catch (error) {
+        if (error instanceof AiPrivacyError) throw new Error(error.direction === "input" ? "UNSAFE_SUMMARY_INPUT" : "UNSAFE_SUMMARY_OUTPUT");
+        throw error;
+      }
+    } };
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), settings.timeBudgetMs);
+    const remaining = Date.parse(lease.expiresAt) - now().getTime();
+    const timer = setTimeout(() => controller.abort(), Math.max(0, Math.min(settings.timeBudgetMs, remaining)));
+    if (remaining <= 0) controller.abort();
     try {
-      const repository = createRpcJobRepository(db);
+      const repository = createRpcJobRepository(db, { workerRunToken: lease.token });
       const registry = createReviewSummaryRegistry({
-        repository: createRpcReviewSummaryRepository(db), model: model.model, safety,
+        repository: createRpcReviewSummaryRepository(db, { workerRunToken: lease.token }), model: protectedModel, safety,
         settings: settings.summary, versions: { modelVersion: versions.modelVersion, promptVersion: versions.promptVersion },
-        signal: controller.signal,
+        signal: controller.signal, workerRunToken: lease.token,
       }, { budgetDeferMs: settings.budgetDeferMs, now });
       const id = workerId();
       return await runSummaryWorkerBatch({
@@ -144,6 +174,7 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
       });
     } finally {
       clearTimeout(timer);
+      await scope.close(lease);
     }
   }
 

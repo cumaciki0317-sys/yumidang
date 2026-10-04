@@ -1,3 +1,4 @@
+import { serviceMode, serviceConfigurationError } from "../remote";
 import React from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Stack, router, usePathname } from "expo-router";
@@ -25,7 +26,7 @@ function Frame() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="프로토타입 상태와 화면 목록"
-        onPress={() => router.push("/preview")}
+        onPress={() => { if (!serviceMode) router.push("/preview"); }}
         style={{
           paddingVertical: 7,
           paddingHorizontal: 16,
@@ -35,10 +36,10 @@ function Frame() {
         }}
       >
         <Text style={{ color: colors.deep, fontSize: 10, fontWeight: "600" }}>
-          디자인 미리보기 · 예시 데이터
+          {serviceMode ? (serviceConfigurationError ? "서비스 연결 준비 중" : "서버 연결 검증 모드") : "디자인 미리보기 · 예시 데이터"}
         </Text>
         <Text style={{ color: colors.deep, fontSize: 10 }}>
-          {path === "/preview" ? "상태 확인 중" : "화면 목록 ↗"}
+          {serviceMode ? "" : path === "/preview" ? "상태 확인 중" : "화면 목록 ↗"}
         </Text>
       </Pressable>
       <Stack

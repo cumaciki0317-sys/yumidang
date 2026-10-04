@@ -11,7 +11,7 @@ export function buildContext(raw: ChatInput, principal: TrustedChatContext, limi
   if (!raw || typeof raw.clientRequestId !== "string" || !raw.clientRequestId.trim() || !Array.isArray(raw.messages) || !raw.messages.length) throw new AiInputError("INVALID_INPUT");
   const currentFilters = validateFilters(raw.currentFilters);
   if (raw.messages.some(m => !m || !["user", "assistant"].includes(m.role) || typeof m.content !== "string" || !m.content.trim())) throw new AiInputError("INVALID_MESSAGE");
-  if (raw.messages.length > limits.maxMessages || raw.messages.some(m => m.content.length > limits.maxMessageChars) || raw.messages.reduce((n,m) => n + m.content.length, 0) > limits.maxTotalChars) throw new AiInputError("NEW_EXPLORATION_REQUIRED");
+  if (raw.messages.length > limits.maxMessages || raw.messages.some(m => [...m.content].length > limits.maxMessageChars) || raw.messages.reduce((n,m) => n + [...m.content].length, 0) > limits.maxTotalChars) throw new AiInputError("NEW_EXPLORATION_REQUIRED");
   const preferences = principal.preferences ?? {};
   return {
     messages: raw.messages.map(m => ({ role: m.role, content: m.content })), currentFilters,

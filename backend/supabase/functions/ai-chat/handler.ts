@@ -16,6 +16,10 @@ import { runChat } from "../_shared/ai/Agents/chatbot/orchestrator.ts";
 import { assertLimits } from "../_shared/ai/Agents/chatbot/context.ts";
 import { validateFilters } from "../_shared/ai/Agents/chatbot/intent.ts";
 import type { ExplanationCheck } from "../_shared/ai/Agents/chatbot/output-check.ts";
+import { assertPrivacy, AiPrivacyError, type ApprovedPrivacyCheck } from "../_shared/ai/providers/privacy.ts";
+import type { AiChatRequestGate, RequestOutcome } from "../_shared/ai/providers/member-request.ts";
+import type { MemberModelRequest } from "../_shared/ai/providers/model-port.ts";
+import { readAiFeedbackInput, type AiFeedbackPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
 import type { PublicDiscoveryPort } from "../_shared/ai/Agents/chatbot/tools.ts";
 
 export interface AiChatPrincipal { readonly userId: string }
@@ -27,13 +31,17 @@ export interface AiChatSession {
   loadPreferences(): Promise<NonNullable<TrustedChatContext["preferences"]>>;
 }
 export type AiChatEngine =
-  | { status: "ready"; model: ModelPort; limits: ChatLimits; now: () => Date; verifyExplanation?: ExplanationCheck }
+  | { status: "ready"; model: ModelPort; limits: ChatLimits; now: () => Date; verifyExplanation?: ExplanationCheck; privacy?: ApprovedPrivacyCheck }
   | { status: "unavailable"; code: string };
 export interface AiChatHandlerDependencies {
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
   authenticate(request: Request): Promise<AiChatPrincipal>;
   engine: AiChatEngine;
+  /** 운영 런타임은 필수 연결. 단위 테스트는 가상 포트를 주입한다. */
+  requestGate?: AiChatRequestGate;
+  /** 별도 모델/일일 차감 없이 최소 평가·신고 포트만 호출한다. */
+  feedback?: AiFeedbackPort;
   openSession(principal: AiChatPrincipal, model: ModelPort): AiChatSession;
 }
 
@@ -42,10 +50,10 @@ const bodyKeys = ["clientRequestId", "messages", "currentFilters"];
 
 /** 본문은 세 필드만 허용한다. userId·role·권한 주장 등 여분 필드는 400. 세부 내용 검사는 탐색 코어가 한다. */
 function readChatInput(body: JsonValue): ChatInput {
-  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== bodyKeys.length ||
+  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some(key => ![...bodyKeys, "outputRetryOf"].includes(key)) ||
     bodyKeys.some((key) => !Object.hasOwn(body, key))) throw new HttpError("INVALID_REQUEST");
   if (typeof body.clientRequestId !== "string" || !body.clientRequestId.trim() || body.clientRequestId.length > 128 ||
-    !Array.isArray(body.messages)) throw new HttpError("INVALID_REQUEST");
+    !Array.isArray(body.messages) || (body.outputRetryOf !== undefined && (typeof body.outputRetryOf !== "string" || !/^[0-9a-f-]{36}$/i.test(body.outputRetryOf)))) throw new HttpError("INVALID_REQUEST");
   return body as unknown as ChatInput;
 }
 
@@ -59,14 +67,28 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
     const preflight = cors.preflight(request, context);
     if (preflight) return preflight;
     let originAllowed = false;
+    let scope: MemberModelRequest | undefined;
+    let outcome: RequestOutcome = "finished";
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const controller = new AbortController();
+    const cancel = () => controller.abort();
+    request.signal.addEventListener("abort", cancel, { once: true });
+    if (request.signal.aborted) cancel();
     try {
       cors.responseHeaders(request);
       originAllowed = true;
       const url = new URL(request.url);
-      if (!["/functions/v1/ai-chat", "/ai-chat"].includes(url.pathname)) throw new HttpError("RESOURCE_NOT_FOUND");
+      const feedbackPath = ["/functions/v1/ai-chat/feedback", "/ai-chat/feedback"].includes(url.pathname);
+      if (!feedbackPath && !["/functions/v1/ai-chat", "/ai-chat"].includes(url.pathname)) throw new HttpError("RESOURCE_NOT_FOUND");
       if (request.method !== "POST") throw new HttpError("METHOD_NOT_ALLOWED");
       if (url.search) throw new HttpError("INVALID_REQUEST");
       const principal = await deps.authenticate(request);
+      if (feedbackPath) {
+        const input = readAiFeedbackInput(await readJson(request, { maxBytes: deps.maxBodyBytes }));
+        const result = deps.feedback ? await deps.feedback.submit(principal.userId, input) :
+          { status: "not_enabled", reason: input.action === "report" ? "AI_REPORT_EVIDENCE_HANDLING_NOT_CONNECTED" : "AI_FEEDBACK_STORAGE_NOT_CONNECTED" };
+        return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
+      }
       const input = readChatInput(await readJson(request, { maxBytes: deps.maxBodyBytes }));
       let result: AiChatResult;
       if (deps.engine.status !== "ready") {
@@ -75,7 +97,44 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
           cards: [], explanations: [], notice: AI_CHAT_UNAVAILABLE_NOTICE };
       } else {
         const engine = deps.engine;
-        const session = deps.openSession(principal, engine.model);
+        // 전체 대화·조건을 검사한다. 오탐 문의에 원문을 자동 첨부하거나 최소 구간을 대신 선택하지 않는다.
+        if (engine.privacy) {
+          try { await assertPrivacy(input, engine.privacy, "input"); }
+          catch (error) {
+            if (!(error instanceof AiPrivacyError)) throw error;
+            result = { requestId: context.requestId, status: "unavailable", interpretedFilters: validateFilters(input.currentFilters),
+              cards: [], explanations: [], notice: "개인정보가 포함되어 전송하지 않았어요. 내용을 수정하거나 선택한 구간으로 문의해주세요.",
+              recovery: { reason: "input_privacy", retryAllowed: false } };
+            return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
+          }
+        }
+        if (deps.requestGate) {
+          let acquired;
+          try { acquired = await deps.requestGate.acquire({ userId: principal.userId, requestId: context.requestId,
+            clientRequestId: input.clientRequestId, ...(input.outputRetryOf ? { outputRetryOf: input.outputRetryOf } : {}) }); }
+          catch { acquired = undefined; }
+          if (!acquired || acquired.status !== "acquired") {
+            const reason = acquired?.status === "consent_revoked" ? "consent" :
+              acquired?.status === "concurrent" ? "concurrent" : acquired?.status === "daily_limit" ? "daily_limit" : "temporary";
+            const notice = reason === "consent" ? "AI 동의 철회로 새 전송이 중단됐어요. 일반 탐색을 이용해주세요." :
+              reason === "concurrent" ? "앞선 AI 요청이 처리 중이에요. 응답 후 다시 요청해주세요." :
+              reason === "daily_limit" ? "오늘의 AI 이용 한도에 도달했어요. 한국시간 자정 이후 다시 이용해주세요." : AI_CHAT_UNAVAILABLE_NOTICE;
+            result = { requestId: context.requestId, status: "unavailable", interpretedFilters: validateFilters(input.currentFilters),
+              cards: [], explanations: [], notice, recovery: { reason, retryAllowed: false } };
+            return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
+          }
+          scope = acquired.scope;
+          const remaining = Date.parse(acquired.expiresAt) - Date.now();
+          if (remaining <= 0 || remaining > 2_147_483_647) throw new Error("INVALID_AI_REQUEST_LEASE");
+          timer = setTimeout(cancel, remaining);
+        }
+        const model: ModelPort = { async generate(request) {
+          if (engine.privacy) await assertPrivacy(request.input, engine.privacy, "input");
+          const response = await engine.model.generate({ ...request, ...(scope ? { memberRequest: scope } : {}) });
+          if (engine.privacy) await assertPrivacy(response.value, engine.privacy, "output");
+          return response;
+        } };
+        const session = deps.openSession(principal, model);
         let preferences: NonNullable<TrustedChatContext["preferences"]> | undefined;
         try { preferences = await session.loadPreferences(); }
         catch (error) {
@@ -88,16 +147,39 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
             cards: [], explanations: [], notice: AI_CHAT_UNAVAILABLE_NOTICE };
         } else {
           result = await runChat(input, { userId: principal.userId, preferences },
-            { model: engine.model, discovery: session.discovery, ...(session.events ? { events: session.events } : {}),
+            { model, discovery: session.discovery, ...(session.events ? { events: session.events } : {}),
               limits: engine.limits, now: engine.now, ...(engine.verifyExplanation ? { verifyExplanation: engine.verifyExplanation } : {}) },
-            context.requestId, request.signal);
+            context.requestId, controller.signal);
         }
       }
+      if (result.recovery?.reason === "output_privacy") {
+        outcome = "output_privacy";
+        result.recovery.retryAllowed = input.outputRetryOf === undefined;
+      }
+      if (deps.engine.status === "ready" && deps.engine.privacy) {
+        try { await assertPrivacy(result, deps.engine.privacy, "output"); }
+        catch (error) {
+          if (!(error instanceof AiPrivacyError)) throw error;
+          outcome = "output_privacy";
+          result = { requestId: context.requestId, status: "unavailable", interpretedFilters: validateFilters(input.currentFilters), cards: [], explanations: [],
+            notice: "개인정보가 포함된 답변을 숨겼어요. 다시 요청하거나 일반 탐색을 이용해주세요.",
+            recovery: { reason: "output_privacy", retryAllowed: input.outputRetryOf === undefined } };
+        }
+      }
+      // 재시도 상태 기록·점유 해제 성공을 확인하고 응답한다. DB 실패를 완료로 숨기지 않는다.
+      if (scope && deps.requestGate) { await deps.requestGate.finish(scope, outcome); scope = undefined; }
       return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
     } catch (error) {
       // 입력 오류 코드·메시지 원문을 응답에 넣지 않는다.
       const response = jsonFailure(error instanceof AiInputError ? new HttpError("INVALID_REQUEST") : error, context);
       return originAllowed ? cors.apply(response, request) : response;
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+      request.signal.removeEventListener("abort", cancel);
+      if (scope && deps.requestGate) {
+        // 전송 실패 경로도 점유를 해제한다. 해제 실패 시 DB 만료가 복구하며 새 요청은 동시에 실행되지 않는다.
+        try { await deps.requestGate.finish(scope, outcome); } catch { /* 원문 오류를 로그에 남기지 않는다. */ }
+      }
     }
   };
 }

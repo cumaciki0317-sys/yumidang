@@ -39,16 +39,17 @@ test("회원 필터·선택 정렬·제한을 v2 RPC에 전달하고 caller·토
   const input = {
     ...member, query: "전시", category: "전시", cost: "paid", availability: "recruiting",
     period: { startsAt: "2026-10-03T00:00:00+09:00", endsAt: "2026-10-05T00:00:00+09:00" },
-    authorAge: "30s", sort: "starts_asc", limit: 7,
+    authorAge: { min: 30, max: 39 }, sort: "starts_asc", limit: 7,
   };
   const { repository, calls } = setup({ items: [], nextCursor: null });
   assert.deepEqual(await repository.searchPage(input), { items: [], nextCursor: null });
   assert.deepEqual(calls, [{
     name: "search_public_posts_v2",
     args: {
+      p_contract_version: "2026-10-05", p_region: null,
       p_filters: {
         query: "전시", category: "전시", cost: "paid", availability: "recruiting",
-        periodStart: input.period.startsAt, periodEnd: input.period.endsAt, authorAge: "30s", sort: "starts_asc",
+        periodStart: input.period.startsAt, periodEnd: input.period.endsAt, authorAge: { min: 30, max: 39 }, sort: "starts_asc",
       },
       p_cursor: null,
       p_limit: 7,
@@ -147,11 +148,11 @@ test("잘못된 카드·날짜·금액·페이지 구조와 구형 DB 커서를 
   }
 });
 
-test("익명 기간·나이 all은 RPC로 전달하고 상세 나이와 잘못된 입력은 호출 전에 거절한다", async () => {
-  const { repository, calls } = setup({ items: [{ ...card, authorDisplayName: "동행 1234" }], nextCursor: null });
+test("익명은 기간·상세 나이를 호출 전 거절하고 작성자 null만 반환한다", async () => {
+  const { repository, calls } = setup({ items: [{ ...card, authorDisplayName: null }], nextCursor: null });
   const period = { startsAt: "2026-10-03T00:00:00Z", endsAt: "2026-10-04T00:00:00Z" };
-  for (const authorAge of ["20s", "30s", "40plus"]) {
-    await assert.rejects(repository.searchPage({ caller: "anonymous", period, authorAge }), /AUTH_REQUIRED/);
+  for (const input of [{ caller: "anonymous", period }, { caller: "anonymous", authorAge: { min: 19, max: 99 } }]) {
+    await assert.rejects(repository.searchPage(input), /AUTH_REQUIRED/);
   }
   for (const input of [
     { ...member, limit: 0 }, { ...member, limit: 51 }, { ...member, authorAge: "teen" },
@@ -159,36 +160,34 @@ test("익명 기간·나이 all은 RPC로 전달하고 상세 나이와 잘못�
     { ...member, sort: "recruiting_first" }, { ...member, sort: null },
   ]) await assert.rejects(repository.searchPage(input), /INVALID_/);
   assert.equal(calls.length, 0);
-  const page = await repository.searchPage({ caller: "anonymous", period, authorAge: "all" });
-  assert.equal(calls.length, 1);
-  assert.equal(calls[0].args.p_filters.periodStart, period.startsAt);
-  assert.equal(calls[0].args.p_filters.periodEnd, period.endsAt);
+  const page = await repository.searchPage({ caller: "anonymous", authorAge: "all" });
+  assert.equal(calls[0].args.p_filters.periodStart, null);
+  assert.equal(calls[0].args.p_filters.periodEnd, null);
   assert.equal(calls[0].args.p_filters.authorAge, "all");
-  assert.equal(calls[0].args.p_filters.sort, "created_desc");
-  assert.equal(page.items[0].authorDisplayName, "동행 1234");
-  assert.equal(page.items[0].publicArea, card.publicArea);
+  assert.equal(calls[0].args.p_limit, 10);
+  assert.equal(page.items[0].authorDisplayName, null);
   assert.equal(page.items[0].canApply, false);
 });
 
-test("외부 커서는 v2·정규화 필터·정렬에 묶이며 구버전과 다른 조건을 거절한다", async () => {
-  const input = { ...member, query: "  Art   Hall ", category: "전시", authorAge: "20s", limit: 5 };
+test("외부 커서는 v3·정규화 필터·정렬에 묶이며 구버전과 다른 조건을 거절한다", async () => {
+  const input = { ...member, query: "  Art   Hall ", category: "전시", authorAge: { min: 20, max: 29 }, limit: 5 };
   const cursor = encodePublicPostCursor(input, position);
   const parsed = unpackCursor(cursor);
-  assert.equal(parsed.v, 2);
+  assert.equal(parsed.v, 3);
   assert.equal(parsed.filters.query, "art hall");
   assert.equal(parsed.filters.sort, "created_desc");
   assert.deepEqual(parsed.position, position);
   assert.deepEqual(decodePublicPostCursor(cursor, { ...input, query: "art hall", limit: 1 }), position);
   const { repository, calls } = setup();
   for (const changed of [
-    { query: "식사" }, { category: "식사" }, { cost: "free" },
-    { authorAge: "30s" }, { availability: "recruiting" }, { sort: "starts_asc" },
+    { query: "식사" }, { category: "맛집" }, { cost: "free" },
+    { authorAge: { min: 30, max: 39 } }, { availability: "recruiting" }, { sort: "starts_asc" },
     { period: { startsAt: "2026-10-03T00:00:00Z", endsAt: "2026-10-04T00:00:00Z" } },
   ]) await assert.rejects(repository.searchPage({ ...input, ...changed, cursor }), /INVALID_CURSOR/);
   const oldFilters = { ...parsed.filters }; delete oldFilters.sort;
   const invalid = [
     rawCursor({ ...parsed, v: 1, filters: oldFilters, position: { ...position, periodGroup: 0, recruitingGroup: 0 } }),
-    rawCursor({ ...parsed, v: 3 }),
+    rawCursor({ ...parsed, v: 2 }),
     rawCursor({ ...parsed, position: { ...position, periodGroup: 0 } }),
     rawCursor({ ...parsed, position: { ...position, sortAt: "2026-09-29T00:00:00.0000001Z" } }),
     "malformed",
@@ -252,7 +251,7 @@ test("두 정렬·전체/모집의 정적 여러 페이지를 독립 예상 순�
     for (const [sort, availability, expected] of cases) {
       const input = {
         caller, sort, availability, limit: 2,
-        period: { startsAt: "2026-10-03T00:00:00Z", endsAt: "2026-10-05T00:00:00Z" },
+        ...(caller === "member" ? { period: { startsAt: "2026-10-03T00:00:00Z", endsAt: "2026-10-05T00:00:00Z" } } : {}),
       };
       let offset = 0;
       let previousPosition = null;
@@ -263,15 +262,15 @@ test("두 정렬·전체/모집의 정적 여러 페이지를 독립 예상 순�
         assert.equal(args.p_filters.sort, sort);
         assert.equal(args.p_filters.availability, availability);
         assert.equal(args.p_filters.authorAge, "all");
-        assert.equal(args.p_filters.periodStart, input.period.startsAt);
-        assert.equal(args.p_filters.periodEnd, input.period.endsAt);
+        assert.equal(args.p_filters.periodStart, input.period?.startsAt ?? null);
+        assert.equal(args.p_filters.periodEnd, input.period?.endsAt ?? null);
         assert.equal(args.p_limit, 2);
         assert.deepEqual(args.p_cursor, previousPosition);
         assert.ok(offset < expected.length, "마지막 페이지 뒤에 추가 호출하지 않는다");
         const numbers = expected.slice(offset, offset + 2);
         const items = numbers.map((number) => ({
           ...card, id: id(number), title: "가상 공고 " + number,
-          authorDisplayName: caller === "anonymous" ? "동행 " + number : "김*현",
+          authorDisplayName: caller === "anonymous" ? null : "김*현",
           startsAt: records.get(number).startsAt, endsAt: "2026-10-05T00:00:00.000000Z",
           state: records.get(number).state, canApply: caller === "member" && records.get(number).state === "recruiting",
         }));

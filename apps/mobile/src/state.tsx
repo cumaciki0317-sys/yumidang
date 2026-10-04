@@ -32,6 +32,7 @@ import {
   validateDraft,
 } from "./domain";
 import * as storage from "./storage";
+import { serviceMode, installServiceSession } from "./remote";
 
 export const routes: Record<ScreenId, string> = {
   S00: "/",
@@ -85,7 +86,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const defaultMemberId = useRef("me");
   const pathname = usePathname();
   const params = useGlobalSearchParams();
-  const [state, setState] = useState<AppState>(() => initialState());
+  const [state, setState] = useState<AppState>(() => {
+    const initial = initialState();
+    return serviceMode ? { ...initial, viewerId: null, members: {}, posts: [], events: [], conversations: [], appointments: [], reviews: [], notifications: [], aiDiscoveryAllowed: false, aiSummaryAllowed: false } : initial;
+  });
   const ref = useRef(state);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiLock = useRef(false);
@@ -1109,13 +1113,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ),
       }),
     withdrawAi: (kind) => {
-      aiGeneration.current++;
-      aiLock.current = false;
-      commit(
-        kind === "discovery"
-          ? { aiDiscoveryAllowed: false, aiMessages: [], aiBusy: false }
-          : { aiSummaryAllowed: false },
-      );
+      if (kind === "discovery") {
+        aiGeneration.current++;
+        aiLock.current = false;
+        commit({ aiDiscoveryAllowed: false, aiMessages: [], aiBusy: false });
+      } else {
+        const id = ref.current.viewerId;
+        if (!id) return;
+        commit({ aiSummaryAllowed: false, aiSummaryWithdrawnIds: [...new Set([...ref.current.aiSummaryWithdrawnIds, id])] });
+      }
       showToast("철회 요청을 접수했어요. 계정과 일반 동행은 유지돼요.");
     },
     deleteAccount: async () => {
@@ -1183,6 +1189,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       router.replace("/");
     },
   };
+  if (serviceMode) {
+    // Core writes require the real service/auth adapter. Never report a local mutation as server success.
+    const unavailable = () => err("서비스 연결을 준비 중이에요. 잠시 후 다시 이용해 주세요.");
+    for (const action of ["publish", "sendMessage", "requestMatch", "acceptMatch", "withdrawMatch", "rejectApplicant", "reopenPost", "closePost", "deletePost", "cancel", "proposeChange", "acceptChange", "rejectChange", "confirmCompletion", "submitReview", "block", "report"] as const) {
+      value[action] = unavailable;
+    }
+    for (const action of ["login", "updateMember", "unblock", "leaveChat", "markNotificationsRead", "withdrawAi", "setPreview", "editPost"] as const) {
+      value[action] = () => showToast(unavailable().message!);
+    }
+    value.saveDraft = async () => { throw new Error("SERVICE_DRAFT_CONTEXT_NOT_CONNECTED"); };
+    value.deleteAccount = async () => unavailable();
+    value.reset = async () => { showToast(unavailable().message!); };
+    value.sendAi = async () => unavailable();
+    value.logout = async () => { installServiceSession(null); clearAi(); commit({ viewerId: null, members: {}, posts: [], events: [], recentSearches: [], draft: null }); };
+  }
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 export function useApp() {

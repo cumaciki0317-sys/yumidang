@@ -273,6 +273,7 @@ export function initialState(now = Date.now()): AppState {
     aiBusy: false,
     aiDiscoveryAllowed: true,
     aiSummaryAllowed: true,
+    aiSummaryWithdrawnIds: [],
     failNext: false,
     now,
     toast: "",

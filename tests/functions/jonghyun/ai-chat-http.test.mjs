@@ -9,7 +9,7 @@ import { HttpError } from "../../../backend/supabase/functions/_shared/http/erro
 const ORIGIN = "https://app.synthetic.test";
 const URL_ = "https://edge.synthetic.test/functions/v1/ai-chat";
 const SECRET = "PRIVATE_DIALOGUE_TEXT";
-const body = { clientRequestId: "c1", messages: [{ role: "user", content: `${SECRET} 이번 주말 전시` }], currentFilters: { target: "posts" } };
+const body = { clientRequestId: "c1", messages: [{ role: "user", content: `${SECRET} 이번 주말 전시` }], currentFilters: { target:"posts",region:"서울특별시" } };
 const card = { kind: "post", id: "00000000-0000-4000-8000-000000000001", title: "가상 전시", locationLabel: "서울특별시 종로구 종로1가",
   startsAtOrDate: "2026-10-03T05:00:00.000000Z", endsAtOrDate: "2026-10-03T07:00:00.000000Z", costLabel: "무료", state: "recruiting", canApply: true };
 const limits = { maxMessages: 6, maxMessageChars: 400, maxTotalChars: 1000, maxOutputTokens: 200 };
@@ -20,7 +20,7 @@ function post(payload, headers = {}) {
 }
 function setup(overrides = {}) {
   const seen = { auth: 0, sessions: 0, search: 0, prefs: 0, modelCalls: [] };
-  const model = { async generate(req) { seen.modelCalls.push(req); return { value: { status: "search", filters: { target: "posts" } }, modelVersion: "synthetic", usage: null }; } };
+  const model = { async generate(req) { seen.modelCalls.push(req); return { value: { status: "search", filters: { target:"posts",region:"서울특별시" } }, modelVersion: "synthetic", usage: null }; } };
   const deps = {
     allowedOrigins: [ORIGIN], maxBodyBytes: 2048,
     async authenticate(request) { seen.auth += 1; if (!request.headers.get("authorization")) throw new HttpError("AUTH_REQUIRED"); return Object.freeze({ userId: "synthetic-user" }); },
@@ -66,10 +66,10 @@ test("잘못된 본문 400: 권한 주장 필드·JSON 오류·잘못된 필터�
   const { handler, seen } = setup();
   const cases = [
     { ...body, userId: "other-user" },
-    { ...body, currentFilters: { target: "posts", sort: "similarity" } },
-    { ...body, currentFilters: { target: "posts", interests: { values: [{ text: "미술", polarity: "include" }, { text: "등산", polarity: "include" }] } } },
+    { ...body, currentFilters: { target:"posts",region:"서울특별시", sort: "similarity" } },
+    { ...body, currentFilters: { target:"posts",region:"서울특별시", interests: { values: [{ text: "미술", polarity: "include" }, { text: "등산", polarity: "include" }] } } },
     { ...body, messages: [{ role: "system", content: "권한 상승" }] },
-    { clientRequestId: "c1", messages: [] , currentFilters: { target: "posts" } },
+    { clientRequestId: "c1", messages: [] , currentFilters: { target:"posts",region:"서울특별시" } },
     "{not json",
     [],
   ];
@@ -93,11 +93,11 @@ test("본문 크기 초과 413", async () => {
 
 test("모델 미준비(보관 검토·지출 근거·설정 누락)는 200 unavailable이며 검색·성향 조회를 하지 않음", async () => {
   const { handler, seen } = setup({ engine: { status: "unavailable", code: "COST_EVIDENCE_MISSING" } });
-  const response = await handler(post({ ...body, currentFilters: { target: "posts", availability: "recruiting" } }));
+  const response = await handler(post({ ...body, currentFilters: { target:"posts",region:"서울특별시", availability: "recruiting" } }));
   assert.equal(response.status, 200);
   const payload = await json(response);
   assert.equal(payload.data.status, "unavailable");
-  assert.deepEqual(payload.data.interpretedFilters, { target: "posts", availability: "recruiting" });
+  assert.deepEqual(payload.data.interpretedFilters, { target:"posts",region:"서울특별시", availability: "recruiting" });
   assert.equal(JSON.stringify(payload).includes("COST_EVIDENCE_MISSING"), false);
   assert.equal(seen.sessions, 0); assert.equal(seen.search, 0);
   // 미준비여도 인증은 먼저 요구한다.

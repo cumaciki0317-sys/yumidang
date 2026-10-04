@@ -19,6 +19,8 @@ export interface ReviewSourceSnapshot {
   sourceRevision: string;
   /** DB가 회원 공개 자격을 확인한 집합. 당사자 released와 다르다. */
   publicTextReviews: PublicTextReview[];
+  /** 대상자 동의와 각 작성자의 요약 근거 사용 자격은 DB가 필터링·검사한다. */
+  processingAllowed?: boolean;
 }
 export interface SummaryClaim { text: string; evidenceIds: string[] }
 export interface SummaryNode {
@@ -119,8 +121,8 @@ function jobArgs(job: ReviewSummaryJob, withRevision: boolean): Record<string, J
     throw new Error("INVALID_SUMMARY_JOB");
   }
   return withRevision
-    ? { p_job_id: job.jobId, p_lease_token: job.leaseToken, p_source_revision: job.sourceRevision }
-    : { p_job_id: job.jobId, p_lease_token: job.leaseToken };
+    ? { p_job_id: job.jobId, p_lease_token: job.leaseToken, p_source_revision: job.sourceRevision, p_contract_version: "2026-10-05" }
+    : { p_job_id: job.jobId, p_lease_token: job.leaseToken, p_contract_version: "2026-10-05" };
 }
 function status(value: JsonValue): string {
   const body = record(value);
@@ -166,18 +168,23 @@ function toCheckpoint(value: JsonValue, job: ReviewSummaryJob): SummaryCheckpoin
  * 변환: profileId↔targetUserId, reviewId→evidenceId, text→comment, bigint revision은 십진 문자열 그대로.
  * 점유 손실·revision 불일치 등은 DB가 status 값으로 반환한다. 전송·권한 오류는 그대로 던진다.
  */
-export function createRpcReviewSummaryRepository(db: RpcClient): ReviewSummaryRepository {
+export function createRpcReviewSummaryRepository(db: RpcClient, options: { workerRunToken?: string } = {}): ReviewSummaryRepository {
   if (!db || typeof db.rpc !== "function") throw new TypeError("INVALID_SUMMARY_DB");
+  if (options.workerRunToken !== undefined && !UUID.test(options.workerRunToken)) throw new TypeError("INVALID_WORKER_RUN_TOKEN");
+  const scopedDb: RpcClient = { rpc(name, args) {
+    return db.rpc(name, { ...args, ...(options.workerRunToken ? { p_worker_run_token: options.workerRunToken } : {}) });
+  } };
   return Object.freeze({
     async loadSource(job: ReviewSummaryJob) {
-      const body = record(await db.rpc("load_review_summary_source", jobArgs(job, false)));
+      const body = record(await scopedDb.rpc("load_review_summary_source", { ...jobArgs(job, false), p_contract_version: "2026-10-05" }));
       const state = status(body);
       if (state === "lease_lost" || state === "already_published" || state === "stale_revision") {
         exactKeys(body, ["status"]);
         return state;
       }
       if (state !== "applied") return wire();
-      exactKeys(body, ["status", "profileId", "sourceRevision", "reviews", "eligibleCount"]);
+      exactKeys(body, ["status", "profileId", "sourceRevision", "reviews", "eligibleCount", "processingAllowed"]);
+      if (body.processingAllowed !== true) return "stale_revision";
       if (body.profileId !== job.targetUserId || !isSourceRevision(body.sourceRevision) || !Array.isArray(body.reviews) ||
           body.eligibleCount !== body.reviews.length) return wire();
       const publicTextReviews: PublicTextReview[] = body.reviews.map((raw) => {
@@ -186,10 +193,10 @@ export function createRpcReviewSummaryRepository(db: RpcClient): ReviewSummaryRe
         return { evidenceId: review.reviewId, comment: review.text };
       });
       if (new Set(publicTextReviews.map((review) => review.evidenceId)).size !== publicTextReviews.length) return wire();
-      return { targetUserId: body.profileId, sourceRevision: body.sourceRevision as string, publicTextReviews };
+      return { targetUserId: body.profileId, sourceRevision: body.sourceRevision as string, publicTextReviews, processingAllowed: true };
     },
     async loadCheckpoint(job: ReviewSummaryJob) {
-      const body = record(await db.rpc("load_review_summary_checkpoint", jobArgs(job, true)));
+      const body = record(await scopedDb.rpc("load_review_summary_checkpoint", jobArgs(job, true)));
       const state = status(body);
       if (state === "lease_lost" || state === "stale_revision") {
         exactKeys(body, ["status"]);
@@ -215,14 +222,14 @@ export function createRpcReviewSummaryRepository(db: RpcClient): ReviewSummaryRe
           modelVersions: [...node.modelVersions],
         })),
       };
-      return writeResult(await db.rpc("save_review_summary_checkpoint", { ...args, p_checkpoint: payload }));
+      return writeResult(await scopedDb.rpc("save_review_summary_checkpoint", { ...args, p_checkpoint: payload }));
     },
     async publish(input: SummaryPublishInput) {
       const args = jobArgs(input, true);
       if (typeof input.summaryText !== "string" || !Array.isArray(input.sourceReviewIds) ||
           input.sourceReviewIds.some((id) => typeof id !== "string" || !UUID.test(id)) ||
           input.sourceReviewCount !== input.sourceReviewIds.length) throw new Error("INVALID_SUMMARY_PUBLICATION");
-      const body = record(await db.rpc("publish_review_summary_for_job", {
+      const body = record(await scopedDb.rpc("publish_review_summary_for_job", {
         ...args, p_evidence_review_ids: [...input.sourceReviewIds], p_summary: input.summaryText,
         p_model_version: input.modelVersion, p_prompt_version: input.promptVersion,
       }));
@@ -234,10 +241,10 @@ export function createRpcReviewSummaryRepository(db: RpcClient): ReviewSummaryRe
       return "applied";
     },
     async markInsufficient(job: ReviewSummaryJob) {
-      return writeResult(await db.rpc("mark_review_summary_insufficient", jobArgs(job, true)));
+      return writeResult(await scopedDb.rpc("mark_review_summary_insufficient", jobArgs(job, true)));
     },
     async discardCheckpoint(job: ReviewSummaryJob) {
-      const result = writeResult(await db.rpc("discard_review_summary_checkpoint", jobArgs(job, true)));
+      const result = writeResult(await scopedDb.rpc("discard_review_summary_checkpoint", jobArgs(job, true)));
       if (result !== "applied" && result !== "lease_lost") return wire();
       return result;
     },

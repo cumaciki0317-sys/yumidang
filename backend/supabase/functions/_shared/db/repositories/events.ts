@@ -5,6 +5,7 @@
 import type {
   EventPeriod, EventProviderPort, EventQuery, EventFetchRequest, EventState, SourceEventRecord, StoredEventRecord,
 } from "../../integrations/events/port.ts";
+import { normalizeEventRegion, performanceGenreForSource, type PerformanceGenre } from "../../integrations/events/normalize.ts";
 import { assertSourceEventRecord, parseCalendarDate, queryPeriodInterval } from "../../integrations/events/normalize.ts";
 import { selectEvents } from "../../services/event-service.ts";
 import type { JsonValue } from "../../contracts/common.ts";
@@ -50,7 +51,7 @@ export function matchesEventKeyword(fields: EventSearchIndexFields, rawQuery: st
 
 export async function queryStoredEvents(repository: EventRepositoryPort, query: EventQuery): Promise<StoredEventRecord[]> {
   if (!query || typeof query !== "object" || Array.isArray(query)) throw new Error("INVALID_EVENT_QUERY");
-  if (Object.keys(query).some((key) => !["mode", "now", "period", "ongoingOnly", "region", "category", "query"].includes(key))) {
+  if (Object.keys(query).some((key) => !["mode", "now", "period", "ongoingOnly", "includeOngoing", "freeOnly", "performanceGenre", "region", "category", "query"].includes(key))) {
     throw new Error("UNSUPPORTED_EVENT_FILTER");
   }
   for (const field of ["region", "category"] as const) {
@@ -58,13 +59,16 @@ export async function queryStoredEvents(repository: EventRepositoryPort, query: 
       throw new Error("INVALID_EVENT_FILTER");
     }
   }
-  const { query: rawQuery, region, category, ...timingQuery } = query;
+  if (query.performanceGenre !== undefined && !["concert", "musical", "play"].includes(query.performanceGenre)) throw new Error("INVALID_EVENT_FILTER");
+  if (query.freeOnly !== undefined && typeof query.freeOnly !== "boolean") throw new Error("INVALID_EVENT_FILTER");
+  const { query: rawQuery, region, category, performanceGenre, freeOnly, ...timingQuery } = query;
   const keyword = normalizeEventKeyword(rawQuery === undefined ? "" : rawQuery);
   selectEvents([], timingQuery); // 잘못된 필터를 실제 DB 요청 전에 거절한다.
   const events = await repository.listCandidates({ ...query, query: keyword });
   return selectEvents(events, timingQuery).filter((event) =>
     matchesEventKeyword(event, keyword) &&
-    (region === undefined || event.region === region) && (category === undefined || event.category === category)
+    (region === undefined || normalizeEventRegion(event.region) === normalizeEventRegion(region)) && (category === undefined || event.category === category) &&
+    (performanceGenre === undefined || performanceGenreForSource(event.provider, event.category) === performanceGenre) && (!freeOnly || event.admission.kind === "free")
   );
 }
 
@@ -92,12 +96,15 @@ export interface EventPageQuery {
   mode: "overlapping" | "new_this_week" | "post_selection";
   period?: EventPeriod;
   ongoingOnly?: boolean;
+  includeOngoing?: boolean;
+  performanceGenre?: PerformanceGenre;
+  freeOnly?: boolean;
   /** 행사명·장소명·공개 주소 중 한 필드 부분 일치. 빈 검색어는 다른 필터만 적용한다. */
   query?: string;
   region?: string;
   category?: string;
 }
-export type PublicEventItem = StoredEventRecord & { state: EventState };
+export type PublicEventItem = StoredEventRecord & { state: EventState; performanceGenre?: PerformanceGenre | null; operatingInfo?: string | null; description?: string | null; posterUrl?: string | null };
 export interface EventPage {
   events: PublicEventItem[];
   /** 다음 페이지 불투명 커서. 같은 조건에서만 유효하다. */
@@ -115,6 +122,9 @@ interface CanonicalEventFilters {
   mode: EventPageQuery["mode"];
   period: EventPeriod | null;
   ongoingOnly: boolean;
+  includeOngoing: boolean;
+  performanceGenre: PerformanceGenre | null;
+  freeOnly: boolean;
   query: string;
   region: string | null;
   category: string | null;
@@ -138,7 +148,7 @@ function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]): 
 /** 조회 조건을 고정 순서의 정규형으로 만든다. 커서 지문과 RPC 인자가 같은 값을 사용한다. */
 export function normalizeEventPageQuery(query: EventPageQuery): CanonicalEventFilters {
   if (!isObject(query)) throw new Error("INVALID_EVENT_QUERY");
-  if (Object.keys(query).some((key) => !["mode", "period", "ongoingOnly", "query", "region", "category"].includes(key))) {
+  if (Object.keys(query).some((key) => !["mode", "period", "ongoingOnly", "includeOngoing", "freeOnly", "performanceGenre", "query", "region", "category"].includes(key))) {
     throw new Error("UNSUPPORTED_EVENT_FILTER");
   }
   if (!["overlapping", "new_this_week", "post_selection"].includes(query.mode as string)) throw new Error("INVALID_EVENT_MODE");
@@ -149,8 +159,13 @@ export function normalizeEventPageQuery(query: EventPageQuery): CanonicalEventFi
     period = { start: query.period.start as string, end: query.period.end as string };
   }
   if (query.ongoingOnly !== undefined && typeof query.ongoingOnly !== "boolean") throw new Error("INVALID_EVENT_FILTER");
+  if (query.includeOngoing !== undefined && typeof query.includeOngoing !== "boolean") throw new Error("INVALID_EVENT_FILTER");
+  if (query.includeOngoing && (query.ongoingOnly || query.mode !== "new_this_week")) throw new Error("INVALID_EVENT_FILTER");
+  if (query.performanceGenre !== undefined && !["concert", "musical", "play"].includes(query.performanceGenre)) throw new Error("INVALID_EVENT_FILTER");
+  if (query.freeOnly !== undefined && typeof query.freeOnly !== "boolean") throw new Error("INVALID_EVENT_FILTER");
   const filters: CanonicalEventFilters = {
-    mode: query.mode, period, ongoingOnly: query.ongoingOnly === true,
+    mode: query.mode, period, ongoingOnly: query.ongoingOnly === true, includeOngoing: query.includeOngoing === true,
+    performanceGenre: query.performanceGenre ?? null, freeOnly: query.freeOnly === true,
     query: normalizeEventKeyword(query.query === undefined ? "" : query.query),
     region: null, category: null,
   };
@@ -158,7 +173,7 @@ export function normalizeEventPageQuery(query: EventPageQuery): CanonicalEventFi
     const value = query[field];
     if (value === undefined) continue;
     if (typeof value !== "string" || !value.trim()) throw new Error("INVALID_EVENT_FILTER");
-    filters[field] = value;
+    filters[field] = field === "region" ? normalizeEventRegion(value) : value;
   }
   return filters;
 }
@@ -167,6 +182,9 @@ function filtersToRpc(filters: CanonicalEventFilters): Record<string, JsonValue>
   return {
     mode: filters.mode,
     ongoingOnly: filters.ongoingOnly,
+    ...(filters.includeOngoing ? { includeOngoing: true } : {}),
+    ...(filters.performanceGenre ? { performanceGenre: filters.performanceGenre } : {}),
+    ...(filters.freeOnly ? { freeOnly: true } : {}),
     ...(filters.query ? { query: filters.query } : {}),
     ...(filters.period ? { period: { start: filters.period.start, end: filters.period.end } } : {}),
     ...(filters.region !== null ? { region: filters.region } : {}),
@@ -217,7 +235,7 @@ function eventIntervalOf(item: StoredEventRecord): { start: number; endExclusive
   return range;
 }
 
-function toWireEvent(event: SourceEventRecord): Record<string, JsonValue> {
+export function toWireEvent(event: SourceEventRecord): Record<string, JsonValue> {
   assertSourceEventRecord(event);
   if (!providerPattern.test(event.provider)) throw new Error("INVALID_EVENT_SOURCE_RECORD");
   const admission: JsonValue = event.admission.kind === "described"
@@ -227,6 +245,9 @@ function toWireEvent(event: SourceEventRecord): Record<string, JsonValue> {
     category: event.category, region: event.region, placeName: event.placeName, publicAddress: event.publicAddress,
     admission, sourceUrl: event.sourceUrl, collectedAt: event.collectedAt, precision: event.precision,
   };
+  for (const key of ["operatingInfo", "description", "posterUrl"] as const) {
+    if (event[key] != null && event[key] !== "") common[key] = event[key]!;
+  }
   return event.precision === "date"
     ? { ...common, startsOn: event.startsOn, endsOn: event.endsOn }
     : { ...common, startsAt: event.startsAt, endsAt: event.endsAt };
@@ -242,7 +263,16 @@ function parseItem(raw: JsonValue): PublicEventItem {
   const common = ["id", "provider", "sourceId", "sourceStatus", "title", "category", "region", "placeName", "publicAddress",
     "admission", "sourceUrl", "collectedAt", "state", "precision"];
   const timing = raw.precision === "date" ? ["startsOn", "endsOn"] : raw.precision === "instant" ? ["startsAt", "endsAt"] : null;
-  if (!timing || !hasExactKeys(raw, [...common, ...timing])) return invalidResponse();
+  const extras = ["operatingInfo", "description", "posterUrl", "performanceGenre"].filter((key) => Object.hasOwn(raw, key));
+  if (!timing || !hasExactKeys(raw, [...common, ...timing, ...extras])) return invalidResponse();
+  for (const key of extras.filter((key) => key !== "performanceGenre")) {
+    const value = raw[key];
+    if (value !== null && (typeof value !== "string" || value.length > 10000 || /[<>\u0000-\u001f]/u.test(value))) return invalidResponse();
+  }
+  if (raw.posterUrl != null) {
+    let url: URL; try { url = new URL(raw.posterUrl as string); } catch { return invalidResponse(); }
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) return invalidResponse();
+  }
   if (typeof raw.id !== "string" || !uuidPattern.test(raw.id) || typeof raw.provider !== "string" || !providerPattern.test(raw.provider) ||
       raw.sourceStatus !== "active" || typeof raw.state !== "string" || !Object.hasOwn(stateRank, raw.state)) return invalidResponse();
   for (const field of ["category", "region", "placeName", "publicAddress", "sourceUrl"] as const) {
@@ -258,7 +288,9 @@ function parseItem(raw: JsonValue): PublicEventItem {
     assertSourceEventRecord(item);
     if (item.precision === "date") { parseCalendarDate(item.startsOn); parseCalendarDate(item.endsOn); }
   } catch { return invalidResponse(); }
-  return item;
+  const performanceGenre = performanceGenreForSource(item.provider, item.category);
+  if (Object.hasOwn(raw, "performanceGenre") && raw.performanceGenre !== performanceGenre) return invalidResponse();
+  return { ...item, performanceGenre };
 }
 
 /** 행사 필터 값(제공처 원문). 2026-09-30 사용자 결정 U9-A: 값마다 제공처를 함께 둬 섞여도 구분한다. */
@@ -327,7 +359,9 @@ export function createRpcEventRepository(db: RpcClient): RpcEventRepository {
         ids.add(item.id);
         // DB가 요청 조건을 지켰는지 확인한다. 조건 밖 행을 조용히 걸러 성공으로 만들지 않는다.
         if ((filters.mode !== "overlapping" && item.state === "ended") || (filters.ongoingOnly && item.state !== "ongoing") ||
-            (filters.region !== null && item.region !== filters.region) ||
+            (filters.region !== null && normalizeEventRegion(item.region) !== filters.region) ||
+            (filters.performanceGenre !== null && performanceGenreForSource(item.provider, item.category) !== filters.performanceGenre) ||
+            (filters.freeOnly && item.admission.kind !== "free") ||
             (filters.category !== null && item.category !== filters.category) ||
             !matchesEventKeyword(item, filters.query)) return invalidResponse();
         const interval = eventIntervalOf(item);

@@ -1,3 +1,6 @@
+import RemotePlacePicker from "./RemotePlacePicker";
+import { serviceMode, useServiceSession } from "../remote";
+import { RemotePostResults, RemoteEventResults, RemotePostDetail, RemoteEventDetail, RemoteRankings, RemoteEventListScreen, RemoteEventPicker } from "./RemoteScreens";
 import React, { useMemo, useState } from "react";
 import {
   Linking,
@@ -205,6 +208,8 @@ function ConfirmCard({
 }
 function AccountHeader() {
   const app = useApp();
+  const session = useServiceSession();
+  if (serviceMode && session.authenticated) return <Body small>로그인됨</Body>;
   return app.member ? (
     <Row>
       <Body small style={{ fontWeight: "700" }}>
@@ -233,11 +238,13 @@ function AccountHeader() {
 }
 function FloatingActions() {
   const app = useApp();
+  const session = useServiceSession();
+  const authenticated = Boolean(app.member) || (serviceMode && session.authenticated);
   return (
     <View style={styles.floating}>
       <Pressable
         accessibilityRole="button"
-        onPress={() => app.navigate(app.member ? "S20" : "S05")}
+        onPress={() => app.navigate(authenticated ? "S20" : "S05")}
         style={styles.aiButton}
       >
         <Icon name="sparkles-outline" color={colors.primary} size={14} />
@@ -246,7 +253,7 @@ function FloatingActions() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="동행 공고 작성"
-        onPress={() => app.navigate(app.member ? "S03" : "S05")}
+        onPress={() => app.navigate(authenticated ? "S03" : "S05")}
         style={styles.addButton}
       >
         <Icon name="add" size={29} color="white" />
@@ -257,6 +264,7 @@ function FloatingActions() {
 
 export function HomeScreen() {
   const app = useApp();
+  const session = useServiceSession();
   const events = selectEvents(app.events, app.now);
   const upcoming = app.appointments
     .filter(
@@ -278,7 +286,7 @@ export function HomeScreen() {
           <Body small muted>
             {monthWeek(app.now).label} · 이번 주 신규 중 미종료
           </Body>
-          {events.length ? (
+          {serviceMode ? <RemoteEventResults /> : events.length ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -332,7 +340,7 @@ export function HomeScreen() {
           action={app.member ? "나의 동행" : undefined}
           onPress={() => app.navigate("S13", "activity")}
         >
-          {!app.member ? (
+          {serviceMode && session.authenticated ? <Card><Body muted>약속 정보 연결을 준비 중이에요.</Body></Card> : !app.member ? (
             <Card style={{ backgroundColor: colors.lavender }}>
               <Body muted>로그인하면 다가오는 약속을 확인할 수 있어요.</Body>
               <TextButton onPress={() => app.navigate("S05")}>
@@ -446,6 +454,8 @@ export function HomeScreen() {
 
 function BrowseList({ category }: { category?: string }) {
   const app = useApp();
+  const session = useServiceSession();
+  const hasMember = Boolean(app.member) || (serviceMode && session.authenticated);
   const [applied, setApplied] = useState<Filters>({
     ...BASE_FILTERS,
     category: category || "",
@@ -497,7 +507,8 @@ function BrowseList({ category }: { category?: string }) {
     setFilterOpen(true);
   };
   const applyFilters = () => {
-    if (app.member && (pending.ageMin || pending.ageMax)) {
+    if (hasMember && Boolean(pending.from) !== Boolean(pending.to)) { setFilterError("시작 날짜와 종료 날짜를 모두 입력해 주세요."); return; }
+    if (hasMember && (pending.ageMin || pending.ageMax)) {
       const min = Number(pending.ageMin || 19),
         max = Number(pending.ageMax || 99);
       if (
@@ -514,7 +525,7 @@ function BrowseList({ category }: { category?: string }) {
       }
     }
     if (
-      app.member &&
+      hasMember &&
       ((pending.from && !Number.isFinite(parseDateInput(pending.from))) ||
         (pending.to && !Number.isFinite(parseDateInput(pending.to))))
     ) {
@@ -531,7 +542,7 @@ function BrowseList({ category }: { category?: string }) {
     }
     setApplied({
       ...pending,
-      ...(!app.member ? { from: "", to: "", ageMin: "", ageMax: "" } : {}),
+      ...(!hasMember ? { from: "", to: "", ageMin: "", ageMax: "" } : {}),
     });
     setLimit(10);
     setFilterOpen(false);
@@ -546,7 +557,7 @@ function BrowseList({ category }: { category?: string }) {
   const activeLabels = [
     applied.category,
     applied.region,
-    ...(app.member
+    ...(hasMember
       ? [
           applied.from || applied.to ? "일정 지정" : "",
           applied.ageMin || applied.ageMax
@@ -622,14 +633,14 @@ function BrowseList({ category }: { category?: string }) {
             </Chip>
             <Chip
               selected={Boolean(applied.from || applied.to)}
-              disabled={!app.member}
+              disabled={!hasMember}
               onPress={openFilter}
             >
               일정 ⌄
             </Chip>
             <Chip
               selected={Boolean(applied.ageMin || applied.ageMax)}
-              disabled={!app.member}
+              disabled={!hasMember}
               onPress={openFilter}
             >
               나이 ⌄
@@ -638,7 +649,7 @@ function BrowseList({ category }: { category?: string }) {
               {applied.category || "카테고리"} ⌄
             </Chip>
           </ScrollView>
-          {!app.member && (
+          {!hasMember && (
             <Body small muted>
               일정·작성자 나이 상세 조건은 로그인 후 선택할 수 있어요.
             </Body>
@@ -675,7 +686,7 @@ function BrowseList({ category }: { category?: string }) {
               ⌄
             </TextButton>
           </Row>
-          {!failed && (
+          {!failed && !serviceMode && (
             <Row between>
               <Body style={{ fontWeight: "700" }}>
                 총{" "}
@@ -697,7 +708,7 @@ function BrowseList({ category }: { category?: string }) {
             </View>
           )}
         </View>
-        {failed ? (
+        {serviceMode ? <RemotePostResults filters={applied} reset={reset} /> : failed ? (
           <Empty
             title="공고를 불러오지 못했어요"
             description="입력한 검색 조건은 그대로 남아 있어요."
@@ -729,8 +740,8 @@ function BrowseList({ category }: { category?: string }) {
           <Button
             onPress={() =>
               app.navigate(
-                app.member ? "S03" : "S05",
-                app.member ? `category:${category}` : undefined,
+                hasMember ? "S03" : "S05",
+                hasMember ? `category:${category}` : undefined,
               )
             }
             icon="add"
@@ -795,7 +806,7 @@ function BrowseList({ category }: { category?: string }) {
               </Section>
               <Section title="일정">
                 <Chip
-                  disabled={!app.member}
+                  disabled={!hasMember}
                   selected={!pending.from && !pending.to}
                   onPress={() => set({ from: "", to: "" })}
                 >
@@ -807,7 +818,7 @@ function BrowseList({ category }: { category?: string }) {
                       label="시작 날짜"
                       placeholder="2026-10-05"
                       value={pending.from}
-                      editable={Boolean(app.member)}
+                      editable={Boolean(hasMember)}
                       onChangeText={(from) => set({ from })}
                     />
                   </View>
@@ -816,7 +827,7 @@ function BrowseList({ category }: { category?: string }) {
                       label="종료 날짜"
                       placeholder="2026-10-12"
                       value={pending.to}
-                      editable={Boolean(app.member)}
+                      editable={Boolean(hasMember)}
                       onChangeText={(to) => set({ to })}
                     />
                   </View>
@@ -824,7 +835,7 @@ function BrowseList({ category }: { category?: string }) {
               </Section>
               <Section title="작성자 나이 (만 19~99세)">
                 <Chip
-                  disabled={!app.member}
+                  disabled={!hasMember}
                   selected={!pending.ageMin && !pending.ageMax}
                   onPress={() => set({ ageMin: "", ageMax: "" })}
                 >
@@ -837,7 +848,7 @@ function BrowseList({ category }: { category?: string }) {
                       keyboardType="number-pad"
                       placeholder="19"
                       value={pending.ageMin}
-                      editable={Boolean(app.member)}
+                      editable={Boolean(hasMember)}
                       onChangeText={(ageMin) => set({ ageMin })}
                     />
                   </View>
@@ -848,12 +859,12 @@ function BrowseList({ category }: { category?: string }) {
                       keyboardType="number-pad"
                       placeholder="99"
                       value={pending.ageMax}
-                      editable={Boolean(app.member)}
+                      editable={Boolean(hasMember)}
                       onChangeText={(ageMax) => set({ ageMax })}
                     />
                   </View>
                 </Row>
-                {!app.member && (
+                {!hasMember && (
                   <TextButton
                     onPress={() => {
                       setFilterOpen(false);
@@ -883,7 +894,7 @@ function BrowseList({ category }: { category?: string }) {
                   초기화
                 </Button>
                 <Button onPress={applyFilters} style={{ flex: 2 }}>
-                  적용하기 ({pendingResults.length}건)
+                  {serviceMode ? "적용하기" : `적용하기 (${pendingResults.length}건)`}
                 </Button>
               </Row>
             </View>
@@ -900,12 +911,15 @@ export function CategoryScreen({ id }: { id?: string }) {
   return <BrowseList key={id || "전시"} category={id || "전시"} />;
 }
 
-export function EventListScreen({ id }: { id?: string }) {
+export function EventListScreen({ id }: { id?: string }) { return serviceMode ? <RemoteEventListScreen selecting={id === "select"} /> : <PreviewEventListScreen id={id} />; }
+function PreviewEventListScreen({ id }: { id?: string }) {
   const app = useApp();
   const selecting = id === "select";
   const [category, setCategory] = useState("전체");
   const [ongoing, setOngoing] = useState(false);
   const [past, setPast] = useState(false);
+  const [pastStart, setPastStart] = useState("");
+  const [pastEnd, setPastEnd] = useState("");
   const [ranking, setRanking] = useState<"전체 공연" | "뮤지컬">("전체 공연");
   const [limit, setLimit] = useState(10);
   const [failed, setFailed] = useState(false);
@@ -951,10 +965,11 @@ export function EventListScreen({ id }: { id?: string }) {
             ))}
           </Row>
           <View style={styles.rankingEmpty}>
+            {serviceMode ? <RemoteRankings mode={ranking === "뮤지컬" ? "musical" : "all"} /> : <>
             <Icon name="cloud-offline-outline" color={colors.muted} size={24} />
             <Body small muted>
               {ranking} 순위 데이터가 아직 연결되지 않았어요.
-            </Body>
+            </Body></>}
           </View>
         </Card>
       )}
@@ -962,7 +977,7 @@ export function EventListScreen({ id }: { id?: string }) {
         <Body small muted>
           {monthWeek(app.now).label} ·{" "}
           {past
-            ? "종료한 행사만 보여드려요."
+            ? (serviceMode ? "선택한 과거 기간과 겹치는 행사예요." : "종료한 행사만 보여드려요.")
             : "기본 목록은 이번 주 신규 중 미종료 행사예요."}
         </Body>
         <ScrollView
@@ -1012,7 +1027,12 @@ export function EventListScreen({ id }: { id?: string }) {
           </Body>
         </Card>
       )}
-      {failed ? (
+      {serviceMode ? <View style={{ gap: 14 }}>
+        {past && <><Body muted>조회할 기간을 선택해 주세요.</Body><Row><Field label="시작 날짜" value={pastStart} onChangeText={setPastStart} placeholder="YYYY-MM-DD" /><Field label="종료 날짜" value={pastEnd} onChangeText={setPastEnd} placeholder="YYYY-MM-DD" /></Row></>}
+        {!past || (Number.isFinite(parseDateInput(pastStart)) && Number.isFinite(parseDateInput(pastEnd)) && parseDateInput(pastStart) <= parseDateInput(pastEnd))
+          ? <RemoteEventResults category={category} includeOngoing={!past && ongoing} period={past ? { start: pastStart, end: pastEnd } : undefined} />
+          : <Body muted>올바른 시작·종료 날짜를 입력해 주세요.</Body>}
+      </View> : failed ? (
         <Empty
           title="행사를 불러오지 못했어요"
           action="다시 시도"
@@ -1102,7 +1122,8 @@ export function EventListScreen({ id }: { id?: string }) {
   );
 }
 
-export function EventDetailScreen({ id }: { id: string }) {
+export function EventDetailScreen({ id }: { id: string }) { return serviceMode ? <RemoteEventDetail id={id} /> : <PreviewEventDetail id={id} />; }
+function PreviewEventDetail({ id }: { id: string }) {
   const app = useApp();
   const event = app.events.find((e) => e.id === id);
   const [limit, setLimit] = useState(10);
@@ -1224,7 +1245,8 @@ type PostWithWishes = Post & {
   desiredAgeMax?: string;
   wishes?: string;
 };
-export function PostDetailScreen({ id }: { id: string }) {
+export function PostDetailScreen({ id }: { id: string }) { return serviceMode ? <RemotePostDetail id={id} /> : <PreviewPostDetail id={id} />; }
+function PreviewPostDetail({ id }: { id: string }) {
   const app = useApp();
   const post = app.posts.find((p) => p.id === id) as PostWithWishes | undefined;
   const [confirm, setConfirm] = useState<"delete" | "edit" | "close" | null>(
@@ -1643,6 +1665,9 @@ export function CreateScreen({ id }: { id?: string }) {
 }
 function CreateForm({ id }: { id?: string }) {
   const app = useApp();
+  const serviceSession = useServiceSession();
+  const [eventOpen, setEventOpen] = useState(false);
+  const [liveEvent, setLiveEvent] = useState<{ id: string; title: string; placeName: string | null } | null>(null);
   const eventId = id?.startsWith("event:") ? id.slice(6) : undefined;
   const category = id?.startsWith("category:") ? id.slice(9) : "";
   const continuing = id === "resume" || Boolean(eventId);
@@ -1665,7 +1690,7 @@ function CreateForm({ id }: { id?: string }) {
   const [placeMode, setPlaceMode] = useState<"장소명" | "주소">("장소명");
   const [restoredDraft, setRestoredDraft] = useState(continuing);
   const [saving, setSaving] = useState(false);
-  const event = app.events.find((e) => e.id === draft.eventId);
+  const event = serviceMode ? (liveEvent?.id === draft.eventId ? liveEvent : undefined) : app.events.find((e) => e.id === draft.eventId);
   const change = (patch: Partial<Draft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
     setErrors({});
@@ -1712,7 +1737,7 @@ function CreateForm({ id }: { id?: string }) {
       placeQuery.trim(),
     ),
   );
-  if (!app.member)
+  if (!app.member && !(serviceMode && serviceSession.authenticated))
     return (
       <Screen title="동행 모집">
         <Empty
@@ -1895,6 +1920,7 @@ function CreateForm({ id }: { id?: string }) {
           </Body>
         </Row>
       </Section>
+      <Modal visible={eventOpen} transparent animationType="slide" onRequestClose={() => setEventOpen(false)}><View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }}><Title>연결할 행사 선택</Title><TextButton onPress={() => setEventOpen(false)}>행사 선택 닫기</TextButton><RemoteEventPicker startsAt={draft.startsAt} endsAt={draft.endsAt} onSelect={(selected) => { setLiveEvent(selected); change({ eventId: selected.id }); setEventOpen(false); }} /></ScrollView></View></View></Modal>
       <Section title="연결 문화 행사 (선택)">
         {event ? (
           <Card style={{ backgroundColor: colors.lavender }}>
@@ -1905,7 +1931,7 @@ function CreateForm({ id }: { id?: string }) {
             <Row between>
               <TextButton
                 onPress={() => {
-                  void saveThen("event");
+                  if (serviceMode) setEventOpen(true); else void saveThen("event");
                 }}
               >
                 행사 변경
@@ -1920,12 +1946,13 @@ function CreateForm({ id }: { id?: string }) {
             secondary
             icon="ticket-outline"
             onPress={() => {
-              void saveThen("event");
+              if (serviceMode) setEventOpen(true); else void saveThen("event");
             }}
           >
             연결할 행사 선택하기
           </Button>
         )}
+        {serviceMode && liveEvent?.placeName && <TextButton onPress={() => { setPlaceQuery(liveEvent.placeName!); setPlaceOpen(true); }}>행사장을 장소 후보로 찾기</TextButton>}
         <Body small muted>
           행사 선택은 작성 중인 동행 일정을 바꾸지 않아요.
         </Body>
@@ -2016,6 +2043,7 @@ function CreateForm({ id }: { id?: string }) {
               contentContainerStyle={{ padding: 22, gap: 16 }}
               keyboardShouldPersistTaps="handled"
             >
+              {serviceMode ? <RemotePlacePicker initialQuery={placeQuery} onSelect={(selected) => { change({ placeName: selected.placeName, address: selected.address, publicArea: selected.publicArea }); setPlaceOpen(false); }} onCancel={() => setPlaceOpen(false)} /> : <>
               <Badge tone="gray">프로토타입 장소 목록</Badge>
               <Body small muted>
                 외부 장소 검색은 연결되지 않았어요. 준비된 장소를 선택해 작성
@@ -2083,7 +2111,7 @@ function CreateForm({ id }: { id?: string }) {
                   action="검색어 지우기"
                   onPress={() => setPlaceQuery("")}
                 />
-              )}
+              )}</>}
             </ScrollView>
           </View>
         </View>

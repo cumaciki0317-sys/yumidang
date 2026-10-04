@@ -35,6 +35,8 @@ export interface ReviewSummaryDependencies {
   settings: ReviewSummarySettings;
   versions: { modelVersion: string; promptVersion: string };
   signal?: AbortSignal;
+  /** 실제 worker는 전역 점유를 예산 예약의 최종 처리 허가에도 묶는다. */
+  workerRunToken?: string;
 }
 
 function validateSettings(settings: ReviewSummarySettings) {
@@ -101,6 +103,7 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
     // 같은 작업·revision 게시가 이미 원자 처리됨(settle 전 중단 후 재실행). 모델을 다시 호출하지 않는다.
     if (source === "already_published") return { status: "published" };
     if (source === "stale_revision") return await rejectedWrite(repository, job, source);
+    if (source.processingAllowed === false) return await rejectedWrite(repository, job, "stale_revision");
     const reviews = source.publicTextReviews;
     if (reviews.length < MIN_PUBLIC_TEXT_REVIEWS) {
       const status = await repository.markInsufficient(job);
@@ -143,20 +146,36 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
         input = mergeInput(selectedNodes);
         expectedIds = selectedNodes.map((_, index) => "group-" + index);
       }
+      // 분할/재개 사이에 대상자 또는 작성자가 철회했거나 공개 근거가 바뀌면 새 외부 전송 전에 중단한다.
+      const freshSource = await loadReviewSource(repository, job);
+      if (freshSource === "lease_lost") return { status: "lease_lost" };
+      if (freshSource === "already_published") return { status: "published" };
+      if (freshSource === "stale_revision" || freshSource.processingAllowed === false ||
+          !sameEvidence(freshSource.publicTextReviews.map(review => review.evidenceId), ids) ||
+          JSON.stringify(freshSource.publicTextReviews) !== JSON.stringify(reviews)) {
+        return await rejectedWrite(repository, job, "stale_revision");
+      }
       let response;
       try {
         response = await model.generate({
           task: merged ? "review_merge" : "review_chunk",
           system: merged ? REVIEW_MERGE_SYSTEM : REVIEW_CHUNK_SYSTEM,
+          ...(deps.workerRunToken ? { summaryRequest: { ...job, workerRunToken: deps.workerRunToken, sourceReviewIds: ids } } : {}),
           input, maxOutputTokens: settings.maxOutputTokens, signal,
         });
       } catch (error) {
         if (signal?.aborted) return { status: "yielded" };
+        if (error instanceof ModelError && error.code === "REQUEST_LEASE_LOST") return { status: "lease_lost" };
+        if (error instanceof ModelError && ["SUMMARY_SOURCE_CHANGED", "AI_CONSENT_REVOKED"].includes(error.code)) {
+          return await rejectedWrite(repository, job, "stale_revision");
+        }
         if (error instanceof ModelError && (error.code === "BUDGET_EXHAUSTED" || error.code === "DAILY_QUOTA_EXHAUSTED")) {
           return { status: "budget_exhausted", code: error.code };
         }
+        if (error instanceof Error && ["UNSAFE_SUMMARY_INPUT", "UNSAFE_SUMMARY_OUTPUT"].includes(error.message)) throw error;
         return { status: "unavailable", code: "MODEL_UNAVAILABLE" };
       }
+      if (signal?.aborted) return { status: "yielded" };
       calls += 1;
       if (!response || typeof response.modelVersion !== "string" || !response.modelVersion.trim()) throw new Error("INVALID_SUMMARY_OUTPUT");
       const validated = checkSummaryOutput(response.value, expectedIds, settings.maxOutputChars);
@@ -178,6 +197,7 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
         checkpoint.nodes.push(node);
         checkpoint.nextReviewIndex += chunk.length;
       }
+      if (signal?.aborted) return { status: "yielded" };
       const write = await repository.saveCheckpoint(job, checkpoint);
       if (write !== "applied") return await rejectedWrite(repository, job, write);
     }
@@ -185,6 +205,8 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
     const final = checkpoint.nodes[0];
     // 재개된 checkpoint도 게시 전에 현재 원문과 함께 의미/개인정보를 검사한다.
     if (!await safety.check({ claims: final.claims, publicTextReviews: reviews })) throw new Error("UNSAFE_SUMMARY_OUTPUT");
+    if (signal?.aborted) return { status: "yielded" };
+    checkSummaryOutput({ claims: final.claims }, ids, Math.min(settings.maxOutputChars, 300));
     const write = await publishSummary(repository, {
       ...job, summaryText: final.claims.map((claim) => claim.text).join(" "), claims: final.claims,
       sourceReviewIds: final.sourceReviewIds, sourceReviewCount: reviews.length,
@@ -195,7 +217,7 @@ export async function runReviewSummaryStep(job: ReviewSummaryJob, deps: ReviewSu
     const code = error instanceof Error ? error.message : "";
     const permanent = new Set([
       "INVALID_REVIEW_SOURCE", "DUPLICATE_REVIEW_SOURCE", "INVALID_SUMMARY_CHECKPOINT",
-      "INVALID_SUMMARY_OUTPUT", "SUMMARY_OUTPUT_TOO_LARGE", "UNSAFE_SUMMARY_OUTPUT",
+      "INVALID_SUMMARY_OUTPUT", "SUMMARY_OUTPUT_TOO_LARGE", "UNSAFE_SUMMARY_OUTPUT", "UNSAFE_SUMMARY_INPUT",
       "INVALID_EVIDENCE", "INCOMPLETE_EVIDENCE", "INVALID_SUMMARY_PUBLICATION", "SUMMARY_INPUT_TOO_LARGE",
     ]);
     if (!permanent.has(code)) return { status: "unavailable", code: "DEPENDENCY_UNAVAILABLE" };

@@ -8,6 +8,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.26",
     "expo-constants": "~57.0.20",
+    "expo-crypto": "~57.0.3",
     "expo-font": "~57.0.4",
     "expo-image-picker": "~57.0.20",
     "expo-linear-gradient": "~57.0.2",
@@ -21,6 +22,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "^0.21.2",
+    "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
@@ -37,10 +39,10 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "build:web": "expo export --platform web",
+    "build:web": "expo export --platform web --clear",
     "test:policy": "node --experimental-strip-types --test ../../tests/functions/jonghyun/mobile-policy.test.ts",
     "test:browser": "node ../../tests/integration/jonghyun/mobile-browser.mjs",
-    "build:native": "expo export --platform ios --platform android --output-dir dist-native"
+    "build:native": "expo export --platform ios --platform android --clear --output-dir dist-native"
   },
   "private": true
 }

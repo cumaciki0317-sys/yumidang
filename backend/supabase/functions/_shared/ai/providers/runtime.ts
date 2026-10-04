@@ -8,10 +8,10 @@ import type { RpcClient } from "../../db/transport.ts";
 import { optionalToken, requiredToken, SettingError } from "../../jobs/settings.ts";
 import { createRpcModelBudget } from "./budget.ts";
 import type { ModelPort } from "./model-port.ts";
-import { createPotensModel, POTENS_PROMPT_OVERHEAD_BYTES, type FetchLike } from "./potens-adapter.ts";
+import { createPotensModel, POTENS_PROMPT_OVERHEAD_BYTES, type FetchLike, type PotensOutputLimit } from "./potens-adapter.ts";
 import { createModelRouter } from "./provider-adapter.ts";
 
-export type ModelRuntimeDisabledCode = "RETENTION_REVIEW_PENDING" | "COST_EVIDENCE_MISSING" | "NOT_CONFIGURED";
+export type ModelRuntimeDisabledCode = "RETENTION_REVIEW_PENDING" | "COST_EVIDENCE_MISSING" | "LEGAL_REVIEW_PENDING" | "MEMBER_TRANSMISSION_NOT_APPROVED" | "OUTPUT_LIMIT_NOT_VERIFIED" | "NOT_CONFIGURED";
 export type ModelRuntime =
   | { status: "ready"; model: ModelPort; modelVersion: string }
   | { status: "disabled"; code: ModelRuntimeDisabledCode };
@@ -20,12 +20,14 @@ export type ModelRuntime =
 export const AI_RUNTIME_ENV = {
   retentionDecisionId: "AI_RETENTION_DECISION_ID",
   costEvidenceId: "AI_COST_EVIDENCE_ID",
+  legalDecisionId: "AI_PROCESSING_LEGAL_DECISION_ID",
+  memberTransmissionApprovalId: "AI_MEMBER_TRANSMISSION_APPROVAL_ID",
   budgetLedgerId: "AI_BUDGET_LEDGER_ID",
   usageInputField: "POTENS_USAGE_INPUT_FIELD",
   usageOutputField: "POTENS_USAGE_OUTPUT_FIELD",
 } as const;
 
-export function createConfiguredModel(read: EnvReader, deps: { budgetDb: RpcClient; fetch?: FetchLike }): ModelRuntime {
+export function createConfiguredModel(read: EnvReader, deps: { budgetDb: RpcClient; fetch?: FetchLike; outputLimit?: PotensOutputLimit }): ModelRuntime {
   try {
     const decisionId = optionalToken(read, AI_RUNTIME_ENV.retentionDecisionId);
     if (!decisionId) return { status: "disabled", code: "RETENTION_REVIEW_PENDING" };
@@ -35,8 +37,14 @@ export function createConfiguredModel(read: EnvReader, deps: { budgetDb: RpcClie
     const input = optionalToken(read, AI_RUNTIME_ENV.usageInputField, fieldPattern);
     const output = optionalToken(read, AI_RUNTIME_ENV.usageOutputField, fieldPattern);
     if ((input === undefined) !== (output === undefined)) return { status: "disabled", code: "NOT_CONFIGURED" };
+    if (!optionalToken(read, AI_RUNTIME_ENV.legalDecisionId)) return { status: "disabled", code: "LEGAL_REVIEW_PENDING" };
+    if (!optionalToken(read, AI_RUNTIME_ENV.memberTransmissionApprovalId)) return { status: "disabled", code: "MEMBER_TRANSMISSION_NOT_APPROVED" };
+    if (!deps.outputLimit || !deps.outputLimit.decisionId?.trim() || typeof deps.outputLimit.apply !== "function") {
+      return { status: "disabled", code: "OUTPUT_LIMIT_NOT_VERIFIED" };
+    }
     const potens = loadPotensLlmConfig(read);
     const model = createPotensModel({
+      outputLimit: deps.outputLimit,
       apiKey: potens.apiKey, baseUrl: potens.baseUrl, model: potens.model, timeoutMs: potens.upstreamTimeoutMs,
       ...(input && output ? { usageFields: { input, output } } : {}),
       fetch: deps.fetch ?? ((url, init) => fetch(url, init)),

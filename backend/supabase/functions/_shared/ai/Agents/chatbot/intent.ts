@@ -1,8 +1,8 @@
 import { AiInputError } from "../../../contracts/ai.ts";
-import { POST_CATEGORIES } from "../../../contracts/search.ts";
+import { POST_CATEGORIES, POST_REGIONS, type PostRegion } from "../../../contracts/search.ts";
 import type { AiFilters, DateSelection, PreferenceCondition } from "../../../contracts/ai.ts";
 import { parseCalendarDate } from "../../../integrations/events/normalize.ts";
-const keys = new Set(["target","query","category","region","cost","availability","date","mbti","ongoingOnly","newThisWeek","sort","authorAge","interests","conversationStyles"]);
+const keys = new Set(["target","query","category","region","cost","availability","date","mbti","ongoingOnly","includeOngoing","performanceGenre","newThisWeek","sort","authorAge","interests","conversationStyles"]);
 /**
  * AI 요청 조건의 기술 상한(제품 정책 아님): 한 조건의 요청 값 수·값 길이. 모델 입력/출력 크기와 판정 배열 길이를 제한하기 위한 값이며
  * 등록 성향 상한(값 40자, Q9-A로 제품 기준)과 맞춘다. 운영 정책으로 바뀌면 설정값으로 옮긴다.
@@ -43,14 +43,32 @@ export function validateFilters(value: unknown): AiFilters {
   const v = value as Record<string, unknown>;
   if (Object.keys(v).some(k => !keys.has(k)) || !["posts","events"].includes(v.target as string)) throw new AiInputError("INVALID_FILTER");
   const f: AiFilters = { target: v.target as AiFilters["target"] };
-  for (const key of ["query","category","region"] as const) { if (v[key] !== undefined) { if (typeof v[key] !== "string") throw new AiInputError("INVALID_FILTER"); f[key] = v[key]; } }
+  for (const key of ["query","category"] as const) { if (v[key] !== undefined) { if (typeof v[key] !== "string") throw new AiInputError("INVALID_FILTER"); f[key] = v[key]; } }
+  if (v.region !== undefined) {
+    if (!(POST_REGIONS as readonly unknown[]).includes(v.region)) throw new AiInputError("INVALID_FILTER");
+    f.region = v.region as PostRegion;
+  }
   // 공고 분류는 검색 v2 고정 목록만 허용한다. 목록 밖 값을 검색 단계 장애로 넘기지 않고 입력 오류로 드러낸다.
   if (f.target === "posts" && f.category !== undefined && !(POST_CATEGORIES as readonly string[]).includes(f.category)) throw new AiInputError("INVALID_FILTER");
   if (v.cost !== undefined) { if (!["all","free","paid"].includes(v.cost as string)) throw new AiInputError("INVALID_FILTER"); f.cost=v.cost as AiFilters["cost"]; }
   if (v.availability !== undefined) { if (!["all","recruiting"].includes(v.availability as string)) throw new AiInputError("INVALID_FILTER"); f.availability=v.availability as AiFilters["availability"]; }
-  for (const key of ["ongoingOnly","newThisWeek"] as const) { if(v[key] !== undefined) { if(typeof v[key] !== "boolean") throw new AiInputError("INVALID_FILTER"); f[key]=v[key]; } }
+  for (const key of ["ongoingOnly","includeOngoing","newThisWeek"] as const) { if(v[key] !== undefined) { if(typeof v[key] !== "boolean") throw new AiInputError("INVALID_FILTER"); f[key]=v[key]; } }
+  if (v.performanceGenre !== undefined) {
+    if (!["concert","musical","play"].includes(v.performanceGenre as string)) throw new AiInputError("INVALID_FILTER");
+    f.performanceGenre = v.performanceGenre as AiFilters["performanceGenre"];
+  }
+  if (f.includeOngoing && (f.ongoingOnly || f.newThisWeek === false)) throw new AiInputError("INVALID_FILTER");
   if (v.sort !== undefined) { if (!["created_desc","starts_asc"].includes(v.sort as string)) throw new AiInputError("INVALID_FILTER"); f.sort=v.sort as AiFilters["sort"]; }
-  if (v.authorAge !== undefined) { if (!["all","20s","30s","40plus"].includes(v.authorAge as string)) throw new AiInputError("INVALID_FILTER"); f.authorAge=v.authorAge as AiFilters["authorAge"]; }
+  if (v.authorAge !== undefined) {
+    if (v.authorAge === "all") f.authorAge = "all";
+    else {
+      const age = v.authorAge as Record<string, unknown>;
+      if (!age || typeof age !== "object" || Array.isArray(age) || Object.keys(age).length !== 2 ||
+          !Number.isInteger(age.min) || !Number.isInteger(age.max) || (age.min as number) < 19 ||
+          (age.max as number) > 99 || (age.min as number) > (age.max as number)) throw new AiInputError("INVALID_FILTER");
+      f.authorAge = { min: age.min as number, max: age.max as number };
+    }
+  }
   for (const key of ["interests","conversationStyles"] as const) { if (v[key] !== undefined) f[key]=validatePreferenceCondition(v[key]); }
   if (v.mbti !== undefined) { if(typeof v.mbti !== "string" || !/^[IE][NS][TF][JP]$/i.test(v.mbti)) throw new AiInputError("INVALID_FILTER"); f.mbti=v.mbti.toUpperCase(); }
   if (v.date !== undefined) {
@@ -67,9 +85,9 @@ export function validateFilters(value: unknown): AiFilters {
     }
   }
   // 서로 다른 카드 종류에 잘못된 필터를 적용하거나 조용히 버리지 않는다.
-  if (f.target === "events" && (f.mbti !== undefined || f.availability !== undefined || f.cost !== undefined || f.sort !== undefined ||
+  if (f.target === "events" && (f.mbti !== undefined || f.availability !== undefined || f.sort !== undefined ||
     f.authorAge !== undefined || f.interests !== undefined || f.conversationStyles !== undefined)) throw new AiInputError("UNSUPPORTED_FILTER");
-  if (f.target === "posts" && (f.ongoingOnly !== undefined || f.newThisWeek !== undefined || f.region !== undefined)) throw new AiInputError("UNSUPPORTED_FILTER");
+  if (f.target === "posts" && (f.ongoingOnly !== undefined || f.newThisWeek !== undefined || f.includeOngoing !== undefined || f.performanceGenre !== undefined)) throw new AiInputError("UNSUPPORTED_FILTER");
   return f;
 }
 export type InterpretedIntent = { status: "search"; filters: AiFilters } | { status: "clarify"; filters: AiFilters; question: string };
@@ -78,7 +96,10 @@ export function parseIntent(raw: unknown): InterpretedIntent {
   const v=raw as Record<string,unknown>;
   if(Object.keys(v).some(k=>!["status","filters","question"].includes(k))) throw new AiInputError("INVALID_INTENT");
   const filters=validateFilters(v.filters);
-  if(v.status==="search" && v.question === undefined) return {status:"search",filters};
+  if(v.status==="search" && v.question === undefined) {
+    if (filters.target === "events" && filters.cost === "paid") return { status:"clarify", filters, question:"공식 무료 여부만 확인할 수 있어요. 무료 행사만 찾거나 비용 조건 없이 볼까요?" };
+    return {status:"search",filters};
+  }
   if(v.status==="clarify" && typeof v.question==="string" && v.question.trim()) return {status:"clarify",filters,question:v.question};
   throw new AiInputError("INVALID_INTENT");
 }

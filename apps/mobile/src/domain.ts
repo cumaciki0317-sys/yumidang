@@ -106,10 +106,10 @@ export function filterPosts(posts: Post[], filters: Filters, members: Record<str
     if (filters.recruiting && post.status !== 'recruiting') return false;
     if (filters.category && filters.category !== '전체' && post.category !== filters.category) return false;
     if (filters.region && filters.region !== '전체' && !post.publicArea.includes(filters.region)) return false;
-    const searchable = [post.title, post.placeName, post.address, post.eventId ? eventTitles.get(post.eventId) ?? '' : ''].join(' ').toLocaleLowerCase();
-    if (query && !searchable.includes(query)) return false;
+    const searchable = [post.title, post.placeName, post.address, post.eventId ? eventTitles.get(post.eventId) ?? '' : ''];
+    if (query && !searchable.some((value) => value.toLocaleLowerCase().includes(query))) return false;
     if (viewerId) {
-      if (Number.isFinite(from) && post.endsAt < from) return false;
+      if (Number.isFinite(from) && post.endsAt <= from) return false;
       if (Number.isFinite(end) && post.startsAt >= end) return false;
       if (filters.ageMin || filters.ageMax) {
         const age = members[post.authorId]?.age;
@@ -117,7 +117,7 @@ export function filterPosts(posts: Post[], filters: Filters, members: Record<str
       }
     }
     return true;
-  }).sort((a, b) => filters.sort === 'starts_asc' ? a.startsAt - b.startsAt || b.createdAt - a.createdAt : b.createdAt - a.createdAt || a.id.localeCompare(b.id));
+  }).sort((a, b) => filters.sort === 'starts_asc' ? a.startsAt - b.startsAt || a.id.localeCompare(b.id) : b.createdAt - a.createdAt || a.id.localeCompare(b.id));
 }
 
 export function selectEvents(events: EventItem[], now: number, includeOngoing = false, past = false): EventItem[] {
@@ -157,4 +157,10 @@ export function validateDraft(draft: Draft, now = Date.now()): Record<string, st
   const ageMin = Number(draft.desiredAgeMin || 19), ageMax = Number(draft.desiredAgeMax || 99);
   if (!Number.isInteger(ageMin) || !Number.isInteger(ageMax) || ageMin < 19 || ageMax > 99 || ageMin > ageMax) errors.desiredAgeMin = '희망 나이는 만 19~99세 안에서 선택해 주세요.';
   return errors;
+}
+
+/** Pass public, valid reviews only. Withdrawal affects written sources and the owner profile. */
+export function summarySources(reviews: Review[], targetId: string, withdrawnIds: readonly string[]): Review[] {
+  if (withdrawnIds.includes(targetId)) return [];
+  return reviews.filter((review) => review.targetId === targetId && review.comment.trim() && !withdrawnIds.includes(review.authorId));
 }

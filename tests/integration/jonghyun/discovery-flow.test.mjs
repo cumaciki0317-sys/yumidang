@@ -13,7 +13,7 @@ import {loadMyPreferences} from "../../../backend/supabase/functions/_shared/ai/
 const now=new Date("2026-10-02T20:00:00+09:00");
 const limits={maxMessages:5,maxMessageChars:300,maxTotalChars:1000,maxOutputTokens:300};
 const principal={userId:"synthetic-member"};
-const request={clientRequestId:"c1",messages:[{role:"user",content:"이번 주말 전시"}],currentFilters:{target:"posts"}};
+const request={clientRequestId:"c1",messages:[{role:"user",content:"이번 주말 전시"}],currentFilters:{target:"posts",region:"서울특별시"}};
 const response=value=>({value,modelVersion:"synthetic",usage:{inputTokens:10,outputTokens:10}});
 function asPost(c){return {kind:"post",id:c.id,title:c.title,locationLabel:c.publicArea,startsAtOrDate:c.startsAt,endsAtOrDate:c.endsAt,costLabel:c.cost.kind==="unknown"?"비용 미확인":c.cost.kind==="free"?"무료":String(c.cost.amount),state:c.state,canApply:c.canApply};}
 test("AI 조건→검색 기본 등록일순→공개 동 보존·비공개 입력 제거→재조회 순서 보존",async()=>{
@@ -54,14 +54,14 @@ test("비용 미확인 공고를 AI 카드와 설명 입력에 무료나 신청 
 });
 
 test("AI 주말·키워드→행사 코어는 장소 부분 일치·기간/지역/종류 교집합·출처 보존",async()=>{
-  const base={provider:"synthetic",sourceId:"s",sourceStatus:"active",title:"가상 전시",category:"전시",region:"seoul",placeName:"Art  Hall",publicAddress:"서울",admission:{kind:"unknown"},sourceUrl:"https://example.invalid/event",collectedAt:"2026-10-01T00:00:00Z",precision:"date",startsOn:"2026-09-01",endsOn:"2026-10-10"};
-  const events=[{...base,id:"long"},{...base,id:"ended",endsOn:"2026-10-02"},{...base,id:"cancelled",sourceStatus:"cancelled"},{...base,id:"other",region:"busan"},{...base,id:"no-keyword",placeName:"Museum"}];
+  const base={provider:"synthetic",sourceId:"s",sourceStatus:"active",title:"가상 전시",category:"전시",region:"서울특별시",placeName:"Art  Hall",publicAddress:"서울",admission:{kind:"unknown"},sourceUrl:"https://example.invalid/event",collectedAt:"2026-10-01T00:00:00Z",precision:"date",startsOn:"2026-09-01",endsOn:"2026-10-10"};
+  const events=[{...base,id:"long"},{...base,id:"ended",endsOn:"2026-10-02"},{...base,id:"cancelled",sourceStatus:"cancelled"},{...base,id:"other",region:"부산광역시"},{...base,id:"no-keyword",placeName:"Museum"}];
   const repo={async listCandidates(){return events;}};
   let latest;
   const eventPort={async search(q){latest=q;const found=await queryStoredEvents(repo,{mode:"overlapping",now:q.now,period:{start:q.period.startsAt.slice(0,10),end:"2026-10-04"},region:q.filters.region,category:q.filters.category,query:q.filters.query});return {cards:found.map(e=>({kind:"event",id:e.id,title:e.title,locationLabel:e.publicAddress,startsAtOrDate:e.startsOn,endsAtOrDate:e.endsOn,costLabel:"입장료 확인 필요",state:eventStateAt(e,q.now),canApply:false,sourceUrl:e.sourceUrl,sourceName:"합성 제공처"})),coverage:"exhausted"};},async recheck(){return {cards:(await this.search(latest)).cards,complete:true};}};
   const discovery={async search(){throw new Error("posts port must not run for events");},async recheck(){throw new Error("no");}};
-  const model={async generate(){return response({status:"search",filters:{target:"events",query:"art hall",region:"seoul",category:"전시",date:{kind:"this_weekend"}}});}};
-  const r=await runChat({...request,currentFilters:{target:"events"}},principal,{model,discovery,events:eventPort,limits,now:()=>now},"r2");
+  const model={async generate(){return response({status:"search",filters:{target:"events",query:"art hall",region:"서울특별시",category:"전시",date:{kind:"this_weekend"}}});}};
+  const r=await runChat({...request,currentFilters:{target:"events",region:"서울특별시"}},principal,{model,discovery,events:eventPort,limits,now:()=>now},"r2");
   assert.equal(r.status,"results");assert.deepEqual(r.cards.map(c=>c.id),["long"]);assert.equal(r.cards[0].sourceUrl,base.sourceUrl);assert.equal(r.cards[0].sourceName,"합성 제공처");assert.equal(r.cards[0].canApply,false);
 });
 
@@ -69,9 +69,9 @@ test("행사 포트가 연결되지 않으면 행사 요청은 unavailable이며
   let searched=false;
   const discovery={async search(){searched=true;return {cards:[],coverage:"exhausted"};},async recheck(){return {cards:[],complete:true};}};
   const model={async generate(){return response({status:"search",filters:{target:"events",query:"전시"}});}};
-  const r=await runChat({...request,currentFilters:{target:"events"}},principal,{model,discovery,limits,now:()=>now},"r3");
+  const r=await runChat({...request,currentFilters:{target:"events",region:"서울특별시"}},principal,{model,discovery,limits,now:()=>now},"r3");
   assert.equal(r.status,"unavailable");assert.match(r.notice,/행사/);assert.equal(searched,false);
-  assert.deepEqual(r.interpretedFilters,{target:"events",query:"전시"});
+  assert.deepEqual(r.interpretedFilters,{target:"events",region:"서울특별시",query:"전시"});
 });
 
 test("HTTP→해석→검색 v2 RPC→작성자 성향 RPC→C 의미 판단→재확인: 회원 RpcClient 하나로 연결", async()=>{
@@ -95,7 +95,7 @@ test("HTTP→해석→검색 v2 RPC→작성자 성향 RPC→C 의미 판단→�
     engine:{status:"ready",model,limits,now:()=>now},
     openSession:(principal,m)=>({discovery:createPostDiscovery({db,model:m,limits:{pageSize:10,maxSearchPages:2,recheckMaxPages:2,maxResultCards:5,matchBatchSize:5,maxMatchCalls:2,matchMaxOutputTokens:50}}),loadPreferences:()=>loadMyPreferences(db)})});
   const res=await handler(new Request("https://edge.synthetic.test/functions/v1/ai-chat",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer a.b.c"},
-    body:JSON.stringify({clientRequestId:"c1",messages:[{role:"user",content:"나랑 관심사 비슷한 사람"}],currentFilters:{target:"posts"}})}));
+    body:JSON.stringify({clientRequestId:"c1",messages:[{role:"user",content:"나랑 관심사 비슷한 사람"}],currentFilters:{target:"posts",region:"서울특별시"}})}));
   assert.equal(res.status,200);
   const {data}=await res.json();
   assert.equal(data.status,"results");

@@ -1,6 +1,7 @@
 // 요약 worker 가상 검사(총괄 작성, lane S 중단 후 이어받음). 모델·DB는 주입값이며 실제 모델·Edge·DB가 아니다.
 import test from "node:test";
 import assert from "node:assert/strict";
+import { HttpError } from "../../../backend/supabase/functions/_shared/http/errors.ts";
 import { runReviewSummaryStep } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/orchestrator.ts";
 import { REVIEW_SUMMARY_PROMPT_VERSION } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/prompts.ts";
 import { ModelError } from "../../../backend/supabase/functions/_shared/ai/providers/provider-errors.ts";
@@ -90,8 +91,14 @@ const baseEnv = {
 };
 // 가상 수치(합성 검사 전용, 운영값 아님).
 const workerEnv = Object.fromEntries(Object.values(REVIEW_SUMMARY_WORKER_ENV).map((key) => [key, "5"]));
-workerEnv[REVIEW_SUMMARY_WORKER_ENV.leaseSeconds] = "60"; workerEnv[REVIEW_SUMMARY_WORKER_ENV.timeBudgetMs] = "1000";
-workerEnv[REVIEW_SUMMARY_WORKER_ENV.maxInputChars] = "20000"; workerEnv[REVIEW_SUMMARY_WORKER_ENV.maxOutputChars] = "2000";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.leaseSeconds] = "180"; workerEnv[REVIEW_SUMMARY_WORKER_ENV.timeBudgetMs] = "1000";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.maxInputChars] = "12000"; workerEnv[REVIEW_SUMMARY_WORKER_ENV.maxOutputChars] = "300";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.mergeFanIn] = "4";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.maxCallsPerStep] = "3";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.retryMaxAttempts] = "3";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.retryBaseDelayMs] = "600000";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.retryMaxDelayMs] = "21600000";
+workerEnv[REVIEW_SUMMARY_WORKER_ENV.budgetDeferMs] = "3600000";
 const post = (body = {}, token = secret) => new Request("https://project.example.invalid/functions/v1/review-summary-worker",
   { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer " + token }, body: JSON.stringify(body) });
 function runtime(env, overrides) {
@@ -108,14 +115,15 @@ test("전제 미충족은 작업을 점유하지 않고 not_enabled(설정·모�
     [{ ...baseEnv, ...workerEnv }, { createModel: readyModel }, "SAFETY_CHECK_NOT_APPROVED"],
     [{ ...baseEnv, ...workerEnv, REVIEW_SUMMARY_MODEL_VERSION: "other-model" }, { createModel: readyModel, safety }, "MODEL_VERSION_MISMATCH"],
     // 기본 민규 내부 클라이언트는 새 요약 RPC를 허용 목록에 두지 않았다 → 전송 전 거절, 점유 없음.
-    [{ ...baseEnv, ...workerEnv }, { createModel: readyModel, safety }, "DB_RPC_NOT_ALLOWED"],
+    [{ ...baseEnv, ...workerEnv }, { createModel: readyModel, safety }, "PRIVACY_CHECK_NOT_APPROVED"],
   ];
   for (const [env, overrides, reason] of cases) {
     const { handler, calls } = runtime(env, overrides);
     const response = await handler(post());
     assert.equal(response.status, 200, reason);
     assert.deepEqual((await response.json()).data, { status: "not_enabled", reason });
-    assert.equal(calls.length, 0, "네트워크·claim 호출 없음: " + reason);
+    assert.equal(calls.some(url => url.endsWith("/claim_job")), false, "claim 호출 없음: " + reason);
+    if (reason !== "DB_RPC_UNAVAILABLE") assert.equal(calls.length, 0);
   }
 });
 
@@ -124,4 +132,50 @@ test("요청은 실행 설정을 바꿀 수 없음: 비어 있지 않은 본문 
   assert.equal((await handler(post({ maxJobs: 999 }))).status, 400);
   assert.equal((await handler(post({ model: "x" }))).status, 400);
   assert.equal((await handler(post({}, "wrong_secret_" + "c".repeat(32)))).status, 403);
+});
+
+test("일일 직접 호출·상주 실행기 토큰 재사용은 같은 전역 점유를 검증하고 소유한 점유만 해제한다", async () => {
+  const token = "00000000-0000-4000-8000-000000000001";
+  const privacy = { decisionId: "synthetic-only", check: async () => true };
+  for (const existing of [undefined, token]) {
+    const calls = [];
+    const db = { rpc: async (name, args) => {
+      calls.push({ name, args });
+      if (name === "acquire_worker_run") return { token, expiresAt: new Date(Date.now() + 180_000).toISOString() };
+      if (name === "release_worker_run") return { status: "applied" };
+      if (name === "claim_job") return { job: null };
+      if (["yield_job", "fail_job", "supersede_job"].includes(name)) throw new HttpError("STATE_CONFLICT");
+      return { status: "lease_lost" };
+    } };
+    const { handler } = runtime({ ...baseEnv, ...workerEnv }, { createDb: () => db,
+      createModel: () => ({ status: "ready", model: chunkModel(99), modelVersion: versions.modelVersion }), safety, privacy });
+    const req = post();
+    if (existing) req.headers.set("x-worker-run-token", existing);
+    const result = (await (await handler(req)).json()).data;
+    assert.equal(result.status, "ran"); assert.equal(result.stopReason, "idle");
+    const acquire = calls.find(call => call.name === "acquire_worker_run");
+    assert.deepEqual(acquire.args, { p_lease_seconds: 180, p_existing_token: existing ?? null });
+    assert.equal(calls.filter(call => call.name === "release_worker_run").length, existing ? 0 : 1);
+    assert.equal(calls.find(call => call.name === "claim_job").args.p_worker_run_token, token);
+  }
+});
+
+test("전역 점유 충돌·미허용 RPC·잘못된 토큰에서는 작업 claim을 시작하지 않는다", async () => {
+  const privacy = { decisionId: "synthetic-only", check: async () => true };
+  for (const blocked of ["busy", "denied"]) {
+    let claims = 0;
+    const db = { rpc: async name => {
+      if (name === "acquire_worker_run") { if (blocked === "busy") return null; throw new HttpError("ACCESS_DENIED"); }
+      if (name === "claim_job") claims++;
+      if (["yield_job", "fail_job", "supersede_job"].includes(name)) throw new HttpError("STATE_CONFLICT");
+      return { status: "lease_lost" };
+    } };
+    const { handler } = runtime({ ...baseEnv, ...workerEnv }, { createDb: () => db,
+      createModel: () => ({ status: "ready", model: chunkModel(99), modelVersion: versions.modelVersion }), safety, privacy });
+    const result = (await (await handler(post())).json()).data;
+    assert.deepEqual(result, { status: "not_enabled", reason: blocked === "busy" ? "WORKER_RUN_BUSY" : "DB_RPC_NOT_ALLOWED" });
+    assert.equal(claims, 0);
+    const req = post(); req.headers.set("x-worker-run-token", "untrusted");
+    assert.equal((await handler(req)).status, 400);
+  }
 });
