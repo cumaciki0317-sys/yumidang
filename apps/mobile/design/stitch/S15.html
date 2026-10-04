@@ -1,0 +1,300 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 프로필 정보 관리</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface": "#f9f9ff",
+            "surface-container-low": "#f1f3ff",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-error-container": "#93000a",
+            "on-tertiary-container": "#ffd1bd",
+            "primary": "#5300d1",
+            "error-container": "#ffdad6",
+            "error": "#ba1a1a",
+            "tertiary-fixed": "#ffdbcc",
+            "primary-fixed": "#e8ddff",
+            "surface-container": "#e9edff",
+            "on-secondary": "#ffffff",
+            "background": "#f9f9ff",
+            "secondary": "#5e5d6c",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-fixed": "#351000",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "on-surface": "#141b2b",
+            "outline": "#7a7488",
+            "surface-bright": "#f9f9ff",
+            "surface-dim": "#d3daef",
+            "on-secondary-fixed": "#1a1a27",
+            "on-error": "#ffffff",
+            "outline-variant": "#cbc3d9",
+            "surface-container-high": "#e1e8fd",
+            "tertiary-fixed-dim": "#ffb694",
+            "on-secondary-fixed-variant": "#464553",
+            "on-surface-variant": "#494456",
+            "tertiary-container": "#a34100",
+            "on-primary-fixed": "#21005e",
+            "secondary-fixed": "#e3e0f2",
+            "primary-fixed-dim": "#cebdff",
+            "on-primary-container": "#e1d4ff",
+            "tertiary": "#7d3000",
+            "on-background": "#141b2b",
+            "inverse-on-surface": "#edf0ff",
+            "surface-container-highest": "#dce2f7",
+            "surface-tint": "#6b2af4",
+            "on-primary": "#ffffff",
+            "primary-container": "#6c2cf5",
+            "surface-container-lowest": "#ffffff",
+            "surface-variant": "#dce2f7",
+            "secondary-container": "#e3e0f2",
+            "inverse-primary": "#cebdff",
+            "inverse-surface": "#293040",
+            "on-secondary-container": "#646372",
+            "on-primary-fixed-variant": "#5100ce"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "margin": "1.25rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem"
+          },
+          "fontFamily": {
+            "headline-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "caption": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-lg": ["Plus Jakarta Sans", "Noto Sans KR"]
+          },
+          "fontSize": {
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-size: 22px;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased flex justify-center selection:bg-primary-fixed selection:text-primary">
+<!-- Mobile Canvas Device Shell (Sub-page flow, Global BottomNav & FAB suppressed according to Task-Focused destination rule) -->
+<div class="relative w-full max-w-md min-h-screen bg-surface flex flex-col pb-28">
+<!-- 1. Top Bar: Linear task back navigation & Title -->
+<header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md px-margin h-14 flex items-center justify-between transition-colors">
+<button aria-label="뒤로가기" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-on-surface active:scale-95 transition-transform hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm text-on-surface font-bold">프로필 정보 관리</h1>
+<div class="w-10 h-10 flex items-center justify-end">
+<button class="font-label-md text-label-md text-secondary hover:text-primary transition-colors" type="button">초기화</button>
+</div>
+</header>
+<!-- Main Scrollable Form Content -->
+<main class="flex-1 px-margin pt-space-sm space-y-space-lg">
+<!-- 2. 프로필 사진 섹션 -->
+<section class="flex flex-col items-center justify-center pt-2 pb-1">
+<div class="relative w-24 h-24">
+<!-- Central Circular Profile Photo (96px) -->
+<div class="w-24 h-24 rounded-full overflow-hidden ring-4 ring-surface-container-low shadow-sm bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A warm, elegant aesthetic portrait of a young Korean woman in her late 20s smiling gently in a naturally lit quiet museum courtyard. The scene features soft sunbeams, tranquil architectural stone walls, and modern styling with a lavender wool cardigan, conveying safety, warmth, and artistic calm in crisp high definition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvgo58Hpi4wFYTs2PPG0OdV-b5JabF90W9RUXTvbKj50b9BqalUqaEYKYwqLDZb2uk9Fym84YxstLm-5jQ-uNoDxcX_vl6nd4r8DKY_zC1SQzxzs5ECZv6zV9Uap3Y4322U3jj4Ll6ypyyKf7W2bsWxW-PpC9b-3fLkLM37MC6P39E3xoDWq-qOsBjBoWCkqRvmuL65XI4BFFJOs-UjZg03wLTbl9lWwsrGsuTgxG3sQrRrsg07HE9jg">
+</div>
+<!-- Camera Action Floating Button (우측 하단 보라색 카메라 버튼) -->
+<button aria-label="사진 촬영 및 업로드" class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-md active:scale-90 transition-transform" type="button">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</button>
+</div>
+<!-- Text Link & Spec Warning -->
+<button class="mt-3 font-label-md text-label-md text-primary font-semibold hover:underline" type="button">
+          대표 사진 변경
+        </button>
+<p class="font-caption text-caption text-secondary mt-1">10MB 이하 JPG, PNG 파일 권장</p>
+</section>
+<!-- 3. 네이버 본인인증 고정 정보 요약 카드 (수정 불가 안내) -->
+<section class="bg-surface-container-low/70 border border-outline-variant/30 rounded-xl p-space-md">
+<div class="flex items-center justify-between pb-space-xs border-b border-outline-variant/20 mb-2.5">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label-sm text-label-sm font-semibold">네이버 실명인증 완료</span>
+</div>
+<span class="font-caption text-caption text-outline">수정 불가</span>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">김**</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm">만 26세</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold">여성</span>
+</div>
+<p class="font-caption text-caption text-secondary mt-1">도용 방지를 위해 본인인증 정보는 고객센터를 통해 변경 가능합니다.</p>
+</div>
+<div class="w-8 h-8 rounded-full bg-[#03C75A]/10 flex items-center justify-center flex-shrink-0 ml-2">
+<span class="font-label-sm text-label-sm font-black text-[#03C75A]">N</span>
+</div>
+</div>
+</section>
+<!-- 4. 나의 문화 취향 키워드 -->
+<section class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-space-md shadow-[0_2px_8px_rgba(17,24,39,0.02)]">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">palette</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold text-[17px]">나의 문화 취향 키워드</h2>
+</div>
+<button class="flex items-center gap-0.5 font-label-sm text-label-sm text-primary font-semibold hover:opacity-80 transition-opacity" type="button">
+<span>수정</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Tag Group -->
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center px-3 py-1.5 rounded-full bg-surface-container text-primary font-label-md text-label-md border border-primary/20">
+            #현대미술
+          </span>
+<span class="inline-flex items-center px-3 py-1.5 rounded-full bg-surface-container text-primary font-label-md text-label-md border border-primary/20">
+            #카페투어
+          </span>
+<span class="inline-flex items-center px-3 py-1.5 rounded-full bg-surface-container text-primary font-label-md text-label-md border border-primary/20">
+            #조용한관람
+          </span>
+<span class="inline-flex items-center px-3 py-1.5 rounded-full bg-surface-container text-primary font-label-md text-label-md border border-primary/20">
+            #독립출판
+          </span>
+</div>
+<p class="font-caption text-caption text-secondary mt-2.5">비슷한 취향을 가진 동행자와 우선 매칭됩니다.</p>
+</section>
+<!-- 5. 대화 및 감상 스타일 -->
+<section class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-space-md shadow-[0_2px_8px_rgba(17,24,39,0.02)]">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">forum</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold text-[17px]">대화 및 감상 스타일</h2>
+</div>
+<button class="flex items-center gap-0.5 font-label-sm text-label-sm text-primary font-semibold hover:opacity-80 transition-opacity" type="button">
+<span>변경</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low border border-primary/15 flex items-center gap-3">
+<div class="w-9 h-9 rounded-full bg-primary-container/10 flex items-center justify-center flex-shrink-0 text-primary">
+<span class="material-symbols-outlined text-[20px]">headphones</span>
+</div>
+<div class="flex-1">
+<div class="inline-block px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold mb-1">
+              차분하게 작품에 집중하는 스타일
+            </div>
+<p class="font-body-sm text-body-sm text-secondary">작품 감상 중에는 대화를 아끼고 관람 후 카페에서 소감을 나누는 편이에요.</p>
+</div>
+</div>
+</section>
+<!-- 6. 한 줄 소개 편집 인풋 -->
+<section class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-space-md shadow-[0_2px_8px_rgba(17,24,39,0.02)]">
+<div class="flex items-center justify-between mb-2">
+<label class="font-headline-sm text-headline-sm text-on-surface font-bold text-[17px]" for="bio-input">한 줄 소개</label>
+<span class="font-caption text-caption text-secondary" id="char-counter">26/50자</span>
+</div>
+<div class="relative">
+<textarea class="w-full rounded-xl border border-outline-variant/40 bg-surface px-3.5 py-2.5 font-body-md text-body-md text-on-surface placeholder:text-outline focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 focus:outline-none transition-all resize-none" id="bio-input" maxlength="50" placeholder="함께할 동행에게 전달하고 싶은 인사를 적어주세요." rows="2">주말 미술관과 조용한 카페 나들이를 가장 좋아합니다.</textarea>
+</div>
+<p class="font-caption text-caption text-secondary mt-1.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">info</span>
+          개인 연락처, SNS 아이디 기재 시 이용이 제한될 수 있습니다.
+        </p>
+</section>
+<!-- 7. 공개 범위 안심 설정 -->
+<section class="p-space-md rounded-xl bg-gradient-to-r from-surface-container-high/60 to-surface-container-low border border-primary/15 flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-1.5 mb-0.5">
+<h3 class="font-label-md text-label-md text-on-surface font-bold">공개 범위 안심 설정</h3>
+<span class="inline-flex items-center px-1.5 py-0.2 rounded bg-primary-fixed text-primary font-caption text-caption font-semibold">보호중</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary leading-snug">
+            상세 만남 위치와 전체 성명은 <strong>최종 약속이 확정된 안전한 동행 상대</strong>에게만 제한적으로 공개됩니다.
+          </p>
+</div>
+</section>
+</main>
+<!-- 8. 하단 고정 '변경사항 저장' 주요 버튼 -->
+<div class="fixed bottom-0 left-0 w-full z-40 bg-surface/95 backdrop-blur-md border-t border-outline-variant/30 py-3 px-margin">
+<div class="max-w-md mx-auto">
+<button class="w-full h-12 rounded-xl bg-primary-container text-on-primary font-body-lg text-body-lg font-bold flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] transition-all hover:bg-primary-container/95" id="save-button" type="button">
+<span>변경사항 저장</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive script for character count & micro-feedback -->
+<script>
+    const textarea = document.getElementById('bio-input');
+    const counter = document.getElementById('char-counter');
+    const saveBtn = document.getElementById('save-button');
+
+    if (textarea && counter) {
+      textarea.addEventListener('input', (e) => {
+        const len = e.target.value.length;
+        counter.textContent = `${len}/50자`;
+      });
+    }
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
+          <span>저장 중...</span>
+        `;
+        setTimeout(() => {
+          saveBtn.innerHTML = `
+            <span class="material-symbols-outlined text-[20px]">check</span>
+            <span>저장 완료</span>
+          `;
+          saveBtn.classList.add('bg-primary');
+          setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.classList.remove('bg-primary');
+          }, 1500);
+        }, 500);
+      });
+    }
+  </script>
+</body></html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 동행 모집</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary-fixed": "#1a1a27",
+            "on-tertiary": "#ffffff",
+            "primary-fixed": "#e8ddff",
+            "on-secondary-container": "#646372",
+            "primary-container": "#6c2cf5",
+            "surface-dim": "#d3daef",
+            "on-surface-variant": "#494456",
+            "on-error": "#ffffff",
+            "surface-container": "#e9edff",
+            "surface": "#f9f9ff",
+            "outline-variant": "#cbc3d9",
+            "error-container": "#ffdad6",
+            "surface-variant": "#dce2f7",
+            "secondary-container": "#e3e0f2",
+            "background": "#f9f9ff",
+            "on-primary": "#ffffff",
+            "surface-tint": "#6b2af4",
+            "primary": "#5300d1",
+            "tertiary-fixed-dim": "#ffb694",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "primary-fixed-dim": "#cebdff",
+            "secondary": "#5e5d6c",
+            "on-primary-fixed-variant": "#5100ce",
+            "tertiary": "#7d3000",
+            "on-secondary": "#ffffff",
+            "on-secondary-fixed-variant": "#464553",
+            "secondary-fixed-dim": "#c7c5d6",
+            "outline": "#7a7488",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#e1e8fd",
+            "tertiary-fixed": "#ffdbcc",
+            "on-primary-container": "#e1d4ff",
+            "on-tertiary-fixed": "#351000",
+            "inverse-primary": "#cebdff",
+            "error": "#ba1a1a",
+            "on-surface": "#141b2b",
+            "on-tertiary-container": "#ffd1bd",
+            "surface-container-highest": "#dce2f7",
+            "tertiary-container": "#a34100",
+            "secondary-fixed": "#e3e0f2",
+            "inverse-surface": "#293040",
+            "on-background": "#141b2b",
+            "inverse-on-surface": "#edf0ff",
+            "on-error-container": "#93000a",
+            "on-primary-fixed": "#21005e",
+            "surface-bright": "#f9f9ff",
+            "surface-container-low": "#f1f3ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-md": "1rem",
+            "space-sm": "0.5rem",
+            "margin": "1.25rem"
+          },
+          "fontFamily": {
+            "caption": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "caption": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+            "body-md": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.05em", "fontWeight": "400"}],
+            "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700"}],
+            "headline-sm": ["18px", {"lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+            "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    body {
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(108, 44, 245, 0.12);
+    }
+  </style>
+</head>
+<body class="bg-surface-variant flex justify-center min-h-screen text-on-surface">
+<!-- Mobile Screen Container (390 x auto) -->
+<div class="w-full max-w-[390px] bg-surface-container-lowest min-h-screen flex flex-col relative shadow-xl overflow-hidden pb-24">
+<!-- Top Navigation Header -->
+<header class="sticky top-0 left-0 w-full z-40 bg-surface-container-lowest flex items-center justify-between px-margin h-14 border-b border-outline-variant/30">
+<div class="flex items-center gap-2">
+<button aria-label="뒤로가기" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container transition-transform active:scale-95 text-on-surface" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">동행 모집</h1>
+</div>
+<div class="flex items-center">
+<!-- 1/2 단계 진행 표시 배지 (Primary purple) -->
+<span class="inline-flex items-center px-2.5 py-1 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-bold tracking-wide">
+          1/2
+        </span>
+</div>
+</header>
+<!-- Scrollable Form Body -->
+<main class="flex-1 px-margin pt-space-lg pb-space-xl flex flex-col gap-6">
+<!-- 1. 활동 카테고리 선택 -->
+<section class="flex flex-col gap-space-sm">
+<label class="font-headline-sm text-[16px] text-on-surface font-semibold flex items-center gap-1">
+          활동 카테고리 <span class="text-primary font-bold">*</span>
+</label>
+<p class="font-caption text-caption text-secondary">어떤 문화 활동을 함께하고 싶으신가요?</p>
+<div class="flex flex-wrap gap-2 pt-1" id="categoryChips">
+<!-- Active: 전시 -->
+<button class="category-chip h-9 px-3.5 rounded-full border border-primary-container bg-primary-fixed text-primary font-label-md text-label-md flex items-center gap-1.5 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">museum</span>
+            전시
+          </button>
+<button class="category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">theater_comedy</span>
+            축제
+          </button>
+<button class="category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">storefront</span>
+            팝업
+          </button>
+<button class="category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">local_cafe</span>
+            카페
+          </button>
+<button class="category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">directions_walk</span>
+            산책
+          </button>
+<button class="category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+            맛집
+          </button>
+<button class="category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">brush</span>
+            클래스
+          </button>
+</div>
+</section>
+<!-- 2. 공고 제목 필수 입력 -->
+<section class="flex flex-col gap-space-xs">
+<label class="font-headline-sm text-[15px] text-on-surface font-semibold flex items-center gap-1" for="post-title">
+          공고 제목 <span class="text-primary font-bold">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-[50px] px-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline focus:border-primary-container transition-colors" id="post-title" name="title" placeholder="예: 삼청동 국립현대미술관 전시 천천히 같이 볼 분" type="text" value="삼청동 국립현대미술관 전시 천천히 같이 볼 분">
+</div>
+</section>
+<!-- 3. 동행 소개 입력 -->
+<section class="flex flex-col gap-space-xs">
+<label class="font-headline-sm text-[15px] text-on-surface font-semibold flex items-center gap-1" for="post-intro">
+          동행 소개 <span class="text-primary font-bold">*</span>
+</label>
+<textarea class="w-full p-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline focus:border-primary-container transition-colors resize-none leading-relaxed" id="post-intro" placeholder="예: 차분하게 현대미술 관람 후 돌담길 산책하실 분 구해요." rows="4">차분하게 현대미술 전시 관람하고, 날씨가 좋으면 삼청동 돌담길 가볍게 산책하실 분 환영해요! 서로 편안한 템포로 감상 나눠요.</textarea>
+</section>
+<!-- 4. 무료 1:1 동행 안내 박스 (연보라색 #F0EDFF) -->
+<section class="p-4 rounded-2xl bg-primary-fixed/45 border border-primary-fixed-dim/60 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-[22px] mt-0.5" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<div class="flex-1">
+<h4 class="font-label-md text-label-md text-primary font-bold mb-1">상호 존중 기반의 안심 동행</h4>
+<p class="font-body-sm text-[13px] leading-5 text-on-secondary-fixed">
+            유미당의 동행은 순수한 취향 공유를 위한 <strong class="text-primary font-semibold">무료 1:1 동행</strong>입니다. (개인 티켓/음료는 각자 부담)
+          </p>
+</div>
+</section>
+<!-- 5. 일정 설정 (시작/종료) -->
+<section class="flex flex-col gap-space-sm">
+<label class="font-headline-sm text-[15px] text-on-surface font-semibold flex items-center gap-1">
+          일정 설정 <span class="text-primary font-bold">*</span>
+</label>
+<div class="grid grid-cols-2 gap-3">
+<!-- 시작 날짜/시간 -->
+<div class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-outline-variant/50 bg-surface">
+<span class="font-label-sm text-caption text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">event_available</span> 시작
+            </span>
+<div class="font-body-md text-[14px] font-semibold text-on-surface">2024.09.21 (토)</div>
+<div class="font-label-md text-label-md text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 14:00
+            </div>
+</div>
+<!-- 종료 날짜/시간 -->
+<div class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-outline-variant/50 bg-surface">
+<span class="font-label-sm text-caption text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">event_busy</span> 예상 종료
+            </span>
+<div class="font-body-md text-[14px] font-semibold text-on-surface">2024.09.21 (토)</div>
+<div class="font-label-md text-label-md text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 16:30
+            </div>
+</div>
+</div>
+</section>
+<!-- 6. 모집 마감 설정 (선택) -->
+<section class="p-4 rounded-2xl border border-outline-variant/40 bg-surface flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">timer</span>
+<span class="font-label-md text-body-md font-semibold text-on-surface">동행 시작 시각에 자동 마감</span>
+</div>
+<!-- Switch Toggle (checked) -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox">
+<div class="w-11 h-6 bg-secondary-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<p class="font-caption text-caption text-secondary pl-7">
+          미입력 시 동행 시작 시각에 자동 마감돼요.
+        </p>
+</section>
+<!-- 7. 장소 검색 & 8. 상세 만남 지점 별도 입력 -->
+<section class="flex flex-col gap-space-sm">
+<label class="font-headline-sm text-[15px] text-on-surface font-semibold flex items-center gap-1">
+          만남 장소 <span class="text-primary font-bold">*</span>
+</label>
+<!-- 검색 인풋 박스 -->
+<div class="flex gap-2">
+<div class="relative flex-1">
+<span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline material-symbols-outlined text-[20px]">search</span>
+<input class="w-full h-[48px] pl-10 pr-3 rounded-xl border border-outline-variant/60 bg-surface-container-lowest text-on-surface font-body-md text-body-md focus:border-primary-container transition-colors" placeholder="장소명 검색 / 주소 검색" type="text" value="국립현대미술관 서울">
+</div>
+<button class="h-[48px] px-4 rounded-xl bg-surface-container text-on-surface font-label-md text-label-md font-semibold hover:bg-surface-variant transition-colors whitespace-nowrap" type="button">
+            재검색
+          </button>
+</div>
+<!-- 선택된 장소 카드 (Location Card) -->
+<div class="p-3.5 rounded-xl border border-outline-variant/50 bg-surface flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-body-md font-bold text-on-surface truncate">국립현대미술관 서울</span>
+<span class="px-1.5 py-0.5 text-[10px] font-semibold bg-surface-variant text-secondary rounded">선택됨</span>
+</div>
+<p class="font-caption text-caption text-secondary mt-0.5 truncate">서울 종로구 삼청로 30</p>
+</div>
+</div>
+<!-- 8. 상세 만남 지점 별도 입력 -->
+<div class="flex flex-col gap-1.5 pt-1">
+<label class="font-label-md text-label-md text-secondary" for="detail-location">
+            상세 만남 지점
+          </label>
+<input class="w-full h-[48px] px-4 rounded-xl border border-outline-variant/60 bg-surface-container-lowest text-on-surface font-body-md text-body-md focus:border-primary-container transition-colors" id="detail-location" placeholder="예: 미술관 본관 로비 안내데스크 앞" type="text" value="미술관 본관 1층 로비 안내데스크 앞">
+</div>
+<!-- 9. 안심 위치 안내 문구 -->
+<div class="flex items-start gap-2 px-1 pt-0.5">
+<span class="material-symbols-outlined text-secondary text-[16px] mt-0.5 shrink-0">verified_user</span>
+<p class="font-caption text-caption text-secondary leading-normal">
+            공개 지역은 동까지, 정확한 주소와 상세 지점은 동행 확정 당사자에게만 보여요.
+          </p>
+</div>
+</section>
+<!-- 10. 행사 연결 버튼 카드 -->
+<section class="flex flex-col gap-2">
+<label class="font-headline-sm text-[15px] text-on-surface font-semibold flex items-center justify-between">
+<span>연계 문화 행사 <span class="text-secondary font-normal font-caption text-caption">(선택)</span></span>
+</label>
+<button class="w-full p-4 rounded-2xl border border-dashed border-primary-container/40 bg-primary-fixed/20 hover:bg-primary-fixed/30 text-left transition-all active:scale-[0.99] flex items-center justify-between group" type="button">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-[22px]">confirmation_number</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary font-bold">+ 연결할 문화 행사 선택하기</p>
+<p class="font-caption text-caption text-secondary">등록된 전시·공연 티켓 정보를 공유할 수 있어요</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px] transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+</section>
+</main>
+<!-- 하단 고정 CTA 액션 바 (높이 50px 버튼, 보라색 #6C2CF5 풀위드 버튼) -->
+<div class="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto p-margin bg-surface-container-lowest/95 backdrop-blur-md border-t border-outline-variant/30 z-50">
+<button class="w-full h-[50px] rounded-xl bg-primary-container text-on-primary font-headline-sm text-body-lg font-semibold flex items-center justify-center gap-1.5 shadow-md active:brightness-90 transition-all" type="button">
+<span>다음 (1/2)</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Chip Selection Interactive Script -->
+<script>
+    document.querySelectorAll('.category-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        // Toggle Active styles
+        document.querySelectorAll('.category-chip').forEach(c => {
+          c.className = 'category-chip h-9 px-3.5 rounded-full border border-outline-variant/40 bg-surface text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:border-primary-container/40 transition-all';
+          const icon = c.querySelector('.material-symbols-outlined');
+          if (icon) icon.style.fontVariationSettings = "'FILL' 0";
+        });
+
+        this.className = 'category-chip h-9 px-3.5 rounded-full border border-primary-container bg-primary-fixed text-primary font-label-md text-label-md flex items-center gap-1.5 transition-all';
+        const activeIcon = this.querySelector('.material-symbols-outlined');
+        if (activeIcon) activeIcon.style.fontVariationSettings = "'FILL' 1";
+      });
+    });
+  </script>
+</body></html>

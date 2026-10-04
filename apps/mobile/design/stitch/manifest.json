@@ -1,0 +1,131 @@
+{
+  "project": "projects/15036677317273949177",
+  "title": "Markdown Prototype Builder",
+  "references": [
+    {
+      "screen": "S13",
+      "title": "S13 나 (옵션 B · 약속 대시보드형)",
+      "source": "projects/15036677317273949177/screens/945538112c624939a6839d0b726b46be",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S06",
+      "title": "S06 프로필 등록 (옵션 A · 표준 폼형)",
+      "source": "projects/15036677317273949177/screens/8973bebe5d124240b981c3a82e2c3304",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S14",
+      "title": "S14 공개 프로필 (옵션 C · 칭찬 배지 탭형)",
+      "source": "projects/15036677317273949177/screens/94593057814b40528c8f9efc62629165",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S05",
+      "title": "S05 로그인 (옵션 A · 표준 미니멀형)",
+      "source": "projects/15036677317273949177/screens/4d57fb0d195f42688a5a9f7bc2c0c8a8",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S03",
+      "title": "S03 공고 작성 (옵션 A · 표준 섹션 폼형)",
+      "source": "projects/15036677317273949177/screens/88e1f36f16b44b2d98e0961a82982253",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S09",
+      "title": "S09 행사 둘러보기 (옵션 C · 공식 연계형)",
+      "source": "projects/15036677317273949177/screens/0650c50abead42a190b5a556de869b9d",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S11",
+      "title": "S11 1:1 채팅방 (옵션 A · 표준 채팅 및 공고 연계형)",
+      "source": "projects/15036677317273949177/screens/580c29f316d4497ca8b506e031f0fcb6",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S15",
+      "title": "S15 프로필 관리 (옵션 C · 올인원 종합 편집형)",
+      "source": "projects/15036677317273949177/screens/8489571252d748c3a57fbbb198103ccb",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S04",
+      "title": "S04 등록 전 확인 (옵션 A · 표준 요약형)",
+      "source": "projects/15036677317273949177/screens/f58df2ea17744117a49bbc542df2ee81",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S19",
+      "title": "S19 안심 동행 수칙 (옵션 A · 표준 바텀시트형)",
+      "source": "projects/15036677317273949177/screens/9c0a1007b6004ef290bea4ad2778a3e9",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S17",
+      "title": "S17 동행 상호 평가 (옵션 A · 표준 바텀시트형)",
+      "source": "projects/15036677317273949177/screens/066e5098ecf64bc4af010b24e9498394",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S01",
+      "title": "S01 둘러보기 (옵션 A · 표준 리스트형)",
+      "source": "projects/15036677317273949177/screens/61077450a20b4971960438ebfa93e568",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S12",
+      "title": "S12 알림 (옵션 A · 표준 탭 리스트형)",
+      "source": "projects/15036677317273949177/screens/e41e459f153f4e038dd98877ea0bc172",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S00",
+      "title": "S00 홈 (옵션 A · 레퍼런스 충실형)",
+      "source": "projects/15036677317273949177/screens/f491e5e5b1274c17ad7783e59ba097f4",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S18",
+      "title": "S18 취소 사유 선택 (옵션 C · 사유 선택 및 매너 피드백형)",
+      "source": "projects/15036677317273949177/screens/98fa036626d94b30a72be1a7e26a282e",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S02",
+      "title": "S02 공고 상세 (옵션 B · 모듈 카드형)",
+      "source": "projects/15036677317273949177/screens/aa171977854d4dcbbefc971b432fa8d2",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S21",
+      "title": "S21 계정 상태 관리 (옵션 A · 표준 정상 상태형)",
+      "source": "projects/15036677317273949177/screens/bb809954c1334028afdadcde2c5d5418",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S20",
+      "title": "S20 유미당 AI (옵션 A · 표준 대화 피드형)",
+      "source": "projects/15036677317273949177/screens/a02e0d1990f14c5f9f7beb0a0391382b",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S16",
+      "title": "S16 약속 상세 (옵션 C · 모바일 티켓 패스형)",
+      "source": "projects/15036677317273949177/screens/879d4c61ac86494eb82ba9369aa7bede",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    },
+    {
+      "screen": "S10",
+      "title": "S10 채팅 목록 (옵션 A · 표준 리스트형)",
+      "source": "projects/15036677317273949177/screens/07a6c67b9cd249c0972386ef669eba9c",
+      "use": "visual reference only; current IA, flow, PRD and policy take precedence"
+    }
+  ],
+  "discarded": [
+    "S08 separate application",
+    "S20 first-use consent popup"
+  ],
+  "fetchedAt": "2026-10-05"
+}

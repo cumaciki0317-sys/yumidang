@@ -1,0 +1,403 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 행사 둘러보기</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Plus Jakarta Sans & Noto Sans KR -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-low": "#f1f3ff",
+            "on-primary-container": "#e1d4ff",
+            "secondary-container": "#e3e0f2",
+            "surface-container-highest": "#dce2f7",
+            "background": "#f9f9ff",
+            "surface-tint": "#6b2af4",
+            "surface-variant": "#dce2f7",
+            "on-error-container": "#93000a",
+            "secondary": "#5e5d6c",
+            "primary-container": "#6c2cf5",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface-container-high": "#e1e8fd",
+            "on-surface": "#141b2b",
+            "inverse-primary": "#cebdff",
+            "on-surface-variant": "#494456",
+            "inverse-surface": "#293040",
+            "on-primary-fixed-variant": "#5100ce",
+            "surface-container-lowest": "#ffffff",
+            "tertiary": "#7d3000",
+            "surface-dim": "#d3daef",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-tertiary-fixed": "#351000",
+            "tertiary-container": "#a34100",
+            "tertiary-fixed-dim": "#ffb694",
+            "on-error": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "inverse-on-surface": "#edf0ff",
+            "primary-fixed": "#e8ddff",
+            "error": "#ba1a1a",
+            "surface-container": "#e9edff",
+            "primary-fixed-dim": "#cebdff",
+            "tertiary-fixed": "#ffdbcc",
+            "on-secondary-fixed": "#1a1a27",
+            "on-primary": "#ffffff",
+            "primary": "#5300d1",
+            "secondary-fixed": "#e3e0f2",
+            "error-container": "#ffdad6",
+            "outline": "#7a7488",
+            "on-background": "#141b2b",
+            "on-secondary-fixed-variant": "#464553",
+            "surface": "#f9f9ff",
+            "outline-variant": "#cbc3d9",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#f9f9ff",
+            "on-secondary-container": "#646372",
+            "on-tertiary-container": "#ffd1bd",
+            "on-primary-fixed": "#21005e"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "gutter": "1rem",
+            "space-xl": "2rem",
+            "margin": "1.25rem",
+            "space-lg": "1.5rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "label-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "caption": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-md": ["Plus Jakarta Sans", "Noto Sans KR"]
+          },
+          "fontSize": {
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased selection:bg-primary-fixed selection:text-primary min-h-screen flex justify-center">
+<!-- Mobile Viewport Wrapper (Max 448px) -->
+<div class="relative w-full max-w-md bg-surface-container-lowest min-h-screen pb-24 shadow-sm flex flex-col">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-40 bg-surface-container-lowest flex justify-between items-center px-margin h-14 border-b border-outline-variant/30">
+<button aria-label="뒤로가기" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-low active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">행사 둘러보기</h1>
+<button aria-label="알림" class="w-10 h-10 -mr-2 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-low active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col pt-space-md">
+<!-- Section 1: KOPIS 공식 공연 Top 10 -->
+<section class="flex flex-col space-y-space-sm mb-space-lg">
+<div class="px-margin flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">theater_comedy</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">KOPIS 공식 공연 Top 10</h2>
+</div>
+<span class="font-caption text-caption text-primary font-bold px-2 py-0.5 rounded-full bg-surface-container-low border border-outline-variant/40">실시간 연동</span>
+</div>
+<p class="font-caption text-caption text-secondary">어제까지 최근 7일 집계 · 매일 갱신 (KOPIS 출처 · 디자인 샘플)</p>
+</div>
+<!-- Sub Tabs -->
+<div class="px-margin pt-1">
+<div class="inline-flex p-1 bg-surface-container-low rounded-xl gap-1">
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm transition-all duration-150 font-bold" type="button">
+              전체 공연
+            </button>
+<button class="px-3.5 py-1.5 rounded-lg text-secondary hover:text-on-surface font-label-md text-label-md transition-all duration-150" type="button">
+              뮤지컬
+            </button>
+</div>
+</div>
+<!-- Horizontal Ranking Scroll Cards -->
+<div class="flex overflow-x-auto no-scrollbar px-margin space-x-space-md pt-2">
+<!-- Rank 1 Card: 시카고 -->
+<article class="flex-shrink-0 w-64 bg-surface-container-lowest border border-outline-variant/40 rounded-2xl p-3 shadow-[0_2px_8px_rgba(17,24,39,0.04)] flex flex-col relative group">
+<div class="relative w-full h-40 rounded-xl overflow-hidden bg-surface-container-high mb-3">
+<img class="w-full h-full object-cover" data-alt="A vivid theatrical stage poster for the musical Chicago with intense warm spotlighting and dramatic silhouette figures on a refined black-and-gold aesthetic, set in a glamorous Broadway ambiance with warm amber highlights, matching modern light editorial layout." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6hjw9PLahjlYELU6uN4-He2sPG8f6sdR3Rywkzlm7lPLQHfn3nswdUPBM6YSsS90nG1JULE07WDxGo5xsucfQNc0uYbT4hUiWC0mCCzpA8VzxKuG-vXHZarzUcJjCLxElxzPvH9HIxHS6UIjXc_TEYXmerqJFpBOlU5mvhkgCcyHBE2v6-kpzuPgxy0D5obqVvoU7laBOs3bNCnzeooo5BBkw8BO1LQMR5ZY1_ungzuQZgk3vUCwn7w">
+<div class="absolute top-2 left-2 bg-primary text-on-primary font-headline-sm text-headline-sm px-2.5 py-0.5 rounded-lg font-bold shadow-md flex items-center justify-center">
+                1
+              </div>
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur text-primary font-label-sm text-label-sm border border-outline-variant/30">
+                예매율 18.4%
+              </span>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold line-clamp-1 mb-0.5">뮤지컬 〈시카고〉</h3>
+<p class="font-body-sm text-body-sm text-secondary flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">location_on</span>
+                  디큐브 링크아트센터
+                </p>
+<p class="font-caption text-caption text-outline mb-2">2024.06.11 ~ 2024.09.29</p>
+</div>
+<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">인터파크 티켓</span>
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-low text-primary hover:bg-primary-container hover:text-on-primary text-label-sm font-label-sm font-semibold transition-colors flex items-center gap-0.5" type="button">
+                  예매 바로가기
+                  <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Rank 2 Card: 헤드윅 -->
+<article class="flex-shrink-0 w-64 bg-surface-container-lowest border border-outline-variant/40 rounded-2xl p-3 shadow-[0_2px_8px_rgba(17,24,39,0.04)] flex flex-col relative group">
+<div class="relative w-full h-40 rounded-xl overflow-hidden bg-surface-container-high mb-3">
+<img class="w-full h-full object-cover" data-alt="A striking and emotional rock musical poster for Hedwig, showing vibrant electric violet and neon magenta lights cutting across a modern stage backdrop, styled with crisp light-mode aesthetic, sophisticated typography, and radiant theatrical aura." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD69z2iWOdPP3smPoHEWK1LVq6NIbt88kqMxst10jZ3lhqWo3AAYvFNvzYjMSHa2at-OPrAx9KEG1uZ9wOlO0T1epakOaWoN427oJfQmTf7Qxx0lvq6YXrKHzk-7bpZZgZng5lZ6drq4xy1MFbDIVN_o_rzn5biKJaBg_ls7aVVEZE844NWuTzK8iDD9-yobdskrLyT91tgk-CDOqzOm3-vEQt-pJdiNCha72ZeUxQ2Sd5J31pD_BEztw">
+<div class="absolute top-2 left-2 bg-secondary text-on-secondary font-headline-sm text-headline-sm px-2.5 py-0.5 rounded-lg font-bold shadow-md flex items-center justify-center">
+                2
+              </div>
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur text-primary font-label-sm text-label-sm border border-outline-variant/30">
+                예매율 14.1%
+              </span>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold line-clamp-1 mb-0.5">뮤지컬 〈헤드윅〉</h3>
+<p class="font-body-sm text-body-sm text-secondary flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">location_on</span>
+                  샤롯데씨어터
+                </p>
+<p class="font-caption text-caption text-outline mb-2">2024.03.22 ~ 2024.06.23</p>
+</div>
+<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">예스24 티켓</span>
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-low text-primary hover:bg-primary-container hover:text-on-primary text-label-sm font-label-sm font-semibold transition-colors flex items-center gap-0.5" type="button">
+                  예매 바로가기
+                  <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Rank 3 Sneak Peek Card -->
+<article class="flex-shrink-0 w-64 bg-surface-container-lowest border border-outline-variant/40 rounded-2xl p-3 shadow-[0_2px_8px_rgba(17,24,39,0.04)] flex flex-col relative opacity-95">
+<div class="relative w-full h-40 rounded-xl overflow-hidden bg-surface-container-high mb-3">
+<img class="w-full h-full object-cover" data-alt="An elegant classical art exhibition poster with graceful pastel oil brushwork, soft daylight illuminating a grand cultural hall, designed in clean editorial format matching a peaceful light purple and neutral ivory scheme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCm6E4yTxQBpLkmt_AUh36P7nWNn4oxZdSlHPvhPmbPbOSaG6MLDrrCD0gTCIDEKGfYi6ojyOf6IudNhaqrN5ljbQge9NIR9su8Xk9Htk8gWlSKyNtFm5BNMWx50w-_0q6V5f3fttPW8crYkubI5WtIsFPIDCcVEmPx684tbXJ09fiMYXolsYP9LODgUvvNGPgpIH7IhRNdQF2bHOqpXzcmeuA0t7uJR49RCJcctecEOaQPyIYrGNJzRw">
+<div class="absolute top-2 left-2 bg-secondary text-on-secondary font-headline-sm text-headline-sm px-2.5 py-0.5 rounded-lg font-bold shadow-md flex items-center justify-center">
+                3
+              </div>
+<span class="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur text-primary font-label-sm text-label-sm border border-outline-variant/30">
+                예매율 9.8%
+              </span>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold line-clamp-1 mb-0.5">베르사유의 장미</h3>
+<p class="font-body-sm text-body-sm text-secondary flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">location_on</span>
+                  충무아트센터 대극장
+                </p>
+<p class="font-caption text-caption text-outline mb-2">2024.07.16 ~ 2024.10.13</p>
+</div>
+<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">인터파크 티켓</span>
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-low text-primary hover:bg-primary-container hover:text-on-primary text-label-sm font-label-sm font-semibold transition-colors flex items-center gap-0.5" type="button">
+                  예매 바로가기
+                  <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Section 2: 이 주의 문화 행사 & 동행 -->
+<section class="flex flex-col px-margin space-y-space-md">
+<div class="flex flex-col space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-1.5">
+<span class="material-symbols-outlined text-primary text-[22px]">local_activity</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">이 주의 문화 행사 &amp; 동행</h2>
+</div>
+</div>
+<!-- Category Chips & Ongoing Checkbox -->
+<div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+<!-- Filter Chips -->
+<div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+<button class="h-9 px-3.5 rounded-full bg-surface-container-low border border-primary text-primary font-label-md text-label-md flex items-center justify-center font-bold" type="button">
+                전체
+              </button>
+<button class="h-9 px-3.5 rounded-full bg-surface border border-outline-variant/50 text-secondary hover:text-on-surface font-label-md text-label-md flex items-center justify-center" type="button">
+                전시
+              </button>
+<button class="h-9 px-3.5 rounded-full bg-surface border border-outline-variant/50 text-secondary hover:text-on-surface font-label-md text-label-md flex items-center justify-center" type="button">
+                축제
+              </button>
+<button class="h-9 px-3.5 rounded-full bg-surface border border-outline-variant/50 text-secondary hover:text-on-surface font-label-md text-label-md flex items-center justify-center" type="button">
+                팝업
+              </button>
+</div>
+<!-- Ongoing Event Checkbox -->
+<label class="inline-flex items-center gap-1.5 cursor-pointer select-none text-secondary hover:text-on-surface">
+<input checked="" class="w-4 h-4 rounded border-outline-variant/80 text-primary-container focus:ring-0 focus:ring-offset-0" type="checkbox">
+<span class="font-label-sm text-label-sm text-on-surface">진행 중인 행사도 포함</span>
+</label>
+</div>
+</div>
+<!-- Event Cards Stack -->
+<div class="flex flex-col space-y-4">
+<!-- Card 1: MMCA 가을 기획전 -->
+<div class="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-4 shadow-[0_2px_8px_rgba(17,24,39,0.04)] flex flex-col space-y-3">
+<div class="flex gap-3">
+<div class="w-24 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-high relative">
+<img class="w-full h-full object-cover" data-alt="A luminous contemporary art museum interior with vast minimalist white walls and soft natural sunlight casting gentle shadows on modern sculptures, conveying a tranquil and refined aesthetic in clear high key photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCisDUg3EYjFjz3JAjnA6GstlEU6qDfPKxd3TOQa0m8AsNDU1sjIxxDLQloUNbtwT02KD-hCMlnVg7wJSPnDgDTgo35wEcmWE9A17X25nqHoWJ5jMnWmOJN8LLQfGZpQRAEYgI4aJhxC3Hda7RmPj4VSYSFRva-y2NcPZjGgFpjLXIE-RdZsEMlDZ1J52wUS-_5-xcyE_rDQJICtFAUeiWsIJfPVglLIbRQpZHPUBj2MXgcQeJ2gmC4vQ">
+<span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-surface-container-low text-primary font-label-sm text-label-sm font-bold border border-primary/20">
+                  진행중
+                </span>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1 mb-1">
+<span class="font-caption text-caption text-secondary">전시 · 순수미술</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-snug">
+                    국립현대미술관 서울 가을 기획전
+                  </h3>
+<p class="font-body-sm text-body-sm text-secondary flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">place</span>
+                    서울 종로구 삼청로
+                  </p>
+</div>
+<div class="flex items-center justify-between text-outline font-caption text-caption">
+<span>2024.09.01 ~ 11.30</span>
+<span class="text-primary font-bold">무료/유료</span>
+</div>
+</div>
+</div>
+<!-- Companion Shortcut Banner Chip -->
+<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-1.5 overflow-hidden">
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-primary-fixed flex items-center justify-center text-primary text-[10px] font-bold">지</div>
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-surface-container-high flex items-center justify-center text-secondary text-[10px] font-bold">민</div>
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-on-primary-container flex items-center justify-center text-primary text-[10px] font-bold">서</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">실시간 참여 모집 중</span>
+</div>
+<button class="h-8 px-3 rounded-full bg-surface-container-low border border-primary/30 text-primary hover:bg-primary-container hover:text-on-primary font-label-sm text-label-sm font-bold flex items-center gap-1 transition-all active:scale-95" type="button">
+<span>연결된 동행 공고 3건 보기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Card 2: 성수 팝업스토어 -->
+<div class="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-4 shadow-[0_2px_8px_rgba(17,24,39,0.04)] flex flex-col space-y-3">
+<div class="flex gap-3">
+<div class="w-24 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-high relative">
+<img class="w-full h-full object-cover" data-alt="A trendy and vibrant pop-up store exhibition space in Seongsu-dong Seoul, with sleek metallic displays, gentle violet neon accents, and chic lifestyle goods illuminated under warm modern ambient lights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVDlWka9XuSMp2XWtmZHF75HLF3gPhYyerfMk83TXsv-ZFASL6ErwB7GtXkrtZOLwL1csRq4OkKlK1ZCavNfOyT0zBvBmPi2IeCMvLwWoYiZmkxC110qXRPr2vut2MzuxmB9orfwLpZUIAqCqCDXb-ko0TxpusDOg9PMTqmVWgz9_ucqfi_Dz73gx7n5lIc4MjvBDBeeprYqAx2muSvTXgr3zQM9pgrIx7UQhSpRERC8yZY3jToYOzUQ">
+<span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-surface-container-low text-primary font-label-sm text-label-sm font-bold border border-primary/20">
+                  진행중
+                </span>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1 mb-1">
+<span class="font-caption text-caption text-secondary">팝업 · 라이프스타일</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold leading-snug">
+                    성수 감성 오브제 &amp; 플라워 팝업스토어
+                  </h3>
+<p class="font-body-sm text-body-sm text-secondary flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">place</span>
+                    서울 성동구 연무장길
+                  </p>
+</div>
+<div class="flex items-center justify-between text-outline font-caption text-caption">
+<span>2024.10.12 ~ 10.27</span>
+<span class="text-primary font-bold">사전예약 / 현장</span>
+</div>
+</div>
+</div>
+<!-- Companion Shortcut Banner Chip -->
+<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-1.5 overflow-hidden">
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-primary-fixed flex items-center justify-center text-primary text-[10px] font-bold">수</div>
+<div class="inline-block h-6 w-6 rounded-full ring-2 ring-white bg-surface-container-high flex items-center justify-center text-secondary text-[10px] font-bold">현</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">새로운 동행 등록됨</span>
+</div>
+<button class="h-8 px-3 rounded-full bg-surface-container-low border border-primary/30 text-primary hover:bg-primary-container hover:text-on-primary font-label-sm text-label-sm font-bold flex items-center gap-1 transition-all active:scale-95" type="button">
+<span>연결된 동행 공고 2건 보기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual Floating Action Button (FAB) : 동행 및 행사 공고 작성(+) -->
+<aside class="fixed bottom-20 right-4 sm:right-[calc(50%-208px)] z-40">
+<button class="flex items-center gap-2 h-13 px-4 py-3 bg-primary-container text-on-primary font-headline-sm text-headline-sm font-semibold rounded-full shadow-[0_8px_24px_rgba(108,44,245,0.35)] hover:opacity-95 active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">add</span>
+<span class="font-label-md text-label-md">동행 모집하기</span>
+</button>
+</aside>
+<!-- Bottom Navigation Bar (Shared Component Blueprint executed with Active: 둘러보기) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter h-16 max-w-md mx-auto bg-surface dark:bg-inverse-surface border-t border-outline-variant/30 dark:border-outline/20 shadow-[0_-4px_20px_rgba(17,24,39,0.06)] dark:shadow-none">
+<!-- Nav Item 0: 홈 (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="font-label-sm text-label-sm">홈</span>
+</a>
+<!-- Nav Item 1: 둘러보기 (Active strictly mapped) -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-sm text-label-sm">둘러보기</span>
+</a>
+<!-- Nav Item 2: 채팅 (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+<span class="font-label-sm text-label-sm">채팅</span>
+</a>
+<!-- Nav Item 3: 나 (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="font-label-sm text-label-sm">나</span>
+</a>
+</nav>
+</div>
+</body></html>

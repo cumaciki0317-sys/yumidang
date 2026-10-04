@@ -1,0 +1,377 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 따뜻하고 안전한 동행</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#ffffff",
+            "surface-container-high": "#e1e8fd",
+            "secondary-container": "#e3e0f2",
+            "outline-variant": "#cbc3d9",
+            "on-primary-fixed-variant": "#5100ce",
+            "on-tertiary-fixed": "#351000",
+            "surface-dim": "#d3daef",
+            "surface-container-low": "#f1f3ff",
+            "on-surface-variant": "#494456",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#464553",
+            "on-primary-container": "#e1d4ff",
+            "inverse-primary": "#cebdff",
+            "tertiary-fixed": "#ffdbcc",
+            "on-tertiary-container": "#ffd1bd",
+            "outline": "#7a7488",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface-bright": "#f9f9ff",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#e3e0f2",
+            "surface-variant": "#dce2f7",
+            "primary-fixed": "#e8ddff",
+            "tertiary": "#7d3000",
+            "on-secondary-fixed": "#1a1a27",
+            "surface-container-lowest": "#ffffff",
+            "secondary": "#5e5d6c",
+            "on-secondary-container": "#646372",
+            "primary-container": "#6c2cf5",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-surface": "#141b2b",
+            "inverse-on-surface": "#edf0ff",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#ffb694",
+            "surface-container-highest": "#dce2f7",
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#293040",
+            "error-container": "#ffdad6",
+            "surface-tint": "#6b2af4",
+            "tertiary-container": "#a34100",
+            "on-primary-fixed": "#21005e",
+            "surface": "#f9f9ff",
+            "primary-fixed-dim": "#cebdff",
+            "background": "#f9f9ff",
+            "surface-container": "#e9edff",
+            "primary": "#5300d1",
+            "on-tertiary": "#ffffff",
+            "on-background": "#141b2b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "margin": "1.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "body-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "caption": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-md": ["Plus Jakarta Sans", "Noto Sans KR"]
+          },
+          "fontSize": {
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      background-color: #f9f9ff;
+      color: #141b2b;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased flex justify-center min-h-screen">
+<!-- Mobile Viewport Shell (Max-w-md matching phone standard & shared components) -->
+<div class="w-full max-w-md bg-surface min-h-screen relative flex flex-col shadow-xl pb-28">
+<!-- TopAppBar (Shared Component Implementation) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin h-14 max-w-md mx-auto bg-surface transition-colors shadow-none">
+<!-- Left: Logo & Brand Name -->
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-primary-container p-0.5 shadow-sm">
+<img alt="유미당 심볼" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4ZN5r5K-ug1LPHw4V8Ya2y7LlPKVjxqf00WMDeKM-R3rLkr6LjhVV3vD3r2qREKeIZjoxs5zS0ghlsx_yvaVcFgua7T_0dwelQCuYyIg6GpNtjR9x3BsTVJObPrmE9aPQZoBDpgdSE_MGXdZ_zchoJVLMGjFL2YdkLGhs_6nzMZC0Cu-7qDiZSpdS4YDO85OOQvtSP7kHjwSeXD979Hw-6YssWeUF5tpUVcZe6XMgDqMqlhkpEkwG2yi6zS72uQRsEq8">
+</div>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">유미당</span>
+</div>
+<!-- Right: User/Login Button & Notifications -->
+<div class="flex items-center gap-space-sm">
+<button class="bg-primary-container text-on-primary font-label-sm text-label-sm px-3 py-1.5 rounded-full active:scale-95 transition-transform duration-150">
+          로그인
+        </button>
+<button aria-label="알림" class="w-9 h-9 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Scrollable Canvas -->
+<main class="flex-1 pt-16 px-margin flex flex-col gap-space-lg">
+<!-- Section: 9월 3주차 이벤트 / 이번 주 새로 시작한 행사 -->
+<section class="mt-2">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">9월 3주차 이벤트</h2>
+</div>
+<button class="flex items-center text-secondary hover:text-primary transition-colors font-label-sm text-label-sm">
+<span>전체보기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Event Hero Card Carousel View -->
+<div class="relative w-full rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(17,24,39,0.06)] group">
+<!-- Background Image with Gradient Overlay -->
+<div class="relative w-full h-[220px]">
+<img class="w-full h-full object-cover" data-alt="A festive outdoor long banquet table arranged under the warm golden autumn afternoon sun with colorful floral centerpieces, elegant wine glasses, and blurred park greenery in the background. The aesthetic is warm, cozy, and luxurious, radiating feelings of friendship, cultural joy, and safe community. Shot in high-key natural lighting with soft cinematic bokeh." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCruu880vRC7oPYtXGTBxwzxnZ5ypUND-YVgHYSNMyaRZEFeZX-gYxHkGFiazrQtrMIIv2tyj8KSh2K103v3xwdw6ta2J_Zo0bcGR0QED6m8LXK6jLX7xGl0Y7GOXp7dm6zfqNfxzOVI0jWXEWXVfiDWlDiSfLNjcLG1MiXN_ahKJy2nDNl1nVGo5jy-Zd3k6cpFR5j3qB42OZazfW3sy45vduS6dEQDJEBOX6ykbqY5KKlCl_EXBtohw">
+<div class="absolute inset-0 bg-gradient-to-t from-[#141B2B]/90 via-[#141B2B]/40 to-transparent"></div>
+<!-- Badges at top -->
+<div class="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center pointer-events-none">
+<span class="bg-surface-container-lowest/95 backdrop-blur-md text-on-surface font-label-sm text-label-sm px-2.5 py-1 rounded-full shadow-sm font-semibold">
+                축제
+              </span>
+<span class="bg-primary-container text-on-primary font-label-sm text-label-sm px-2.5 py-1 rounded-full shadow-sm font-semibold tracking-wide">
+                진행 중
+              </span>
+</div>
+<!-- Card Content Body -->
+<div class="absolute bottom-3.5 left-4 right-4 text-on-primary">
+<p class="font-caption text-caption text-primary-fixed-dim mb-1 font-medium">9.15~9.30 · 한강공원</p>
+<h3 class="font-headline-sm text-headline-sm text-on-primary font-bold leading-snug">동네에서 즐기는 작은 가을 축제</h3>
+<p class="font-body-sm text-body-sm text-surface-container-high/90 mt-0.5 line-clamp-1">취향이 맞는 동행과 함께 둘러보세요</p>
+</div>
+</div>
+<!-- Progress Indicator Bar -->
+<div class="h-1.5 w-full bg-secondary-container/50">
+<div class="h-full bg-primary-container w-1/3 rounded-r-full transition-all duration-300"></div>
+</div>
+</div>
+<p class="text-[11px] text-secondary mt-1.5 ml-1">프로토타입 예시 행사 · 해당 주차에 시작하는 행사</p>
+</section>
+<!-- Section: 다가오는 약속 (Upcoming Companionship Card) -->
+<section class="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/30 shadow-[0_2px_8px_rgba(17,24,39,0.03)]">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">다가오는 약속</span>
+</div>
+<span class="bg-primary-fixed text-primary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full">
+            D-3
+          </span>
+</div>
+<div class="mt-3 flex items-start gap-3">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex-shrink-0 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">museum</span>
+</div>
+<div class="flex-1">
+<h4 class="font-body-lg text-body-lg font-bold text-on-surface leading-tight">삼청동 국립현대미술관 전시 관람</h4>
+<div class="flex items-center gap-2 mt-1.5 text-secondary font-label-md text-label-md">
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px]">calendar_today</span>
+                9.21(토) 14:00
+              </span>
+<span>·</span>
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[15px]">location_on</span>
+                종로구 삼청동
+              </span>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2.5 flex items-center justify-between bg-surface-container-low rounded-xl px-3 py-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-primary-container text-on-primary flex items-center justify-center text-[10px] font-bold">
+              동행
+            </div>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">지은 님과 동행 예정</span>
+</div>
+<button class="text-primary hover:text-on-primary-fixed-variant font-label-sm text-label-sm font-bold flex items-center">
+            약속 상세 보기
+            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Section: 어떤 동행을 찾고 계신가요? (Category Grid 4x3) -->
+<section class="mb-4">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface mb-3.5">
+          어떤 동행을 찾고 계신가요?
+        </h2>
+<!-- 4 x 3 Interactive Grid -->
+<div class="grid grid-cols-4 gap-y-4 gap-x-2.5">
+<!-- 1: 지금이당 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#FFF6E9] border border-[#FFE8C2] flex items-center justify-center text-[#E67E22] group-hover:shadow-sm transition-all">
+<span class="font-bold text-[18px] tracking-tighter text-[#D96B00]">당!</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">지금</span>
+</button>
+<!-- 2: 전시 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#F0EBFF] border border-[#DDD0FF] flex items-center justify-center text-primary group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">palette</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">전시</span>
+</button>
+<!-- 3: 축제 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#FFEAF1] border border-[#FFD0DE] flex items-center justify-center text-[#D93875] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">celebration</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">축제</span>
+</button>
+<!-- 4: 식사 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#FFF6E6] border border-[#FFE6B8] flex items-center justify-center text-[#D47A00] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">restaurant</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">식사</span>
+</button>
+<!-- 5: 운동 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#E8F5FF] border border-[#CDE7FF] flex items-center justify-center text-[#0D7ED9] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">fitness_center</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">운동</span>
+</button>
+<!-- 6: 여행 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#E6F9F0] border border-[#BFF1D7] flex items-center justify-center text-[#0A9E58] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">luggage</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">여행</span>
+</button>
+<!-- 7: 클래스 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#F3ECFF] border border-[#DEC9FF] flex items-center justify-center text-[#7435F3] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">school</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">클래스</span>
+</button>
+<!-- 8: 산책 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#FFF2EB] border border-[#FFDFC9] flex items-center justify-center text-[#E25C1D] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">footprint</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">산책</span>
+</button>
+<!-- 9: 스터디 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#EAF7FA] border border-[#CFEFF5] flex items-center justify-center text-[#0E8EA4] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">menu_book</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">스터디</span>
+</button>
+<!-- 10: 공연 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#FFEBF3] border border-[#FFD0E4] flex items-center justify-center text-[#DF2975] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">confirmation_number</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">공연</span>
+</button>
+<!-- 11: 쇼핑 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#F5ECFE] border border-[#E3CDFD] flex items-center justify-center text-[#8233E8] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">shopping_bag</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">쇼핑</span>
+</button>
+<!-- 12: 전체보기 -->
+<button class="flex flex-col items-center group active:scale-95 transition-transform duration-150">
+<div class="w-[62px] h-[62px] rounded-2xl bg-[#F1F3F8] border border-[#E2E6EF] flex items-center justify-center text-[#555C6D] group-hover:shadow-sm transition-all">
+<span class="material-symbols-outlined text-[26px]">grid_view</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface mt-1.5 font-medium">전체</span>
+</button>
+</div>
+</section>
+<!-- Trust & Verification Banner -->
+<section class="bg-gradient-to-r from-primary/10 via-surface-container to-primary-fixed/20 border border-outline-variant/30 rounded-2xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">100% 여성 안심 실명 인증</p>
+<p class="font-caption text-caption text-secondary">유미당은 신뢰할 수 있는 상호 동행 매칭을 보장합니다</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]">chevron_right</span>
+</section>
+</main>
+<!-- Floating Action Cluster (AI Explore Mini Button + Companion Request Plus FAB) -->
+<div class="fixed bottom-20 right-4 sm:right-[calc(50%-13rem)] z-40 flex flex-col items-end gap-2.5">
+<!-- Mini AI Discovery Action -->
+<button aria-label="AI 취향 탐색" class="w-10 h-10 rounded-full bg-surface-container-lowest text-primary shadow-[0_4px_12px_rgba(108,44,245,0.2)] border border-primary-fixed flex items-center justify-center active:scale-90 transition-all hover:bg-primary-fixed">
+<span class="material-symbols-outlined text-[20px]">psychology</span>
+</button>
+<!-- Main Add Companion Recruitment FAB -->
+<button aria-label="동행 모집 글쓰기" class="w-14 h-14 rounded-full bg-primary-container text-on-primary shadow-[0_6px_20px_rgba(108,44,245,0.4)] flex items-center justify-center active:scale-95 transition-all duration-150 hover:bg-primary">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+<!-- BottomNavBar (Shared Component Implementation) -->
+<!-- Prohibiting top/bottom border line per Shell Border Ban, using subtle shadow instead -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter h-16 max-w-md mx-auto bg-surface shadow-[0_-4px_20px_rgba(17,24,39,0.06)]">
+<!-- 1: 홈 (Active) -->
+<button class="flex flex-col items-center justify-center text-primary font-bold py-1 active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm">홈</span>
+</button>
+<!-- 2: 둘러보기 (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary py-1 hover:text-primary active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-[26px]">explore</span>
+<span class="font-label-sm text-label-sm">둘러보기</span>
+</button>
+<!-- 3: 채팅 (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary py-1 hover:text-primary active:scale-95 transition-transform duration-150 relative">
+<span class="material-symbols-outlined text-[26px]">chat_bubble</span>
+<span class="font-label-sm text-label-sm">채팅</span>
+</button>
+<!-- 4: 나 (Inactive - Mapped to person from JSON, labeled '나') -->
+<button class="flex flex-col items-center justify-center text-secondary py-1 hover:text-primary active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-[26px]">person</span>
+<span class="font-label-sm text-label-sm">나</span>
+</button>
+</nav>
+</div>
+</body></html>

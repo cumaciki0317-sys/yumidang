@@ -1,0 +1,391 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - S21 계정 상태 관리</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Plus Jakarta Sans Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface-variant": "#494456",
+            "error": "#ba1a1a",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed-variant": "#5100ce",
+            "tertiary": "#7d3000",
+            "primary-container": "#6c2cf5",
+            "on-surface": "#141b2b",
+            "outline": "#7a7488",
+            "primary-fixed": "#e8ddff",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "on-tertiary-fixed": "#351000",
+            "secondary-container": "#e3e0f2",
+            "surface-bright": "#f9f9ff",
+            "surface-container-low": "#f1f3ff",
+            "surface-container-highest": "#dce2f7",
+            "on-tertiary-container": "#ffd1bd",
+            "surface-container": "#e9edff",
+            "primary-fixed-dim": "#cebdff",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary": "#ffffff",
+            "secondary": "#5e5d6c",
+            "error-container": "#ffdad6",
+            "surface-variant": "#dce2f7",
+            "on-error": "#ffffff",
+            "tertiary-fixed": "#ffdbcc",
+            "tertiary-fixed-dim": "#ffb694",
+            "inverse-surface": "#293040",
+            "secondary-fixed": "#e3e0f2",
+            "surface": "#f9f9ff",
+            "surface-dim": "#d3daef",
+            "on-secondary-container": "#646372",
+            "tertiary-container": "#a34100",
+            "on-secondary-fixed-variant": "#464553",
+            "on-error-container": "#93000a",
+            "background": "#f9f9ff",
+            "on-secondary-fixed": "#1a1a27",
+            "primary": "#5300d1",
+            "on-background": "#141b2b",
+            "on-primary-container": "#e1d4ff",
+            "on-primary": "#ffffff",
+            "secondary-fixed-dim": "#c7c5d6",
+            "outline-variant": "#cbc3d9",
+            "inverse-primary": "#cebdff",
+            "surface-tint": "#6b2af4",
+            "on-primary-fixed": "#21005e",
+            "inverse-on-surface": "#edf0ff",
+            "surface-container-high": "#e1e8fd"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "margin": "1.25rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "headline-sm": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "headline-md": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "caption": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "headline-lg": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "body-lg": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "label-sm": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "label-md": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "body-sm": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"],
+            "body-md": ["Plus Jakarta Sans", "Noto Sans KR", "sans-serif"]
+          },
+          "fontSize": {
+            "headline-sm": [
+              "18px",
+              {
+                "lineHeight": "26px",
+                "letterSpacing": "-0.01em",
+                "fontWeight": "600"
+              }
+            ],
+            "headline-md": [
+              "20px",
+              {
+                "lineHeight": "28px",
+                "letterSpacing": "-0.015em",
+                "fontWeight": "700"
+              }
+            ],
+            "caption": [
+              "11px",
+              {
+                "lineHeight": "14px",
+                "fontWeight": "500"
+              }
+            ],
+            "headline-lg": [
+              "24px",
+              {
+                "lineHeight": "32px",
+                "letterSpacing": "-0.02em",
+                "fontWeight": "700"
+              }
+            ],
+            "body-lg": [
+              "16px",
+              {
+                "lineHeight": "24px",
+                "letterSpacing": "-0.01em",
+                "fontWeight": "500"
+              }
+            ],
+            "label-sm": [
+              "12px",
+              {
+                "lineHeight": "16px",
+                "fontWeight": "600"
+              }
+            ],
+            "label-md": [
+              "13px",
+              {
+                "lineHeight": "18px",
+                "fontWeight": "600"
+              }
+            ],
+            "body-sm": [
+              "14px",
+              {
+                "lineHeight": "20px",
+                "fontWeight": "400"
+              }
+            ],
+            "body-md": [
+              "15px",
+              {
+                "lineHeight": "22px",
+                "letterSpacing": "-0.005em",
+                "fontWeight": "400"
+              }
+            ]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex justify-center selection:bg-primary-fixed selection:text-primary">
+<!-- Mobile Viewport Container (Standard 390px Max Shell) -->
+<main class="w-full max-w-[390px] min-h-screen bg-surface-container-lowest flex flex-col relative shadow-xl overflow-x-hidden">
+<!-- TopAppBar Component (from Shared Components JSON: type=small_center_aligned, headline='유미당') -->
+<header class="flex justify-between items-center w-full px-margin h-14 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline sticky top-0 z-40">
+<button aria-label="뒤로가기" class="p-space-xs text-primary dark:text-inverse-primary hover:bg-surface-container-high rounded-full active:opacity-80 active:scale-95 transition-transform duration-150 flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex flex-col items-center">
+<h1 class="text-headline-sm font-headline-sm text-on-surface">계정 상태 및 보안</h1>
+</div>
+<button aria-label="고객센터 및 옵션" class="p-space-xs text-on-surface-variant hover:bg-surface-container-high rounded-full active:opacity-80 active:scale-95 transition-transform duration-150 flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[22px]">more_vert</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<div class="flex-1 flex flex-col px-margin pt-space-md pb-space-xl space-y-space-lg">
+<!-- 계정 프로필 요약 카드 -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/60 shadow-sm relative overflow-hidden">
+<!-- Accent Top Bar -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary-container"></div>
+<div class="flex items-start justify-between">
+<div class="flex items-center space-x-3">
+<div class="relative w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary-container font-headline-md shadow-inner">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">face_3</span>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-surface-container-lowest"></span>
+</div>
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-headline-sm font-headline-sm text-on-surface">김**</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-caption font-caption bg-[#F0EDFF] text-primary-container">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                  네이버 연동
+                </span>
+</div>
+<p class="text-caption font-caption text-secondary mt-0.5">2024.08.15 가입 · 여성 안심 인증 회원</p>
+</div>
+</div>
+<button class="text-caption font-caption text-secondary hover:text-primary flex items-center gap-0.5 pt-1" type="button">
+<span>인증서</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+<div class="mt-space-md pt-space-sm border-t border-outline-variant/40">
+<div class="flex items-center justify-between text-body-sm font-body-sm mb-1.5">
+<div class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-primary-container text-[18px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-semibold text-on-surface">매너 당도 지수</span>
+</div>
+<div class="flex items-baseline space-x-1">
+<span class="text-headline-sm font-headline-sm text-primary-container">98%</span>
+<span class="text-caption font-caption text-secondary">(최상위 신뢰 등급)</span>
+</div>
+</div>
+<!-- Gauge Bar -->
+<div class="w-full bg-[#F0EDFF] h-2 rounded-full overflow-hidden flex">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500" style="width: 98%;"></div>
+</div>
+<p class="text-caption font-caption text-secondary mt-1.5 text-right">매너 평가 42건 연속 긍정 피드백</p>
+</div>
+</section>
+<!-- 현재 계정 활동 상태 (Normal Safe Badge Alert) -->
+<section class="bg-[#F0EDFF]/70 border border-primary-fixed-dim/80 rounded-xl p-space-md">
+<div class="flex items-start space-x-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center space-x-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm font-label-sm bg-primary-container text-white">
+                모든 서비스 정상 이용 가능
+              </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant leading-relaxed">
+              현재 계정에 등록된 제재 내역이나 이용 제한 조치가 없습니다. 안심하고 문화 동행을 즐기세요.
+            </p>
+</div>
+</div>
+</section>
+<!-- 세부 활동 및 보안 항목 리스트 -->
+<section class="space-y-space-sm">
+<h2 class="text-label-md font-label-md text-secondary px-1">계정 인증 및 보안 설정</h2>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/60 divide-y divide-outline-variant/40 overflow-hidden shadow-sm">
+<!-- 네이버 본인인증 정보 -->
+<div class="p-space-md flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-start space-x-3">
+<div class="w-9 h-9 rounded-lg bg-[#03C75A]/10 text-[#03C75A] flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm">
+                N
+              </div>
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-body-md font-body-md font-semibold text-on-surface">네이버 1단계 본인인증 정보</span>
+<span class="material-symbols-outlined text-outline text-[16px]">lock</span>
+</div>
+<p class="text-caption font-caption text-secondary mt-0.5">김** · 생년월일 · 여성 (수정 불가/암호화 보관)</p>
+</div>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</div>
+</div>
+<!-- 로그인 보안 관리 -->
+<div class="p-space-md flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-start space-x-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">security</span>
+</div>
+<div>
+<span class="text-body-md font-body-md font-semibold text-on-surface">로그인 보안 관리</span>
+<p class="text-caption font-caption text-secondary mt-0.5">네이버 소셜 간편 연동 중 · 2차 기기 인증</p>
+</div>
+</div>
+<div class="flex items-center space-x-1 text-secondary">
+<span class="text-caption font-caption text-emerald-600 font-semibold">보안 양호</span>
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</div>
+</div>
+<!-- 1:1 안심 번호 및 비상 연락망 -->
+<div class="p-space-md flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-start space-x-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">call_quality</span>
+</div>
+<div>
+<div class="flex items-center space-x-1.5">
+<span class="text-body-md font-body-md font-semibold text-on-surface">1:1 안심 번호 및 비상 연락망</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-caption font-caption bg-emerald-50 text-emerald-700">ON</span>
+</div>
+<p class="text-caption font-caption text-secondary mt-0.5">동행 만남 시 실제 전화번호 마스킹 보호</p>
+</div>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</div>
+</div>
+<!-- 서비스 이용 정책 및 안심 동행 수칙 -->
+<div class="p-space-md flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-start space-x-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container text-primary flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">policy</span>
+</div>
+<div>
+<span class="text-body-md font-body-md font-semibold text-on-surface">서비스 이용 정책 및 안심 수칙</span>
+<p class="text-caption font-caption text-secondary mt-0.5">클린 커뮤니티 가이드라인 및 분쟁 처리 기준</p>
+</div>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 안심 보안 가이드 팁 배너 -->
+<section class="bg-surface-container-low rounded-xl p-space-md border border-outline-variant/50">
+<div class="flex items-start space-x-2.5">
+<span class="material-symbols-outlined text-primary-container text-[20px] mt-0.5">shield</span>
+<div class="text-body-sm font-body-sm text-on-surface">
+<p class="font-semibold text-on-surface">여성 1:1 안심 검증 프로토콜</p>
+<p class="text-caption font-caption text-on-surface-variant mt-1 leading-relaxed">
+              유미당은 전 회원 100% 실명 검증 및 이상 징후 자동 탐지 알고리즘을 가동하여 안전한 교류를 전폭 지원합니다.
+            </p>
+</div>
+</div>
+</section>
+<!-- 최하단 계정 관리 영역 -->
+<footer class="pt-space-md pb-space-lg flex flex-col items-center text-center space-y-3">
+<button class="text-body-sm font-body-sm text-secondary hover:text-error transition-colors flex items-center gap-0.5" type="button">
+<span>회원 탈퇴</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<p class="text-caption font-caption text-outline max-w-[280px] leading-relaxed">
+          유미당은 회원의 안전하고 신뢰할 수 있는 문화 교류를 위해 클린 매너 정책을 운영하고 있습니다.
+        </p>
+</footer>
+</div>
+<!-- BottomNavBar Component (Shared Components JSON: type=label_icon, active tab='마이') -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin py-space-sm h-16 bg-surface dark:bg-inverse-surface border-t border-outline-variant dark:border-outline shadow-sm dark:shadow-none">
+<!-- 홈 (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim gap-space-xs hover:text-primary dark:hover:text-inverse-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]">home</span>
+<span class="text-caption font-caption">홈</span>
+</a>
+<!-- 둘러보기 (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim gap-space-xs hover:text-primary dark:hover:text-inverse-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]">explore</span>
+<span class="text-caption font-caption">둘러보기</span>
+</a>
+<!-- 채팅 (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim gap-space-xs hover:text-primary dark:hover:text-inverse-primary active:scale-95 transition-transform duration-150 relative" href="#">
+<span class="material-symbols-outlined text-[22px]">chat_bubble</span>
+<span class="text-caption font-caption">채팅</span>
+</a>
+<!-- 마이 (Active - exact match for account/profile destination) -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-inverse-primary font-semibold gap-space-xs hover:text-primary dark:hover:text-inverse-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-caption font-caption">마이</span>
+</a>
+</nav>
+</main>
+<script>
+    // Micro-interactions for interactive feedback
+    document.querySelectorAll('button, a').forEach(el => {
+      el.addEventListener('click', function(e) {
+        // Prevent generic jumps for anchor placeholders
+        if(this.getAttribute('href') === '#') {
+          e.preventDefault();
+        }
+      });
+    });
+  </script>
+</body></html>

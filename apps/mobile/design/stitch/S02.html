@@ -1,0 +1,398 @@
+<!DOCTYPE html><html lang="ko" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 공고 상세</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#ffffff",
+            "surface-container-high": "#e1e8fd",
+            "secondary-container": "#e3e0f2",
+            "outline-variant": "#cbc3d9",
+            "on-primary-fixed-variant": "#5100ce",
+            "on-tertiary-fixed": "#351000",
+            "surface-dim": "#d3daef",
+            "surface-container-low": "#f1f3ff",
+            "on-surface-variant": "#494456",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#464553",
+            "on-primary-container": "#e1d4ff",
+            "inverse-primary": "#cebdff",
+            "tertiary-fixed": "#ffdbcc",
+            "on-tertiary-container": "#ffd1bd",
+            "outline": "#7a7488",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface-bright": "#f9f9ff",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#e3e0f2",
+            "surface-variant": "#dce2f7",
+            "primary-fixed": "#e8ddff",
+            "tertiary": "#7d3000",
+            "on-secondary-fixed": "#1a1a27",
+            "surface-container-lowest": "#ffffff",
+            "secondary": "#5e5d6c",
+            "on-secondary-container": "#646372",
+            "primary-container": "#6c2cf5",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-surface": "#141b2b",
+            "inverse-on-surface": "#edf0ff",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#ffb694",
+            "surface-container-highest": "#dce2f7",
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#293040",
+            "error-container": "#ffdad6",
+            "surface-tint": "#6b2af4",
+            "tertiary-container": "#a34100",
+            "on-primary-fixed": "#21005e",
+            "surface": "#f9f9ff",
+            "primary-fixed-dim": "#cebdff",
+            "background": "#f9f9ff",
+            "surface-container": "#e9edff",
+            "primary": "#5300d1",
+            "on-tertiary": "#ffffff",
+            "on-background": "#141b2b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "margin": "1.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "body-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "caption": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-md": ["Plus Jakarta Sans", "Noto Sans KR"]
+          },
+          "fontSize": {
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+      background-color: #0f121d;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #e3e0f2;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-0 sm:p-4 select-none">
+<!-- Mobile Screen Container -->
+<div class="relative w-full max-w-md h-[100dvh] max-h-[920px] bg-surface-container-lowest overflow-hidden flex flex-col shadow-2xl sm:rounded-3xl border border-outline-variant/20">
+<!-- 1. Background Content (Dimmed Explore Screen Silhouette) -->
+<div class="absolute inset-0 bg-surface flex flex-col pointer-events-none select-none filter blur-[1.5px] opacity-40 scale-[0.98] transform-gpu">
+<!-- Fake Header -->
+<div class="h-14 px-margin flex items-center justify-between border-b border-outline-variant/20 bg-surface">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="spa">spa</span>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">유미당</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-2xl" data-icon="notifications">notifications</span>
+</div>
+</div>
+<!-- Feed Silhouette Items -->
+<div class="p-margin space-y-4">
+<!-- Event Banner Silhouette -->
+<div class="w-full h-44 rounded-2xl bg-surface-container-high/60 overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A modern artistic cultural exhibition hall in Seoul with contemporary soft ambient light, violet and warm undertones, showing visitors appreciating gallery artwork in a clean minimal interior." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtJWTHWxVSgHFeueUk86MVyDek4R3IqdiAyvn1WEPtm91d8JGamqxzHoSiOhePOg2vJW0MA8K0r9gTB3RGVnLYCPvBT6kXY4FaG2MNyZmDFDtI1UyrwVRf-CQlaZYcnvgoUH0xr4kQ4qDy7RfxQxHjajvhqI236HDi2S_1ep_IBAi3msHiTPV7zRbT2TZVDmJDa2xReCN7tnfqfTCaI1zzZ8DZKIH_dvhTYLcDwPi8WPTxmMig4fbvdg">
+</div>
+<!-- Filter Chips Silhouette -->
+<div class="flex gap-2">
+<span class="px-3 py-1.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm">전시/미술</span>
+<span class="px-3 py-1.5 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm">삼청동</span>
+<span class="px-3 py-1.5 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm">이번 주말</span>
+</div>
+<!-- Fake Cards -->
+<div class="p-4 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest space-y-2">
+<div class="h-4 w-28 bg-surface-container-highest rounded"></div>
+<div class="h-5 w-4/5 bg-secondary-container rounded"></div>
+<div class="h-3 w-1/2 bg-surface-container rounded"></div>
+</div>
+<div class="p-4 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest space-y-2">
+<div class="h-4 w-32 bg-surface-container-highest rounded"></div>
+<div class="h-5 w-3/4 bg-secondary-container rounded"></div>
+<div class="h-3 w-2/5 bg-surface-container rounded"></div>
+</div>
+</div>
+</div>
+<!-- Black Scrim Overlay (Semi-transparent Dim) -->
+<div class="absolute inset-0 bg-on-surface/50 backdrop-blur-[2px] z-10 transition-opacity"></div>
+<!-- 2. Bottom Sheet Container (Modal Layer Level 2) -->
+<div class="relative z-20 mt-auto w-full max-h-[92%] bg-surface-container-lowest rounded-t-[28px] shadow-[0_-4px_24px_rgba(17,24,39,0.14)] border-t border-outline-variant/30 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+<!-- Sheet Top Drag Handle & Close Button -->
+<div class="relative flex items-center justify-between px-margin pt-3 pb-2 flex-shrink-0">
+<div class="w-10"></div> <!-- Spacer for center balance -->
+<div class="w-12 h-1.5 bg-outline-variant/50 rounded-full mx-auto"></div>
+<button aria-label="닫기" class="w-9 h-9 flex items-center justify-center rounded-full text-secondary hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl" data-icon="close">close</span>
+</button>
+</div>
+<!-- Scrollable Modular Content -->
+<div class="flex-1 overflow-y-auto custom-scrollbar px-margin pb-28 space-y-4">
+<!-- 3. Title & Badge Section -->
+<div class="pt-1 pb-1">
+<div class="flex items-center gap-2 mb-2">
+<!-- Recruiting Status Badge -->
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-primary-fixed text-primary">
+              모집중
+            </span>
+<!-- Category Badge -->
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-semibold bg-secondary-fixed text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="palette">palette</span>
+              전시
+            </span>
+<span class="ml-auto font-caption text-caption text-secondary">등록 2시간 전</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold leading-snug tracking-tight">
+            삼청동 전시 천천히 같이 볼 분
+          </h1>
+<p class="mt-1 font-body-sm text-body-sm text-secondary">
+            국립현대미술관 서울관 및 삼청동 작은 갤러리 골목 산책
+          </p>
+</div>
+<!-- 4. Host Trust Profile Card (Level 1 Surface Card) -->
+<div class="p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30 transition-shadow">
+<div class="flex items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<!-- Avatar -->
+<div class="relative w-12 h-12 rounded-full overflow-hidden border border-outline-variant/40 flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A warm, confident portrait photo of a Korean woman in her late twenties with a friendly, trustworthy gentle smile, wearing a minimal beige linen shirt in a bright artistic cafe environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6C-gQh-3JBYWLTdIma7U9vEWog5Y32Yfu51YYusaWwuptjsTc2cLF6JuiBCt-_OD6gMnOrBizpYXfC6VZxwfZntfbsUVkP1t1K_WgLdgFblByuAbWl7PGP0uX-vzcXJE0V0-mOXXhEyb5TvI0H6H08qobBBQgx1jsEZlqNSF0J6qksSZnJkU6Vc8e5JsABrqevKmoRCAA0L25g5abrEZ4JWbouFrwBhtA48Z3FiUurNQE_fqp--VMYQ">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-primary-container border-2 border-surface-container-lowest rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[8px] text-on-primary" data-icon="check">check</span>
+</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">박**</span>
+<span class="font-body-sm text-body-sm text-secondary">만 29세</span>
+<span class="px-1.5 py-0.5 rounded font-caption text-caption bg-surface-container-highest text-primary font-semibold">본인인증</span>
+</div>
+<!-- Companion Affinity Gauge (당도 지수) -->
+<div class="flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-primary-container text-base leading-none" data-icon="favorite" data-weight="fill" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-sm text-label-sm font-bold text-primary">당도 지수 99%</span>
+<div class="w-16 h-1.5 bg-primary-fixed rounded-full overflow-hidden ml-1">
+<div class="w-[99%] h-full bg-primary-container rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Host Profile Link -->
+<button class="flex items-center text-secondary hover:text-primary transition-colors text-xs font-label-sm p-1">
+
+<span class="material-symbols-outlined text-base" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<!-- Trust Sub-Badges / Chips -->
+<div class="mt-3 pt-3 border-t border-outline-variant/20 flex flex-wrap gap-2">
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-on-surface font-caption text-caption">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="verified_user">verified_user</span>
+<span class="">매칭 완료 14회</span>
+</div>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-on-surface font-caption text-caption">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="thumb_up">thumb_up</span>
+<span class="">후기 칭찬 100%</span>
+</div>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-on-surface font-caption text-caption">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="schedule">schedule</span>
+<span class="">시간 약속 철저</span>
+</div>
+</div>
+</div>
+<!-- 5. Companion Condition Module Card (Bento Grid Style) -->
+<div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-[0_2px_8px_rgba(17,24,39,0.03)] space-y-3">
+<div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+<h2 class="font-label-md text-label-md text-on-surface font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="fact_check">fact_check</span>
+              동행 조건 및 일정
+            </h2>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-caption text-caption font-bold">
+<span class="material-symbols-outlined text-xs" data-icon="card_giftcard">card_giftcard</span>
+              무료 1:1 동행
+            </span>
+</div>
+<div class="grid grid-cols-1 gap-2.5 pt-1">
+<!-- Row 1: Date & Time -->
+<div class="flex items-start gap-3 p-2.5 rounded-xl bg-surface-bright border border-outline-variant/20">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed/60 text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
+</div>
+<div class="flex-1">
+<span class="block font-caption text-caption text-secondary">일시</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">9월 21일 (토) 14:00 - 16:30</span>
+</div>
+</div>
+<!-- Row 2: Location -->
+<div class="flex items-start gap-3 p-2.5 rounded-xl bg-surface-bright border border-outline-variant/20">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed/60 text-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-lg" data-icon="location_on">location_on</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-secondary">만남 지역</span>
+<span class="font-caption text-caption text-primary">안심 비공개</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface font-semibold">종로구 삼청동 일대</span>
+<p class="font-caption text-caption text-secondary mt-0.5">상세 위치는 매칭 확정 후 1:1 안내</p>
+</div>
+</div>
+<!-- Row 3: Companion Audience & Target -->
+<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-bright border border-outline-variant/20">
+<div class="w-7 h-7 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-base" data-icon="female">female</span>
+</div>
+<div>
+<span class="block font-caption text-caption text-secondary">참여 대상</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">여성 전용</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-bright border border-outline-variant/20">
+<div class="w-7 h-7 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-base" data-icon="groups">groups</span>
+</div>
+<div>
+<span class="block font-caption text-caption text-secondary">동행 인원</span>
+<span class="font-label-md text-label-md text-on-surface font-bold">1:1 프라이빗</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 6. Safety Notice Card -->
+<div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-[0_2px_8px_rgba(17,24,39,0.03)] space-y-3">
+  <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+    <h2 class="font-label-md text-label-md text-on-surface font-bold flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-primary text-lg" data-icon="theater_comedy">theater_comedy</span>
+      연결된 문화행사
+    </h2>
+    <button class="flex items-center gap-0.5 text-secondary hover:text-primary font-caption text-caption transition-colors">
+      <span class="">상세보기</span>
+      <span class="material-symbols-outlined text-base" data-icon="chevron_right">chevron_right</span>
+    </button>
+  </div>
+  <div class="flex gap-3 items-center">
+    <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-surface-container-high/60">
+      <img class="w-full h-full object-cover" data-alt="국립현대미술관 서울관 전시 포스터 이미지" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtJWTHWxVSgHFeueUk86MVyDek4R3IqdiAyvn1WEPtm91d8JGamqxzHoSiOhePOg2vJW0MA8K0r9gTB3RGVnLYCPvBT6kXY4FaG2MNyZmDFDtI1UyrwVRf-CQlaZYcnvgoUH0xr4kQ4qDy7RfxQxHjajvhqI236HDi2S_1ep_IBAi3msHiTPV7zRbT2TZVDmJDa2xReCN7tnfqfTCaI1zzZ8DZKIH_dvhTYLcDwPi8WPTxmMig4fbvdg">
+    </div>
+    <div class="flex-1 min-w-0 space-y-1">
+      <div class="flex items-center gap-1.5">
+        <span class="px-2 py-0.5 rounded-full font-caption text-caption bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">전시</span>
+        <span class="font-caption text-caption text-secondary">2024.09.01 ~ 11.30</span>
+      </div>
+      <h3 class="font-label-md text-label-md text-on-surface font-bold truncate">국립현대미술관 서울관 가을 기획전</h3>
+      <p class="font-caption text-caption text-secondary flex items-center gap-1">
+        <span class="material-symbols-outlined text-xs text-primary" data-icon="location_on">location_on</span>
+        국립현대미술관 서울관 (종로구 삼청로)
+      </p>
+    </div>
+  </div>
+
+</div><div class="p-3.5 rounded-xl bg-surface-container-low border border-primary-fixed/70 flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-lg" data-icon="shield">shield</span>
+</div>
+<div class="flex-1">
+<h3 class="font-label-md text-label-md text-on-surface font-bold">안심 보호 및 프라이버시 알림</h3>
+<p class="mt-0.5 font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+              정확한 만남 장소는 동행 확정자에게만 안전한 1:1 안심 채팅방에서 암호화되어 안내됩니다.
+            </p>
+</div>
+</div>
+<!-- 7. Details and Preferences (세부 내용 및 바라는 점) -->
+<div class="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 space-y-3">
+<h2 class="font-label-md text-label-md text-on-surface font-bold">소개 및 함께 나누고 싶은 시간</h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+            평소 현대미술과 사진전을 좋아해서 주말마다 종로 쪽 갤러리를 자주 찾아요. 혼자 보는 것도 좋지만, 이번 전시는 관람 후 감상을 가볍게 나누며 삼청동 돌담길을 함께 걸을 동행분을 만나고 싶습니다.
+          </p>
+<div class="pt-2">
+<h4 class="font-label-sm text-label-sm text-secondary mb-2">이런 동행자면 더 좋아요!</h4>
+<ul class="space-y-1.5 font-body-sm text-body-sm text-on-surface">
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base" data-icon="check_circle">check_circle</span>
+<span class="">조용하게 작품 감상하는 분위기를 선호하시는 분</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base" data-icon="check_circle">check_circle</span>
+<span class="">전시 후 근처 조용한 카페에서 30분 정도 티타임 가능하신 분</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base" data-icon="check_circle">check_circle</span>
+<span class="">시간 약속을 소중하게 지켜주실 수 있는 분</span>
+</li>
+</ul>
+</div>
+<!-- Interest Tags -->
+<div class="pt-2 flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-secondary font-caption text-caption">#국립현대미술관</span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-secondary font-caption text-caption">#삼청동카페</span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-secondary font-caption text-caption">#주말문화생활</span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-secondary font-caption text-caption">#예술수다</span>
+</div>
+</div>
+</div>
+<!-- 8. Sticky Bottom Action Bar (Level 2 Elevation) -->
+<div class="absolute bottom-0 left-0 w-full bg-surface-container-lowest/95 backdrop-blur-md px-margin py-3 border-t border-outline-variant/30 flex items-center gap-3 z-30">
+<!-- Favorite Heart Toggle -->
+<button aria-label="관심 동행 저장" class="w-12 h-12 rounded-xl border border-outline-variant/40 bg-surface-container-lowest flex items-center justify-center text-secondary hover:text-primary active:scale-95 transition-all flex-shrink-0">
+<span class="material-symbols-outlined text-2xl" data-icon="favorite_border">favorite_border</span>
+</button>
+<!-- Primary CTA Button -->
+<button class="flex-1 h-12 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(108,44,245,0.25)] active:scale-[0.98] transition-all">
+<span class="">동행 신청하기</span>
+<span class="material-symbols-outlined text-xl" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+
+
+
+
+</body></html>

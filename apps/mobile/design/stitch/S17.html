@@ -1,0 +1,322 @@
+<!DOCTYPE html><html class="h-full" lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>유미당 - 동행 상호 평가</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-fixed-variant": "#5100ce",
+            "primary": "#5300d1",
+            "on-secondary-fixed": "#1a1a27",
+            "surface-container-lowest": "#ffffff",
+            "error-container": "#ffdad6",
+            "on-tertiary-container": "#ffd1bd",
+            "on-tertiary-fixed": "#351000",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface": "#f9f9ff",
+            "surface-container-highest": "#dce2f7",
+            "on-secondary": "#ffffff",
+            "primary-fixed-dim": "#cebdff",
+            "outline-variant": "#cbc3d9",
+            "surface-dim": "#d3daef",
+            "surface-container-low": "#f1f3ff",
+            "secondary-container": "#e3e0f2",
+            "outline": "#7a7488",
+            "on-error-container": "#93000a",
+            "on-surface-variant": "#494456",
+            "inverse-surface": "#293040",
+            "on-surface": "#141b2b",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed": "#e3e0f2",
+            "surface-variant": "#dce2f7",
+            "primary-container": "#6c2cf5",
+            "on-primary": "#ffffff",
+            "tertiary-fixed-dim": "#ffb694",
+            "surface-tint": "#6b2af4",
+            "primary-fixed": "#e8ddff",
+            "on-secondary-fixed-variant": "#464553",
+            "secondary-fixed-dim": "#c7c5d6",
+            "tertiary-container": "#a34100",
+            "on-error": "#ffffff",
+            "secondary": "#5e5d6c",
+            "surface-container": "#e9edff",
+            "background": "#f9f9ff",
+            "inverse-on-surface": "#edf0ff",
+            "on-primary-fixed": "#21005e",
+            "on-primary-container": "#e1d4ff",
+            "on-secondary-container": "#646372",
+            "surface-bright": "#f9f9ff",
+            "tertiary": "#7d3000",
+            "tertiary-fixed": "#ffdbcc",
+            "inverse-primary": "#cebdff",
+            "on-background": "#141b2b",
+            "surface-container-high": "#e1e8fd",
+            "error": "#ba1a1a"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "margin": "1.25rem"
+          },
+          "fontFamily": {
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "caption": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Hide scrollbar for seamless mobile feel */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#111827] text-on-surface antialiased font-body-md min-h-screen flex justify-center selection:bg-primary-fixed selection:text-primary">
+<!-- Mobile Container Wrapper -->
+<div class="relative w-full max-w-md bg-surface min-h-screen shadow-2xl overflow-hidden flex flex-col justify-end">
+<!-- 1. Background Content: Completed Companion Screen (Blurred & Dimmed Behind Bottom Sheet) -->
+<div class="absolute inset-0 bg-surface flex flex-col pointer-events-none select-none filter blur-[2px] opacity-40 scale-[0.98] transform origin-top transition-transform">
+<!-- Top Bar Behind -->
+<div class="h-14 px-margin flex items-center justify-between border-b border-outline-variant/20 bg-surface-container-lowest">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">동행 상세</span>
+</div>
+<span class="material-symbols-outlined text-secondary">share</span>
+</div>
+<!-- Mock Background Card Content -->
+<div class="p-margin space-y-4">
+<div class="w-full h-44 rounded-xl overflow-hidden relative bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="Modern art gallery exhibition hall with soft natural skylight illuminating minimalist abstract paintings hung on serene white walls. Two chic female visitors casually strolling through the calm museum space, capturing an intimate and cultured Korean aesthetic in soothing lavender and neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8m6JNNH6eV5T33fWp41p-ebQ-p1g0X3m6DEg27LV_8v_kn8bC8EkMKf5PkeL158UiHXu79sXh-aT0Y5iG8ChUviS3g4zu84K1EplwjMWjUnUXoBw7gnQ1bYA8X4VC4WtegbMc3GKGIp4lwL5_wzKmFInb-cxyzs0n95luuJ-u55zL7YA9P0bGHjfeRARDYO-l-_8RpBVbgRk3q_LpEKVeC7gbW_yqJPj68xjnLs9GVXKuIpW-C499-g">
+<div class="absolute top-3 left-3 bg-inverse-surface/80 text-inverse-on-surface px-2.5 py-1 rounded-full font-label-sm text-label-sm">
+            동행 완료
+          </div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 space-y-2">
+<span class="font-headline-md text-headline-md text-on-surface">삼청동 국립현대미술관 가을 기획전</span>
+<div class="flex items-center text-secondary text-sm space-x-2">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>2024년 10월 26일 (토) 14:00</span>
+</div>
+<div class="flex items-center text-secondary text-sm space-x-2">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span>국립현대미술관 서울관 입구</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Dark Semi-transparent Backdrop Overlay -->
+<div class="absolute inset-0 bg-[#111827]/60 backdrop-blur-sm z-30 transition-opacity"></div>
+<!-- 2. Bottom Sheet: S17 동행 상호 평가 (Standard Bottom Sheet Layout, Occupies ~88% of screen) -->
+<div class="relative z-40 w-full h-[88vh] bg-surface-container-lowest rounded-t-[28px] shadow-[0_-8px_30px_rgba(17,24,39,0.18)] flex flex-col overflow-hidden animate-[slideUp_0.3s_ease-out]">
+<!-- Top Drag Handle & Sheet Header -->
+<div class="flex-none pt-3 pb-3 px-margin border-b border-outline-variant/20 bg-surface-container-lowest">
+<!-- Handle Bar -->
+<div class="w-10 h-1.5 bg-outline-variant/70 rounded-full mx-auto mb-2"></div>
+<!-- Header Content -->
+<div class="flex items-center justify-between relative py-1">
+<div class="w-7"></div> <!-- Spacer for center balance -->
+<h1 class="font-headline-sm text-headline-sm text-on-surface font-bold text-center tracking-tight">동행 상호 평가</h1>
+<button aria-label="닫기" class="w-8 h-8 rounded-full flex items-center justify-center text-secondary hover:text-on-surface hover:bg-surface-container transition-colors active:scale-95" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Sheet Content Area -->
+<div class="flex-1 overflow-y-auto no-scrollbar px-margin pt-4 pb-28 space-y-6">
+<!-- 1. 동행 정보 요약 배너 -->
+<div class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center space-x-3 min-w-0">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">museum</span>
+</div>
+<div class="truncate">
+<div class="font-label-md text-label-md text-on-surface font-bold truncate">삼청동 국립현대미술관 가을 기획전</div>
+<div class="flex items-center text-secondary font-caption text-caption mt-0.5 space-x-1">
+<span>함께한 메이트</span>
+<span class="font-bold text-on-surface">박소연 님</span>
+<span class="text-primary-container font-label-sm font-bold flex items-center ml-1">
+<span class="material-symbols-outlined text-[12px] fill-icon text-primary-container mr-0.5">verified</span>
+                  본인인증 완료
+                </span>
+</div>
+</div>
+</div>
+<span class="text-xs bg-surface-container-lowest text-secondary px-2.5 py-1 rounded-full font-label-sm border border-outline-variant/40 flex-shrink-0">
+            동행 완료
+          </span>
+</div>
+<!-- 2. '동행은 어떠셨나요?' 3단 감정 선택 버튼 -->
+<div class="space-y-2.5">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">동행은 어떠셨나요?</h2>
+<p class="font-caption text-caption text-secondary">솔직한 만족도는 더 안전하고 편안한 메이트 매칭에 활용됩니다.</p>
+<div class="grid grid-cols-3 gap-2.5 pt-1">
+<!-- 1) 좋아요 (활성화 상태) -->
+<button class="flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border-2 border-primary-container bg-[#F0EDFF] text-primary-container transition-all shadow-sm active:scale-95" type="button">
+<span aria-label="좋아요" class="text-2xl mb-1.5" role="img">😊</span>
+<span class="font-label-md text-label-md font-bold text-primary-container">좋아요</span>
+</button>
+<!-- 2) 보통이에요 -->
+<button class="flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-secondary hover:border-outline-variant transition-all active:scale-95" type="button">
+<span aria-label="보통이에요" class="text-2xl mb-1.5" role="img">😐</span>
+<span class="font-label-md text-label-md font-medium text-secondary">보통이에요</span>
+</button>
+<!-- 3) 별로예요 -->
+<button class="flex flex-col items-center justify-center py-3.5 px-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest text-secondary hover:border-outline-variant transition-all active:scale-95" type="button">
+<span aria-label="별로예요" class="text-2xl mb-1.5" role="img">🙁</span>
+<span class="font-label-md text-label-md font-medium text-secondary">별로예요</span>
+</button>
+</div>
+</div>
+<!-- 3. 별점 평가 (5점 만점 선택 상태) -->
+<div class="bg-surface-container-low/60 rounded-2xl p-4 border border-outline-variant/30 flex flex-col items-center text-center space-y-2">
+<div class="flex items-center space-x-1.5">
+<button class="text-primary-container active:scale-110 transition-transform" type="button">
+<span class="material-symbols-outlined text-[32px] fill-icon text-primary-container">star</span>
+</button>
+<button class="text-primary-container active:scale-110 transition-transform" type="button">
+<span class="material-symbols-outlined text-[32px] fill-icon text-primary-container">star</span>
+</button>
+<button class="text-primary-container active:scale-110 transition-transform" type="button">
+<span class="material-symbols-outlined text-[32px] fill-icon text-primary-container">star</span>
+</button>
+<button class="text-primary-container active:scale-110 transition-transform" type="button">
+<span class="material-symbols-outlined text-[32px] fill-icon text-primary-container">star</span>
+</button>
+<button class="text-primary-container active:scale-110 transition-transform" type="button">
+<span class="material-symbols-outlined text-[32px] fill-icon text-primary-container">star</span>
+</button>
+</div>
+<div class="text-primary-container font-headline-sm text-headline-sm font-bold tracking-tight">
+            5.0점 <span class="font-normal text-on-surface text-base">“최고의 문화 메이트였어요”</span>
+</div>
+</div>
+<!-- 4. 칭찬 키워드 다중 선택 칩 -->
+<div class="space-y-2.5">
+<div class="flex items-baseline justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">어떤 점이 좋으셨나요?</h2>
+<span class="font-label-sm text-label-sm text-primary-container font-semibold">최대 3개 선택 (3/3)</span>
+</div>
+<p class="font-caption text-caption text-secondary">선택하신 칭찬은 메이트의 안심 매너 프로필 뱃지로 누적됩니다.</p>
+<div class="flex flex-wrap gap-2 pt-1">
+<!-- 1) 시간 약속을 잘 지켜요 (선택됨) -->
+<button class="inline-flex items-center px-3.5 py-2 rounded-full border border-primary-container bg-[#F0EDFF] text-primary-container font-label-md text-label-md shadow-xs active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px] mr-1.5 font-bold">check</span>
+<span>시간 약속을 잘 지켜요 (10분 전 도착)</span>
+</button>
+<!-- 2) 약속 내용을 잘 준수해요 (미선택) -->
+<button class="inline-flex items-center px-3.5 py-2 rounded-full border border-outline-variant/50 bg-surface-container-lowest text-secondary font-label-md text-label-md hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span>약속 내용을 잘 준수해요</span>
+</button>
+<!-- 3) 편안하고 즐거운 대화 (선택됨) -->
+<button class="inline-flex items-center px-3.5 py-2 rounded-full border border-primary-container bg-[#F0EDFF] text-primary-container font-label-md text-label-md shadow-xs active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px] mr-1.5 font-bold">check</span>
+<span>편안하고 즐거운 대화</span>
+</button>
+<!-- 4) 배려심이 넘쳐요 (선택됨) -->
+<button class="inline-flex items-center px-3.5 py-2 rounded-full border border-primary-container bg-[#F0EDFF] text-primary-container font-label-md text-label-md shadow-xs active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px] mr-1.5 font-bold">check</span>
+<span>배려심이 넘쳐요</span>
+</button>
+<!-- 5) 취향과 관람 템포가 잘 맞아요 (미선택) -->
+<button class="inline-flex items-center px-3.5 py-2 rounded-full border border-outline-variant/50 bg-surface-container-lowest text-secondary font-label-md text-label-md hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span>취향과 관람 템포가 잘 맞아요</span>
+</button>
+<!-- 6) 원활한 소통과 친절함 (미선택) -->
+<button class="inline-flex items-center px-3.5 py-2 rounded-full border border-outline-variant/50 bg-surface-container-lowest text-secondary font-label-md text-label-md hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span>원활한 소통과 친절함</span>
+</button>
+</div>
+</div>
+<!-- 5. 따뜻한 한 줄 후기 (선택 입력) -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-headline-sm text-headline-sm text-on-surface font-bold" for="review-input">
+              따뜻한 한 줄 후기 <span class="font-body-sm text-body-sm text-secondary font-normal">(선택)</span>
+</label>
+<span class="font-caption text-caption text-secondary">
+<span class="text-primary-container font-semibold">68</span>/200자
+            </span>
+</div>
+<div class="relative rounded-xl border border-outline-variant/50 bg-surface-container-lowest focus-within:border-primary-container focus-within:ring-2 focus-within:ring-primary-container/10 transition-all p-3">
+<textarea class="w-full text-on-surface font-body-sm text-body-sm bg-transparent border-0 p-0 focus:ring-0 resize-none leading-relaxed placeholder:text-secondary/50" id="review-input" placeholder="메이트에게 전하고 싶은 따뜻한 한마디를 남겨주세요 (선택)" rows="3">미술관 동선도 세심하게 배려해주시고 전시 관람 후 카페에서 나눈 대화도 너무 힐링이었어요!</textarea>
+</div>
+</div>
+<!-- 6. 안심 공개 정책 안내 박스 (연보라 카드) -->
+<div class="bg-[#F0EDFF] rounded-xl p-3.5 border border-primary-fixed flex items-start space-x-3">
+<span class="material-symbols-outlined text-primary-container text-[20px] flex-shrink-0 mt-0.5">security</span>
+<div class="space-y-1 font-caption text-caption leading-relaxed text-on-surface-variant">
+<p class="font-semibold text-primary">유미당 안심 상호 공개 정책</p>
+<p class="text-secondary">
+              서로 남긴 후기는 상대방을 배려하여 <span class="font-semibold text-on-surface">양측이 모두 작성하거나 동행 완료 24시간 뒤</span>에 동시에 상호 공개됩니다.
+            </p>
+<p class="text-secondary">
+              동행 완료 전에는 비공개 상태로 안전하게 보관됩니다.
+            </p>
+</div>
+</div>
+</div>
+<!-- 7. 하단 고정 주요 버튼 바 (Level 2 Floating Element with extended ambient shadow) -->
+<div class="absolute bottom-0 left-0 w-full bg-surface-container-lowest/95 backdrop-blur-md px-margin py-3.5 border-t border-outline-variant/30 shadow-[0_-4px_20px_rgba(17,24,39,0.06)] z-50">
+<button class="w-full h-[52px] bg-[#6C2CF5] hover:bg-[#5e22e0] active:scale-[0.99] active:brightness-95 text-on-primary font-body-lg text-body-lg font-bold rounded-xl flex items-center justify-center space-x-1.5 shadow-md shadow-primary/20 transition-all duration-150" type="button">
+<span>평가 완료하기</span>
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html><html class="light" lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 채팅 목록</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-low": "#f1f3ff",
+            "on-primary-container": "#e1d4ff",
+            "secondary-container": "#e3e0f2",
+            "surface-container-highest": "#dce2f7",
+            "background": "#f9f9ff",
+            "surface-tint": "#6b2af4",
+            "surface-variant": "#dce2f7",
+            "on-error-container": "#93000a",
+            "secondary": "#5e5d6c",
+            "primary-container": "#6c2cf5",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface-container-high": "#e1e8fd",
+            "on-surface": "#141b2b",
+            "inverse-primary": "#cebdff",
+            "on-surface-variant": "#494456",
+            "inverse-surface": "#293040",
+            "on-primary-fixed-variant": "#5100ce",
+            "surface-container-lowest": "#ffffff",
+            "tertiary": "#7d3000",
+            "surface-dim": "#d3daef",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-tertiary-fixed": "#351000",
+            "tertiary-container": "#a34100",
+            "tertiary-fixed-dim": "#ffb694",
+            "on-error": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "inverse-on-surface": "#edf0ff",
+            "primary-fixed": "#e8ddff",
+            "error": "#ba1a1a",
+            "surface-container": "#e9edff",
+            "primary-fixed-dim": "#cebdff",
+            "tertiary-fixed": "#ffdbcc",
+            "on-secondary-fixed": "#1a1a27",
+            "on-primary": "#ffffff",
+            "primary": "#5300d1",
+            "secondary-fixed": "#e3e0f2",
+            "error-container": "#ffdad6",
+            "outline": "#7a7488",
+            "outline-variant": "#cbc3d9",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#f9f9ff",
+            "on-secondary-container": "#646372",
+            "on-tertiary-container": "#ffd1bd",
+            "on-primary-fixed": "#21005e"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "gutter": "1rem",
+            "space-xl": "2rem",
+            "margin": "1.25rem",
+            "space-lg": "1.5rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "label-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "body-lg": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-sm": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "headline-md": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "caption": ["Plus Jakarta Sans", "Noto Sans KR"],
+            "label-md": ["Plus Jakarta Sans", "Noto Sans KR"]
+          },
+          "fontSize": {
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex justify-center">
+<div class="w-full max-w-md bg-surface flex flex-col min-h-screen relative pb-20 select-none">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 max-w-md mx-auto h-14 z-50 bg-surface flex justify-between items-center px-margin border-b border-outline-variant/30">
+<div class="flex items-center gap-space-xs">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight" style="font-size: 22px; line-height: 28px;">채팅</h1>
+<span class="inline-flex items-center justify-center bg-primary-fixed text-primary font-label-sm text-caption px-1.5 py-0.5 rounded-full ml-1">4</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button aria-label="알림" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Spacer for TopAppBar -->
+<div class="h-14 w-full"></div>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col px-margin pt-space-sm">
+<!-- Status Filter Tabs -->
+<section class="py-space-sm overflow-x-auto no-scrollbar -mx-margin px-margin flex items-center gap-space-xs mb-space-sm">
+<button class="h-9 px-3.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform" type="button">
+<span>전체</span>
+<span class="text-caption font-bold bg-white/25 px-1.5 py-0.5 rounded-full">4</span>
+</button>
+<button class="h-9 px-3.5 rounded-full bg-surface-container-lowest border border-outline-variant/40 text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container active:scale-95 transition-transform" type="button">
+<span>대화 중</span>
+<span class="text-caption font-bold bg-surface-container px-1.5 py-0.5 rounded-full text-secondary">2</span>
+</button>
+<button class="h-9 px-3.5 rounded-full bg-surface-container-lowest border border-outline-variant/40 text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container active:scale-95 transition-transform" type="button">
+<span>최종 동의</span>
+<span class="text-caption font-bold bg-surface-container px-1.5 py-0.5 rounded-full text-secondary">1</span>
+</button>
+<button class="h-9 px-3.5 rounded-full bg-surface-container-lowest border border-outline-variant/40 text-secondary font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container active:scale-95 transition-transform" type="button">
+<span>확정</span>
+<span class="text-caption font-bold bg-surface-container px-1.5 py-0.5 rounded-full text-secondary">1</span>
+</button>
+</section>
+<!-- Chat Item List (Standard High-Touch List Layout) -->
+<section class="flex flex-col divide-y divide-outline-variant/20 bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-[0_2px_8px_rgba(17,24,39,0.03)] overflow-hidden mb-space-md">
+<!-- Item 1: 최종 동의 대기 -->
+<article class="p-space-md flex gap-3.5 items-start hover:bg-surface-container-low transition-colors duration-150 cursor-pointer active:bg-surface-container">
+<div class="relative shrink-0 mt-0.5">
+<img class="w-12 h-12 rounded-full object-cover border border-outline-variant/40" data-alt="A refined portrait of a stylish young East Asian woman with natural makeup and subtle smile, standing against a soft-lit warm indoor exhibition gallery. The atmosphere conveys warmth, trust, and creative cultural engagement, perfectly aligning with a premium feminine lifestyle accompaniment service." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDepP2PrTk3XFSH0syvRhULIgMe_fPOEqeuIMt8qJ5AkBZ8O5qwwG8y0GchsG_0dGwwDedlbrcOqkO8d_pljrrk0cEfryFVy2Yz2iO-ZyBkZtKxSGlbj0t3R2oEDcgEa3cq1Okb_QfZfj99R7sq2pV5Y1Y3tLVc8GHNCQ5LW5k5gLb8IqWn-ivZ4NVUxZFDf1axN-koBbBXvP2Iel0mWnKBTjxufXV_0JfCJO_McW_WfM1bLFTJWhLjyA">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-surface-container-lowest" title="동의 대기 중"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1 mb-1">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="font-headline-sm text-body-lg font-bold text-on-surface truncate">박** (만 29세)</span>
+<span class="inline-flex items-center text-caption font-label-sm font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+                  최종 동의 대기
+                </span>
+</div>
+<time class="font-caption text-caption text-secondary shrink-0 ml-1">오후 2:30</time>
+</div>
+<!-- Connected Listing -->
+<div class="flex items-center gap-1 text-secondary mb-1">
+<span class="material-symbols-outlined text-[15px] text-primary" data-icon="palette">palette</span>
+<p class="font-label-sm text-caption text-secondary truncate">삼청동 국립현대미술관 기획전 함께 봐요</p>
+</div>
+<!-- Last Message -->
+<div class="flex items-center justify-between gap-2">
+<p class="font-body-sm text-body-sm text-primary font-medium truncate">
+                [최종 동의 요청] 일시와 장소를 확인하고 동의해 주세요.
+              </p>
+<span class="w-5 h-5 rounded-full bg-primary-container text-on-primary font-label-sm text-[11px] flex items-center justify-center shrink-0">
+                1
+              </span>
+</div>
+</div>
+</article>
+<!-- Item 2: 확정된 동행 -->
+<article class="p-space-md flex gap-3.5 items-start hover:bg-surface-container-low transition-colors duration-150 cursor-pointer active:bg-surface-container">
+<div class="relative shrink-0 mt-0.5">
+<img class="w-12 h-12 rounded-full object-cover border border-outline-variant/40" data-alt="A bright, approachable East Asian woman smiling warmly outdoors in a crisp autumn park environment with gentle golden hour sunlight. She has an authentic and friendly expression, wearing a stylish beige trench coat, evoking security and reliable companionship in a modern cultural setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvBxHIExH095CI5fD3NH-l3pbHeDl_bBdALXDa5dTxwf9YrJL1-DHtMykIbZv1HV2GQYu4rWuzft9KoubDSQAuIlq8RAGwWmk1CNaoHLwU-_fvoaZ8KVcd6nRnQ_l6YINoHay9tEataKlxGyLBAEjJUwdXZ5bco89EQvymj5X23zNZWVHK-Cqtcq09SeIXhDZKHioqb3brtHAwLZBWW3NHhbWvjWdF8Y0dQybVvYKuOFlrDCuj0Co45g">
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-surface-container-lowest" title="약속 확정"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1 mb-1">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="font-headline-sm text-body-lg font-bold text-on-surface truncate">이지은 님</span>
+<span class="font-caption text-caption text-primary font-semibold shrink-0">(확정 메이트)</span>
+<span class="inline-flex items-center text-caption font-label-sm font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+                  약속 확정 (D-2)
+                </span>
+</div>
+<time class="font-caption text-caption text-secondary shrink-0 ml-1">어제</time>
+</div>
+<!-- Connected Listing -->
+<div class="flex items-center gap-1 text-secondary mb-1">
+<span class="material-symbols-outlined text-[15px] text-emerald-600" data-icon="park">park</span>
+<p class="font-label-sm text-caption text-secondary truncate">선유도 공원 가을 단풍 산책</p>
+</div>
+<!-- Last Message -->
+<div class="flex items-center justify-between gap-2">
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">
+                네! 2번 출구 앞에서 뵐게요, 조심히 오세요!
+              </p>
+</div>
+</div>
+</article>
+<!-- Item 3: 대화 중 -->
+<article class="p-space-md flex gap-3.5 items-start hover:bg-surface-container-low transition-colors duration-150 cursor-pointer active:bg-surface-container">
+<div class="relative shrink-0 mt-0.5">
+<img class="w-12 h-12 rounded-full object-cover border border-outline-variant/40" data-alt="A close portrait of a calm adult woman in a serene indoor setting with soft diffused natural light from a window. Her styling is minimalist and modern, showcasing a trustworthy personality within a safe, authentic female companionship platform aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMEU0kq4gd7UtDDReagwycaiCFr9zWVS0wUIn4oyXIppeLpeFoG7fI4DMuRR_6Z5a5KQXIeYKqndjax-ogKnFUT1pxHxF5K2CVaw3rWjQvLnZEj31Typ8nTpM1cmZfXknAbejows3ISLtFtPOIzoEOr9jPHGzKpALdKPaNvm_lN7eVk8rEVXgpDA0vGalwWByqNtTKWCahzn6hRLH468W7eG1kWWKY3Qqw0PDyZ8wQpLkiC1zAWVPtlQ">
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1 mb-1">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="font-headline-sm text-body-lg font-bold text-on-surface truncate">김** (만 26세)</span>
+<span class="inline-flex items-center text-caption font-label-sm font-semibold px-2 py-0.5 rounded-full bg-primary-fixed/60 text-primary border border-primary-fixed-dim shrink-0">
+                  대화 중
+                </span>
+</div>
+<time class="font-caption text-caption text-secondary shrink-0 ml-1">9월 18일</time>
+</div>
+<!-- Connected Listing -->
+<div class="flex items-center gap-1 text-secondary mb-1">
+<span class="material-symbols-outlined text-[15px] text-primary" data-icon="museum">museum</span>
+<p class="font-label-sm text-caption text-secondary truncate">서촌 그라운드시소 전시 동행</p>
+</div>
+<!-- Last Message -->
+<div class="flex items-center justify-between gap-2">
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">
+                전시 티켓은 각자 예매하고 만나는 게 편하시겠죠?
+              </p>
+</div>
+</div>
+</article>
+<!-- Item 4: 종료된 동행 -->
+<article class="p-space-md flex gap-3.5 items-start hover:bg-surface-container-low transition-colors duration-150 cursor-pointer active:bg-surface-container opacity-85">
+<div class="relative shrink-0 mt-0.5">
+<img class="w-12 h-12 rounded-full object-cover grayscale-[20%] border border-outline-variant/30" data-alt="Warm portrait photograph of a mature Korean woman smiling gently, positioned in an artisan pottery studio background with delicate ceramic craft pieces visible. The ambient lighting is warm and reassuring, exuding a sense of refined fulfillment and cultural appreciation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC79FDeovi9-SPBEBDc06bvxQ8oVPQHJr1V2_lqIPIDp0RzgCwhJQ5c-9fwqwkexz7DatmGzkorKklvF0YTKy94HK0WF7U2Vx7OfR2pLqCEWy2vAwXvNe8WpC_FGLbOjn0Z2U5vPVn18-trd0kdYcq9TNx_ZiamOWxnXqIscaXTFFqmaHLGKb1l4xK5JweujLDqDYHe1fzRap-Po1VjzmiA2WHCv7vxBrpxlpaEniYGwDIjvE-uNVLrQQ">
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1 mb-1">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="font-headline-sm text-body-lg font-bold text-secondary truncate">최수연 님</span>
+<span class="inline-flex items-center text-caption font-label-sm font-medium px-2 py-0.5 rounded-full bg-surface-container-high text-secondary border border-outline-variant/30 shrink-0">
+                  동행 완료
+                </span>
+</div>
+<time class="font-caption text-caption text-secondary/70 shrink-0 ml-1">9월 12일</time>
+</div>
+<!-- Connected Listing -->
+<div class="flex items-center gap-1 text-secondary/80 mb-1">
+<span class="material-symbols-outlined text-[15px] text-secondary" data-icon="local_cafe">local_cafe</span>
+<p class="font-label-sm text-caption text-secondary/80 truncate">원데이 도자기 클래스</p>
+</div>
+<!-- Last Message -->
+<div class="flex items-center justify-between gap-2">
+<p class="font-body-sm text-body-sm text-secondary truncate">
+                오늘 너무 즐거웠어요! 후기 남겨드렸습니다.
+              </p>
+</div>
+</div>
+</article>
+</section>
+<!-- 안심 보안 풋터 팁 (Trust Banner) -->
+<footer class="mt-auto mb-space-lg p-3.5 rounded-xl bg-surface-container-low border border-primary-fixed-dim/60 flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="verified_user">verified_user</span>
+</div>
+<p class="font-body-sm text-caption text-on-surface-variant leading-snug">
+<strong class="text-primary font-semibold">안심 동행 안내:</strong> 안전한 동행을 위해 인앱 채팅에서 일정을 조율하세요.
+        </p>
+</footer>
+</main>
+<!-- BottomNavBar (Shared Component JSON Source of Truth) -->
+<!-- Active tab: 채팅 (Chat) highlighted according to intent -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter h-16 max-w-md mx-auto bg-surface border-t border-outline-variant/30 shadow-[0_-4px_20px_rgba(17,24,39,0.06)]">
+<!-- 홈 (Home) -->
+<button class="flex flex-col items-center justify-center text-secondary py-1 hover:text-primary active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm mt-0.5">홈</span>
+</button>
+<!-- 둘러보기 (Explore) -->
+<button class="flex flex-col items-center justify-center text-secondary py-1 hover:text-primary active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-label-sm text-label-sm mt-0.5">둘러보기</span>
+</button>
+<!-- 채팅 (Chat) - ACTIVE STATE -->
+<button class="flex flex-col items-center justify-center text-primary font-bold py-1 active:scale-95 transition-transform duration-150 relative" type="button">
+<span class="material-symbols-outlined" data-icon="chat_bubble" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-0.5">채팅</span>
+<span class="absolute top-1 right-2 w-2 h-2 rounded-full bg-primary"></span>
+</button>
+<!-- 나 (Me/Profile) -->
+<button class="flex flex-col items-center justify-center text-secondary py-1 hover:text-primary active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-0.5">나</span>
+</button>
+</nav>
+</div>
+</body></html>

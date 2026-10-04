@@ -1,0 +1,321 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 AI 대화형 탐색</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface-variant": "#494456",
+            "error": "#ba1a1a",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed-variant": "#5100ce",
+            "tertiary": "#7d3000",
+            "primary-container": "#6c2cf5",
+            "on-surface": "#141b2b",
+            "outline": "#7a7488",
+            "primary-fixed": "#e8ddff",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "on-tertiary-fixed": "#351000",
+            "secondary-container": "#e3e0f2",
+            "surface-bright": "#f9f9ff",
+            "surface-container-low": "#f1f3ff",
+            "surface-container-highest": "#dce2f7",
+            "on-tertiary-container": "#ffd1bd",
+            "surface-container": "#e9edff",
+            "primary-fixed-dim": "#cebdff",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary": "#ffffff",
+            "secondary": "#5e5d6c",
+            "error-container": "#ffdad6",
+            "surface-variant": "#dce2f7",
+            "on-error": "#ffffff",
+            "tertiary-fixed": "#ffdbcc",
+            "tertiary-fixed-dim": "#ffb694",
+            "inverse-surface": "#293040",
+            "secondary-fixed": "#e3e0f2",
+            "surface": "#f9f9ff",
+            "surface-dim": "#d3daef",
+            "on-secondary-container": "#646372",
+            "tertiary-container": "#a34100",
+            "on-secondary-fixed-variant": "#464553",
+            "on-error-container": "#93000a",
+            "background": "#f9f9ff",
+            "on-secondary-fixed": "#1a1a27",
+            "primary": "#5300d1",
+            "on-background": "#141b2b",
+            "on-primary-container": "#e1d4ff",
+            "on-primary": "#ffffff",
+            "secondary-fixed-dim": "#c7c5d6",
+            "outline-variant": "#cbc3d9",
+            "inverse-primary": "#cebdff",
+            "surface-tint": "#6b2af4",
+            "on-primary-fixed": "#21005e",
+            "inverse-on-surface": "#edf0ff",
+            "surface-container-high": "#e1e8fd"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "margin": "1.25rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "headline-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "caption": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-sm": ["18px", {"lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700"}],
+            "caption": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+            "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "600"}],
+            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "body-md": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex justify-center selection:bg-primary-fixed selection:text-primary">
+<!-- Mobile Device Container (390px base viewport) -->
+<div class="w-full max-w-[390px] min-h-screen flex flex-col bg-surface-container-lowest border-x border-outline-variant relative pb-28 shadow-sm">
+<!-- Top App Bar (Task-focused sub-page with Back Navigation) -->
+<header class="sticky top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-outline-variant px-margin h-14 flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<button aria-label="뒤로가기" class="p-space-xs -ml-2 rounded-full hover:bg-surface-container active:scale-95 transition-transform flex items-center justify-center text-on-surface" type="button">
+<span class="material-symbols-outlined text-[24px]" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="flex items-center gap-1.5 ml-1">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">유미당 AI</span>
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="sparkles" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+</div>
+</div>
+<button class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-primary font-label-md text-label-md active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="refresh">refresh</span>
+<span>새 대화</span>
+</button>
+</header>
+<!-- Safe Advisory Privacy Banner -->
+<div class="mx-margin mt-3 mb-2 p-3 rounded-xl bg-surface-container-low border border-outline-variant/60 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<p class="font-caption text-caption text-secondary leading-relaxed">
+        개인 연락처나 민감한 정보는 입력하지 않도록 주의해 주세요. 인공지능이 취향에 맞는 공고와 행사를 찾아드립니다.
+      </p>
+</div>
+<!-- Conversation Feed Container -->
+<main class="flex-1 px-margin py-2 space-y-5 overflow-y-auto">
+<!-- User Inquiry Bubble (Right) -->
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-end gap-1.5 max-w-[85%]">
+<span class="font-caption text-caption text-secondary shrink-0 select-none pb-1">오후 2:14</span>
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-4 py-3 rounded-2xl rounded-tr-xs font-body-md text-body-md font-medium leading-relaxed shadow-sm">
+            이번 주말 서울에서 차분하게 전시를 보고 싶어요.
+          </div>
+</div>
+</div>
+<!-- AI Response Row (Left) -->
+<div class="flex items-start gap-2.5">
+<!-- AI Avatar Icon (Yu-Mi-Dang Character) -->
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white shrink-0 shadow-sm mt-0.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="smart_toy" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div class="flex-1 space-y-4">
+<!-- Text Greeting Bubble -->
+<div class="bg-surface-container-low border border-outline-variant/50 rounded-2xl rounded-tl-xs p-3.5 shadow-sm text-on-surface">
+<p class="font-body-md text-body-md leading-relaxed">
+              주말에 차분하게 감상할 수 있는 삼청동과 한남동의 전시 및 관련 동행 공고를 추천해 드릴게요! ✨
+            </p>
+</div>
+<!-- Recommendation Module 1: Cultural Exhibition Card -->
+<div class="space-y-2">
+<div class="flex items-center gap-1.5 px-0.5">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="palette">palette</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">추천 문화 행사</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden hover:border-primary/40 transition-colors shadow-sm">
+<div class="relative h-32 w-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="An expansive, serene contemporary art exhibition hall inside the National Museum of Modern and Contemporary Art in Seoul. Visitors calmly admire minimalist framed paintings hung against clean white architectural walls under soft, diffused natural daylight streaming from high ceilings. Elegant warm wooden parquet flooring and modern purple-hued atmospheric accents enhance the peaceful, contemplative light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6Aqr2K98t8f4579USYhVSuC5OyeSo7nynwu9DvQOICrYukLabjvru3NWGuOWSbKdyfEm1qj-G7jwCIOYPZwB8VkYFzb1Gc_geimYav1ZDyGgIEd2eznwfYJSoJoyU_Enmh1ur6j255hLp6Mk9-EsY0E1W-O-pGXafmE-iZ-AxTAxHsLYriov76PB-fJNbh0xWGZjkKO9qWn5XbktkQr5qaDIuh1MYpKL_JPXDXMZrB3QQProN8gMyrQ">
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-sm text-primary font-label-sm text-label-sm font-bold shadow-xs">
+                    전시
+                  </span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-white font-label-sm text-label-sm shadow-xs">
+                    진행 중
+                  </span>
+</div>
+</div>
+<div class="p-3.5 space-y-2.5">
+<div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-surface leading-snug">
+                    국립현대미술관 서울관 가을 기획전
+                  </h4>
+<div class="flex items-center gap-2 text-secondary font-caption text-caption mt-1">
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="location_on">location_on</span>
+                      종로구 삼청동
+                    </span>
+<span>•</span>
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="calendar_today">calendar_today</span>
+                      2024.09.01 ~ 11.30
+                    </span>
+<span>•</span>
+<span class="text-primary font-semibold">무료·유료</span>
+</div>
+</div>
+<!-- AI Recommendation Reason Chips -->
+<div class="pt-1 border-t border-outline-variant/40 flex flex-wrap gap-1.5 items-center">
+<span class="font-caption text-caption text-secondary font-semibold mr-0.5">AI 추천 이유:</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-caption">
+                    차분한 관람 분위기
+                  </span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-caption">
+                    넓은 전시 공간
+                  </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommendation Module 2: Connected Companion Post Card -->
+<div class="space-y-2 pt-1">
+<div class="flex items-center gap-1.5 px-0.5">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">연결된 동행 공고</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-3.5 space-y-3 hover:border-primary/40 transition-colors shadow-sm">
+<!-- Post Author & Matching Score Header -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold text-[13px] border border-outline-variant">
+                    박**
+                  </div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md font-bold text-on-surface">박** 님</span>
+<span class="px-1.5 py-0.2 rounded-full bg-primary-fixed text-primary font-label-sm text-caption">
+                        모집중
+                      </span>
+</div>
+<span class="font-caption text-caption text-secondary">30대 여성 • 미술관 마니아</span>
+</div>
+</div>
+<!-- Affinity Gauge (당도 지수) -->
+<div class="flex flex-col items-end">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-md text-label-md font-bold">당도 98%</span>
+</div>
+<div class="w-16 h-1.5 bg-secondary-container rounded-full overflow-hidden mt-0.5">
+<div class="bg-primary-container h-full rounded-full" style="width: 98%;"></div>
+</div>
+</div>
+</div>
+<!-- Post Body -->
+<div class="space-y-1">
+<h5 class="font-headline-sm text-headline-sm font-bold text-on-surface leading-snug">
+                  삼청동 전시 천천히 같이 볼 분
+                </h5>
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2">
+                  주말 오후에 조용히 전시 산책하고 인근 다도 카페에서 소소하게 감상 나눌 여성 동행 구해요.
+                </p>
+</div>
+<!-- Post Metadata Tag Cluster -->
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-secondary font-caption text-caption pt-1 border-t border-outline-variant/30">
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="schedule">schedule</span>
+                  9.21(토) 14:00
+                </span>
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="pin_drop">pin_drop</span>
+                  종로구 삼청동
+                </span>
+<span class="font-semibold text-primary">무료 1:1 동행</span>
+</div>
+<!-- AI Fit Check Advice Box -->
+<div class="bg-primary-fixed/40 border border-primary-fixed p-2.5 rounded-lg flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5" data-icon="tips_and_updates" style="font-variation-settings: 'FILL' 1;">tips_and_updates</span>
+<p class="font-caption text-caption text-on-surface leading-tight">
+<span class="font-bold text-primary">AI 확인 팁:</span> 작성자 성향이 조용한 관람 위주로 회원님의 취향과 잘 맞아요.
+                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Follow-up Question Chips (Horizontal Scroll) -->
+<div class="pt-2">
+<p class="font-caption text-caption text-secondary mb-2 px-1">추천 후속 질문을 눌러 바로 확인해보세요</p>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-margin px-margin">
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant hover:border-primary-container text-on-surface font-label-md text-label-md active:scale-95 transition-all shadow-xs flex items-center gap-1" type="button">
+<span>관람 후 갈만한 조용한 카페 추천해줘</span>
+<span class="material-symbols-outlined text-[14px] text-primary" data-icon="north_east">north_east</span>
+</button>
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant hover:border-primary-container text-on-surface font-label-md text-label-md active:scale-95 transition-all shadow-xs flex items-center gap-1" type="button">
+<span>일요일 오전 일정은 없어?</span>
+<span class="material-symbols-outlined text-[14px] text-primary" data-icon="north_east">north_east</span>
+</button>
+<button class="whitespace-nowrap px-3.5 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant hover:border-primary-container text-on-surface font-label-md text-label-md active:scale-95 transition-all shadow-xs flex items-center gap-1" type="button">
+<span>무료 전시만 모아보기</span>
+<span class="material-symbols-outlined text-[14px] text-primary" data-icon="north_east">north_east</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Fixed Bottom Interactive Input Bar (Level 2 Elevation) -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-50 bg-surface-container-lowest border-t border-outline-variant px-margin py-3 shadow-[0_-4px_20px_rgba(17,24,39,0.05)]">
+<form class="flex items-center gap-2" onsubmit="event.preventDefault();">
+<div class="relative flex-1">
+<input class="w-full h-11 pl-3.5 pr-9 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-body-sm text-body-sm placeholder:text-secondary focus:bg-surface-container-lowest focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="궁금한 전시나 원하는 동행 스타일을 물어보세요" type="text">
+<button aria-label="음성 입력" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="mic">mic</span>
+</button>
+</div>
+<!-- Primary Action Send Button (#6C2CF5) -->
+<button aria-label="메시지 전송" class="w-11 h-11 rounded-full bg-primary-container hover:brightness-95 active:brightness-90 active:scale-95 text-white flex items-center justify-center shrink-0 shadow-md transition-all" type="submit">
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_upward">arrow_upward</span>
+</button>
+</form>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "유미당",
+    "slug": "yumidang",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/stitch/logo.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F1ECFF",
+        "foregroundImage": "./assets/stitch/logo.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/stitch/logo.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "프로필 사진과 신고 캡처를 선택할 때만 사진 접근을 요청해요.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "scheme": "yumidang"
+  }
+}

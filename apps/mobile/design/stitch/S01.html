@@ -1,0 +1,412 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 둘러보기</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Plus Jakarta Sans & Noto Sans KR -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#ffffff",
+            "surface-container-high": "#e1e8fd",
+            "secondary-container": "#e3e0f2",
+            "outline-variant": "#cbc3d9",
+            "on-primary-fixed-variant": "#5100ce",
+            "on-tertiary-fixed": "#351000",
+            "surface-dim": "#d3daef",
+            "surface-container-low": "#f1f3ff",
+            "on-surface-variant": "#494456",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#464553",
+            "on-primary-container": "#e1d4ff",
+            "inverse-primary": "#cebdff",
+            "tertiary-fixed": "#ffdbcc",
+            "on-tertiary-container": "#ffd1bd",
+            "outline": "#7a7488",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface-bright": "#f9f9ff",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#e3e0f2",
+            "surface-variant": "#dce2f7",
+            "primary-fixed": "#e8ddff",
+            "tertiary": "#7d3000",
+            "on-secondary-fixed": "#1a1a27",
+            "surface-container-lowest": "#ffffff",
+            "secondary": "#5e5d6c",
+            "on-secondary-container": "#646372",
+            "primary-container": "#6c2cf5",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-surface": "#141b2b",
+            "inverse-on-surface": "#edf0ff",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#ffb694",
+            "surface-container-highest": "#dce2f7",
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#293040",
+            "error-container": "#ffdad6",
+            "surface-tint": "#6b2af4",
+            "tertiary-container": "#a34100",
+            "on-primary-fixed": "#21005e",
+            "surface": "#f9f9ff",
+            "primary-fixed-dim": "#cebdff",
+            "background": "#f9f9ff",
+            "surface-container": "#e9edff",
+            "primary": "#5300d1",
+            "on-tertiary": "#ffffff",
+            "on-background": "#141b2b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-lg": "1.5rem",
+            "margin": "1.25rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "body-sm": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "label-md": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "headline-lg": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "headline-sm": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "caption": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "label-sm": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "body-lg": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"],
+            "headline-md": ["Noto Sans KR", "Plus Jakarta Sans", "sans-serif"]
+          },
+          "fontSize": {
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #f3f4f8;
+      font-family: 'Noto Sans KR', 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="flex justify-center min-h-screen text-on-surface">
+<!-- Mobile Screen Container -->
+<div class="relative w-full max-w-md min-h-screen bg-surface-container-lowest shadow-2xl flex flex-col pb-28">
+<!-- 1. 헤더: 둘러보기 볼드 타이틀 (22px) & 벨 알림 아이콘 -->
+<header class="sticky top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md px-margin h-14 flex items-center justify-between shadow-[0_1px_4px_rgba(17,24,39,0.03)]">
+<div class="flex items-center gap-2">
+<h1 class="text-[22px] font-bold text-on-surface tracking-tight">둘러보기</h1>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="알림" class="relative p-2 text-on-surface rounded-full hover:bg-surface-container-low transition-colors duration-150">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary-container rounded-full ring-2 ring-surface-container-lowest"></span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-margin pt-2 flex flex-col gap-space-md">
+<!-- 2. 검색창 -->
+<section class="relative">
+<div class="relative flex items-center w-full">
+<span class="material-symbols-outlined absolute left-3.5 text-secondary text-[22px] pointer-events-none">search</span>
+<input class="w-full h-12 pl-11 pr-4 bg-surface-bright rounded-xl border border-secondary-container text-body-md font-body-md text-on-surface placeholder:text-secondary placeholder:text-body-sm focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/15 transition-all shadow-[0_2px_6px_rgba(0,0,0,0.02)]" placeholder="공고 제목, 장소, 주소, 행사명 검색" type="text">
+</div>
+</section>
+<!-- 3. 필터 버튼 행 -->
+<section class="flex items-center gap-space-sm overflow-x-auto no-scrollbar py-0.5 -mx-margin px-margin">
+<!-- 필터 아이콘 버튼 -->
+<button aria-label="필터 설정" class="flex items-center justify-center w-9 h-9 rounded-full bg-surface-bright border border-secondary-container text-secondary shrink-0 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+<!-- 필터 칩들 -->
+<button class="flex items-center gap-1 h-9 px-3.5 rounded-full bg-surface-bright border border-secondary-container text-label-md font-label-md text-on-surface whitespace-nowrap hover:bg-surface-container-low transition-colors">
+<span>지역</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">expand_more</span>
+</button>
+<button class="flex items-center gap-1 h-9 px-3.5 rounded-full bg-surface-bright border border-secondary-container text-label-md font-label-md text-on-surface whitespace-nowrap hover:bg-surface-container-low transition-colors">
+<span>일정</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">expand_more</span>
+</button>
+<button class="flex items-center gap-1 h-9 px-3.5 rounded-full bg-surface-bright border border-secondary-container text-label-md font-label-md text-on-surface whitespace-nowrap hover:bg-surface-container-low transition-colors">
+<span>나이</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">expand_more</span>
+</button>
+<button class="flex items-center gap-1 h-9 px-3.5 rounded-full bg-surface-bright border border-secondary-container text-label-md font-label-md text-secondary whitespace-nowrap hover:bg-surface-container-low transition-colors">
+<span>카테고리</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">expand_more</span>
+</button>
+</section>
+<!-- 4. 토글 및 정렬 행 -->
+<section class="flex items-center justify-between pt-1">
+<!-- '모집중만 보기' 스위치 (기본 OFF 회색 토글) -->
+<label class="inline-flex items-center gap-2 cursor-pointer select-none">
+<div class="relative">
+<input class="sr-only peer" id="recruitingToggle" type="checkbox">
+<div class="w-9 h-5 bg-secondary-container rounded-full peer peer-checked:bg-primary-container transition-colors duration-200"></div>
+<div class="absolute left-0.5 top-0.5 bg-on-primary w-4 h-4 rounded-full transition-transform duration-200 peer-checked:translate-x-4 shadow-sm"></div>
+</div>
+<span class="text-label-md font-label-md text-on-surface-variant">모집중만 보기</span>
+</label>
+<!-- 우측 '등록일 최신순 ▾' 셀렉트 -->
+<div class="flex items-center gap-0.5 text-label-md font-label-md text-secondary cursor-pointer hover:text-on-surface">
+<span>등록일 최신순</span>
+<span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+</div>
+</section>
+<!-- 5. 건수 요약 -->
+<section class="flex items-center gap-2 pb-0.5">
+<span class="text-headline-sm font-headline-sm text-on-surface font-bold">
+          총 <span class="text-primary-container font-extrabold">24</span>건의 동행
+        </span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold">
+          전체 지역
+        </span>
+</section>
+<!-- 6. 동행 공고 카드 목록 -->
+<section class="flex flex-col gap-space-md">
+<!-- 카드 1 (모집중) -->
+<article class="bg-surface-container-lowest rounded-2xl border border-secondary-container p-4 shadow-[0_2px_8px_rgba(17,24,39,0.04)] hover:border-outline-variant transition-all cursor-pointer">
+<!-- 상단 뱃지 & 카테고리 -->
+<div class="flex items-center justify-between mb-2.5">
+<div class="flex items-center gap-1.5">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary-container font-label-sm text-label-sm font-bold">
+                모집중
+              </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-low text-secondary font-label-sm text-label-sm">
+                전시
+              </span>
+</div>
+<span class="text-caption font-caption text-secondary">30분 전</span>
+</div>
+<!-- 공고 제목 -->
+<h2 class="text-headline-sm font-headline-sm text-on-surface font-bold leading-snug line-clamp-1 mb-2">
+            삼청동 국립현대미술관 천천히 같이 볼 분
+          </h2>
+<!-- 일정 및 장소 메타데이터 -->
+<div class="space-y-1 mb-3">
+<div class="flex items-center gap-1.5 text-body-sm font-body-sm text-secondary">
+<span class="material-symbols-outlined text-[17px] text-primary-container">calendar_today</span>
+<span>9.21(토) 14:00 ~ 16:30</span>
+</div>
+<div class="flex items-center gap-1.5 text-body-sm font-body-sm text-secondary">
+<span class="material-symbols-outlined text-[17px] text-primary-container">location_on</span>
+<span>종로구 삼청동</span>
+</div>
+</div>
+<!-- 연보라 박스: 무료 1:1 동행 -->
+<div class="bg-primary-fixed/50 rounded-lg px-3 py-1.5 mb-3.5 flex items-center justify-between">
+<div class="flex items-center gap-1 text-primary-container font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-[17px]">volunteer_activism</span>
+<span>무료 1:1 동행</span>
+</div>
+<span class="text-caption font-caption text-primary">안심 인증 회원</span>
+</div>
+<!-- 디바이더 -->
+<div class="h-px bg-secondary-container/80 w-full mb-3"></div>
+<!-- 하단: 작성자 프로필 & 당도 지수 & 프로필 보기 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<img class="w-10 h-10 rounded-full object-cover border border-secondary-container" data-alt="A gentle portrait photo of a smiling Korean woman in her late twenties wearing an off-white cozy knitted sweater against a softly blurred, warm interior café background with clean minimalist aesthetics, soft natural daylight, and a serene trustworthy look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhdosR053GRJGFW5lUHz0LCQH___oQ6_9Hk4DUEiV5ZvdCmbDy2xYoQD_3Mzl0FPKQGTPNmP85ESheWnFLbNIcvwiQyRka97dUQKMyMl3_9z--3hxgs3RDS60AI8LUACLPbcIVjTO1yiGtNYkEX2GJTLsOE8KZwwvnGntZ2s0VPloFu0xAV9NMU2FMoBmbmGRSFuYPp0u7I3RxiIMhNSrjnow4wCDk4qGWURLDw2UZqlWVaLBJZ45VqA">
+<div>
+<div class="flex items-center gap-1">
+<span class="text-label-md font-label-md text-on-surface font-bold">김** (만 27세)</span>
+<span class="material-symbols-outlined text-[15px] text-primary-container" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="text-caption font-caption text-secondary">당도 지수</span>
+<span class="text-caption font-caption font-bold text-primary-container">98%</span>
+<div class="w-12 h-1.5 bg-primary-fixed rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 98%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center text-secondary hover:text-on-surface font-label-sm text-label-sm font-semibold pl-2">
+<span>프로필 보기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</div>
+</div>
+</article>
+<!-- 카드 2 (모집중) -->
+<article class="bg-surface-container-lowest rounded-2xl border border-secondary-container p-4 shadow-[0_2px_8px_rgba(17,24,39,0.04)] hover:border-outline-variant transition-all cursor-pointer">
+<!-- 상단 뱃지 & 카테고리 -->
+<div class="flex items-center justify-between mb-2.5">
+<div class="flex items-center gap-1.5">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary-container font-label-sm text-label-sm font-bold">
+                모집중
+              </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-low text-secondary font-label-sm text-label-sm">
+                축제
+              </span>
+</div>
+<span class="text-caption font-caption text-secondary">1시간 전</span>
+</div>
+<!-- 공고 제목 -->
+<h2 class="text-headline-sm font-headline-sm text-on-surface font-bold leading-snug line-clamp-1 mb-2">
+            여의도 한강 불꽃축제 피크닉 동행 구해요
+          </h2>
+<!-- 일정 및 장소 메타데이터 -->
+<div class="space-y-1 mb-3">
+<div class="flex items-center gap-1.5 text-body-sm font-body-sm text-secondary">
+<span class="material-symbols-outlined text-[17px] text-primary-container">calendar_today</span>
+<span>9.28(토) 17:00</span>
+</div>
+<div class="flex items-center gap-1.5 text-body-sm font-body-sm text-secondary">
+<span class="material-symbols-outlined text-[17px] text-primary-container">location_on</span>
+<span>영등포구 여의도동</span>
+</div>
+</div>
+<!-- 연보라 박스: 무료 1:1 동행 -->
+<div class="bg-primary-fixed/50 rounded-lg px-3 py-1.5 mb-3.5 flex items-center justify-between">
+<div class="flex items-center gap-1 text-primary-container font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-[17px]">volunteer_activism</span>
+<span>무료 1:1 동행</span>
+</div>
+<span class="text-caption font-caption text-primary">본인 확인 완료</span>
+</div>
+<!-- 디바이더 -->
+<div class="h-px bg-secondary-container/80 w-full mb-3"></div>
+<!-- 하단: 작성자 프로필 & 당도 지수 & 프로필 보기 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<img class="w-10 h-10 rounded-full object-cover border border-secondary-container" data-alt="A warm candid portrait of a 30-something Korean woman in casual chic autumn outerwear smiling warmly outdoors in an urban park. High quality, soft evening golden hour glow, authentic feminine expression, clean contemporary light palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-9nTtWnBEtcF2UmdHqV2LZCTLQ2OUO5CrqmUFOMXvKerzQ-66XWvutoViYl-S5mu9CCSd8ycGDPkrG90bpRLKOITAjeFADrRc9UF9c8xfEG_qDJrOTBrecHMic-N5JRPA8mWL6UHWn0jGEvHpRqjQCFLHU9g8GINPPHXJwkGsgrW3LggCnTR7yyCpg4-lFGgq345t-sYCKGz6X-XcD7ZRHjzvMuuVNjCfQOw9cgMGeNbwXqdwaNuu0w">
+<div>
+<div class="flex items-center gap-1">
+<span class="text-label-md font-label-md text-on-surface font-bold">이** (만 31세)</span>
+<span class="material-symbols-outlined text-[15px] text-primary-container" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="text-caption font-caption text-secondary">당도 지수</span>
+<span class="text-caption font-caption font-bold text-primary-container">99%</span>
+<div class="w-12 h-1.5 bg-primary-fixed rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 99%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center text-secondary hover:text-on-surface font-label-sm text-label-sm font-semibold pl-2">
+<span>프로필 보기</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</div>
+</div>
+</article>
+<!-- 카드 3 (모집 마감) -->
+<article class="bg-surface-bright rounded-2xl border border-secondary-container/70 p-4 opacity-75 hover:opacity-90 transition-opacity cursor-pointer">
+<!-- 상단 뱃지 & 카테고리 -->
+<div class="flex items-center justify-between mb-2.5">
+<div class="flex items-center gap-1.5">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-low text-secondary border border-secondary-container font-label-sm text-label-sm font-medium">
+                모집 마감
+              </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-low text-secondary font-label-sm text-label-sm">
+                맛집/카페
+              </span>
+</div>
+<span class="text-caption font-caption text-secondary">어제</span>
+</div>
+<!-- 공고 제목 (톤다운) -->
+<h2 class="text-headline-sm font-headline-sm text-secondary font-semibold leading-snug line-clamp-1 mb-2">
+            성수동 성수연방 브런치 드실 분
+          </h2>
+<!-- 일정 및 장소 메타데이터 -->
+<div class="space-y-1 mb-3">
+<div class="flex items-center gap-1.5 text-body-sm font-body-sm text-secondary">
+<span class="material-symbols-outlined text-[17px] text-secondary">calendar_today</span>
+<span>9.20(금) 12:00</span>
+</div>
+<div class="flex items-center gap-1.5 text-body-sm font-body-sm text-secondary">
+<span class="material-symbols-outlined text-[17px] text-secondary">location_on</span>
+<span>성동구 성수동</span>
+</div>
+</div>
+<!-- 디바이더 -->
+<div class="h-px bg-secondary-container/60 w-full mb-3"></div>
+<!-- 하단: 작성자 프로필 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-label-md">
+                박**
+              </div>
+<div>
+<span class="text-label-md font-label-md text-secondary font-medium">박** (만 25세)</span>
+<p class="text-caption font-caption text-secondary mt-0.5">매칭이 완료된 동행입니다</p>
+</div>
+</div>
+<span class="text-caption font-caption text-secondary px-2 py-1 bg-surface-container-low rounded-lg">
+              마감됨
+            </span>
+</div>
+</article>
+</section>
+</main>
+<!-- 7. 우측 하단 플로팅 버튼 군 (AI 동행 탐색 & + 공고 작성 버튼) -->
+<div class="fixed bottom-20 right-[max(1.25rem,calc(50%-13rem))] z-40 flex flex-col items-end gap-2.5 pointer-events-auto">
+<!-- 작은 보라 테두리 'AI 동행 탐색' 버튼 -->
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface-container-lowest border border-primary-container text-primary-container shadow-md hover:bg-primary-fixed/30 active:scale-95 transition-all text-label-md font-label-md">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span>AI 동행 탐색</span>
+</button>
+<!-- 보라색 원형 '+' 공고 작성 버튼 -->
+<button aria-label="동행 공고 작성" class="w-14 h-14 rounded-full bg-primary-container text-on-primary shadow-[0_8px_20px_rgba(108,44,245,0.35)] flex items-center justify-center hover:brightness-95 active:scale-90 transition-transform duration-150">
+<span class="material-symbols-outlined text-[30px]">add</span>
+</button>
+</div>
+<!-- 8. 하단 4개 탭 바 (JSON Component Anchor 기반 & 둘러보기 활성화) -->
+<!-- Shared Component: BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter h-16 max-w-md mx-auto bg-surface dark:bg-inverse-surface shadow-[0_-4px_20px_rgba(17,24,39,0.06)] dark:shadow-none">
+<!-- 탭 1: 홈 (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150 flex-1">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="font-label-sm text-label-sm mt-0.5">홈</span>
+</button>
+<!-- 탭 2: 둘러보기 (Active - style_active_navigation 적용) -->
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150 flex-1">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-sm text-label-sm mt-0.5">둘러보기</span>
+</button>
+<!-- 탭 3: 채팅 (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150 flex-1">
+<span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-0.5">채팅</span>
+</button>
+<!-- 탭 4: 나 (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150 flex-1">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="font-label-sm text-label-sm mt-0.5">나</span>
+</button>
+</nav>
+</div>
+</body></html>

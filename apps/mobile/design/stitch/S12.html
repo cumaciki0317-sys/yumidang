@@ -1,0 +1,317 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>유미당 - 알림 센터</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-surface": "#293040",
+            "outline-variant": "#cbc3d9",
+            "tertiary-fixed": "#ffdbcc",
+            "tertiary": "#7d3000",
+            "secondary": "#5e5d6c",
+            "outline": "#7a7488",
+            "on-primary-container": "#e1d4ff",
+            "surface-dim": "#d3daef",
+            "surface-bright": "#f9f9ff",
+            "tertiary-fixed-dim": "#ffb694",
+            "secondary-fixed": "#e3e0f2",
+            "on-error": "#ffffff",
+            "surface-container": "#e9edff",
+            "on-secondary-container": "#646372",
+            "primary": "#5300d1",
+            "on-tertiary-container": "#ffd1bd",
+            "on-tertiary": "#ffffff",
+            "primary-container": "#6c2cf5",
+            "background": "#f9f9ff",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#a34100",
+            "secondary-container": "#e3e0f2",
+            "on-primary-fixed-variant": "#5100ce",
+            "inverse-primary": "#cebdff",
+            "surface": "#f9f9ff",
+            "error-container": "#ffdad6",
+            "surface-container-highest": "#dce2f7",
+            "error": "#ba1a1a",
+            "primary-fixed-dim": "#cebdff",
+            "on-secondary-fixed": "#1a1a27",
+            "surface-tint": "#6b2af4",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f1f3ff",
+            "on-surface": "#141b2b",
+            "on-background": "#141b2b",
+            "on-primary": "#ffffff",
+            "on-error-container": "#93000a",
+            "inverse-on-surface": "#edf0ff",
+            "on-tertiary-fixed-variant": "#7b2f00",
+            "surface-variant": "#dce2f7",
+            "surface-container-high": "#e1e8fd",
+            "on-secondary-fixed-variant": "#464553",
+            "on-primary-fixed": "#21005e",
+            "primary-fixed": "#e8ddff",
+            "on-tertiary-fixed": "#351000",
+            "secondary-fixed-dim": "#c7c5d6",
+            "on-surface-variant": "#494456"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin": "1.25rem",
+            "space-xl": "2rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "gutter": "1rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "caption": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "caption": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "body-md": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+            "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    body {
+      background-color: #f1f3ff;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-on-surface flex justify-center selection:bg-primary/20 selection:text-primary">
+<!-- Mobile Container Wrapper (Max 448px standard phone frame) -->
+<div class="w-full max-w-md bg-surface-container-lowest min-h-screen flex flex-col relative shadow-[0_0_50px_rgba(0,0,0,0.06)] pb-24">
+<!-- 1. Header / TopAppBar -->
+<header class="sticky top-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md px-margin h-14 flex items-center justify-between border-b border-outline-variant/30">
+<div class="flex items-center space-x-2">
+<button aria-label="뒤로가기" class="w-9 h-9 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container-low active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">알림</h1>
+</div>
+<button class="font-label-md text-label-md text-secondary hover:text-primary font-semibold py-1 px-2 rounded-lg transition-colors active:scale-95" type="button">
+        모두 읽음
+      </button>
+</header>
+<!-- 2. Sub Tabs ([전체 6], [안 읽음 2]) -->
+<div class="w-full bg-surface-container-lowest border-b border-outline-variant/30 px-margin flex space-x-6">
+<!-- Active Tab: 전체 -->
+<button class="relative py-3.5 flex items-center space-x-1.5 text-primary font-headline-sm text-headline-sm font-bold border-b-2 border-primary -mb-px transition-colors" type="button">
+<span>전체</span>
+<span class="font-label-sm text-label-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">6</span>
+</button>
+<!-- Inactive Tab: 안 읽음 -->
+<button class="relative py-3.5 flex items-center space-x-1.5 text-secondary hover:text-on-surface font-headline-sm text-headline-sm font-medium transition-colors" type="button">
+<span>안 읽음</span>
+<span class="font-label-sm text-label-sm bg-surface-container-low text-secondary px-2 py-0.5 rounded-full font-bold">2</span>
+</button>
+</div>
+<!-- Main Content Container -->
+<main class="flex-1 w-full flex flex-col pt-space-md">
+<!-- 3. 오늘 알림 섹션 -->
+<section class="mb-space-lg">
+<div class="px-margin mb-space-sm flex items-center justify-between">
+<h2 class="font-label-md text-label-md font-bold text-secondary tracking-tight">오늘</h2>
+<span class="font-caption text-caption text-secondary">새로운 알림 2건</span>
+</div>
+<div class="flex flex-col space-y-space-xs px-margin">
+<!-- 알림 항목 1: 미확인 (연보라 배경 & 보라색 액센트 점) -->
+<article class="relative p-space-md rounded-xl bg-[#F0EDFF] border border-primary/20 transition-all active:scale-[0.99] cursor-pointer">
+<!-- Unread Indicator Dot -->
+<div class="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary ring-4 ring-primary/20"></div>
+<div class="flex items-start space-x-space-md">
+<!-- Icon Container -->
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">send</span>
+</div>
+<!-- Content Body -->
+<div class="flex-1 pr-3">
+<div class="flex items-center space-x-space-xs mb-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">새로운 동행 신청이 도착했습니다</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-sm">
+                  박** 님이 <span class="font-medium text-on-surface">'삼청동 국립현대미술관 전시'</span> 공고에 동행을 신청했어요. 소개 메시지를 확인해 보세요.
+                </p>
+<!-- Tag & Link Row -->
+<div class="flex flex-wrap items-center gap-2 mb-2">
+<span class="inline-flex items-center font-caption text-caption px-2.5 py-1 rounded-full bg-surface-container-lowest text-primary font-semibold border border-primary/20 shadow-xs">
+                    삼청동 전시 동행
+                  </span>
+<span class="font-caption text-caption text-secondary">10분 전</span>
+</div>
+<!-- Action CTA -->
+<div class="pt-1">
+<span class="inline-flex items-center font-label-sm text-label-sm text-primary font-bold hover:underline">
+                    신청서 확인하기
+                    <span class="material-symbols-outlined text-[16px] ml-0.5">chevron_right</span>
+</span>
+</div>
+</div>
+</div>
+</article>
+<!-- 알림 항목 2: 미확인 (연보라 배경) -->
+<article class="relative p-space-md rounded-xl bg-[#F0EDFF] border border-primary/20 transition-all active:scale-[0.99] cursor-pointer">
+<!-- Unread Indicator Dot -->
+<div class="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary ring-4 ring-primary/20"></div>
+<div class="flex items-start space-x-space-md">
+<!-- Icon Container -->
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">event_available</span>
+</div>
+<!-- Content Body -->
+<div class="flex-1 pr-3">
+<div class="flex items-center space-x-space-xs mb-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">최종 동의 요청이 도착했습니다</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-sm">
+                  이지은 님이 최종 동행 동의를 요청했습니다. 조건을 확인하고 24시간 내에 응답해 주세요.
+                </p>
+<div class="flex items-center space-x-space-sm mb-2">
+<span class="font-caption text-caption text-secondary">1시간 전</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-caption text-caption text-error font-medium">응답 대기중</span>
+</div>
+<!-- Action CTA -->
+<div class="pt-1">
+<span class="inline-flex items-center font-label-sm text-label-sm text-primary font-bold hover:underline">
+                    조건 확인하기
+                    <span class="material-symbols-outlined text-[16px] ml-0.5">chevron_right</span>
+</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- 4. 이전 알림 섹션 -->
+<section class="mb-space-lg">
+<div class="px-margin mb-space-sm">
+<h2 class="font-label-md text-label-md font-bold text-secondary tracking-tight">이전 알림</h2>
+</div>
+<div class="flex flex-col space-y-space-xs px-margin">
+<!-- 알림 항목 3: 확인 상태 (흰색 배경) -->
+<article class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-start space-x-space-md">
+<!-- Icon Container -->
+<div class="w-10 h-10 rounded-full bg-secondary-container text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">celebration</span>
+</div>
+<!-- Content Body -->
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">동행 약속이 확정되었습니다 🎉</span>
+<span class="font-caption text-caption text-secondary shrink-0 ml-2">어제</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary leading-relaxed mb-2">
+                  김** 님과의 '서촌 그라운드시소 전시' 약속이 확정되어 상세 장소가 공개되었습니다.
+                </p>
+<div class="inline-flex items-center font-caption text-caption px-2 py-0.5 rounded-full bg-surface-container-low text-secondary border border-outline-variant/30">
+                  약속 카드 확인 완료
+                </div>
+</div>
+</div>
+</article>
+<!-- 알림 항목 4: 확인 상태 (흰색 배경) -->
+<article class="p-space-md rounded-xl bg-surface-container-lowest border border-outline-variant/40 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="flex items-start space-x-space-md">
+<!-- Icon Container -->
+<div class="w-10 h-10 rounded-full bg-secondary-container text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">rate_review</span>
+</div>
+<!-- Content Body -->
+<div class="flex-1">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-md text-label-md font-bold text-on-surface">따뜻한 동행은 어떠셨나요?</span>
+<span class="font-caption text-caption text-secondary shrink-0 ml-2">3일 전</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary leading-relaxed mb-2">
+                  정다은 님과의 동행이 완료되었습니다. 소중한 상호 후기와 당도 평가를 남겨주세요.
+                </p>
+<!-- Affinity Info -->
+<div class="flex items-center space-x-1.5 mt-1 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-sm text-label-sm font-semibold">당도 지수 평가하기</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- Reassuring Safety / Notice Banner -->
+<section class="px-margin mb-space-xl">
+<div class="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center space-x-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">verified_user</span>
+<p class="font-caption text-caption text-secondary leading-snug">
+            유미당은 만 19세 이상 여성 인증 회원 전용 서비스로, 안전한 문화 동행 문화를 함께 만들어갑니다.
+          </p>
+</div>
+</section>
+</main>
+<!-- 5. 하단 바 (BottomNavBar) from Shared Components JSON -->
+<!-- JSON: label_texts: ["홈", "둘러보기", "채팅", "나"], icons: ["home", "explore", "chat_bubble", "person"] -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter h-16 max-w-md mx-auto bg-surface dark:bg-inverse-surface shadow-[0_-4px_20px_rgba(17,24,39,0.06)] dark:shadow-none">
+<!-- Tab 1: 홈 (Active state applied as top-level hub) -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed font-bold py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm mt-0.5">홈</span>
+</a>
+<!-- Tab 2: 둘러보기 -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]">explore</span>
+<span class="font-label-sm text-label-sm mt-0.5">둘러보기</span>
+</a>
+<!-- Tab 3: 채팅 -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]">chat_bubble</span>
+<span class="font-label-sm text-label-sm mt-0.5">채팅</span>
+</a>
+<!-- Tab 4: 나 -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim py-1 hover:text-primary dark:hover:text-primary-fixed active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="font-label-sm text-label-sm mt-0.5">나</span>
+</a>
+</nav>
+</div>
+</body></html>
