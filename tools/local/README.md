@@ -2,9 +2,9 @@
 
 ## 현재 정책을 검증할 때
 
-현재 로그인은 네이버만, 현재 동행은 무료 1:1이다. 과거 테스트 Auth/비밀번호 세션은 로컬 권한 검사 도구이며 네이버 필수 정보·성인 여성 자격·필수 사진의 실제 연동 성공이 아니다. 이메일·계좌 인증은 추후 도입 검토다.
+현재 로그인은 네이버만, 현재 동행은 무료 1:1이다. 과거 테스트 Auth/비밀번호 세션은 로컬 권한 검사 도구이며 네이버 필수 정보·성인 여성 자격·필수 사진의 실제 연동 성공이 아니다. 기관이메일·계좌·별도 전화 인증은 현재 제외한다.
 
-기존 SQL/HTTP 검사가 통과해도 작성자 만 나이 19~99 숫자 범위·연결 행사명 검색·개인 완료 후 선제 후기 제출·칭찬 6개·동의 만료/미선정 종료의 최신 정책 반영을 보장하지 않는다. 이 경계는 후속 코드 변경과 함께 검사한다. 문서 동기화 작업에서는 아래 DB 기동·reset·원격 호출을 실행하지 않는다. 구성·길이·배치 한도와 제품상 표시 수량·운영 보관 수치는 별도로 관리한다.
+기존 SQL/HTTP 검사가 통과해도 작성자 만 나이 19~99 숫자 범위·연결 행사명 검색·개인 완료 후 선제 후기 제출·칭찬 6개·동의 만료/미선정 종료의 최신 정책 반영을 보장하지 않는다. 이 경계는 후속 코드 변경과 함께 검사한다. 문서 동기화 작업에서는 아래 DB 기동·reset·원격 호출을 실행하지 않는다. 현재 선택값(공고/행사10개·후기5개·AI하루20회·분당제한없음·전체포함량50%·일반JSON64KiB 등)과 실제 설정/공급사 한도 일치는 별도 검증한다.
 
 담당: 민규. Python 3.11 이상 표준 라이브러리와 Git을 사용한다. 명령은 현재 작업 중인 worktree의 최상위에서 실행한다. 환경/복사 도구는 DB를 기동하거나 SQL을 실행하지 않는다.
 
@@ -18,7 +18,7 @@ python3 -B tools/local/check_environment.py
 
 PATH의 `python3`, `node`, `deno`, `supabase`, `docker` 경로와 `--version` 결과의 버전 숫자만 보고한다. 프로세스마다 5초 제한을 두며 환경 변수나 도구의 원문 stdout/stderr를 출력하지 않는다. 도구 누락·실행 실패·설정 골격은 `NOT_READY`와 종료 코드 1이다. 필요한 도구와 설정 항목이 있으면 `READY`지만 실제 설정 유효성이나 실행 성공을 의미하지 않는다. 설정은 `PRESENT_UNVERIFIED`로 구분한다.
 
-`config.toml`은 2차에서 실행 가능한 로컬 설정으로 작성했다. Docker daemon, Supabase 시작, 실제 마이그레이션 재생, Deno 타입 검사는 **이 점검 명령**에서 실행하지 않아 `NOT_RUN`으로 표시한다. 별도 실행 결과는 민규 현황에 기록한다. Supabase CLI를 `npx`로만 실행하면 PATH 점검은 MISSING일 수 있으며 설치 실패와 혼동하지 않는다.
+`config.toml`의 현재 설정은 별도로 확인한다. Docker daemon, Supabase 시작, 실제 마이그레이션 재생, Deno 타입 검사는 **이 점검 명령**에서 실행하지 않아 `NOT_RUN`으로 표시한다. 별도 실행 결과는 민규 현황에 기록한다. Supabase CLI를 `npx`로만 실행하면 PATH 점검은 MISSING일 수 있으며 설치 실패와 혼동하지 않는다.
 
 ## 정식 마이그레이션 검사
 
@@ -70,7 +70,7 @@ Node 단위 검증 성공은 Deno 타입 검사나 Supabase 런타임 검증을 
 
 ## 설정을 포함한 현재 정식 SQL 복사
 
-2·3차 SQL 6개는 이제 정식 Git 이력에 포함됐다. `prepare_database.py`는 `prepare_migrations.py`의 검사를 거쳐 **현재 Git HEAD와 동일한 정식 SQL 전체**와 로컬 `config.toml`만 새 임시 루트에 복사한다. 2026-09-28 기준 정식 SQL은 26개이며, 고정된 추가 SQL 목록을 다시 붙이지 않는다.
+`prepare_database.py`는 `prepare_migrations.py`의 검사를 거쳐 **현재 Git HEAD와 동일한 정식 SQL 전체**와 로컬 `config.toml`만 새 임시 루트에 복사한다. 고정된 과거 개수나 추가 SQL 목록을 다시 붙이지 않는다.
 
 ```sh
 db_output="$(TMPDIR=/private/tmp mktemp -d /private/tmp/yumidang-minkyu-db.XXXXXX)"
@@ -81,7 +81,7 @@ TMPDIR=/private/tmp python3 -B tools/local/prepare_database.py --output "$db_out
 
 `migration-manifest.json`에는 선택한 정식 SQL 경로·버전·SHA-256을, `database-manifest.json`에는 같은 목록과 설정 해시를 기록한다. `pending`은 빈 배열이고 `total_count`는 정식 이력의 `count`와 같다. `sql_execution: NOT_RUN`은 준비 후에도 유지하며 이후 DB 실행 성공을 자동 기록하지 않는다. 새 정식 SQL이 커밋되면 현재 HEAD 검사 목록에 포함하므로 단계별 파일명을 도구에 추가할 필요가 없다.
 
-이번 준비에 사용한 새 임시 루트와 실제 결과는 [민규 작업 현황](../../docs/collaboration/minkyu.md)과 [2026-09-28 준비 기록](../../docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md)을 확인한다. 임시 폴더의 장기 보존을 기대하지 말고 위 명령으로 재현한다.
+임시 폴더의 장기 보존을 기대하지 않고 현재 소스로 위 명령을 재현한다. 준비 결과와 실제 실행 결과를 구분한다.
 
 준비 도구 검증:
 
@@ -91,9 +91,7 @@ python3 -B tests/database/minkyu/test_database_runner.py
 
 ## 전용 로컬 Supabase에서 실제 검증 — 이후 실행 안내
 
-**2026-09-23에 사용한 검증 환경:** macOS arm64, Deno 2.9.6, Colima 0.10.3, Docker CLI 29.8.0, Supabase CLI 2.116.0, PostgreSQL 17.6. Homebrew Supabase 설치는 Command Line Tools 버전 요구로 실패했으므로 공식 npm 배포를 `npx --yes supabase@2.116.0`으로 실행했다. 시스템 Command Line Tools를 삭제하거나 교체하지 않았다. 설치 명령을 반복 실행할 필요는 없다.
-
-아래 명령은 실제 로컬 DB를 기동하고 SQL 검사를 실행한다. **이번 2026-09-28 준비 작업에서는 실행하지 않는다.** Colima 전용 프로필은 기본 Docker context나 SSH 설정을 바꾸지 않는다. 저장소 worktree와 `/private/tmp`만 mount한다. VM의 2 CPU/4 GiB/20 GiB는 2026-09-23 로컬 검증 자원이며 운영 사양이 아니다.
+아래 명령은 실제 격리 로컬 DB를 기동하는 참고 절차이며 문서 동기화에서는 실행하지 않는다. 현재 도구가 지원하는 버전·전용 프로젝트·빈 합성 DB·mount 범위를 확인한다. 예시 VM 자원은 운영 사양이 아니며 기존 사용자 설정을 자동 변경하지 않는다.
 
 ```sh
 colima start --profile yumidang-minkyu --activate=false --ssh-config=false \
@@ -131,7 +129,7 @@ colima stop --profile yumidang-minkyu
 
 공식 설치·실행 근거: [Supabase 로컬 개발](https://supabase.com/docs/guides/local-development/cli/getting-started), [Colima](https://github.com/abiosoft/colima#installation).
 
-## 3차 Auth/JWT·업무 HTTP 검증 — 2026-09-23 기록과 재현 안내
+## Auth/JWT·업무 HTTP 검증 안내
 
 ```sh
 node --test tests/functions/minkyu/http.test.ts tests/functions/minkyu/auth_db.test.ts tests/functions/minkyu/service_api.test.ts
@@ -139,16 +137,13 @@ node --test tests/functions/minkyu/http.test.ts tests/functions/minkyu/auth_db.t
 python3 -B tests/integration/minkyu/runtime_e2e.py --workdir "$db_output"
 ```
 
-빈 전용 DB와 같은 Docker socket을 사용한다. 통합 검사는 로컬 Auth admin API로 가상 사용자 3명을 만들고 실제 비밀번호 로그인 토큰을 발급받는다. 동일한 `createRuntimeHandler`를 127.0.0.1의 임시 Deno 서버에서 실행하고 실제 Auth/PostgREST/RPC로 무료 공고→신청→양측 매칭→완료→후기 공개→중복 없는 요약 큐를 검증한다. SQL 보조 fixture로 시간과 후기 개수 조건을 준비하므로 실제 24시간 대기나 모델 생성 검사가 아니다. 서버·가상 사용자는 finally에서 정리한다. 자격 증명·본문을 로그로 출력하지 않는다.
+빈 전용 DB와 같은 Docker socket을 사용한다. 통합 검사는 로컬 Auth admin API로 가상 사용자 3명을 만들고 실제 비밀번호 로그인 토큰을 발급받는다. 동일한 `createRuntimeHandler`를 127.0.0.1의 임시 Deno 서버에서 실행하고 실제 Auth/PostgREST/RPC로 무료 공고→신청→양측 매칭→완료→후기 공개→중복 없는 요약 큐를 검증한다. SQL 보조 fixture로 시간과 후기 개수 조건을 준비하므로 실제 작성기한 경과 대기나 모델 생성 검사가 아니다. 서버·가상 사용자는 finally에서 정리한다. 자격 증명·본문을 로그로 출력하지 않는다.
 
 로컬 `auth.enable_signup=false`는 일반 가입을 차단한다. `auth.email.enable_signup=true`는 CLI의 이메일/비밀번호 provider를 켜기 위한 설정이다. Mailpit은 로컬 수집기이며 외부 SMTP가 아니다. 현재 네이버 가입·로그인 연동을 구현·검증한 것으로 해석하지 않는다.
 
 `functions.service-api.verify_jwt=false`는 handler의 사용자 Auth 검증과 별도 내부 비밀 검증을 사용하기 위한 설정이다. gateway가 내부 비밀을 사용자 JWT로 거절하지 않게 한다. 인증을 생략하는 공개 업무 경로는 추가하지 않았다. [Supabase custom 인증 안내](https://supabase.com/docs/guides/functions/auth)를 따른다. Supabase Edge 호스팅 자체는 NOT_RUN이고 로컬 기본 edge_runtime도 비활성이다. 배포 전에 Edge 기동·gateway 경로 검증이 필요하다.
 
-**2026-09-23 과거 검증 기록:** 당시 실행 루트는 `/private/tmp/yumidang-minkyu-runtime-20260923-v5`였고, 26개 SQL 재생·rollback 스위트 6개·경쟁 시나리오 6개·HTTP 시나리오 8개가 각각 PASS였다. 마지막 gateway 설정은 당시 실행 후 보완했다. 외부 공급사·모델·배포는 NOT_RUN이었다. 이 기록은 2026-09-28 병합본의 DB/HTTP 재검증 결과가 아니다. 현재 준비 복사본에는 현재 설정이 포함되지만 실제 DB·HTTP 실행 여부는 별도로 확인해야 한다.
-
-
-## 실제 로컬 Supabase Edge 검증 — 2026-09-29
+## 실제 로컬 Supabase Edge 검증 안내
 
 `prepare_edge.py`는 기존 정식 SQL 준비를 재사용하며 service-api 진입점의 정적 import로 필요한 소스만 새 임시 루트에 복사한다. 현재 작업 파일을 SHA256으로 고정하므로 미커밋 HTTP 준비도 검사할 수 있다. 준비를 실행 성공으로 표시하지 않으며 `edge_execution/sql_execution=NOT_RUN`을 유지한다.
 
@@ -170,6 +165,10 @@ python3 -B tests/integration/minkyu/edge_e2e.py --workdir "$edge_output"
 
 기존 volume에 새 SQL이 아직 적용되지 않았다면 빈 전용 DB를 확인하고 로컬 reset을 수행한다. runner는 준비 이후 소스 변동·다른프로젝트/소켓·남은 fixture를 거절한다. 키는 CLI에서 읽어 메모리로 사용하고 내부 설정만0600 임시 env에 기록한다. gateway `/functions/v1/service-api`를 실제 호출하며 standalone Deno 서버로 대체하지 않는다. 사용한 가상 데이터·CLI프로세스그룹·임시env/log를 정리하고, 종료 시 전용 Supabase/Colima stop은 호출자가 수행한다(볼륨 보존).
 
-2026-09-29 당시 결과는 **8개 묶음 PASS + 로컬 gateway CORS 미충족1개 = PARTIAL(exit2)**다. CLI Kong이 GET의 Origin을`*`로 바꾸고 OPTIONS를200/`*`/no-store 없이 응답한다. 앱의 미허용Origin403과 인증은 유지됐다. 이 알려진 차이를 검사 성공으로 숨기지 않는다. exit0은 전체 통과, exit1은 시작/기능 실패, exit2는 검사를 완료했으나 미충족 사항 존재다. 원격운영gateway/배포는 NOT_RUN이다.
+기본 gateway가 Origin·OPTIONS 응답을 변경하는지 [CORS 계약](../../backend/contracts/gateway-cors.md)에 따라 확인한다. exit0은 전체 통과, exit1은 시작/기능 실패, exit2는 검사 완료 후 미충족 사항 존재다. 실제 현재 실행 없이 과거 결과를 재사용하지 않는다.
 
 [실제 실행 근거·상세 결과·CORS 후속](../../docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md)을 따른다. 준비 도구 회귀는 `python3 -B tests/database/minkyu/test_edge_tools.py`로 실행한다.
+
+## 현재 정책의 추가 검증 대상
+
+첫채팅과 신청 원자성·기존방재신청·철회1분·확정요청6시간·변경제안6시간, 한쪽 후기 작성기한종료·검토중 기존공개유지·당도 산식, 익명일정제한·개인정보없는가드, AI새모델요청1회/버튼미차감·개인하루20회와 전체예산·동의철회·보관삭제를 현재 소스와 대조한다. 기존 fixture의 기대가 다르면 해당 구현 작업에서 갱신한다. 사용자 정책 확정과 실제 공급사·법적 조건·실운영 검증은 분리한다.

@@ -1,34 +1,63 @@
-# 3차 업무 런타임 연결 — 민규 → 종현
+# 업무 API와 작업 실행 연결
 
-2026-09-23. 민규 worktree `minkyu/foundation-harness`에서 구현했다. 작성 당시 미커밋이었으며 이후 사용자가 구현과 재개 기록의 커밋·푸시를 요청했다. 최신 상태는 Git 로그와 민규 현황을 확인한다. 외부 메시지 전송 없이 이 문서로 전달한다. 종현 담당 파일은 수정하지 않았다. 1차 가상 사례와 2차 DB 계약에 이어 아래 실제 런타임 계약을 사용한다.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-## 준비된 기능과 계약
+사용자 JWT 업무 호출과 INTERNAL_WORKER_SECRET maintenance 를 구분한다. 내부 호출에 사용자 토큰이나 service-role 키를 대신 보내지 않는다. DB 공개 적격성·revision 무효화·outbox 등록을 한 트랜잭션에 연결하고 HTTP 는 각 실행 결과를 분리한다.
 
-- [서비스 API](../../../../backend/contracts/service-api.md): 사용자 JWT로 공고·신청·양측 매칭·채팅·알림·완료·후기를 호출한다. 응답은 공통 `{data,requestId}` / `{error,requestId}`다.
-- [인증/DB](../../../../backend/contracts/auth-runtime.md): Supabase Auth의 `/auth/v1/user` 검증 후 원래 JWT로 사용자 RPC를 실행한다. service role은 내부 경로만 사용한다.
-- [공고/매칭 DB](../../../../backend/contracts/core-service-db.md): 무료 공고만 신규 경로에서 지원한다. 양측 동의 전 상세 장소는 비공개이며 조건 버전은 무작위 UUID다. 중복 동의·겹치는 일정·직접 쓰기 우회를 방어한다.
-- [완료 DB](../../../../backend/contracts/completion-db.md): 한쪽 확인만으로 완료하지 않는다. 양쪽 확인 또는 자동 처리로 완료한다. 사용자 확정에 따라 자동 완료의 실제 처리 시각부터 후기 7일을 계산한다.
-- [후기 자동화](../../../../backend/contracts/review-automation-db.md): 공개 자격 확인, 기존 명시적 숨김 보존, revision 무효화와 durable outbox, 3개 이상 텍스트의 중복 없는 요약 작업 등록을 제공한다.
-- [검색](../../../../backend/contracts/public-post-search-db.md), [요약](../../../../backend/contracts/review-summary-db.md), [작업 큐](../../../../backend/contracts/worker-jobs.md)는 2차 RPC 계약을 유지한다. 모델 생성·출력 검증·게시 호출은 종현 어댑터에 연결한다.
+## 가입·권한 연결
 
-## 종현이 자기 폴더에서 연결할 작업
+네이버 이름·성별·생일·출생연도로 여성·만 19세 이상 자격을 확인하고 누락·확인 불가는 가입 보류한다. 네이버 계정당 유미당 계정 하나이며 사진 필수·성향 선택·명시적 가입 완료를 적용한다. 다른 계정 연결·활동 이전은 제공하지 않는다.
 
-1. `scheduled-jobs/`에서 `POST /functions/v1/service-api/internal/maintenance`를 JSON `{ "limit": 100 }`과 별도 `Authorization: Bearer <INTERNAL_WORKER_SECRET>`으로 호출한다. limit은 1..100의 명시값이다. 사용자 JWT나 service-role key를 이 비밀로 대신 보내지 않는다. 호출 주기·배치 크기·재시도 운영 값은 별도 확정한다. 이번에는 새 예약 실행을 등록하지 않았다.
-2. endpoint는 `process_due_completions(p_limit)` 다음 `process_review_automation(p_limit,p_model_version,p_prompt_version)`를 실행한다. 둘은 별도 DB 트랜잭션이다. 앞 단계만 성공한 뒤 실패해도 재호출로 안전하게 회복하도록 구현했다. `data.completion`과 `data.reviews` 구조 및 실제 키는 서비스 API 계약을 따른다.
-3. `_shared/jobs/`와 `review-summary-worker/`에서 큐 점유·lease·fencing token·실패 재시도를 연결한다. job payload는 profileId/sourceRevision/modelVersion/promptVersion만 포함한다. 후기 원문·사용자 토큰을 큐에 저장하지 않는다.
-4. `_shared/ai/Agents/review-summary/`에서 snapshot을 조회하고 실제 모델로 생성한 뒤 전체 근거 집합과 revision으로 조건부 게시한다. 409 충돌은 최신 원문 재조회 대상이며 오래된 결과를 강제 게시하지 않는다. 명시적으로 숨긴 후기나 3개 미만 원문은 요약에 사용하지 않는다.
-5. 자기 검색 repository와 chatbot에서 새 검색 RPC를 연결한다. 등록 주소의 검색 일치와 반환 권한은 분리된다. 현재 service-api의 사용자 공고 조회는 로그인 필수이며 비로그인 검색 endpoint는 종현 소관이다.
+Supabase Auth의 `/auth/v1/user`로 세션을 검증하고 사용자 RPC에는 검증한 사용자 JWT를 전달한다. 서버 내부 역할과 사용자 권한을 혼합하지 않는다. 인증 헤더가 없을 때만 익명 경로를 사용하고 잘못된 인증·Auth 장애를 익명으로 재시도하지 않는다. 클라이언트의 `caller`·`userId`는 권한 근거가 아니다.
 
-## 필요한 실행 설정
+비로그인 작성자 영역은 개인정보 없는 모자이크 로그인 가드다. 실명·사진·프로필 원문을 응답한 뒤 CSS로 가리지 않는다. 로그인 미확정 상대는 마스킹, 확정 당사자는 전체 이름·상세 위치, 취소 후 즉시 재마스킹한다. 차단·제재·탈퇴 상태도 각 RPC에서 다시 검사한다.
 
-`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `ALLOWED_ORIGINS`(정확한 origin의 JSON 배열), `MAX_REQUEST_BYTES`, `UPSTREAM_TIMEOUT_MS`가 사용자 API 필수다. 내부 자동화에는 `SUPABASE_SERVICE_ROLE_KEY`, `INTERNAL_WORKER_SECRET`, `REVIEW_SUMMARY_MODEL_VERSION`, `REVIEW_SUMMARY_PROMPT_VERSION`도 필요하다. 실제 비밀은 저장소나 요청 문서에 넣지 않는다. 테스트 버전 `integration-fixture`는 운영 모델 선택이 아니다.
+## 신청·확정·취소 연결
 
-service-api는 자체 인증을 하므로 `config.toml`의 해당 함수에만 `verify_jwt=false`를 설정했다. gateway가 내부 비밀을 JWT로 해석해 차단하지 않도록 한다. 사용자 요청의 Auth 검증과 내부 비밀 검증은 계속 필수다. [Supabase 인증 안내](https://supabase.com/docs/guides/functions/auth)를 참고한다. Edge 호스팅 기동·gateway 검증은 NOT_RUN이며 배포 전에 별도 확인한다. 로컬 HTTP 통합 PASS를 호스팅 PASS로 해석하지 않는다.
+신청 버튼은 S08 없이 S11로 연결한다. 첫 메시지 전송 성공과 신청 성립·작성자 채팅방·알림 생성을 원자적으로 처리하고 실패·무전송 이탈은 미신청이다. 미전송 초안은 화면 메모리에만 두고 이탈 안내 후 삭제한다. 철회 후1분부터 횟수 제한 없이 같은 공고·상대 채팅을 재사용해 새 전송 성공으로 재신청한다. 작성자 거절 후 재신청은 막는다.
 
-## 검증 증거와 보류
+동의 요청은 한 명에게만, 요청후6시간과 동행 시작 중 이른 시각까지다. 확정후 변경은 양쪽 제안 가능하며 제안후6시간·기존 시작·새 시작 중 가장 이른 시각에 만료된다. 수락 전 기존 약속을 유지하고 조건버전·정원·일정충돌을 서버에서 다시 검사한다. 일반 마감 요청은 서버 접수시각이 마감보다 빨라야 한다.
 
-현재 26개 SQL 재생, 단위 검사 81개, rollback SQL 스위트 6개, 독립 DB 세션 경쟁 6개, 실제 Auth/JWT·HTTP 통합 8개 PASS다. 세부 결과와 최신 숫자는 [민규 현황](../../minkyu.md), 재현 방법은 [로컬 안내](../../../../tools/local/README.md)를 따른다.
+확정 시 다른 신청은 모집 종료·읽기 전용이다. 취소만으로 모집을 자동 재개하지 않으며 작성자 재개시 이전 유효 신청·채팅을 복원한다. 본인 철회·거절은 복원하지 않는다. 취소후 이름·상세위치 접근을 즉시 회수한다.
 
-PASS/문자 신규 가입·세션 발급, 계좌 검증과 유료 공고, 계좌 효력 변경 후 확정, 분쟁 세부 판단은 미정/미연결이다. 칭찬 키워드 catalog는 합의된 목록이 없어 비어 있으며 빈 praises는 제출할 수 있다. 기존 수동 완료자의 분쟁 제한은 그대로 남아 있다. 기존 후기 자동 backfill·완료 이력 재작성은 하지 않았다. 프런트엔드·외부 AI·예약 실행·운영 배포의 전체 연결은 아직 완료되지 않았다.
+연속취소는 합의한 최신 예정 시작시각 순서로, 첫3회 경고·다음3회마다7일 제한이다. 이의는24시간, 대기/검토중 관련 제재판정 보류다. 중간 미정 결과는 뒤 판정도 보류한다. 같은시각은 확정시각·내부ID순이며 제재 겹침은 각 실제적용시각+7일 중 가장늦은 종료를 사용한다.
 
-상대 파일의 변경이 필요하면 종현 요청 폴더에 정확한 경로·필요 계약을 기록하고 민규 소유 파일을 직접 수정하지 않는다.
+## 완료·후기·당도 기준
+
+예상 종료 후 본인 완료 확인으로 선제 후기를 제출할 수 있으나 실제 완료 전 비공개다. 양쪽 확인 또는 예상 종료+24시간에 실제 완료 처리하고 취소·노쇼는 제외하며 분쟁 검토 중 자동 완료를 보류한다. 처음 실제 완료된 시각부터 후기 작성 7일, 양쪽 제출은 실제 완료 후 즉시 공개, 한쪽은 작성 기한 종료 시 공개한다.
+
+검토 중 작성·기한 진행·새 공개는 보류하고 정상 인정 후 남은 기간을 재개하되 최소 24시간을 보장한다. 이미 공개된 후기는 신고만으로 숨기지 않고 운영자의 임시 비공개 판단을 구분한다. 미완료였다면 검토 후 실제 완료 시점부터 7일이다. 완료 횟수는 실제 완료 즉시, 후기 당도는 상대 후기가 열람 가능해질 때 반영한다.
+
+당도는 초기 15 + 유효 반응(좋아요 +1·보통 0·별로 −2) + 별점(1~2점 −2·3점 0·4~5점 +1) + 운영 감점이다. 취소 제재 −2·노쇼 −3·중대 −10 중 같은 사건의 운영 감점은 가장 큰 하나, 유효 후기 점수는 함께 합산한다. 마지막 표시만 0~100 정수로 제한한다. 임시 숨김은 당도 유지, 최종 무효·오판 정정은 원 기여를 재계산한다.
+
+공식 칭찬은 좋아요일 때 최대 3개, 차트는 상위 5개다. 후기 원문은 5개씩 조회하고 공개 요약은 300자 이내다. 숨긴 후기의 칭찬은 제외하고 관련 요약도 즉시 숨긴다. 남은 공개 텍스트 후기 3개 이상이면 정기 재생성하며 조회·다시 펼침에서 현재 공개 조건을 확인하고 별도 공개 결과 캐시는 두지 않는다.
+
+## 예약·요약 작업의 연결 경계
+
+자동 완료는 건별 DB 영속 예약과 `completion-runner.mjs`·`completion-scheduler.mjs`를 연결한다. LISTEN/NOTIFY는 변경 알림이며 예약 DB가 기준이다. 시작·연결 복구·정지 후 재시작에서 누락 예약을 다시 읽고 일정 변경·취소·수동 완료·분쟁 상태를 재확인한다. 재접속 5초·DB 쿼리 10초다. 모델 준비나 일일 작업을 기다려 자동 완료·후기 공개를 막지 않는다.
+
+행사·후기 요약 작업은 한국시간 매일 00:01 등록 후 분리 실행한다. `POST /functions/v1/scheduled-jobs/daily`·`review-summary-worker`의 내부 Bearer와 사용자 JWT를 혼용하지 않는다. 실패 영역만 재시도한다.
+
+요약 작업은 실제 실패 최대 3회·10분부터 최대 6시간 재시도, 예산 부족은 실패로 세지 않고 1시간 뒤 확인한다. 10작업·60초·점유180초·동시 실행기1개·자동 점유연장 없음이다. 입력12,000자·후기20개씩·중간4개 병합·단계당3호출·출력800토큰을 적용할 설정을 대조한다. 일일 호출1회·75초·내부정리20건이며 남은 작업은 재개한다.
+
+`sourceRevision`은 큰 정수의 정규 십진 문자열로 전달한다. 작업의 모델·프롬프트 버전과 checkpoint를 비교하고 원문을 큐·중간 저장에 복제하지 않는다. 조회·중간 저장·게시에서 현재 토큰과 점유 만료를 확인하고 잠금 대기 후·쓰기 직전에도 재확인한다. 게시·중간 저장 삭제는 원자 처리하며 같은 작업/revision의 재호출로 내용·시각·알림을 중복 반영하지 않는다. 정상 양보와 예산 대기는 실제 실패와 분리한다.
+
+작업 처리 세부 내역은 종료 후30일, 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제조건을 개발 검증한다. 요약 중간자료는 완료·폐기·원문 변경·실패 종결의 정리와 정상 재개 보존을 구분한다.
+
+## 연결 파일
+
+아래는 소스·계약을 대조할 경로이며 파일 존재나 이름이 현재 정책 구현 완료를 뜻하지 않습니다.
+
+- [service-api.md](../../../../backend/contracts/service-api.md)
+- [auth-runtime.md](../../../../backend/contracts/auth-runtime.md)
+- [core-service-db.md](../../../../backend/contracts/core-service-db.md)
+- [completion-db.md](../../../../backend/contracts/completion-db.md)
+- [review-automation-db.md](../../../../backend/contracts/review-automation-db.md)
+- [public-post-search-db.md](../../../../backend/contracts/public-post-search-db.md)
+- [review-summary-db.md](../../../../backend/contracts/review-summary-db.md)
+- [worker-jobs.md](../../../../backend/contracts/worker-jobs.md)
+- [README.md](../../../../tools/local/README.md)
+
+## 확인할 범위
+
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

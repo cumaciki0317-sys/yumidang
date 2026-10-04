@@ -1,38 +1,34 @@
-# 최신 검색 정책 DB·공개 인증 인계 — 2026-09-29
+# 검색 DB·공개 인증 연결
 
-담당 민규. `minkyu/foundation-harness`의 기준 `bd15429` 이후 로컬 구현이다. [5차 하네스](../../minkyu-search-db-harness.json)에서 총괄/A/B/C 수정 파일을 분리했다. 구현 완료 후 사용자가 커밋·푸시를 요청했으며 공유 대상은 `origin/minkyu/foundation-harness`다. 원격 DB 변경·배포는 포함하지 않는다.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-## 구현한 계약
+anon/authenticated의 정확한 v2 읽기 RPC 권한을 정하고 직접 테이블·구형 조회 우회를 확인한다. 정확한 주소 검색과 응답의 동까지 공개 권한을 구분하며 사용자 입력으로 인증 문맥을 위조할 수 없어야 한다.
 
-- [DB 계약](../../../../backend/contracts/public-post-search-db.md): `search_public_posts_v2(p_filters,p_cursor,p_limit)` 반환은 `{items,nextCursor}`. 신규 SQL 한 개이며 기존 26개 이력은 변경하지 않는다.
-- 등록일 최신순 `created_desc`가 기본, 시작일 빠른순 `starts_asc` 선택. 상태 기본 전체/`recruiting` 선택. 날짜 겹침은 필터이며 모집/기간 그룹을 정렬 앞에 붙이지 않는다.
-- 동까지 공개. 익명 기간 검색 허용, 나이는 `all`만 허용. 공개 카드의 익명 별칭/회원 마스킹을 유지하며 확정 당사자 전체 이름은 별도 관계 권한 경로다.
-- 키워드는 제목·등록 장소명·등록 주소에만 일치한다. 일치한 주소·상세 지점·소개·생년월일·실명 원본은 카드에 반환하지 않는다.
-- SQL 커서는 `{sortAt,id}`이며 UTC 마이크로초를 유지한다. 다음 페이지는 같은 필터/정렬로 호출한다. HTTP 커서의 필터 결합·버전 변경은 종현 구현 대상이다.
-- nullable `category/periodStart/periodEnd`는 생략과 동일하다. 기간 한쪽만 있는 경우 거절한다. 기본 20/최대 50은 기존 기술값이다. 유료 등록을 활성화하지 않으며 기존 비용 NULL을 무료로 바꾸지 않는다.
-- [인증 계약](../../../../backend/contracts/auth-runtime.md): `requireOptionalPrincipal`은 Authorization 자체가 없는 경우만 null. 잘못된 인증을 익명으로 낮추지 않는다. `createPublicClient`는 anon key로 v2 검색 하나만 허용하며 `createUserClient`는 실제 검증한 사용자 JWT로 v2를 호출한다.
+## 검색 계약과 현재 연결 요구
 
-## 종현담당 다음 수정
+`search_public_posts_v2(p_filters,p_cursor,p_limit)`와 기존 검색 service/repository를 재사용한다. 제목·등록 장소명·등록 주소·연결 행사명을 검색하고 소개·후기·비공개 상세 지점은 제외한다. 공개 지역은 동까지이며 검색 일치가 상세 주소 표시 권한을 주지 않는다.
 
-자기 브랜치에서 최신 민규 변경을 받은 후 아래 파일을 담당 범위에서 수정한다. 민규 파일을 직접 수정하지 않는다.
+`authorAge`는 `"all" | {min:number,max:number}`이며 숫자는 만 19~99세 양 끝을 포함한다. 전체에는 99세 상한을 적용하지 않는다. HTTP의 `authorAgeMin/Max` 두 정수를 같은 객체로 전달하고 한쪽 누락·소수·추가 키·역전 범위를 거절한다. 비로그인은 일정·나이 상세 필터 모두 전체만 허용한다. 과거 나이 enum은 현재 화면 선택지로 사용하지 않는다.
 
-1. `backend/contracts/search.md`, `_shared/contracts/search.ts`: 동 허용·익명 기간 허용·정렬 입력 `created_desc/starts_asc`와 새 커서 계약 반영.
-2. `_shared/services/search-service.ts`: 기존 익명 기간 거절과 모집/기간 그룹 우선 정렬 전제를 제거하고 나이 all 제한·카드 비공개 필드 거절 유지.
-3. `_shared/db/repositories/search.ts`: RPC 이름을 v2로 연결하고 sort 전달, `{sortAt,id}` 변환, µs 보존. 구형 cursor는 버전 검증으로 거절하고 필터/정렬 변경 시 초기화한다.
-4. 종현 테스트: 동 카드, 익명 기간/나이, 두 정렬, 기본 전체/모집 필터, 페이지 중복/누락, 비공개 필드 제외를 새 계약으로 검증한다. AI도 최신 검색 코어를 재사용한다.
+기본 `created_desc`, 선택 `starts_asc`이며 모집 상태 전체가 기본이다. 사용자 선택보다 기간·모집 그룹을 앞세우지 않는다. 목록은 10개씩 추가 조회한다. 커서에는 필터·정렬과 마이크로초 정밀도 위치를 결합하고 변경된 조건의 커서를 거절한다. DB 결과를 어댑터에서 다시 정렬하거나 미지원 조건을 조용히 버리지 않는다.
 
-`_shared/`는 `backend/supabase/functions/_shared/`다. 기존 동 거절·익명 날짜 제한·구형 커서 코드가 남아 있어 **GET 검색 API 연결 완료가 아니다.** 종현 코어가 맞춰지면 민규가 기존 서비스 HTTP 진입점에서 optional principal → public/user client → 종현 검색 service/repository를 연결하고 실제 GET 검사를 추가한다. 중복 검색 코어를 만들지 않는다.
+반환 카드의 `canApply`는 실제 가입·사진·차단·제재·모집 상태를 반영하는 안내이며 첫 메시지 전송 때 다시 검사한다. 비로그인 작성자 가드에 실제 개인 정보를 보내지 않는다. 오류 응답은 0건과 구분하고 SQL 오류·원문을 노출하지 않는다.
 
-## 검증과 재현
+## DB·RPC 연결 점검
 
-전용 Colima `yumidang-minkyu`, Supabase `yumidang-minkyu-db`, PostgreSQL 17.6, CLI 2.116.0을 사용한다. 원격 URL을 입력받지 않는 검사다. 이번 임시 실행 루트는 `/private/tmp/yumidang-search-v2-20260929-cir5lkiy`.
+기존 서비스·repository·RPC 허용 목록을 대조하고 승인된 담당이 필요한 최소 변경을 한다. 현재 정식 migration과 실제 대상 이력을 비교하여 이미 적용한 제안 SQL을 중복 채택하지 않는다. 파일 존재만으로 배포된 RPC라고 판단하지 않는다.
 
-이번 검증 당시 정식 준비 도구는 기준 HEAD의 26개만 준비했다. 이번 검증에는 검토한 신규 `20260929090000_public_search_v2.sql` 한 개만 임시 폴더에 따로 복사하고 `search-v2-pending.json`에 해시를 기록했다. 모든 미추적 SQL 자동 포함이나 ` 2.sql` 사본 재생은 하지 않았다. 신규 SQL 커밋 이후에는 일반 준비 도구가 정식 27개로 인식한다.
+HTTP 응답은 `{data,requestId}` 또는 `{error:{code,message,retryable},requestId}`다. RPC에는 HTTP envelope를 중복 추가하지 않는다. `22023` 입력오류, `P0002` 대상없음, `28000` 인증필요, `42501` 권한거절, `40001` 충돌을 실제 문맥에 맞게 매핑하고 SQL 원문/detail을 공개하지 않는다.
 
-```sh
-python3 -B tools/local/run_database_tests.py --run
-python3 -B tests/integration/minkyu/search_rpc_e2e.py --workdir /private/tmp/yumidang-search-v2-20260929-cir5lkiy
-python3 -B tools/collaboration/check_harness.py --manifest docs/collaboration/minkyu-search-db-harness.json --all-changes
-```
+행사비용 JSON은 `CASE`로 객체 자료형을 먼저 검사하며 조건이 명시적 TRUE일 때만 저장한다. 원자배치 실패를 일부정상자료 저장으로 숨기지 않는다. 요약잠금은 투영상태→작업→중간저장/표식 순서를 맞추고 잠금대기후 점유토큰·만료를 재검사한다.
 
-최종 검증은 SQL 재생 27개, SQL 스위트 7개, 경쟁 사례 6개, 실제 Auth/PostgREST 시나리오 6개, Node 21개, Python 16개와 Deno 타입 검사 모두 PASS다. 기존 SQL 26개 보존·하네스 17파일 경계·담당 중복 0도 확인했다. 최종 결과는 [민규 현황](../../minkyu.md)에 함께 기록했다. 검증 후 가상 데이터 잔존 0을 확인하고 전용 Supabase/Colima를 중지했으며 볼륨은 보존했다. 실제 Auth/PostgREST 검사는 민규 TypeScript 인증/DB 클라이언트를 직접 호출하며 아직 GET 라우트를 검사하지 않는다. 구형 list_posts 등 검색 호출 전체 전환·AI/프런트엔드·Edge 호스팅·외부 공급사·원격 배포는 `NOT_RUN`이다.
+## 연결 파일
+
+아래는 소스·계약을 대조할 경로이며 파일 존재나 이름이 현재 정책 구현 완료를 뜻하지 않습니다.
+
+- [public-post-search-db.md](../../../../backend/contracts/public-post-search-db.md)
+- [auth-runtime.md](../../../../backend/contracts/auth-runtime.md)
+
+## 확인할 범위
+
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

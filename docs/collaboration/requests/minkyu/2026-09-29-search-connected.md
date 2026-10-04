@@ -1,67 +1,33 @@
-# 검색 v2 병합·실제 GET 연결 인계
+# GET 공고 검색 연결
 
-2026-09-29 민규. 사용자 “진행하자” 요청으로 종현 검색 코어를 병합하고 기본 공개 검색을 연결했다. [8차 하네스](../../minkyu-search-connect-harness.json), [독립 검토와 종현 변경 요청](2026-09-29-search-connect-review.md)을 함께 읽는다.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-## 병합과 구현
+service-api GET /posts→선택 인증→공통 RPC client→종현 search-service/repository→공개 카드의 기본 실행 경로를 검사한다. POST 공고 작성의 회원 인증은 공개 GET과 별개다.
 
-- 종현 `129a871`의 14파일과 민규 `5d43a46`의 20파일은 수정 경로가 겹치지 않았다. 병합 커밋은 `2a53097`이며 종현 14파일은 원문 그대로 반영했다.
-- 기본 `createRuntimeHandler(read)`와 lazy `default.fetch`가 GET `/posts`에서 종현 `searchPublicPosts(createRpcPublicPostSearchRepository(db), input)`을 호출한다. 명시 executor 주입도 유지한다. 별도 검색 코어나 RPC 우회 경로를 만들지 않았다.
-- 인증 헤더가 없을 때만 익명이다. 헤더가 있으면 실제 Auth 사용자 검증 후 사용자 DB client를 사용한다. 잘못된 JWT를 익명으로 재시도하지 않으며 POST와 기존 업무 API의 인증은 유지한다.
-- HTTP 입력 타입을 종현 v2 공유 계약으로 연결했다. 등록일 최신순 기본, 시작일 빠른순 선택, 전체 상태 기본/모집 필터, 익명 기간 허용/상세 나이 거절, 동 표시와 개인정보 분리를 유지한다.
-- 연결 진단의 커서 fixture가 이전 시구 형식이라 최신 동 필수 제약에서 멈췄다. 민규 도구의 가상 지역만 실제 SQL 제약에 맞게 갱신했다. 코어 검증을 완화하지 않았다.
+## 검색 계약과 현재 연결 요구
 
-## 실제 검증
+`search_public_posts_v2(p_filters,p_cursor,p_limit)`와 기존 검색 service/repository를 재사용한다. 제목·등록 장소명·등록 주소·연결 행사명을 검색하고 소개·후기·비공개 상세 지점은 제외한다. 공개 지역은 동까지이며 검색 일치가 상세 주소 표시 권한을 주지 않는다.
 
-| 검사 | 결과 |
-|---|---|
-| 종현 검색 repository/service/discovery | Node 31개 PASS |
-| 민규 HTTP·인증/DB·업무 API·검색·진단 | Node 83개 PASS |
-| 검색 연결 진단 | 7개 PASS, offline_core_contract READY |
-| Deno | 진입점·진단 도구·검색 테스트 3파일 타입 검사 PASS |
-| Python | Edge 준비 10개 + 하네스 6개 PASS |
-| 실제 Edge gateway→Auth→검색 코어→RPC | 검색 4묶음 PASS |
-| 실제 Edge 기존 업무/보안/소스/로그 | 기존 8묶음 PASS |
-| 로컬 gateway CORS | FAIL 1개; 전체 PARTIAL(exit2) |
-| 보존 | 종현 추적94파일·SQL27개 원문 동일, 병합14파일 원문 동일 |
-| 수정 경계 | 종현 직접수정0, 에이전트 수정 중복0 |
-| 원격 DB·배포·외부 공급사 | NOT_RUN |
+`authorAge`는 `"all" | {min:number,max:number}`이며 숫자는 만 19~99세 양 끝을 포함한다. 전체에는 99세 상한을 적용하지 않는다. HTTP의 `authorAgeMin/Max` 두 정수를 같은 객체로 전달하고 한쪽 누락·소수·추가 키·역전 범위를 거절한다. 비로그인은 일정·나이 상세 필터 모두 전체만 허용한다. 과거 나이 enum은 현재 화면 선택지로 사용하지 않는다.
 
-실제 검색 검사 4묶음:
+기본 `created_desc`, 선택 `starts_asc`이며 모집 상태 전체가 기본이다. 사용자 선택보다 기간·모집 그룹을 앞세우지 않는다. 목록은 10개씩 추가 조회한다. 커서에는 필터·정렬과 마이크로초 정밀도 위치를 결합하고 변경된 조건의 커서를 거절한다. DB 결과를 어댑터에서 다시 정렬하거나 미지원 조건을 조용히 버리지 않는다.
 
-1. 익명 별칭·동·정확히 허용된 카드9필드, 기본 전체 상태와 모집 중 옵션, 무료/유료 필터, 기존 NULL 비용 unknown.
-2. 실제 회원 JWT·마스킹 이름·나이 필터·신청 가능성, 익명 기간 검색과 상세 나이401, 위조 JWT401.
-3. 등록 주소로 공고가 검색되지만 주소·상세 지점·소개는 카드에 반환하지 않음. 상세 지점·소개는 검색 대상에서 제외.
-4. 등록일/시작일 두 정렬 각각 limit1로 모든 페이지를 순회. .123456/.123457 차이와 동일 시각 UUID순에서 중복·누락 없음. v2 마이크로초 보존, 정렬/필터 변경 커서와 v1 커서400.
+반환 카드의 `canApply`는 실제 가입·사진·차단·제재·모집 상태를 반영하는 안내이며 첫 메시지 전송 때 다시 검사한다. 비로그인 작성자 가드에 실제 개인 정보를 보내지 않는다. 오류 응답은 0건과 구분하고 SQL 오류·원문을 노출하지 않는다.
 
-검사 자료는 가상 사용자3명과 검색 공고4개 및 기존 업무 공고이며 실제 로컬 Auth/DB/Edge를 사용했다. 사용자 가입 공급사 연결을 의미하지 않는다. 검증 후 users/profiles/posts/worker_jobs 잔존0, 실행 소스 해시 일치, CLI 로그의 비밀값·사용자 원문 제외를 확인했다.
+## 가입·권한 연결
 
-## 재현
+네이버 이름·성별·생일·출생연도로 여성·만 19세 이상 자격을 확인하고 누락·확인 불가는 가입 보류한다. 네이버 계정당 유미당 계정 하나이며 사진 필수·성향 선택·명시적 가입 완료를 적용한다. 다른 계정 연결·활동 이전은 제공하지 않는다.
 
-브랜치는 `minkyu/foundation-harness`, worktree는 `.worktrees/minkyu-foundation`이다. 실제 실행 준비 경로는 `/private/tmp/yumidang-search-connect-edge-20260929`, 기준 HEAD는 `2a53097`이며 미커밋 구현을 해시 고정한 소스36개와 정식 SQL27개를 복사했다. 기본 config는 변경하지 않고 임시 config만 Edge 활성화했다. 소스나 HEAD가 바뀌면 새 임시 폴더로 다시 준비한다.
+Supabase Auth의 `/auth/v1/user`로 세션을 검증하고 사용자 RPC에는 검증한 사용자 JWT를 전달한다. 서버 내부 역할과 사용자 권한을 혼합하지 않는다. 인증 헤더가 없을 때만 익명 경로를 사용하고 잘못된 인증·Auth 장애를 익명으로 재시도하지 않는다. 클라이언트의 `caller`·`userId`는 권한 근거가 아니다.
 
-```sh
-node --test tests/functions/jonghyun/search-service.test.mjs tests/functions/jonghyun/search-repository.test.mjs tests/integration/jonghyun/discovery-flow.test.mjs
-node --test tests/functions/minkyu/http.test.ts tests/functions/minkyu/auth_db.test.ts tests/functions/minkyu/service_api.test.ts tests/functions/minkyu/search_http.test.ts tests/functions/minkyu/search_runtime.test.ts tests/functions/minkyu/search_core_gate.test.ts
-node tools/local/check_search_core.ts
-deno check --no-remote backend/supabase/functions/service-api/index.ts tools/local/check_search_core.ts tests/functions/minkyu/search_http.test.ts tests/functions/minkyu/search_runtime.test.ts tests/functions/minkyu/search_core_gate.test.ts
-python3 -B tests/database/minkyu/test_edge_tools.py
-python3 -B tests/functions/minkyu/test_harness.py
-python3 -B tools/collaboration/check_harness.py --manifest docs/collaboration/minkyu-search-connect-harness.json --all-changes
-```
+비로그인 작성자 영역은 개인정보 없는 모자이크 로그인 가드다. 실명·사진·프로필 원문을 응답한 뒤 CSS로 가리지 않는다. 로그인 미확정 상대는 마스킹, 확정 당사자는 전체 이름·상세 위치, 취소 후 즉시 재마스킹한다. 차단·제재·탈퇴 상태도 각 RPC에서 다시 검사한다.
 
-[로컬 준비·기동 안내](../../../../tools/local/README.md)에 따라 민규 전용 Colima/Supabase를 같은 새 준비 루트에서 기동한 뒤 실행한다. 실제 이번 결과는 준비 도구의 NOT_RUN과 별개다.
+## 연결 파일
 
-```sh
-python3 -B tests/integration/minkyu/edge_e2e.py --workdir /private/tmp/yumidang-search-connect-edge-20260929
-```
+아래는 소스·계약을 대조할 경로이며 파일 존재나 이름이 현재 정책 구현 완료를 뜻하지 않습니다.
 
-CLI2.116.0 / Edge Runtime v1.74.3 / Kong2.8.1을 사용했다. runner 종료코드2는 검색 실패가 아니라 아래 CORS 차이를 포함한 PARTIAL이다. 비밀값은 출력하지 않으며 runner의 가상 데이터·임시 비밀파일·functions 프로세스를 정리한다. 전용 Supabase/Colima는 검증 후 종료하고 볼륨·이미지는 보존한다.
+- [README.md](../../../../tools/local/README.md)
 
-## 남은 작업과 담당
+## 확인할 범위
 
-- **민규:** 운영 gateway 대상을 정한 뒤 CORS Origin·OPTIONS 정책 확인/설정·실제 검증. 로컬 Kong은 GET ACAO를 `*`로 바꾸고 OPTIONS200/`*`/no-store 없음으로 응답한다. 앱의 미허용 Origin403과 인증은 유지되지만 전체 CORS 계약 충족으로 보고하지 않는다. 운영 환경은 NOT_RUN.
-- **종현 요청:** repository에서 잘못된 DB 카드 시각이 사용자 입력 오류400으로 분류되는 비차단 P2를 내부 응답 오류500으로 구분한다. 상세 재현·완료 조건은 독립 검토 문서에 있다. 민규가 종현 코드를 대신 수정하지 않았다.
-- **다음 별도 분담 작업:** [종현의 유지보수/모델 분리 요청](../jonghyun/2026-09-29-maintenance-decoupling-request.md). 민규는 모델 설정 없이 자동 완료·후기 공개가 진행되도록 DB/RPC·설정·API 계약을 정리하고, 종현은 합의한 계약에 맞춰 scheduled-jobs 연결을 이어간다. 이번 단계에서는 구현하지 않았고 현재 유지보수는 여전히 모델/프롬프트 버전 설정을 요구한다.
-- **별도 미완료:** AI 전체 흐름·프런트 연결·구형 검색 경로 전체 전환, PASS/문자·계좌 공급사, 미정 서비스 정책, 원격 DB/운영 배포. 이번 검색 완료를 전체 백엔드 완료로 해석하지 않는다.
-
-병합 커밋은 로컬에 생성됐으며 이번 연결 구현·문서는 아직 미커밋이다. 원격 푸시와 외부 메시지는 수행하지 않았다. 다음 공유 요청 시 민규 변경만 검사·커밋하여 기존 승인 대상 브랜치에 공유한다.
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

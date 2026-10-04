@@ -1,8 +1,14 @@
 # 행사 저장·페이지 조회·회원 공개 프로필 DB 계약
 
-민규 담당 후속 마이그레이션 `20261002131000_events_public_profile.sql`이 종현 제안04·05와 S14 공개 프로필을 연결한다. 선행 원본 `20260929100000_event_storage.sql`은 수정하지 않고 기존 기록·UUID를 보존한다. 아래 v1은 deprecated 호환 계약이다. 기준은 종현 소유 `integrations/events/port.ts`의 `SourceEventRecord`·`StoredEventRecord`, `normalize.ts`, `repositories/events.ts`, `event-service.ts`다. 기존 SQL 27개와 종현 파일은 변경하지 않는다.
+현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
 
-현재 문서는 구현 명세이며 실제 로컬 실행 결과는 [이번 인계](../../docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md)를 따른다. 함수 존재나 SQL 작성만으로 실행 성공·어댑터 연결·배포 완료를 주장하지 않는다.
+기준 인터페이스는 `_shared/integrations/events/port.ts`의 SourceEventRecord/StoredEventRecord와 기존 normalize·repository·event-service다. 현재 저장·페이지·필터 RPC를 재사용하고 공급사별 실제 연결·자료 범위·UI/AI 연결을 검증한다.
+
+KOPIS·TourAPI·서울 열린데이터 실제 연동이 출시 목표다. 초기 과거1개월·미래오늘부터31일과 오래 진행 중인 행사를 갱신하며 매일00:01KST 등록한다. 31일구간·100건/쪽·최대5쪽·쪽당15초이며 진행 위치·미수집 범위를 보존한다.
+
+일반 목록은 이번 주 신규 중 미종료 기본, 진행 중 포함은 이전 주 시작 미종료까지다. 과거 조회를 유지하며 한 주는 월요일00:00~다음월요일00:00 미만, 월별 주차는 목요일 귀속 달의 첫 목요일 포함 주부터 센다. 공고·행사10개씩 조회하고 작성용 선택은 일정과 겹치는 진행 중·예정 행사만 허용한다.
+
+KOPIS 공식 Top10은 전국 전체공연 기본/뮤지컬 선택, 어제까지 최근7일·매일 갱신이며 일반 목록과 구분한다. 제공처 실제 유형·출처·기간·갱신시각을 표시하고 미수신을 임의 순위로 바꾸지 않는다.
 
 ## 단일 canonical 저장소와 신규 저장 RPC
 
@@ -98,9 +104,9 @@ rpc("list_event_candidates_v1", {
 | 동일·과거 collectedAt | 정상 응답, 해당 항목 savedCount 미포함, 기존 UUID·내용 유지 |
 | 사전 필터 후 공개 후보 1,001개 이상 | `54000`, `EVENT_CANDIDATE_LIMIT_EXCEEDED`, 부분 목록 없음 |
 
-종현의 createRpcEventRepository(db)는 신규 upsert_events/list_public_events에 연결하며 createRpcEventFilterRepository(db)는 list_event_filter_values에 연결한다. v1 후보 방식은 이전 어댑터 호환용이다. 공통 client·서비스 HTTP 연결은 C 담당의 수정·실제 검증 결과를 따른다. 내부 writer에는 검증된 내부 호출 문맥의 service client를, 공개 reader에는 역할에 맞는 공개/회원 client를 사용한다.
+종현의 createRpcEventRepository(db)는 신규 upsert_events/list_public_events에 연결하며 createRpcEventFilterRepository(db)는 list_event_filter_values에 연결한다. v1 후보 방식은 이전 어댑터 호환용이다. 공통 client·서비스 HTTP의 실제 연결은 담당자가 현재 소스와 대조한다. 내부 writer에는 검증된 내부 호출 문맥의 service client를, 공개 reader에는 역할에 맞는 공개/회원 client를 사용한다.
 
-민규 공통 클라이언트에는 역할별 허용 목록을 반영했다. `_shared/db/public-client.ts`·`user-client.ts`는 `list_event_candidates_v1`만 허용하며 저장 RPC는 네트워크 요청 전에 거절한다. `_shared/db/internal-client.ts`는 `upsert_source_events_v1`와 `list_event_candidates_v1`을 허용한다. 내부 클라이언트 생성에는 기존의 service-role 키와 유효한 `INTERNAL_WORKER_SECRET` 설정이 모두 필요하며, HTTP 호출부는 기존 `requireInternalCaller` 검사 후 생성해야 한다.
+공개/회원 client는 현재 공개 행사·필터·호환 후보 RPC를, 내부 client는 저장 RPC를 허용한다. 정확한 allowlist는 auth-runtime 계약과 현재 소스로 대조한다. 내부 저장은 requireInternalCaller 성공 후 내부 client로 호출한다.
 
 후보 한도 `54000`은 공통 transport에 별도 공개 오류 코드를 추가하지 않았다. PostgREST의 HTTP 상태가 5xx이면 `EXTERNAL_UNAVAILABLE`(공통 HTTP 503), 다른 특별 분류에 해당하지 않는 4xx이면 `INTERNAL_ERROR`(공통 HTTP 500)로 안전하게 변환한다. SQL 원문·후보 정보를 공개하지 않고 실패로 남기며 빈 목록으로 대체하지 않는다.
 
@@ -108,11 +114,11 @@ rpc("list_event_candidates_v1", {
 
 ## 신규 공개 페이지·필터 RPC
 
-list_public_events(p_filters jsonb,p_cursor jsonb,p_limit integer)는 anon/authenticated/service_role에 허용하고 {items:[...],nextCursor:null|{rank,key,id}}를 반환한다. p_filters는 mode 필수, period:{start:YYYY-MM-DD,end:YYYY-MM-DD} 선택(종료일 포함), ongoingOnly:boolean/query/region/category 선택이다. 추가 키·비정상 null/빈 선택 값·역전 기간·잘못된 커서는 22023이다. limit 1~50은 기술 한도이며 운영 노출 개수로 확정하지 않는다. now() 하나를 기준으로 KST 날짜·주간과 상태·정렬을 계산하고 클라이언트가 기준시각을 지정하지 못한다.
+list_public_events(p_filters jsonb,p_cursor jsonb,p_limit integer)는 anon/authenticated/service_role에 허용하고 {items:[...],nextCursor:null|{rank,key,id}}를 반환한다. p_filters는 mode 필수, period:{start:YYYY-MM-DD,end:YYYY-MM-DD} 선택(종료일 포함), ongoingOnly:boolean/query/region/category 선택이다. 추가 키·비정상 null/빈 선택 값·역전 기간·잘못된 커서는 22023이다. limit1~50은 기존 기술 한도이며 화면은10개씩 요청한다. now() 하나를 기준으로 KST 날짜·주간과 상태·정렬을 계산하고 클라이언트가 기준시각을 지정하지 못한다.
 
 mode=overlapping은 선택 기간과 겹치는 행사(과거 포함), new_this_week는 한국 월요일00:00~다음월요일00:00 사이 새로 시작해 아직 종료하지 않은 행사, post_selection은 진행중/예정 행사다. 모든 mode는 취소 행사를 숨기고 신규 reader가 지원하는 provider 형식(소문자·숫자 시작, 하이픈 허용 1~32자)만 반환한다. 기존 33~80자·밑줄 provider는 저장소와 deprecated v1 조회로 보존한다. date 종료일은 포함, instant 종료시각은 제외한다. 키워드는 행사명·장소명·공개 주소 각 필드의 부분 일치이며 소문자·연속 공백 정규화를 적용한다. 지역/분류는 제공처 원문과 정확 일치한다.
 
-제품의 ‘진행 중 행사도 포함’은 ongoingOnly=true가 아니다. 일반 목록의 선택은 mode=overlapping과 선택 기간(화면 기본은 한국 주간 월요일~일요일), ongoingOnly=false로 보내 기간과 겹치는 장기행사를 포함한다. ongoingOnly=true는 기존 기술 계약인 현재 진행중만 필터다. 화면의 주간 날짜 계산·옵션 연결은 별도 UI 작업이며 SQL 기능 존재를 UI 검증 성공으로 설명하지 않는다.
+제품의 ‘진행 중 행사도 포함’은 ongoingOnly=true가 아니다. 기존 mode=overlapping·주간 기간은 장기 진행 행사를 포함할 수 있지만 이미 종료된 이번 주 행사도 포함할 수 있다. 현재 목표인 신규 미종료+이전 주 시작 미종료에 맞도록 조회 계약을 변경·검증하고 과거 기간 조회는 별도 유지한다. ongoingOnly=true는 기존 기술 계약인 현재 진행중만 필터다. 화면의 주간 날짜 계산·옵션 연결은 별도 UI 작업이며 SQL 기능 존재를 UI 검증 성공으로 설명하지 않는다.
 
 정렬은 진행중(최근 시작) → 예정(빠른 시작) → 종료(최근 종료), 동률 id다. SQL keyset 커서는 rank와 부호 있는 epoch-second key 문자열·UUID id이며 시간 경과에 따라 그룹이 바뀌면 페이지 간 누락·중복 가능성이 있어 snapshot 커서로 주장하지 않는다. 종현 repository는 필터 조건에 결합한 불투명 커서로 변환한다. 날짜/시각은 원래 precision을 유지하고 ISO 출력은 UTC millisecond 형식이다. items는 기존 EventRecord+id/state이며 API주소·상세설명·연락처·좌표를 추가하지 않는다.
 
@@ -124,9 +130,9 @@ get_public_profile(p_profile_id uuid)는 authenticated만 실행하며 실제 au
 
 반환은 {profileId,displayName,age,gender,avatarPath,bio,interests:[],conversationStyles:[],mbti:null|string,completedCount}다. 본인 또는 대상과 confirmed/completed 상태인 실제 동행 당사자는 전체실명을 표시하고 나머지는 mask_real_name으로 마스킹한다. 취소·분쟁 상태만으로 전체실명 관계를 부여하지 않는다. 다른 유효한 확정 관계가 있으면 그 관계에 따른 권한은 유지한다. 출생일·네이버subject·세션·가입인증자료·정확주소는 반환하지 않는다. 사진은 기존 저장path이고 다운로드서명은 별도 이미지흐름이다.
 
-private.profile_traits를 그대로 조회하고 새로운 traits테이블을 만들지 않는다. 미입력 관심사/대화방식은 []이고 MBTI는 null이다. completedCount는 private.completed_appointment_count로 계산하여 실제완료기록의 distinct약속수만 센다. 공개후기·칭찬·summary적격성과 완료count를 혼동하지 않는다. 점수/당도산식은 만들지 않는다. get_my_profile은 변경하지 않는다. 공개후기·칭찬·요약은 기존 분리RPC를 호출한다.
+private.profile_traits를 그대로 조회하고 새로운 traits테이블을 만들지 않는다. 미입력 관심사/대화방식은 []이고 MBTI는 null이다. completedCount는 private.completed_appointment_count로 계산하여 실제완료기록의 distinct약속수만 센다. 공개후기·칭찬·summary적격성과 완료count를 혼동하지 않는다. 현재 당도 산식은 정책7-4절에 확정됐으며 이 기존 RPC에 점수 계산·반환이 연결됐다고 해석하지 않는다. get_my_profile은 변경하지 않는다. 공개후기·칭찬·요약은 기존 분리RPC를 호출한다.
 
-## 이번 변경 검증 경계
+## 후속 검증 경계
 
 tests/database/minkyu/common_connections.sql과 경합runner에서 null sourceUrl·강한URL차단·양방향 v1/v2저장호환·기존ID보존·sameTimestampstale·역순batch경합·view권한회수·기간/그룹/커서·filtercounts·공개성향/관계별이름/완료횟수·get_my_profile불변을 검사한다. 선행event_storage 원본을 적용하고 새2SQL을 순차재생한 단일rollback검증의 실제결과는 총괄이 기록한다. DB작성·정적검사와 실제공급사수집·모델호출·UI·운영배포 결과는 구분한다.
 

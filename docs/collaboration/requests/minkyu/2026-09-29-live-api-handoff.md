@@ -1,56 +1,29 @@
-# 민규 공급사 실호출·종현 연결 인계
+# 외부 공급사 연결 준비
 
-2026-09-29. 사용자 요청에 따라 종현 공유를 먼저 완료하고 민규 API 검증을 이어간다.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-## 공유 완료
+Kakao·KOPIS·TourAPI·서울·포텐스닷 각각의 키 존재·계정 권한·응답 형식·정규화·DB 저장·화면 조회 단계를 구분한다. HTTPS origin 고정, redirect 미추종, 원문·키 로그 제외를 지키고 .env는 서버 비밀 설정으로만 읽는다.
 
-`ff9c14fec069dc03b575cfd33d9deb62625fd924`를 `origin/minkyu/foundation-harness`에 푸시했고 `git ls-remote`로 원격 SHA를 확인했다. 검색 실제 GET 연결, 서버 API 설정, 오프라인 검사, Sonnet5 최소호출 결과, 최신 종현 시작 계획이 포함됐다. 실제 `.env`나 캡처는 포함하지 않았다. 종현은 자신의 작업을 보존하면서 이 브랜치를 반영한 후 `AGENTS.md`와 [공급사 연결 인계](2026-09-29-provider-config-handoff.md)를 따른다.
+## 행사 수집·표시 연결
 
-## 병렬 범위
+KOPIS·TourAPI·서울 열린데이터를 출시 연결 대상으로 두고 실제 제공 데이터만 노출한다. 공급사별 HTTPS·계정 권한·형식·실패를 확인하며 연결 의도와 실제 성공을 구분한다. `provider + sourceId`로 식별하고 제목만으로 다른 공급사 행사를 합치지 않는다. 제공처 값·시간 정밀도·비용 unknown·공식 출처를 유지한다.
 
-[10차 하네스](../../minkyu-live-api-harness.json)의 기준은 ff9c14f다. A는 Kakao403 원인, B는 KOPIS/서울 행사, C는 TourAPI를 검증한다. 민규 소유 tools/local·테스트·요청 문서만 수정하며 종현 코드·SQL·외부 계정설정을 건드리지 않는다. 입력은 사용자 지정 루트 `.env`이며 stdout/stderr·프로세스 인수에 키를 넣지 않는다.
+홈과 기본 목록은 이번 주 신규 중 미종료 행사다. 진행 중 포함을 켜면 이전 주 시작 행사도 포함한다. 한국시간 월요일 00:00~다음 월요일 00:00 미만을 사용하고 월별 주차는 목요일 귀속 규칙으로 표시한다. 과거 행사는 조회 가능하지만 종료 행사를 새 동행 모집 대상으로 연결하지 않는다. 작성용 선택은 일정과 겹치는 진행 중·예정 행사다.
 
-## 진행 상태
+`mode=new_this_week|overlapping|post_selection`과 제공처별 필터를 실제 저장소에 연결한다. `StoredEventRecord`의 `sourceStatus`, `precision`, `admission`, `sourceUrl`, `collectedAt` 의미를 유지하고 불명 입장료를 무료로 만들지 않는다. 등록 행사 선택·공급사 갱신으로 작성 중 동행 일정을 자동 변경하지 않는다.
 
-| 대상 | 실제 결과 | 다음 조치 |
-|---|---|---|
-| Kakao | 사용자 사용 설정 ON 후 HTTP200, PUBLIC_QUERY_SUCCEEDED PASS | 종현 places 어댑터 연결·서비스 통합 검증 |
-| KOPIS | 공식 canonical HTTPS HTTP200, 공연 XML1행·필수필드 확인 PASS | 종현 transport/normalize 연결에 이 endpoint·계약 사용 |
-| 서울 문화행사 | NOT_RUN, 공식 HTTPS 주소 미확인 | HTTPS 전송 경로 확인 전 실키 전송하지 않음 |
-| TourAPI | HTTPS HTTP200, 정상코드0000, 행사1건 확인 PASS | 현 저장 원문을 한 번 URL직렬화하는 확인된 전송 방식으로 종현 연결 |
+초기 과거 수집 최근 1개월·미래 오늘부터 31일·이미 진행 중 별도 갱신을 적용한다. 요청은 31일 구간·100건/쪽·최대 5쪽·쪽당 15초이며 공급사의 실제 한도를 확인한다. 처리 한도 이후 진행 위치를 보존하고 미수집 범위를 표시한다. 페이지 손상·인증 오류·수집 중단을 정상 0건으로 저장하지 않는다.
 
-사용자가 카카오맵 사용 설정 ON 완료를 알린 뒤 동일 최소 요청을 한 번 재검증해 HTTP200 성공을 확인했다. 도구 출력에는 실제 반환 건수가 없으므로 한 건 반환을 주장하지 않는다. 에이전트가 외부 계정 설정이나 결제 설정을 직접 변경하지 않았다. [Kakao 진단](2026-09-29-kakao-live.md), [공연·서울 진단](2026-09-29-events-live.md), [Tour 진단](2026-09-29-tour-live.md)을 각각 따른다.
+## 공급사 조건·비용 경계
 
-## 종현 코드 연결과 별개인 부분
+포텐스닷(코멘토)에 대한 사용자의 문의 답변을 기다린다. 입력·응답·로그·캐시·백업·학습·삭제·실제 하위 처리자 조건과 계정/API 적용 범위를 확인하기 전 회원 원문 전송을 보류한다. 학습 미사용과 원문 미보관은 다른 조건이다. 서버가 원문을 저장하지 않는다고 공급사도 보관하지 않는다고 설명하지 않는다.
 
-공급사 최소 조회가 성공해도 places/event-sync/ai-chat 함수 배포나 서비스 전체 연결 성공은 아니다. 기존 `EventRepositoryPort`는 실제 DB/RPC를 주입받는 계약으로 남아 있으며 공급사 데이터를 수집했다고 테이블 저장까지 완료한 것으로 표현하지 않는다. 민규 DB 계약이 추가로 필요한 경우 요청 문서로 연결한다.
+초기 회원 한도는 한국시간 하루 20회·자정 초기화, 분당 제한 없음·동일 회원 동시 요청 1개다. 모델 처리를 시작한 새 사용자 요청을 1회로 세며 내부 호출·자동 재시도는 추가 차감하지 않는다. 시작 전 차단·창 열기·모델 없는 조건 버튼은 제외하고 시작 후 실패 및 사용자가 다시 보낸 요청은 센다. 실제 연결 후 토큰·요청별 모델 호출 수·공급사 한도를 측정하여 재설정한다.
 
-포텐스닷은 종현의 ModelPort에 맞춰 message의 구조화 파싱, token_usage의 input/output 매핑, 출력한도, 모델 버전 근거, 보관·예산 처리를 확인해야 한다. 민규가 해당 소유 파일을 대신 수정하지 않는다. 종현은 자기 담당에서 독립 구현을 이어가며 실제 공급사 권한 문제는 이 진단 결과와 구분해 처리한다.
+서비스 전체 예산은 확인된 공급사 포함량의 50%로 시작하고 추가 결제는 하지 않는다. 포함량 미확인 시 운영을 시작하지 않는다. `reserve_ai_budget`·`settle_ai_budget`의 예약/정산을 연결하며 사용량 불명 호출을 임의 환불하거나 원장 교체로 지우지 않는다. 공급사 초기화 주기에 맞추고 기간 종료 후 90일 보관하되 미정산은 해결까지 제한 접근으로 분리한다.
 
-## 재현 도구와 완료 검증
+비용 담당 1명·개발 운영 담당의 배정과 접근 기록이 필요하다. 합성 원장 50,000은 기술 단위이며 원화·공급사 토큰이나 합성 10회 성공 보장이 아니다. 모델·출력 상한의 실제 전달과 비용 증빙을 확인한다.
 
-```sh
-# 네트워크 없는 테스트
-python3 -B tests/functions/minkyu/test_kakao_api.py
-python3 -B tests/functions/minkyu/test_event_apis.py
-python3 -B tests/functions/minkyu/test_tour_api.py
-python3 -B tests/functions/minkyu/test_harness.py
+## 확인할 범위
 
-# 직접 재검증할 때만 --run 사용. 키는 명령 인수에 넣지 않는다.
-python3 -B tools/local/check_kakao_api.py --env-file /본인경로/.env --run
-python3 -B tools/local/check_event_apis.py --provider kopis --env-file /본인경로/.env --run
-python3 -B tools/local/check_tour_api.py --env-file /본인경로/.env --raw-input --run
-```
-
-- Python: Kakao7 + 공연/서울7 + Tour15 = 신규29개 PASS, 기존 하네스6개 PASS, 총35개. HTTP200에 들어 있는 공급사 오류를 성공으로 처리하지 않는 것과 키/원문 미출력·명령 인수 제외·리디렉트 거절·TLS 및 응답 한도 등을 검사했다.
-- 실키 요청: Kakao2회(최초403, 사용자 사용 설정 ON 후 동일 요청 재검증200 PASS), KOPIS1회PASS, Tour2회(최초 응답은 00만 허용한 검사기에서 UNKNOWN으로 분류했다. 원문을 저장하지 않아 당시 코드는 재확인하지 못했다. 공식 문서에 따라 0000도 정상으로 처리한 뒤 동일 요청1회 재검증 PASS). 서울은0회다. 키가 없는 HTTPS 지원 여부 probe는 별도로 수행했다.
-- TourAPI는 `https://apis.data.go.kr/B551011/KorService2/searchFestival2`의 하루 범위/한 건을 요청했다. 필수 MobileOS/MobileApp/eventStartDate/serviceKey를 공식 명세와 대조했다. 결과코드00·0000을 모두 정상으로 정의한 공식 근거를 확인했고 파서를 보완했다. [Tour 공식 상세 근거](2026-09-29-tour-live.md)
-- 성공한 전송 방식은 `urlencode({serviceKey: 저장된 원문, ...})` 한 번이다. 발급 화면의 encoded/decoded 명칭을 추정하거나 로컬 키/형식 설정을 바꾸지 않았다. 종현은 이 확인된 직렬화를 어댑터에 반영하고 이중 인코딩·자동 fallback을 추가하지 않는다.
-- KOPIS canonical endpoint는 `https://kopis.or.kr/openApi/restful/pblprfr`다. www의301을 따라가지 않고 canonical 호스트의 TLS/API 응답을 먼저 확인했다. XML 오류·0건과 실제 유효행을 구분하며 비용/상태 등 도메인 정규화는 종현의 별도 검사다.
-
-## 남은 조치
-
-1. Kakao 활성화와 최소요청 재검증은 완료했다. 종현은 기존 places 어댑터 연결과 서비스 통합 검증을 이어간다.
-2. 서울은 현재 검증환경에서 공식호스트443 timeout,8088 TLS실패였다. API 지원HTTPS 경로 확인 전 키를 HTTP로 보내지 않는다. 모든 환경에서 HTTPS가 불가능하다는 판정은 아니다.
-3. 종현은 이미 공유한 ff9c14f의 설정·인계로 AI 작업을 시작할 수 있다. 이번 Kakao/KOPIS/Tour 검증 결과는 후속 adapter 연결 근거이며 실제 DB 저장·조회·서비스 API 성공이 아니다.
-4. 이번 추가 진단 도구/문서는 로컬 미커밋 상태다. 앞의 ff9c14f 푸시와 구분하며 자동 추가 푸시는 하지 않았다.
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

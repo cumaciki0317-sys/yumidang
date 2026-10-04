@@ -1,8 +1,8 @@
 # 로컬 함수 게이트웨이 CORS 계약
 
-담당: 민규. 기준은 Supabase CLI 2.116.0·Kong 2.8.1과 현재 service-api의 정확한 Origin 계약이다. [이번 하네스](../../docs/collaboration/minkyu-gateway-harness.json)의 지정 경로만 수정한다. **기본 설정 실제82확인 PARTIAL / 같은 하네스의 명시 조정 적용 PASS / 조정 후 실제82확인 PASS**다. 재시작 후 자동 재적용·원격·운영 결과는 NOT_RUN이다. 전체 진행률은43%·6/14이며 로컬 성공을 운영 배포 성공으로 표시하지 않는다.
+담당: 민규. 기존 도구가 전제하는 Supabase CLI2.116.0·Kong2.8.1과 정확한 Origin 계약을 설명한다. 사용 전에 실제 버전·설정 구조·대상을 확인한다. 아래 절차는 전용 로컬 검증용이며 문서 동기화에서 설정 적용·재시작·실요청·원격 배포를 수행하지 않았다.
 
-## 기본 설정과 이전 부분 통과의 원인
+## 기본 설정에서 확인할 차이
 
 고정 CLI 템플릿의 `functions-v1` 서비스는 `/functions/v1/`를 함수 런타임으로 보내며 설정 없는 `cors`와 별도 `request-transformer`를 둔다. 해당 변환기는 함수에 필요한 헤더를 추가하므로 보존한다. [CLI 2.116.0 공식 템플릿](https://github.com/supabase/cli/blob/v2.116.0/apps/cli/src/legacy/commands/start/templates/kong.yml.ts#L182-L204)
 
@@ -18,7 +18,7 @@ Kong의 DB 없는 모드에서는 엔티티의 PATCH/DELETE로 플러그인을 �
 
 내보낸 설정의 `_format_version:2.1`, `_transform:false`, 엔티티 ID와 참조를 유지한다. 특히 `_transform:false`를 누락하거나 true로 바꾸어 자격 증명 변환을 다시 적용하지 않는다. 비활성 서비스·플러그인도 임의 제거하지 않는다. [고정 버전 설정 내보내기 구현](https://github.com/Kong/kong/blob/2.8.1/kong/db/declarative/init.lua#L382-L486)
 
-같은 하네스에서 기존 `tools/local/prepare_edge.py --gateway-probe`를 재사용하고 `tools/local/configure_local_gateway.py`를 구현했다. 기본 읽기 READY 뒤 전용 프로젝트에 `--apply`를 실행해 적용 PASS, 조정 후 실제 요청 PASS를 확인했다. [총괄 인계](../../docs/collaboration/requests/minkyu/2026-10-02-gateway-handoff.md)의 실제 결과와 아래 보존 조건을 따른다.
+기존 tools/local/prepare_edge.py --gateway-probe와 tools/local/configure_local_gateway.py를 사용한다. 읽기 점검 뒤 승인된 격리 대상에서만 명시 적용하고 아래 보존 조건을 확인한다.
 
 1. 대상이 이번 격리 프로젝트의 Kong이며 DB 없는 고정 버전인지 확인한다. 관리 API를 외부에 새로 공개하지 않는다.
 2. 현재 전체 설정을 제한된 경로로 읽어 원본을 메모리 또는0600 임시 파일에 보존한다. 키·자격 증명·전체 설정을 저장소·문서·명령 인수·출력·오류 로그에 넣지 않는다.
@@ -49,10 +49,6 @@ POST 재로드는 실행 중 메모리 설정을 바꾸며 CLI의 생성 템플�
 
 ## 검증 상태의 구분
 
-- 기본 CLI: 이번 실제82확인의 API·인증 흐름은 PASS, CORS10개는 FAIL로 종합 PARTIAL이다. 이전 [부분 통과 이력](../../docs/collaboration/requests/minkyu/2026-09-29-cors-followup.md)도 보존한다.
-- 명시 로컬 모드: scoped 함수 CORS 조정 APPLY PASS. ID·자격 증명·라우팅·설정 보존과 원형 재적용의 의미 일치를 확인했다. 조정 후 같은 실제82확인은 `workflowPassed:true`, `corsPassed:true`, 실패 목록 없음으로 모두 PASS다. 두 실행의 검사 수를 합산하지 않는다.
-- 준비11개·조정 도구6개·probe 자체4개 검사도 PASS이며 실제 HTTP82확인과 별도 증거다. 최초 공유 밖 임시 경로의 BOOT_ERROR503은 `/private/tmp`로 다시 준비해 해결했고 CORS 실패와 구분한다.
-- 자동 완료 상주 실행기의 실제4그룹·195확인과 합성 자료 정리는 PASS다. 실제 PostgreSQL·본래 CLI에서 시작/과거 예약·committed LISTEN 일정 변경·정확한 세션 단절 재접속·정지 중 예약 후 재시작 복구를 확인했다. 관리자 연결의 로컬 결과이며 운영 최소 권한·원격 연결은 NOT_RUN이다. HTTP82확인과 합산하지 않는다.
-- 원격 관리형 환경·영구 재시작 자동 재적용·운영 cron·배포는 NOT_RUN이다. 로컬 성공으로 운영 대상·비밀 설정·프론트 전체 연결이 완료됐다고 설명하지 않는다.
+앱 응답·gateway 변경·실제 요청·재시작 후 재적용·원격 관리형 환경은 각각 검증한다. 설정 파일 생성과 재로드 성공은 전체 CORS 성공이 아니다. 자동 완료 실행기·외부 네이버·AI·행사 수집은 별도 검증 대상이다.
 
-원격 대상의 실제 게이트웨이·허용 Origin·운영 배포·상주 호스트·일일 작업 수치는 별도 입력/검증이 필요하다. 이미 확정된 앱 Origin 경계나204/no-store 계약을 기본 플러그인 결과에 맞춰 완화하지 않는다.
+현재 Origin·호스트·정확한 버전·배포 대상·비밀 주입을 확인한다. 운영 선택값이 확정됐어도 실제 gateway 적용을 뜻하지 않으며 앱의204/no-store·정확한 Origin 경계를 기본 플러그인 결과에 맞춰 완화하지 않는다.

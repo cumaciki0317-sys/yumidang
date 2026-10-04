@@ -15,10 +15,10 @@
 | 공개 검색 | `search_public_posts_v2`, [검색 DB](public-post-search-db.md) | 기존 연령대 wire를 작성자 만 나이 19~99 숫자 범위로 연결하고 연결 행사명 검색 추가. 정확한 주소는 일치 판단에만 사용 |
 | 핵심 서비스 | `create_service_post`·`request_service_post`·`propose_match`·`accept_match`, [핵심 DB](core-service-db.md) | 마감 기본값·핵심 조건 변경·동의 만료/한 명 제한·미선정 종료·취소 후 정보 숨김을 확정 정책과 대조 |
 | 완료 | `confirm_appointment_completion`·건별 예약, [완료 DB](completion-db.md) | 개인 완료 확인과 전체 완료를 구분하고 지연 시 실제 완료 시각 사용 |
-| 후기 | `submit_appointment_review`·공개 적격성, [후기 DB](review-automation-db.md) | 개인 확인 후 선제 제출·미완료 비공개·완료+24시간·칭찬 6개 구성·지표 시점 구분 |
+| 후기 | `submit_appointment_review`·공개 적격성, [후기 DB](review-automation-db.md) | 개인 확인 후 선제 제출·미완료 비공개·한쪽 작성 기한 종료 공개·칭찬6개·확정 당도 산식·지표 시점 구분 |
 | 요약·작업 | [요약 DB](review-summary-db.md), [작업 큐](worker-jobs.md) | 공개 적격성·revision·점유·중간 저장·삭제 원자성 및 실제 정식 적용 상태 확인 |
 
-기존 `exact_location` 같은 혼합 자료에서 주소를 임의 추출하거나 기존 후기·가입 기록을 새 자격으로 자동 승격하지 않는다. 네이버 계정·세션 연결과 추후 계좌 효력·분쟁 판정의 세부 검토는 각 계약에서 구분한다. 코드/SQL을 이번 문서 변경으로 갱신한 것은 아니다.
+기존 `exact_location` 같은 혼합 자료에서 주소를 임의 추출하거나 기존 후기·가입 기록을 새 자격으로 자동 승격하지 않는다. 네이버 계정·세션 연결과 현재 분쟁·제재·동의 철회·보관 정책의 실제 연결는 각 계약에서 구분한다. 코드/SQL을 이번 문서 변경으로 갱신한 것은 아니다.
 
 ## 2. 공통 호출·오류 경계
 
@@ -34,7 +34,7 @@
 `searchPublicPosts({query, filters, cursor}) → {items, nextCursor}`. 일반 탐색은 비로그인·회원 모두 가능하고 AI HTTP 진입점은 별도 로그인 검사를 적용한다. `filters`의 제품 정의는 종현 검색 계약과 연결하며 주변·좌표·반경·거리순 정렬은 제공하지 않는다.
 
 - 일치 판단은 제목·등록 장소명·등록 주소·연결된 행사명에 한정한다. 소개·후기·상세 만남 지점은 검색하지 않는다. 등록 주소는 DB 내부 비교에만 사용하며 주소가 검색어와 같더라도 응답에 추가하지 않는다.
-- 가상 공개 카드는 `postId,title,publicArea,authorDisplayName`만 사용한다. 실제 제품의 비용·일정 카드 필드는 검색 DB 계약에 명시된 공개 필드를 따른다. 비로그인은 시스템 별칭, 로그인은 마스킹 이름이다. `nextCursor`는 마지막 페이지에서 null이다.
+- 가상 공개 카드는 `postId,title,publicArea,authorDisplayName`만 사용한다. 실제 제품의 비용·일정 카드 필드는 검색 DB 계약에 명시된 공개 필드를 따른다. 비로그인은 개인정보 없는 작성자 로그인 가드, 로그인은 마스킹 이름이 목표이며 기존 카드 투영과 대조한다. `nextCursor`는 마지막 페이지에서 null이다.
 - 정확주소·상세지점·전체실명·원본 `exact_location`·주소 일치 조각·내부 검색 레코드는 일반/AI 검색 결과에서 제외한다. 양쪽 확정 당사자도 이 **공개 검색 경로**에서는 같은 최소 카드를 받고 권한 있는 별도 상세 화면에서 추가 정보를 확인한다.
 - 기존 공고의 주소가 분리되지 않았다면 알려진 제목·장소명으로만 일치시킨다. 기존 `exact_location`을 대신 검색하지 않는다. 주소 일치를 통한 위치 추정 가능성이 있으므로 완전한 위치 비밀 보장을 주장하지 않는다.
 - 0건은 성공 `{items:[],nextCursor:null}`이다. 관련 예시: `search_address_anon`, `search_address_member`, `search_empty`.
@@ -68,11 +68,11 @@
 | `completeJob` | `jobId,leaseToken` | `jobId,status:'succeeded'` |
 | `retryJob` | `jobId,leaseToken,availableAt,errorCode` | `jobId,status:'retry_wait'` |
 
-- `(kind,dedupeKey)`는 원자적 유일키다. 요약 키는 프로필·revision·모델/프롬프트 처리 버전을 포함한다. 동일 키+동일 payload는 기존 작업을 반환하며 완료 작업도 재실행하지 않는다. 같은 키의 다른 payload는 STATE_CONFLICT. 보존·정리 기간은 미정이며 먼저 유일성을 삭제해 재실행시키지 않는다.
+- `(kind,dedupeKey)`는 원자적 유일키다. 요약 키는 프로필·revision·모델/프롬프트 처리 버전을 포함한다. 동일 키+동일 payload는 기존 작업을 반환하며 완료 작업도 재실행하지 않는다. 같은 키의 다른 payload는 STATE_CONFLICT. 작업 종료 후 세부 기록30일, 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 검증한다. 먼저 유일성을 지워 재실행시키지 않는다.
 - `queued` 또는 `retry_wait` 중 `availableAt <= DB now`인 작업 하나를 원자적으로 점유한다. 두 worker 경쟁에서 한 명만 새 토큰을 받는다. 다른 후보가 없으면 `job:null` 성공이다. claim 호출자의 시각·lease 만료값을 받지 않는다.
-- `leaseExpiresAt <= DB now`면 만료다. 재점유 시 새 불투명 토큰 발급, attempt 증가. 예시의 1분은 가상값이며 운영 timeout 정책이 아니다. leaseToken은 모델/브라우저에 전달하지 않는다.
+- `leaseExpiresAt <= DB now`면 만료다. 재점유 시 새 불투명 토큰 발급, attempt 증가. 점유 선택값은180초이며 실제 환경 주입·만료 경합은 별도 검증한다. leaseToken은 모델/브라우저에 전달하지 않는다.
 - 완료·재시도는 현재 `running`, 토큰 일치, 만료 전을 모두 검사한다. 잘못된 토큰·만료·재점유된 이전 worker는 STATE_CONFLICT로 거절한다. `succeeded` 작업의 완료 요청도 이 v1 계약에서는 충돌이며 내부 상태 조회로 결과를 확인한다.
-- 재시도는 현재 lease를 폐기하고 `retry_wait`로 이동한다. 실제 재시도 간격·최대 횟수·회복 불가 상태는 운영 미정 사항이다. 도메인 완료·후기 공개 시점은 민규 공통 RPC 판단에 맡긴다.
+- 재시도는 현재 lease를 폐기하고 `retry_wait`로 이동한다. 실제 실패 최대3회·10분~6시간, 예산 부족은 실패 없이1시간 뒤 확인으로 선택했다. 도메인 완료·후기 공개 시점은 민규 공통 RPC 판단에 맡긴다.
 - 실행 의미는 최소 한 번이다. lease는 모델 중복 호출·외부 부작용을 완전히 막지 못하므로 요약 게시 등 실제 부작용도 별도 조건부 저장을 사용한다.
 
 예시: `job_enqueue`, `job_duplicate`, `job_payload_conflict`, `job_claim`, `job_competing_claim`, `job_reclaim`, `job_complete`, `job_stale_token`, `job_expired`, `job_retry`, `job_denied`.
@@ -86,3 +86,9 @@ python3 -m unittest discover -s tests/contracts/minkyu -p 'test_db_foundation.py
 이 검사는 가상 계약의 공개 필드·snapshot 적격성·revision/근거 거절·중복키·lease 경쟁 사례 불변조건과 잘못된 사례를 거절하는 능력을 확인한다. SQL·RLS·실제 경쟁 상태·모델 품질 검증은 아니다. 이 가상 계약 검사에서는 실제 DB·migration 재생·네트워크를 실행하지 않는다. 별도 실행 이력은 영역별 계약·인계에 있고 이번 문서 작업에서 재실행하지 않았다.
 
 후속 실제 연결의 완료 조건은 익명/일반/당사자/내부 권한 테스트, 주소 일치 후 비공개 반환 차단, 같은 transaction의 revision·공개 상태 재검증, 비공개 전환 중 생성 경쟁, 두 worker 동시 claim·만료 토큰 차단, 양쪽 수동 완료·자동 완료 경쟁의 로컬 DB 테스트다. 종현은 이 제안·가상 자료로 자기 파일에서 어댑터를 작성하고 실제 RPC가 생기기 전에는 가상 결과를 운영 성공으로 노출하지 않는다. 실제 RPC 이름·공개 카드는 영역별 계약을 따르고, 새로운 필드·운영 수치·대규모 요약 연결 변경은 후속 계약과 검증으로 반영한다.
+
+## 보관·공개 정책 연결
+
+검토 중에는 작성·기한 진행·새 공개를 보류한다. 이미 공개된 후기는 접수만으로 숨기지 않고 운영자가 임시 비공개를 결정한 때 숨긴다. 정상 동행 인정 후 원래 종료+24시간이 지났으면 즉시 실제 완료한다. 첫 완료라면 그때부터 작성 7일, 이미 완료했다면 남은 기한을 재개하되 최소 24시간을 보장한다. 재개 후 양쪽 제출이면 공개하고 한쪽이면 재개·연장된 작성 기한 종료에 공개한다.
+
+공개 요약 최대300자·현재 표시/재진입 조회·별도 공개 캐시 없음, 적격 후기 전체 분할 처리를 적용한다. 운영 보관 선택은 일반 진단 30일·보안 90일·작업 종료 후 세부 기록 30일·공급사 한도 기간 종료 후 비용 원장 90일이다. 원문·비밀값을 제외한다. 미정산 예약은 해결까지 제한 보관하고 자동 환불·초기화를 하지 않는다. 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 검증한다. 법적 근거·실제 삭제·백업 만료는 별도 확인이며 활성 자료 삭제를 백업 즉시 삭제로 안내하지 않는다.

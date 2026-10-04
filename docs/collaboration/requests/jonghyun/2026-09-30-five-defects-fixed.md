@@ -1,59 +1,35 @@
-# 인수 검토 결함 5건 수정 — 2026-09-30
+# 요약·예산·행사 결함 방지 기준
 
-**F1~F5 수정 및 로컬 재검증 PASS.** 정식 마이그레이션 채택·운영 연결은 여전히 별도다. 커밋·푸시·원격 DB·배포·실제 공급사 호출은 하지 않았다.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-기준: `minkyu/foundation-harness`, `ff9c14fec069dc03b575cfd33d9deb62625fd924`. [이전 실패 보고서](2026-09-30-codex-implementation-review.md)는 당시 근거로 보존한다. 이번 결과는 [하네스](2026-09-30-five-defects-harness.json)와 [실행 근거 JSON](2026-09-30-five-defects-evidence.json)을 따른다. JSON에는 검사별 로그·입력 해시·재생 목록·정리 결과를 담았다.
+F1: 잠금 대기 후와 쓰기 직전 lease/token 검사. F2: 투영 상태→작업→checkpoint/표식 잠금 순서. F3: ModelError(BUDGET_EXHAUSTED) 때 이미 확인한 카드만 재확인 후 partial; 위조 오류를 성공으로 변환 금지. F4: TourAPI totalCount/items/빈페이지정합성 검사, 손상은503·저장 안 함. F5: admission 객체 타입을 CASE 로먼저 확인하고 명시 TRUE 만 저장·오류 시 전체 배치 원복.
 
-## 1. 수정 결과
+## DB·RPC 연결 점검
 
-| 결함 | 수정 | 검증 |
-|---|---|---|
-| F1 점유 만료 후 요약 게시 | SQL03에서 투영 상태와 작업 잠금을 모두 잡은 뒤 토큰·만료를 재검사. 게시·중간 저장은 쓰기 직전에도 만료 확인 | 실제 잠금 대기 중 2초 점유 만료. 게시·중간 저장·원문 조회 모두 `lease_lost`, 저장 결과 0건 |
-| F2 요약·재등록 교착 | SQL03의 잠금 순서를 `투영 상태 → 작업 → 중간 저장/표식`으로 통일 | 실제 source RPC가 투영 잠금을 기다릴 때 기존 refresh RPC가 중복 enqueue까지 완료. 교착 없음·추가 작업 없음 |
-| F3 예산 소진 후 부분 결과 소실 | 실제 `ModelError(BUDGET_EXHAUSTED)` 분류를 유지. 이미 채택한 카드만 `incomplete`로 보내 재확인 후 `partial` 반환 | 일부 결과·미입력 표시 유지, 삭제된 카드 제외, 일반 오류·취소·위조 코드의 가짜 성공 방지 |
-| F4 TourAPI 손상 응답을 0건 처리 | `totalCount` 자료형·`items` 구조·전체 건수와 빈 페이지의 관계를 검사 | 정상 0건·단일 항목 유지. 손상 응답은 503·저장 RPC 호출 0회 |
-| F5 잘못된 행사 비용 저장 | SQL04의 RPC와 CHECK에서 객체 자료형을 CASE로 먼저 확인하고 조건이 명시적 TRUE일 때만 허용 | `{}`·필수 키 누락·null·문자열·숫자·boolean·배열 등 10개 입력 거절, 배치 전체 롤백 |
+기존 서비스·repository·RPC 허용 목록을 대조하고 승인된 담당이 필요한 최소 변경을 한다. 현재 정식 migration과 실제 대상 이력을 비교하여 이미 적용한 제안 SQL을 중복 채택하지 않는다. 파일 존재만으로 배포된 RPC라고 판단하지 않는다.
 
-SQL 변경은 종현 제안 `03_review_summary_worker.sql`, `04_events.sql`에만 반영했다. 민규 소유의 기존 마이그레이션·DB 클라이언트·service-api·config는 수정하지 않았다. 최초 F5 재검사에서 문자열 입력의 JSON 연산 오류를 발견해 자료형 CASE 검사를 보완했고, 그 실패 로그도 근거 JSON에 보존했다.
+HTTP 응답은 `{data,requestId}` 또는 `{error:{code,message,retryable},requestId}`다. RPC에는 HTTP envelope를 중복 추가하지 않는다. `22023` 입력오류, `P0002` 대상없음, `28000` 인증필요, `42501` 권한거절, `40001` 충돌을 실제 문맥에 맞게 매핑하고 SQL 원문/detail을 공개하지 않는다.
 
-새 실제 DB 검사: [summary-lock-regression.mjs](../../../../tests/integration/jonghyun/summary-lock-regression.mjs). 이전 F2 재현은 작업 행을 외부에서 먼저 잠그는 방식이므로 수정 후 회귀로 그대로 쓰지 않는다. 새 검사는 실제 RPC가 내부에서 잡는 순서로 충돌을 만들고 확인한다.
+행사비용 JSON은 `CASE`로 객체 자료형을 먼저 검사하며 조건이 명시적 TRUE일 때만 저장한다. 원자배치 실패를 일부정상자료 저장으로 숨기지 않는다. 요약잠금은 투영상태→작업→중간저장/표식 순서를 맞추고 잠금대기후 점유토큰·만료를 재검사한다.
 
-## 2. 실행 명령과 판정
+## 예약·요약 작업의 연결 경계
 
-Node·Python 명령은 저장소 루트, Deno만 `backend/supabase/functions` 기준이다. 실제 DB 검사는 전용 Colima `yumidang-minkyu` / Supabase `yumidang-minkyu-db` / 로컬 API 55421·DB 55422에서 합성 자료만 사용했다. 로컬 키는 메모리에서 검사 환경 변수로 전달하고 출력하지 않았다.
+자동 완료는 건별 DB 영속 예약과 `completion-runner.mjs`·`completion-scheduler.mjs`를 연결한다. LISTEN/NOTIFY는 변경 알림이며 예약 DB가 기준이다. 시작·연결 복구·정지 후 재시작에서 누락 예약을 다시 읽고 일정 변경·취소·수동 완료·분쟁 상태를 재확인한다. 재접속 5초·DB 쿼리 10초다. 모델 준비나 일일 작업을 기다려 자동 완료·후기 공개를 막지 않는다.
 
-| 판정 | 명령 | 결과 |
-|---|---|---|
-| PASS | `node --test tests/functions/jonghyun/*.test.mjs tests/ai/jonghyun/*.test.mjs tests/integration/jonghyun/*.test.mjs` | **265/265** |
-| PASS | `deno check --no-remote ai-chat/index.ts places/index.ts event-sync/index.ts review-summary-worker/index.ts scheduled-jobs/index.ts` | 5개 진입점 |
-| PASS | `python3 -B tests/database/jonghyun/run_proposals.py --all` | 제안 SQL 검사 **5/5**, 롤백 |
-| PASS | `python3 -B tests/database/jonghyun/run_minkyu_regression.py "<제안 SQL 5개 쉼표 목록>" "<민규 SQL 검사 8개 쉼표 목록>"` | **8/8** |
-| PASS | `npx --offline supabase@2.116.0 db reset --local --workdir <임시 applied 폴더>` | 기존 **28개 + 제안 5개 = 33개** 처음부터 재생 |
-| PASS | `python3 -B tests/database/jonghyun/run_proposals.py --test <검사 SQL> ...` | 33개 적용 상태에서 검사 **5/5**, 제안 중복 적용 없음 |
-| PASS | `python3 -B tools/local/run_database_tests.py --run` | 기존 SQL **7개 + 동시성 6개** |
-| PASS | `node --test tests/integration/jonghyun/summary-lock-regression.mjs` | 새 만료 3경로·교착 1경로, 1개 통합 테스트 |
-| PASS | `node --test tests/integration/jonghyun/<아래 파일명>.mjs` | 기존 통합 7파일 **14/14** |
+행사·후기 요약 작업은 한국시간 매일 00:01 등록 후 분리 실행한다. `POST /functions/v1/scheduled-jobs/daily`·`review-summary-worker`의 내부 Bearer와 사용자 JWT를 혼용하지 않는다. 실패 영역만 재시도한다.
 
-기존 통합 파일: `review-policy-e2e`(8), `ai-budget-concurrency`(1), `summary-worker-concurrency`(1), `summary-worker-rest`(1), `ai-discovery-rest`(1), `events-rest`(1), `ai-event-discovery-rest`(1). 실제 DB/REST 연결을 검증했으며 모델 응답은 합성이다.
+요약 작업은 실제 실패 최대 3회·10분부터 최대 6시간 재시도, 예산 부족은 실패로 세지 않고 1시간 뒤 확인한다. 10작업·60초·점유180초·동시 실행기1개·자동 점유연장 없음이다. 입력12,000자·후기20개씩·중간4개 병합·단계당3호출·출력800토큰을 적용할 설정을 대조한다. 일일 호출1회·75초·내부정리20건이며 남은 작업은 재개한다.
 
-초기 실행 폴더에는 기존 28개 SQL과 원본 config를 복사했고, 적용 폴더에는 수정된 제안 5개만 임시 migration으로 추가했다. 저장소 migration/config는 보존했다. 일반 준비 도구에 미커밋 SQL을 자동 포함시키지 않았다.
+`sourceRevision`은 큰 정수의 정규 십진 문자열로 전달한다. 작업의 모델·프롬프트 버전과 checkpoint를 비교하고 원문을 큐·중간 저장에 복제하지 않는다. 조회·중간 저장·게시에서 현재 토큰과 점유 만료를 확인하고 잠금 대기 후·쓰기 직전에도 재확인한다. 게시·중간 저장 삭제는 원자 처리하며 같은 작업/revision의 재호출로 내용·시각·알림을 중복 반영하지 않는다. 정상 양보와 예산 대기는 실제 실패와 분리한다.
 
-## 3. 보존·잔여 범위
+작업 처리 세부 내역은 종료 후30일, 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제조건을 개발 검증한다. 요약 중간자료는 완료·폐기·원문 변경·실패 종결의 정리와 정상 재개 보존을 구분한다.
 
-- 이전 검토 입력 134개 중 변경은 허용된 코드·SQL·검사 **8개**뿐이다. 나머지 **126개**는 SHA-256 동일하다. 기존 검토 근거도 보존했다.
-- 새 파일은 실제 DB 회귀 검사, 이 보고서, 하네스, 근거 JSON **4개**다. 소유권 검사 대상은 총 **12개**, 작업자는 `jonghyun`이다.
-- **정리 PASS:** 사용자·프로필·공고·약속·후기·작업·예약·행사·중간 저장·요약 모두 0건. DB를 기준 28개로 복구한 뒤 잔존 자료 0건 재확인. Supabase·전용 Colima 모두 정상 종료했고 볼륨은 보존했다.
-- **PARTIAL:** 전체 서비스 인수·운영 준비. 이 5건의 PASS를 출시 완료로 확대하지 않는다.
-- **BLOCKED:** 민규 정식 반영 R1~R7/M1~M6, 팀 결정 T1~T5는 기존 요청대로 대기한다. 제안 운영 수치·요금·보관·품질을 확정하지 않았다.
-- **NOT_RUN:** 실제 외부 AI·장소·행사, 브라우저, 이번 변경 후 Edge 재실행, 원격 DB, 배포, 커밋·푸시.
-- 이전 검토의 service-api 타입 오류와 gateway CORS **FAIL**은 이번 5건 밖이다. 수정·재검사하지 않았으며 해결됐다고 표시하지 않는다.
+## 연결 파일
 
-## 4. 어느 브랜치에 커밋할지
+아래는 소스·계약을 대조할 경로이며 파일 존재나 이름이 현재 정책 구현 완료를 뜻하지 않습니다.
 
-현재 폴더는 실제로 **민규 브랜치 `minkyu/foundation-harness`**에 있다. 따라서 여기서 브랜치를 바꾸지 않고 커밋하면 민규 브랜치에 기록된다. 폴더 이름은 커밋 대상을 결정하지 않고 현재 체크아웃된 브랜치가 결정한다.
+- [summary-lock-regression.mjs](../../../../tests/integration/jonghyun/summary-lock-regression.mjs)
 
-**추천: 현재 HEAD를 기준으로 새 종현 인계 브랜치를 만들고, 그 브랜치에서 변경을 구분해 커밋한 뒤 민규 브랜치로 통합한다.** 현재 민규 기반을 그대로 잇기 때문에 민규의 기존 커밋을 잃지 않는다. 과거 종현 브랜치로 단순 전환하거나 현재 미커밋 파일을 덮어쓰는 방식은 피한다.
+## 확인할 범위
 
-이번 폴더에는 종현 구현뿐 아니라 이전 승인된 후기 정책 변경도 섞여 있다. 커밋 전 기존 후기 정책 변경, Claude 구현, 이번 5건 수정을 파일·변경 단위로 구분해야 한다. `git add .`로 전체를 한 번에 묶지 않는다. 팀이 이 브랜치를 공동 통합 브랜치로 쓰기로 명시하면 민규 브랜치에 공유하는 것도 가능하지만, 폴더 위치만으로 그 선택을 확정하지 않는다.
-
-로컬 `origin/minkyu/foundation-harness` 참조와 HEAD는 동일했다. 이번에는 원격 fetch/최신 원격 HEAD 확인을 하지 않았다. 브랜치·Git 인덱스·커밋·푸시 상태도 바꾸지 않았다.
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

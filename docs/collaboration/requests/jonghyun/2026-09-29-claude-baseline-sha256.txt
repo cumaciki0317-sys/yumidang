@@ -1,39 +1,8 @@
-# 2026-09-29T13:08Z 작업 시작 시 미커밋 37개 경로의 SHA256 (HEAD ff9c14f). 확인: shasum -a 256 -c 아래 줄들(주석 제외)
-# 종료 시 변경 4개(설계 파일·jonghyun.md·review-summary.md·scheduled-jobs/index.ts)는 인계 문서 ① 참조
-790ef703f2773644959b30a8bfcb0bc561973190254617c75479379570ca5b27  AGENTS.md
-e93780998d643d496df8ee6860896a0d3ab0ec231bdd8433d0e45350a0d30c56  PLAN.md
-0d09de14bd64c5253fafe3c5ed35a3d009a1b328869968d7cbe108ec789035b0  PLAN_상세설계.md
-bcdcf46188df21d819b1b89e20a2bdfcaf7d703b076591e41446d3f8b7260b9d  backend/README.md
-f7474c6ca0222fb91497163f00af631b1f7691f79c867a298813e2c6d247b29d  backend/contracts/completion-db.md
-ad662bdadbbd24390da6de29a9893dc50faf3f34dce405425ad4c5616157a706  backend/contracts/review-automation-db.md
-5052defe3dae53bbc9150f77aeb804c858618bea9a97d6d86849ed2c91e4e123  backend/contracts/review-summary-db.md
-f3bf289f994cf7ae2e721e741e75b94b61d399eca046ab5c8b35d5f873a2d032  backend/contracts/review-summary.md
-8fe884cfc321a63affed1b17d138fb286242eb433ee09bf2d2067f7e79134776  backend/contracts/reviews.md
-6fe5c25d040d4493b7fd6eec6b303c6c0c9af0f26abe70f4b261a308d4667102  backend/contracts/service-api.md
-bfe9eb358051efdb136e5c0cff0a1decfc773e9970989000206df51c10cf380b  backend/supabase/functions/_shared/config/env.ts
-fb4ab4e6f9b2b33505a9b3d3cf28f7d57baece356b9aec275949b6d9115acee4  backend/supabase/functions/_shared/db/internal-client.ts
-14d5fdf2499a8635cd2393432445cfd89a479aca3be0e81830577b3300e0fafb  backend/supabase/functions/_shared/db/repositories/reviews.ts
-3bedaabb9ae34f6b04c03c75ced5a2dc4c3248d6cb9ba49af33336699b959b2b  backend/supabase/functions/_shared/services/review-service.ts
-fffb9d9524569e95435cd1cbf8d02f50e1a5b77176cc03aaad560f27cf52790a  backend/supabase/functions/scheduled-jobs/index.ts
-84da73ba95f705643828bbec1e739dce172c7c4e020fa8e871592ab691216a5c  backend/supabase/functions/service-api/index.ts
-dfab9ebe766a568949ab0da9a93bf1a4e1035a34ff015fa5d3639ff6222522f4  backend/supabase/functions/service-api/routes.ts
-7f7b652a1897b7e9ef71e5d68ff9cdc8485891a8067e3c57fec0aa849fb6fe36  docs/collaboration/jonghyun.md
-9163e59ff09d945cbe58bc470ebfbbb4f1c453fd9df68ae744a3a37c2686c976  docs/collaboration/minkyu.md
-30efe84cb5ca4b6bf4f02e54552b5fb2be5bce8d41ed1580dc407c4841ed7542  docs/planning/design/IA.md
-7f387e8340b0ef557998f4a7c4ee33677a1e33e014cac788180e1ac4b08649ed  docs/planning/design/USER_FLOW.md
-bee0089675b07dbb944238ea69427f64d6ca92175678b19a18bfbd8d1d4c10b3  tests/database/minkyu/review_automation.sql
-3cee39ffb3ff1b1df2bd924e9e0406e9c9e6233dc057a60a550394ad4fc21a27  tests/database/minkyu/review_summary_storage.sql
-f2422b0bd53b1fe2a6e7801f6718f9b2ceeda875d82642cf570a05f5fc5b8fe6  tests/functions/jonghyun/scheduled-jobs.test.mjs
-2933c09ea76caeb23c6982446fd4e34d6921f8ed47f8ab9ca8feef54b45a7b62  tests/functions/minkyu/auth_db.test.ts
-768ba2d207249a56991eef289a6afbeac2b2e0703f3eda7a827a90e562a96958  tests/functions/minkyu/service_api.test.ts
-e71b1d55909b888497c23d26caa604415af0010fbe861306a0dc2c9c95459fda  260929_종현담당_PLAN.md
-62f1407bf8a2bef19f502c5b1b03ea1705e3ebf26380fb0e3e14c798831606ae  backend/package-lock.json
-f8c99ef370432028e1cdf700f0750bbe17bfda0e11b33b8373d9b5866bce54fc  backend/package.json
-159794276b3c175ccb976619b02e1fb0bbd867ed05de823bc5f7b1b19a344250  backend/supabase/functions/_shared/jobs/completion-scheduler.mjs
-2d1447564edeb7524d686a507c22b4fc7820074f5d6768dbd947d239cb1503d0  backend/supabase/functions/scheduled-jobs/completion-runner.mjs
-8cd13df2cfa9e92a8a3ea0e21d2917cdc32d03441cb5a2957665fbbee60366b2  backend/supabase/migrations/20260929120000_review_release_and_completion_reservations.sql
-00974509a4d60ac9e2ad7c08d38885f8422d0df3d1f3e01ecfa32afcf3318e05  docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md
-2d2d54e6021d0acfc7dd8eeb116b9b90394c9f657b1df0db78ad979e710458f2  docs/collaboration/requests/jonghyun/2026-09-29-review-policy-harness.json
-f895d2c759e308062a3cd415df363868dafdba715f6ae90f3caada47e143bd7e  tests/database/minkyu/review_release_policy.sql
-fd58f02e82ae671c443a19cc8e4b3abf1f17ea3e5015d4683dc1834ec91da929  tests/functions/jonghyun/completion-scheduler.test.mjs
-792b0c011cc216d45172439947ca46a4d45f7b40ca4a2123a3b16dbe3b304bc4  tests/integration/jonghyun/review-policy-e2e.mjs
+# 현재 문서 연결 안내
+
+이 경로의 이전 작업 기준 해시 목록은 현재 문서에서 제거했습니다.
+현재 기준: ../../../../정책.md
+현재 협업: ../../README.md
+
+다음 구현의 무결성 확인은 그 작업의 실제 HEAD와 허용 파일에서 새로 계산합니다.
+이 파일은 shasum 검증 입력이나 현재 소스의 검증 완료 근거가 아닙니다.

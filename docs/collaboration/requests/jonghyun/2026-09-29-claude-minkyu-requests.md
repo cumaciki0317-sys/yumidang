@@ -1,71 +1,57 @@
-# 종현 → 민규 연결·정책 적용 요청
+# 종현과 민규 연결 요청
 
-현재 정책은 [정책.md](../../../../정책.md), 당시 구현·검증 근거는 lane별 기록([C](2026-09-29-claude-lane-c-notes.md), [E](2026-09-29-claude-lane-e-notes.md), [S](2026-09-29-claude-lane-s-notes.md))과 [9월 30일 통합 인계](2026-09-30-jonghyun-integration-handoff.md)를 따른다. 이 요청은 남은 연결과 최신 정책 적용을 관리한다. 아래 제안 SQL·기존 API를 최신 정책 검토 없이 그대로 채택하지 않는다. 실제 회원 AI 원문 전송은 공급사 보관 조건 검토·사용자 확인 전 보류한다. 이번 문서 작업은 코드·DB·배포 변경이 아니다.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-## R1. 제안 SQL 5개의 검토·정식 마이그레이션 채택
+민규는 정식 SQL·internal/user/public client 허용목록·service-api·config·환경 주입을, 종현은 adapter/repository/service 를 연결한다. reserve/settle_ai_budget, 요약 source/checkpoint/publish, 행사 upsert/list, 성향 get/set 을 현재 정식 계약에 대조한다. 채택된 SQL 을 다시 등록하지 않는다. GET /events·/me/traits·공개프로필 성향과 daily 내부 진입점의 실제 경로를 확인한다.
 
-| 순서 | 제안 파일 | 내용 | 권한 |
-|---|---|---|---|
-| 1 | [01_ai_budget.sql](2026-09-29-claude-proposed-sql/01_ai_budget.sql) | AI 호출 예산 원장·예약(원자 예약/정산, 사용량 불명은 예약 전체 소비) | service_role |
-| 2 | [02_profile_traits.sql](2026-09-29-claude-proposed-sql/02_profile_traits.sql) | `private.profile_traits`, 본인 성향 저장/조회, 공고 작성자 성향 조회 | authenticated(익명 28000) |
-| 3 | [03_review_summary_worker.sql](2026-09-29-claude-proposed-sql/03_review_summary_worker.sql) | 작업 큐 실패 횟수 분리·종결 상태, 비공개 중간 저장, 점유 확인 요약 RPC, 원자 게시·멱등 표식, 원문 변경 시 중간 저장 삭제 | service_role |
-| 4 | [04_events.sql](2026-09-29-claude-proposed-sql/04_events.sql) | `private.events`, `upsert_events`(service_role), `list_public_events`(anon·authenticated) | 표 참조 |
-| 5 | [05_event_filter_values.sql](2026-09-29-claude-proposed-sql/05_event_filter_values.sql) | 행사 필터 값 목록(제공처별 지역·분류 원문 값, 취소만 가진 값 제외) — 사용자 결정 U9 | anon·authenticated |
+## 가입·권한 연결
 
-- 아래 파일은 검토 대상 원본이다. 현재 브랜치의 마지막 정식 마이그레이션 이후 충돌하지 않는 새 버전을 정하고, 이미 채택된 항목은 중복 생성하지 않는다. 과거 날짜를 새 마이그레이션 순서로 고정하지 않는다.
-- 파일에는 BEGIN/COMMIT이 없다. 채택 시 트랜잭션 경계와 최신 정식 이력 순서를 검토한다. 03은 기존 `worker_jobs_status_check`, `worker_jobs_check1` 제약 이름을 교체하고 `claim_job`·`complete_job`·`retry_job`·`private.invalidate_appointment_review_summaries`·`private.refresh_review_summary_state`를 `create or replace`한다(기존 outbox 동작 보존).
-- **실제 검증(2026-09-30, 전용 로컬 DB):** 28개 + 제안 4개를 처음부터 재생 PASS. 제안 적용 상태에서 `tools/local/run_database_tests.py --run` PASS(SQL 7 + 동시성 6), `review-policy-e2e.mjs` 8/8, 종현 SQL 4개·실제 다중 세션 2개·PostgREST 경유 3개 PASS. 원격 DB 적용은 NOT_RUN.
-- 위 9월 30일 실검증의 4개 제안 범위와 추가 05를 구분한다. 기존 성공 기록은 아래 최신 정책 변경의 검증이 아니다.
-- 완료 조건: 정식 SQL로 로컬 재생 + `python3 -B tests/database/jonghyun/run_proposals.py --all`이 제안 없이도(정식 적용 후에는 `--proposal` 없이 `--test`만) PASS.
+네이버 이름·성별·생일·출생연도로 여성·만 19세 이상 자격을 확인하고 누락·확인 불가는 가입 보류한다. 네이버 계정당 유미당 계정 하나이며 사진 필수·성향 선택·명시적 가입 완료를 적용한다. 다른 계정 연결·활동 이전은 제공하지 않는다.
 
-## R2. RPC 허용 목록
+Supabase Auth의 `/auth/v1/user`로 세션을 검증하고 사용자 RPC에는 검증한 사용자 JWT를 전달한다. 서버 내부 역할과 사용자 권한을 혼합하지 않는다. 인증 헤더가 없을 때만 익명 경로를 사용하고 잘못된 인증·Auth 장애를 익명으로 재시도하지 않는다. 클라이언트의 `caller`·`userId`는 권한 근거가 아니다.
 
-| 대상 | 추가할 이름 | 이유 |
-|---|---|---|
-| `_shared/db/internal-client.ts` | `reserve_ai_budget`, `settle_ai_budget`, `yield_job`, `fail_job`, `supersede_job`, `load_review_summary_source`, `load_review_summary_checkpoint`, `save_review_summary_checkpoint`, `discard_review_summary_checkpoint`, `mark_review_summary_insufficient`, `publish_review_summary_for_job`, `upsert_events` | 예산 예약(ai-chat·worker), 요약 worker, event-sync 저장. 현재는 전송 전 `ACCESS_DENIED` → ai-chat unavailable, worker `DB_RPC_NOT_ALLOWED`, event-sync 500 |
-| `_shared/db/user-client.ts` | `get_post_author_traits`, `get_my_profile_traits`, `set_my_profile_traits`, `list_public_events`, `list_event_filter_values` | AI 탐색 후보 성향·본인 성향, S15-2 저장, 회원 행사 조회 |
-| `_shared/db/public-client.ts` | `list_public_events`, `list_event_filter_values` | 비로그인 행사 조회 |
+비로그인 작성자 영역은 개인정보 없는 모자이크 로그인 가드다. 실명·사진·프로필 원문을 응답한 뒤 CSS로 가리지 않는다. 로그인 미확정 상대는 마스킹, 확정 당사자는 전체 이름·상세 위치, 취소 후 즉시 재마스킹한다. 차단·제재·탈퇴 상태도 각 RPC에서 다시 검사한다.
 
-운영 코드는 이 목록을 우회하지 않는다(테스트만 전용 허용 목록 transport를 명시적으로 만든다). 완료 조건: `tests/functions/jonghyun/ai-chat-http.test.mjs`·`review-summary-worker.test.mjs`·`event-sync.test.mjs`에서 허용된 요청의 실제 연결과 미허용 요청 차단을 모두 검증한다. 기존 실패 기대값을 성공으로 바꾸는 것만으로 연결 성공을 판단하지 않는다.
+## 검색 계약과 현재 연결 요구
 
-## R3. HTTP 경로·함수 설정
+`search_public_posts_v2(p_filters,p_cursor,p_limit)`와 기존 검색 service/repository를 재사용한다. 제목·등록 장소명·등록 주소·연결 행사명을 검색하고 소개·후기·비공개 상세 지점은 제외한다. 공개 지역은 동까지이며 검색 일치가 상세 주소 표시 권한을 주지 않는다.
 
-- `service-api`: 공개 `GET /events`(인증은 공고 검색과 동일, 쿼리 ↔ `createRpcEventRepository(db).listPage`), S15-2·S06 성향 저장 경로(`set_my_profile_traits`; 22023→400, P0002→404, 28000→401). 상세 계약은 lane E M4, lane C 4절.
-- **2026-09-30 사용자 결정 U13:** 성향 전용 조회는 유지하고, **공개 프로필(S14) 응답에만 성향(관심사·대화 방식·MBTI)을 추가**한다. `get_my_profile`은 바꾸지 않는다.
-- `config.toml`/배포: `ai-chat`(회원 JWT), `places`(회원 JWT), `event-sync`·`review-summary-worker`·`scheduled-jobs`(내부 비밀 Bearer — gateway JWT 검사와 충돌하지 않게) 등록. 기존 gateway CORS PARTIAL은 여전히 미해결이다.
-- 일일 실행 등록: `POST /functions/v1/scheduled-jobs/daily {limit}`을 **매일 00:01 Asia/Seoul**(사용자 결정 U4)에 호출하는 cron(pg_cron+net 또는 외부 스케줄러). limit과 운영 수치는 [운영값 제안](2026-09-30-operational-values-proposal.md) 검토 후 확정. `TOUR_API_KEY_FORMAT=decoded`도 운영 환경에 입력. 중복 호출은 DB dedupe·upsert·점유로 무해하다(가상 검사).
+`authorAge`는 `"all" | {min:number,max:number}`이며 숫자는 만 19~99세 양 끝을 포함한다. 전체에는 99세 상한을 적용하지 않는다. HTTP의 `authorAgeMin/Max` 두 정수를 같은 객체로 전달하고 한쪽 누락·소수·추가 키·역전 범위를 거절한다. 비로그인은 일정·나이 상세 필터 모두 전체만 허용한다. 과거 나이 enum은 현재 화면 선택지로 사용하지 않는다.
 
-## R4. 환경 변수 이름(`.env.example`·배포 주입, 값 없음)
+기본 `created_desc`, 선택 `starts_asc`이며 모집 상태 전체가 기본이다. 사용자 선택보다 기간·모집 그룹을 앞세우지 않는다. 목록은 10개씩 추가 조회한다. 커서에는 필터·정렬과 마이크로초 정밀도 위치를 결합하고 변경된 조건의 커서를 거절한다. DB 결과를 어댑터에서 다시 정렬하거나 미지원 조건을 조용히 버리지 않는다.
 
-- 모델: `AI_RETENTION_DECISION_ID`(팀 보관 검토 결정 참조), `AI_COST_EVIDENCE_ID`(추가 지출 0원 계정 근거 참조), `AI_BUDGET_LEDGER_ID`, 선택 `POTENS_USAGE_INPUT_FIELD`/`POTENS_USAGE_OUTPUT_FIELD`(확인된 token_usage 필드명). 기존 `POTENS_API_KEY`·`POTENS_API_BASE_URL`·`POTENS_MODEL`·`UPSTREAM_TIMEOUT_MS`.
-- AI 탐색: `AI_CHAT_MAX_MESSAGES`, `AI_CHAT_MAX_MESSAGE_CHARS`, `AI_CHAT_MAX_TOTAL_CHARS`, `AI_CHAT_MAX_OUTPUT_TOKENS`, `AI_CHAT_SEARCH_PAGE_SIZE`, `AI_CHAT_MAX_SEARCH_PAGES`, `AI_CHAT_RECHECK_MAX_PAGES`, `AI_CHAT_MAX_RESULT_CARDS`, `AI_CHAT_MATCH_BATCH_SIZE`, `AI_CHAT_MAX_MATCH_CALLS`, `AI_CHAT_MATCH_MAX_OUTPUT_TOKENS`.
-- 요약 worker: `REVIEW_SUMMARY_WORKER_MAX_JOBS_PER_RUN`, `REVIEW_SUMMARY_WORKER_TIME_BUDGET_MS`, `REVIEW_SUMMARY_LEASE_SECONDS`, `REVIEW_SUMMARY_RETRY_MAX_ATTEMPTS`, `REVIEW_SUMMARY_RETRY_BASE_DELAY_MS`, `REVIEW_SUMMARY_RETRY_MAX_DELAY_MS`, `REVIEW_SUMMARY_BUDGET_DEFER_MS`, `REVIEW_SUMMARY_MAX_INPUT_CHARS`, `REVIEW_SUMMARY_MAX_REVIEWS_PER_CHUNK`, `REVIEW_SUMMARY_MERGE_FAN_IN`, `REVIEW_SUMMARY_MAX_OUTPUT_TOKENS`, `REVIEW_SUMMARY_MAX_OUTPUT_CHARS`, `REVIEW_SUMMARY_MAX_CALLS_PER_STEP` + 기존 `REVIEW_SUMMARY_MODEL_VERSION`(모델 표식 `potens.<POTENS_MODEL>`과 같아야 함)·`REVIEW_SUMMARY_PROMPT_VERSION`.
-- 장소·행사: `PLACES_PAGE_SIZE`, `EVENT_SYNC_PROVIDERS`, `EVENT_SYNC_MAX_PERIOD_DAYS`, `EVENT_SYNC_MAX_PAGE`, `EVENT_SYNC_PAGE_ROWS`.
-- 일일 실행: `EVENT_SYNC_DAILY_PROVIDERS`, `EVENT_SYNC_DAILY_TIME_ZONE`, `EVENT_SYNC_DAILY_WINDOW_DAYS`, `EVENT_SYNC_DAILY_MAX_PAGES`, `EVENT_SYNC_DAILY_TIMEOUT_MS`, `DAILY_SUMMARY_WORKER_MAX_INVOCATIONS`, `DAILY_SUMMARY_WORKER_TIMEOUT_MS`.
+반환 카드의 `canApply`는 실제 가입·사진·차단·제재·모집 상태를 반영하는 안내이며 첫 메시지 전송 때 다시 검사한다. 비로그인 작성자 가드에 실제 개인 정보를 보내지 않는다. 오류 응답은 0건과 구분하고 SQL 오류·원문을 노출하지 않는다.
 
-기존 구현의 필수 환경값 부재 시 해당 기능을 not_configured/unavailable로 두고 다른 기능, 특히 후기 공개를 막지 않는다. 운영 수치는 팀 검토 상태이며 코드 기술 한도·합성 테스트값을 서비스 정책으로 승인하지 않는다. 매일 00:01 Asia/Seoul, Sonnet 5 선택, 요약 자동 TTL 없음은 이미 확정되어 재질문하지 않는다.
+## AI 탐색 연결
 
-## R5. 민규 소유 계약 문서 동기화
+`POST /functions/v1/ai-chat`는 회원 기능이며 요청의 `clientRequestId`, `messages`, `currentFilters`를 검증한다. 응답의 `results`, `no_results`, `needs_clarification`, `unavailable`을 구분한다. `partial`은 확인한 카드가 있을 때만 일부 확인 결과로 안내하며 확인 카드가 없으면 확인 미완료다. 설명 생성 실패에는 실제 확인 카드와 정형 안내를 제공한다.
 
-`worker-jobs.md`(kind 확장 없음, `failed_attempts`·`failed`/`superseded`·`yield_job`/`fail_job`/`supersede_job`), `review-summary-db.md`(중간 저장·점유 확인 RPC·게시 표식), `core-service-db.md`(성향 테이블·RPC), `service-api.md`(새 경로). 종현 소유 `search.md`·`ai-chat.md`·`review-summary.md`는 이번에 갱신했다.
+메시지 합계 20개·각 500자·전체 4,000자, 후보 10개씩 최대 3쪽·표시 최대 5개다. 화면 메모리만 사용하고 종료·로그아웃 시 삭제한다. 반환 직전 현재 공개 조건을 다시 확인하며 공개 정보 변경은 최신 카드로 바꾸고 낡은 설명을 제거한다. 성향 근거 변경·권한 상실 카드는 제외한다. 미등록 성향은 확인 필요로 표시하고 의미 불일치·조회 실패를 미등록으로 바꾸지 않는다.
 
-## R6. `service-api/routes.ts` Deno 타입 오류 (2026-09-30 발견)
+입력 개인정보는 전송 중단·수정 안내, 출력 개인정보는 답변 숨김·사용자 재시도 1회 후 반복 시 일반 탐색 안내다. 일시 오류 자동 재시도는 1회다. AI 신고는 해당 답변 또는 캡처 하나를 제출 전 확인하고 전체 대화를 자동 첨부하지 않는다.
 
-Deno 2.9.7 `deno check --no-remote service-api/index.ts`가 `service-api/routes.ts:155`(`/internal/maintenance` 경로)에서 실패한다. 반환 객체의 `summary`가 `{ code?: undefined; retryable?: undefined }` 형태로 추론되어 `JsonValue`(undefined 불가)와 맞지 않는다. 실행 동작에는 영향이 없지만(로컬 Edge에서 maintenance 호출 200 확인) 타입 검사가 막힌다. 선택 필드를 조건부 spread로 만들거나 반환 타입을 명시하는 수정을 요청한다. 이 파일은 종현 작업에서 수정하지 않았다(기준선 해시 동일).
+탐색 AI와 후기 AI 각각 가입 필수 동의는 제품 의도다. 가입 후 철회 요청을 받으면 해당 AI의 신규 전송을 중단하고 관련 요약을 숨기며 일반 동행·계정은 유지한다. 법적 정합성 확인 전 가입 차단·실제 회원 원문 외부 전송을 시행하지 않는다. 별도 첫 이용 팝업을 추가하지 않고 AI 화면에 설명을 둔다.
 
-## R7. 로컬 gateway CORS 재현 기록 (2026-09-30)
+## 예약·요약 작업의 연결 경계
 
-임시 Edge 실행에서 `OPTIONS /functions/v1/ai-chat`에 허용되지 않은 Origin을 보내도 게이트웨이가 200과 `Access-Control-Allow-Origin: *`를 돌려줬다. 기존 민규 Edge 인계의 CORS 미충족과 같은 현상이며, 종현 함수 자체의 Origin 검사는 게이트웨이 뒤에서만 동작한다. 운영 gateway 정책 결정이 필요하다.
+자동 완료는 건별 DB 영속 예약과 `completion-runner.mjs`·`completion-scheduler.mjs`를 연결한다. LISTEN/NOTIFY는 변경 알림이며 예약 DB가 기준이다. 시작·연결 복구·정지 후 재시작에서 누락 예약을 다시 읽고 일정 변경·취소·수동 완료·분쟁 상태를 재확인한다. 재접속 5초·DB 쿼리 10초다. 모델 준비나 일일 작업을 기다려 자동 완료·후기 공개를 막지 않는다.
 
-## R8. 최신 답변에 따른 현재 적용 요구
+행사·후기 요약 작업은 한국시간 매일 00:01 등록 후 분리 실행한다. `POST /functions/v1/scheduled-jobs/daily`·`review-summary-worker`의 내부 Bearer와 사용자 JWT를 혼용하지 않는다. 실패 영역만 재시도한다.
 
-- **인증·프로필:** 네이버만 사용한다. 이름·성별·생일·출생연도 필수, 여성 만 19세 이상, 누락·확인 불가 보류, 네이버 계정별 계정 하나다. 사진 필수·성향 선택을 연결하고 재로그인 자격 변동·복구 제한을 반영한다. 이메일 배지는 미래 검토다.
-- **무료·공개:** 현재 무료 공고만 제공한다. 유료 신청·제안의 1원 인증은 추후 도입 시 필수이며 지금 화면·서버에서 유료 흐름을 다시 켜지 않는다. 별칭/마스킹/확정 당사자 전체 이름, 동 공개/정확한 주소 당사자 공개와 취소 즉시 재마스킹을 일관되게 적용한다.
-- **검색:** 연결 행사명도 공고 검색 대상에 포함한다. 작성자 만 나이 19~99 직접 범위·전체, 비로그인 나이 전체, 등록일 최신순 기본/시작일 빠른순 선택, 전체 상태 기본을 유지한다.
-- **공고·매칭:** 모집 마감은 미입력 시 시작 시각이며 시작보다 늦을 수 없다. 신청 거절은 재신청 불가, 본인 철회는 가능하다. 최종 동의 거절·철회·만료는 신청을 유지하고 시작 전 재요청할 수 있다. 공고당 최종 동의 대기 하나, 요청 후 24시간/시작 중 이른 만료, 수동 모집 마감 후 기존 신청자의 동의 요청·재요청, 확정 시간 겹침 차단을 반영한다.
-- **완료·후기:** 예상 종료 후 본인의 완료 확인으로 선제 후기 작성 가능, 실제 동행 완료는 양쪽 확인 또는 종료+24시간 자동 처리다. 완료 전 비공개, 실제 완료+7일 작성 기한, 양쪽 후기+완료 시 즉시/한쪽은 실제 완료+24시간 공개다. 당도는 상대 후기 열람 가능 시, 완료 횟수는 실제 완료 즉시 반영하며 계산식은 팀 검토다. 신고만으로 비공개하지 않는다.
-- **AI·보관:** 근거 있는 추천 이유·주의점 방향을 반영하되 반환 직전 재확인·일부 결과·실패 세부 동작과 품질 기준은 팀 검토다. 입력 개인정보 발견 시 전송 중단, 출력 발견 시 숨김·재시도, 첫 이용 전 고지·확인을 구현 대상으로 둔다. 실제 회원 원문은 보관 조건 확인·사용자 확인 전 전송하지 않는다. 요약 중간 결과 자동 TTL을 추가하지 않는다. 원장 보존기간·교체·운영 한도를 임의 확정하지 않는다.
-- **행사:** 진행 중→예정→종료와 최근 시작/빠른 시작/최근 종료 순서를 반영한다. 서울 연결 조건·연결 여부는 팀 검토다. 공식 KOPIS 전국 전체 공연 Top 10 기본/뮤지컬 전환, 어제까지 최근 7일·매일 갱신을 별도 연결한다. API의 실제 지표·기간·장르 응답을 확인한다.
-- **신고·분쟁:** 일반 신고 확인용 운영자 고객 DB 채팅 직접 조회를 만들지 않는다. 당사자가 제출한 스크린샷만 확인하며 접근·보존·삭제·법률 예외는 팀 검토다.
+요약 작업은 실제 실패 최대 3회·10분부터 최대 6시간 재시도, 예산 부족은 실패로 세지 않고 1시간 뒤 확인한다. 10작업·60초·점유180초·동시 실행기1개·자동 점유연장 없음이다. 입력12,000자·후기20개씩·중간4개 병합·단계당3호출·출력800토큰을 적용할 설정을 대조한다. 일일 호출1회·75초·내부정리20건이며 남은 작업은 재개한다.
 
-각 항목은 담당 코드·정식 SQL·HTTP·화면 계약을 함께 점검하고 기존 로컬 검증과 새 정책 검증을 구분한다. R6·R7의 오류는 아래 날짜에 관찰한 근거이며 현재 재현·해결 여부를 별도 확인한다.
+`sourceRevision`은 큰 정수의 정규 십진 문자열로 전달한다. 작업의 모델·프롬프트 버전과 checkpoint를 비교하고 원문을 큐·중간 저장에 복제하지 않는다. 조회·중간 저장·게시에서 현재 토큰과 점유 만료를 확인하고 잠금 대기 후·쓰기 직전에도 재확인한다. 게시·중간 저장 삭제는 원자 처리하며 같은 작업/revision의 재호출로 내용·시각·알림을 중복 반영하지 않는다. 정상 양보와 예산 대기는 실제 실패와 분리한다.
+
+작업 처리 세부 내역은 종료 후30일, 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제조건을 개발 검증한다. 요약 중간자료는 완료·폐기·원문 변경·실패 종결의 정리와 정상 재개 보존을 구분한다.
+
+## DB·RPC 연결 점검
+
+기존 서비스·repository·RPC 허용 목록을 대조하고 승인된 담당이 필요한 최소 변경을 한다. 현재 정식 migration과 실제 대상 이력을 비교하여 이미 적용한 제안 SQL을 중복 채택하지 않는다. 파일 존재만으로 배포된 RPC라고 판단하지 않는다.
+
+HTTP 응답은 `{data,requestId}` 또는 `{error:{code,message,retryable},requestId}`다. RPC에는 HTTP envelope를 중복 추가하지 않는다. `22023` 입력오류, `P0002` 대상없음, `28000` 인증필요, `42501` 권한거절, `40001` 충돌을 실제 문맥에 맞게 매핑하고 SQL 원문/detail을 공개하지 않는다.
+
+행사비용 JSON은 `CASE`로 객체 자료형을 먼저 검사하며 조건이 명시적 TRUE일 때만 저장한다. 원자배치 실패를 일부정상자료 저장으로 숨기지 않는다. 요약잠금은 투영상태→작업→중간저장/표식 순서를 맞추고 잠금대기후 점유토큰·만료를 재검사한다.
+
+## 확인할 범위
+
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

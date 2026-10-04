@@ -1,28 +1,26 @@
 # 민규 서비스 API 런타임 계약
 
-## 현재 정책에 맞출 API 차이
+## 현재 정책 목표와 기존 인터페이스
 
-현재 무료 1:1만 제공하며 가입은 네이버 전용이다. 공고 목록·상세는 비로그인도 볼 수 있어야 한다. 2026-10-02 공개 상세 단위에서 기존 상세 GET의 회원 인증 강제를 선택 인증으로 연결했다. 이번 단위의 실제 Auth/DB/HTTP 통합 검증 결과는 별도 인계에서 확인한다. 연결 행사명 검색·선택 행사 HTTP 연결은 아래 2026-10-03 단위에서 실제 로컬 검증했다. 작성자 만 나이 19~99 숫자 범위의 HTTP·AI 연결은 남아 있다. 모집 마감 생략 시 시작 시각 기본값과 공고 수정·마감·삭제, 동의 단일 요청·만료·철회·거절·미선정 종료는 2026-10-02 생명주기 단위에서 구현했다. 개인 완료 후 선제 후기·확정 칭찬 6개·완료 횟수는 아래 2026-10-02 완료/후기 연결 단위와 새 인계의 실제 검증 범위를 따른다.
+현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
 
-아래 경로·signature·필드 길이·limit는 기존 실행 코드의 기술 계약이다. 제품상 글자 수·페이지 수를 이번 구현의 기술 한도로 확정하지 않는다. 이번 생명주기 변경의 실제 검증은 새 인계를 따른다. 일반 목록 더 보기·AI 추가 요청 수량은 팀 검토다.
+예상 종료 후 본인 완료 확인을 마친 사람은 상대 확인 전에도 후기를 제출할 수 있으나 실제 완료 전에는 비공개다. 양쪽 확인 또는 예상 종료+24시간에 실제 완료하며 취소·노쇼는 제외하고 신고·분쟁 검토 중에는 보류한다. 지연 시 실제 성공 시각이 완료 시각이다. 작성 마감은 실제 완료부터 7일, 양쪽 제출은 실제 완료 후 즉시 공개, 한쪽 제출은 작성 기한 종료 시 공개한다. 완료 횟수는 실제 완료 즉시, 후기 당도는 상대 열람 가능 시 반영한다.
 
-## 개인 완료·후기 제출과 실제 완료의 경계
+검토 중에는 작성·기한 진행·새 공개를 보류한다. 이미 공개된 후기는 접수만으로 숨기지 않고 운영자가 임시 비공개를 결정한 때 숨긴다. 정상 동행 인정 후 원래 종료+24시간이 지났으면 즉시 실제 완료한다. 첫 완료라면 그때부터 작성 7일, 이미 완료했다면 남은 기한을 재개하되 최소 24시간을 보장한다. 재개 후 양쪽 제출이면 공개하고 한쪽이면 재개·연장된 작성 기한 종료에 공개한다.
 
-예상 종료 후 본인 완료 확인을 마친 당사자는 상대방 완료를 기다리지 않고 후기를 제출할 수 있다. 한 명만 확인한 상태는 동행 전체 완료가 아니며 해당 후기는 비공개다. 두 사람 확인 또는 예상 종료+24시간 자동 처리(취소·불발·분쟁 제외)로 실제 완료한다. 지연 처리면 실제 성공 시각을 완료 시각으로 기록한다. 실제 완료부터 작성 마감 7일·한쪽 후기 공개 24시간을 계산하며 양쪽 제출은 완료 조건 충족 후 즉시 공개한다. 완료 횟수는 실제 완료 즉시, 당도는 상대 후기 열람 가능 시 반영한다.
+첫 채팅 성공 신청·기존 방 재사용·철회1분 대기, 확정 요청6시간/시작 만료, 일정·장소 변경 제안6시간/양 시작 만료, 모집 재개 유효 신청 복원은 현재 목표다. 아래 기존 신청 message/신청 ID 중심 인터페이스가 이를 이미 지원한다고 해석하지 않는다.
 
-DB의 후기 상태 조회는 개인 확인 뒤의 `can_write`를 반환한다. HTTP는 동행이 아직 미완료여도 이 상태를 그대로 전달하며 완료 성공으로 바꾸지 않는다. 실제 SQL 시간·권한·공개 검증은 [순서별 백엔드 인계](../../docs/collaboration/requests/minkyu/2026-10-02-ordered-backend-handoff.md)를 따른다.
+공고·행사10개/후기5개, 제목50·소개2,000·상세지점300자·16카테고리, 익명 일정/나이 전체·개인정보 없는 작성자 가드로 입력·응답을 맞춰야 한다. 숫자나이 HTTP·AI·커서와 확정 제재·당도·동의 철회·탈퇴 보관도 후속 구현 검증 대상이다.
 
-현재 적용할 서비스 정책은 [정책.md](../../정책.md)를 따른다. 한쪽 후기 공개는 **실제 동행 완료 시각 +24시간**, 양쪽 제출은 즉시다. 당도는 상대 후기를 열람할 수 있게 될 때 동시에 반영하고, 완료 횟수는 후기와 관계없이 동행 완료 즉시 반영한다. 당도 산식은 민규·팀 검토 필요다. 아래 RPC·구현·검증 기록과 정책의 확정은 구분하며, 이번 문서 동기화에서 코드·DB·화면의 최신 정책 일치 여부는 검증하지 않았다. [반영 확인 작업](../../정책.md#follow-ups)을 확인한다.
+기존 구현 경로는 Request→인증→입력 검증→service→repository→고정 RPC다. 시간·관계·동시성·상태 전이는 DB에서 최종 확인한다. 아래 기술 signature를 문서만으로 바꿔 신규 API가 존재하는 것처럼 안내하지 않는다.
 
-현재 구현은 `Request → 인증 → 입력 검증 → service → repository → 고정 RPC`로 연결된다. 시간·관계·동시성·상태 전이는 DB RPC가 결정하며 서비스 모듈은 같은 정책을 복제하지 않는다. 실제 로컬 Auth/JWT/DB 통합 결과는 [민규 현황](../../docs/collaboration/minkyu.md)에 별도로 기록한다.
-
-## 완료·후기 연결 단위 — 2026-10-02
+## 기존 완료·후기 응답
 
 기존 GET `/appointments/:id/reviews`는 table-returning RPC의 snake_case 객체 배열을 유지한다. 미완료 상태에서도 예상 종료 후 본인 완료 확인을 마치면 `appointment_completed:false`, `can_write:true`, `deadline_at:null`이 가능하다. `released:false`, `peer_review:null`로 상대 후기를 숨긴다. 제출 성공은 기존 `{reviewId,submittedAt,deduplicated}` 결과이며 HTTP가 완료·공개를 추가 실행하지 않는다. 서버가 반환한 상태를 기준으로 제출 버튼·공개 대기 안내를 결정한다.
 
 GET `/reviews/praises`는 정해진 6개 `code`·한국어 `label`을 표시 순서대로 반환한다. `punctual` 시간 준수, `keeps_promises` 약속 내용, `communicates_well` 소통, `considerate` 배려, `enjoyable_conversation` 대화, `comfortable_companion` 편안함의 기술 코드다. label은 DB 결과를 사용하며 기존 비활성 코드·과거 후기 기록을 삭제하거나 새 선택지로 안내하지 않는다. 권한·DB 실패를 빈 목록 성공으로 바꾸지 않는다.
 
-GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedCount`를 추가한다. 실제 완료 시 기록한 횟수이며 후기 제출·공개 건수와 독립이다. 실제 완료된 이력이 있는 분쟁 검토 동행은 횟수를 유지하고 취소·불발은 제외한다. 공개 후기 적격성·집계·실제 시각은 DB 계약을 따른다. 본인 프로필 GET `/me`는 기존 `get_my_profile` 전용 반환을 유지하며 공개 프로필 RPC로 교체하지 않는다. 당도 산식은 팀 검토로 남긴다.
+GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedCount`를 추가한다. 실제 완료 시 기록한 횟수이며 후기 제출·공개 건수와 독립이다. 실제 완료된 이력이 있는 분쟁 검토 동행은 횟수를 유지하고 취소·불발은 제외한다. 공개 후기 적격성·집계·실제 시각은 DB 계약을 따른다. 본인 프로필 GET `/me`는 기존 `get_my_profile` 전용 반환을 유지하며 공개 프로필 RPC로 교체하지 않는다. 당도 산식은 정책 7-4절에 확정됐으며 실제 계산기 연결은 후속이다.
 
 ## HTTP 및 인증
 
@@ -35,7 +33,7 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 - `data`는 각 고정 RPC 결과다. 기존 table-returning RPC는 snake_case 객체 배열, 신규 JSON RPC는 해당 DB 계약의 camelCase 객체다. 배열 첫 항목을 암묵적으로 꺼내거나 없는 결과를 성공 객체로 만들지 않는다.
 - 인증 실패 401, 권한 거절 403, 대상 부재 404, 상태·조건 버전 충돌 409, 설정/외부 연결 누락 503이다. DB 오류 원문·토큰·SQL·채팅/후기 원문을 로그나 오류에 넣지 않는다.
 
-## 공개 공고 상세 연결 — 2026-10-02
+## 공개 공고 상세 연결
 
 정확한 GET `/service-api/posts/:UUID` 또는 `/functions/v1/service-api/posts/:UUID`만 선택 인증을 적용한다. `resolveRouteForMethod`가 기존 prefix·UUID·메서드를 검증한 뒤 상세 query가 없는지 검사하고 `publicPostDetail:true`를 붙인다. 잘못된 prefix·suffix, 다른 메서드, 추가/중복 query·본문을 익명 경로로 우회시키지 않는다. 기존 상세 GET은 query를 받지 않는다.
 
@@ -47,17 +45,13 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 
 | 관계 | 기존 DB 상세 투영 |
 |---|---|
-| 비로그인 | 시스템 별칭·공개 지역; `privateDetails`·`participantNames` 제외 |
+| 비로그인 | 현재 목표는 작성자 개인정보 없는 로그인 가드·공개 지역; 기존 투영 변경 필요; `privateDetails`·`participantNames` 제외 |
 | 일반 회원·미확정 상대 | 마스킹 이름·공개 지역; 상대 비공개 이름/장소 제외 |
 | 공고 작성자 | 본인 이름·본인이 등록한 정확한 장소 권한 유지 |
 | 양쪽 확정/완료 당사자 | 기존 관계 권한에 따른 전체 이름·정확한 장소 |
 | 취소 후 상대 | 다시 마스킹하고 구조화된 정확한 장소·상대 실명 공유 종료; 작성자의 본인 입력 권한과 구분 |
 
 삭제/없는 공고는 기존404, 권한·DB 오류는 공통 오류로 반환하며 실패를 빈 상세 성공으로 바꾸지 않는다. 성공 envelope·requestId·no-store·정확한 Origin 검사와 기존 회원/작성자/확정/취소 권한은 유지한다. 반환 개인정보 권한은 DB에서 판단하며 HTTP는 독자적으로 관계를 추정하거나 필드를 보강하지 않는다.
-
-최종 검증: A 구현·Deno 검사, B 신규 단위15/15 PASS, 총괄 실제 Auth/DB/HTTP 통합346확인 PASS다. 익명·회원·작성자·신청 중·확정·취소 후 재마스킹, 삭제/없는 공고404, 잘못된 인증의 익명 fallback 차단을 확인했다. 통합은 실제 Auth를 사용한 합성 자료 검사이며 이번 단위에서 외부 네이버·실제 사진 업로드는 실행하지 않았다. 최종 합성 자료 정리도 통과했다. 최초 정리 실패는 사진 보호42501과 fixture 정리 순서 차이였으며 제품 변경 없이 합성 잔여를 정리한 뒤 초기0에서 재실행해 통과했다.
-
-별도 기존 회귀94개는93PASS/1FAIL이다. `tests/functions/minkyu/auth_db.test.ts:220`의 익명 `get_service_post` 거절 기대가 이번 허용 목록과 달라 다음 별도 단위에서 동기화한다. 이 결과를 기존 회귀 전체PASS로 표시하지 않는다. 운영 Edge/gateway·브라우저 프론트 전체 연결·배포 성공도 별도다. [공개 상세 인계](../../docs/collaboration/requests/minkyu/2026-10-02-public-detail-handoff.md)와 [현황](../../docs/collaboration/minkyu.md)에 실제 결과를 기록한다.
 
 ## 공개 상세와 사용자 경로
 
@@ -106,15 +100,15 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 | POST `/requests/:id/consent/decline` | `{conditionVersion}` → 신청자 `decline_match_consent`; 신청 자체는 유지 |
 | POST `/requests/:id/accept` | `{conditionVersion}` → 신청자 `accept_match`; 조회한 동일 버전 필요 |
 
-### 대화방 나가기 — 2026-10-03
+### 대화방 나가기
 
 POST `/conversations/:id/leave`는 UUID 신청 ID와 정확한 JSON `{}`만 받으며 `{requestId,hidden:true}`를 반환한다. 기존 회원 인증 후 원래 JWT로 `leave_conversation(p_request_id)`를 호출한다. DB가 대화 당사자를 검사하고 본인 목록 숨김을 멱등 기록한다. 없는 관계·타인 관계는404이며 신규 네이버 활동 자격을 요구하지 않는다.
 
 본인의 `GET /conversations` 목록에서만 제외한다. 상대 목록·기존 대화/메시지 조회·전송 권한·신청/약속 상태·알림·원래 기록은 나가기 때문에 변경하지 않는다. 나가기를 신청 철회·차단·자료 삭제로 처리하지 않으며 복귀 API나 새 메시지에 따른 자동 복귀를 추가하지 않는다. 숨김 표의 직접 쓰기는 허용하지 않는다. 실제 DB/RLS·native Auth/HTTP 실행 결과는 별도 인계에서 기록한다.
 
-### 행사 연결·내부 Top10 — 2026-10-03
+### 행사 연결·내부 Top10
 
-무료 공고 생성·수정의 선택 입력 `eventId?: string | null`은 [공고 계약](posts-search.md#행사-연결최신-표시--2026-10-03-실제-로컬-검증)을 따른다. UUID 형식만 받으며 빈 문자열·boolean·객체는400이다. 수정 생략은 전달 키 자체를 제외해 기존 연결을 보존한다. 기존 `create_service_post`·`update_service_post`·`get_service_post`를 사용하고 별도 공개 RPC를 만들지 않는다. 상세의 `eventId`·`linkedEvent`는 항상 최신 canonical 행사 정보이며 동행 일정과 공고의 정확한 장소 권한을 유지한다. 수동 연결 변경은 동의 무효화/새 동의를 요구하고 공급자 갱신은 동의를 변경하지 않는다.
+무료 공고 생성·수정의 선택 입력 `eventId?: string | null`은 [공고 계약](posts-search.md)을 따른다. UUID 형식만 받으며 빈 문자열·boolean·객체는400이다. 수정 생략은 전달 키 자체를 제외해 기존 연결을 보존한다. 기존 `create_service_post`·`update_service_post`·`get_service_post`를 사용하고 별도 공개 RPC를 만들지 않는다. 상세의 `eventId`·`linkedEvent`는 항상 최신 canonical 행사 정보이며 동행 일정과 공고의 정확한 장소 권한을 유지한다. 수동 연결 변경은 동의 무효화/새 동의를 요구하고 공급자 갱신은 동의를 변경하지 않는다.
 
 | 메서드·경로 | 내부 인증 후 고정 RPC |
 |---|---|
@@ -125,21 +119,19 @@ POST `/conversations/:id/leave`는 UUID 신청 ID와 정확한 JSON `{}`만 받�
 
 저장 결과는 `{status:"saved"|"stale",itemCount,deduplicated}`다. 같은 수집 시각·같은 본문은 중복 안전, 같은 시각·다른 본문은409, 오래된 수집본은 최신 내용을 유지한다. 조회는 `{status:"available"|"unavailable",mode,source:"kopis",requestedPeriod,responsePeriod:null,periodVerification:"requested_only",collectedAt,items}`이며 자료 없으면 기간/수집시각은null, 항목은빈 배열이다. upstream 응답 기간 검증 성공으로 해석하지 않는다. 공개 Top10·종현 수집 어댑터·취소/종료 순위 자료의 공개 정책은 남아 있다.
 
-[이번 인계](../../docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md)의 실제 로컬 통합8그룹·769확인 PASS는 원형 factory와 배포된 gateway의 행사 생성/수정/상세·Top10 저장/조회, native Auth/RPC·권한·멱등·오래된 수집본·23테이블 정리를 포함한다. 신규 단위8개·Deno 검사와 DB12/5그룹·gateway82확인은 별도 검사이며 합산하지 않는다. 외부 행사·실제 네이버·실제 사진·외부 AI·원격 적용은 이 runner에서 실행하지 않았다.
-
-### 확정 후 일정 변경·취소 연결 — 2026-10-02
+### 확정 후 일정 변경·취소 연결
 
 GET `/appointments/:id/schedule-change`는 `{appointmentId,status,startsAt,endsAt,updatedAt,change,cancellation}`을 반환한다. 기존 약속 상세의 table-returning snake_case signature는 바꾸지 않는다. 변경 제안에는 이 조회의 `updatedAt` 원본을 `expectedUpdatedAt`으로 보내며 ISO offset/Z·최대 소수 6자리를 보존한다. `changeId`는 UUID 재시도 ID이며 같은 요청의 재전송 때 유지한다. `startsAt`, `endsAt`는 offset/Z를 포함하고 종료가 시작보다 늦어야 한다. 시간 기한·현재 일정·동시 확정 충돌·상대 권한은 DB가 최종 검사한다.
 
-`change`가 없으면 `null`, 있으면 `{changeId,conditionVersion,status,oldSchedule,newSchedule,requestedByMe,requestedAt,expiresAt,resolvedAt}`이다. 상태는 `awaiting_response|accepted|declined|expired|cancelled`, 각 일정은 `{startsAt,endsAt}`이다. 응답 기한은 기존 시작 시각과 새 시작 시각 중 먼저 오는 때이며 거절·만료는 기존 일정을 유지한다. 제안·수락·거절 결과는 이 변경 객체에 `appointmentId`, `deduplicated`를 추가한다. 수락·거절 때 조회한 `changeId`와 불투명 `conditionVersion`을 그대로 보내며 과거 요청이 새 제안을 종료하지 못한다. 만료된 거절이 성공 응답으로 끝나더라도 `status:expired`를 안내하고 새 일정 반영으로 표시하지 않는다.
+`change`가 없으면 `null`, 있으면 `{changeId,conditionVersion,status,oldSchedule,newSchedule,requestedByMe,requestedAt,expiresAt,resolvedAt}`이다. 상태는 `awaiting_response|accepted|declined|expired|cancelled`, 각 일정은 `{startsAt,endsAt}`이다. 현재 목표 응답 기한은 제안+6시간·기존 시작·새 시작 중 먼저 오는 때이며 기존 계산 변경·검증이 필요하다. 거절·만료는 기존 일정을 유지한다. 제안·수락·거절 결과는 이 변경 객체에 `appointmentId`, `deduplicated`를 추가한다. 수락·거절 때 조회한 `changeId`와 불투명 `conditionVersion`을 그대로 보내며 과거 요청이 새 제안을 종료하지 못한다. 만료된 거절이 성공 응답으로 끝나더라도 `status:expired`를 안내하고 새 일정 반영으로 표시하지 않는다.
 
 취소는 별도의 UUID `cancellationId`와 앞뒤 공백 없는 사유1..300자를 입력한다. 같은 재전송에는 ID·사유를 유지한다. 결과는 `{appointmentId,status:"cancelled",cancellationId,reason,cancelledAt,deduplicated}`이다. 조회의 `cancellation`은 없으면 `null`, 있으면 `{cancellationId,reason,cancelledAt,cancelledByMe}`다. 시작 전 당사자 취소와 시작 후 신고를 구분하며 HTTP에 노쇼·분쟁 판정 필드를 받지 않는다. 일정 제안·수락은 새로운 네이버 활동 자격을 검사하고 조회·거절·취소는 기존 회원의 관계 정리를 유지한다. 취소 후 구조화된 정확한 주소 숨김·자동 완료 예약 제거·대화 읽기 전용·양쪽 알림은 같은 DB 전이를 따른다.
 
-### 공고·최종 동의 생명주기 연결 — 2026-10-02
+### 공고·최종 동의 생명주기 연결
 
 공고 상세의 `updatedAt` 원본으로 전체 수정 입력을 제출한다. `update_service_post(p_post_id,p_input,p_expected_updated_at)`는 오래된 입력이면 409를 반환하므로 최신 상세를 다시 확인하고 입력을 보존한다. 수정·마감·삭제 결과는 `{postId,status,updatedAt}`다. 핵심 조건 변경 시 신청·대화는 유지하고 진행 중 동의만 무효화한다. 확정 후에는 공고 수정으로 약속 조건을 변경하지 않는다. 수동 마감은 기존 신청자와의 동의 요청·재요청을 시작 전까지 유지한다. 삭제는 미확정 관계를 종료하며 확정 약속 종료 전 삭제는 거절한다.
 
-`propose_match`와 `get_match_consent` 결과는 `{requestId,conditionVersion,conditions,status,requestedAt,expiresAt}`이며 DB가 요청 시각+24시간과 시작 시각 중 빠른 만료를 결정한다. 없으면 `{consent:null}`, 신규 상태는 `awaiting_consent|expired|withdrawn|declined|invalidated|accepted`다. 기존 만료 정보가 없는 동의는 `renewal_required`, `expiresAt:null`로 반환하여 새 요청을 안내한다. 작성자가 다른 상대를 선택할 때는 기존 요청을 먼저 철회해야 한다. `conditionVersion`은 서버가 반환한 불투명 값을 그대로 전달하고 HTTP에서 상태·만료를 추정하지 않는다.
+`propose_match`와 `get_match_consent` 결과는 `{requestId,conditionVersion,conditions,status,requestedAt,expiresAt}`이며 DB가 현재 정책의 요청+6시간/시작 중 빠른 만료를 결정하도록 후속 변경·검증한다. 없으면 `{consent:null}`, 신규 상태는 `awaiting_consent|expired|withdrawn|declined|invalidated|accepted`다. 기존 만료 정보가 없는 동의는 `renewal_required`, `expiresAt:null`로 반환하여 새 요청을 안내한다. 작성자가 다른 상대를 선택할 때는 기존 요청을 먼저 철회해야 한다. `conditionVersion`은 서버가 반환한 불투명 값을 그대로 전달하고 HTTP에서 상태·만료를 추정하지 않는다.
 
 동의 철회·거절은 `{requestId,conditionVersion,status,alreadyEnded}`를 반환한다. `status`는 `withdrawn|declined`, 만료가 먼저면 `expired`다. 예전 버전 요청으로 새 동의를 끝내지 못하며 중복 요청은 DB가 같은 결과로 처리한다. 이 경로와 신청 자체 `/withdraw|decline`은 별개다. 최종 확정은 미선정 관계를 종료하고 기존 대화를 읽기 전용으로 보존한다. 알림의 `eventData`는 현재 상태·조건 버전·만료 시각 같은 안전한 구조값이며 알림 클릭이 동의·확정을 대신하지 않는다.
 
@@ -151,7 +143,7 @@ GET `/appointments/:id/schedule-change`는 `{appointmentId,status,startsAt,endsA
 {"rating":5,"experience":"positive","comment":"편안하게 대화했어요","praises":[]}
 ```
 
-rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선택/null 또는1..300자다. praises는 최대3개이며 positive에만 허용한다. 칭찬 6개는 [후기 계약](reviews.md)에 확정됐다. GET `/reviews/praises`로 조회한 `code`를 제출하며 DB가 활성 목록 포함 여부를 최종 검증한다. HTTP가 별도 catalog 조회로 제출 상태를 판단하거나 표시 문구를 코드 대신 생성하지 않는다. 최대 3개·중복·positive 조건은 HTTP와 DB에서 검사한다. 별점을 당도로 환산하지 않는다. 현재 적용할 정책에 따라 제출 성공 뒤 공개 상태를 조회해야 한다. 양쪽 제출은 24시간 전이어도 즉시 공개하고, 한쪽은 실제 동행 완료+24시간부터 공개하며 그 이후 기한 내 제출은 즉시 열람한다. 실제 분쟁·미완료·불발/노쇼는 제외한다. 일반 후기 작성 기간은 실제 완료부터 7일이다. 실제 분쟁 중 기한 보류와 동행 인정 후 남은 기간 재개·최소 24시간의 기존 예외는 유지한다.
+rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선택/null 또는1..300자다. praises는 최대3개이며 positive에만 허용한다. 칭찬 6개는 [후기 계약](reviews.md)에 확정됐다. GET `/reviews/praises`로 조회한 `code`를 제출하며 DB가 활성 목록 포함 여부를 최종 검증한다. HTTP가 별도 catalog 조회로 제출 상태를 판단하거나 표시 문구를 코드 대신 생성하지 않는다. 최대 3개·중복·positive 조건은 HTTP와 DB에서 검사한다. 당도는 확정된 반응·별점·운영 감점 산식으로 별도 계산한다. 공개는 실제 완료 후 양쪽 즉시/한쪽 작성 기한 종료이며 검토 중 새 공개와 기존 공개 후기를 구분한다. 자세한 기한 재개·점수 기준은 후기 계약을 따른다.
 
 공고 입력 예시(가상):
 
@@ -177,9 +169,9 @@ rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선�
 
 제목2..80자, 소개1..2000자, 공개지역 최대60자, 장소명 최대200자, 등록주소1..300자, 만남상세2..200자, 선택 선호문구 최대300자, 태그 최대5개·각20자다. 문자열은 앞뒤 공백을 허용하지 않는다. 시간은 offset 또는 Z가 있는 ISO 문자열이며 종료가 시작보다 늦고 모집 종료가 시작 이하여야 한다. `recruitmentEndsAt` 생략 시 `startsAt`을 사용하며 명시 `null`은 거절한다. 수정 `expectedUpdatedAt`은 상세 조회의 `updatedAt` 원본 문자열을 보내며 최대 소수 6자리까지 허용한다. 시각 정밀도를 줄이거나 클라이언트 현재 시각으로 대체하지 않는다. 현재 지역 형식은 기존 DB 제약을 따르며 임의로 바꾸지 않는다.
 
-유료 `paid_request|paid_offer`는 503이며 공급사 연결 없이 성공 처리하지 않는다. 신규 무료 공고와 달리 비용 미상인 기존 공고는 `request_service_post`에서 차단된다. 클라이언트 `authorId`, `userId`, 권한·성별·확정 상태 필드는 허용하지 않는다. 네이버 가입·세션은 [가입 계약](signup.md), 이번 공고·동의 규칙은 [매칭 생명주기 인계](../../docs/collaboration/requests/minkyu/2026-10-02-matching-lifecycle-handoff.md)의 실제 검증 범위를 따른다. 은행 확인은 추후 유료 도입 검토이며 분쟁 판정 세부·당도 산식은 팀 검토다.
+유료 `paid_request|paid_offer`는 503이며 공급사 연결 없이 성공 처리하지 않는다. 신규 무료 공고와 달리 비용 미상인 기존 공고는 `request_service_post`에서 차단된다. 클라이언트 `authorId`, `userId`, 권한·성별·확정 상태 필드는 허용하지 않는다. 네이버 가입·세션은 [가입 계약](signup.md), 이번 공고·동의 규칙은 [매칭 생명주기 인계](../../docs/collaboration/requests/minkyu/2026-10-02-matching-lifecycle-handoff.md)의 실제 검증 범위를 따른다. 유료·계좌 인증은 현재 제외하며 분쟁·당도 확정 정책의 코드 연결을 별도 검증한다.
 
-## 공개 행사·필터와 회원 프로필 연결 — 2026-10-02
+## 공개 행사·필터와 회원 프로필 연결
 
 GET `/events`와 `/events/filters`는 공고 검색과 동일한 선택 인증을 사용한다. Authorization 헤더가 없을 때만 익명 client, 있으면 Auth `/user` 검증 후 같은 사용자 JWT client를 사용한다. 빈·위조·만료·서버 키 인증 실패를 익명으로 강등하지 않는다. 정확한 function prefix·GET·허용 Origin·no-store·공통 envelope를 유지한다. POST나 DELETE는405, 알 수 없는/중복 query는400이다.
 
@@ -191,9 +183,9 @@ GET `/events`와 `/events/filters`는 공고 검색과 동일한 선택 인증�
 | query | 행사명·장소명·공개 주소 검색어; 정규화는 저장소 |
 | region, category | 제공처 원문 값 정확 일치. 임의 enum·분류표를 만들지 않음 |
 | cursor | 기존 저장소의 조건 결합 불투명 커서, 조건 변경·변조는400 |
-| limit | 명시 필수 정수1..50 기술 범위. 운영 기본 수량은 미정이며 생략하면400 |
+| limit | 명시 필수 정수1..50 기술 범위. 현재 화면은10을 전달하며 기존 HTTP에서는 생략하면400 |
 
-실행은 `createRpcEventRepository(db).listPage(query,cursor,limit)`이며 응답은 `{events,nextCursor}`다. 순서·자료·기간·커서를 HTTP에 중복 구현하지 않는다. **‘진행 중인 행사도 포함’은 `mode=overlapping`과 선택 기간(기본 주간이면 KST 월요일~일요일)을 함께 보내 장기 진행·신규 예정 행사를 포함한다.** `ongoingOnly=true`로 대신하지 않는다. 과거 조회는 overlapping과 과거 기간으로 가능하며 작성용 post_selection은 종료 행사를 제외한다. 실제 화면 체크박스 연결은 이번 백엔드 검사 범위가 아니다.
+실행은 `createRpcEventRepository(db).listPage(query,cursor,limit)`이며 응답은 `{events,nextCursor}`다. 순서·자료·기간·커서를 HTTP에 중복 구현하지 않는다. 기존 `mode=overlapping`·주간 기간 조회는 이미 종료된 이번 주 행사도 포함할 수 있다. 현재 ‘진행 중 포함’ 목표인 신규 미종료+이전 주 시작 미종료에 맞춰 조회를 변경·검증한다. `ongoingOnly=true`로 대신하지 않는다. 과거 조회는 overlapping과 과거 기간으로 가능하며 작성용 post_selection은 종료 행사를 제외한다. 실제 화면 체크박스 연결은 이번 백엔드 검사 범위가 아니다.
 
 GET `/events/filters`는 query 없이 `listEventFilterValues(db)`로 `{regions:[{provider,value,count}],categories:[{provider,value,count}]}`를 반환한다. 제공처·원문 값·횟수를 보존하며 취소만 가진 값은 DB가 제외한다. 입력 오류만400으로 변환하고 응답/투영 오류는500, DB 오류는 기존 공통 매핑을 따른다. 실패를 첫 페이지·빈 성공으로 바꾸지 않는다.
 
@@ -212,16 +204,11 @@ GET `/profiles/:id`는 회원용 `get_public_profile(p_profile_id)`를 호출한
 
 summary 결과는 성공 시 `{status:"queued",processedCount,enqueuedCount}`, 설정 누락/오류 시 `{status:"pending_configuration"|"configuration_error"}`, 실행 실패 시 `{status:"failed",code,retryable}`다. 공개 정리 이후 요약 대기·실패는 `partial`이며 가짜 0건으로 숨기지 않는다. 공개 성공은 요약 실패로 롤백하지 않고 outbox를 보존한다. 버전 문자열을 실제 모델 호출 승인으로 해석하지 않는다.
 
-현재 정책은 양쪽 제출 즉시/한쪽 실제 동행 완료+24시간 조건을 제출·조회에서 적용하도록 요구하므로 이 정리 API나 하루 한 번 요약 등록을 기다리지 않는다. 행사·AI 후기 요약 등록은 하루 한 번 정책이며 실제 운영 일일 스케줄러 배포는 이번에 수행하지 않는다. 자동 완료는 실제 성공 시각부터 작성 7일을 계산한다.
+현재 정책은 실제 완료 후 양쪽 제출 즉시/한쪽 작성 기한 종료 조건을 제출·조회에서 적용하도록 요구하므로 이 정리 API나 하루 한 번 요약 등록을 기다리지 않는다. 행사·AI 후기 요약 등록은 하루 한 번 정책이며 실제 운영 일일 스케줄러 배포는 이번에 수행하지 않는다. 자동 완료는 실제 성공 시각부터 작성 7일을 계산한다.
 
-## 검증 이력과 이번 변경
+## 후속 검증
 
-아래 기존 PASS는 변경 전 검사 이력이다. 이번 공개/예약·모델 분리 변경의 실제 결과는 [새 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md)를 따른다.
-
-- `node --test tests/functions/minkyu/service_api.test.ts`: handler·서비스·repository 단위 검사22개 PASS. 실제 Web API, 인증 실패·권한 경로 분리·엄격한 입력·RPC 매핑·민감정보 제외를 검증한다.
-- `deno check --no-remote backend/supabase/functions/service-api/index.ts`: 런타임 전체 모듈 타입 검사 PASS.
-- mock 검사를 실제 JWT/SQL 검증으로 표현하지 않는다. 실제 통합 검증 증거는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에 기록한다.
-
+기존 handler·service·repository 단위 검사와 실제 Auth/RPC 통합을 현재 정책 기준으로 대조한다. 첫 채팅 원자 생성·방 재사용·기한 경계·제재·공개 권한·분쟁·당도·익명 가드와 동시 요청을 포함한다. 이번 문서 수정에서 테스트·외부 연결·원격 배포는 수행하지 않았다.
 
 ## 실행 진입점과 검증 범위
 
@@ -229,13 +216,11 @@ summary 결과는 성공 시 `{status:"queued",processedCount,enqueuedCount}`, �
 
 `verify_jwt=false`는 이 함수가 사용자 JWT와 별도 내부 작업 secret을 경로별로 직접 검증하기 위한 설정이다. 사용자 인증 검사를 생략한다는 뜻이 아니다. [공식 함수 설정](https://supabase.com/docs/guides/functions/function-configuration)
 
-Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supabase의 실제 HTTP/JWT/DB 통합 결과를 관리형 Edge hosting 결과와 구분한다. **원격 관리형 Edge hosting 및 운영 배포는 NOT_RUN**이다. 2026-09-29 로컬 Supabase Edge/gateway에서 실제 인증·업무 검사를 수행했으며 아래 결과를 따른다.
+Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supabase의 실제 HTTP/JWT/DB 통합 결과를 관리형 Edge hosting 결과와 구분한다. **원격 관리형 Edge hosting 및 운영 배포는 NOT_RUN**이다. 실행 환경별 검증은 별도로 기록한다.
 
+## 검색 HTTP 연결
 
-<a id="검색-http-병렬-준비--2026-09-29"></a>
-## 검색 HTTP 연결 — 2026-09-29
-
-종현 검색 v2 코어(`129a871`)를 민규 기본 런타임에 연결한다. `createRuntimeHandler(read)`와 `default.fetch`의 GET `/posts`는 `searchPublicPosts(createRpcPublicPostSearchRepository(db), input)`을 실행한다. `createRuntimeHandler(read, { publicPostSearch })`의 명시 의존성 주입은 검사·조립 용도로 유지하며 URL/본문/환경값으로 실행기를 교체하지 못한다. POST `/posts`와 다른 업무 경로는 기존 로그인 요구를 유지한다.
+기본 런타임은 기존 검색 v2 코어를 재사용한다. `createRuntimeHandler(read)`와 `default.fetch`의 GET `/posts`는 `searchPublicPosts(createRpcPublicPostSearchRepository(db), input)`을 실행한다. `createRuntimeHandler(read, { publicPostSearch })`의 명시 의존성 주입은 검사·조립 용도로 유지하며 URL/본문/환경값으로 실행기를 교체하지 못한다. POST `/posts`와 다른 업무 경로는 기존 로그인 요구를 유지한다.
 
 공개 GET 요청은 다음 순서로 처리한다.
 
@@ -259,15 +244,4 @@ Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supaba
 
 잘못된 입력으로 정의한 검색 코어 오류만 공통 INVALID_REQUEST로 변환한다. AUTH_REQUIRED는 401, 이미 정해진 HttpError는 유지하고 응답/투영 불일치 및 알 수 없는 오류는 원문 없이 500으로 처리한다. 외부 오류 메시지·검색어·토큰을 로그에 출력하지 않는다.
 
-현재 요구사항은 [검색 계약](search.md)과 [정책](../../정책.md#posts), 후속 반영 범위는 [민규 현황](../../docs/collaboration/minkyu.md)을 따른다. [검색 연결 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-connected.md)는 당시 연결 검증의 근거이고, [HTTP 병렬 인계](../../docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md)는 연결 전 기록이다. 두 기록의 당시 남은 작업을 현재 상태로 사용하지 않는다.
-
-당시 독립 검토는 응답 카드의 잘못된 시각이 400으로 분류되는 문제를 기록했다. 현재 repository는 잘못된 응답을 `INVALID_SEARCH_RESPONSE`로 구분하므로 해당 요청을 미수정 작업으로 안내하지 않는다. [당시 재현 기록](../../docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md)은 보존하고, 새 검색 정책의 적용·검증 범위는 현재 검색 계약을 따른다.
-
-
-## 연결 전 로컬 Edge/gateway 결과 — 2026-09-29
-
-CLI2.116.0 / Edge Runtime v1.74.3 / Kong2.8.1에서 기존 default fetch를 변경 없이 실행했다. 실제 gateway→Edge→Auth/PostgREST로 사용자JWT·역할 분리·무료 공고·양측 매칭·당사자 정보 권한·내부secret 등을 확인했다. 8개 묶음 PASS, 가상 데이터 잔존0이며 상세 결과는 [Edge 인계](../../docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md)에 있다.
-
-전체 결과는 **PARTIAL**이다. 위 HTTP 계약의 정확한 Origin/no-store/OPTIONS204는 앱 응답 기준이며, 로컬 Kong은 허용 Origin GET의 ACAO를 `*`로 변경하고 OPTIONS를200/`*`/no-store 없이 먼저 응답한다. 애플리케이션의 미허용 Origin403과 자체 인증은 실제로 유지됐다. 이 로컬 gateway 차이를 CORS 전체 통과로 기록하지 않는다. 운영 gateway의 허용 Origin·OPTIONS 정책은 대상 선정 후 확인해야 하며 원격 결과는 NOT_RUN이다.
-
-이전 검사 당시 기본 GET 검색405는 종현 최신 코어 미연결 상태를 확인한 것이었다. 위 검색 연결 이후의 결과는 최신 인계를 따른다. 현재 네이버 연동·추후 계좌 공급사·외부 모델·운영 데이터·배포의 성공 근거로 이 검증 이력을 사용하지 않는다.
+현재 목표·차이는 [검색 계약](search.md)과 [정책](../../정책.md)을 따른다. DB 카드 응답 불일치는 `INVALID_SEARCH_RESPONSE`로 입력 오류와 구분한다. 게이트웨이의 실제 Origin/OPTIONS 처리는 [CORS 계약](gateway-cors.md)에 따라 확인하며 앱 단위 통과를 운영 성공으로 표시하지 않는다.

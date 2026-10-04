@@ -2,11 +2,19 @@
 
 ## 현재 실행·보관 정책
 
-후기 공개는 실제 완료 후 양쪽 제출 즉시/한쪽 완료+24시간의 제출·조회 조건으로 적용하고 일일 작업을 기다리지 않는다. 자동 완료는 예상 종료+24시간 건별 DB 영속 예약·Node 상주 실행기가 처리한다. 개인 완료 확인은 먼저 후기 제출을 허용하지만 작업자가 이를 동행 전체 완료로 바꾸지 않는다.
+현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
 
-행사 갱신·새 요약 등록은 매일 00:01 Asia/Seoul이며 Top 10의 전국 전체/뮤지컬·어제까지 최근 7일 순위 갱신 실제 연결은 별도다. 요약 중간 결과는 비공개·원문 사본 제외, 완료·폐기·원문 변경·실패 종결 시 삭제하며 자동 TTL을 추가하지 않는다. 운영 한도·재시도·로그·예산 원장 보존은 팀 검토다. 외부 실제 회원 정보 전송은 공급사 보관 답변의 팀 검토·사용자 확인 전 보류한다.
+예상 종료 후 본인 완료 확인을 마친 사람은 상대 확인 전에도 후기를 제출할 수 있으나 실제 완료 전에는 비공개다. 양쪽 확인 또는 예상 종료+24시간에 실제 완료하며 취소·노쇼는 제외하고 신고·분쟁 검토 중에는 보류한다. 지연 시 실제 성공 시각이 완료 시각이다. 작성 마감은 실제 완료부터 7일, 양쪽 제출은 실제 완료 후 즉시 공개, 한쪽 제출은 작성 기한 종료 시 공개한다. 완료 횟수는 실제 완료 즉시, 후기 당도는 상대 열람 가능 시 반영한다.
 
-`20261002130000_ai_budget_worker.sql`은 기존 큐에 실패 횟수·종결·양보 전이를 추가하고 원자 예산 원장을 제공한다. 현재 변경의 실제 DB 검증은 총괄·독립 B 담당의 실행 결과를 따른다. 이전 큐 검증을 새 변경의 성공 근거로 사용하지 않는다. `20260923090000_worker_jobs.sql`은 `private.worker_jobs`와 아래 RPC를 제공한다. [DB 기반 명세](db-foundation.md)의 작업 어댑터 의미를 실제 PostgreSQL 함수에 연결한다. HTTP 진입점·종현 어댑터·스케줄러·AI 모델은 이 변경에 포함하지 않는다. 격리 로컬 PostgreSQL에서 SQL 검증과 다중 세션의 중복 enqueue·SKIP LOCKED claim 검증을 통과했다. 실행 환경·전체 결과와 미검증 범위는 [민규 작업 현황](../../docs/collaboration/minkyu.md)에 기록한다. 잠금 대기 중 lease 만료의 별도 경쟁 검증은 아직 **NOT_RUN**이다.
+행사·신규 요약 등록은 매일00:01KST, 자동 완료는 건별 DB 예약·상주 실행기로 분리한다. 작업큐는 아래 RPC의 현재 기술 연결이며 정책 전체 적용은 후속 검증 대상이다.
+
+실제 실패 최대3회·10분~6시간, 예산 부족은 실패 없이1시간 뒤 확인한다. 최대10작업·60초·lease180초·동시 실행기1개·점유 자동 연장 없음이다. 정상 분할/양보는 실패로 세지 않고 중간 결과를 보존한다. 중간 결과는 비공개·원문 사본 제외, 완료·폐기·원문 변경·실패 종결에 삭제하고 자동 TTL을 두지 않는다.
+
+운영 보관 선택은 일반 진단 30일·보안 90일·작업 종료 후 세부 기록 30일·공급사 한도 기간 종료 후 비용 원장 90일이다. 원문·비밀값을 제외한다. 미정산 예약은 해결까지 제한 보관하고 자동 환불·초기화를 하지 않는다. 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 검증한다. 법적 근거·실제 삭제·백업 만료는 별도 확인이며 활성 자료 삭제를 백업 즉시 삭제로 안내하지 않는다.
+
+전체 AI 예산은 실제 계정의 포함량·계산 단위·초기화 주기를 확인한 뒤 포함량의 50%로 시작하고 추가 결제는 허용하지 않는다. 전체 예산 소진 시 개인 한도가 남아도 중단한다. 증액 희망은 공급사 회신·측정 후 검토하며 확인 전 활성화하지 않는다. 합성 검증 50,000은 기술 원장 단위로 원화·청구 토큰과 같지 않으며 합성 10회의 충분한 예산을 보장하지 않는다.
+
+회원별 하루20회는 모델 처리를 시작한 사용자 요청 단위이며 아래 내부 호출 원장과 다르다. 분당 횟수 제한 없이 동일 회원 진행 요청 하나만 허용한다. 세부 차감과 재설정은 [AI 계약](ai-chat.md)을 따른다. 실회원 외부 전송은 공급사 회신 팀 검토·사용자 확인 전 보류한다.
 
 ## RPC 연결
 
@@ -22,7 +30,7 @@
 | `supersedeJob` | `supersede_job(p_job_id uuid,p_lease_token uuid)` | `{jobId,status:"superseded"}` |
 | `retryJob` | `retry_job(p_job_id uuid, p_lease_token uuid, p_available_at timestamptz, p_error_code text)` | `{jobId,status:"retry_wait"}` |
 
-`workerId`는 실행 인스턴스 UUID다. 초 단위 lease는 **필수 입력**, 기술 범위 `1..86400`이며 운영 기본값은 없다. 서버 운영 설정이 결정되기 전 어댑터에 임의 timeout을 넣지 않는다. DB가 현재 시각과 lease 만료값을 계산한다. 입력 timestamp는 유한값만 허용하며 enqueue는 현재/과거/미래, retry는 잠금 획득 뒤 현재 시각 이상만 허용한다. 즉시 재시도를 위해 호출자가 오래된 `now`를 보내면 거절될 수 있으므로 정책이 정한 미래 시각을 전달한다.
+`workerId`는 실행 인스턴스 UUID다. 초 단위 lease는 **필수 입력**, 기술 범위 `1..86400`이며 코드에 자동 기본값은 없다. 선택 운영값180초를 명시 주입하고 실제 작업 시간·만료 경합을 검증한다. DB가 현재 시각과 lease 만료값을 계산한다. 입력 timestamp는 유한값만 허용하며 enqueue는 현재/과거/미래, retry는 잠금 획득 뒤 현재 시각 이상만 허용한다. 즉시 재시도를 위해 호출자가 오래된 `now`를 보내면 거절될 수 있으므로 정책이 정한 미래 시각을 전달한다.
 
 ## 허용 payload와 보존 정보
 
@@ -50,12 +58,12 @@
 - SQLSTATE `22023`/`invalid_input` → `INVALID_REQUEST`/400, `42501` → 서버가 인증 문맥을 확인해 `AUTH_REQUIRED`/401 또는 `ACCESS_DENIED`/403, `P0001`/`state_conflict` → `STATE_CONFLICT`/409. 모든 상태 충돌은 `retryable:false`. SQL 오류 detail·원문·query·payload·token을 응답/로그에 복사하지 않는다. HTTP 매핑 구현은 별도 어댑터 작업이다.
 - 기본 READ COMMITTED에서 중복 INSERT 승자를 후속 SELECT로 읽는다. 높은 격리수준의 serialization failure(`40001`)는 호출자가 트랜잭션 전체를 재시도할 수 있는 인프라 오류이며 업무 성공으로 바꾸지 않는다.
 - 상태는 queued/running/retry_wait/succeeded/failed/superseded다. succeeded/failed/superseded만 completed_at이 있고 다시 claim하지 않는다. 정상 분할·예산 연기는 yield로 queued에 돌려보내며 failedAttempts를 늘리지 않는다. p_available_at null은 DB 현재 시각, 지정 시 잠금 후 현재 시각 이상이다. retry/fail만 failedAttempts를 늘리고 supersede는 실패로 세지 않는다. attempt는 claim마다 증가한다.
-- 성공 완료·실패 종결·대체 종결은 자기 작업 checkpoint를 삭제한다. retry/yield는 재개를 위해 보존한다. 최대 실패 횟수·지연·보존 기간·lease 연장·운영 수치와 일일 실행 환경은 별도 명시 설정이며 SQL이 기본값을 정하지 않는다. 행사·자동 완료 kind를 추가하지 않는다.
+- 성공 완료·실패 종결·대체 종결은 자기 작업 checkpoint를 삭제한다. retry/yield는 재개를 위해 보존한다. 위 확정 실패 횟수·지연·보관·점유 정책은 별도 명시 설정/삭제 구현이 필요하며 기존 SQL이 자동 적용하지 않는다. 행사·자동 완료 kind를 추가하지 않는다.
 - 실행은 최소 한 번이며 현재 점유권·공개 revision을 재검사하는 게시 표식으로 모델 중복 호출을 막는다. [요약 DB 계약](review-summary-db.md)의 projection → job → checkpoint 잠금 순서를 따른다.
 
 ## 원자 AI 예산
 
-원장은 사용자 ID·대화·후기·프롬프트를 저장하지 않는다. ledgerId, 제공처 표식, 기술 작업 종류, 예약·보고 사용량만 저장한다. 개인별 이력이나 운영 로그로 사용하지 않는다. 한도·원장 교체 주기·보존·열람 범위는 팀 검토이며 자동 일일 재설정·기본 원장·자동 TTL을 추가하지 않는다.
+원장은 사용자 ID·대화·후기·프롬프트를 저장하지 않는다. ledgerId, 제공처 표식, 기술 작업 종류, 예약·보고 사용량만 저장한다. 개인별 이력이나 운영 로그로 사용하지 않는다. 공급사 포함량50%·공급사 초기화 주기·기간 종료 후90일 보관을 선택했다. 비용 담당1명·개발 운영 담당만 접근하고 접근/변경을 기록한다. 실제 계정 단위·담당 지정·법적 근거·삭제 구현 확인 전 임의 초기화·기본 원장·자동 TTL을 넣지 않는다.
 
 모든 예산 RPC는 service_role 전용이다. configure/get은 신뢰된 운영·검증 경로에서만 호출하고 일반 HTTP 라우트에 노출하지 않는다.
 
@@ -82,7 +90,7 @@ usage_reported는 확인된 입력·출력 토큰을 소비하고 예약 상한�
 psql -X -v ON_ERROR_STOP=1 -f tests/database/minkyu/worker_jobs.sql "$LOCAL_DATABASE_URL"
 ```
 
-RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/lease/kind/error, 같은 키 중복·payload 충돌, 빈 claim, 미래 작업 제외, 만료·재점유·옛 토큰 거절, retry 도래와 terminal 재실행 방지를 검증한다. 단일 SQL 파일의 연속 호출은 두 실제 세션의 경쟁 검증을 대신하지 않는다. 총괄의 별도 동시 세션 테스트에서 unique enqueue 경쟁과 잠긴 후보를 건너뛰는 claim을 검증했다. 잠금 대기 중 lease 만료의 별도 경쟁 검증은 **NOT_RUN**이다.
+RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/lease/kind/error, 같은 키 중복·payload 충돌, 빈 claim, 미래 작업 제외, 만료·재점유·옛 토큰 거절, retry 도래와 terminal 재실행 방지를 검증한다. 단일 SQL 파일의 연속 호출은 두 실제 세션의 경쟁 검증을 대신하지 않는다. 현재 정책의 실제 경쟁 검증 여부는 실행 기록으로 별도 확인한다.
 
 구현 근거: PostgreSQL 공식 문서의 [함수 권한과 안전한 SECURITY DEFINER](https://www.postgresql.org/docs/current/sql-createfunction.html), [SKIP LOCKED](https://www.postgresql.org/docs/current/sql-select.html), [실제 시각 clock_timestamp](https://www.postgresql.org/docs/current/functions-datetime.html).
 

@@ -1,32 +1,31 @@
-# 2026-09-29 lane S 기록 — 후기 요약 중간 저장·worker·24시간 실행 (설계 5.5·5.6)
+# 후기 요약 worker 연결 상세
 
-작업자: jonghyun. lane S 에이전트가 SQL·저장소·worker·일일 실행 코드를 작성하던 중 **사용 한도로 중단**(테스트 작성 초입)되어, 총괄이 남은 코드를 검토하고 검사·이 기록을 작성했다. 커밋·푸시·원격 DB·배포 없음. 기존 미커밋 파일 중 `scheduled-jobs/index.ts` 한 개만 확장했고, 변경 전 사본의 SHA256이 시작 기준선과 같음을 확인했다(기존 maintenance 동작 보존, 기존 `scheduled-jobs.test.mjs` 8/8 무수정 통과).
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-## 구현
+load_review_summary_source→checkpoint 조회→분할 생성→checkpoint 저장→전체 근거 재검사→원자 게시 흐름을 연결한다. 예산 대기·정상 양보는 실패 횟수와 분리하고 sourceRevision 변화로 낡은 결과를 게시하지 않는다.
 
-| 파일 | 내용 |
-|---|---|
-| 제안 SQL [03_review_summary_worker.sql](2026-09-29-claude-proposed-sql/03_review_summary_worker.sql) | `worker_jobs.failed_attempts`(점유 횟수 `attempt`와 분리), 종결 `failed`/`superseded`, `yield_job`(실패 미증가), `retry_job`(실패 +1), `fail_job`/`supersede_job`(종결+중간 저장 삭제), `complete_job`(중간 저장 삭제). 비공개 `review_summary_checkpoints`(형태 검사로 원문 사본·임의 키 거절), `review_summary_job_publications`(게시 표식). 점유 확인 RPC: `load_review_summary_source`, `load/save/discard_review_summary_checkpoint`, `mark_review_summary_insufficient`, `publish_review_summary_for_job`. 원문 변경으로 revision이 오르면 같은 트랜잭션에서 옛 revision 중간 저장 삭제(기존 outbox 보존) |
-| `_shared/db/repositories/jobs.ts` | `createRpcJobRepository(db)`: claim 매핑(profileId→targetUserId, leaseExpiresAt→leaseUntil, failedAttempts), settle 매핑(succeeded→complete, queued→yield, retry_wait→retry, failed→fail, superseded→supersede), 오류 코드 명시 변환, state_conflict→lease_lost, `JOB_RPCS` |
-| `_shared/db/repositories/review-summaries.ts` | `createRpcReviewSummaryRepository(db)`: reviewId→evidenceId, text→comment, bigint revision 문자열 유지, 상태 값 변환 |
-| `_shared/ai/Agents/review-summary/orchestrator.ts` 외 | `budget_exhausted` 결과 추가(BUDGET_EXHAUSTED·확인된 DAILY_QUOTA_EXHAUSTED): 추가 모델 호출 없이 멈추고 중간 저장 보존, 실패 아님 |
-| `_shared/jobs/registry.ts`·`lease.ts` | 예산 소진 → `REVIEW_SUMMARY_BUDGET_DEFER_MS`가 있으면 그 시각으로 yield(queued+retryAt, 실패 미증가), 없으면 즉시 yield + 중단 사유. 실행 결과에 정형 `reason` |
-| `review-summary-worker/handler.ts`·`index.ts` | POST 내부 인증, 빈 본문만. 설정·버전·모델(`createConfiguredModel`)·**승인된 안전 검사기**·RPC 접근 확인(부작용 없는 probe) 중 하나라도 없으면 점유 없이 `not_enabled`. 실행당 `maxJobsPerRun`·`timeBudgetMs` 안에서 `runNextJob` 반복(정상 양보는 같은 실행에서 이어감, 무한 즉시 재점유 없음). 요청 모델 버전과 조립된 모델 표식이 다르면 점유하지 않음 |
-| `_shared/jobs/daily.ts`, `scheduled-jobs/*` | `POST /functions/v1/scheduled-jobs/daily {limit}`: ① 기존 maintenance(공개 정리+요약 등록, 모델 무관) ② 설정된 공급사·기간(설정 시간대 날짜부터 N일)·최대 페이지만큼 event-sync ③ worker를 명시 최대 횟수 안에서 남은 작업이 있을 때만 재호출. 단계 독립, 단계별 상태, 실패를 0건 성공으로 숨기지 않음 |
+## 완료·후기·당도 기준
 
-**운영 기본값 없음:** 안전 검사기 `APPROVED_SUMMARY_SAFETY_CHECKER = null`(검사 방법·품질 기준 미확정). 따라서 현재 제품 worker는 `SAFETY_CHECK_NOT_APPROVED`로 작업을 점유하지 않는다. 방치된 중간 저장의 TTL 삭제는 만들지 않았다(팀 검토).
+예상 종료 후 본인 완료 확인으로 선제 후기를 제출할 수 있으나 실제 완료 전 비공개다. 양쪽 확인 또는 예상 종료+24시간에 실제 완료 처리하고 취소·노쇼는 제외하며 분쟁 검토 중 자동 완료를 보류한다. 처음 실제 완료된 시각부터 후기 작성 7일, 양쪽 제출은 실제 완료 후 즉시 공개, 한쪽은 작성 기한 종료 시 공개한다.
 
-## 검사 결과(총괄 실행)
+검토 중 작성·기한 진행·새 공개는 보류하고 정상 인정 후 남은 기간을 재개하되 최소 24시간을 보장한다. 이미 공개된 후기는 신고만으로 숨기지 않고 운영자의 임시 비공개 판단을 구분한다. 미완료였다면 검토 후 실제 완료 시점부터 7일이다. 완료 횟수는 실제 완료 즉시, 후기 당도는 상대 후기가 열람 가능해질 때 반영한다.
 
-| 검사 | 결과 |
-|---|---|
-| `run_proposals.py --proposal 01 --proposal 03 --test review_summary_worker.sql`(ROLLBACK) | PASS |
-| `summary-repository.test.mjs` 9, `jobs.test.mjs` 20, `review-summary-worker.test.mjs` 5, `daily-run.test.mjs` 6, `scheduled-jobs.test.mjs` 8, `review-summary.test.mjs` 19 | 전부 PASS(가상) |
-| 제안 적용 DB에서 `summary-worker-concurrency.mjs`(실제 2세션) | PASS: 동시 점유 1건, 동시 중복 게시 멱등(요약·표식 1개·같은 시각), 게시↔비공개 전환 경쟁 후 표시 요약 없음/현재 revision 일치 |
-| 제안 적용 DB에서 `summary-worker-rest.mjs`(PostgREST+가상 모델) | PASS: 등록→정상 양보 여러 번→병합→원자 게시→완료, 실패 0, 모델 3회 |
-| 민규 SQL 8개 회귀(제안 없음/전체 적용) | 둘 다 PASS |
+당도는 초기 15 + 유효 반응(좋아요 +1·보통 0·별로 −2) + 별점(1~2점 −2·3점 0·4~5점 +1) + 운영 감점이다. 취소 제재 −2·노쇼 −3·중대 −10 중 같은 사건의 운영 감점은 가장 큰 하나, 유효 후기 점수는 함께 합산한다. 마지막 표시만 0~100 정수로 제한한다. 임시 숨김은 당도 유지, 최종 무효·오판 정정은 원 기여를 재계산한다.
 
-## 열린 사항
+공식 칭찬은 좋아요일 때 최대 3개, 차트는 상위 5개다. 후기 원문은 5개씩 조회하고 공개 요약은 300자 이내다. 숨긴 후기의 칭찬은 제외하고 관련 요약도 즉시 숨긴다. 남은 공개 텍스트 후기 3개 이상이면 정기 재생성하며 조회·다시 펼침에서 현재 공개 조건을 확인하고 별도 공개 결과 캐시는 두지 않는다.
 
-- 실제 cron 등록·시작 시각/시간대·limit(운영 결정), 방치 중간 저장 보관기간(팀 검토), 안전 검사 방법(첫 합성 결과 공동 검토 후).
-- worker는 매 실행 시작 때 부작용 없는 RPC 접근 확인 9회를 호출한다(허용 목록 누락 시 점유 전 중단 목적). 운영 비용이 문제면 캐시 여부를 결정한다.
+## 예약·요약 작업의 연결 경계
+
+자동 완료는 건별 DB 영속 예약과 `completion-runner.mjs`·`completion-scheduler.mjs`를 연결한다. LISTEN/NOTIFY는 변경 알림이며 예약 DB가 기준이다. 시작·연결 복구·정지 후 재시작에서 누락 예약을 다시 읽고 일정 변경·취소·수동 완료·분쟁 상태를 재확인한다. 재접속 5초·DB 쿼리 10초다. 모델 준비나 일일 작업을 기다려 자동 완료·후기 공개를 막지 않는다.
+
+행사·후기 요약 작업은 한국시간 매일 00:01 등록 후 분리 실행한다. `POST /functions/v1/scheduled-jobs/daily`·`review-summary-worker`의 내부 Bearer와 사용자 JWT를 혼용하지 않는다. 실패 영역만 재시도한다.
+
+요약 작업은 실제 실패 최대 3회·10분부터 최대 6시간 재시도, 예산 부족은 실패로 세지 않고 1시간 뒤 확인한다. 10작업·60초·점유180초·동시 실행기1개·자동 점유연장 없음이다. 입력12,000자·후기20개씩·중간4개 병합·단계당3호출·출력800토큰을 적용할 설정을 대조한다. 일일 호출1회·75초·내부정리20건이며 남은 작업은 재개한다.
+
+`sourceRevision`은 큰 정수의 정규 십진 문자열로 전달한다. 작업의 모델·프롬프트 버전과 checkpoint를 비교하고 원문을 큐·중간 저장에 복제하지 않는다. 조회·중간 저장·게시에서 현재 토큰과 점유 만료를 확인하고 잠금 대기 후·쓰기 직전에도 재확인한다. 게시·중간 저장 삭제는 원자 처리하며 같은 작업/revision의 재호출로 내용·시각·알림을 중복 반영하지 않는다. 정상 양보와 예산 대기는 실제 실패와 분리한다.
+
+작업 처리 세부 내역은 종료 후30일, 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제조건을 개발 검증한다. 요약 중간자료는 완료·폐기·원문 변경·실패 종결의 정리와 정상 재개 보존을 구분한다.
+
+## 확인할 범위
+
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.

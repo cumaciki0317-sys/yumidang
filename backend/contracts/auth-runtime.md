@@ -50,18 +50,17 @@
 
 ## 네이버 가입 자격과 활동 제한
 
-`evaluateTrustedEligibility`는 `source: naver`, 사용자 귀속·자격 확인·계정 연결·사진·명시 완료를 확인한다. PASS/DI·수기·referral·user_metadata를 증거로 사용하지 않는다. 이 순수 계산 결과로 쓰기를 허가하지 않으며 실제 DB가 매번 확인한다.
+`evaluateTrustedEligibility`는 `source: naver`, 사용자 귀속·자격 확인·계정 연결·사진·명시 완료를 확인한다. 수기·referral·user_metadata를 증거로 사용하지 않는다. 이 순수 계산 결과로 쓰기를 허가하지 않으며 실제 DB가 매번 확인한다.
 
 네이버 전용 signup runtime만 서비스 키로 `begin_naver_login`, `consume_naver_login`, `resolve_naver_account`, `record_naver_session`을 호출한다. 내부 워커 클라이언트에 이 계정/세션 RPC를 추가하지 않았다. 사용자 클라이언트는 `get_naver_signup_state`, `complete_naver_signup`과 성향 조회/저장 RPC를 허용한다.
 
 private `naver_sessions`는 Auth의 session_id·user_id와 계정 예약을 확인한다. Auth JWT를 직접 만들거나 사용자 metadata를 신뢰하지 않는다. 사진·가입 완료·최신 자격이 없는 회원과 네이버 미등록 Auth 세션은 새 공고·신청·최종 동의/확정에서 거절한다. 기존 사용자 자료의 읽기·대화 권한을 일괄 제거하지 않는다. 기존 일반 JWT 인증 계약과 RLS는 유지한다.
 
-기존 계정은 이름·실제 이메일로 자동 연결하지 않는다. 계정 확인/전환의 운영 절차는 별도다. `auth.sessions` 내부 테이블과 Auth REST 평면 응답에 의존하므로 Auth 버전 변경 시 로컬 통합 검증을 다시 수행한다. 실제 네이버 필수 정보 제공·브라우저·운영 gateway CORS 검증은 별도다.
+기존 계정은 이름·실제 이메일로 자동 연결하지 않는다. 다른 네이버 계정 연결·기록 이전은 현재 제공하지 않는다. `auth.sessions` 내부 테이블과 Auth REST 평면 응답에 의존하므로 Auth 버전 변경 시 로컬 통합 검증을 다시 수행한다. 실제 네이버 필수 정보 제공·브라우저·운영 gateway CORS 검증은 별도다.
 
-## 검증
+## 검증 경계
 
-`node --test tests/functions/minkyu/auth_db.test.ts`의 기존 14개와 공개 검색 인증 7개를 합한 21개 테스트 및 Deno 타입 검사를 통과했다. 원격 검증 모형, 위조 Principal 거절, 역할 혼동 거절, 토큰 전달, allowlist, 네트워크·timeout, SQLSTATE 매핑, 민감정보 제외를 포함한다. 실제 Supabase HTTP/JWT 통합 결과는 총괄의 [민규 현황](../../docs/collaboration/minkyu.md)에서 별도 기록한다. 모형 테스트 통과를 네이버 가입·세션 연결이나 추후 계좌 인증의 성공으로 판단하지 않는다.
-
+원격 검증 모형·위조 Principal 거절·역할 혼동·JWT 전달·allowlist·timeout·SQLSTATE·민감정보 제외는 단위 검사, 실제 Auth/RPC는 통합 검사로 구분한다. 이번 문서 동기화에서 실행하지 않았다. 신규 제재·동의 철회·탈퇴·비로그인 작성자 가드의 실제 연결도 별도 확인한다.
 
 ## 공개 읽기의 선택 인증 — 현재 연결
 
@@ -92,14 +91,16 @@ const db = principal === null
 
 `ServiceApiDependencies.publicPostDetails.authenticate`를 명시적으로 연결하지 않은 factory는 기존 회원 인증을 유지한다. 이는 구성 호환이며 인증 실패를 익명·내부·서비스 역할로 재시도하는 fallback이 아니다. 작성자/일반 회원/양쪽 확정/취소 후 재마스킹/삭제·없는 공고의 권한과 공개 필드는 기존 RPC가 판단한다. 별도 상세 projection이나 새 RPC를 추가하지 않았다.
 
-이 연결은 종현 담당 검색 코어를 우회하지 않는다. 연결 행사명 검색은 기존9필드 카드를 유지하며 2026-10-03 실제 로컬 통합에서 확인했다. 숫자 나이 범위의 HTTP·AI 연결과 행사 카드 확장은 별도 미완료 범위이며 [공개 검색 DB 계약](public-post-search-db.md)을 따른다. 익명 상세 연결을 전체 프론트·AI·운영 배포 완료로 판단하지 않는다.
+이 연결은 종현 담당 검색 코어를 우회하지 않는다. 연결 행사명 검색은 기존9필드 카드를 유지하며 DB 연결 계약에 반영되어 있다. 현재 실행 검증은 별도다. 숫자 나이 범위의 HTTP·AI 연결과 행사 카드 확장은 별도 미완료 범위이며 [공개 검색 DB 계약](public-post-search-db.md)을 따른다. 익명 상세 연결을 전체 프론트·AI·운영 배포 완료로 판단하지 않는다.
 
 추가 7개 모형 테스트는 헤더 부재/빈 값 구분, 잘못된 인증의 익명 fallback 차단, 서비스 키를 읽지 않는 익명 전송, 공개 RPC 목록 제한, 검증된 회원 JWT 보존을 확인한다. PostgREST의 HTTP403 응답에서도 문자열 SQLSTATE `28000`은 로그인 필요로 분류하고, 다른 403은 접근 거절을 유지한다. 실제 SQL 권한 검증은 이 모형 테스트와 구분한다.
 
-[공개 상세 인계](../../docs/collaboration/requests/minkyu/2026-10-02-public-detail-handoff.md)에 신규 단위 15개 PASS와 실제 격리 Auth·PostgREST·DB·기본 HTTP runtime 통합 346개 확인 PASS를 기록했다. 합성 계정/공고/사진 metadata의 권한 검증과 정리까지 수행했으며 외부 네이버·실제 사용자 사진 업로드·Edge gateway·운영 배포는 해당 runner 범위가 아니다. 이전 익명 client의 `get_service_post` 차단 기대를 현재 5개 허용 목록에 맞추는 기존 인증 회귀는 [별도 인계](../../docs/collaboration/requests/minkyu/2026-10-02-public-client-regression-handoff.md)에서 실행 결과를 구분한다. 이 문서 갱신은 제품 코드나 SQL을 변경하지 않는다.
-
-## 내부 Top10과 행사 연결 검증 — 2026-10-03
+## 내부 Top10 권한 경계
 
 `/internal/events/kopis-top10` 두 경로는 `requireInternalCaller` 성공 뒤에만 기존 내부 client의 `store_kopis_top10_snapshot`·`get_kopis_top10_snapshot`을 호출한다. Bearer 헤더 없음은401, 사용자 JWT·anon/service 역할 키·잘못된 secret은403이며 Auth/공개 client로 fallback하지 않는다. 공개 읽기5개·사용자 RPC 목록은 그대로다. 직접 PostgREST 호출도 native 권한 거절을 확인했다(회원403/42501, anon401/42501). HTTP의 내부 인증과 직접 DB 역할 거절은 별도 검사다.
 
-[이번 인계](../../docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md)의 실제 통합8그룹·769확인 PASS는 실제 로컬 Auth·원형 factory/native RPC·배포된 gateway 호출을 포함한다. 합성 회원3명의 자격과 사진 metadata만 주입했고 실제 외부 네이버·사진 업로드는 실행하지 않았다. 행사 연결의 최신 정보·수동 교체 재동의와 확정/취소 후 이름·정확 장소 권한을 확인했으며, 생성 식별자로만 정리한 뒤 관련23테이블0을 확인했다. 최신38 SQL·원본135개 보존 검사를 적용했다. 이 결과는 외부 AI·공식 행사 수집·원격 운영 배포의 성공 증거가 아니다.
+## 운영 선택과 적용 확인
+
+일반 JSON64KiB·외부 요청15초를 명시 주입한다. 기존 설정의 기본값 없음과 정책 선택을 구분하고 실제 계정·호스트 지원을 확인한다. 운영 보관 선택은 일반 진단 30일·보안 90일·작업 종료 후 세부 기록 30일·공급사 한도 기간 종료 후 비용 원장 90일이다. 원문·비밀값을 제외한다. 미정산 예약은 해결까지 제한 보관하고 자동 환불·초기화를 하지 않는다. 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 검증한다. 법적 근거·실제 삭제·백업 만료는 별도 확인이며 활성 자료 삭제를 백업 즉시 삭제로 안내하지 않는다.
+
+탐색 AI와 후기 AI를 구분해 가입 시 각각 필수 동의를 받으려는 제품 의도를 유지한다. 가입 후 철회 요청을 접수하면 해당 처리의 신규 전송을 중단하고 관련 요약 숨김·필요한 원문/외부 사본 삭제를 처리하며 일반 동행·계정은 유지한다. 필수화와 철회 처리의 법적 정합성은 검토 대기다. 확인 전 관련 가입 차단·외부 전송을 시행하지 않는다. AI 화면 설명을 제공하고 별도 첫 이용 팝업은 추가하지 않는다.

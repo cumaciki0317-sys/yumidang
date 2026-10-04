@@ -1,34 +1,48 @@
-# 종현 연결 전달: 실제 DB RPC 2차
+# DB RPC와 종현 저장소 연결
 
-작성: 민규. 대상: 종현의 검색·후기 요약·작업 저장소 어댑터. 외부 전송 없음.
+> 현재 기준: [정책.md](../../../../정책.md) · 문서 기준일: 2026-10-05
 
-전용 worktree `.worktrees/minkyu-foundation`, 브랜치 `minkyu/foundation-harness`에 구현했다. 아직 커밋·푸시하지 않았으므로 다른 복제본에 자동 반영되지 않는다. 1차 가상 명세의 의미 이름을 그대로 RPC 이름으로 호출하지 말고 아래 실제 계약을 따른다.
+검색은 현재 v2 계약을 기준으로, 요약은 snapshot·checkpoint·publish, 큐는 enqueue/claim/yield/retry/fail/supersede/complete 경계를 대조한다. 큰 숫자 revision 을 Number 로변환하지 않고 조건 충돌은 최신 자료 재조회로 처리한다.
 
-| 종현 담당 연결 | 민규 제공 RPC | 상세 계약 |
-|---|---|---|
-| 검색 repository / search-service | `search_public_posts` | [검색 DB](../../../../backend/contracts/public-post-search-db.md) |
-| 요약 source-loader / publisher | `load_public_review_snapshot`, `publish_review_summary` | [후기 DB](../../../../backend/contracts/review-summary-db.md) |
-| 요약 표시 repository | `get_visible_review_summary` | 같은 후기 DB 계약 |
-| jobs repository / worker | `enqueue_job`, `claim_job`, `complete_job`, `retry_job` | [작업 큐](../../../../backend/contracts/worker-jobs.md) |
+## DB·RPC 연결 점검
 
-회원 검색·요약 표시는 사용자 JWT, 내부 snapshot·게시·큐 처리는 service_role 경로다. 서비스 키로 회원 검색을 대신하면 익명 별칭이 반환된다. 서비스 키·lease token·후기 원문을 클라이언트/AI 탐색 도구에 전달하지 않는다.
+기존 서비스·repository·RPC 허용 목록을 대조하고 승인된 담당이 필요한 최소 변경을 한다. 현재 정식 migration과 실제 대상 이력을 비교하여 이미 적용한 제안 SQL을 중복 채택하지 않는다. 파일 존재만으로 배포된 RPC라고 판단하지 않는다.
 
-RPC JSON에는 공통 HTTP envelope가 없다. HTTP 진입점에서 `{data,requestId}` / `{error,requestId}`를 만들고 SQLSTATE를 공개 오류로 변환한다. `22023`→`INVALID_REQUEST`, `P0002`→`RESOURCE_NOT_FOUND`, `28000`→`AUTH_REQUIRED`, `42501`→인증 문맥에 맞는 인증/권한 오류다. 요약 `40001`과 큐 `P0001/state_conflict`는 `STATE_CONFLICT`; 원문 SQL 오류와 detail은 반환하지 않는다. 요약 충돌이면 새 snapshot으로 다시 판단하며 오래된 출력을 무조건 재게시하지 않는다.
+HTTP 응답은 `{data,requestId}` 또는 `{error:{code,message,retryable},requestId}`다. RPC에는 HTTP envelope를 중복 추가하지 않는다. `22023` 입력오류, `P0002` 대상없음, `28000` 인증필요, `42501` 권한거절, `40001` 충돌을 실제 문맥에 맞게 매핑하고 SQL 원문/detail을 공개하지 않는다.
 
-큐 kind는 `review_summary`만 지원한다. payload는 profileId/sourceRevision/modelVersion/promptVersion 네 문자열만 허용한다. snapshot의 sourceRevision은 불투명 정수 문자열, 버전 표식은 영문·숫자·점·밑줄·하이픈 1~64자다. queue lease는 필수 인수이고 운영 기본값·재시도 간격·최대 횟수는 아직 정하지 않았다.
+행사비용 JSON은 `CASE`로 객체 자료형을 먼저 검사하며 조건이 명시적 TRUE일 때만 저장한다. 원자배치 실패를 일부정상자료 저장으로 숨기지 않는다. 요약잠금은 투영상태→작업→중간저장/표식 순서를 맞추고 잠금대기후 점유토큰·만료를 재검사한다.
 
-요약은 공개 텍스트 후기 3개 이상과 전체 근거 ID 집합·현재 revision이 맞아야 게시된다. 중복 게시에는 최초 결과를 반환한다. 내용의 사실성·민감정보 제외는 종현의 output/evidence 검사가 맡는다. 이 SQL을 통과했다고 모델 출력이 안전하다는 뜻은 아니다.
+## 검색 계약과 현재 연결 요구
 
-## 실제 검증 결과
+`search_public_posts_v2(p_filters,p_cursor,p_limit)`와 기존 검색 service/repository를 재사용한다. 제목·등록 장소명·등록 주소·연결 행사명을 검색하고 소개·후기·비공개 상세 지점은 제외한다. 공개 지역은 동까지이며 검색 일치가 상세 주소 표시 권한을 주지 않는다.
 
-Supabase CLI 2.116.0 / PostgreSQL 17.6에서 기존 20개+신규 3개 재생 PASS. 역할 전환을 포함한 큐/검색/후기 SQL 3개 PASS. 별도 DB 연결의 중복 enqueue, SKIP LOCKED claim, 게시 후 비공개 변경, 비공개 변경 후 오래된 게시 거절 4개 PASS. fixture 잔존 0. HTTP 공통 Deno 타입 검사도 PASS. 실행법은 [로컬 도구 안내](../../../../tools/local/README.md).
+`authorAge`는 `"all" | {min:number,max:number}`이며 숫자는 만 19~99세 양 끝을 포함한다. 전체에는 99세 상한을 적용하지 않는다. HTTP의 `authorAgeMin/Max` 두 정수를 같은 객체로 전달하고 한쪽 누락·소수·추가 키·역전 범위를 거절한다. 비로그인은 일정·나이 상세 필터 모두 전체만 허용한다. 과거 나이 enum은 현재 화면 선택지로 사용하지 않는다.
 
-## 민규 후속 연결과 보류
+기본 `created_desc`, 선택 `starts_asc`이며 모집 상태 전체가 기본이다. 사용자 선택보다 기간·모집 그룹을 앞세우지 않는다. 목록은 10개씩 추가 조회한다. 커서에는 필터·정렬과 마이크로초 정밀도 위치를 결합하고 변경된 조건의 커서를 거절한다. DB 결과를 어댑터에서 다시 정렬하거나 미지원 조건을 조용히 버리지 않는다.
 
-- 공고 생성/수정 서비스가 등록 장소·주소를 분리해 `set_post_search_location`을 호출해야 한다. 기존 exact_location은 자동 이행하지 않았고 이전 list_posts 경로는 유지된다.
-- 비용·작성자 나이 범위·날짜 구간 등 확장 검색 조건은 아직 최소 DB RPC에 없다. 종현 어댑터가 미지원 조건을 조용히 무시하지 않도록 요청이 필요하다.
-- `set_review_publication`은 상위 서비스용 내부 연결점이며 기존 후기의 기본값은 비공개다. 공개 전환 스케줄러·정책 서비스·변경 후 재요약 enqueue/outbox는 아직 연결하지 않았다.
-- 수동 완료 양측 확인은 후기 적격성에서 검사하지만 기존 완료 RPC 자체는 아직 단측 완료 방식이다. 양측 완료 전환·알림 기록·분쟁 이후 기한 처리 보완은 민규 후속 작업이다.
-- DB 클라이언트·인증 middleware·업무 handler·종현 워커와의 end-to-end 연결은 미완료다. PASS 공급사/세션, 계좌 효력 변경 후 확정, 분쟁 판단 세부 정책은 결정하지 않았다.
+반환 카드의 `canApply`는 실제 가입·사진·차단·제재·모집 상태를 반영하는 안내이며 첫 메시지 전송 때 다시 검사한다. 비로그인 작성자 가드에 실제 개인 정보를 보내지 않는다. 오류 응답은 0건과 구분하고 SQL 오류·원문을 노출하지 않는다.
 
-상대 파일 수정 대신 종현 요청 폴더에 계약 차이·필요 필터·어댑터 요구를 남기면 민규가 자기 영역에서 후속 구현한다.
+## 예약·요약 작업의 연결 경계
+
+자동 완료는 건별 DB 영속 예약과 `completion-runner.mjs`·`completion-scheduler.mjs`를 연결한다. LISTEN/NOTIFY는 변경 알림이며 예약 DB가 기준이다. 시작·연결 복구·정지 후 재시작에서 누락 예약을 다시 읽고 일정 변경·취소·수동 완료·분쟁 상태를 재확인한다. 재접속 5초·DB 쿼리 10초다. 모델 준비나 일일 작업을 기다려 자동 완료·후기 공개를 막지 않는다.
+
+행사·후기 요약 작업은 한국시간 매일 00:01 등록 후 분리 실행한다. `POST /functions/v1/scheduled-jobs/daily`·`review-summary-worker`의 내부 Bearer와 사용자 JWT를 혼용하지 않는다. 실패 영역만 재시도한다.
+
+요약 작업은 실제 실패 최대 3회·10분부터 최대 6시간 재시도, 예산 부족은 실패로 세지 않고 1시간 뒤 확인한다. 10작업·60초·점유180초·동시 실행기1개·자동 점유연장 없음이다. 입력12,000자·후기20개씩·중간4개 병합·단계당3호출·출력800토큰을 적용할 설정을 대조한다. 일일 호출1회·75초·내부정리20건이며 남은 작업은 재개한다.
+
+`sourceRevision`은 큰 정수의 정규 십진 문자열로 전달한다. 작업의 모델·프롬프트 버전과 checkpoint를 비교하고 원문을 큐·중간 저장에 복제하지 않는다. 조회·중간 저장·게시에서 현재 토큰과 점유 만료를 확인하고 잠금 대기 후·쓰기 직전에도 재확인한다. 게시·중간 저장 삭제는 원자 처리하며 같은 작업/revision의 재호출로 내용·시각·알림을 중복 반영하지 않는다. 정상 양보와 예산 대기는 실제 실패와 분리한다.
+
+작업 처리 세부 내역은 종료 후30일, 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제조건을 개발 검증한다. 요약 중간자료는 완료·폐기·원문 변경·실패 종결의 정리와 정상 재개 보존을 구분한다.
+
+## 연결 파일
+
+아래는 소스·계약을 대조할 경로이며 파일 존재나 이름이 현재 정책 구현 완료를 뜻하지 않습니다.
+
+- [public-post-search-db.md](../../../../backend/contracts/public-post-search-db.md)
+- [review-summary-db.md](../../../../backend/contracts/review-summary-db.md)
+- [worker-jobs.md](../../../../backend/contracts/worker-jobs.md)
+- [README.md](../../../../tools/local/README.md)
+
+## 확인할 범위
+
+현재 정책에 맞춘 코드·SQL 적합성, 실제 Auth/DB/HTTP, 브라우저, 공급사, 운영 배포를 각각 확인합니다. 이번 작업은 문서만 갱신했으며 이 기능의 실행 검증을 수행하지 않았습니다. 필요한 변경은 담당별 허용 경로에서 진행하고 기존 코드·SQL·실제 자료를 변경하는 승인은 별도로 확인합니다.
