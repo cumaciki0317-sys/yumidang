@@ -118,11 +118,13 @@ AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한�
 
 승인된 의미 검사기, 승인된 전체 입력/출력 개인정보 검사기, 공식 공급사 출력 상한 인코더가 모두 필요하다. 미주입 기본값은 `not_enabled`이며 가짜 통과 함수로 바꾸지 않는다. 공개 원문이더라도 개인정보가 포함된 묶음은 새 모델 전송 전에 차단한다. 차단된 원문을 임의로 자르거나 일부만 처리해 전체 요약을 만들지 않는다. 승인 검토에는 합성 사례를 사용한다.
 
-현재 운영 미연결 항목: 신규 계약 버전 SQL, 대상/작성자 철회와 공개 조회의 원자 처리, 전역 점유 RPC 허용 목록, 상주 실행기의 실제 기동·재접속·재시도, 공급사 상한·보관·비용 근거와 검사 품질 승인. 로컬 단위·HTTP 검증은 이 항목의 운영 완료를 뜻하지 않는다.
+현재 소스에는 신규 계약 버전 SQL(`20261005002528_ai_atomic_requests.sql`, `20261005003159_current_summary_fences.sql`), 대상/작성자 철회 처리, 전역 점유 및 요약 RPC 허용 목록이 있다. 실제 대상 DB 적용·철회/게시 경쟁·공개 조회 권한 검증, 공개 요약 HTTP 경로, 상주 실행기의 실제 기동·재접속·재시도, 공급사 상한·보관·비용 근거와 검사 품질 승인은 별도 확인 과제다. 로컬 단위·HTTP 검증은 이 항목의 운영 완료를 뜻하지 않는다.
 
 
 외부 요약 처리 시작의 최종 허가는 `reserve_review_summary_model` RPC에서 전체 예산 예약과 함께 원자 처리한다. 직전 소스 재조회 뒤 개인정보 검사·예산 예약을 기다리는 동안 철회나 점유 만료가 발생할 수 있으므로 재조회만으로 새 전송을 허가하지 않는다. worker는 모델 요청에 서버의 작업·전역 점유 범위를 묶고, 요약 작업에는 범위 없는 `reserve_ai_budget` 호출을 허용하지 않는다.
 
 민규 연결 계약: `reserve_review_summary_model(p_ledger_id,p_provider_id,p_task,p_units,p_job_id,p_lease_token,p_target_user_id,p_source_revision,p_worker_run_token,p_model_version,p_prompt_version,p_source_review_ids,p_contract_version)`이며 버전은 `2026-10-05`다. `p_source_review_ids`는 현재 공개·동의 자격을 충족하는 **전체 텍스트 후기 집합**이다. DB는 현재 job과 target·revision·model/prompt 일치, 작업 및 전역 점유 유효, 대상자와 모든 작성자의 현재 동의, 전체 근거 집합 일치와 3개 이상을 같은 트랜잭션에서 확인하고 전체 예산을 예약한다. 원문은 이 RPC에 전달하거나 저장하지 않는다. 이 예약 허가를 외부 모델 처리 시작의 기준으로 삼고 이후 철회는 다음 처리 시작을 막으며 이미 시작한 처리 결과도 게시 전 다시 검증한다.
 
-성공은 `{reservationId:UUID}`, 예산 소진은 `{reservationId:null}`, 자격 거부는 `{status:'consent_revoked'|'stale_revision'|'insufficient_reviews'|'invalid_evidence'|'lease_lost'}`다. 이외 반환형·미지원 RPC는 오류로 중단하며 generic 예약으로 대체하지 않는다. worker의 시작 전 준비 확인은 존재하지 않는 작업·전역 토큰으로 이 RPC를 호출하며 `lease_lost`를 받아야 한다. DB는 없는 작업의 점유 확인을 먼저 하여 이 확인 호출에서 예산을 예약하지 않는다. 내부 클라이언트 허용 목록·SQL 구현·동시 철회/점유 만료 실제 검증은 민규 담당이며 현재 미실행이다.
+성공은 `{reservationId:UUID}`, 예산 소진은 `{reservationId:null}`, 자격 거부는 `{status:'consent_revoked'|'stale_revision'|'insufficient_reviews'|'invalid_evidence'|'lease_lost'}`다. 이외 반환형·미지원 RPC는 오류로 중단하며 generic 예약으로 대체하지 않는다. worker의 시작 전 준비 확인은 존재하지 않는 작업·전역 토큰으로 이 RPC를 호출하며 `lease_lost`를 받아야 한다. DB는 없는 작업의 점유 확인을 먼저 하여 이 확인 호출에서 예산을 예약하지 않는다. 내부 클라이언트 허용 목록·SQL 구현은 민규 소유 소스에 존재한다. 실제 대상 DB 적용·동시 철회/점유 만료 검증은 민규와 연결해 수행해야 하며 이번에는 실행하지 않았다.
+
+현재 소스 확인과 이번 합성 검증은 [AI·검색 구현 결과](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md)를 따른다. 승인된 요약 의미 검사기·개인정보 검사기·출력 상한 포트의 운영 기본값은 비어 있으며 준비 전 `not_enabled`를 유지한다.

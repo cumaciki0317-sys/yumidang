@@ -142,6 +142,8 @@ export type Notification = {
   targetId?: string;
 };
 export type Draft = {
+  serviceExpectedUpdatedAt?: string;
+  serviceDraftEpoch?: number;
   editingPostId?: string;
   category: string;
   title: string;

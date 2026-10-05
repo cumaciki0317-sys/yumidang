@@ -32,7 +32,7 @@ import {
   validateDraft,
 } from "./domain";
 import * as storage from "./storage";
-import { serviceMode, installServiceSession } from "./remote";
+import { serviceMode, installServiceSession, serviceSessionEpoch, useServiceSession } from "./remote";
 
 export const routes: Record<ScreenId, string> = {
   S00: "/",
@@ -83,6 +83,7 @@ function conflicts(
 
 /** Local scenario adapter. No OAuth, member data or model calls leave this preview. */
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const serviceSession = useServiceSession();
   const defaultMemberId = useRef("me");
   const pathname = usePathname();
   const params = useGlobalSearchParams();
@@ -1198,7 +1199,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     for (const action of ["login", "updateMember", "unblock", "leaveChat", "markNotificationsRead", "withdrawAi", "setPreview", "editPost"] as const) {
       value[action] = () => showToast(unavailable().message!);
     }
-    value.saveDraft = async () => { throw new Error("SERVICE_DRAFT_CONTEXT_NOT_CONNECTED"); };
+    // Device-memory draft only. It is not a published post or a server save receipt.
+    value.draft = state.draft?.serviceDraftEpoch === serviceSession.epoch ? state.draft : null;
+    value.saveDraft = async (draft) => {
+      if (!serviceSession.authenticated || draft.serviceDraftEpoch !== serviceSessionEpoch()) throw new Error("SERVICE_DRAFT_SESSION_CHANGED");
+      commit({ draft: { ...draft, updatedAt: Date.now() } });
+    };
+    value.clearDraft = async () => { commit({ draft: null }); };
     value.deleteAccount = async () => unavailable();
     value.reset = async () => { showToast(unavailable().message!); };
     value.sendAi = async () => unavailable();

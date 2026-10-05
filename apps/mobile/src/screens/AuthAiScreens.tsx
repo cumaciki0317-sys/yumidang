@@ -1,6 +1,10 @@
-import { serviceMode } from "../remote";
+import { serviceMode, useMemberPorts, useMemberSessionDetails, useServiceSession, installMemberSessionDetails, serviceSessionEpoch } from "../remote";
+import { sessionResult, signupState } from "../member-session";
+import { uploadPhoto, validateOriginalPhoto, type PhotoInput } from "../avatar-service";
+import { ApiError } from "../api";
+import * as Crypto from "expo-crypto";
 import { RemoteAiScreen } from "./RemoteScreens";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Image, Modal, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -25,7 +29,8 @@ import {
   Title,
 } from "../ui";
 
-export function LoginScreen() {
+export function LoginScreen() { return serviceMode ? <RemoteLoginScreen /> : <PreviewLoginScreen />; }
+function PreviewLoginScreen() {
   const app = useApp();
   const { returnPath, example } = useLocalSearchParams<{
     returnPath?: string;
@@ -124,7 +129,8 @@ export function LoginScreen() {
   );
 }
 
-export function SignupScreen() {
+export function SignupScreen() { const { epoch } = useServiceSession(); return serviceMode ? <RemoteSignupScreen key={epoch} /> : <PreviewSignupScreen />; }
+function PreviewSignupScreen() {
   const app = useApp();
   const [photo, setPhoto] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
@@ -144,7 +150,7 @@ export function SignupScreen() {
       const format = asset.mimeType?.toLowerCase();
       if (
         size === undefined ||
-        size > 10 * 1024 * 1024 ||
+        size > 10_000_000 ||
         (format
           ? !["image/jpeg", "image/png"].includes(format)
           : !/\.(jpe?g|png)$/i.test(
@@ -284,6 +290,124 @@ export function SignupScreen() {
       </Modal>
     </Screen>
   );
+}
+
+function authMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    if (error.code === "NAVER_INFORMATION_REQUIRED") return "네이버 필수 정보가 누락됐어요. 네이버 정보와 동의 항목을 확인한 뒤 다시 로그인해 주세요.";
+    if (error.code === "NAVER_INELIGIBLE") return "여성·만 19세 이상 가입 자격을 충족하지 않아 가입을 완료할 수 없어요.";
+    if (["INVALID_PHOTO", "INVALID_PHOTO_PATH"].includes(error.code)) return "원본 10MB 이하 JPG·PNG 사진을 선택해 주세요. 저장용 사진은 2MiB 이하 JPEG로 변환해요.";
+    if (error.code === "INVALID_LOGIN_CALLBACK") return "로그인 요청이 만료됐거나 이 화면의 요청과 일치하지 않아요. 새로 로그인해 주세요.";
+  }
+  return "연결하지 못했어요. 입력을 유지했으니 잠시 후 다시 시도해 주세요.";
+}
+function authDestination(result: ReturnType<typeof sessionResult>) {
+  if (result.status === "ready") router.replace(result.returnTo as any);
+  else if (result.status === "photo_required" || result.status === "completion_required") router.replace("/signup");
+}
+function RemoteLoginScreen() {
+  const { session } = useMemberPorts();
+  const details = useMemberSessionDetails();
+  const { returnPath } = useLocalSearchParams<{ returnPath?: string }>();
+  const [busy, setBusy] = useState(false), [issue, setIssue] = useState("");
+  const active = useRef<AbortController | null>(null);
+  useEffect(() => () => active.current?.abort(), [session]);
+  const login = async () => {
+    if (!session || busy) return;
+    active.current?.abort(); const controller = new AbortController(); active.current = controller;
+    const epoch = serviceSessionEpoch(); setBusy(true); setIssue("");
+    try {
+      const result = await session.login(returnPath || "/", controller.signal);
+      if (controller.signal.aborted || serviceSessionEpoch() !== epoch) return;
+      if (result === null) return; // Supported web start redirects; this is not a successful login.
+      const verified = sessionResult(result); installMemberSessionDetails(verified); authDestination(verified);
+    } catch (error) { if (!controller.signal.aborted && serviceSessionEpoch() === epoch) setIssue(authMessage(error)); }
+    finally { if (!controller.signal.aborted) setBusy(false); }
+  };
+  return <Screen title="로그인">
+    <Title>네이버로 유미당 시작하기</Title>
+    <Body>네이버의 이름·성별·생일·출생연도로 여성·만 19세 이상 여부를 확인해요.</Body>
+    {!session && <Body muted>네이버 연결을 준비하고 있어요. 준비되면 여기에서 로그인할 수 있어요.</Body>}
+    {details && ["information_required", "ineligible"].includes(details.status) && <Body>네이버 정보 확인이 필요해 새 공고·신청·확정을 보류했어요. 기존 약속 조회·취소·지원은 이용할 수 있어요.</Body>}
+    {issue && <Body>{issue}</Body>}
+    <Button disabled={!session || busy} loading={busy} onPress={() => { void login(); }}>네이버로 로그인</Button>
+    <TextButton onPress={() => router.replace("/")}>둘러보기</TextButton>
+  </Screen>;
+}
+export function RemoteNaverCallback() {
+  const { session } = useMemberPorts();
+  const [issue, setIssue] = useState("");
+  const started = useRef(false);
+  useEffect(() => {
+    if (!session?.callback || typeof window === "undefined" || started.current) return;
+    started.current = true;
+    const controller = new AbortController(), epoch = serviceSessionEpoch();
+    void session.callback(window.location.href, controller.signal).then(result => {
+      if (controller.signal.aborted || serviceSessionEpoch() !== epoch) return;
+      const verified = sessionResult(result); installMemberSessionDetails(verified); authDestination(verified);
+      if (["information_required", "ineligible"].includes(verified.status)) router.replace("/login");
+    }, error => { if (!controller.signal.aborted) setIssue(authMessage(error)); });
+    return () => controller.abort();
+  }, [session]);
+  return <Screen title="네이버 로그인 확인"><Body>{issue || (session?.callback ? "네이버 정보를 확인하고 있어요…" : "로그인 연결을 준비하고 있어요.")}</Body><TextButton onPress={() => router.replace("/login")}>로그인으로 돌아가기</TextButton></Screen>;
+}
+function RemoteSignupScreen() {
+  const { session, photo: storage } = useMemberPorts(), details = useMemberSessionDetails();
+  const [photo, setPhoto] = useState<PhotoInput | null>(null), [path, setPath] = useState<string | null>(null);
+  const [interests, setInterests] = useState<string[]>([]), [styles, setStyles] = useState<string[]>([]), [mbti, setMbti] = useState("");
+  const [busy, setBusy] = useState(false), [issue, setIssue] = useState(""), [loaded, setLoaded] = useState(false);
+  const active = useRef<AbortController | null>(null);
+  const uploaded = useRef<{ path: string; ready: boolean } | null>(null);
+  useEffect(() => {
+    const controller = new AbortController(); active.current = controller;
+    const epoch = serviceSessionEpoch();
+    if (session && details) void session.signupState(controller.signal).then(result => {
+      if (controller.signal.aborted || serviceSessionEpoch() !== epoch) return;
+      const state = signupState(result); setPath(state.avatarPath); setInterests(state.interests); setStyles(state.conversationStyles); setMbti(state.mbti || ""); setLoaded(true);
+      if (state.status === "ready") router.replace(details.returnTo as any);
+    }, error => { if (!controller.signal.aborted) setIssue(authMessage(error)); });
+    return () => controller.abort();
+  }, [session, details]);
+  const select = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 1, allowsEditing: false, exif: false });
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      const input: PhotoInput = { uri: asset.uri, mimeType: asset.mimeType || "", originalBytes: asset.fileSize ?? asset.file?.size ?? 0 };
+      validateOriginalPhoto(input); setPhoto(input); setPath(null); uploaded.current = null;
+    } catch (error) { setIssue(authMessage(error)); }
+  };
+  const complete = async () => {
+    if (!details || !session || !storage || !loaded || busy) return;
+    active.current?.abort(); const controller = new AbortController(); active.current = controller;
+    const epoch = serviceSessionEpoch(); setBusy(true); setIssue("");
+    try {
+      let avatarPath = path;
+      if (photo) {
+        const next = uploaded.current?.path || `${details.userId}/${Crypto.randomUUID()}.jpg`;
+        if (!uploaded.current?.ready) { uploaded.current = { path: next, ready: false }; await uploadPhoto(photo, next, details.userId, storage, controller.signal); uploaded.current = { path: next, ready: true }; }
+        avatarPath = next;
+      }
+      if (!avatarPath) throw new ApiError(400, "INVALID_PHOTO");
+      const result = signupState(await session.complete({ avatarPath, interests, conversationStyles: styles, mbti: mbti || null }, controller.signal));
+      if (controller.signal.aborted || serviceSessionEpoch() !== epoch) return;
+      if (result.status !== "ready") { setIssue("가입 정보를 다시 확인해 주세요. 아직 가입 완료가 확인되지 않았어요."); return; }
+      const verified = sessionResult({ ...details, status: result.status }); installMemberSessionDetails(verified); authDestination(verified);
+    } catch (error) { if (!controller.signal.aborted && serviceSessionEpoch() === epoch) setIssue(authMessage(error)); }
+    finally { if (!controller.signal.aborted) setBusy(false); }
+  };
+  if (!details) return <Screen title="가입 프로필"><Body>네이버 로그인 후 가입 정보를 입력할 수 있어요.</Body><Button onPress={() => router.replace("/login")}>네이버 로그인</Button></Screen>;
+  return <Screen title="가입 프로필">
+    {issue && <Body>{issue}</Body>}
+    {!session || !storage ? <Body muted>가입·사진 연결을 준비하고 있어요.</Body> : !loaded && <Body muted>현재 가입 정보를 확인하고 있어요…</Body>}
+    {photo && <Image source={{ uri: photo.uri }} style={{ width: 110, height: 110, borderRadius: 55 }} />}
+    <Button secondary disabled={!storage || busy} onPress={() => { void select(); }}>필수 프로필 사진 선택</Button>
+    <Body small>JPG·PNG 원본 10MB 이하. 사진을 선택한 뒤 가입 완료를 눌러 주세요.</Body>
+    <TagsEditor title="관심사 · 선택" values={interests} setValues={setInterests} suggestions={[]} />
+    <TagsEditor title="대화 방식 · 선택" values={styles} setValues={setStyles} suggestions={[]} />
+    <Field label="MBTI · 선택" value={mbti} onChangeText={v => setMbti(v.toUpperCase())} maxLength={4} />
+    <Button disabled={!session || !storage || !loaded || busy || !photo && !path} loading={busy} onPress={() => { void complete(); }}>가입 완료</Button>
+  </Screen>;
 }
 
 export function AiScreen() { return serviceMode ? <RemoteAiScreen /> : <PreviewAiScreen />; }

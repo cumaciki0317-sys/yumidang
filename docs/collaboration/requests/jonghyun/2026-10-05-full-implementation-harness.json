@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "actor": "jonghyun",
+  "baseline": "9dfca36cfe88f6da658fcbf863d5f4a33c2d0513",
+  "branch": "jonghyun/queue-integration",
+  "mode": "implementation",
+  "user_decisions": {
+    "original_image_max_bytes": 10000000,
+    "uncertain_remote_completion": "retain_lease_until_expiry_no_renewal",
+    "priority": "documented_jonghyun_tasks_first"
+  },
+  "lanes": {
+    "runner": [
+      "backend/supabase/functions/scheduled-jobs/queue-runner.mjs"
+    ],
+    "scheduler": [
+      "backend/supabase/functions/_shared/jobs/background.mjs"
+    ],
+    "coordinator": [
+      "tests/functions/jonghyun/background-runner.test.mjs",
+      "docs/collaboration/jonghyun.md",
+      "docs/collaboration/requests/jonghyun/2026-10-05-full-implementation-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-10-05-full-implementation-plan.md",
+      "docs/collaboration/requests/jonghyun/2026-10-05-queue-integration-result.md",
+      "docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md",
+      "tests/integration/jonghyun/mobile-member-writes-browser.mjs"
+    ],
+    "mobile": [
+      "apps/mobile/src/service.ts",
+      "apps/mobile/src/api.ts",
+      "apps/mobile/src/remote.tsx",
+      "apps/mobile/src/types.ts",
+      "apps/mobile/src/screens/AuthAiScreens.tsx",
+      "apps/mobile/src/screens/RemotePlacePicker.tsx",
+      "apps/mobile/src/screens/RemoteAiFeedback.tsx",
+      "apps/mobile/src/state.tsx",
+      "apps/mobile/src/storage.ts",
+      "apps/mobile/src/ui.tsx",
+      "apps/mobile/src/member-service.ts",
+      "apps/mobile/src/member-session.ts",
+      "apps/mobile/src/avatar-service.ts",
+      "apps/mobile/package.json",
+      "apps/mobile/package-lock.json",
+      "tests/functions/jonghyun/mobile-member-service.test.ts",
+      "tests/functions/jonghyun/mobile-session.test.ts",
+      "tests/functions/jonghyun/mobile-avatar-service.test.ts",
+      "docs/collaboration/requests/jonghyun/2026-10-05-mobile-implementation-result.md",
+      "apps/mobile/src/app/auth-callback.tsx",
+      "apps/mobile/src/web-member-session.ts",
+      "tests/functions/jonghyun/mobile-web-session.test.ts",
+      "tests/functions/jonghyun/mobile-service.test.ts"
+    ],
+    "ai-search-audit": [
+      "backend/contracts/search.md",
+      "backend/contracts/ai-chat.md",
+      "backend/contracts/review-summary.md",
+      "docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md"
+    ],
+    "event-audit": [
+      "docs/collaboration/requests/jonghyun/2026-10-05-events-implementation-result.md"
+    ],
+    "mobile-ui": [
+      "apps/mobile/src/screens/CommunityScreens.tsx",
+      "apps/mobile/src/screens/BrowseScreens.tsx",
+      "apps/mobile/src/screens/RemoteScreens.tsx",
+      "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "docs/collaboration/requests/jonghyun/2026-10-05-mobile-ui-implementation-result.md"
+    ],
+    "real-env-coordinator": [
+      "docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md",
+      "정책.md",
+      "포텐스닷.md"
+    ],
+    "public-provider-live": [
+      "tests/integration/jonghyun/public-providers-live.ts"
+    ],
+    "android-runtime": [
+      "tests/integration/jonghyun/android-runtime-validation.mjs",
+      "apps/mobile/src/app/_layout.tsx"
+    ]
+  },
+  "pending_lanes": [],
+  "rules": [
+    "exact file allowlists before editing",
+    "ownership check before edits",
+    "no shared file edits",
+    "no automatic commits push or deployment",
+    "M and sungho files read-only"
+  ]
+}

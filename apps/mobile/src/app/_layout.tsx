@@ -3,7 +3,7 @@ import React from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AppProvider, useApp } from "../state";
 import { colors } from "../ui";
 
@@ -23,6 +23,7 @@ function Frame() {
       }}
     >
       <StatusBar style="dark" />
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: "#EDE7FB" }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="프로토타입 상태와 화면 목록"
@@ -42,6 +43,7 @@ function Frame() {
           {serviceMode ? "" : path === "/preview" ? "상태 확인 중" : "화면 목록 ↗"}
         </Text>
       </Pressable>
+      </SafeAreaView>
       <Stack
         screenOptions={{
           headerShown: false,

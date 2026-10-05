@@ -1,17 +1,39 @@
 import { useSyncExternalStore } from "react";
 import { YumidangService } from "./service";
+import { ServiceApiClient } from "./api";
+import { MemberService } from "./member-service";
+import type { MemberSessionPort, SessionResult } from "./member-session";
+import { sessionResult } from "./member-session";
+import { createPhotoStoragePort, createMemberReportCaptureUpload, type PhotoStoragePort, type ReportCaptureInput } from "./avatar-service";
+import { createWebMemberSessionPort, type WebSessionOptions } from "./web-member-session";
 
 /** The Naver auth integration installs a verified user session here. Never an EXPO_PUBLIC token. */
 let token: string | null = null;
 let epoch = 0;
 const listeners = new Set<() => void>();
 export function installServiceSession(accessToken: string | null) {
+  if (sessionDetails?.accessToken !== accessToken) sessionDetails = null;
   token = accessToken;
   epoch++;
   listeners.forEach((listener) => listener());
 }
 export const serviceSessionEpoch = () => epoch;
-export const serviceAccessToken = async () => token;
+export const serviceAccessToken = async () => {
+  if (token === null) return null;
+  const expectedEpoch = epoch, expectedPort = sessionPort;
+  if (!expectedPort?.accessToken) return token;
+  try {
+    const current = await expectedPort.accessToken();
+    if (epoch !== expectedEpoch || sessionPort !== expectedPort) return null;
+    if (!current) { installMemberSessionDetails(null); return null; }
+    token = current;
+    if (sessionDetails) sessionDetails = { ...sessionDetails, accessToken: current };
+    return current;
+  } catch (error) {
+    if (epoch === expectedEpoch && sessionPort === expectedPort) installMemberSessionDetails(null);
+    throw error;
+  }
+};
 export function useServiceSession() {
   useSyncExternalStore(
     (listener) => {
@@ -27,6 +49,7 @@ export function useServiceSession() {
 }
 export const serviceMode = process.env.EXPO_PUBLIC_DATA_MODE === "service";
 let service: YumidangService | null = null;
+let memberService: MemberService | null = null;
 export let serviceConfigurationError = false;
 if (serviceMode) {
   try {
@@ -37,12 +60,41 @@ if (serviceMode) {
       aiChatUrl: process.env.EXPO_PUBLIC_AI_CHAT_URL,
       accessToken: serviceAccessToken,
     });
+    memberService = new MemberService(new ServiceApiClient(serviceApiUrl, serviceAccessToken));
   } catch {
     serviceConfigurationError = true;
   }
 }
 export function useService() {
   return service;
+}
+export function useMemberService() { return memberService; }
+let sessionPort: MemberSessionPort | null = null;
+let photoPort: PhotoStoragePort | null = null;
+let memberReportCapture: ((input: ReportCaptureInput) => Promise<{ assetId: string }>) | null = null;
+let sessionDetails: SessionResult | null = null;
+let portsEpoch = 0;
+const portListeners = new Set<() => void>();
+function changedPorts() { portsEpoch++; portListeners.forEach(f => f()); }
+/** Trusted integration only. The app never invents an Origin or a callback URL. */
+export function installMemberSessionPort(port: MemberSessionPort | null) { if (sessionPort !== port) installMemberSessionDetails(null); sessionPort = port; changedPorts(); }
+export function installPhotoStoragePort(port: PhotoStoragePort | null) { photoPort = port; changedPorts(); }
+export function installMemberReportCaptureUpload(port: typeof memberReportCapture) { memberReportCapture = port; changedPorts(); }
+export function installMemberSessionDetails(details: SessionResult | null) { sessionDetails = details === null ? null : sessionResult(details); installServiceSession(sessionDetails?.accessToken ?? null); }
+export function useMemberPorts() {
+  useSyncExternalStore(f => { portListeners.add(f); return () => { portListeners.delete(f); }; }, () => portsEpoch, () => 0);
+  return { session: sessionPort, photo: photoPort, reportCapture: memberReportCapture };
+}
+export function useMemberSessionDetails() { useServiceSession(); return sessionDetails; }
+/** Supplied by trusted app initialization after M verifies exact deployed URLs/public key. No new env or secret. */
+export function installWebMemberConnection(options: WebSessionOptions) {
+  if (!memberService) throw new Error("SERVICE_NOT_CONFIGURED");
+  const port = createWebMemberSessionPort(options);
+  const storage = { supabaseUrl: options.supabaseUrl, publicApiKey: options.publicApiKey, accessToken: serviceAccessToken, fetcher: options.fetcher };
+  const photo = createPhotoStoragePort(storage), capture = createMemberReportCaptureUpload(storage, memberService);
+  installMemberSessionPort(port);
+  installPhotoStoragePort(photo);
+  installMemberReportCaptureUpload(capture);
 }
 
 /** 민규가 실제 Storage 업로드를 설치한다. 파일/토큰은 요청 메모리에서만 사용한다.

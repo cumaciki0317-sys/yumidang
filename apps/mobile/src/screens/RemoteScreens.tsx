@@ -3,6 +3,7 @@ import { Image, Linking, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { ApiError } from "../api";
 import { RemoteAiFeedback } from "./RemoteAiFeedback";
+import { RemoteBlockControls, RemotePostManagement, RemoteProfilePhoto, RemoteReport } from "./RemoteMemberScreens";
 import { serviceSessionEpoch, useService, useServiceSession } from "../remote";
 import { normalizeMobileRegion } from "../service";
 import { useApp } from "../state";
@@ -541,6 +542,7 @@ function RemoteAiSession() {
 }
 
 export function RemotePostDetail({ id }: { id: string }) {
+  const session = useServiceSession();
   const service = useService();
   const app = useApp();
   const page = useRemotePage(id, async (_cursor, signal) => {
@@ -594,7 +596,8 @@ export function RemotePostDetail({ id }: { id: string }) {
               <Body>{post.linkedEvent.title}</Body>
             </Card>
           )}
-          <Button disabled onPress={() => {}}>신청 서비스 준비 중</Button>
+          <Button disabled={post.status !== "recruiting"} onPress={() => app.navigate(session.authenticated ? "S11" : "S05", session.authenticated ? post.postId : undefined)}>대화로 동행 신청하기</Button>
+          {session.authenticated && <><RemotePostManagement postId={post.postId} onChanged={page.retry} /><RemoteReport targetId={post.postId} targetType="post" /></>}
           <TextButton onPress={() => app.navigate("S01")}>둘러보기</TextButton>
         </>
       )}
@@ -798,6 +801,7 @@ export function RemoteProfileScreen({ id }: { id: string }) {
         <>
           <Card>
             <Title large>{profile.displayName}</Title>
+            <RemoteProfilePhoto path={profile.avatarPath} />
             <Body>만 {profile.age}세 · 완료 {profile.completedCount}회</Body>
             {profile.sweetness !== undefined && (
               <Body>당도 {profile.sweetness}</Body>
@@ -811,6 +815,7 @@ export function RemoteProfileScreen({ id }: { id: string }) {
           </Card>
           <RemoteProfileSummary id={id} />
           <RemoteProfileReviews id={id} />
+          <RemoteBlockControls profileId={profile.profileId} />
         </>
       )}
     </Screen>

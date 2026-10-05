@@ -1,7 +1,9 @@
 import RemotePlacePicker from "./RemotePlacePicker";
-import { serviceMode, useServiceSession } from "../remote";
+import { serviceMode, serviceSessionEpoch, useServiceSession } from "../remote";
+import { RemotePostEditor, useMemberAction } from "./RemoteMemberScreens";
+import * as Crypto from "expo-crypto";
 import { RemotePostResults, RemoteEventResults, RemotePostDetail, RemoteEventDetail, RemoteRankings, RemoteEventListScreen, RemoteEventPicker } from "./RemoteScreens";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Linking,
   Modal,
@@ -1661,7 +1663,8 @@ const PREVIEW_PLACES = [
   },
 ];
 export function CreateScreen({ id }: { id?: string }) {
-  return <CreateForm key={id || "new"} id={id} />;
+  if (serviceMode && id?.startsWith("edit:")) return <RemotePostEditor id={id.slice(5)} />;
+  return <CreateForm key={`${id || "new"}:${serviceMode ? serviceSessionEpoch() : "preview"}`} id={id} />;
 }
 function CreateForm({ id }: { id?: string }) {
   const app = useApp();
@@ -1672,13 +1675,13 @@ function CreateForm({ id }: { id?: string }) {
   const category = id?.startsWith("category:") ? id.slice(9) : "";
   const continuing = id === "resume" || Boolean(eventId);
   const [draft, setDraft] = useState<Draft>(() => ({
-    ...(continuing && app.draft ? app.draft : blankDraft(category)),
+    ...(continuing && app.draft && (!serviceMode || app.draft.serviceDraftEpoch === serviceSession.epoch) ? app.draft : blankDraft(category)),
     ...(eventId ? { eventId } : {}),
   }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [restore, setRestore] = useState(
     Boolean(
-      !continuing && app.draft && app.now - app.draft.updatedAt < 7 * DAY,
+      !continuing && app.draft && (!serviceMode || app.draft.serviceDraftEpoch === serviceSession.epoch) && app.now - app.draft.updatedAt < 7 * DAY,
     ),
   );
   const [exit, setExit] = useState(false);
@@ -1710,7 +1713,7 @@ function CreateForm({ id }: { id?: string }) {
     }
     setSaving(true);
     try {
-      await app.saveDraft({ ...draft, updatedAt: app.now });
+      await app.saveDraft({ ...draft, updatedAt: app.now, ...(serviceMode ? { serviceDraftEpoch: serviceSession.epoch } : {}) });
       setRestoredDraft(true);
       if (action === "next") app.navigate("S04");
       else if (action === "event") app.navigate("S09-2", "select");
@@ -1737,7 +1740,7 @@ function CreateForm({ id }: { id?: string }) {
       placeQuery.trim(),
     ),
   );
-  if (!app.member && !(serviceMode && serviceSession.authenticated))
+  if (serviceMode ? !serviceSession.authenticated : !app.member)
     return (
       <Screen title="동행 모집">
         <Empty
@@ -2121,7 +2124,14 @@ function CreateForm({ id }: { id?: string }) {
 }
 
 export function PublishScreen() {
+  const session = useServiceSession();
+  return <PublishForm key={serviceMode ? session.epoch : "preview"} />;
+}
+function PublishForm() {
   const app = useApp();
+  const action = useMemberAction();
+  const session = useServiceSession();
+  const attempt = useRef<{ fingerprint: string; postId: string } | null>(null);
   const [draft, setDraft] = useState<Draft>(() => app.draft || blankDraft());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -2147,12 +2157,28 @@ export function PublishScreen() {
       app.showToast("등록 정보와 공개 범위를 확인해 주세요.");
       return;
     }
+    if (serviceMode) {
+      if (!session.authenticated || draft.serviceDraftEpoch !== session.epoch) { app.showToast("이 계정에서 작성한 초안으로 다시 시작해 주세요."); return; }
+      const input = {
+        title: draft.title.trim(), description: draft.introduction.trim(), category: draft.category,
+        startsAt: new Date(parseDateInput(draft.startsAt)).toISOString(), endsAt: new Date(parseDateInput(draft.endsAt)).toISOString(),
+        recruitmentEndsAt: new Date(parseDateInput(draft.deadlineAt || draft.startsAt)).toISOString(),
+        publicArea: draft.publicArea, registeredPlaceName: draft.placeName || null, registeredAddress: draft.address,
+        meetingDetail: draft.meetingPoint, preferenceNote: [draft.wishes, draft.desiredAgeMin && draft.desiredAgeMax ? `희망 나이: 만 ${draft.desiredAgeMin}~${draft.desiredAgeMax}세` : ""].filter(Boolean).join(" · ") || null,
+        tags: [], costType: "free" as const, amount: 0 as const, ...(draft.eventId ? { eventId: draft.eventId } : {}),
+      };
+      const fingerprint = JSON.stringify(input);
+      if (!attempt.current || attempt.current.fingerprint !== fingerprint) attempt.current = { fingerprint, postId: Crypto.randomUUID() };
+      const postId = attempt.current.postId;
+      void action.run((s, signal) => s.create(postId, input, signal), () => { app.showToast("공고를 등록했어요."); app.navigate("S02", postId); });
+      return;
+    }
     setSubmitting(true);
     const result = app.publish(draft);
     if (feedback(app, result) && result.id) app.navigate("S02", result.id);
     setSubmitting(false);
   };
-  if (!app.draft)
+  if (!app.draft || (serviceMode && (!session.authenticated || draft.serviceDraftEpoch !== session.epoch)))
     return (
       <Screen title="등록 전 확인">
         <Empty
@@ -2200,7 +2226,7 @@ export function PublishScreen() {
             수정하기
           </Button>
           <Button
-            loading={submitting}
+            loading={submitting || action.busy}
             onPress={submit}
             disabled={!checked}
             style={{ flex: 2 }}
@@ -2215,6 +2241,7 @@ export function PublishScreen() {
         <View style={[styles.stepFill, { width: "100%" }]} />
       </View>
       <Title>{"입력하신 공고를\n최종 점검해 주세요"}</Title>
+      {serviceMode && action.error && <Body style={{ color: colors.red }}>{action.error}</Body>}
       <Body muted>함께할 상대와 공개 범위를 확인해 주세요.</Body>
       <Section title="함께할 분의 희망 나이 (선택)">
         <View style={styles.wrap}>

@@ -45,11 +45,11 @@
 
 `createMetricsRecorder`는 고정 결과·시간·재시도·버전·토큰 수만 받고 원문·회원 ID·임의 metadata·오류 객체를 받지 않는다. 초기 품질 지표는 영구 저장하지 않는다. 운영 보관 선택은 일반 진단 30일·보안 90일·작업 종료 후 세부 기록 30일·공급사 한도 기간 종료 후 비용 원장 90일이다. 원문·비밀값을 제외한다. 미정산 예약은 해결까지 제한 보관하고 자동 환불·초기화를 하지 않는다. 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 검증한다. 법적 근거·실제 삭제·백업 만료는 별도 확인이며 활성 자료 삭제를 백업 즉시 삭제로 안내하지 않는다.
 
-회원 점유·차감·철회 RPC는 종현 어댑터가 강제하지만 민규 DB 구현과 실제 동시 세션 검증은 남아 있다. 고정 조건·일반 더보기는 모델 없는 검색 API를 사용한다. 실제 공급사 사용량 매핑·품질 승인·화면 연결은 별도 검증하며 원장 기술 단위를 공급사 토큰·원화로 보고하지 않는다.
+회원 점유·차감·철회 RPC는 종현 어댑터가 강제하며 민규의 `20261005002528_ai_atomic_requests.sql`과 공통 클라이언트에 구현되어 있다. 실제 대상 DB 적용·동시 세션 검증은 별도 확인해야 한다. 고정 조건·일반 더보기는 모델 없는 검색 API를 사용한다. 실제 공급사 사용량 매핑·품질 승인·화면 연결은 별도 검증하며 원장 기술 단위를 공급사 토큰·원화로 보고하지 않는다.
 
 ## 회원 요청과 예산의 필수 DB 계약
 
-현재 내부 클라이언트는 아래 3개 신규 RPC를 허용하지 않는다. 민규가 SQL·허용 목록을 연결하기 전 운영 요청은 모델 전에 중단한다. 종현은 공통 클라이언트나 마이그레이션을 수정하지 않는다.
+현재 내부 클라이언트는 아래 3개 RPC를 허용하고 최신 버전 SQL도 소스에 존재한다. 실제 DB 적용·원자성 검증, 개인정보 검사기·공급사 출력 상한·보관/비용/법적 근거의 준비는 별도다. 준비되지 않은 운영 요청은 모델 전에 중단한다. 종현은 공통 클라이언트나 마이그레이션을 수정하지 않는다.
 
 - `acquire_ai_chat_request(p_user_id,p_request_id,p_client_request_id,p_output_retry_of,p_contract_version:"2026-10-05")`: 인증 서버가 전달한 회원만 인정한다. 회원 활성 상태·탐색 동의·동시 요청 1개·DB 한국시간 하루 20회·출력 재시도 소유자와 1회 사용을 확인한다. 점유 자체에는 횟수를 차감하지 않는다. 성공 `{status:"acquired",leaseToken,expiresAt}`, 거부는 `{status:"concurrent"|"daily_limit"|"consent_revoked"|"retry_exhausted"}`다. finite lease는 DB 서버 시각으로 관리하고 오래된 요청은 새 점유를 해제하지 못한다.
 - `reserve_ai_chat_model(p_user_id,p_request_id,p_lease_token,p_contract_version,p_ledger_id,p_provider_id,p_task,p_units)`: 모델 처리 시작 직전에 점유·동의·회원 자격을 재확인한다. **전체 예산 예약과 해당 요청의 첫 개인 1회 차감을 하나의 트랜잭션**으로 수행한다. 예산 거부에는 개인 차감이 없으며, 내부 추가 호출·자동 재시도는 같은 requestId의 차감 표식을 유지한다. 한국시간 날짜는 첫 모델 처리 시작의 DB 시각이며 클라이언트 날짜를 받지 않는다. 응답 `{reservationId:UUID|null}`이며 null은 전체 예산 거부다. 개인 한도·철회·점유 손실은 각각 `{status:"daily_limit"|"consent_revoked"|"lease_lost"}`로 구분해 자동 재시도하지 않는다. 원문·모델 입력은 전달하지 않는다.
@@ -79,4 +79,6 @@
 
 report의 `reportEvidenceHandling:ReportEvidenceHandlingPort`는 기존 정책13의 **첨부 소유권·배정 담당자/승인 책임자 ACL·접근 기록·이의 포함 최종 종결+90일 정리**가 실제 연결됐는지만 확인한다. 새 법률 승인·새 동의·새 보관 선택을 추가하지 않는다. actual runtime 기본 포트는 미주입이며 `{status:'not_enabled',reason:'AI_REPORT_EVIDENCE_HANDLING_NOT_CONNECTED'}`로 DB 저장 전 중단한다. helpful은 원문이 없으므로 이 준비 포트 없이 RPC만 연결한다. 합성 isReady:true는 실제 운영 준비 증거가 아니다. 포트 확인 이후 DB 접수 트랜잭션에서도 같은 조건을 검사해 중간 자격 변경을 허용하지 않는다.
 
-현재 민규 소유 reports 서비스/SQL·Storage 첨부·내부 RPC 허용 목록·ACL/접근기록/정리 capability는 미연결이다. 로컬 HTTP/RPC 합성 검증은 실제 접수·보관·삭제·외부 전송·운영 권한의 검증이 아니다. 회원 AI 답변 원문 전체를 영구 저장하거나 모델/공급사로 신고를 보내는 기능을 추가하지 않는다. 상세 연결 과제는 [AI 피드백 인계](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md)를 따른다.
+현재 일반 신고 서비스·SQL은 존재하지만 AI 전용 `submit_ai_feedback` SQL과 내부 RPC 허용 목록은 없다. AI 신고의 Storage 첨부 연결·ACL/접근기록/정리 capability와 `reportEvidenceHandling` 운영 주입도 확인해야 한다. 로컬 HTTP/RPC 합성 검증은 실제 접수·보관·삭제·외부 전송·운영 권한의 검증이 아니다. 회원 AI 답변 원문 전체를 영구 저장하거나 모델/공급사로 신고를 보내는 기능을 추가하지 않는다. 상세 연결 과제는 [AI 피드백 인계](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md)를 따른다.
+
+현재 소스·합성 검증과 민규 연결 요청은 [AI·검색 구현 결과](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md)를 따른다. 운영 미주입 검사기를 합성 통과 함수로 대체하지 않는다.

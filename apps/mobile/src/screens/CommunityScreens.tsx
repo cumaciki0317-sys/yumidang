@@ -1,3 +1,4 @@
+import { RemoteChatsScreen, RemoteChatScreen, RemoteMeScreen, RemotePhotoScreen, RemotePreferencesScreen, RemoteAppointmentScreen, RemoteReviewScreen, RemoteCancelScreen, RemoteNotificationsScreen, RemoteAccountScreen } from "./RemoteMemberScreens";
 import { serviceMode } from "../remote";
 import { RemoteProfileScreen } from "./RemoteScreens";
 import React, { useCallback, useState } from "react";
@@ -157,7 +158,7 @@ async function pickImage(
       );
       return null;
     }
-    if (size > 10 * 1024 * 1024) {
+    if (size > 10_000_000) {
       showToast("10MB 이하 사진을 선택해 주세요.");
       return null;
     }
@@ -259,7 +260,8 @@ function ReportForm({
   );
 }
 
-export function ChatsScreen() {
+export function ChatsScreen() { return serviceMode ? <RemoteChatsScreen /> : <PreviewChatsScreen />; }
+function PreviewChatsScreen() {
   const app = useApp();
   const [filter, setFilter] = useState("전체");
   if (!app.member) return <LoginGuard title="채팅" tab />;
@@ -368,7 +370,11 @@ export function ChatsScreen() {
   );
 }
 
-export function ChatScreen({
+export function ChatScreen({ id, conversationId }: { id?: string; conversationId?: string }) {
+  const requestId = id?.startsWith("request:") ? id.slice(8) : conversationId;
+  return serviceMode ? <RemoteChatScreen postId={requestId ? undefined : id} conversationId={requestId} /> : <PreviewChatScreen id={id} conversationId={conversationId} />;
+}
+function PreviewChatScreen({
   id,
   conversationId,
 }: {
@@ -891,7 +897,8 @@ export function ChatScreen({
   );
 }
 
-export function NotificationsScreen() {
+export function NotificationsScreen() { return serviceMode ? <RemoteNotificationsScreen /> : <PreviewNotificationsScreen />; }
+function PreviewNotificationsScreen() {
   const app = useApp();
   const [unread, setUnread] = useState(false);
   if (!app.member) return <LoginGuard title="알림" />;
@@ -958,7 +965,8 @@ export function NotificationsScreen() {
   );
 }
 
-export function MeScreen() {
+export function MeScreen() { return serviceMode ? <RemoteMeScreen /> : <PreviewMeScreen />; }
+function PreviewMeScreen() {
   const app = useApp();
   const [tab, setTab] = useState("내 동행");
   if (!app.member) return <LoginGuard title="나" tab />;
@@ -1379,7 +1387,8 @@ function PreviewProfileScreen({ id }: { id?: string }) {
   );
 }
 
-export function PhotoScreen() {
+export function PhotoScreen() { return serviceMode ? <RemotePhotoScreen /> : <PreviewPhotoScreen />; }
+function PreviewPhotoScreen() {
   const app = useApp();
   const [photo, setPhoto] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -1493,7 +1502,8 @@ export function TagsEditor({
     </Section>
   );
 }
-export function PreferencesScreen() {
+export function PreferencesScreen() { return serviceMode ? <RemotePreferencesScreen /> : <PreviewPreferencesScreen />; }
+function PreviewPreferencesScreen() {
   const app = useApp();
   const [interests, setInterests] = useState(app.member?.interests || []);
   const [styles, setStyles] = useState(app.member?.conversationStyles || []);
@@ -1605,7 +1615,8 @@ export function PreferencesScreen() {
   );
 }
 
-export function AppointmentScreen({ id }: { id?: string }) {
+export function AppointmentScreen({ id }: { id?: string }) { return serviceMode ? <RemoteAppointmentScreen id={id} /> : <PreviewAppointmentScreen id={id} />; }
+function PreviewAppointmentScreen({ id }: { id?: string }) {
   const app = useApp();
   if (!app.member) return <LoginGuard title="약속 상세" />;
   const a = app.appointments.find((a) => a.id === id);
@@ -1769,7 +1780,8 @@ export function AppointmentScreen({ id }: { id?: string }) {
   );
 }
 
-export function ReviewScreen({ id }: { id?: string }) {
+export function ReviewScreen({ id }: { id?: string }) { return serviceMode ? <RemoteReviewScreen id={id} /> : <PreviewReviewScreen id={id} />; }
+function PreviewReviewScreen({ id }: { id?: string }) {
   const app = useApp();
   const [mood, setMood] = useState<Review["mood"] | null>(null);
   const [stars, setStars] = useState(0);
@@ -1948,7 +1960,8 @@ export function ReviewScreen({ id }: { id?: string }) {
   );
 }
 
-export function CancelScreen({ id }: { id?: string }) {
+export function CancelScreen({ id }: { id?: string }) { return serviceMode ? <RemoteCancelScreen id={id} /> : <PreviewCancelScreen id={id} />; }
+function PreviewCancelScreen({ id }: { id?: string }) {
   const app = useApp();
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
@@ -2166,7 +2179,8 @@ export function SafetyScreen() {
   );
 }
 
-export function AccountScreen() {
+export function AccountScreen() { return serviceMode ? <RemoteAccountScreen /> : <PreviewAccountScreen />; }
+function PreviewAccountScreen() {
   const app = useApp();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [withdraw, setWithdraw] = useState<"discovery" | "summary" | null>(

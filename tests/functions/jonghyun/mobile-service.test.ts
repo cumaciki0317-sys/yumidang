@@ -4,7 +4,34 @@ import {
   normalizeMobileRegion,
   YumidangService,
 } from "../../../apps/mobile/src/service.ts";
-import { ApiError } from "../../../apps/mobile/src/api.ts";
+import { ApiError, checkAbort, requestSignal, ServiceApiClient } from "../../../apps/mobile/src/api.ts";
+
+test("native signal 기본 속성만으로 취소 확인", () => {
+  checkAbort({ aborted: false } as AbortSignal);
+  assert.throws(() => checkAbort({ aborted: true } as AbortSignal), error => error instanceof Error && error.name === "AbortError");
+});
+test("signal 합성은 부모 취소와 기한을 전달하고 listener 정리", async () => {
+  const parent = new AbortController();
+  const request = requestSignal([parent.signal], 1000);
+  parent.abort();
+  assert.equal(request.signal.aborted, true);
+  request.dispose();
+  const expired = requestSignal([], 1);
+  await new Promise(resolve => setTimeout(resolve, 5));
+  assert.equal(expired.signal.aborted, true);
+  expired.dispose();
+  const untouched = new AbortController(), disposed = requestSignal([untouched.signal]);
+  disposed.dispose(); untouched.abort();
+  assert.equal(disposed.signal.aborted, false);
+});
+test("late API 응답은 native처럼 throwIfAborted 없는 부모 취소 후 거절", async () => {
+  const parent = new AbortController();
+  Object.defineProperty(parent.signal, "throwIfAborted", { value: undefined });
+  const client = new ServiceApiClient("https://api.example.test", async () => "synthetic", async () => {
+    parent.abort(); return new Response(JSON.stringify({ data: "late" }));
+  });
+  await assert.rejects(client.request("/me", { signal: parent.signal }), error => error instanceof ApiError && error.code === "CANCELLED");
+});
 
 const postId = "11111111-1111-4111-8111-111111111111";
 const card = {

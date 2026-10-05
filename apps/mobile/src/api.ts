@@ -11,6 +11,30 @@ export class ApiError extends Error {
   }
 }
 export type AuthenticationMode = "required" | "optional" | "anonymous";
+// Hermes와 브라우저 모두에서 기본 aborted/EventTarget 기능만 사용한다.
+export function checkAbort(signal: AbortSignal) {
+  if (!signal.aborted) return;
+  const error = new Error("Request aborted");
+  error.name = "AbortError";
+  throw error;
+}
+export function requestSignal(parents: readonly (AbortSignal | undefined)[], timeoutMs = 15000) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const timer = setTimeout(abort, timeoutMs);
+  const activeParents = parents.filter((signal): signal is AbortSignal => !!signal);
+  for (const parent of activeParents) {
+    if (parent.aborted) abort();
+    else parent.addEventListener("abort", abort);
+  }
+  return {
+    signal: controller.signal,
+    dispose() {
+      clearTimeout(timer);
+      for (const parent of activeParents) parent.removeEventListener("abort", abort);
+    },
+  };
+}
 export class ServiceApiClient {
   private readonly baseUrl: string;
   private readonly accessToken: () => Promise<string | null>;
@@ -68,13 +92,9 @@ export class ServiceApiClient {
     ) {
       throw new ApiError(413, "REQUEST_TOO_LARGE");
     }
-    const controller = new AbortController();
-    const abort = () => controller.abort();
-    const timeout = setTimeout(abort, 15000);
-    if (options.signal?.aborted) abort();
-    else options.signal?.addEventListener("abort", abort);
+    const request = requestSignal([options.signal]);
     try {
-      controller.signal.throwIfAborted();
+      checkAbort(request.signal);
       const response = await this.fetcher(this.baseUrl + path, {
         method: options.method || "GET",
         headers: {
@@ -82,12 +102,12 @@ export class ServiceApiClient {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body,
-        signal: controller.signal,
+        signal: request.signal,
         redirect: "error",
         cache: "no-store",
       });
       const envelope = await response.json();
-      controller.signal.throwIfAborted();
+      checkAbort(request.signal);
       if (
         !envelope || typeof envelope !== "object" || Array.isArray(envelope)
       ) {
@@ -108,7 +128,7 @@ export class ServiceApiClient {
       return envelope.data as T;
     } catch (error) {
       if (error instanceof ApiError) throw error;
-      if (controller.signal.aborted) {
+      if (request.signal.aborted) {
         throw new ApiError(
           408,
           options.signal?.aborted ? "CANCELLED" : "REQUEST_TIMEOUT",
@@ -117,8 +137,7 @@ export class ServiceApiClient {
       }
       throw new ApiError(503, "SERVICE_UNAVAILABLE", true);
     } finally {
-      clearTimeout(timeout);
-      options.signal?.removeEventListener("abort", abort);
+      request.dispose();
     }
   }
 }
