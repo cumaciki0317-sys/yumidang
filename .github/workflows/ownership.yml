@@ -1,0 +1,27 @@
+name: File ownership
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  ownership:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+      - name: Check with trusted base policy and checker
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          case "$HEAD_BRANCH" in
+            minkyu/*) actor=minkyu ;;
+            jonghyun/*) actor=jonghyun ;;
+            sungho/*) actor=sungho ;;
+            *) echo "Use a minkyu/, jonghyun/ or sungho/ branch."; exit 1 ;;
+          esac
+          git fetch origin "refs/pull/${PR_NUMBER}/head"
+          python3 tools/collaboration/check_ownership.py --actor "$actor" --diff "$BASE_SHA" FETCH_HEAD

@@ -4,9 +4,9 @@ set -eu
 repo_root=$(git rev-parse --show-toplevel)
 actor=$(git config --local --get yumidang.actor || true)
 case "$actor" in
-  minkyu|jonghyun) ;;
+  minkyu|jonghyun|sungho) ;;
   *)
-    echo '작업자 설정 필요: git config --local yumidang.actor minkyu 또는 jonghyun' >&2
+    echo '작업자 설정 필요: git config --local yumidang.actor minkyu 또는 jonghyun 또는 sungho' >&2
     exit 1
     ;;
 esac

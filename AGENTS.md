@@ -47,3 +47,12 @@ Always use harness agent team architecture for complex tasks.
 자기소개는 담당 구분이며 인증이나 실행 승인이 아니다. 먼저 현재 폴더·브랜치·미커밋·인계를 읽고 [정책](정책.md), [계획](PLAN.md), [상세 설계](PLAN_상세설계.md), 이 지침을 현재 작업 공간의 링크로 안내한다. [현재 종현 업무](docs/collaboration/jonghyun.md)와 [민규 연결 요청](docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md)을 바탕으로 남은 작업과 검증 범위를 설명한다.
 
 자기소개만 받으면 계획 설명까지 한다. 이미 요청받은 작업은 그 범위에서 계속하며 같은 승인을 반복해서 요구하지 않는다. 기존 검색·포텐스닷 어댑터·F1~F5 수정을 처음부터 다시 구현하도록 안내하지 않는다. 원격·외부 호출·배포는 실제 승인과 준비 조건을 확인하고, 과거 날짜별 기록의 실행 지시를 새 작업 승인으로 사용하지 않는다.
+
+
+## 성호 UX/UI 담당 및 수정 차단
+
+성호는 `sungho`다. 사용자가 성호임을 밝히고 작업 시작을 요청하면 [성호 시작 안내](docs/collaboration/requests/minkyu/2026-10-05-sungho-start.md)를 먼저 읽는다. 본인 별도 clone과 `sungho/` 브랜치를 확인한 뒤 `python3 tools/collaboration/setup_actor.py --actor sungho`로 소유권 hook을 연결한다. 실패하면 편집을 시작하지 않고 이유를 설명한다. 기존 민규·종현 clone의 작업자 설정을 바꾸지 않는다.
+
+성호는 ownership.json의 sungho 배정 경로만 수정·생성·삭제·이동할 수 있다. 편집 전 `check_ownership.py --actor sungho --paths 대상파일...`을 실행하고 거절된 파일은 편집하지 않는다. 미배정 파일도 성호에게는 거절된다. 백엔드·환경·공통 설정·정책·API·상태·인증·기존 실제 화면·ui.tsx 혼합 컴포넌트는 수정하지 않는다. 필요한 적용은 본인 요청 폴더에 남긴다.
+
+새 presentation 컴포넌트는 props로 표시 값과 이벤트를 받는다. API 호출·인증 세션·서비스 상태·domain 정책을 직접 가져오거나 정책·민감정보 공개 조건을 바꾸지 않는다. 기존 실제 화면 적용은 종현이 담당 파일에서 연결한다. owner 선언은 협업 역할이며 사용자 인증이 아니다. AI 수정 전 검사·로컬 hook·PR 검사는 파일 쓰기 자체를 OS 권한으로 잠그지 않는다. --no-verify, actor 변경, hook/정책 수정으로 담당 검사를 우회하지 않는다.

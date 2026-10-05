@@ -16,7 +16,7 @@ import sys
 
 
 MANIFEST = "backend/ownership.json"
-ACTORS = ("minkyu", "jonghyun")
+ACTORS = ("minkyu", "jonghyun", "sungho")
 
 
 class CheckError(Exception):
@@ -132,7 +132,7 @@ def parse_name_status(raw):
 def violations(policy, actor, paths):
     denied = []
     for path in dict.fromkeys(paths):
-        if not any(matches(path, pattern) for pattern in policy["protected_paths"]):
+        if actor != "sungho" and not any(matches(path, pattern) for pattern in policy["protected_paths"]):
             continue
         rules = [rule for rule in policy["rules"] if matches(path, rule["path"])]
         owner = max(rules, key=lambda rule: len(rule["path"]))["owner"] if rules else None
@@ -147,12 +147,16 @@ def main(argv=None):
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--staged", action="store_true", help="스테이징된 변경 검사 (기본값)")
     group.add_argument("--paths", nargs="+", metavar="PATH", help="작성 전 저장소 상대 경로 검사")
+    group.add_argument("--diff", nargs=2, metavar=("BASE", "HEAD"), help="PR 기준 두 커밋 사이 변경 검사")
     args = parser.parse_args(argv)
     try:
         candidate = Path(__file__).resolve().parents[2]
         repo = Path(git(candidate, "rev-parse", "--show-toplevel").decode().strip())
         policy, source = load_policy(repo)
-        paths = args.paths if args.paths is not None else parse_name_status(
+        if args.diff:
+            paths = parse_name_status(git(repo, "diff", "--name-status", "-z", "--find-renames", *args.diff, "--"))
+        else:
+            paths = args.paths if args.paths is not None else parse_name_status(
             git(repo, "diff", "--cached", "--name-status", "-z", "--find-renames", "--")
         )
         paths = [normalize_path(path, repo=repo) for path in paths]
@@ -160,6 +164,14 @@ def main(argv=None):
             for path in paths:
                 if (repo / path).is_dir():
                     raise CheckError(f"디렉터리 대신 작성할 파일 경로를 지정하세요: {path!r}")
+            resolved_paths = []
+            for path in paths:
+                try:
+                    resolved = (repo / path).resolve().relative_to(repo.resolve()).as_posix()
+                except ValueError as exc:
+                    raise CheckError(f"링크 대상이 저장소 밖입니다: {path!r}") from exc
+                resolved_paths.append(resolved)
+            paths.extend(resolved_paths)
         denied = violations(policy, args.actor, paths)
         if denied:
             for path, owner in denied:

@@ -13,7 +13,18 @@
     "tools/collaboration/",
     "tools/local/",
     "docs/collaboration/",
-    "tests/"
+    "tests/",
+    "apps/mobile/",
+    "apps/mobile/design/sungho/",
+    "apps/mobile/assets/sungho/",
+    "apps/mobile/src/presentation/sungho/",
+    "frontend/",
+    "frontend/src/assets/sungho/",
+    "docs/collaboration/requests/sungho/",
+    "tests/functions/sungho/",
+    "tests/integration/sungho/",
+    "tests/fixtures/sungho/",
+    ".github/"
   ],
   "rules": [
     {
@@ -187,6 +198,50 @@
     {
       "path": "tests/fixtures/jonghyun/",
       "owner": "jonghyun"
+    },
+    {
+      "path": "apps/mobile/",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "apps/mobile/design/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/assets/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/src/presentation/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "frontend/",
+      "owner": "minkyu"
+    },
+    {
+      "path": "frontend/src/assets/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "docs/collaboration/requests/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "tests/functions/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "tests/integration/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": "tests/fixtures/sungho/",
+      "owner": "sungho"
+    },
+    {
+      "path": ".github/",
+      "owner": "minkyu"
     }
   ]
 }
