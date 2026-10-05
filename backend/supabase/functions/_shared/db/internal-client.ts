@@ -1,13 +1,17 @@
 /** 민규담당: 승인된 내부 RPC만 제공. 요청 헤더/사용자 ID로 서비스 역할을 선택하지 않는다. */
 import { requireInternalConfig, type RuntimeConfig } from "../config/env.ts";
 import { createRpcTransport, type FetchLike, type RpcClient } from "./transport.ts";
+// 최신 AI 원자 RPC는 실제 SQL 검증을 거쳤다. 행사 영속 RPC는 준비 전까지 허용하지 않는다.
+// supportsRpc는 이 목록만 반영하며 이름이 요청됐다는 이유로 능력을 선언하지 않는다.
 const internalRpcs = new Set([
   "upsert_source_events_v1", "list_event_candidates_v1",
   "enqueue_job", "claim_job", "complete_job", "retry_job",
-  "load_public_review_snapshot", "publish_review_summary", "set_review_publication",
+  "acquire_worker_run", "release_worker_run",
+  "set_review_publication",
   "set_post_search_location", "expire_match_consents", "process_due_review_publications", "process_review_summary_refresh",
   "expire_appointment_changes",
-  "reserve_ai_budget", "settle_ai_budget", "yield_job", "fail_job", "supersede_job",
+  "acquire_ai_chat_request", "finish_ai_chat_request", "reserve_ai_chat_model", "reserve_review_summary_model",
+  "settle_ai_budget", "yield_job", "fail_job", "supersede_job",
   "load_review_summary_source", "load_review_summary_checkpoint", "save_review_summary_checkpoint", "discard_review_summary_checkpoint",
   "mark_review_summary_insufficient", "publish_review_summary_for_job", "upsert_events",
   "store_kopis_top10_snapshot", "get_kopis_top10_snapshot",

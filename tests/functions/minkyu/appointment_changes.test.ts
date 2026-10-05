@@ -30,6 +30,44 @@ function setup(reply: (name: string) => Promise<JsonValue> = async () => ({ ok: 
   return { send, calls, handler };
 }
 const schedulePath = `/appointments/${id}/schedule-change`;
+const location = { publicArea: "서울특별시 강남구 역삼동", registeredPlaceName: "도서관", registeredAddress: "서울 강남구 테스트로 1", meetingDetail: "정문 앞" };
+
+test("장소 포함 제안은 검증한 선택 입력을 전달하고 DB 응답 DTO를 보존한다", async () => {
+  const result = { appointmentId: id, changeId, status: "awaiting_response", locationChanged: true, newLocation: location, deduplicated: false };
+  const { send, calls } = setup(async () => result);
+  const response = await send(`${schedulePath}/propose`, { ...proposal, location });
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json()).data, result);
+  assert.deepEqual(calls[0].args, { p_appointment_id: id, p_change_id: changeId, p_starts_at: proposal.startsAt,
+    p_ends_at: proposal.endsAt, p_expected_updated_at: expectedUpdatedAt, p_location: location });
+  for (const newLocation of [location, null]) {
+    const dto = { appointmentId: id, change: { changeId, locationChanged: true, newLocation } };
+    const reader = setup(async () => dto);
+    assert.deepEqual((await (await reader.send(schedulePath, undefined, "GET")).json()).data, dto);
+  }
+});
+
+test("시간 전용 응답에는 새 장소 필드를 강제로 추가하지 않는다", async () => {
+  const dto = { appointmentId: id, change: { changeId, status: "awaiting_response", oldSchedule: proposal, newSchedule: proposal } };
+  const { send } = setup(async () => dto);
+  assert.deepEqual((await (await send(schedulePath, undefined, "GET")).json()).data, dto);
+});
+
+test("장소 입력은 17개 지역·필수 필드·문자 길이를 검사하며 서버 시각 주입을 거절한다", async () => {
+  const { send, calls } = setup();
+  for (const invalid of [null, [], {}, { ...location, publicArea: "미등록지역" }, { ...location, publicArea: "서울특별시 종로구" }, { ...location, meetingDetail: "한" },
+    { ...location, registeredAddress: "가".repeat(301) }, { ...location, meetingDetail: "가".repeat(301) },
+    { ...location, registeredPlaceName: "가".repeat(201) }, { ...location, receivedAt: proposal.startsAt }]) {
+    assert.equal((await send(`${schedulePath}/propose`, { ...proposal, location: invalid })).status, 400);
+  }
+  assert.equal((await send(`${schedulePath}/propose`, { ...proposal, location, receivedAt: proposal.startsAt })).status, 400);
+  assert.equal(calls.length, 0);
+  for (const publicArea of ["서울 강남구 역삼동", "강원도 춘천시 퇴계동", "전라북도 전주시 완산구 서신동"]) {
+    assert.equal((await send(`${schedulePath}/propose`, { ...proposal, location: { ...location, publicArea, registeredPlaceName: null, meetingDetail: "가".repeat(300) } })).status, 200);
+  }
+  assert.equal(calls.length, 3);
+  assert.deepEqual(calls.map(call => (call.args.p_location as Record<string, JsonValue>).publicArea), ["서울특별시 강남구 역삼동", "강원특별자치도 춘천시 퇴계동", "전북특별자치도 전주시 완산구 서신동"]);
+});
 
 test("일정 변경 조회는 현재 일정·조회 버전·없는 제안·취소를 그대로 전달한다", async () => {
   const result = { appointmentId: id, status: "confirmed", startsAt: proposal.startsAt, endsAt: proposal.endsAt, updatedAt: expectedUpdatedAt, change: null, cancellation: null };
@@ -67,18 +105,19 @@ test("일정 제안·수락은 회원·역할·확정·만료시각 주입을 �
   assert.equal(calls.length, 0);
 });
 
-test("일정 수락·거절은 동일 변경 ID·불투명 조건 버전을 별도 RPC에 전달한다", async () => {
+test("일정 수락·거절·철회는 동일 변경 ID·불투명 조건 버전을 별도 RPC에 전달한다", async () => {
   const { send, calls } = setup();
-  for (const action of ["accept", "decline"]) assert.equal((await send(`${schedulePath}/${action}`, { changeId, conditionVersion })).status, 200);
+  for (const action of ["accept", "decline", "withdraw"]) assert.equal((await send(`${schedulePath}/${action}`, { changeId, conditionVersion })).status, 200);
   assert.deepEqual(calls.map(c => [c.name, c.args]), [
     ["accept_appointment_schedule_change", { p_appointment_id: id, p_change_id: changeId, p_condition_version: conditionVersion }],
     ["decline_appointment_schedule_change", { p_appointment_id: id, p_change_id: changeId, p_condition_version: conditionVersion }],
+    ["withdraw_appointment_schedule_change", { p_appointment_id: id, p_change_id: changeId, p_condition_version: conditionVersion }],
   ]);
 });
 
 test("일정 응답은 누락·비객체·잘못된 ID·빈 버전을 SQL 전에 거절한다", async () => {
   const { send, calls } = setup();
-  for (const action of ["accept", "decline"]) for (const body of [
+  for (const action of ["accept", "decline", "withdraw"]) for (const body of [
     {}, null, [], { changeId }, { conditionVersion }, { changeId: "bad", conditionVersion },
     { changeId, conditionVersion: null }, { changeId, conditionVersion: " " }, { changeId, conditionVersion: "v".repeat(201) },
   ]) assert.equal((await send(`${schedulePath}/${action}`, body)).status, 400);
@@ -92,6 +131,24 @@ test("기한이 끝난 거절 결과는 기존 일정과 expired를 보존해 HT
   const response = await send(`${schedulePath}/decline`, { changeId, conditionVersion });
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).data, result);
+});
+
+test("변경 제안 철회는 종료 상태·기존 일정을 보존하고 사용자·접수 시각 주입을 거절한다", async () => {
+  for (const status of ["withdrawn", "expired", "cancelled"]) {
+    const result = { appointmentId: id, changeId, conditionVersion, status, oldSchedule: proposal, newLocation: null, deduplicated: true };
+    const { send } = setup(async () => result);
+    assert.deepEqual((await (await send(`${schedulePath}/withdraw`, { changeId, conditionVersion })).json()).data, result);
+  }
+  const { send, calls } = setup();
+  for (const field of ["appointmentId", "userId", "requestedBy", "role", "status", "receivedAt", "expiresAt", "location"])
+    assert.equal((await send(`${schedulePath}/withdraw`, { changeId, conditionVersion, [field]: id })).status, 400);
+  assert.equal((await send(`${schedulePath}/withdraw`, { changeId, conditionVersion }, "POST", "worker")).status, 401);
+  assert.equal(calls.length, 0);
+  for (const code of ["ACCESS_DENIED", "STATE_CONFLICT"] as const) {
+    const denied = setup(async () => { throw new HttpError(code); });
+    assert.equal((await denied.send(`${schedulePath}/withdraw`, { changeId, conditionVersion })).status, code === "ACCESS_DENIED" ? 403 : 409);
+    assert.deepEqual(denied.calls.map(call => call.role), ["user"]);
+  }
 });
 
 test("취소는 재시도 ID·사유만 받고 현재 약속을 임의 노쇼·완료로 바꾸지 않는다", async () => {
@@ -117,7 +174,7 @@ test("취소 사유는 공백·누락·300자 초과를 거절하고 승인되�
 test("일정·취소 경로는 메서드·UUID·query·prefix 우회를 차단한다", async () => {
   const { send, calls, handler } = setup();
   assert.equal((await send(schedulePath, {}, "POST")).status, 405);
-  for (const path of [`${schedulePath}/propose`, `${schedulePath}/accept`, `${schedulePath}/decline`, `/appointments/${id}/cancel`]) {
+  for (const path of [`${schedulePath}/propose`, `${schedulePath}/accept`, `${schedulePath}/decline`, `${schedulePath}/withdraw`, `/appointments/${id}/cancel`]) {
     assert.equal((await send(path, undefined, "GET")).status, 405);
     assert.equal((await send(path, {}, "DELETE")).status, 405);
     assert.equal((await send(`${path}?actorId=${id}`, {})).status, 400);
@@ -141,7 +198,7 @@ test("일정·취소권한·조건·충돌 오류는 내부 역할 재시도 없
 });
 
 test("유지보수는 두 만료를 먼저 처리하고 모델 없이 공개를 실행한다", async () => {
-  const { send, calls } = setup(async name => name === "process_due_review_publications" ? { publishedCount: 1 } : { expiredCount: 2, secret: "never-echo" });
+  const { send, calls } = setup(async (name): Promise<JsonValue> => name === "process_due_review_publications" ? { publishedCount: 1 } : { expiredCount: 2, secret: "never-echo" });
   const response = await send("/internal/maintenance", { limit: 3 }, "POST", "worker");
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).data, { status: "partial", completion: { status: "managed_by_reservation" },
@@ -168,13 +225,13 @@ test("사용자·내부 client는 일정 사용자 RPC와 내부 만료 RPC를 �
     async () => Response.json({ id, role: "authenticated", is_anonymous: false }));
   const calls: string[] = [];
   const db = createUserClient(config, principal, async (url, init) => { calls.push(String(url)); assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${token}`); return Response.json({ ok: true }); });
-  for (const name of ["get_appointment_change_state", "propose_appointment_schedule_change", "accept_appointment_schedule_change", "decline_appointment_schedule_change", "cancel_appointment"]) await db.rpc(name, {});
+  for (const name of ["get_appointment_change_state", "propose_appointment_schedule_change", "accept_appointment_schedule_change", "decline_appointment_schedule_change", "withdraw_appointment_schedule_change", "cancel_appointment"]) await db.rpc(name, {});
   await assert.rejects(db.rpc("expire_appointment_changes", {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
   const internalCalls: string[] = [];
   const internal = createInternalClient(config, async (url, init) => { internalCalls.push(String(url)); assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${config.supabaseServiceRoleKey}`); return Response.json({ expiredCount: 0 }); });
   await internal.rpc("expire_appointment_changes", { p_limit: 2 });
-  for (const name of ["cancel_appointment", "accept_appointment_schedule_change"]) await assert.rejects(internal.rpc(name, {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
-  assert.equal(calls.length, 5);
+  for (const name of ["cancel_appointment", "accept_appointment_schedule_change", "withdraw_appointment_schedule_change"]) await assert.rejects(internal.rpc(name, {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
+  assert.equal(calls.length, 6);
   assert.deepEqual(internalCalls, [`${config.supabaseUrl}/rest/v1/rpc/expire_appointment_changes`]);
 });
 
@@ -196,5 +253,27 @@ test("일정 제안 기본 런타임은 네이버 설정 없이 Auth 사용자�
     }));
     assert.equal(response.status, 200);
     assert.deepEqual(urls, [`${config.supabaseUrl}/auth/v1/user`, `${config.supabaseUrl}/rest/v1/rpc/propose_appointment_schedule_change`]);
+  } finally { globalThis.fetch = previous; }
+});
+
+test("철회 런타임은 검증된 회원 JWT와 정확한 세 RPC 인자만 사용한다", async () => {
+  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  const previous = globalThis.fetch;
+  const urls: string[] = [];
+  globalThis.fetch = async (url, init) => {
+    urls.push(String(url));
+    assert.equal(new Headers(init?.headers).get("authorization"), "Bearer header.payload.signature");
+    if (String(url).endsWith("/auth/v1/user")) return Response.json({ id, role: "authenticated", is_anonymous: false });
+    assert.equal(String(url), `${config.supabaseUrl}/rest/v1/rpc/withdraw_appointment_schedule_change`);
+    assert.deepEqual(JSON.parse(String(init?.body)), { p_appointment_id: id, p_change_id: changeId, p_condition_version: conditionVersion });
+    return Response.json({ appointmentId: id, changeId, status: "withdrawn", deduplicated: false });
+  };
+  try {
+    const response = await createRuntimeHandler(key => env[key])(new Request(`https://api.example.test/service-api${schedulePath}/withdraw`, {
+      method: "POST", headers: { authorization: "Bearer header.payload.signature", "content-type": "application/json" }, body: JSON.stringify({ changeId, conditionVersion }),
+    }));
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).data.status, "withdrawn");
+    assert.deepEqual(urls, [`${config.supabaseUrl}/auth/v1/user`, `${config.supabaseUrl}/rest/v1/rpc/withdraw_appointment_schedule_change`]);
   } finally { globalThis.fetch = previous; }
 });

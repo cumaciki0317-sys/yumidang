@@ -3,7 +3,11 @@ import type { JsonValue } from "../contracts/common.ts";
 import type { RuntimeConfig } from "../config/env.ts";
 import { HttpError } from "../http/errors.ts";
 export type FetchLike = typeof fetch;
-export interface RpcClient { rpc(name: string, args: Record<string, JsonValue>): Promise<JsonValue> }
+export interface RpcClient {
+  rpc(name: string, args: Record<string, JsonValue>): Promise<JsonValue>;
+  /** 전송 허용 여부만 확인한다. 배포 DB 함수·버전·권한 준비는 별도 RPC로 검증한다. */
+  supportsRpc?(name: string): boolean;
+}
 export async function fetchJson(url: string, init: RequestInit, timeoutMs: number, fetchImpl: FetchLike = fetch): Promise<{ status: number; body: JsonValue }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -31,9 +35,13 @@ function rpcFailure(status: number, body: JsonValue): never {
   }
 }
 export function createRpcTransport(config: RuntimeConfig, apiKey: string, token: string, names: ReadonlySet<string>, fetchImpl: FetchLike = fetch): RpcClient {
+  // 호출자가 나중에 원래 Set을 수정해 허용 범위를 넓히지 못하게 한다.
+  const allowedNames = new Set(names);
+  const supportsRpc = (name: string): boolean => /^[a-z][a-z0-9_]*$/.test(name) && allowedNames.has(name);
   return Object.freeze({
+    supportsRpc,
     async rpc(name: string, args: Record<string, JsonValue>): Promise<JsonValue> {
-      if (!names.has(name) || !/^[a-z][a-z0-9_]*$/.test(name)) throw new HttpError("ACCESS_DENIED");
+      if (!supportsRpc(name)) throw new HttpError("ACCESS_DENIED");
       let payload: string;
       try { payload = JSON.stringify(args); } catch { throw new HttpError("INVALID_REQUEST"); }
       const { status, body } = await fetchJson(`${config.supabaseUrl}/rest/v1/rpc/${name}`, {

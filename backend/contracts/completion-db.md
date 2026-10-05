@@ -31,8 +31,8 @@ DB가 약속별 `appointmentId`·`dueAt`·`generation` 예약을 영속 보존�
 실행 파일은 `backend/supabase/functions/scheduled-jobs/completion-runner.mjs`다. Node 22.18.0 이상에서 실행하며 Edge 요청 수명에 장기 타이머를 맡기지 않는다. 실행 환경에 다음 값을 명시적으로 주입한다. 실행기는 `.env` 파일을 자동으로 읽지 않는다.
 
 - `COMPLETION_DATABASE_URL`: 위 RPC를 실행할 수 있는 서버 전용 PostgreSQL 연결 문자열. LISTEN 연결을 유지할 수 있는 direct 또는 session 연결을 사용한다. transaction pool 연결은 사용하지 않으며 비밀값을 문서·로그에 남기지 않는다.
-- `COMPLETION_RECONNECT_MS`: 재연결 대기 시간(밀리초). 양의 정수이며 운영 기본값은 없다.
-- `COMPLETION_QUERY_TIMEOUT_MS`: 접속·쿼리·statement 제한 시간(밀리초). 양의 정수이며 운영 기본값은 없다.
+- `COMPLETION_RECONNECT_MS`: 재연결 대기 시간(밀리초). 사용자 확정 운영 값 `5000`을 명시한다. 코드의 암묵적 기본값으로 대체하지 않는다.
+- `COMPLETION_QUERY_TIMEOUT_MS`: 접속·쿼리·statement 제한 시간(밀리초). 사용자 확정 운영 값 `10000`을 명시한다. 코드의 암묵적 기본값으로 대체하지 않는다.
 
 밀리초 설정 상한은 2,147,483,647이다. 비로컬 연결은 TLS 인증서 검증을 켜며 URL의 ssl 관련 query 인자를 허용하지 않는다. 환경을 준비한 뒤 저장소 루트에서 실행한다.
 
@@ -73,3 +73,7 @@ LISTEN/NOTIFY에는 채널별 ACL이 없다. 원형 실행기는 `yumidang_compl
 ## 검증
 
 `tests/database/minkyu/bilateral_completion.sql`은 트랜잭션 롤백 fixture로 한 명/양측 확인, 재시도, 권한, 이른 시점/취소/분쟁 거절, 지연 자동 완료 시각, 알림 중복 방지, 실제 DB 역할을 검사한다. 새 `review_release_policy.sql`은 예약 생성·변경·무효화·기한 전 호출·세대 경쟁·실제 자동 완료를 검증한다. 실제 실행 결과는 [새 인계](../../docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md)를 따른다.
+
+## 원형 실행기 로컬 LOGIN 검증
+
+민규 전용 `tests/integration/minkyu/completion_runner_current_local.mjs`는 독립 schema54 scratch에서 종현 소유 실행기·scheduler를 수정하지 않고 실제 프로세스를 실행했다.7그룹 PASS: 전용 LOGIN의2개 RPC와 업무/권한상승 차단, 시작 시 누락 처리, 커밋 알림·예약, 양쪽 수동 완료, 합성 분쟁 자동 완료 제외, 실제 backend 종료 후5초 재접속·누락 처리, SIGTERM 정상 종료다. 일시 역할·회원·예약·세션 정리 PASS다. 다른 DB의 PUBLIC CONNECT를 회수하지 않았으므로 클러스터 전체 배타 접근을 주장하지 않는다. 운영 LOGIN·TLS·Railway·cron 전환은 NOT_RUN이다.

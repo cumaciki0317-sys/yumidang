@@ -25,7 +25,7 @@ const production: SearchCoreDependencies = {
 const id = "11111111-1111-4111-8111-111111111111";
 const sortAt = "2030-01-01T09:00:00.123456Z";
 const fixture = {
-  id, title: "검색 연결 검사", authorDisplayName: "동행 1234", publicArea: "서울특별시 종로구 삼청동",
+  id, title: "검색 연결 검사", authorDisplayName: null, publicArea: "서울특별시 종로구 삼청동",
   startsAt: "2030-02-01T09:00:00.123456Z", endsAt: "2030-02-01T10:00:00.123456Z",
   cost: { kind: "free" }, state: "recruiting", canApply: false,
 };
@@ -77,21 +77,20 @@ export async function checkSearchCore(dependencies: Partial<SearchCoreDependenci
     const repository = deps.repository(rpc({ items: [], nextCursor: null }, (args) => {
       called = true;
       expect(object(args.p_filters).sort === "starts_asc", "SORT_NOT_FORWARDED");
-      expect(args.p_cursor === null && args.p_limit === 20, "WRONG_FIRST_PAGE");
+      expect(args.p_cursor === null && args.p_limit === 10, "WRONG_FIRST_PAGE");
     }));
     await deps.search(repository, input);
     expect(called, "RPC_NOT_CALLED");
   });
-  await probe("anonymous_period", () => {
+  await probe("anonymous_period_requires_auth", async () => {
     const period = { startsAt: "2030-02-01T00:00:00Z", endsAt: "2030-02-02T00:00:00Z" };
-    const normalized = deps.normalize({ caller: "anonymous", period });
-    expect(normalized.period?.startsAt === period.startsAt && normalized.period?.endsAt === period.endsAt, "PERIOD_NOT_PRESERVED");
+    await mustReject(() => deps.normalize({ caller: "anonymous", period }), "AUTH_REQUIRED");
   });
   await probe("anonymous_age_requires_auth", async () => {
-    await mustReject(() => deps.normalize({ caller: "anonymous", authorAge: "30s" }), "AUTH_REQUIRED");
+    await mustReject(() => deps.normalize({ caller: "anonymous", authorAge: { min: 30, max: 39 } }), "AUTH_REQUIRED");
     let called = false;
     const repository = deps.repository(rpc({ items: [], nextCursor: null }, () => { called = true; }));
-    await mustReject(() => deps.search(repository, { caller: "anonymous", authorAge: "30s" }), "AUTH_REQUIRED");
+    await mustReject(() => deps.search(repository, { caller: "anonymous", authorAge: { min: 30, max: 39 } }), "AUTH_REQUIRED");
     expect(!called, "REJECTED_INPUT_REACHED_RPC");
   });
   await probe("dong_public_projection", async () => {

@@ -16,7 +16,7 @@ const request = (authorization?: string, query = "") => new Request(`https://api
 
 // 가상 executor는 검색 의미를 구현하지 않는다. 전달받은 client의 RPC 자격 증명만 확인한다.
 const probe: PublicPostSearchExecutor = async (db, input) => {
-  await db.rpc("search_public_posts_v2", { p_filters: { sort: input.sort ?? "created_desc", authorAge: input.authorAge ?? "all" }, p_cursor: null, p_limit: input.limit ?? 20 });
+  await db.rpc("search_public_posts_v2", { p_filters: { sort: input.sort ?? "created_desc", authorAge: input.authorAge ?? "all" }, p_cursor: null, p_limit: input.limit ?? 10 });
   return emptyPage;
 };
 
@@ -55,12 +55,12 @@ test("회원 검색은 Auth 검증 후 같은 JWT를 RPC에 전달하며 서비�
     assert.doesNotMatch(JSON.stringify(init), /fixture-private-service|fixture_internal_secret/);
     if (String(url).endsWith("/auth/v1/user")) return json({ id: uid, role: "authenticated", is_anonymous: false });
     assert.equal(String(url), `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
-    assert.equal(JSON.parse(String(init?.body)).p_filters.authorAge, "30s");
+    assert.deepEqual(JSON.parse(String(init?.body)).p_filters.authorAge, { min: 30, max: 39 });
     return json({ items: [], nextCursor: null });
   }, async () => {
     let caller = "";
     const handler = createRuntimeHandler((key) => env[key], { publicPostSearch: async (db, input) => { caller = input.caller; return probe(db, input); } });
-    assert.equal((await handler(request(`Bearer ${jwt}`, "?authorAge=30s"))).status, 200);
+    assert.equal((await handler(request(`Bearer ${jwt}`, "?ageMin=30&ageMax=39"))).status, 200);
     assert.equal(caller, "member");
     assert.deepEqual(calls, [`${env.SUPABASE_URL}/auth/v1/user`, `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`]);
   });
@@ -118,8 +118,9 @@ test("기본 검색 조립은 종현 코어의 정규화·기본값을 v2 RPC에
     calls.push(String(url));
     assert.equal(String(url), `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
     assert.deepEqual(JSON.parse(String(init?.body)), {
+      p_contract_version: "2026-10-05", p_region: null,
       p_filters: { query: "전시 a", category: null, cost: "all", availability: "all", sort: "created_desc", periodStart: null, periodEnd: null, authorAge: "all" },
-      p_cursor: null, p_limit: 20,
+      p_cursor: null, p_limit: 10,
     });
     return json({ items: [], nextCursor: null });
   }, async () => {
@@ -140,19 +141,19 @@ test("기본 검색 연결 이후에도 POST는 계속 회원 인증이 필요�
 
 const publicCard = {
   id: "11111111-1111-4111-8111-111111111111", title: "함께 전시",
-  authorDisplayName: "동행 1234", publicArea: "서울특별시 종로구 삼청동",
+  authorDisplayName: null, publicArea: "서울특별시 종로구 삼청동",
   startsAt: "2026-10-01T00:00:00.123456Z", endsAt: "2026-10-01T03:00:00Z",
   cost: { kind: "free" }, state: "recruiting", canApply: false,
 };
 
-test("기본 코어는 동 공개·익명 기간·선택 정렬·마이크로초 v2 커서를 유지한다", async () => {
+test("기본 코어는 동 공개·선택 정렬·마이크로초 v3 커서를 유지한다", async () => {
   let cursor: string;
   let calls = 0;
   await withFetch(async (_url, init) => {
     const body = JSON.parse(String(init?.body));
     assert.equal(body.p_filters.sort, "starts_asc");
-    assert.equal(body.p_filters.periodStart, "2026-10-01T00:00:00Z");
-    assert.equal(body.p_filters.periodEnd, "2026-10-02T00:00:00Z");
+    assert.equal(body.p_filters.periodStart, null);
+    assert.equal(body.p_filters.periodEnd, null);
     assert.equal(body.p_filters.authorAge, "all");
     assert.equal(body.p_limit, 1);
     if (calls++ === 0) {
@@ -163,7 +164,7 @@ test("기본 코어는 동 공개·익명 기간·선택 정렬·마이크로초
     return json({ items: [], nextCursor: null });
   }, async () => {
     const handler = createRuntimeHandler((key) => env[key]);
-    const query = "?sort=starts_asc&limit=1&periodStart=2026-10-01T00:00:00Z&periodEnd=2026-10-02T00:00:00Z";
+    const query = "?sort=starts_asc&limit=1";
     const first = await handler(request(undefined, query));
     assert.equal(first.status, 200);
     const page = (await first.json()).data;
@@ -186,10 +187,10 @@ test("기본 코어 회원 검색은 검증된 JWT·나이 필터와 마스킹 �
     assert.equal(headers.get("authorization"), `Bearer ${jwt}`);
     assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
     if (String(url).endsWith("/auth/v1/user")) return json({ id: uid, role: "authenticated", is_anonymous: false });
-    assert.equal(JSON.parse(String(init?.body)).p_filters.authorAge, "30s");
+    assert.deepEqual(JSON.parse(String(init?.body)).p_filters.authorAge, { min: 30, max: 39 });
     return json({ items: [memberCard], nextCursor: null });
   }, async () => {
-    const response = await createRuntimeHandler((key) => env[key])(request(`Bearer ${jwt}`, "?authorAge=30s"));
+    const response = await createRuntimeHandler((key) => env[key])(request(`Bearer ${jwt}`, "?ageMin=30&ageMax=39"));
     assert.equal(response.status, 200);
     assert.deepEqual((await response.json()).data.posts, [memberCard]);
   });
@@ -239,4 +240,36 @@ test("호스팅 default fetch도 같은 기본 검색 코어를 실행한다", a
     if (saved === undefined) delete runtime.Deno;
     else runtime.Deno = saved;
   }
+});
+
+
+test("모바일 URL의 지역·분류·숫자 나이·일정이 기본 코어에서 최신 RPC로 손실 없이 전달된다", async () => {
+  let rpcCalls = 0;
+  await withFetch(async (url, init) => {
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("authorization"), `Bearer ${jwt}`);
+    if (String(url).endsWith("/auth/v1/user")) return json({ id: uid, role: "authenticated", is_anonymous: false });
+    assert.equal(String(url), `${env.SUPABASE_URL}/rest/v1/rpc/search_public_posts_v2`);
+    rpcCalls++;
+    assert.deepEqual(JSON.parse(String(init?.body)), {
+      p_contract_version: "2026-10-05", p_region: "경기도",
+      p_filters: { query: "팝업", category: "팝업", cost: "free", availability: "recruiting", sort: "starts_asc", periodStart: "2026-10-05T00:00:00+09:00", periodEnd: "2026-10-06T00:00:00+09:00", authorAge: { min: 19, max: 99 } },
+      p_cursor: null, p_limit: 10,
+    });
+    return json({ items: [], nextCursor: null });
+  }, async () => {
+    const query = new URLSearchParams({ query: "팝업", category: "팝업", region: "경기도", cost: "free", availability: "recruiting", sort: "starts_asc", periodStart: "2026-10-05T00:00:00+09:00", periodEnd: "2026-10-06T00:00:00+09:00", ageMin: "19", ageMax: "99", limit: "10" });
+    const response = await createRuntimeHandler((key) => env[key])(request(`Bearer ${jwt}`, `?${query}`));
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).data, emptyPage);
+    assert.equal(rpcCalls, 1);
+  });
+});
+
+test("익명 작성자 이름이 DB 응답에 들어오면 기본 코어가 공개하지 않는다", async () => {
+  await withFetch(async () => json({ items: [{ ...publicCard, authorDisplayName: "김*연" }], nextCursor: null }), async () => {
+    const response = await createRuntimeHandler((key) => env[key])(request());
+    assert.equal(response.status, 500);
+    assert.doesNotMatch(await response.text(), /김|삼청동|authorDisplayName/);
+  });
 });

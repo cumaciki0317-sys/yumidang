@@ -57,7 +57,7 @@ test("회원 행사 조회는 Auth 검증 이후 같은 사용자 JWT로 지역�
   await runtimeTest(async (send, calls) => {
     assert.equal((await send("/events?mode=overlapping&periodStart=2099-01-01&periodEnd=2099-01-31&ongoingOnly=false&region=서울&category=전시&query=ART&limit=3", `Bearer ${token}`)).status, 200);
     assert.equal(calls[0].url, `${env.SUPABASE_URL}/auth/v1/user`);
-    assert.deepEqual(calls[1].args, { p_filters: { mode: "overlapping", ongoingOnly: false, period: { start: "2099-01-01", end: "2099-01-31" }, region: "서울", category: "전시", query: "art" }, p_cursor: null, p_limit: 3 });
+    assert.deepEqual(calls[1].args, { p_filters: { mode: "overlapping", ongoingOnly: false, period: { start: "2099-01-01", end: "2099-01-31" }, region: "서울특별시", category: "전시", query: "art" }, p_cursor: null, p_limit: 3 });
     assert.equal(calls[1].bearer, `Bearer ${token}`);
   });
 });
@@ -145,20 +145,20 @@ test("R2 client 허용 목록은 실제 전송을 허용하고 다른 역할·�
   const principal = await requirePrincipal(new Request("https://app.example.test", { headers: { authorization: `Bearer ${token}` } }), config,
     async () => Response.json({ id, role: "authenticated", is_anonymous: false }));
   const user = createUserClient(config, principal, fetcher), anonymous = createPublicClient(config, fetcher), internal = createInternalClient(config, fetcher);
-  const newInternal = ["reserve_ai_budget", "settle_ai_budget", "yield_job", "fail_job", "supersede_job", "load_review_summary_source", "load_review_summary_checkpoint", "save_review_summary_checkpoint", "discard_review_summary_checkpoint", "mark_review_summary_insufficient", "publish_review_summary_for_job", "upsert_events"];
+  const newInternal = ["acquire_ai_chat_request", "finish_ai_chat_request", "reserve_ai_chat_model", "reserve_review_summary_model", "settle_ai_budget", "yield_job", "fail_job", "supersede_job", "load_review_summary_source", "load_review_summary_checkpoint", "save_review_summary_checkpoint", "discard_review_summary_checkpoint", "mark_review_summary_insufficient", "publish_review_summary_for_job", "upsert_events"];
   for (const name of newInternal) await internal.rpc(name, {});
   for (const client of [user, anonymous]) for (const name of ["list_public_events", "list_event_filter_values"]) await client.rpc(name, {});
   await user.rpc("get_public_profile", { p_profile_id: id });
-  assert.equal(calls.length, 17);
+  assert.equal(calls.length, 20);
   for (const client of [user, anonymous]) for (const name of newInternal) await assert.rejects(client.rpc(name, {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
-  for (const client of [user, anonymous, internal]) for (const name of ["configure_ai_budget_ledger", "get_ai_budget_ledger", "unknown_rpc"])
+  for (const client of [user, anonymous, internal]) for (const name of ["configure_ai_budget_ledger", "get_ai_budget_ledger", "unknown_rpc", "reserve_ai_budget", "load_public_review_snapshot", "publish_review_summary"])
     await assert.rejects(client.rpc(name, {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
   await assert.rejects(anonymous.rpc("get_public_profile", {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
-  assert.equal(calls.length, 17);
+  assert.equal(calls.length, 20);
 });
 
 test("빈 내부·AI 설정은 공개 기능을 막지 않으며 내부 호출은 계속 미설정으로 거절한다", async () => {
-  const values = { ...env, SUPABASE_SERVICE_ROLE_KEY: "", INTERNAL_WORKER_SECRET: "", REVIEW_SUMMARY_MODEL_VERSION: "", AI_CHAT_MAX_MESSAGES: "" };
+  const values: Record<string, string> = { ...env, SUPABASE_SERVICE_ROLE_KEY: "", INTERNAL_WORKER_SECRET: "", REVIEW_SUMMARY_MODEL_VERSION: "", AI_CHAT_MAX_MESSAGES: "" };
   const reads: Record<string, number> = {};
   const parsed = loadRuntimeConfig(key => { reads[key] = (reads[key] ?? 0) + 1; return values[key]; });
   assert.equal(parsed.supabaseServiceRoleKey, undefined); assert.equal(parsed.internalWorkerSecret, undefined);
@@ -178,7 +178,7 @@ test("빈 내부·AI 설정은 공개 기능을 막지 않으며 내부 호출�
 });
 
 test("종현 event-sync 기본 런타임은 가상 HTTPS 수집 후 실제 내부 client로 저장한다", async () => {
-  const values = { ...env, KOPIS_API_KEY: "synthetic-key", EVENT_SYNC_PROVIDERS: "kopis", EVENT_SYNC_MAX_PERIOD_DAYS: "7", EVENT_SYNC_MAX_PAGE: "3", EVENT_SYNC_PAGE_ROWS: "2" };
+  const values: Record<string, string> = { ...env, KOPIS_API_KEY: "synthetic-key", EVENT_SYNC_PROVIDERS: "kopis", EVENT_SYNC_MAX_PERIOD_DAYS: "7", EVENT_SYNC_MAX_PAGE: "3", EVENT_SYNC_PAGE_ROWS: "2" };
   const calls: string[] = [];
   const handler = createEventSyncRuntime(key => values[key], async (url, init) => {
     const path = String(url); calls.push(path);
@@ -194,46 +194,102 @@ test("종현 event-sync 기본 런타임은 가상 HTTPS 수집 후 실제 내�
   assert.equal(calls.length, 2);
 });
 
-test("종현 worker는 실제 내부 client로 접근 확인 후 claim까지 도달하며 승인 없는 모델은 호출하지 않는다", async () => {
+// 합성 승인·새 RPC 응답은 연결 계약 테스트 전용이다. 실제 승인/SQL 적용의 증거가 아니다.
+function summaryWorkerValues(): Record<string, string> {
   const worker = Object.fromEntries(Object.values(REVIEW_SUMMARY_WORKER_ENV).map(key => [key, "5"]));
-  worker.REVIEW_SUMMARY_LEASE_SECONDS = "60"; worker.REVIEW_SUMMARY_WORKER_TIME_BUDGET_MS = "1000";
-  const values = { ...env, ...worker, REVIEW_SUMMARY_MODEL_VERSION: "potens.claude-5-sonnet", REVIEW_SUMMARY_PROMPT_VERSION };
-  const names: string[] = [];
+  Object.assign(worker, { REVIEW_SUMMARY_LEASE_SECONDS: "180", REVIEW_SUMMARY_WORKER_TIME_BUDGET_MS: "1000",
+    REVIEW_SUMMARY_RETRY_BASE_DELAY_MS: "600000", REVIEW_SUMMARY_RETRY_MAX_DELAY_MS: "600000",
+    REVIEW_SUMMARY_BUDGET_DEFER_MS: "3600000", REVIEW_SUMMARY_RETRY_MAX_ATTEMPTS: "3",
+    REVIEW_SUMMARY_MAX_CALLS_PER_STEP: "3", REVIEW_SUMMARY_MERGE_FAN_IN: "4" });
+  return { ...env, ...worker, REVIEW_SUMMARY_MODEL_VERSION: "potens.claude-5-sonnet", REVIEW_SUMMARY_PROMPT_VERSION };
+}
+const workerRequest = () => new Request("https://api.example.test/review-summary-worker", { method: "POST", headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" }, body: "{}" });
+const syntheticModel = () => ({ status: "ready" as const, modelVersion: "potens.claude-5-sonnet", model: { async generate(): Promise<never> { throw new Error("must not generate"); } } });
+
+test("현재 내부 client는 최신 요약 RPC에 연결하지만 DB 승인 보류 오류가 나면 worker 점유 전에 멈춘다", async () => {
+  const values = summaryWorkerValues();
+  const calls: string[] = [];
   const handler = createReviewSummaryWorkerRuntime(key => values[key], {
-    createModel: () => ({ status: "ready", modelVersion: "potens.claude-5-sonnet", model: { async generate() { throw new Error("must not generate"); } } }),
-    safety: { async check() { return true; } }, workerId: () => id,
-    fetch: async (url, init) => {
-      const name = String(url).split("/").at(-1)!; names.push(name);
-      assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`);
-      if (["yield_job", "fail_job", "supersede_job"].includes(name)) return Response.json({ code: "40001" }, { status: 409 });
-      return Response.json(name === "claim_job" ? { job: null } : { status: "lease_lost" });
+    createModel: syntheticModel, safety: { async check() { return true; } },
+    privacy: { decisionId: "synthetic-only", check: async () => true },
+    fetch: async (url) => {
+      calls.push(String(url).split("/").at(-1)!);
+      return Response.json({ code: "55000" }, { status: 400 });
     },
   });
-  const response = await handler(new Request("https://api.example.test/review-summary-worker", { method: "POST", headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" }, body: "{}" }));
+  const response = await handler(workerRequest());
   assert.equal(response.status, 200);
-  const result = (await response.json()).data;
-  assert.equal(result.status, "ran"); assert.equal(result.stopReason, "idle");
-  assert.deepEqual(names, ["load_review_summary_source", "load_review_summary_checkpoint", "save_review_summary_checkpoint", "discard_review_summary_checkpoint", "mark_review_summary_insufficient", "publish_review_summary_for_job", "yield_job", "fail_job", "supersede_job", "claim_job"]);
+  assert.deepEqual((await response.json()).data, { status: "not_enabled", reason: "DB_RPC_UNAVAILABLE" });
+  assert.deepEqual(calls, ["reserve_review_summary_model"]);
 });
 
-test("AI 탐색 기본 런타임은 성향·행사 사용자 client와 예산 내부 client로 가상 모델을 연결한다", async () => {
+test("worker는 실제 내부 client로 최신 모델 예약·요약 계약·전역 점유·claim·해제 경로를 전송한다", async () => {
+  const values = summaryWorkerValues(), names: string[] = [];
+  const nil = "00000000-0000-0000-0000-000000000000";
+  const handler = createReviewSummaryWorkerRuntime(key => values[key], {
+    createModel: syntheticModel, safety: { async check() { return true; } },
+    privacy: { decisionId: "synthetic-only", check: async () => true }, workerId: () => id,
+    now: () => new Date("2026-10-05T00:00:00Z"),
+    createDb: value => {
+      const client = createInternalClient(value, async (url, init) => {
+        const name = String(url).split("/").at(-1)!; names.push(name);
+        assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`);
+        const args = JSON.parse(String(init?.body));
+        if (["yield_job", "fail_job", "supersede_job"].includes(name)) {
+          assert.equal(args.p_worker_run_token, nil);
+          return Response.json({ code: "40001" }, { status: 409 });
+        }
+        if (name === "acquire_worker_run") {
+          assert.deepEqual(args, { p_lease_seconds: 180, p_existing_token: null });
+          return Response.json({ token: otherId, expiresAt: "2026-10-05T00:03:00Z" });
+        }
+        if (name === "release_worker_run") { assert.deepEqual(args, { p_token: otherId }); return Response.json({ status: "applied" }); }
+        if (name === "claim_job") { assert.equal(args.p_worker_run_token, otherId); return Response.json({ job: null }); }
+        assert.equal(args.p_contract_version, "2026-10-05");
+        assert.equal(args.p_worker_run_token, nil);
+        return Response.json({ status: "lease_lost" });
+      });
+      return client;
+    },
+  });
+  const response = await handler(workerRequest());
+  assert.equal(response.status, 200);
+  const result = (await response.json()).data;
+  assert.equal(result.status, "ran"); assert.equal(result.stopReason, "idle"); assert.equal(result.counts.claimed, 0);
+  assert.deepEqual(names, ["reserve_review_summary_model", "load_review_summary_source", "load_review_summary_checkpoint", "save_review_summary_checkpoint", "discard_review_summary_checkpoint", "mark_review_summary_insufficient", "publish_review_summary_for_job", "yield_job", "fail_job", "supersede_job", "acquire_worker_run", "claim_job", "release_worker_run"]);
+});
+
+test("AI 탐색은 연결된 회원 점유 RPC의 동의 거절 뒤 성향·행사·모델을 전송하지 않는다", async () => {
   const settings = Object.fromEntries(Object.values(AI_CHAT_ENV).map(key => [key, "5"]));
-  settings.AI_CHAT_MAX_MESSAGE_CHARS = "1000"; settings.AI_CHAT_MAX_TOTAL_CHARS = "2000";
-  const values = { ...env, ...settings, POTENS_API_KEY: "synthetic-key", POTENS_API_BASE_URL: "https://ai.potens.ai", POTENS_MODEL: "claude-5-sonnet",
-    AI_RETENTION_DECISION_ID: "synthetic-only", AI_COST_EVIDENCE_ID: "synthetic-only", AI_BUDGET_LEDGER_ID: "synthetic-ledger" };
+  settings.AI_CHAT_MAX_MESSAGE_CHARS = "500"; settings.AI_CHAT_MAX_TOTAL_CHARS = "2000";
+  settings.AI_CHAT_MAX_SEARCH_PAGES = "3"; settings.AI_CHAT_RECHECK_MAX_PAGES = "3"; settings.AI_CHAT_MAX_MATCH_CALLS = "3";
+  const values: Record<string, string> = { ...env, ...settings, POTENS_API_KEY: "synthetic-key", POTENS_API_BASE_URL: "https://ai.potens.ai", POTENS_MODEL: "claude-5-sonnet",
+    AI_RETENTION_DECISION_ID: "synthetic-only", AI_COST_EVIDENCE_ID: "synthetic-only", AI_BUDGET_LEDGER_ID: "synthetic-ledger",
+    AI_PROCESSING_LEGAL_DECISION_ID: "synthetic-only", AI_MEMBER_TRANSMISSION_APPROVAL_ID: "synthetic-only" };
   const calls: Array<[string, string | null]> = [];
   const handler = createAiChatRuntime(key => values[key], async (url, init) => {
     const path = String(url), name = path.split("/").at(-1)!; calls.push([name, new Headers(init?.headers).get("authorization")]);
     if (path.endsWith("/auth/v1/user")) return Response.json({ id, role: "authenticated", is_anonymous: false });
-    if (path === "https://ai.potens.ai/api/chat") return Response.json({ message: JSON.stringify({ status: "search", filters: { target: "events", newThisWeek: true } }), token_usage: {} });
-    if (name === "get_my_profile_traits") return Response.json({ interests: [], conversationStyles: [], mbti: null });
-    if (name === "reserve_ai_budget") return Response.json({ reservationId: otherId });
-    if (name === "settle_ai_budget") return Response.json({ settled: true });
-    assert.equal(name, "list_public_events"); return Response.json({ items: [], nextCursor: null });
-  }, { now: () => new Date("2026-10-02T00:00:00Z") });
+    if (name === "acquire_ai_chat_request") {
+      const args = JSON.parse(String(init?.body));
+      assert.equal(args.p_contract_version, "2026-10-05");
+      assert.equal(args.p_user_id, id);
+      assert.equal(Object.hasOwn(args, "messages"), false);
+      return Response.json({ status: "consent_revoked" });
+    }
+    assert.fail("동의 거절 뒤 성향·행사·모델·예산 전송을 실행하지 않는다");
+  }, { now: () => new Date("2026-10-02T00:00:00Z"), privacy: { decisionId: "synthetic-only", check: async () => true },
+    outputLimit: { decisionId: "synthetic-only", apply: (body, limit) => ({ ...body, synthetic_max_tokens: limit }) } });
   const response = await handler(new Request("https://api.example.test/ai-chat", { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify({ clientRequestId: "synthetic1", messages: [{ role: "user", content: "이번 주 행사를 찾아줘" }], currentFilters: { target: "events" } }) }));
   assert.equal(response.status, 200);
-  assert.equal((await response.json()).data.status, "no_results");
-  for (const name of ["get_my_profile_traits", "list_public_events"]) assert.ok(calls.some(call => call[0] === name && call[1] === `Bearer ${token}`));
-  for (const name of ["reserve_ai_budget", "settle_ai_budget"]) assert.ok(calls.some(call => call[0] === name && call[1] === `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`));
+  const data = (await response.json()).data;
+  assert.equal(data.status, "unavailable");
+  assert.deepEqual(data.recovery, { reason: "consent", retryAllowed: false });
+  assert.deepEqual(calls, [["user", `Bearer ${token}`], ["acquire_ai_chat_request", `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`]]);
+  const internal = createInternalClient(config, async () => assert.fail("폐쇄한 generic RPC를 외부로 보내지 않는다"));
+  for (const name of ["reserve_ai_budget", "load_public_review_snapshot", "publish_review_summary"]) {
+    assert.equal(internal.supportsRpc?.(name), false);
+    await assert.rejects(internal.rpc(name, {}), error => toPublicError(error).error.code === "ACCESS_DENIED");
+  }
+  // 합성 HTTP 검사는 실제 모델 전송의 승인·성공 증거가 아니다. 실제 SQL 회귀와 구분한다.
 });

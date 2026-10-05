@@ -3,6 +3,7 @@ import type { JsonValue } from "./common.ts";
 import { HttpError } from "../http/errors.ts";
 export type SignupStatus = "information_required" | "ineligible" | "photo_required" | "completion_required" | "ready";
 export interface ProfileTraits { interests: string[]; conversationStyles: string[]; mbti: string | null }
+export interface ProfilePreferences extends ProfileTraits { bio: string | null }
 const invalid = (): never => { throw new HttpError("INVALID_REQUEST"); };
 function object(value: JsonValue, required: string[], optional: string[] = []): Record<string, JsonValue> {
   if (!value || typeof value !== "object" || Array.isArray(value) ||
@@ -50,6 +51,13 @@ export function parseProfileTraits(value: JsonValue): ProfileTraits {
   const mbti = input.mbti === null ? null : text(input.mbti, 4, 4);
   if (mbti !== null && !/^[EI][NS][TF][JP]$/.test(mbti)) return invalid();
   return { interests: traits(input.interests), conversationStyles: traits(input.conversationStyles), mbti };
+}
+/** 소개는 기존 DB의 nullable·300자 기준을 그대로 적용하며 입력을 정규화하지 않는다. */
+export function parseProfilePreferences(value: JsonValue): ProfilePreferences {
+  const input = object(value, ["interests", "conversationStyles", "mbti", "bio"]);
+  const bio = input.bio;
+  if (bio !== null && (typeof bio !== "string" || [...bio].length > 300)) return invalid();
+  return { ...parseProfileTraits({ interests: input.interests!, conversationStyles: input.conversationStyles!, mbti: input.mbti! }), bio };
 }
 export function parseSignupCompletion(value: JsonValue): ProfileTraits & { avatarPath: string } {
   const input = object(value, ["avatarPath"], ["interests", "conversationStyles", "mbti"]);

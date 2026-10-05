@@ -23,12 +23,12 @@
 | 어댑터 의미 이름 | 실제 RPC와 필수 매개변수 | 반환 |
 |---|---|---|
 | `enqueueJob` | `enqueue_job(p_kind text, p_dedupe_key text, p_payload jsonb, p_available_at timestamptz)` | `{jobId,deduplicated,status}` |
-| `claimJob` | `claim_job(p_worker_id uuid, p_lease_seconds integer)` | `{job:null}` 또는 `{job:{jobId,kind,payload,leaseToken,leaseExpiresAt,attempt,failedAttempts}}` |
-| `completeJob` | `complete_job(p_job_id uuid, p_lease_token uuid)` | `{jobId,status:"succeeded"}` |
-| `yieldJob` | `yield_job(p_job_id uuid,p_lease_token uuid,p_available_at timestamptz)` | `{jobId,status:"queued"}` |
-| `failJob` | `fail_job(p_job_id uuid,p_lease_token uuid,p_error_code text)` | `{jobId,status:"failed"}` |
-| `supersedeJob` | `supersede_job(p_job_id uuid,p_lease_token uuid)` | `{jobId,status:"superseded"}` |
-| `retryJob` | `retry_job(p_job_id uuid, p_lease_token uuid, p_available_at timestamptz, p_error_code text)` | `{jobId,status:"retry_wait"}` |
+| `claimJob` | `claim_job(p_worker_id uuid, p_lease_seconds integer,p_worker_run_token uuid)` | `{job:null}` 또는 `{job:{jobId,kind,payload,leaseToken,leaseExpiresAt,attempt,failedAttempts}}` |
+| `completeJob` | `complete_job(p_job_id uuid, p_lease_token uuid,p_worker_run_token uuid)` | `{jobId,status:"succeeded"}` |
+| `yieldJob` | `yield_job(p_job_id uuid,p_lease_token uuid,p_available_at timestamptz,p_worker_run_token uuid)` | `{jobId,status:"queued"}` |
+| `failJob` | `fail_job(p_job_id uuid,p_lease_token uuid,p_error_code text,p_worker_run_token uuid)` | `{jobId,status:"failed"}` |
+| `supersedeJob` | `supersede_job(p_job_id uuid,p_lease_token uuid,p_worker_run_token uuid)` | `{jobId,status:"superseded"}` |
+| `retryJob` | `retry_job(p_job_id uuid, p_lease_token uuid, p_available_at timestamptz, p_error_code text,p_worker_run_token uuid)` | `{jobId,status:"retry_wait"}` |
 
 `workerId`는 실행 인스턴스 UUID다. 초 단위 lease는 **필수 입력**, 기술 범위 `1..86400`이며 코드에 자동 기본값은 없다. 선택 운영값180초를 명시 주입하고 실제 작업 시간·만료 경합을 검증한다. DB가 현재 시각과 lease 만료값을 계산한다. 입력 timestamp는 유한값만 허용하며 enqueue는 현재/과거/미래, retry는 잠금 획득 뒤 현재 시각 이상만 허용한다. 즉시 재시도를 위해 호출자가 오래된 `now`를 보내면 거절될 수 있으므로 정책이 정한 미래 시각을 전달한다.
 
@@ -65,12 +65,13 @@
 
 원장은 사용자 ID·대화·후기·프롬프트를 저장하지 않는다. ledgerId, 제공처 표식, 기술 작업 종류, 예약·보고 사용량만 저장한다. 개인별 이력이나 운영 로그로 사용하지 않는다. 공급사 포함량50%·공급사 초기화 주기·기간 종료 후90일 보관을 선택했다. 비용 담당1명·개발 운영 담당만 접근하고 접근/변경을 기록한다. 실제 계정 단위·담당 지정·법적 근거·삭제 구현 확인 전 임의 초기화·기본 원장·자동 TTL을 넣지 않는다.
 
-모든 예산 RPC는 service_role 전용이다. configure/get은 신뢰된 운영·검증 경로에서만 호출하고 일반 HTTP 라우트에 노출하지 않는다.
+직접 호출 가능한 예산 RPC는 service_role 전용이다. generic `reserve_ai_budget`는 새 범위 예약 함수 내부에서만 실행하며 서비스 역할의 직접 권한을 회수한다. configure/get은 신뢰된 운영·검증 경로에서만 호출하고 일반 HTTP 라우트에 노출하지 않는다.
 
 | RPC | 인수 | 반환 |
 |---|---|---|
 | configure_ai_budget_ledger | p_ledger_id text,p_unit_limit bigint,p_call_limit bigint | {ledgerId,configured:true} |
-| reserve_ai_budget | p_ledger_id text,p_provider_id text,p_task text,p_units bigint | {reservationId:uuid} 또는 {reservationId:null} |
+| reserve_ai_chat_model | 원장·제공처·task·units + user/request/lease/contractVersion | 범위 검사 후 `{reservationId:uuid\|null}` 또는 상태 오류 |
+| reserve_review_summary_model | 원장·제공처·task·units + job/lease/globalToken/profile/revision/model/prompt/근거 IDs/contractVersion | 범위 검사 후 예약 또는 상태 오류 |
 | settle_ai_budget | p_reservation_id uuid,p_outcome text,p_input_tokens bigint,p_output_tokens bigint | {settled:true} |
 | get_ai_budget_ledger | p_ledger_id text | {ledgerId,unitLimit,callLimit,reservedUnits,chargedUnits,openCalls,settledCalls,unknownUsageCalls} 또는 null |
 
@@ -95,3 +96,26 @@ RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/le
 구현 근거: PostgreSQL 공식 문서의 [함수 권한과 안전한 SECURITY DEFINER](https://www.postgresql.org/docs/current/sql-createfunction.html), [SKIP LOCKED](https://www.postgresql.org/docs/current/sql-select.html), [실제 시각 clock_timestamp](https://www.postgresql.org/docs/current/functions-datetime.html).
 
 추가 변경의 필수 검증은 tests/database/minkyu/common_connections.sql 및 별도 경합 검사에서 예산 동시 예약·중복 정산·overflow rollback, yield/retry 실패 수 분리, terminal 재점유 금지와 공개 변경 대 게시 경합을 확인한다. 실제 실행 결과는 총괄 인계에 기록하고 NOT_RUN과 PASS를 구분한다.
+
+
+## 전역 실행과 개별 작업 점유 결합 (2026-10-05)
+
+`20261005003000_worker_job_fences.sql`은 전역 실행 singleton과 개별 작업 claim을 결합한다. `acquire_worker_run`으로 받은 전역 토큰을 종현 `createRpcJobRepository(db,{workerRunToken})`에 전달한다. 기존 옵션 생략은 TypeScript 포트에 남아 있지만 실제 DB의 기존 미결합 claim·complete·retry·yield·fail·supersede 실행 권한은 PUBLIC/anon/authenticated/service_role에서 회수했으므로 우회할 수 없다. 등록·maintenance의 `enqueue_job`은 기존 인수와 권한을 유지한다.
+
+신규 6개 RPC는 표의 마지막 `p_worker_run_token uuid` 인수를 요구하며 기존 반환 객체를 그대로 유지한다. 전역 singleton을 `FOR UPDATE`로 잠근 뒤 DB `clock_timestamp()`의 현재 토큰·만료를 확인한다. claim 성공 때 비공개 `worker_job_run_fences`에 작업 UUID·개별 점유 UUID·전역 점유 UUID만 저장한다. 모든 전이는 세 값이 정확히 일치해야 하며 전역 점유와 개별 running lease가 모두 유효해야 한다. 전역 토큰 교체만으로 이전 실행이 claim한 작업을 이어받을 수 없다. 개별 작업 lease가 만료된 뒤 재claim하면 새로운 개별 토큰과 현재 전역 토큰으로 매핑을 교체한다.
+
+전이 성공 시 매핑을 삭제하고 retry/yield 시에는 기존 중간 checkpoint를 보존한다. fail/supersede/complete의 checkpoint 삭제·실패 횟수와 원자적 상태 변경은 기존 소유자 전용 함수가 담당한다. 전역/개별 lease를 자동 연장하지 않는다. 잘못된 전역 토큰·매핑·만료는 SQLSTATE `40001`의 정형 `state_conflict`다. 종현 어댑터는 이를 `lease_lost`로 해석한다. 기존 함수에서 발생한 입력/개별 점유 오류 계약도 유지한다.
+
+공통 helper는 `private.assert_current_worker_run(uuid)`와 `private.assert_current_worker_job(uuid,uuid,uuid)`이며 반환은 `void`다. 둘 다 호출 트랜잭션 끝까지 전역 행 잠금을 유지한다. 작업 helper는 매핑과 현재 job을 읽어 검증하며 job 행의 추가 잠금을 먼저 획득하지 않는다. 요약 RPC는 이후 기존 projection→job→checkpoint 잠금 순서로 작업을 다시 확인한다. 6개 전이 wrapper는 기존 개별 행 잠금·상태 변경 후 전역 시각을 재검사해 대기나 처리 중 전역 lease가 만료되면 변경 전체를 rollback한다. 다른 모델 예약·요약 wrapper에서도 의존 행 잠금 대기 뒤 helper를 재확인해야 한다.
+
+매핑에는 기존 checkpoint와 같은 이유로 job FK를 두지 않는다. 운영 TRUNCATE API는 없으며 임의 큐 삭제로 매핑을 정리했다고 주장하지 않는다. 이후 종료 기록의 보관기간 삭제를 구현할 때 해당 작업 매핑의 동시 정리도 확인해야 한다. 현재 매핑은 전이 완료 시 삭제·만료 재점유 시 교체하며 활성 또는 아직 재점유하지 않은 만료 job에만 남는다.
+
+검증 파일 `tests/database/minkyu/worker_job_fences.sql`은 합성 scratch DB의 빈 큐에서 실행하고 모든 자료를 rollback한다. 권한·RLS·기존 미결합 호출 금지, 6개 wire 반환, 잘못된 두 토큰, 전역 교체, 개별 만료 재점유, 전역 만료, 양보/재시도와 실패 수, 종결 재처리 금지를 검사한다. 합성 트리거가 실제 SQL 전이 중 100ms를 지연해 전역 만료 경계를 지나면 상태와 매핑이 rollback되는지도 확인한다. 단일 세션 테스트이며 독립 세션 경쟁·운영 배포·실제 외부 모델 실행을 증명하지 않는다. 기존 `worker_jobs.sql`의 service_role 미결합 호출 성공 기대는 현재 권한 기준과 다르므로 최신 fence 테스트와 구분해 검토한다.
+
+## 2026-10-05 격리 통합 검증
+
+회원 요청은 `acquire_ai_chat_request`로 개인 점유를 얻고, `reserve_ai_chat_model`에서 승인·동의·현재 점유·한국 날짜·전체 예산을 함께 검사한다. 최초 성공 예약에만 회원 하루20회 중1회를 차감하며 내부 모델 호출은 추가 차감하지 않는다. `finish_ai_chat_request`는 현재 점유만 종료한다. client request 식별자는 해시만 보관하고 대화 원문을 저장하지 않는다. 외부 전송 guard는 기본 false다.
+
+실제 두 DB 세션으로 개인 동시 점유, 동일 요청의 단일 차감, 전체 예산 마지막 단위 경쟁, 원장 잠금 대기 중 점유 만료 롤백, 동의 철회와 모델 시작 경합을 확인했다. 한국 날짜 귀속은 검사했으며 실제 자정 경과는 아직 검증하지 않았다. 요약6 RPC는 입력 `p_contract_version="2026-10-05"`와 전역 점유 token을 요구하고 최신 근거·동의·revision을 검사한다. 승인 보류는55000으로 원문 반환·checkpoint 변경·게시를 차단하고 기존 작업을 보존한다.
+
+검사는 자료를 복제하지 않은 `yumidang_policy_20261005` 합성 fixture로 수행했으며 운영 적용·공급사 실호출·Railway 배포 증거와 구분한다. 최신 검사는 `ai_atomic_requests.sql`, `worker_job_fences.sql`, `current_summary_fences.sql`, `ai_atomic_concurrency_local.py`다. 기존 unfenced 인수의 과거 회귀는 최신 권한 검사의 대체물이 아니다.

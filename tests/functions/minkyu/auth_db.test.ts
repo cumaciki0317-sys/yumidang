@@ -149,7 +149,9 @@ test("DB SQLSTATE는 고정 공개 오류로 변환하고 상세·힌트를 버�
   for (const [sql, status, expected] of [
     ["42501", 403, "ACCESS_DENIED"], ["22023", 400, "INVALID_REQUEST"], ["23505", 409, "STATE_CONFLICT"],
     ["28000", 400, "AUTH_REQUIRED"], ["PT404", 404, "RESOURCE_NOT_FOUND"], ["PT503", 503, "EXTERNAL_UNAVAILABLE"],
-    ["P0001", 400, "STATE_CONFLICT"], ["P0002", 400, "RESOURCE_NOT_FOUND"], ["40001", 500, "STATE_CONFLICT"],
+    ["P0001", 400, "STATE_CONFLICT"], ["P0002", 400, "RESOURCE_NOT_FOUND"],
+    // 실제 PostgREST의 no_data_found 응답은 HTTP 500이다. 공개 API는 상세 없이 404로 변환한다.
+    ["P0002", 500, "RESOURCE_NOT_FOUND"], ["40001", 500, "STATE_CONFLICT"],
     ["99999", 400, "INTERNAL_ERROR"], ["any", 401, "AUTH_REQUIRED"], ["any", 503, "EXTERNAL_UNAVAILABLE"],
   ] as const) {
     const client = createUserClient(config(), p, async () => json({ code: sql, message: "sensitive-detail", details: "SELECT private-service", hint: jwt }, status));
@@ -290,4 +292,18 @@ test("분리된 후기 공개·요약 RPC만 내부 allowlist를 통과한다", 
   });
   for (const name of ["process_due_review_publications", "process_review_summary_refresh"]) await client.rpc(name, {});
   assert.deepEqual(calls, ["process_due_review_publications", "process_review_summary_refresh"]);
+});
+
+
+test("본인 제재 조회도 회원 JWT·anon key로 빈 고정 RPC 인수만 보낸다", async () => {
+  const client = createUserClient(config(), await principal(), async (url, init) => {
+    assert.equal(url, `${env.SUPABASE_URL}/rest/v1/rpc/get_my_safety_state`);
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("authorization"), `Bearer ${jwt}`);
+    assert.equal(headers.get("apikey"), env.SUPABASE_ANON_KEY);
+    assert.equal(init?.body, "{}");
+    assert.doesNotMatch(JSON.stringify(init), /private-service/);
+    return json({ permanent: false, restrictedUntil: null, hasWarning: false, sanctions: [] });
+  });
+  assert.deepEqual(await client.rpc("get_my_safety_state", {}), { permanent: false, restrictedUntil: null, hasWarning: false, sanctions: [] });
 });

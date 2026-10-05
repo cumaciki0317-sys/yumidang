@@ -10,13 +10,16 @@ import { createServiceApi } from "./handler.ts";
 import { createRpcPublicPostSearchRepository } from "../_shared/db/repositories/search.ts";
 import { searchPublicPosts } from "../_shared/services/search-service.ts";
 import { createRpcEventRepository, listEventFilterValues } from "../_shared/db/repositories/events.ts";
+import { createMemberCleanupExecutor, type MemberCleanupExecutionOptions } from "../_shared/services/member-lifecycle-service.ts";
 
 /** 실제 실행과 통합 검증이 같은 설정·인증·DB 의존성 조립을 사용한다. */
 export function createRuntimeHandler(
   read: EnvReader,
-  options: { publicPostSearch?: PublicPostSearchExecutor } = {},
+  options: { publicPostSearch?: PublicPostSearchExecutor; memberCleanup?: boolean; memberCleanupExecution?: MemberCleanupExecutionOptions } = {},
 ): (request: Request) => Promise<Response> {
   const config = loadRuntimeConfig(read);
+  // 명시적인 로컬 검증 옵션에서만 연결한다. DB 권한이나 삭제 승인을 변경하지 않는다.
+  const cleanup = options.memberCleanup === true ? createMemberCleanupExecutor(config, fetch, options.memberCleanupExecution) : undefined;
   const authenticatePublic = async (request: Request) => {
     const principal = await requireOptionalPrincipal(request, config);
     return principal
@@ -26,6 +29,7 @@ export function createRuntimeHandler(
   return createServiceApi({
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
+    ...(cleanup ? { memberCleanup: { execute: (_db, token, signal) => cleanup(token, signal) } } : {}),
     publicSearch: {
       authenticate: authenticatePublic,
       execute: options.publicPostSearch ?? ((db, input) =>

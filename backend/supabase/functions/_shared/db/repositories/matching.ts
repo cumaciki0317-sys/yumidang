@@ -1,6 +1,6 @@
 /** 민규담당. 고정 RPC만 호출하며 사용자 ID·권한 판정은 DB에서 수행한다. */
 import type { RpcClient } from "../transport.ts";
-export const createRequest = (db: RpcClient, postId: string, message: string) => db.rpc("request_service_post", { p_post_id: postId, p_message: message });
+export const createRequest = (db: RpcClient, postId: string, messageId: string, message: string) => db.rpc("request_service_post", { p_post_id: postId, p_message_id: messageId, p_message: message });
 export const listSentRequests = (db: RpcClient) => db.rpc("list_sent_join_requests", {});
 export const listReceivedRequests = (db: RpcClient) => db.rpc("list_received_join_requests", {});
 export const withdrawRequest = (db: RpcClient, id: string) => db.rpc("withdraw_join_request", { p_request_id: id });

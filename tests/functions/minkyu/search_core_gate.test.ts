@@ -40,3 +40,12 @@ test("실제 CLI의 종료 코드는 실제 코어 검사와 일치하며 오류
   assert.deepEqual(JSON.parse(result.stdout), expected);
   assert.equal(expected.status, expected.probes.every((probe) => probe.status === "PASS") ? "READY" : "BLOCKED");
 });
+
+test("현재 공개 검색 계약 7개가 통과해도 실제 DB·HTTP 실행을 주장하지 않는다", async () => {
+  const report = await checkSearchCore();
+  assert.equal(report.status, "READY");
+  assert.equal(report.probes.length, 7);
+  assert.ok(report.probes.every(probe => probe.status === "PASS"));
+  assert.equal(report.realDatabase, "NOT_RUN");
+  assert.equal(report.deployedHttp, "NOT_RUN");
+});

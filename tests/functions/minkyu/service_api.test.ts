@@ -9,7 +9,7 @@ const otherId = "22222222-2222-4222-8222-222222222222";
 function setup(overrides: Partial<ServiceApiDependencies> = {}) {
   const calls: { name: string; args: Record<string, JsonValue>; role: string }[] = [];
   const auth: string[] = [];
-  const client = (role: string) => ({ rpc: async (name: string, args: Record<string, JsonValue>) => { calls.push({ name, args, role }); return name === "expire_match_consents" || name === "expire_appointment_changes" ? { expiredCount: 1 } : name === "process_due_review_publications" ? { publishedCount: 2 } : name === "process_review_summary_refresh" ? { processedCount: 3, enqueuedCount: 1 } : { ok: true }; } });
+  const client = (role: string) => ({ rpc: async (name: string, args: Record<string, JsonValue>): Promise<JsonValue> => { calls.push({ name, args, role }); return name === "expire_match_consents" || name === "expire_appointment_changes" ? { expiredCount: 1 } : name === "process_due_review_publications" ? { publishedCount: 2 } : name === "process_review_summary_refresh" ? { processedCount: 3, enqueuedCount: 1 } : { ok: true }; } });
   const handler = createServiceApi({
     allowedOrigins: ["https://app.example.test"], maxBodyBytes: 8192,
     authenticateUser: async (request) => { auth.push("user"); if (request.headers.get("authorization") !== "Bearer member") throw new HttpError("AUTH_REQUIRED"); return client("user"); },
@@ -108,7 +108,7 @@ test("maintenance 본문 주입·잘못된 작업 한도는 공개 쓰기 전에
 test("공개 실패는 요약을 실행하지 않고 실제 오류로 반환한다", async () => {
   for (const result of ["throw", "malformed"]) {
     const calls: string[] = [];
-    const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name) => {
+    const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name): Promise<JsonValue> => {
       calls.push(name);
       if (name === "expire_match_consents" || name === "expire_appointment_changes") return { expiredCount: 1 };
       if (result === "throw") throw new HttpError("EXTERNAL_UNAVAILABLE");
@@ -124,7 +124,7 @@ test("공개 실패는 요약을 실행하지 않고 실제 오류로 반환한�
 test("공개 후 요약 실패·비정상 응답은 공개 결과와 정형 partial 오류로 구분한다", async () => {
   for (const kind of ["timeout", "malformed", "unknown"]) {
     const calls: string[] = [];
-    const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name) => {
+    const { send } = setup({ authenticateInternal: async () => ({ rpc: async (name): Promise<JsonValue> => {
       calls.push(name);
       if (name === "expire_match_consents" || name === "expire_appointment_changes") return { expiredCount: 1 };
       if (name === "process_due_review_publications") return { publishedCount: 1, secret: "never-echo" };
@@ -256,7 +256,7 @@ test("유료 공급사 미연결·잘못된 일정·비용을 가짜 성공으�
 test("신청·철회·거절·알림 확인 경로는 의도한 RPC에만 연결한다", async () => {
   const { send, calls } = setup();
   for (const [path, body, rpc] of [
-    [`/posts/${id}/requests`, { message: "함께 전시를 보러 가고 싶어요" }, "request_service_post"],
+    [`/posts/${id}/requests`, { messageId: otherId, message: "함께 전시를 보러 가고 싶어요" }, "request_service_post"],
     [`/requests/${id}/withdraw`, {}, "withdraw_join_request"], [`/requests/${id}/decline`, {}, "decline_join_request"],
     [`/notifications/${id}/read`, {}, "mark_my_notification_read"], ["/notifications/read-all", {}, "mark_all_my_notifications_read"],
   ] as const) { assert.equal((await send(path, "POST", body)).status, 200); assert.equal(calls.at(-1)?.name, rpc); }
@@ -276,10 +276,10 @@ test("신청자는 동의 버전 조회 후 수락하며 사진 변경은 소유
 test("공고 주소·상세와 신청 메시지 길이는 DB 계약 경계를 지킨다", async () => {
   const { send, calls } = setup();
   assert.equal((await send("/posts", "POST", { ...freePost, registeredAddress: "가".repeat(301) })).status, 400);
-  assert.equal((await send("/posts", "POST", { ...freePost, meetingDetail: "가".repeat(201) })).status, 400);
+  assert.equal((await send("/posts", "POST", { ...freePost, meetingDetail: "가".repeat(301) })).status, 400);
   assert.equal((await send("/posts", "POST", { ...freePost, meetingDetail: "가" })).status, 400);
-  assert.equal((await send(`/posts/${id}/requests`, "POST", { message: "가".repeat(9) })).status, 400);
-  assert.equal((await send(`/posts/${id}/requests`, "POST", { message: "가".repeat(301) })).status, 400);
+  assert.equal((await send(`/posts/${id}/requests`, "POST", { messageId: otherId, message: " " })).status, 400);
+  assert.equal((await send(`/posts/${id}/requests`, "POST", { messageId: otherId, message: "가".repeat(1001) })).status, 400);
   assert.equal(calls.length, 0);
 });
 
@@ -322,4 +322,93 @@ test("실제 런타임 조립도 빈 요약 환경을 보존하고 내부 공개
     assert.deepEqual(body.data.scheduleChange, { status: "expired", expiredCount: 0 });
     assert.deepEqual(calls, ["https://project.example.test/rest/v1/rpc/expire_match_consents", "https://project.example.test/rest/v1/rpc/expire_appointment_changes", "https://project.example.test/rest/v1/rpc/process_due_review_publications"]);
   } finally { globalThis.fetch = previous; }
+});
+
+
+test("최신 공고 16분류는 등록·수정에 동일하게 전달하고 이전 분류는 거절한다", async () => {
+  const { send, calls } = setup();
+  const categories = ["지금이당", "전시", "축제", "팝업", "공연", "영화", "맛집", "카페", "쇼핑", "여행", "운동", "산책", "게임", "반려동물", "스터디", "기타"];
+  for (const category of categories) {
+    assert.equal((await send("/posts", "POST", { ...freePost, category })).status, 200, category);
+    assert.equal((calls.at(-1)?.args.p_input as Record<string, JsonValue>).category, category);
+    const { postId: omitted, ...input } = freePost;
+    assert.equal((await send(`/posts/${id}/update`, "POST", { ...input, category, expectedUpdatedAt: "2098-01-01T10:00:00Z" })).status, 200, category);
+    assert.equal((calls.at(-1)?.args.p_input as Record<string, JsonValue>).category, category);
+  }
+  const previousCalls = calls.length;
+  for (const category of ["지금", "식사", "클래스", "미분류"]) {
+    assert.equal((await send("/posts", "POST", { ...freePost, category })).status, 400, category);
+  }
+  assert.equal(calls.length, previousCalls);
+});
+
+test("공고 제목50자·상세지점300자 경계는 유니코드 문자 수로 등록·수정에 적용한다", async () => {
+  const { send, calls } = setup();
+  const { postId: omitted, ...input } = freePost;
+  for (const [path, base] of [["/posts", freePost], [`/posts/${id}/update`, { ...input, expectedUpdatedAt: "2098-01-01T10:00:00Z" }]] as const) {
+    assert.equal((await send(path, "POST", { ...base, title: "😀".repeat(50), meetingDetail: "😀".repeat(300) })).status, 200);
+    const payload = calls.at(-1)?.args.p_input as Record<string, JsonValue>;
+    assert.equal(payload.title, "😀".repeat(50));
+    assert.equal(payload.meetingDetail, "😀".repeat(300));
+    const previousCalls = calls.length;
+    assert.equal((await send(path, "POST", { ...base, title: "가".repeat(51) })).status, 400);
+    assert.equal((await send(path, "POST", { ...base, meetingDetail: "가".repeat(301) })).status, 400);
+    assert.equal(calls.length, previousCalls);
+  }
+});
+
+
+test("성향과 소개 저장은 입력을 보존하며 사용자 고정 RPC의 네 인자만 전달한다", async () => {
+  for (const bio of [null, "", "  소개\n원문  ", "😀".repeat(300)]) {
+    const input = { interests: ["산책"], conversationStyles: ["차분한 대화"], mbti: "INTJ", bio };
+    const { send, calls } = setup({ authenticateUser: async () => ({ rpc: async (name, args): Promise<JsonValue> => {
+      calls.push({ name, args, role: "user" });
+      return input;
+    } }) });
+    const response = await send("/me/preferences", "POST", input);
+    assert.equal(response.status, 200);
+    assert.deepEqual(calls, [{ name: "set_my_profile_preferences", role: "user", args: {
+      p_interests: input.interests, p_conversation_styles: input.conversationStyles, p_mbti: input.mbti, p_bio: bio,
+    } }]);
+    assert.deepEqual((await response.json()).data, input);
+  }
+});
+
+test("성향과 소개 저장의 잘못된 본문은 RPC 실행 없이 거절한다", async () => {
+  const input = { interests: ["산책"], conversationStyles: [], mbti: null, bio: null };
+  const { send, calls } = setup();
+  for (const body of [
+    null, [], { interests: [], conversationStyles: [], mbti: null },
+    { ...input, userId: id }, { ...input, bio: 1 }, { ...input, bio: "😀".repeat(301) },
+    { ...input, mbti: "XXXX" }, { ...input, interests: ["산책", "산책"] },
+    { ...input, conversationStyles: ["가".repeat(41)] },
+  ]) {
+    assert.equal((await send("/me/preferences", "POST", body)).status, 400);
+  }
+  assert.equal((await send("/me/preferences?userId=forged", "POST", input)).status, 400);
+  assert.equal(calls.length, 0);
+  // 기존 세 필드 계약에 소개를 끼워 넣는 우회는 계속 거절한다.
+  assert.equal((await send("/me/traits", "POST", input)).status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test("성향과 소개 저장은 인증 실패 시 입력 검증과 RPC 실행 전에 차단한다", async () => {
+  const { send, calls } = setup();
+  const response = await send("/me/preferences", "POST", { userId: id }, { authorization: "Bearer forged" });
+  assert.equal(response.status, 401);
+  assert.equal(calls.length, 0);
+});
+
+test("성향과 소개 저장 오류는 원래 입력이나 외부 오류 원문을 응답에 노출하지 않는다", async () => {
+  const original = { interests: ["실패입력표식"], conversationStyles: [], mbti: null, bio: "비공개소개표식" };
+  const calls: string[] = [];
+  const { send } = setup({ authenticateUser: async () => ({ rpc: async (name): Promise<JsonValue> => {
+    calls.push(name); throw new Error("외부오류원문표식 비공개소개표식 실패입력표식");
+  } }) });
+  const response = await send("/me/preferences", "POST", original);
+  assert.equal(response.status, 500);
+  const result = await response.text();
+  for (const marker of ["외부오류원문표식", "비공개소개표식", "실패입력표식"]) assert.equal(result.includes(marker), false);
+  assert.deepEqual(original, { interests: ["실패입력표식"], conversationStyles: [], mbti: null, bio: "비공개소개표식" });
+  assert.deepEqual(calls, ["set_my_profile_preferences"]);
 });

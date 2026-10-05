@@ -20,7 +20,7 @@
 
 GET `/reviews/praises`는 정해진 6개 `code`·한국어 `label`을 표시 순서대로 반환한다. `punctual` 시간 준수, `keeps_promises` 약속 내용, `communicates_well` 소통, `considerate` 배려, `enjoyable_conversation` 대화, `comfortable_companion` 편안함의 기술 코드다. label은 DB 결과를 사용하며 기존 비활성 코드·과거 후기 기록을 삭제하거나 새 선택지로 안내하지 않는다. 권한·DB 실패를 빈 목록 성공으로 바꾸지 않는다.
 
-GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedCount`를 추가한다. 실제 완료 시 기록한 횟수이며 후기 제출·공개 건수와 독립이다. 실제 완료된 이력이 있는 분쟁 검토 동행은 횟수를 유지하고 취소·불발은 제외한다. 공개 후기 적격성·집계·실제 시각은 DB 계약을 따른다. 본인 프로필 GET `/me`는 기존 `get_my_profile` 전용 반환을 유지하며 공개 프로필 RPC로 교체하지 않는다. 당도 산식은 정책 7-4절에 확정됐으며 실제 계산기 연결은 후속이다.
+GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedCount`를 추가한다. 실제 완료 시 기록한 횟수이며 후기 제출·공개 건수와 독립이다. 실제 완료된 이력이 있는 분쟁 검토 동행은 횟수를 유지하고 취소·불발은 제외한다. 공개 후기 적격성·집계·실제 시각은 DB 계약을 따른다. 본인 프로필 GET `/me`는 기존 `get_my_profile` 전용 반환을 유지하며 공개 프로필 RPC로 교체하지 않는다. 신규 `20261005013901_current_sweetness_ledger.sql` 적용 후 `/me`와 공개 프로필은 현재 가입 회차의 `sweetness` 정수0~100을 추가 반환한다. 기존 필드는 유지하며 초기15+유효 후기 기여+확정 사건별 최대 운영 감점 하나를 합산한 뒤 마지막 표시만 제한한다. 이 SQL은 격리 DB에서 검증했으며 운영·모바일 연결과 제재 판정 계층·탈퇴/재가입 API는 별도 미완료다.
 
 ## HTTP 및 인증
 
@@ -60,10 +60,12 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 | 메서드·경로 | 입력 및 고정 RPC |
 |---|---|
 | GET `/me` | `get_my_profile()`; 본인 필드만 |
+| GET `/me/safety` | `get_my_safety_state()`; 본인 현재 유효 제재, query/타인 ID 입력 없음 |
 | GET `/profiles/:id` | `get_public_profile(p_profile_id)`; 회원용 공개 프로필·성향·완료 횟수, 관계별 이름 표시 |
-| POST `/me/avatar` | `{avatarPath}` → `set_my_profile_avatar`; `<user UUID>/<image UUID>.jpg` 경로, 실제 Storage 객체 소유권·MIME·크기는 DB 확인 |
-| GET `/me/traits` | `get_my_profile_traits()` |
-| POST `/me/traits` | `{interests?,conversationStyles?,mbti?}` → `set_my_profile_traits`; 가입 계약의 선택 성향 검증 |
+| POST `/me/avatar` | `{avatarPath}` → `set_my_profile_avatar`; `data`는 `[{avatar_url,previous_avatar_path}]` 1행 배열. `<user UUID>/<image UUID>.jpg` 경로, 실제 Storage 객체 소유권·MIME·크기는 DB 확인 |
+| GET `/me/traits` | `get_my_profile_traits()` → `{interests:[],conversationStyles:[],mbti}` |
+| POST `/me/traits` | `{interests,conversationStyles,mbti}` 세 키 필수 → `set_my_profile_traits`; 빈 배열·`mbti:null`로 선택값을 비우며 응답은 GET과 같은 객체 |
+| POST `/me/preferences` | `{interests,conversationStyles,mbti,bio}` 네 키 필수 → `set_my_profile_preferences`; 성향·소개를 같은 DB 트랜잭션으로 저장하고 같은 네 필드 객체 반환 |
 | GET `/reviews/praises` | `get_review_praise_catalog()` → `{items:[{code,label}]}`; 기존 서비스 회원 인증 필요 |
 | GET `/appointments` | `list_my_appointments()` |
 | GET `/appointments/:id` | `get_appointment_state(p_appointment_id)` |
@@ -71,11 +73,13 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 | POST `/appointments/:id/schedule-change/propose` | `{changeId,startsAt,endsAt,expectedUpdatedAt}` → `propose_appointment_schedule_change` |
 | POST `/appointments/:id/schedule-change/accept` | `{changeId,conditionVersion}` → `accept_appointment_schedule_change` |
 | POST `/appointments/:id/schedule-change/decline` | `{changeId,conditionVersion}` → `decline_appointment_schedule_change` |
+| POST `/appointments/:id/schedule-change/withdraw` | `{changeId,conditionVersion}` → `withdraw_appointment_schedule_change`; 본인 제안만 종료하고 원래 약속 유지 |
 | POST `/appointments/:id/cancel` | `{cancellationId,reason}` → `cancel_appointment`; reason1..300자 기술 한도 |
 | POST `/appointments/:id/confirm-completion` | `{}` → `confirm_appointment_completion`; 한쪽 확인은 완료 전 유지 |
 | GET `/appointments/:id/reviews` | `get_appointment_review_state` |
 | POST `/appointments/:id/reviews` | 아래 후기 입력 → 5인자 `submit_appointment_review` |
 | GET `/profiles/:id/reviews` | 페이지 query → `get_public_profile_reviews`; 공개 원문·칭찬 집계 및 후기와 독립된 `completedCount` |
+| POST `/me/ai-processing/withdraw` | `{kind:"exploration"\|"review_summary"}` → 회원 JWT로 `withdraw_my_ai_processing(p_kind)`; 일반 계정 유지 |
 | GET `/notifications` | 페이지 query → `list_my_notifications` |
 | POST `/notifications/:id/read` | `{}` → `mark_my_notification_read`; 동의·완료를 실행하지 않음 |
 | POST `/notifications/read-all` | `{}` → `mark_all_my_notifications_read` |
@@ -89,7 +93,7 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 | POST `/posts/:id/update` | 생성 입력에서 `postId`를 제외하고 `expectedUpdatedAt`을 추가한 전체 입력 → `update_service_post`; ID는 경로만 |
 | POST `/posts/:id/close` | `{}` → `close_service_post`; 새 신청만 차단 |
 | POST `/posts/:id/delete` | `{}` → `delete_service_post`; 공개 목록에서 숨기며 미확정 신청·대화 종료 |
-| POST `/posts/:id/requests` | `{message}` 10..300자 → `request_service_post`; 지원되는 무료 공고에만 신청 |
+| POST `/posts/:id/requests` | `{messageId,message}` 1..1000자 → `request_service_post(p_post_id,p_message_id,p_message)`; 첫 채팅과 신청 원자 저장 |
 | GET `/requests/sent` | `list_sent_join_requests()` |
 | GET `/requests/received` | `list_received_join_requests()` |
 | GET `/requests/:id/consent` | `get_match_consent`; 참여자가 현재 조건·버전 확인 |
@@ -131,7 +135,7 @@ GET `/appointments/:id/schedule-change`는 `{appointmentId,status,startsAt,endsA
 
 공고 상세의 `updatedAt` 원본으로 전체 수정 입력을 제출한다. `update_service_post(p_post_id,p_input,p_expected_updated_at)`는 오래된 입력이면 409를 반환하므로 최신 상세를 다시 확인하고 입력을 보존한다. 수정·마감·삭제 결과는 `{postId,status,updatedAt}`다. 핵심 조건 변경 시 신청·대화는 유지하고 진행 중 동의만 무효화한다. 확정 후에는 공고 수정으로 약속 조건을 변경하지 않는다. 수동 마감은 기존 신청자와의 동의 요청·재요청을 시작 전까지 유지한다. 삭제는 미확정 관계를 종료하며 확정 약속 종료 전 삭제는 거절한다.
 
-`propose_match`와 `get_match_consent` 결과는 `{requestId,conditionVersion,conditions,status,requestedAt,expiresAt}`이며 DB가 현재 정책의 요청+6시간/시작 중 빠른 만료를 결정하도록 후속 변경·검증한다. 없으면 `{consent:null}`, 신규 상태는 `awaiting_consent|expired|withdrawn|declined|invalidated|accepted`다. 기존 만료 정보가 없는 동의는 `renewal_required`, `expiresAt:null`로 반환하여 새 요청을 안내한다. 작성자가 다른 상대를 선택할 때는 기존 요청을 먼저 철회해야 한다. `conditionVersion`은 서버가 반환한 불투명 값을 그대로 전달하고 HTTP에서 상태·만료를 추정하지 않는다.
+`propose_match`와 `get_match_consent` 결과는 `{requestId,conditionVersion,conditions,status,requestedAt,expiresAt}`이며 DB가 요청+6시간/시작 중 빠른 만료를 결정한다. `20261005001429`와 격리 SQL 회귀에서 확인했으며 운영 적용은 대기다. 없으면 `{consent:null}`, 신규 상태는 `awaiting_consent|expired|withdrawn|declined|invalidated|accepted`다. 기존 만료 정보가 없는 동의는 `renewal_required`, `expiresAt:null`로 반환하여 새 요청을 안내한다. 작성자가 다른 상대를 선택할 때는 기존 요청을 먼저 철회해야 한다. `conditionVersion`은 서버가 반환한 불투명 값을 그대로 전달하고 HTTP에서 상태·만료를 추정하지 않는다.
 
 동의 철회·거절은 `{requestId,conditionVersion,status,alreadyEnded}`를 반환한다. `status`는 `withdrawn|declined`, 만료가 먼저면 `expired`다. 예전 버전 요청으로 새 동의를 끝내지 못하며 중복 요청은 DB가 같은 결과로 처리한다. 이 경로와 신청 자체 `/withdraw|decline`은 별개다. 최종 확정은 미선정 관계를 종료하고 기존 대화를 읽기 전용으로 보존한다. 알림의 `eventData`는 현재 상태·조건 버전·만료 시각 같은 안전한 구조값이며 알림 클릭이 동의·확정을 대신하지 않는다.
 
@@ -167,7 +171,7 @@ rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선�
 }
 ```
 
-제목2..80자, 소개1..2000자, 공개지역 최대60자, 장소명 최대200자, 등록주소1..300자, 만남상세2..200자, 선택 선호문구 최대300자, 태그 최대5개·각20자다. 문자열은 앞뒤 공백을 허용하지 않는다. 시간은 offset 또는 Z가 있는 ISO 문자열이며 종료가 시작보다 늦고 모집 종료가 시작 이하여야 한다. `recruitmentEndsAt` 생략 시 `startsAt`을 사용하며 명시 `null`은 거절한다. 수정 `expectedUpdatedAt`은 상세 조회의 `updatedAt` 원본 문자열을 보내며 최대 소수 6자리까지 허용한다. 시각 정밀도를 줄이거나 클라이언트 현재 시각으로 대체하지 않는다. 현재 지역 형식은 기존 DB 제약을 따르며 임의로 바꾸지 않는다.
+제목2..50자, 소개1..2000자, 공개지역 최대60자, 장소명 최대200자, 등록주소1..300자, 만남상세2..300자, 선택 선호문구 최대300자, 태그 최대5개·각20자다. 문자열은 앞뒤 공백을 허용하지 않는다. 시간은 offset 또는 Z가 있는 ISO 문자열이며 종료가 시작보다 늦고 모집 종료가 시작 이하여야 한다. `recruitmentEndsAt` 생략 시 `startsAt`을 사용하며 명시 `null`은 거절한다. 수정 `expectedUpdatedAt`은 상세 조회의 `updatedAt` 원본 문자열을 보내며 최대 소수 6자리까지 허용한다. 시각 정밀도를 줄이거나 클라이언트 현재 시각으로 대체하지 않는다. 현재 지역 형식은 기존 DB 제약을 따르며 임의로 바꾸지 않는다.
 
 유료 `paid_request|paid_offer`는 503이며 공급사 연결 없이 성공 처리하지 않는다. 신규 무료 공고와 달리 비용 미상인 기존 공고는 `request_service_post`에서 차단된다. 클라이언트 `authorId`, `userId`, 권한·성별·확정 상태 필드는 허용하지 않는다. 네이버 가입·세션은 [가입 계약](signup.md), 이번 공고·동의 규칙은 [매칭 생명주기 인계](../../docs/collaboration/requests/minkyu/2026-10-02-matching-lifecycle-handoff.md)의 실제 검증 범위를 따른다. 유료·계좌 인증은 현재 제외하며 분쟁·당도 확정 정책의 코드 연결을 별도 검증한다.
 
@@ -245,3 +249,75 @@ Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supaba
 잘못된 입력으로 정의한 검색 코어 오류만 공통 INVALID_REQUEST로 변환한다. AUTH_REQUIRED는 401, 이미 정해진 HttpError는 유지하고 응답/투영 불일치 및 알 수 없는 오류는 원문 없이 500으로 처리한다. 외부 오류 메시지·검색어·토큰을 로그에 출력하지 않는다.
 
 현재 목표·차이는 [검색 계약](search.md)과 [정책](../../정책.md)을 따른다. DB 카드 응답 불일치는 `INVALID_SEARCH_RESPONSE`로 입력 오류와 구분한다. 게이트웨이의 실제 Origin/OPTIONS 처리는 [CORS 계약](gateway-cors.md)에 따라 확인하며 앱 단위 통과를 운영 성공으로 표시하지 않는다.
+
+## 2026-10-05 공고 입력 HTTP 반영
+
+등록·수정은 같은 입력 검증을 사용한다. 카테고리는 `지금이당·전시·축제·팝업·공연·영화·맛집·카페·쇼핑·여행·운동·산책·게임·반려동물·스터디·기타` 16개를 받는다. 이전 `지금·식사·클래스`를 새 분류로 자동 변환하지 않는다. 제목 최대50자, 상세 만남 지점 최대300자는 유니코드 문자 수로 검사한다. 기존 최소2자·앞뒤 공백 거절 조건은 유지한다.
+
+HTTP에서 정상 입력을 RPC에 전달한 검사는 실제 DB의 새 분류·길이 제약 적용 증거와 구분한다. SQL 변경과 실제 DB 등록·수정 검증은 별도 완료 조건이며, 운영 적용은 수행하지 않았다.
+
+## 첫 채팅 신청 연결
+
+`POST /posts/:id/requests`는 `{messageId: UUID, message: 1~1000자}`를 받는다. 기존 `{message}`만 있는 입력은 거절한다. 메시지 ID는 클라이언트가 전송 시 한 번 만들고 응답 손실 재시도에서 그대로 재사용한다. 성공은 신청·메시지·작성자 알림의 한 트랜잭션이며 실패는 신청도 롤백한다. 별도 신청 소개문 폼을 사용하지 않는다. 철회 1분·기존 방 재사용·거절 후 재신청 차단은 DB에서 판정한다. 모바일 실제 전송 화면 연결은 종현 담당 후속이고 코드 계약 갱신만으로 화면 검증을 완료한 것은 아니다.
+
+### AI 처리 동의 철회 연결
+
+`POST /me/ai-processing/withdraw`는 정확한 kind 하나만 받는다. 탐색 철회는 신규 모델 예약과 진행 요청의 추가 예약을 차단한다. 후기 요약 철회는 관련 요약 숨김·revision 갱신·checkpoint 폐기와 다른 대상 재생성 outbox를 처리한다. 일반 프로필과 공개 후기는 유지한다. 외부 사본 삭제·공급사 확인까지 이 RPC가 완료하는 것은 아니며 외부 전송은 승인 전 차단한다. 합성 회원의 HTTP 3개 검사와 실제 SQL·철회/모델 시작 경합을 검증했다.
+
+### 추가 서비스 경로 — 격리 DB 연결 검증 완료
+
+| 메서드·경로 | 입력·RPC |
+|---|---|
+| POST `/profiles/:id/block` | 정확한 `{}` → `block_member(p_target_id)` |
+| POST `/profiles/:id/unblock` | 정확한 `{}` → `unblock_member(p_target_id)` |
+| GET `/me/blocks` | `limit=20`(1..100), `before?:UUID` → `list_my_blocks(p_limit,p_before)` |
+| POST `/posts/:id/reopen` | 정확한 `{}` → `reopen_service_post(p_post_id)` |
+
+차단 관리는 본인 JWT만 사용하며 약속 취소·당도 변경을 함께 실행하지 않는다. 목록은 `{items:[{targetId,blockedAt}],nextCursor:UUID|null}`이며 상대 이름·사진을 추가하지 않는다. 차단/해제는 `{targetId,blocked,alreadyApplied}`를 반환한다. 명시 재개는 `{postId,status:"recruiting",updatedAt,restoredCount,alreadyReopened}`를 반환하며 HTTP에서 복원 대상·마감 연장·취소 여부를 지정할 수 없다. HTTP 차단4개/재개3개와 실제 SQL·권한·두세션 경합 PASS다. 통합 상태의 SQL9개 파일도 모두 PASS다. 운영 적용·모바일 연결은 대기다.
+
+## 내부 회원 삭제 HTTP 연결 준비
+
+`createServiceApi`에 명시적인 `memberCleanup.execute(db,workerRunToken,signal)` dependency가 있을 때만 POST `/internal/member-cleanup`을 처리한다. 기본 runtime index에는 아직 연결하지 않아 경로는404다. 내부 전용 인증 뒤 필수 UUID `x-worker-run-token`, query 없는 JSON `{}`만 허용한다. 회원 JWT로 재시도하지 않고 대상·한도·마감·Provider 키를 본문에서 받지 않는다. 브라우저 CORS 허용 헤더에도 내부 토큰을 추가하지 않는다.
+
+실행 callback은 DB 기준 전역 잔여시간, 기존 cleanup 전용5포트·공통60초 마감·Provider 어댑터를 연결해야 한다. HTTP 연결부 자체는 acquire/release·삭제·권한 활성화를 실행하지 않는다. 성공 응답은 exact `{status:'ran',claimed,succeeded}`로0≤succeeded≤claimed≤20 정수만 노출하며 task 완료 수이지 회원 탈퇴 완료 수가 아니다. 임의 경로·영수증·토큰·Provider 원문을 추가한 응답은503이다. callback 실패/요청 취소를 성공 집계로 바꾸지 않는다.
+
+HTTP 경계 신규6개와 기존 HTTP/API 합계45개 Node 검사 및 Deno 타입 검사가 통과했다. 실제 내부키·DB token·Provider·상주 큐의 통합 또는 운영 활성화 증거는 아니며, DB 예약과 budget 포트·정기 재개·삭제 응답 유실 복구는 후속 검증이다.
+
+`createMemberCleanupBudgetReader`는 별도 단일 allowlist의 `read_worker_run_budget(p_worker_run_token)`만 호출하도록 준비했다. 기존 범용 내부 client/cleanup5포트 allowlist는 넓히지 않는다. exact `{remainingMs}` 양의 정수180,000ms 이하만 인정하며 요청 시작 host 시각과 monotonic 전체 왕복시간을 이용해 보수적인 `deadlineAt`으로 변환한다. 시계가 뒤로 움직여도 왕복 차감을 없애지 않고, 앞으로 움직여 이미 마감이면 중단한다. 취소 신호를 전송·응답 검사에 함께 적용한다. 관련6개 Node 검사와 Deno 타입 검사는 PASS다. SQL budget 포트는 준비 중이며 실제 DB/worker 연결·권한 활성화 검증은 아니다. 반환 이후의 host 시계 변화까지 DB fence를 대체하는 보장으로 해석하지 않는다.
+
+`createMemberCleanupExecutor`는 기존 budget reader/cleanup5포트/Provider adapter/processMemberCleanupTask를 조립한다. 기존 서비스 runtime에는 아직 연결하지 않는다. batch는 전역 점유를 발급·갱신·해제하지 않으며 최대20개 완료 후 양보한다. monotonic·wall 중 짧은 잔여시간이60초 미만이면 새 claim을 시작하지 않는다. 전역 취소 timer와 요청 취소를 공통 신호로 전달하며 실패를 성공 집계로 바꾸지 않는다. 최초 budget 조회 이후의 시계 앞뒤 이동 회귀를 포함한 batch9개+budget6개+회원탈퇴6개 합계21개 Node 검사와 Deno 타입 검사가 PASS다. 실제 DB budget·Provider·큐 HTTP 통합은 별도 검증이 필요하다.
+
+`createRuntimeHandler(read,{memberCleanup:true})`를 명시한 로컬 검증에서만 실제 createMemberCleanupExecutor를 조립한다. 기본 진입점은 옵션을 주지 않아 cleanup 경로404를 유지한다. 실제 내부 비밀 검증 후 전용 budget transport와 기존5포트로 연결되며, budget 권한 거절은 접근 오류이고 빈 큐 성공으로 대체하지 않는다. 합성 fetch를 사용한 runtime 신규3개를 포함한 HTTP/API37개 검사와 Deno 타입 검사가 통과했다. 실제 로컬 DB/Provider와 상주 큐의 배포/권한 준비 검증과는 구분한다.
+
+
+명시적인 로컬 `createRuntimeHandler` 옵션의 `memberCleanupExecution.maxExecutionMs`는 신뢰할 조립 코드에서만 받는다. 기존 cleanup 활성 옵션과 함께 factory에 전달하며 HTTP body/header/query 입력에는 추가하지 않는다. budget 조회 지연부터 DB·로컬 상한 중 짧은 값을 적용하고60초 여유 미만이면 새claim을 시작하지 않는다. 운영 실행 상한은 아직 확정하지 않았고 기본 진입점의 cleanup은 비활성이다. 지역 취소·오류 응답만으로 원격 Provider 종료나 J 실행기의 조기 global release 안전성을 증명하지 않는다.
+
+## 사진·성향 연결 시 응답 구분
+
+`/me/avatar`의 `data`는 table-returning RPC의 snake_case 1행 배열이다. 회원 화면에서 최상위 객체로 가정하지 않는다. 서버는 사진 경로만 받아 DB의 실제 객체 소유권·MIME·크기를 검증한다. 교체 순서는 새 고유 경로로 JPEG 업로드, 포인터 교체 성공 확인, 이전 사진 삭제다. 현재 대표 사진 삭제와 `clear_my_profile_avatar()`의 일반 회원 직접 호출은 DB에서 차단한다. 실패한 교체를 로컬 프로필에 먼저 확정하거나 마지막 필수 사진을 제거하지 않는다.
+
+`/me/traits`의 성향은 선택 항목이지만 저장 본문 키 세 개는 현재 parser에서 필수다. `interests:[]`, `conversationStyles:[]`, `mbti:null`은 각 선택값을 비우는 명시 입력이다. 실패하면 화면의 수정 입력을 보존하고 사용자 재시도를 기다린다. 이 경로에는 `introduction`·`bio` 필드가 없으므로 함께 전송하면 400이며 소개글 저장이 완료됐다고 표시하지 않는다. 모바일 화면의 실제 연결 검증은 별도다.
+
+## 성향·한줄 소개 원자 저장
+
+S15-2에서 성향과 소개를 함께 저장할 때는 POST `/me/preferences`를 사용한다. `bio`는 null 또는 300 Unicode 문자 이하 문자열이며 기존 DB 제약을 재사용한다. 빈 문자열·공백을 서버가 임의로 null 또는 다른 문자열로 바꾸지 않는다. 나머지 세 필드는 기존 성향 parser와 동일하다. 사용자 ID·타인 대상 ID·추가 키를 입력으로 받지 않는다. 조회는 기존 GET `/me`의 `bio`와 GET `/me/traits`를 사용하며 별도 GET `/me/preferences`를 추가하지 않았다.
+
+새 migration `20261005040500_member_profile_preferences.sql`은 본인 공통 회원 관리 guard와 탈퇴 잠금을 적용하고 성향 저장·소개 수정 중 하나가 실패하면 전체 rollback한다. 신규 활동 자격 미충족만으로 기존 본인 관리까지 막지 않는다. 직접 `profiles.bio` UPDATE의 일반 회원 권한은 정확한 해당 열만 회수하고 authenticated만 새 RPC를 호출할 수 있다. 기존 `/me/traits`의 세 키 계약과 사진 API는 유지한다.
+
+소스 구현·HTTP 회귀와 native60 위 단일 owner 트랜잭션 SQL 검증은 PASS다. 이후 격리 DRIFT DB에40300·40500을 정식 CLI로 적용해 실제62 이력에서 Auth·REST·Storage 연결11그룹과 SQL 회귀2개가 PASS했다. 네 필드 저장·재조회, Unicode 경계, 잘못된 입력 후 기존 값 보존, 직접 bio PATCH403/42501을 확인했다. HTTP handler는 프로세스 내부 실행이며 네이버 응답은 합성이다. 저장/탈퇴 실제 두 세션 경합3사례도 PASS다. hosted Edge·모바일 저장 연결·운영 적용은 남는다. 모바일은 새 RPC가 적용된 환경을 확인한 뒤 한 번의 요청이 성공했을 때만 성향·소개 전체 저장 완료를 표시한다. 성향 저장과 소개 저장을 별도 호출해 원자 저장인 것처럼 표시하지 않는다. [증거·후속 범위](../../docs/collaboration/requests/minkyu/2026-10-05-profile-preferences-atomic-save.md)를 따른다.
+
+## 일정·장소 변경 제안 철회
+
+POST `/appointments/:id/schedule-change/withdraw`는 정확히 `{changeId,conditionVersion}`을 받으며 사용자 JWT로 `withdraw_appointment_schedule_change`를 호출한다. 제안자만 철회하고 같은 요청의 withdrawn/expired/cancelled 상태는 멱등 반환한다. 상대 제안자·비당사자·옛 버전 및 수락/거절 완료 후 철회는 DB가 거절한다. 약속 취소와 구분하며 기존 약속·장소·예약을 변경하지 않는다.
+
+관련 HTTP52개·Deno 검사, native62 단일TX SQL 회귀, native63 정식 로컬 적용 및 실제 Auth/REST/Storage12그룹이 PASS다. 실제 회원의 제안/철회/재조회·권한/버전/재시도·원본 보존을 확인했다. handler는 프로세스 내부 실행이며 네이버 응답은 합성이다. 철회/수락 실제 경합·신뢰 접수 마감·hosted/모바일/운영은 별도 남는다. [증거·후속](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-change-withdrawal.md)을 따른다.
+
+
+## 본인 현재 제재 조회
+
+GET `/me/safety`는 회원 JWT로 빈 인수의 고정 RPC를 호출한다. `{permanent,restrictedUntil,hasWarning,sanctions}`를 반환하며 각 제재는 `{sanctionId,kind,appliedAt,expiresAt,notifiedAt}`다. kind는 cancel_warning/cancel_restriction/general_warning/general_7d/general_30d/permanent 중 하나다. 무효·만료 제재는 현재 목록에서 제외하고 통지가 없으면 notifiedAt은 null이다. 본인 제한 중에도 자료 조회는 허용하고 최신 신규 활동 자격 정보가 누락된 경우 관리 가드를 유지한다. 타인 식별자·신고 원문·운영 판정 원문·추정 이의 마감은 반환하지 않는다.
+
+현재 SQL 단일TX/rollback과 주입 HTTP/인증transport 검증은 PASS다. 영속 로컬 적용·실제회원API는 진행 중이며 사유/종료이력/이의절차/알림·모바일·운영 검증과 구분한다. [검증 기록](../../docs/collaboration/requests/minkyu/2026-10-05-member-safety-state.md)을 따른다.
+
+
+후속 native64 영속 적용과 실제Auth/REST/Storage를 거치는 프로세스 내부 회원HTTP 제재조회는 PASS다. 동일 최신 소스에서 기존12그룹+새조회1그룹 총13개 및정리를 확인했다. 실제OAuth·hosted Edge·통지·이의·모바일·운영은 미완료다.

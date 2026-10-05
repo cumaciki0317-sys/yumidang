@@ -15,6 +15,12 @@ export interface ServiceApiDependencies {
   authenticateUser(request: Request): Promise<RpcClient>;
   authenticateInternal(request: Request): Promise<RpcClient>;
   maintenance?: MaintenanceConfig;
+  /** 명시적으로 준비한 내부 실행기만 연결한다. runtime 기본 설정은 아직 연결하지 않는다. */
+  memberCleanup?: {
+    execute(db: RpcClient, workerRunToken: string, signal: AbortSignal): Promise<{
+      status: "ran"; claimed: number; succeeded: number;
+    }>;
+  };
   /** 정책 갱신·검증을 마친 검색 코어만 명시적으로 연결한다. 생략 시 기존 경로 동작을 유지한다. */
   publicSearch?: {
     authenticate(request: Request): Promise<{ db: RpcClient; caller: "anonymous" | "member" }>;
@@ -67,6 +73,26 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
         } catch (error) {
           throw mapPublicPostSearchError(error);
         }
+      }
+      if (dependencies.memberCleanup && ["/service-api/internal/member-cleanup", "/functions/v1/service-api/internal/member-cleanup"].includes(url.pathname)) {
+        if (request.method !== "POST") throw new HttpError("METHOD_NOT_ALLOWED");
+        // 인증 실패를 사용자 JWT로 재시도하지 않는다. 외부 실행 전에 모든 입력을 검사한다.
+        const db = await dependencies.authenticateInternal(request);
+        const token = request.headers.get("x-worker-run-token");
+        if (url.search || !token || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) {
+          throw new HttpError("INVALID_REQUEST");
+        }
+        const body = await readJson(request, { maxBytes: dependencies.maxBodyBytes });
+        if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== 0) throw new HttpError("INVALID_REQUEST");
+        if (request.signal.aborted) throw new HttpError("STATE_CONFLICT");
+        // callback은 실제 DB budget과 기존 cleanup 5포트를 사용해야 한다. 요청에서 마감/한도/대상을 받지 않는다.
+        const data = await dependencies.memberCleanup.execute(db, token.toLowerCase(), request.signal);
+        if (!data || typeof data !== "object" || Array.isArray(data) || Object.keys(data).length !== 3 ||
+          data.status !== "ran" || !Number.isSafeInteger(data.claimed) || data.claimed < 0 || data.claimed > 20 ||
+          !Number.isSafeInteger(data.succeeded) || data.succeeded < 0 || data.succeeded > data.claimed) throw new HttpError("EXTERNAL_UNAVAILABLE");
+        if (request.signal.aborted) throw new HttpError("STATE_CONFLICT");
+        // 영수증/경로/토큰/Provider 응답은 envelope에 포함하지 않는다.
+        return cors.apply(jsonSuccess({ status: data.status, claimed: data.claimed, succeeded: data.succeeded }, context), request);
       }
       const route = resolveRouteForMethod(url, request.method);
       if (route.publicPostDetail && dependencies.publicPostDetails) {

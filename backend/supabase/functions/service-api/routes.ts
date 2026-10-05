@@ -1,12 +1,16 @@
 /** 민규담당. 명시된 경로·메서드·입력만 허용하며 임의 RPC 전달 기능은 없다. */
 import type { JsonValue } from "../_shared/contracts/common.ts";
-import { parseProfileTraits } from "../_shared/contracts/signup.ts";
+import { parseProfileTraits, parseProfilePreferences } from "../_shared/contracts/signup.ts";
+import type { AppointmentLocationInput } from "../_shared/contracts/matching.ts";
+import { POST_REGIONS } from "../_shared/contracts/search.ts";
 import type { FreePostInput } from "../_shared/contracts/posts.ts";
 import type { RpcClient } from "../_shared/db/transport.ts";
 import { HttpError, toPublicError } from "../_shared/http/errors.ts";
 import { inspectReviewSummaryConfig } from "../_shared/config/env.ts";
 import * as completion from "../_shared/services/completion-service.ts";
 import * as reviews from "../_shared/services/review-service.ts";
+import { parseMemberReport, reportObject, reportUuid } from "../_shared/contracts/reports.ts";
+import * as reports from "../_shared/services/report-service.ts";
 import * as profiles from "../_shared/services/profile-service.ts";
 import * as notifications from "../_shared/services/notification-service.ts";
 import * as conversations from "../_shared/services/conversation-service.ts";
@@ -75,6 +79,23 @@ function page(url: URL): [number, string | null] {
   const before = url.searchParams.get("before");
   return [integer(limit === null ? 20 : Number(limit), 1, 100), before === null ? null : uuid(before)];
 }
+/** 공고 등록과 장소 제안의 위치 필드 길이·공백·선택 장소명 검증을 공유한다. */
+function placeFields(data: Record<string, JsonValue>): AppointmentLocationInput {
+  return { publicArea: text(data.publicArea, 1, 60), registeredPlaceName: optionalText(data.registeredPlaceName, 200),
+    registeredAddress: text(data.registeredAddress, 1, 300), meetingDetail: text(data.meetingDetail, 2, 300) };
+}
+function proposedLocation(value: JsonValue): AppointmentLocationInput {
+  const result = placeFields(object(value, ["publicArea", "registeredPlaceName", "registeredAddress", "meetingDetail"]));
+  const aliases: Record<string, string> = { 서울: "서울특별시", 부산: "부산광역시", 대구: "대구광역시", 인천: "인천광역시",
+    광주: "광주광역시", 대전: "대전광역시", 울산: "울산광역시", 세종: "세종특별자치시", 경기: "경기도", 강원: "강원특별자치도",
+    강원도: "강원특별자치도", 충북: "충청북도", 충남: "충청남도", 전북: "전북특별자치도", 전라북도: "전북특별자치도",
+    전남: "전라남도", 경북: "경상북도", 경남: "경상남도", 제주: "제주특별자치도" };
+  const first = result.publicArea.split(" ", 1)[0], region = aliases[first] ?? first;
+  if (!POST_REGIONS.some((value) => value === region)) invalid();
+  result.publicArea = region + result.publicArea.slice(first.length);
+  if (!/^[가-힣]+(특별시|광역시|특별자치시|특별자치도|도) [가-힣]+(시|군|구)( [가-힣]+구)? [가-힣0-9]+(동|읍|면|가)$/.test(result.publicArea)) invalid();
+  return result;
+}
 function postInput(body: JsonValue, postId?: string): { id: string; input: FreePostInput; expectedUpdatedAt?: string } {
   const data = object(body, [postId === undefined ? "postId" : "expectedUpdatedAt", "title", "description", "category", "startsAt", "endsAt", "publicArea", "registeredAddress", "meetingDetail", "costType", "amount"], ["recruitmentEndsAt", "registeredPlaceName", "preferenceNote", "tags", "eventId"]);
   if (["paid_request", "paid_offer"].includes(String(data.costType))) throw new HttpError("EXTERNAL_UNAVAILABLE");
@@ -82,12 +103,10 @@ function postInput(body: JsonValue, postId?: string): { id: string; input: FreeP
   const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt), recruitmentEndsAt = data.recruitmentEndsAt === undefined ? startsAt : timestamp(data.recruitmentEndsAt);
   if (Date.parse(startsAt) >= Date.parse(endsAt) || Date.parse(recruitmentEndsAt) > Date.parse(startsAt)) invalid();
   const category = text(data.category, 1, 20);
-  if (!["지금", "전시", "축제", "식사", "운동", "여행", "클래스", "산책", "스터디", "공연", "쇼핑", "기타"].includes(category)) invalid();
+  if (!["지금이당", "전시", "축제", "팝업", "공연", "영화", "맛집", "카페", "쇼핑", "여행", "운동", "산책", "게임", "반려동물", "스터디", "기타"].includes(category)) invalid();
   return { id: postId ?? uuid(data.postId), ...(postId === undefined ? {} : { expectedUpdatedAt: timestamp(data.expectedUpdatedAt) }), input: {
-    title: text(data.title, 2, 80), description: text(data.description, 1, 2000), category,
-    startsAt, endsAt, recruitmentEndsAt, publicArea: text(data.publicArea, 1, 60),
-    registeredPlaceName: optionalText(data.registeredPlaceName, 200), registeredAddress: text(data.registeredAddress, 1, 300),
-    meetingDetail: text(data.meetingDetail, 2, 200), preferenceNote: optionalText(data.preferenceNote, 300),
+    title: text(data.title, 2, 50), description: text(data.description, 1, 2000), category,
+    startsAt, endsAt, recruitmentEndsAt, ...placeFields(data), preferenceNote: optionalText(data.preferenceNote, 300),
     tags: strings(data.tags ?? [], 5, 20), costType: "free", amount: 0,
     // 키를 생략한 기존 수정 요청은 연결을 보존한다. 명시 null로 바꾸지 않는다.
     ...(Object.hasOwn(data, "eventId") ? { eventId: data.eventId === null ? null : uuid(data.eventId) } : {}),
@@ -113,24 +132,48 @@ export function resolveRoute(url: URL): Route {
     // 소유자·존재·MIME·용량은 DB가 실제 storage 객체로 검증한다.
     return profiles.setProfileAvatar(db, avatarPath);
   });
+  if (path === "/reports") return route("POST", ({ db, body }) => reports.submitMemberReport(db, parseMemberReport(body)));
+  if (path === "/me/safety") return route("GET", ({ db }) => reports.getMySafetyState(db));
+  if (path === "/me/reports") return route("GET", ({ db, url }) => reports.listMyReports(db, ...page(url)), false, true);
+  if (path === "/report-captures") return route("POST", ({ db, body }) => {
+    const input = reportObject(body, ["assetId", "extension"]);
+    if (typeof input.extension !== "string" || !["jpg", "png", "webp"].includes(input.extension)) invalid();
+    return reports.reserveReportCapture(db, reportUuid(input.assetId), input.extension as string);
+  });
+  const reportMatch = /^\/me\/reports\/([^/]+)$/.exec(path);
+  if (reportMatch) { const id = reportUuid(reportMatch[1]); return route("GET", ({ db }) => reports.getMyReport(db, id)); }
+  const captureMatch = /^\/report-captures\/([^/]+)\/(confirm|cancel)$/.exec(path);
+  if (captureMatch) { const id = reportUuid(captureMatch[1]); return route("POST", ({ db, body }) => {
+    empty(body); return captureMatch[2] === "confirm" ? reports.confirmReportCapture(db, id) : reports.cancelReportCapture(db, id);
+  }); }
+  if (path === "/me/blocks") return route("GET", ({ db, url }) => profiles.listMyBlocks(db, ...page(url)), false, true);
   if (path === "/me") return route("GET", ({ db }) => profiles.getOwnProfile(db));
+  if (path === "/me/preferences") return route("POST", ({ db, body }) => profiles.setProfilePreferences(db, parseProfilePreferences(body)));
   if (path === "/me/traits") return route("GET", ({ db }) => db.rpc("get_my_profile_traits", {}));
+  if (path === "/me/ai-processing/withdraw") return route("POST", ({ db, body }) => {
+    const input = object(body, ["kind"]);
+    if (input.kind !== "exploration" && input.kind !== "review_summary") invalid();
+    return db.rpc("withdraw_my_ai_processing", { p_kind: input.kind });
+  });
   if (path === "/reviews/praises") return route("GET", ({ db }) => reviews.getPraiseCatalog(db));
   if (path === "/appointments") return route("GET", ({ db }) => completion.listAppointments(db));
-  let match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|decline))?$/.exec(path);
+  let match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|decline|withdraw))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]), action = match[2];
     if (!action) return route("GET", ({ db }) => completion.getAppointmentChangeState(db, id));
     return route("POST", ({ db, body }) => {
       if (action === "propose") {
-        const data = object(body, ["changeId", "startsAt", "endsAt", "expectedUpdatedAt"]);
+        const data = object(body, ["changeId", "startsAt", "endsAt", "expectedUpdatedAt"], ["location"]);
         const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt);
         if (Date.parse(startsAt) >= Date.parse(endsAt)) invalid();
-        return completion.proposeAppointmentScheduleChange(db, id, { changeId: uuid(data.changeId), startsAt, endsAt, expectedUpdatedAt: timestamp(data.expectedUpdatedAt) });
+        return completion.proposeAppointmentScheduleChange(db, id, { changeId: uuid(data.changeId), startsAt, endsAt, expectedUpdatedAt: timestamp(data.expectedUpdatedAt),
+          ...(Object.hasOwn(data, "location") ? { location: proposedLocation(data.location) } : {}) });
       }
       const data = object(body, ["changeId", "conditionVersion"]);
       const input = { changeId: uuid(data.changeId), conditionVersion: text(data.conditionVersion, 1, 200) };
-      return action === "accept" ? completion.acceptAppointmentScheduleChange(db, id, input) : completion.declineAppointmentScheduleChange(db, id, input);
+      if (action === "accept") return completion.acceptAppointmentScheduleChange(db, id, input);
+      if (action === "decline") return completion.declineAppointmentScheduleChange(db, id, input);
+      return completion.withdrawAppointmentScheduleChange(db, id, input);
     });
   }
   match = /^\/appointments\/([^/]+)\/cancel$/.exec(path);
@@ -150,6 +193,11 @@ export function resolveRoute(url: URL): Route {
       return route("GET", ({ db }) => reviews.getReviewState(db, id));
     }
     return route("GET", ({ db }) => completion.getAppointment(db, id));
+  }
+  match = /^\/profiles\/([^/]+)\/(block|unblock)$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]), action = match[2];
+    return route("POST", ({ db, body }) => { empty(body); return action === "block" ? profiles.blockMember(db, id) : profiles.unblockMember(db, id); });
   }
   match = /^\/profiles\/([^/]+)\/reviews$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("GET", ({ db, url }) => reviews.getPublicReviews(db, id, ...page(url)), false, true); }
@@ -173,19 +221,23 @@ export function resolveRoute(url: URL): Route {
       : route("GET", ({ db }) => conversations.getConversation(db, id));
   }
   if (path === "/posts") return route("POST", ({ db, body }) => { const { id, input } = postInput(body); return posts.createPost(db, id, input); });
-  match = /^\/posts\/([^/]+)(?:\/(requests|update|close|delete))?$/.exec(path);
+  match = /^\/posts\/([^/]+)(?:\/(requests|update|close|delete|reopen))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]);
     if (match[2] === "update") return route("POST", ({ db, body }) => {
       const { input, expectedUpdatedAt } = postInput(body, id);
       return posts.updatePost(db, id, input, expectedUpdatedAt!);
     });
+    if (match[2] === "reopen") return route("POST", ({ db, body }) => { empty(body); return posts.reopenPost(db, id); });
     if (match[2] === "close" || match[2] === "delete") {
       const action = match[2];
       return route("POST", ({ db, body }) => { empty(body); return action === "close" ? posts.closePost(db, id) : posts.deletePost(db, id); });
     }
     return match[2] === "requests"
-      ? route("POST", ({ db, body }) => matching.createRequest(db, id, text(object(body, ["message"]).message, 10, 300)))
+      ? route("POST", ({ db, body }) => {
+        const input = object(body, ["messageId", "message"]);
+        return matching.createRequest(db, id, uuid(input.messageId), text(input.message, 1, 1000));
+      })
       : route("GET", ({ db }) => posts.getPost(db, id));
   }
   if (path === "/requests/sent") return route("GET", ({ db }) => matching.listSentRequests(db));

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createServiceApi, type ServiceApiDependencies } from "../../../backend/supabase/functions/service-api/handler.ts";
 import { mapPublicPostSearchError, parsePublicPostSearchQuery, type HttpPostSearchInput, type PublicPostSearchExecutor } from "../../../backend/supabase/functions/service-api/search-http.ts";
 import { HttpError, toPublicError } from "../../../backend/supabase/functions/_shared/http/errors.ts";
+import { POST_CATEGORIES, POST_REGIONS } from "../../../backend/supabase/functions/_shared/contracts/search.ts";
 import type { RpcClient } from "../../../backend/supabase/functions/_shared/db/transport.ts";
 const origin = "https://app.example.test";
 const emptyPage = { status: "no_results" as const, posts: [], nextCursor: null };
@@ -62,18 +63,18 @@ test("동일 /posts의 POST는 계속 회원 인증이 필요하다", async () =
   assert.deepEqual(rpc, []);
 });
 
-test("기간 검색·선택 정렬은 비로그인 입력으로 넘기고 caller는 인증 문맥에서만 만든다", async () => {
+test("기간 검색은 회원 입력으로 넘기고 caller는 인증 문맥에서만 만든다", async () => {
   const { send, inputs } = setup();
   const query = new URLSearchParams({ query: "  전시  ", periodStart: "2026-10-01T00:00:00+09:00", periodEnd: "2026-10-02T00:00:00+09:00", sort: "starts_asc", availability: "recruiting", category: "전시", cost: "free", authorAge: "all", limit: "50", cursor: "opaque_cursor" });
-  assert.equal((await send(`/posts?${query}`)).status, 200);
-  assert.deepEqual(inputs[0], { caller: "anonymous", query: "  전시  ", period: { startsAt: "2026-10-01T00:00:00+09:00", endsAt: "2026-10-02T00:00:00+09:00" }, sort: "starts_asc", availability: "recruiting", category: "전시", cost: "free", authorAge: "all", limit: 50, cursor: "opaque_cursor" });
-  assert.equal((await send("/posts?authorAge=30s", { authorization: "Bearer member" })).status, 200);
+  assert.equal((await send(`/posts?${query}`, { authorization: "Bearer member" })).status, 200);
+  assert.deepEqual(inputs[0], { caller: "member", query: "  전시  ", period: { startsAt: "2026-10-01T00:00:00+09:00", endsAt: "2026-10-02T00:00:00+09:00" }, sort: "starts_asc", availability: "recruiting", category: "전시", cost: "free", authorAge: "all", limit: 50, cursor: "opaque_cursor" });
+  assert.equal((await send("/posts?ageMin=30&ageMax=39", { authorization: "Bearer member" })).status, 200);
   assert.equal(inputs[1].caller, "member");
 });
 
 test("비로그인 나이 선택은 executor 전에 로그인 필요로 응답한다", async () => {
   const { send, inputs } = setup();
-  const response = await send("/posts?authorAge=30s");
+  const response = await send("/posts?ageMin=30&ageMax=39");
   assert.equal(response.status, 401);
   assert.equal((await response.json()).error.code, "AUTH_REQUIRED");
   assert.deepEqual(inputs, []);
@@ -143,4 +144,46 @@ test("실행기 오류의 민감정보는 응답·console 로그에 남기지 �
     }
     assert.deepEqual(logs, []);
   } finally { Object.assign(console, saved); }
+});
+
+
+test("최신 16개 카테고리와 17개 시도는 익명 검색에 전달한다", async () => {
+  assert.equal(POST_CATEGORIES.length, 16);
+  assert.equal(POST_REGIONS.length, 17);
+  const { send, inputs } = setup();
+  for (const category of POST_CATEGORIES) {
+    assert.equal((await send(`/posts?${new URLSearchParams({ category })}`)).status, 200);
+    assert.equal(inputs.at(-1)?.category, category);
+  }
+  for (const region of POST_REGIONS) {
+    assert.equal((await send(`/posts?${new URLSearchParams({ region })}`)).status, 200);
+    assert.equal(inputs.at(-1)?.region, region);
+  }
+});
+
+test("숫자 만 나이 경계와 단일 나이는 허용하고 전체는 무제한 all로 유지한다", () => {
+  for (const [min, max] of [[19, 99], [19, 19], [99, 99], [30, 39]]) {
+    const parsed = parsePublicPostSearchQuery(new URL(`https://api.example.test/posts?ageMin=${min}&ageMax=${max}`), "member");
+    assert.deepEqual(parsed.authorAge, { min, max });
+  }
+  assert.equal(parsePublicPostSearchQuery(new URL("https://api.example.test/posts?authorAge=all"), "anonymous").authorAge, "all");
+  assert.equal(parsePublicPostSearchQuery(new URL("https://api.example.test/posts"), "member").authorAge, undefined);
+});
+
+test("나이 한쪽·범위 역전·구형 enum·중복 표현·잘못된 지역은 거절한다", async () => {
+  const { send, inputs } = setup();
+  for (const query of ["ageMin=19", "ageMax=99", "ageMin=18&ageMax=99", "ageMin=19&ageMax=100", "ageMin=39&ageMax=30", "ageMin=019&ageMax=99", "ageMin=1e1&ageMax=99", "ageMin=19.0&ageMax=99", "ageMin=&ageMax=99", "ageMin=19&ageMax=99&authorAge=all", "ageMin=19&ageMin=30&ageMax=99", "authorAge=20s", "authorAge=30s", "authorAge=40plus", "region=서울", "region=전체", "category=식사", "category=지금"]) {
+    assert.equal((await send(`/posts?${query}`, { authorization: "Bearer member" })).status, 400, query);
+  }
+  assert.deepEqual(inputs, []);
+});
+
+test("비로그인 일정과 숫자 전체 범위도 executor 전에 로그인 가드한다", async () => {
+  const { send, inputs } = setup();
+  for (const query of ["ageMin=19&ageMax=99", "periodStart=2026-10-01T00:00:00Z&periodEnd=2026-10-02T00:00:00Z"]) {
+    const response = await send(`/posts?${query}`);
+    assert.equal(response.status, 401, query);
+    assert.equal((await response.json()).error.code, "AUTH_REQUIRED");
+  }
+  assert.deepEqual(inputs, []);
 });

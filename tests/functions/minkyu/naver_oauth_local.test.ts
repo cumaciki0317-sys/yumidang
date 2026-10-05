@@ -10,7 +10,7 @@ import { inspect } from 'node:util';
 import {
   LOCAL_ORIGIN, LOCAL_API, LOCAL_PAGE, LOCAL_SCRIPT,
   createNaverOAuthLocalHandler, createGuardedLocalFetch,
-  readSecureLocalConfig, validateLocalTarget, MAX_PHOTO_BYTES, isLocalJpeg,
+  readSecureLocalConfig, validateLocalTarget, MAX_PHOTO_BYTES, MAX_ORIGINAL_PHOTO_BYTES, isLocalJpeg,
 } from '../../../tools/local/run_naver_oauth_local.ts';
 import { sha256 } from '../../../backend/supabase/functions/_shared/services/signup-service.ts';
 
@@ -26,7 +26,7 @@ const verifier = 'v'.repeat(43);
 const imageId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const avatarPath = `${uid}/${imageId}.jpg`;
 const statusText = {
-  photo_required: '로그인 확인 완료. 아래에서 JPG 사진을 선택하고 선택 사진 업로드를 누르세요.',
+  photo_required: '로그인 확인 완료. 아래에서 JPG·JPEG·PNG 사진을 선택하고 선택 사진 업로드를 누르세요.',
   information_required: '네이버 정보 제공이 부족합니다. 이름·성별·생년월일 제공에 동의한 뒤 다시 로그인해 주세요.',
   ineligible: '네이버 로그인 연결은 확인됐지만 여성·만 19세 이상 가입 자격을 충족하지 못했습니다.',
 };
@@ -559,9 +559,10 @@ test('브라우저 업로드·완료·상태 확인 실패는 선택 파일과 �
 });
 
 test('브라우저는 잘못된 타입·크기·실제 디코딩 실패 파일을 업로드하지 않는다', async () => {
-  for (const file of [new File([Uint8Array.from(jpeg).buffer], 'synthetic.png', { type: 'image/png' }),
+  for (const file of [new File([Uint8Array.from(jpeg).buffer], 'synthetic.gif', { type: 'image/gif' }),
     new File([], 'synthetic-empty.jpg', { type: 'image/jpeg' }),
-    new File([new Uint8Array(MAX_PHOTO_BYTES + 1).buffer], 'synthetic-large.jpg', { type: 'image/jpeg' })]) {
+    new File([new Uint8Array(MAX_ORIGINAL_PHOTO_BYTES + 1).buffer], 'synthetic-large.jpg', { type: 'image/jpeg' }),
+    new File([new Uint8Array(MAX_ORIGINAL_PHOTO_BYTES + 1).buffer], 'synthetic-large.png', { type: 'image/png' })]) {
     const b = await photoBrowser(); b.select(file); await b.upload();
     assert.equal(b.calls.length, 2); assert.equal(b.nodes.complete.disabled, true);
     assert.equal(b.nodes.photo.files[0], file); assert.equal(b.decoded(), 0);
@@ -588,5 +589,25 @@ test('브라우저의 세션 없는 자격 보류에서는 사진·완료 버튼
     assert.equal(b.calls.length, 1); assert.equal(b.nodes['photo-section'].hidden, true);
     assert.equal(b.nodes.upload.disabled, true); assert.equal(b.nodes.complete.disabled, true);
     assert.equal(b.output.textContent, statusText[status as keyof typeof statusText]);
+  }
+});
+
+
+test('원본 JPEG·PNG 10MB 경계는 저장 JPEG 2MiB와 분리하고 재인코딩만 전송한다', async () => {
+  assert.equal(MAX_ORIGINAL_PHOTO_BYTES, 10 * 1024 * 1024);
+  assert.equal(MAX_PHOTO_BYTES, 2 * 1024 * 1024);
+  assert.match(LOCAL_PAGE, /accept="image\/jpeg,image\/png"/);
+  for (const [type, extension] of [['image/jpeg', 'jpeg'], ['image/png', 'png']]) {
+    const file = new File([new Uint8Array(MAX_ORIGINAL_PHOTO_BYTES).buffer], `synthetic.${extension}`, { type });
+    const b = await photoBrowser(); b.select(file); await b.upload();
+    assert.equal(b.decoded(), 1);
+    assert.equal(b.calls.length, 3);
+    assert.equal(b.nodes.complete.disabled, false);
+    assert.equal(b.canvasCalls[0].type, 'image/jpeg');
+    const upload = b.calls[2];
+    assert.equal(new Headers(upload.init.headers).get('content-type'), 'image/jpeg');
+    assert.equal(new Uint8Array(upload.init.body as ArrayBuffer).byteLength, jpeg.length);
+    assert.equal(b.nodes.photo.files[0], file);
+    assert.equal(b.calls.some(({ path }) => path === '/api/signup/complete'), false);
   }
 });

@@ -1,6 +1,6 @@
 # 신청·최종 동의·변경 계약
 
-현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
+현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 최신 HTTP·SQL 연결은 아래 실행 범위로 구분하며 운영 적용은 아직 하지 않았다.
 
 ## 신청·확정의 현재 목표
 
@@ -22,11 +22,11 @@
 
 ## 기존 구현에서 변경할 경계
 
-기존 `request_service_post(p_post_id,p_message)`와 신청 ID에 연결된 메시지·대화 구조는 첫 채팅 원자 신청/기존 방 재사용에 맞춰 변경·검증해야 한다. 최종 동의 만료, 모집 재개 복원, 변경 제안 장소·철회·6시간 상한과 제재도 아래 함수의 존재만으로 지원 완료라고 보지 않는다. 기존 RPC 인수·잠금·멱등성을 보존하면서 후속 담당자가 새 연결 계약을 작성한다.
+`request_service_post(p_post_id,p_message_id,p_message)`는 첫 채팅 저장과 신청을 한 트랜잭션으로 처리한다. HTTP `POST /posts/:id/requests`에 `{messageId,message}`를 보내며 본문은 1~1000자다. 동일 메시지 UUID·사용자·공고·본문의 재시도는 기존 성공을 반환한다. 철회 후 1분은 DB 시각으로 확인하며 기존 신청 ID·대화방·이력을 유지하고 숨김을 해제한다. 거절 이력은 재신청을 막는다. 구형 두 인수 RPC·직접 create_join_request의 실행 권한은 회수했다. 격리 DB 회귀와 두 실제 세션의 경합·합성 자료 정리를 검증했다. 최종 동의 만료, 모집 재개 복원, 변경 제안 장소·철회·6시간 상한과 제재도 아래 함수의 존재만으로 지원 완료라고 보지 않는다. 기존 RPC 인수·잠금·멱등성을 보존하면서 후속 담당자가 새 연결 계약을 작성한다.
 
 ## 확정 후 일정 변경·사유 취소 DB/API
 
-아래는 기존 일정 변경·취소 RPC의 인수·응답이다. 현재 장소 변경·제안 철회와 기한 정책은 추가 연결이 필요하다. 기존 get_appointment_state table 응답과 중복 처리 경계는 보존한다.
+아래는 일정 변경·취소 RPC의 인수·응답이다. 장소 변경과40600 제안 철회는 후속 구현·로컬 연결을 검증했으며 신뢰 접수 시각 마감 정책은 추가 연결이 필요하다. 기존 get_appointment_state table 응답과 중복 처리 경계는 보존한다.
 
 | RPC | 인수 | 반환 |
 |---|---|---|
@@ -37,7 +37,7 @@
 | cancel_appointment | p_appointment_id uuid, p_cancellation_id uuid, p_reason text | appointmentId, status:cancelled, cancellationId, reason, cancelledAt, deduplicated |
 | expire_appointment_changes | p_limit integer default 100 | expiredCount — service_role 전용 |
 
-HTTP는 `GET /appointments/:id/schedule-change`, `POST /appointments/:id/schedule-change/propose`·`accept`·`decline`, `POST /appointments/:id/cancel`이다. propose body는 changeId/startsAt/endsAt/expectedUpdatedAt, 응답 body는 changeId/conditionVersion, 취소 body는 cancellationId/reason이다. 서버가 검증한 본인 ID를 사용하며 외부 사용자 ID·완료 시각·취소 시각을 입력받지 않는다. 시각 문자열은 offset ISO 형식이고 DB가 실제 서버 시각과 다시 대조한다. expectedUpdatedAt은 조회한 원본 소수 정밀도를 그대로 보낸다.
+HTTP는 `GET /appointments/:id/schedule-change`, `POST /appointments/:id/schedule-change/propose`·`accept`·`decline`·`withdraw`, `POST /appointments/:id/cancel`이다. propose body는 changeId/startsAt/endsAt/expectedUpdatedAt, 응답 및 철회 body는 changeId/conditionVersion, 취소 body는 cancellationId/reason이다. 서버가 검증한 본인 ID를 사용하며 외부 사용자 ID·완료 시각·취소 시각을 입력받지 않는다. 시각 문자열은 offset ISO 형식이고 DB가 실제 서버 시각과 다시 대조한다. expectedUpdatedAt은 조회한 원본 소수 정밀도를 그대로 보낸다.
 
 GET의 change는 가장 최근 제안 또는 null이다. 변경 객체는 appointmentId/changeId/conditionVersion/status/oldSchedule/newSchedule/requestedByMe/requestedAt/expiresAt/resolvedAt이며 oldSchedule/newSchedule은 startsAt/endsAt이다. status는 awaiting_response, accepted, declined, expired, cancelled다. 종료된 제안도 최신 이력으로 조회한다. cancellation은 cancellationId/reason/cancelledAt/cancelledByMe 또는 null이다. 실명·상대 ID·정확한 주소를 이 응답에 추가하지 않는다. 해당 당사자만 취소 사유를 읽을 수 있으며 사유를 알림 payload·AI 입력에 넣지 않는다.
 
@@ -72,3 +72,39 @@ propose/accept는 확정 조건 변경이라는 새 활동이므로 네이버 �
 사용자 RPC는 authenticated만, 내부 만료는 service_role만 실행한다. 새 private 표와 helper 직접 접근은 회수한다. 다른 관계와 없는 약속은 PT404, 제안자 본인 응답은 42501, 잘못된 입력은 22023, 오래된 상태·버전·기한·일정 충돌은 40001이다. 공개 오류 변환은 기존 계약을 유지하고 SQL detail·사유 원문을 오류/로그로 내보내지 않는다.
 
 동시 수락의 일정 충돌, 취소↔수락, 취소↔새 메시지, 기존 generation 무효화, 후기/완료 횟수 취소 제외, 비네이버 기존 회원의 사유 취소, 개인정보 반환과 실제 role 직접 접근을 로컬에서 검증한다. 실제 노쇼·제재·신고 판정과 보관/운영 배포는 이번 SQL의 성공으로 설명하지 않는다.
+
+## 2026-10-05 확정 요청 6시간 연결
+
+추가 마이그레이션 `20261005001429_current_completion_consent_policy.sql`의 `propose_match`는 요청+6시간과 동행 시작 시각 중 빠른 때를 `expiresAt`으로 저장한다. 기존 대기 요청의 만료 상한도 줄이고, 수락·종료 이력과 신청·대화는 보존한다. 마이그레이션 자체는 요청 종료나 약속 완료를 실행하지 않으며 기존 조회·만료 처리기가 상태와 알림을 처리한다. 동일 제안 재시도는 같은 조건 버전을 반환한다. 실제 SQL 실행·운영 적용은 별도 검증한다.
+
+일정 변경 제안도 요청+6시간·기존 시작·새 시작의 최소 시각으로 만료된다. 기존 대기 제안만 새 상한으로 줄이고 종료된 제안의 원 만료·해결 이력은 보존한다. 새 DB 제약은 대기 제안의6시간 상한과 모든 제안의양 시작 상한을 검사한다. 장소 변경 입력은 이 마이그레이션에서 추가하지 않았으며 별도 연결 과제다.
+
+## 명시 모집 재개와 취소 이력
+
+`POST /posts/:id/reopen`은 작성자의 원래 JWT로 `reopen_service_post(p_post_id)`만 호출한다. `{postId,status:"recruiting",updatedAt,restoredCount,alreadyReopened}`를 반환한다. 취소 자체는 재개하지 않으며 삭제·시작/모집기한 경과·취소 아닌 약속이 있으면 거절한다. 모집기한을 자동 연장하지 않고 작성자가 공고 수정으로 기한을 변경한 뒤 재개할 수 있다.
+
+현재 pending을 보존하고 같은 공고·회원의 전체 신청 이력 중 최신 row가 유효 not_selected인 경우만 기존 신청/방을 복원한다. 영구 거절 이력·최신 철회·차단은 제외하고, 이전 철회 이후의 유효 재신청은 복원한다. 취소된 matched 관계는 자동 복원하지 않는다. 재개 재시도는 추가 복원·알림을 만들지 않는다. 취소 약속을 제외한 partial unique로 새로운 확정을 허용하며 원래 취소 약속·조건·메시지는 보존한다.
+
+새 취소에는 당시 시작·종료·공고 updatedAt 세 시각만 snapshot으로 기록한다. 기존 취소에 근거가 없으면 과거 시각을 추정하지 않는다. 이 경우 약속 get/list 시각은null이고 변경 상태의 startsAt/endsAt/updatedAt도null, scheduleProvenance는unknown이다. 새 정상 취소는captured_at_cancellation, 활성 약속은current_post다. 장소·주소·이름 snapshot을 추가 보존하지 않는다. 모바일에서 unknown을 현재 일정으로 대체하지 않도록 연결해야 한다.
+
+실제 scratch SQL9그룹 및 두세션 재개3그룹 PASS. 다른 종료 이력·pending 공존·최신선택·후속 새 확정·차단 경합·취소 일정 조회를 확인했다. 운영 적용 및 모바일 통합은 별도 대기다.
+
+## 장소 포함 변경 제안: 로컬 통합 검증
+
+`POST /appointments/:id/schedule-change/propose`의 기존 `changeId`, `startsAt`, `endsAt`, `expectedUpdatedAt`에 선택 `location`을 추가한다. location을 보낼 때는 `publicArea`, `registeredPlaceName`(null 허용), `registeredAddress`, `meetingDetail` 네 필드를 모두 보낸다. 입력 한도는 각각 1~60, null 또는 1~200, 1~300, 2~300자이며 등록 장소 입력과 길이 검증을 공유한다. 공개 지역은 기존 17개 지역과 기존 지역 별칭만 받는다. 사용자 접수 시각·만료·역할·추가 필드는 받지 않는다. 시간만 바꿀 때 location을 생략하며 기존 5인자 RPC를 호출한다. location:null은 생략과 다르게 잘못된 입력이다.
+
+시간과 장소를 함께 제안할 수 있으며 장소만 바꿀 때도 기존 시작·종료와 조회한 원본 updatedAt을 보낸다. 상대 수락 전에는 현재 공고·공개 검색·정확 위치가 바뀌지 않는다. 수락할 때 일정과 위치를 같은 트랜잭션에서 반영한다. 상대 응답 전 기존 위치 fingerprint가 달라지면 충돌이며 원래 값은 보존한다.
+
+변경 객체의 `locationChanged:true`, `newLocation:object|null`은 장소가 포함된 제안에만 존재한다. 시간 전용 제안·GET에는 두 키를 추가하지 않아 기존 DTO를 보존한다. newLocation은 대기 중 confirmed 약속의 실제 당사자에게만 반환한다. 종료·취소·익명·비당사자에는 null이며 원래 공고 위치는 기존 조회 권한을 따른다. 장소 원문은 알림·오류 로그에 추가하지 않는다. 종료된 제안의 대기 장소 입력을 정리하는 동작은 검증된 기술 최소안이며 별도 제품 보관 정책 확정으로 설명하지 않는다.
+
+독립 schema-only 장소 DB에서 SQL 8그룹, 두 세션 5그룹, HTTP 18개 테스트를 검증했다. 시간 전용 5인자/DTO 호환성과 선택 위치 입력·수락/거절/만료·현재 공고 검색·예약 원자성을 확인했다. 별도 철회 초안은 해당 DB에 적용하지 않았고 실제 withdraw는 NOT_RUN이다. 신뢰 접수 시각·마감 대기 경합 정책, 모바일 실제 연결, 운영 적용도 별도 미완료다.
+
+민규 main worktree에는 장소 변경 SQL과 HTTP 연결을 통합했다. 정식 SQL 집합은 기존41개+신규11개=52개이며 함수282/282 및 서비스 API 타입 검사 PASS다. 독립 장소 DB의 위 검증과 main 전체 SQL 집합 검증은 별도 증거로 구분한다. 운영 적용·모바일 연결·마감 접수 경계는 완료되지 않았다.
+
+53 입력 보완: 장소 제안의 publicArea는 기존 posts_public_area_format 전체형식(표준 시도+시군구+읍면동/가)을 사전 검사한다. 첫 지역 별칭은 기존17개 표준명으로 정규화한다. 동 누락 제안은 수락까지 대기시키지 않고 즉시 INVALID_REQUEST로 거절한다. 장소52 원문은 보존하며 별도53 migration을 추가했다. 실제 독립 Auth/Edge85개·장소 및 입력 보완 SQL 회귀 PASS다. 마감 접수·철회·모바일·운영은 별도 미완료다.
+
+## 변경 제안 철회 후속 구현
+
+40600과 POST `/appointments/:id/schedule-change/withdraw`를 연결했다. `{changeId,conditionVersion}`만 받으며 DB의 본인 제안자 검사 후 기존 종료 helper로 withdrawn 처리한다. 기존 약속·일정·장소·완료 예약은 유지하고 제안 위치 원문은 정리한다. withdrawn/expired/cancelled는 멱등 반환, 수락/거절 완료 및 옛 조건 버전은 충돌이다. 시간 전용 제안에 위치 키를 강제로 추가하지 않는다.
+
+격리 native63 영속 적용 및 실제 Auth/REST/Storage12그룹, 별도8개 약속/제안 SQL 회귀가 PASS다. HTTP handler는 프로세스 내부 실행이고 네이버 응답은 합성이다. 철회/수락 실제 경합·신뢰 접수 시각 마감·hosted/모바일/운영은 남는다. [검증 범위와 영수증](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-change-withdrawal.md)을 따른다.

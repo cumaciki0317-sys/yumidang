@@ -23,6 +23,9 @@ const LOCAL_HOST = "127.0.0.1:5173";
 const CONTEXT = "colima-yumidang-minkyu";
 const CONTAINER = "supabase_db_" + LOCAL_PROJECT;
 const MAX_BODY_BYTES = 8192;
+// 정책의 원본 10MB는 기존 사진 선택 계약과 같은 10 * 1024 * 1024바이트다.
+export const MAX_ORIGINAL_PHOTO_BYTES = 10 * 1024 * 1024;
+// Storage 저장 한도는 원본 선택 한도와 별개인 재인코딩 JPEG 2MiB다.
 export const MAX_PHOTO_BYTES = 2097152;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const IMAGE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -128,8 +131,8 @@ export const LOCAL_PAGE = `<!doctype html>
 <p>임시 검증 페이지입니다. 여성·만 19세 이상 자격과 정보 제공 여부를 실제 가입 런타임에서 확인합니다.</p>
 <p>자격 미충족 결과는 로그인 연결 결과와 구분합니다. JPEG 업로드 뒤 가입 완료 버튼을 눌러 확인합니다.</p>
 <button id="start" type="button">네이버 로그인 시작</button><p id="status" role="status">시작 전</p>
-<section id="photo-section" hidden><label for="photo">프로필 사진: JPG(JPEG), 최대 2MiB</label>
-<input id="photo" type="file" accept="image/jpeg" disabled>
+<section id="photo-section" hidden><label for="photo">프로필 사진: JPG·JPEG·PNG 원본 10MB 이하</label>
+<input id="photo" type="file" accept="image/jpeg,image/png" disabled>
 <button id="upload" type="button" disabled>선택 사진 업로드</button>
 <p><label for="interests">관심사(선택, 쉼표로 구분)</label><input id="interests" type="text"></p>
 <p><label for="conversationStyles">대화 방식(선택, 쉼표로 구분)</label><input id="conversationStyles" type="text"></p>
@@ -171,7 +174,7 @@ export const LOCAL_SCRIPT = String.raw`"use strict";
     const guidance = {
       information_required:"네이버 정보 제공이 부족합니다. 이름·성별·생년월일 제공에 동의한 뒤 다시 로그인해 주세요.",
       ineligible:"네이버 로그인 연결은 확인됐지만 여성·만 19세 이상 가입 자격을 충족하지 못했습니다.",
-      photo_required:"로그인 확인 완료. 아래에서 JPG 사진을 선택하고 선택 사진 업로드를 누르세요.",
+      photo_required:"로그인 확인 완료. 아래에서 JPG·JPEG·PNG 사진을 선택하고 선택 사진 업로드를 누르세요.",
       completion_required:"사진을 확인했습니다. 선택 항목을 입력하거나 비워 두고 가입 완료를 눌러 주세요.",
       ready:"가입 완료 검증 성공",
     };
@@ -221,7 +224,7 @@ export const LOCAL_SCRIPT = String.raw`"use strict";
     busy = true; updateButtons();
     try {
       const file = photo.files && photo.files.length === 1 ? photo.files[0] : null;
-      if (!file || file.type !== "image/jpeg" || file.size < 1 || file.size > 2097152) throw new Error("LOCAL_REQUEST_FAILED");
+      if (!file || !["image/jpeg","image/png"].includes(file.type) || file.size < 1 || file.size > ${MAX_ORIGINAL_PHOTO_BYTES}) throw new Error("LOCAL_REQUEST_FAILED");
       // 실제 픽셀만 새 JPEG로 인코딩해 원본 EXIF/GPS를 전송하지 않는다.
       const bitmap = await createImageBitmap(file);
       let encoded;

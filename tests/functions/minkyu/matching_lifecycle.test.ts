@@ -78,7 +78,7 @@ test("수정은 기존 무료 전용·주소/상세 분리와 문자열 한도�
   const { send, calls } = setup();
   for (const [patch, status] of [
     [{ costType: "paid_offer", amount: 10000 }, 503], [{ amount: 1 }, 400],
-    [{ registeredAddress: "가".repeat(301) }, 400], [{ meetingDetail: "가".repeat(201) }, 400],
+    [{ registeredAddress: "가".repeat(301) }, 400], [{ meetingDetail: "가".repeat(301) }, 400],
     [{ title: " 공고 제목" }, 400], [{ tags: ["전시", "전시"] }, 400],
   ] as const) assert.equal((await send(`/posts/${id}/update`, { ...input, expectedUpdatedAt: updatedAt, ...patch })).status, status);
   assert.equal(calls.length, 0);
@@ -145,10 +145,11 @@ test("권한 실패·조건 충돌은 사용자 클라이언트를 내부 역할
 });
 
 test("동의 조회는 종료·구형·없는 요청을 가짜 대기 상태로 바꾸지 않는다", async () => {
-  for (const result of [
+  const results: readonly JsonValue[] = [
     { consent: null }, { requestId: id, conditionVersion: version, status: "expired", expiresAt: input.startsAt, requestedAt: updatedAt, conditions: {} },
     { requestId: id, conditionVersion: version, status: "renewal_required", expiresAt: null, requestedAt: updatedAt, conditions: {} },
-  ]) {
+  ];
+  for (const result of results) {
     const { send } = setup(async () => result);
     const response = await send(`/requests/${id}/consent`, undefined, "GET");
     assert.equal(response.status, 200);
@@ -157,7 +158,7 @@ test("동의 조회는 종료·구형·없는 요청을 가짜 대기 상태로 
 });
 
 test("maintenance는 모델 설정 없이 만료·공개를 처리하고 만료 응답의 민감 필드를 버린다", async () => {
-  const { send, calls } = setup(async name => name === "expire_match_consents" || name === "expire_appointment_changes" ? { expiredCount: 2, secret: "never-echo" } : { publishedCount: 1 });
+  const { send, calls } = setup(async (name): Promise<JsonValue> => name === "expire_match_consents" || name === "expire_appointment_changes" ? { expiredCount: 2, secret: "never-echo" } : { publishedCount: 1 });
   const response = await send("/internal/maintenance", { limit: 4 }, "POST", "worker");
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).data, {
@@ -212,4 +213,14 @@ test("실제 런타임은 네이버 앱 설정 없이 검증된 Auth 사용자�
     assert.equal(response.status, 200);
     assert.deepEqual(urls, [`${config.supabaseUrl}/auth/v1/user`, `${config.supabaseUrl}/rest/v1/rpc/update_service_post`]);
   } finally { globalThis.fetch = previous; }
+});
+
+
+test("최신 상세 지점 300자는 보존하고 301자는 RPC 전에 거절한다", async () => {
+  const { send, calls } = setup();
+  const accepted = "가".repeat(300);
+  assert.equal((await send(`/posts/${id}/update`, { ...input, expectedUpdatedAt: updatedAt, meetingDetail: accepted })).status, 200);
+  assert.equal((calls[0].args.p_input as Record<string, JsonValue>).meetingDetail, accepted);
+  assert.equal((await send(`/posts/${id}/update`, { ...input, expectedUpdatedAt: updatedAt, meetingDetail: "가".repeat(301) })).status, 400);
+  assert.equal(calls.length, 1);
 });

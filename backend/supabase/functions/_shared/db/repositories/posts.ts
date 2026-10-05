@@ -6,3 +6,6 @@ export const createPost = (db: RpcClient, id: string, input: FreePostInput) => d
 export const updatePost = (db: RpcClient, id: string, input: FreePostInput, expectedUpdatedAt: string) => db.rpc("update_service_post", { p_post_id: id, p_input: { ...input }, p_expected_updated_at: expectedUpdatedAt });
 export const closePost = (db: RpcClient, id: string) => db.rpc("close_service_post", { p_post_id: id });
 export const deletePost = (db: RpcClient, id: string) => db.rpc("delete_service_post", { p_post_id: id });
+
+/** 취소 처리와 모집 재개는 독립 요청이다. */
+export const reopenPost = (db: RpcClient, id: string) => db.rpc("reopen_service_post", { p_post_id: id });

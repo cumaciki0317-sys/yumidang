@@ -7,7 +7,7 @@ import { HttpError, toPublicError } from "../../../backend/supabase/functions/_s
 import { createCors } from "../../../backend/supabase/functions/_shared/http/cors.ts";
 
 function request(body: string | Uint8Array, headers: Record<string, string> = {}): Request {
-  return new Request("https://api.example.test", { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body });
+  return new Request("https://api.example.test", { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: typeof body === "string" ? body : new Uint8Array(body).buffer });
 }
 const expectCode = (code: string) => (error: unknown) => toPublicError(error).error.code === code;
 

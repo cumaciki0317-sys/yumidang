@@ -8,11 +8,15 @@ export const processDueCompletions = (db: RpcClient, limit: number) => db.rpc("p
 export const getAppointmentChangeState = (db: RpcClient, id: string) => db.rpc("get_appointment_change_state", { p_appointment_id: id });
 export const proposeAppointmentScheduleChange = (db: RpcClient, id: string, input: AppointmentScheduleProposal) => db.rpc("propose_appointment_schedule_change", {
   p_appointment_id: id, p_change_id: input.changeId, p_starts_at: input.startsAt, p_ends_at: input.endsAt, p_expected_updated_at: input.expectedUpdatedAt,
+  ...(input.location === undefined ? {} : { p_location: { ...input.location } }),
 });
 export const acceptAppointmentScheduleChange = (db: RpcClient, id: string, input: AppointmentScheduleResponse) => db.rpc("accept_appointment_schedule_change", {
   p_appointment_id: id, p_change_id: input.changeId, p_condition_version: input.conditionVersion,
 });
 export const declineAppointmentScheduleChange = (db: RpcClient, id: string, input: AppointmentScheduleResponse) => db.rpc("decline_appointment_schedule_change", {
+  p_appointment_id: id, p_change_id: input.changeId, p_condition_version: input.conditionVersion,
+});
+export const withdrawAppointmentScheduleChange = (db: RpcClient, id: string, input: AppointmentScheduleResponse) => db.rpc("withdraw_appointment_schedule_change", {
   p_appointment_id: id, p_change_id: input.changeId, p_condition_version: input.conditionVersion,
 });
 export const cancelAppointment = (db: RpcClient, id: string, input: AppointmentCancellation) => db.rpc("cancel_appointment", {
