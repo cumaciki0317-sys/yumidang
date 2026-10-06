@@ -298,7 +298,7 @@ test("실제 런타임 조립도 빈 요약 환경을 보존하고 내부 공개
   const environment: Record<string, string> = {
     SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "public-anon",
     SUPABASE_SERVICE_ROLE_KEY: "fixture-service", INTERNAL_WORKER_SECRET: secret,
-    ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000",
+    ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000",
     REVIEW_SUMMARY_MODEL_VERSION: "", REVIEW_SUMMARY_PROMPT_VERSION: "review-summary-v1",
   };
   const previous = globalThis.fetch;
@@ -411,4 +411,103 @@ test("성향과 소개 저장 오류는 원래 입력이나 외부 오류 원문
   for (const marker of ["외부오류원문표식", "비공개소개표식", "실패입력표식"]) assert.equal(result.includes(marker), false);
   assert.deepEqual(original, { interests: ["실패입력표식"], conversationStyles: [], mbti: null, bio: "비공개소개표식" });
   assert.deepEqual(calls, ["set_my_profile_preferences"]);
+});
+
+// 실제 factory 설정/인증/전송을 연결하며 외부 Auth·DB 응답은 명시적으로 모형화한다.
+test("실제 서비스 factory는 64KiB 미만 설정을 환경 값 노출이나 fetch 없이 거절한다", async () => {
+  const { createRuntimeHandler } = await import("../../../backend/supabase/functions/service-api/index.ts");
+  const environment: Record<string, string> = { SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "fixture-anon",
+    ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
+  const previous = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; assert.fail("설정 검사 전에 전송하지 않는다"); };
+  try {
+    for (const cap of ["8192", "65535"]) {
+      assert.throws(() => createRuntimeHandler(key => ({ ...environment, MAX_REQUEST_BYTES: cap })[key]), error => {
+        assert.ok(error instanceof HttpError);
+        assert.equal(error.message.includes("fixture-anon"), false);
+        assert.equal(error.message.includes(environment.SUPABASE_URL), false);
+        return true;
+      });
+    }
+    assert.equal(typeof createRuntimeHandler(key => environment[key]), "function");
+    assert.equal(calls, 0);
+  } finally { globalThis.fetch = previous; }
+});
+
+test("실제 서비스 factory는 4000자 한국어·emoji·이스케이프와 최대 신고 필드를 원 JWT로 전달한다", async () => {
+  const { createRuntimeHandler } = await import("../../../backend/supabase/functions/service-api/index.ts");
+  const token = "header.synthetic.signature", anon = "fixture-anon", origin = "https://app.example.test";
+  const environment: Record<string, string> = { SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: anon,
+    ALLOWED_ORIGINS: JSON.stringify([origin]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
+  const reasons = ["sexual_harassment", "threat", "money_or_personal_data", "impersonation", "spam", "no_show", "other"];
+  const assets = [1, 2, 3, 4, 5].map(n => `22222222-2222-4222-8222-${String(n).padStart(12, "0")}`);
+  const previous = globalThis.fetch;
+  const rpcInputs: Record<string, unknown>[] = [];
+  let authCalls = 0;
+  globalThis.fetch = async (url, init) => {
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("authorization"), `Bearer ${token}`);
+    assert.equal(headers.get("apikey"), anon);
+    if (String(url).endsWith("/auth/v1/user")) { authCalls++; return Response.json({ id, role: "authenticated", is_anonymous: false }); }
+    assert.equal(String(url), `${environment.SUPABASE_URL}/rest/v1/rpc/submit_member_report`);
+    rpcInputs.push(JSON.parse(String(init?.body)));
+    return Response.json({ reportId: id, status: "received", alreadySubmitted: false, hideTarget: true });
+  };
+  try {
+    const handler = createRuntimeHandler(key => environment[key]);
+    for (const [description, escaped] of [["가".repeat(4000), false], ["😀".repeat(4000), false], ["😀".repeat(4000), true]] as const) {
+      const input = { clientRequestId: id, targetType: "appointment", targetId: id, context: "offline",
+        reasonCodes: reasons, description, assetIds: assets, hideTarget: true };
+      const json = JSON.stringify(input);
+      const body = escaped ? json.replace(/[^\x00-\x7f]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`) : json;
+      const bytes = new TextEncoder().encode(body).length;
+      assert.ok(bytes > 8192 && bytes < 65536);
+      const response = await handler(new Request("https://api.example.test/functions/v1/service-api/reports", {
+        method: "POST", headers: { authorization: `Bearer ${token}`, origin, "content-type": "application/json" }, body,
+      }));
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.deepEqual(result.data, { reportId: id, status: "received", alreadySubmitted: false, hideTarget: true });
+      assert.equal(response.headers.get("x-request-id"), result.requestId);
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.equal(response.headers.get("access-control-allow-origin"), origin);
+      assert.deepEqual(rpcInputs.at(-1), { p_client_request_id: id, p_target_type: "appointment", p_target_id: id, p_context: "offline",
+        p_reason_codes: reasons, p_description: description, p_asset_ids: assets, p_hide_target: true });
+    }
+    assert.equal(authCalls, 3);
+    assert.equal(rpcInputs.length, 3);
+  } finally { globalThis.fetch = previous; }
+});
+
+test("실제 서비스 factory는 4001자 정책 위반과 64KiB 초과 본문을 신고 RPC 전에 거절한다", async () => {
+  const { createRuntimeHandler } = await import("../../../backend/supabase/functions/service-api/index.ts");
+  const token = "header.synthetic.signature";
+  const environment: Record<string, string> = { SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "fixture-anon",
+    ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
+  const previous = globalThis.fetch;
+  let rpcCalls = 0;
+  globalThis.fetch = async (url) => {
+    if (String(url).endsWith("/auth/v1/user")) return Response.json({ id, role: "authenticated", is_anonymous: false });
+    rpcCalls++; assert.fail("금지 입력으로 신고 RPC를 실행하지 않는다");
+  };
+  try {
+    const handler = createRuntimeHandler(key => environment[key]);
+    const base = { clientRequestId: id, targetType: "appointment", targetId: id, context: "offline", reasonCodes: ["other"], assetIds: [], hideTarget: false };
+    for (const [body, status, code] of [
+      [JSON.stringify({ ...base, description: "가".repeat(4001) }), 400, "INVALID_REQUEST"],
+      [JSON.stringify({ ...base, description: "😀".repeat(4001) }), 400, "INVALID_REQUEST"],
+      [JSON.stringify({ ...base, description: "가", padding: "x".repeat(65536) }), 413, "PAYLOAD_TOO_LARGE"],
+    ] as const) {
+      const response = await handler(new Request("https://api.example.test/service-api/reports", {
+        method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body,
+      }));
+      assert.equal(response.status, status);
+      const result = await response.json();
+      assert.equal(result.error.code, code);
+      assert.equal(response.headers.get("x-request-id"), result.requestId);
+      assert.equal(JSON.stringify(result).includes(token), false);
+    }
+    assert.equal(rpcCalls, 0);
+  } finally { globalThis.fetch = previous; }
 });

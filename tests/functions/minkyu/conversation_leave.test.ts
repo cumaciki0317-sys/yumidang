@@ -33,7 +33,7 @@ async function probe(run:(handler:ReturnType<typeof createRuntimeHandler>,calls:
   };
   try {
     const env:Record<string,string>={SUPABASE_URL:API,SUPABASE_ANON_KEY:ANON,SUPABASE_SERVICE_ROLE_KEY:SERVICE,
-      INTERNAL_WORKER_SECRET:SECRET,ALLOWED_ORIGINS:JSON.stringify([ORIGIN]),MAX_REQUEST_BYTES:"8192",UPSTREAM_TIMEOUT_MS:"1000"};
+      INTERNAL_WORKER_SECRET:SECRET,ALLOWED_ORIGINS:JSON.stringify([ORIGIN]),MAX_REQUEST_BYTES:"65536",UPSTREAM_TIMEOUT_MS:"1000"};
     await run(createRuntimeHandler(key=>env[key]),calls);
   } finally {globalThis.fetch=previous;}
 }
@@ -117,8 +117,8 @@ test("JSON 형식·크기와 CORS 경계는 공통 처리하며 오류 원문을
   await probe(async(handler,calls)=>{
     await failure(await handler(request(undefined,"POST",{},TOKEN,{"content-type":"text/plain"})),415,"UNSUPPORTED_MEDIA_TYPE");
     await failure(await handler(request(undefined,"POST",{},TOKEN,{"content-encoding":"gzip"})),415,"UNSUPPORTED_MEDIA_TYPE");
-    await failure(await handler(request(undefined,"POST",{},TOKEN,{"content-length":"8193"})),413,"PAYLOAD_TOO_LARGE");
-    await failure(await handler(request(undefined,"POST",{extra:"x".repeat(8192)})),413,"PAYLOAD_TOO_LARGE");
+    await failure(await handler(request(undefined,"POST",{},TOKEN,{"content-length":"65537"})),413,"PAYLOAD_TOO_LARGE");
+    await failure(await handler(request(undefined,"POST",{extra:"x".repeat(65536)})),413,"PAYLOAD_TOO_LARGE");
     for(const body of [undefined,"{"]) {
       const input=new Request(API+`/service-api/conversations/${ID}/leave`,{method:"POST",
         headers:{origin:ORIGIN,authorization:"Bearer "+TOKEN,"content-type":"application/json"},...(body===undefined?{}:{body})});

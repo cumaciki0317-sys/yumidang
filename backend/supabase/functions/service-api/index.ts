@@ -1,4 +1,5 @@
 /** 민규담당. Deno/Supabase 런타임 진입점. 설정·원문·자격 증명을 출력하지 않는다. */
+import { HttpError } from "../_shared/http/errors.ts";
 import { loadRuntimeConfig, type EnvReader } from "../_shared/config/env.ts";
 import { requireOptionalPrincipal, requirePrincipal } from "../_shared/auth/principal.ts";
 import { requireInternalCaller } from "../_shared/auth/internal-caller.ts";
@@ -6,6 +7,8 @@ import { createPublicClient } from "../_shared/db/public-client.ts";
 import type { PublicPostSearchExecutor } from "./search-http.ts";
 import { createUserClient } from "../_shared/db/user-client.ts";
 import { createInternalClient } from "../_shared/db/internal-client.ts";
+import { createReportOperatorExecutor } from "./report-operator-http.ts";
+import { createProfileImageExecutor } from "./profile-image-http.ts";
 import { createServiceApi } from "./handler.ts";
 import { createRpcPublicPostSearchRepository } from "../_shared/db/repositories/search.ts";
 import { searchPublicPosts } from "../_shared/services/search-service.ts";
@@ -18,6 +21,8 @@ export function createRuntimeHandler(
   options: { publicPostSearch?: PublicPostSearchExecutor; memberCleanup?: boolean; memberCleanupExecution?: MemberCleanupExecutionOptions } = {},
 ): (request: Request) => Promise<Response> {
   const config = loadRuntimeConfig(read);
+  // 신고 상세 4000자와 JSON 이스케이프를 실제 서비스 진입점에서 수용한다.
+  if (config.maxRequestBytes < 65536) throw new HttpError("EXTERNAL_UNAVAILABLE");
   // 명시적인 로컬 검증 옵션에서만 연결한다. DB 권한이나 삭제 승인을 변경하지 않는다.
   const cleanup = options.memberCleanup === true ? createMemberCleanupExecutor(config, fetch, options.memberCleanupExecution) : undefined;
   const authenticatePublic = async (request: Request) => {
@@ -29,6 +34,8 @@ export function createRuntimeHandler(
   return createServiceApi({
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
+    profileImages: { execute: createProfileImageExecutor(config) },
+    reportOperator: { execute: createReportOperatorExecutor(config) },
     ...(cleanup ? { memberCleanup: { execute: (_db, token, signal) => cleanup(token, signal) } } : {}),
     publicSearch: {
       authenticate: authenticatePublic,

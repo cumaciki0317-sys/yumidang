@@ -68,10 +68,11 @@ test("취소된 요청·잘못된 토큰·누락 설정은 네트워크 전에 �
   assert.throws(() => createMemberCleanupBudgetReader(loadRuntimeConfig(key => key === "SUPABASE_SERVICE_ROLE_KEY" ? undefined : values[key]), fetcher));
   assert.equal(calls, 0);
 });
-test("기존 공개·범용 내부 RPC 목록을 budget 조회 때문에 넓히지 않는다", async () => {
+test("budget은 내부 허용 목록에만 있으며 공개 RPC로 제공하지 않는다", async () => {
   let calls = 0;
   const fetcher = async () => { calls++; return new Response("null"); };
-  for (const db of [createPublicClient(config, fetcher), createInternalClient(config, fetcher)]) {
+  assert.equal(createInternalClient(config, fetcher).supportsRpc!("read_worker_run_budget"), true);
+  for (const db of [createPublicClient(config, fetcher)]) {
     assert.equal(db.supportsRpc!("read_worker_run_budget"), false);
     await assert.rejects(() => db.rpc("read_worker_run_budget", { p_worker_run_token: token }), code("ACCESS_DENIED"));
   }

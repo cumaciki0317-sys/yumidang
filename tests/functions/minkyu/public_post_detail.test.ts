@@ -34,7 +34,7 @@ async function runtimeProbe(run: (handler: ReturnType<typeof createRuntimeHandle
   };
   try {
     const env: Record<string, string> = { SUPABASE_URL: API, SUPABASE_ANON_KEY: ANON,
-      ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000" };
+      ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000" };
     if (options.serviceKey) env.SUPABASE_SERVICE_ROLE_KEY = SERVICE;
     await run(createRuntimeHandler(key => env[key]), calls);
   } finally { globalThis.fetch = originalFetch; }

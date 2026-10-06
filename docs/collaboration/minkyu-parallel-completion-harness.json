@@ -1,0 +1,1308 @@
+{
+  "version": 2,
+  "actor": "minkyu",
+  "baseline": "0b599065d68ad315f2e08cc35b44dc94b9a454a4",
+  "branch": "minkyu/foundation-harness",
+  "objective": "민규 담당13영역 전체 요구·연결·운영 증거까지100% 달성. native69 핵심 사진 검증 후 기존 단계 기준 재감사63.5%, 분모 축소 없음.",
+  "phase": 3,
+  "lanes": {
+    "coordinator": [
+      "docs/collaboration/minkyu-parallel-completion-harness.json",
+      "docs/collaboration/requests/minkyu/2026-10-05-parallel-completion-harness.md",
+      "docs/collaboration/minkyu-progress.md",
+      "tools/collaboration/check_harness.py",
+      "docs/collaboration/requests/minkyu/2026-10-05-appointment-review-no-show-lifecycle.md",
+      "backend/contracts/completion-db.md",
+      "backend/contracts/reviews.md",
+      "backend/contracts/reports.md",
+      "docs/collaboration/requests/minkyu/2026-10-05-profile-photo-access-revocation.md",
+      "docs/collaboration/requests/minkyu/2026-10-05-production-drift-preparation.md",
+      "docs/collaboration/requests/minkyu/2026-10-06-cancellation-due-worker-connection.md",
+      "backend/supabase/migrations/20261005233511_cancellation_due_guard_closed.sql",
+      "tests/database/minkyu/cancellation_due_guard_closed.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-cancellation-due-guard-closed.md"
+    ],
+    "A": [
+      "tools/local/prepare_current_policy.py",
+      "tests/database/minkyu/test_current_policy_preparation.py",
+      "tests/integration/minkyu/naver_signup_local.ts",
+      "backend/supabase/migrations/20261005180340_assigned_report_notice_receipts.sql",
+      "tests/database/minkyu/assigned_report_notice_receipts.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-notice-receipts.md",
+      "backend/supabase/migrations/20261005190311_appointment_cancel_appeal_intake.sql",
+      "tests/database/minkyu/appointment_cancel_appeal_intake.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-appeal-intake.md",
+      "backend/supabase/migrations/20261005195033_appointment_cancel_appeal_atomic_report.sql",
+      "tests/database/minkyu/appointment_cancel_appeal_atomic_report.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-appeal-atomic-report.md",
+      "backend/supabase/migrations/20261005203258_appointment_cancel_resolution_and_due.sql",
+      "tests/database/minkyu/appointment_cancel_resolution_and_due.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-resolution-and-due.md",
+      "docs/collaboration/requests/minkyu/2026-10-06-privacy-data-inventory.md",
+      "backend/supabase/migrations/20261005225107_report_retention_purge.sql",
+      "tests/database/minkyu/report_retention_purge.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-report-retention-purge.md",
+      "backend/supabase/migrations/20261005232700_report_retention_dispatch_fence.sql",
+      "tests/database/minkyu/report_retention_dispatch_fence.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-report-retention-dispatch-fence.md",
+      "backend/supabase/migrations/20261005235230_worker_queue_retention_schedule.sql",
+      "tests/database/minkyu/worker_queue_retention_schedule.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-worker-queue-retention-schedule.md"
+    ],
+    "B": [
+      "tests/integration/minkyu/appointment_review_normal_retirement_concurrency_local.py",
+      "tests/integration/minkyu/member_cleanup_native_local.ts",
+      "backend/supabase/migrations/20261005143045_profile_image_authenticated_access.sql",
+      "backend/supabase/functions/service-api/profile-image-http.ts",
+      "backend/supabase/functions/service-api/handler.ts",
+      "backend/supabase/functions/service-api/index.ts",
+      "backend/contracts/profile-images.md",
+      "tests/functions/minkyu/profile_image_http.test.ts",
+      "tests/database/minkyu/profile_image_authenticated_access.sql",
+      "backend/supabase/functions/service-api/report-operator-http.ts",
+      "tests/functions/minkyu/report_operator_http.test.ts",
+      "tests/integration/minkyu/report_operator_native_local.ts",
+      ".env.example",
+      "tests/functions/minkyu/common_connections.test.ts",
+      "tests/functions/minkyu/conversation_leave.test.ts",
+      "tests/functions/minkyu/completion_review_policy.test.ts",
+      "tests/functions/minkyu/public_post_detail.test.ts",
+      "tests/functions/minkyu/member_cleanup_runtime.test.ts",
+      "tests/functions/minkyu/matching_lifecycle.test.ts",
+      "tests/functions/minkyu/search_runtime.test.ts",
+      "tests/functions/minkyu/service_api.test.ts",
+      "tests/functions/minkyu/appointment_changes.test.ts",
+      "backend/supabase/functions/_shared/db/internal-client.ts",
+      "tests/functions/minkyu/cancellation_due_internal_client.test.ts",
+      "backend/supabase/functions/_shared/services/report-retention-storage.ts",
+      "tests/functions/minkyu/report_retention_storage.test.ts",
+      "backend/supabase/functions/_shared/db/report-retention-client.ts",
+      "tests/functions/minkyu/report_retention_rpc.test.ts"
+    ],
+    "C": [
+      "docs/collaboration/requests/minkyu/2026-10-05-minkyu-remaining-audit.md",
+      "docs/collaboration/requests/minkyu/2026-10-05-public-deletion-page.html",
+      "docs/collaboration/requests/minkyu/2026-10-05-public-deletion-page.md",
+      "backend/contracts/member-activity-sanctions.md",
+      "backend/supabase/functions/_shared/contracts/reports.ts",
+      "backend/supabase/functions/_shared/db/repositories/reports.ts",
+      "backend/supabase/functions/_shared/db/user-client.ts",
+      "backend/supabase/functions/_shared/services/report-service.ts",
+      "backend/supabase/functions/service-api/routes.ts",
+      "tests/functions/minkyu/sanction_history_http.test.ts",
+      "tests/database/minkyu/member_sanction_history.sql",
+      "backend/supabase/migrations/20261005135215_member_sanction_history.sql",
+      "backend/supabase/functions/_shared/db/report-operator-client.ts",
+      "tests/functions/minkyu/report_operator_client.test.ts",
+      "tests/database/minkyu/assigned_report_operator_access.sql",
+      "docs/collaboration/requests/minkyu/2026-10-05-assigned-report-operator-access.md",
+      "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+      "tests/database/minkyu/assigned_report_capture_access.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-capture-access.md",
+      "backend/supabase/migrations/20261005150558_assigned_report_capture_access.sql",
+      "backend/supabase/migrations/20261005155136_assigned_report_review_start.sql",
+      "tests/database/minkyu/assigned_report_review_start.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-start.md",
+      "backend/supabase/migrations/20261005161352_assigned_report_review_state.sql",
+      "tests/database/minkyu/assigned_report_review_state.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-state.md",
+      "tests/integration/minkyu/assigned_report_review_concurrency_local.py",
+      "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-concurrency.md",
+      "backend/supabase/migrations/20261005171606_assigned_report_adjudication.sql",
+      "tests/database/minkyu/assigned_report_adjudication.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-adjudication.md",
+      "tests/functions/minkyu/decision_notices_http.test.ts",
+      "backend/supabase/functions/_shared/db/repositories/completion.ts",
+      "backend/supabase/functions/_shared/services/completion-service.ts",
+      "tests/functions/minkyu/appointment_cancel_appeals_http.test.ts",
+      "docs/collaboration/requests/minkyu/2026-10-06-report-retention-purge-contract.md",
+      "backend/supabase/migrations/20261005225951_worker_supported_claim.sql",
+      "tests/database/minkyu/worker_supported_claim.sql",
+      "docs/collaboration/requests/minkyu/2026-10-06-worker-supported-claim.md"
+    ]
+  },
+  "preserved": {
+    "backend/supabase/migrations/20261005041000_appointment_review_no_show_lifecycle.sql": "b780d364f0d614a160934bd57bb2c1347f24d6a9321275baadbbaf632db3ed50",
+    "tests/database/minkyu/appointment_review_no_show_lifecycle.sql": "0fdb83c04dadaa9bac4d2e428d6948785c4eee2e31b128e8142b204a4d8a913b",
+    "backend/supabase/migrations/20261005040900_appointment_review_holds.sql": "b13e5ade5891e49b049a7243ba3cbe161d8e64545212bc72d8865638a6992fe6",
+    "backend/ownership.json": "af094efe5a6587da63336b4fc0dbff9bf73cb817d5b4c49efaf17ebde5102358",
+    "AGENTS.md": "8e9f40f70e05bf15d4da99dea7000267e55f50952e758ee4fd0f1b8304207ead",
+    "PLAN.md": "1f29b3325d399e473d9ef6a5a2f17ee9e229a050e287f481d9eab2b9e4f13712",
+    "PLAN_상세설계.md": "11d02f4b86959dfc1448ac910f603ac6245ab9c12e12c69a0827c99d49159875"
+  },
+  "observed_policy_sha256": "e02da37e48427c0e58e900880a67eb93f08373fd528f63b4762afc20875e711c",
+  "agents": {
+    "coordinator": {
+      "agent": "/root",
+      "role": "실제 DB 작업 직렬 실행·후보 검토·선별 통합",
+      "workspace": "/Users/minkyu/Documents/GitHub/yumidang/.worktrees/minkyu-foundation"
+    },
+    "A": {
+      "agent": "/root/policy_audit",
+      "role": "직원 해소·취소 경고/제재·통지·due SQL/회귀 후보; 실제 DB root만",
+      "workspace": "/private/tmp/yumidang-core-20261005",
+      "external_artifact": "/private/tmp/yumidang-native70-agent-reviewed/apply.py"
+    },
+    "B": {
+      "agent": "/root/sungho_scope",
+      "role": "fresh legacy20→77 자료·권한·cron 보존 검증기 후보; 실제 DB root만",
+      "workspace": "/private/tmp/yumidang-no-show-20261005"
+    },
+    "C": {
+      "agent": "/root/runtime_connections",
+      "role": "직원 해소 HTTP 연결 설계·전환 입력 독립 검토",
+      "workspace": "/private/tmp/yumidang-public-deletion-20261005",
+      "output": "정확히 배정된 SQL·client·검증 후보와 SHA; root가 검증 후 통합"
+    }
+  },
+  "dependencies": [
+    {
+      "task": "native67_formal_application",
+      "depends_on": [
+        "reviewed_source67_hashes",
+        "A_application_script_review"
+      ],
+      "executor": "coordinator"
+    },
+    {
+      "task": "normal_retirement_race_execution",
+      "depends_on": [
+        "native67_formal_application",
+        "B_driver_review"
+      ],
+      "executor": "coordinator"
+    },
+    {
+      "task": "next_independent_implementation",
+      "depends_on": [
+        "C_requirements_audit",
+        "policy_and_ownership_check"
+      ],
+      "executor": "coordinator assigns exact files"
+    },
+    {
+      "task": "public_deletion_preview",
+      "depends_on": [
+        "operator_name_confirmed_조유미",
+        "C_static_page_candidate_review"
+      ],
+      "executor": "coordinator"
+    },
+    {
+      "task": "integrate_member_sanction_history_candidate",
+      "depends_on": [
+        "A_native67_actual_http_validation",
+        "C_candidate_review",
+        "source68_preparation_gate",
+        "B_native67_signed_photo_verification_before_runtime_changes"
+      ],
+      "executor": "coordinator"
+    }
+  ],
+  "source_snapshot": {
+    "artifact": "/private/tmp/yumidang-policy77-agent-reviewed/prepared",
+    "migration_count": 77,
+    "runtime_files": 52,
+    "migration_manifest_sha256": "501bc9a741a6c64a6ebf7c5a5bd77aebb93dc7fb99b7a2d1b2eff444e3e04ee8",
+    "edge_manifest_sha256": "e9ee9553ad57abe350aa0b1bc982446b79b062d9f1554e865ed7365e865b654e",
+    "local_application": "formal local history77 PASS; actual atomic77 Auth API30/concurrency12 PASS; prior76 proofs preserved",
+    "previous_verified_snapshot": {
+      "artifact": "/private/tmp/yumidang-policy71-reviewed/prepared",
+      "migration_count": 71,
+      "runtime_files": 52,
+      "migration_manifest_sha256": "208068a523604cc3f7d6f4945770eef00d93e62b63750b92fa069d059cc032d3",
+      "edge_manifest_sha256": "a20a2cb75c46524e16275c919e426090009bf07eb5dd4b76d3d052f22eb13ec5",
+      "local_application": "정식CLI·history71·dry-run 대기0 PASS; 실제 직원 Auth/REST/Storage/in-processHTTP12그룹 PASS·Auth삭제와 증거보관 동시성립·전체정리·audit288 IDs/payload 보존"
+    },
+    "operating_application": "NOT_RUN",
+    "formal73_proof": {
+      "root": "/private/tmp/yumidang-native73-rollout-format-reviewed",
+      "receipt_sha256": "ba1c86ef5c36397d2a9bef3f2d8a3fa4647cc0b4df4314448f65ddee1363cf14",
+      "postflight_sha256": "b706e296e91fd7a64ce7da957238eb7751511cada28df41d3e14553f748ea27e",
+      "schema_after_sha256": "ac6a98f31fdcfb18cf1e22ae4ee1c5eee93bc819e5c16c78bfb590b3f0877440"
+    },
+    "review_api_validation": {
+      "status": "PASS",
+      "scope": "actual_Auth_REST_Storage_in_process_HTTP",
+      "checks": 14,
+      "receipt_sha256": "aaea10f3e207b24da9170933c15b5c9f0305fa844e21cb63786e13e475a23b9f",
+      "full_restoration": "PASS",
+      "previous_attempt": {
+        "status": "FAIL",
+        "receipt_sha256": "9f0b10cf1e929df415e39c0c018fc4da7b2d8426175fb7f4f97f162ebd08ae76",
+        "fixture_restoration": "PASS",
+        "restoration_receipt_sha256": "f00fa2343a414b60d17345209a1fc07bde092091c8fbaaa78c6cac53c0a03242",
+        "actual_two_session": "NOT_RUN",
+        "diagnostic_retry": "NOT_RUN"
+      },
+      "session_restore_syntax_failure_sha256": "57c54e5f3656cb13c3ed1a239a09b9872e25bef35d9ed9c646877dbdb4814990",
+      "actual_two_session": {
+        "status": "PASS",
+        "scope": "two_session_SQL_only",
+        "cases": 11,
+        "blocking_observations": 17,
+        "session_outcomes": 75,
+        "receipt_sha256": "885f3b29276f1f462882959752833479ad84ce80191cab2255b4adb3ace94f13",
+        "full_restoration": "PASS",
+        "prior_failed_receipt_sha256": "2e64b160277578c16451a12655eb106b803335cfb4de05b001ba4012509a84f9"
+      },
+      "operating": "NOT_RUN"
+    },
+    "previous_prepared73": {
+      "artifact": "/private/tmp/yumidang-policy73-reviewed/prepared",
+      "migration_count": 73,
+      "runtime_files": 52,
+      "migration_manifest_sha256": "eafbcfd77266fcfdafffb18539c89ce0501f721901b41f4435692942ada2fde9",
+      "edge_manifest_sha256": "4a46666ca6666155ffc209af45ef7e8fc05059aa742852276a1b872d5ee8b156"
+    },
+    "formal74_proof": {
+      "root": "/private/tmp/yumidang-native74-rollout-reviewed",
+      "receipt_sha256": "5099b62eba44200125c21dc9c642c8630f0b98172ebc13f5d1928a550b132926",
+      "postflight_sha256": "484858bb600171ff8079ea0d3c94e435a243a328fb17dd027d43fbd507c9e7bc",
+      "schema_after_sha256": "fb0241ea16744f493fa958468bab4fb928ceceebff1ad9c8f33f2a03afcb8be8",
+      "preflight_sha256": "25c595e77c54179c47a07787371e8662a025c9e8e0961e8824d6ffede75105b3"
+    },
+    "adjudication_api_validation": {
+      "status": "PASS",
+      "scope": "actual_Auth_REST_Storage_in_process_HTTP",
+      "checks": 17,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native74-F6i5zs/result.json",
+      "receipt_sha256": "769781f94ebb212ef68bea6454dee7b59ee7041b32fd1bc6ed3261770f318251",
+      "full_restoration": "PASS",
+      "operating": "NOT_RUN"
+    },
+    "adjudication_concurrency_validation": {
+      "status": "PASS",
+      "scope": "two_session_SQL_only",
+      "cases": 12,
+      "blocking_observations": 16,
+      "session_outcomes": 123,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-review-concurrency74-awpsfmk6/receipt.json",
+      "receipt_sha256": "ec5c571d04221b527c0b64fb4a96dc69b45ffc12e8ee184b1fdecd8076b7aa9a",
+      "full_restoration": "PASS",
+      "notice_appeal": "NOT_RUN",
+      "operating": "NOT_RUN"
+    },
+    "artifact_role": "current source76 exact prepared graph; SQL/Edge execution NOT_RUN",
+    "notice75_candidate": {
+      "source_migration_count": 75,
+      "formal_local_history": 75,
+      "sql_sha256": "880e62099cbb2f405da1e9035bcba2bdb0ff19c2f5a4d5222c63586240fbfc6b",
+      "test_sha256": "f67e71b4239aedff1c7241edb1b7afda89e1c9cf7ba6828d140a43d16e86f42d",
+      "rollback_status": "PASS",
+      "rollback_receipt": "/private/tmp/yumidang-notice75-candidate-reviewed/receipt.json",
+      "rollback_receipt_sha256": "c369784ca1197f100c98152ad78c1bacba7ab1db919948c93ec3704910b693cc",
+      "driver_sha256": "0bd762bd0d204be3e47b3b1e27337e7620a25a8d15e43d9345f2615603443328",
+      "formal_application": "PASS",
+      "actual_auth_api": "PASS_21_GROUPS_AFTER_FOUR_PRESERVED_FAILURES",
+      "actual_concurrency": "PASS_12_CASES",
+      "operating": "NOT_RUN",
+      "prior_first_auth_failure": "FAIL_FIRST_NOTICE_FULL_CLEANUP_PASS"
+    },
+    "previous_prepared74": {
+      "artifact": "/private/tmp/yumidang-policy74-agent-reviewed/prepared",
+      "migration_count": 74,
+      "runtime_files": 52,
+      "migration_manifest_sha256": "5006c517b54a63bf3e7ccb2d0f25e1ad0034ad83bc98fa49fcf25c8c409ed2d5",
+      "edge_manifest_sha256": "df22a40254b1fc269930a5dfe083e3c11a67ec23ff252aecfc8ede3ad02e982c"
+    },
+    "formal75_proof": {
+      "root": "/private/tmp/yumidang-native75-rollout-reviewed",
+      "receipt_sha256": "bdc4827ba529b26dce01f163edb53fcf01f6022b65a9cdaef3b44ac9a47543f7",
+      "preflight_sha256": "3e93773b9bdec6c4153140c2b9744637734c87b1f8d944a97e6d7c732c173005",
+      "postflight_sha256": "d5a009fbab7d522399678804e79c8baa2106f6b7995c1edaf02ec7c0e576382c",
+      "schema_after_sha256": "857cf946c8641b0ab8ff56d70294741170797122fb7faac942dd122c2d6e0225",
+      "driver_sha256": "029c879902e18159607ddec59f4aa60187e650d21586edef35879a08cd6a2258"
+    },
+    "previous_candidate74": {
+      "source_migration_count": 74,
+      "prepared_current": "HISTORICAL_74_ARTIFACT_CURRENT_RUNTIME_NOT_PREPARED",
+      "formal_local_history": 74,
+      "migration_sha256": "d2e3b141ea5ad7048d075f1568f7afd6fc1320e3daa4f71163b252a91b825133",
+      "sql_rollback_receipt_sha256": "4f2712f38fc8de8eec208c7694dd6f0ef6b3c0ba525fcf3d24313626fe4b6eab",
+      "sql_rollback": "PASS",
+      "runtime_mock_tests": 44,
+      "actual_adjudication_api": "PASS_17_GROUPS",
+      "actual_adjudication_concurrency": "PASS_12_CASES",
+      "prior_sql_failure_sha256": "f4e2ad49ea49b65fa4dbbf400923cc3b17235a9c077ef4ea356380e5de49bfad",
+      "operating_application": "NOT_RUN"
+    },
+    "notice75_concurrency_validation": {
+      "status": "PASS",
+      "scope": "two_session_SQL_only",
+      "cases": 12,
+      "blocking_observations": 23,
+      "session_outcomes": 187,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-review-concurrency75-btnyujwz/receipt.json",
+      "receipt_sha256": "4bdf715b33754ff34175e34caf2e550e65c7ec3ccfef0ddde204b6d4bd67d892",
+      "driver_sha256": "8327ec356b1a296f3f323333c94e35e087dcbc585a20fb28f2471713bffc1ff3",
+      "full_restoration": "PASS",
+      "list_final_return": "separate_single_TX_hook_proof_only",
+      "provider_calls": 0,
+      "operating": "NOT_RUN"
+    },
+    "notice75_api_prior_attempts": {
+      "status": "FAIL",
+      "checks_before_failure": 7,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native75-wSlQox/result.json",
+      "receipt_sha256": "9c01eb967e49eca2ebe8376fdbe203369c25bd0622af34d0fb7e15d2c435fcfa",
+      "failure_stage": "native74_actual_adjudication",
+      "failure_substage": "notice75_no_show_own_party_privacy_and_list_ack_zero",
+      "cleanup_checks": 9,
+      "cleanup_errors": [],
+      "full_restoration": "PASS",
+      "driver_sha256": "337f4745050fa2a081292a347a76d8e4d936cbaae7fb4b73f47d25adab067b16",
+      "diagnostic_attempt": {
+        "status": "FAIL",
+        "receipt_sha256": "fce3edf98e29d6739979afbafe84e802c3a1e73244e1edb281da3461e2ae7ecd",
+        "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native75-GVtXZW/result.json",
+        "direct_rest_status": 200,
+        "failure_substage": "notice75_http_import_principal",
+        "error_category": "TypeError",
+        "full_restoration": "PASS",
+        "cleanup_checks": 9,
+        "cleanup_errors": [],
+        "cause": "fixture join shadows node:path join used by nested module import"
+      },
+      "additional_attempts": [
+        {
+          "receipt_sha256": "8a306404c049d413909609bc24b0f639ecb6e65e84b73fe8990c4a7ed6676b07",
+          "status": "FAIL",
+          "cause": "bulk read fixture expects200 but void RPC returns204",
+          "full_restoration": "PASS"
+        },
+        {
+          "receipt_sha256": "3a7413778f1197e75e24fb123abec6b152389c2500b0a7c6fddaa0416f60afce",
+          "status": "FAIL",
+          "checks_before_failure": 11,
+          "cause": "nullable SQL scalar psql output parsed as JSON",
+          "full_restoration": "PASS"
+        }
+      ]
+    },
+    "notice75_api_validation": {
+      "status": "PASS",
+      "scope": "local_Auth_REST_Storage_in_process_HTTP",
+      "checks": 21,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native75-sOVRdX/result.json",
+      "receipt_sha256": "323d4e323c669f28da24a53290634b383805f3548c583f784d0f1526d3bd56ca",
+      "driver_sha256": "6eac744390c13024fe89ce6a890793152751183ce26a512b7c2974fc69dc6133",
+      "cleanup_checks": 9,
+      "cleanup_errors": [],
+      "full_restoration": "PASS",
+      "real_naver_oauth": "NOT_RUN",
+      "hosted_edge": "NOT_RUN",
+      "mobile": "NOT_RUN",
+      "operating": "NOT_RUN"
+    },
+    "current_source_status": {
+      "source_migrations": 77,
+      "formal_local_history": 77,
+      "runtime": "atomic77_HTTP_SQL_integrated",
+      "current_runtime_prepared": "READY_SQL77_RUNTIME52_EXECUTION_NOT_RUN",
+      "previous_prepared75_runtime": "HISTORICAL_NOTICE75_RUNTIME",
+      "candidate76_SQL": "INTEGRATED_ROLLBACK_PASS_FORMAL76_PASS",
+      "raw_SQL_files": 78,
+      "historical_excluded_duplicate_preserved": true,
+      "pending_candidate77": "INTEGRATED_SINGLE_TX_SQL_PASS_FORMAL77_PASS"
+    },
+    "appeal76_http_validation": {
+      "status": "PASS",
+      "scope": "root_mock_HTTP_and_transport_only",
+      "new_tests": 10,
+      "existing_notice_tests": 10,
+      "existing_sanction_tests": 7,
+      "total_tests": 27,
+      "independent_review": "PASS_NO_BLOCKER",
+      "root_integration_receipt": "/private/tmp/yumidang-appeal76-http-root-integration/receipt.json",
+      "candidate_snapshot_receipt_sha256": "b971f45f5dbe813f483f718bea0842f473193b5d00c612cc8a22a4d0aaee2a0f",
+      "db": "NOT_RUN",
+      "actual_HTTP": "NOT_RUN",
+      "atomic_report_and_appeal": "NOT_IMPLEMENTED_REQUIRED_FOR_FULL_S21_FLOW",
+      "operating": "NOT_RUN"
+    },
+    "appeal76_sql_prior_failure": {
+      "status": "FAIL",
+      "receipt": "/private/tmp/yumidang-appeal76-candidate-reviewed/receipt.json",
+      "receipt_sha256": "7ec912252c09911aba197809be117eb3a471a9b2d872eb68492f22eca23a4a83",
+      "driver_sha256": "496324784d13b45d7a3dcd1a4103416e2125bd3b48c9645f51e6eea2a81bec44",
+      "sql_sha256": "359a8093c3a32bf7d547a17df98173de677307933780a8e78db323bc4c26fcd8",
+      "test_sha256": "6306bcd0bc200d6184f69f33441c7349b800ce49f8f0ee75c38ee4f0c51dc4c1",
+      "sqlstate": "42702",
+      "cause": "test helper argument n conflicts with table column n",
+      "full_restoration": "PASS",
+      "restoration_checks": 7,
+      "remote_completion_uncertain": false,
+      "formal_history": 75,
+      "auto_retry": false,
+      "operating": "NOT_RUN"
+    },
+    "appeal76_sql_validation": {
+      "status": "PASS",
+      "scope": "candidate76_on_native75_single_TX_rollback",
+      "receipt": "/private/tmp/yumidang-appeal76-age-reviewed/receipt.json",
+      "receipt_sha256": "a1c048c47d40bc13afe80d0674f80575c7f8ddb9c0305f7e7cb70250580183db",
+      "driver_sha256": "4e07d567da92de74f195764d94349444e351286ac7dfa9efba34c1a4981566a7",
+      "migration_sha256": "359a8093c3a32bf7d547a17df98173de677307933780a8e78db323bc4c26fcd8",
+      "test_sha256": "b4cf7fc3a45cbd4b27f761e7c61717bcf323e5f6d56e239216ac1e550cd3da5e",
+      "checks": 8,
+      "full_restoration": "PASS",
+      "formal_history": 75,
+      "migration_committed": false,
+      "provider": "NOT_RUN",
+      "staff_workflow": "NOT_ASSERTED",
+      "operating": "NOT_RUN"
+    },
+    "previous_prepared75": {
+      "artifact": "/private/tmp/yumidang-policy75-agent-reviewed/prepared",
+      "migration_count": 75,
+      "runtime_files": 52,
+      "migration_manifest_sha256": "0f3f9a30234349b2837673782655c59ec0af5e2750d9c630de244db59accdb10",
+      "edge_manifest_sha256": "b459d05404f7599cb197028a1ec407872e653e12ca5b87f35a913071a3b314ca"
+    },
+    "previous_runtime_candidate75": {
+      "notice_http_source_integrated": true,
+      "mock_tests": 17,
+      "prepared_current": "READY_SQL_EDGE_NOT_RUN",
+      "actual_notice_rpc": "NOT_RUN",
+      "operating": "NOT_RUN"
+    },
+    "current_runtime_candidate": {
+      "appeal_http_source_integrated": true,
+      "mock_tests": 27,
+      "prepared_current": "READY_SQL_EDGE_NOT_RUN",
+      "actual_appeal_rpc": "candidate_single_TX_SQL_only_PASS",
+      "actual_auth_HTTP": "PASS_25_GROUPS_LOCAL_AUTH_IN_PROCESS_HTTP",
+      "operating": "NOT_RUN"
+    },
+    "preparation76_gate": {
+      "tool_sha256": "57ce1632d8759f35ddc642083154d7d98c6a984ce304e20051b4ccdc5cf6cdc7",
+      "test_sha256": "09311f3a132be2437cf874059425bab3bcb886abd04a3c1a65e2418017ea42a6",
+      "root_selected_tests": 3,
+      "root_selected_result": "PASS",
+      "candidate_agent_selected_unique_tests": 12,
+      "known_excluded_duplicate_preserved": true
+    },
+    "formal76_validation": {
+      "status": "PASS",
+      "scope": "isolated_native75_to76_formal_cli",
+      "receipt": "/private/tmp/yumidang-native76-rollout-reviewed/application-receipt.json",
+      "receipt_sha256": "69c7dcf942a9de44669db19a398629b6e628a6d2bdc544a7f1db75d4222d32b9",
+      "driver_sha256": "689931b35bccca14958ef392109fd6184a923b893b0523cb84f28ffcfc89e0f1",
+      "history": 76,
+      "pending": 0,
+      "old_metadata_preserved": true,
+      "auth_audit_288_preserved": true,
+      "guard": false,
+      "worker": "idle",
+      "files": 0,
+      "operating": "NOT_RUN"
+    },
+    "appeal76_auth_api_validation": {
+      "status": "PASS",
+      "scope": "isolated_native76_Auth_REST_Storage_in_process_HTTP",
+      "checks": 25,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native76-h402pb/result.json",
+      "receipt_sha256": "6a76e79742e3f7e7eb457293f912b4ad949c59d4bfe656e771a8a509defcfe2b",
+      "driver_sha256": "30fb1a736431fd7eca35747f8ebe66edd793b0917390bd41a4afba8cd7cace87",
+      "cleanup_errors": [],
+      "cleanup_checks": 10,
+      "full_restoration": "PASS",
+      "real_naver_oauth": "NOT_RUN",
+      "hosted_edge": "NOT_RUN",
+      "mobile": "NOT_RUN",
+      "operating": "NOT_RUN"
+    },
+    "appeal76_concurrency_validation": {
+      "status": "PASS",
+      "scope": "isolated_native76_two_session_SQL_only",
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-review-concurrency76-edaq61nm/receipt.json",
+      "receipt_sha256": "6db722cfc112839e580f6f453a89fc4e36fb9ecae567072f9d1bb5f528affc5e",
+      "driver_sha256": "172ec7e3884046d42b25392ab6188fec102ab14cc114ddf6c481d1925aa16476",
+      "cases": 12,
+      "blocking_observations": 21,
+      "session_outcomes": 136,
+      "full_restoration": "PASS",
+      "remote_completion_uncertain": false,
+      "auto_retry": false,
+      "operating": "NOT_RUN"
+    },
+    "atomic77_http_validation": {
+      "status": "PASS",
+      "scope": "root_mock_HTTP_transport_only",
+      "total_tests": 33,
+      "new_tests": 6,
+      "independent_review": "PASS",
+      "source_integrated": true,
+      "actual_SQL": "NOT_RUN",
+      "actual_Auth_API": "NOT_RUN",
+      "operating": "NOT_RUN",
+      "candidate_receipt_sha256": "83b21d1f059dc2a3f235aad5744af95fb8a636799fe33de7afb4526254637dee"
+    },
+    "atomic77_SQL_validation": {
+      "status": "PASS",
+      "scope": "candidate77_on_native76_single_TX_rollback",
+      "receipt": "/private/tmp/yumidang-appeal77-candidate-reviewed/receipt.json",
+      "receipt_sha256": "a9bf3db6c15c43165728502069bf35286b03f5c7d17528a385ee00c6e8343f9c",
+      "driver_sha256": "a998f5b8151ea7ac7694cd249ff13227eb565facf21f907695c5392365e00e07",
+      "migration_sha256": "53750fc93d7edf48ff863807ccfa267c3e759213d55385b3d0d28103ec71f745",
+      "test_sha256": "acc206f3dfdee35064e08ad3b04498c3b307e65415ecd4f8aa6662f1ec1e9730",
+      "checks": 8,
+      "full_restoration": "PASS",
+      "formal_history": 76,
+      "migration_committed": false,
+      "remote_completion_uncertain": false,
+      "auto_retry": false,
+      "provider": "NOT_RUN",
+      "actual_HTTP": "NOT_RUN",
+      "operating": "NOT_RUN"
+    },
+    "previous_prepared76": {
+      "artifact": "/private/tmp/yumidang-policy76-agent-reviewed/prepared",
+      "migration_count": 76,
+      "runtime_files": 52,
+      "migration_manifest_sha256": "501144f17a46a8442d35ff24375c3f9c8ba941d9fb789f5b0adc21dc15a48621",
+      "edge_manifest_sha256": "a22e2b20306de8eff3340e2c46c8ede3bda108c9fdf4516c509f693f286cd126"
+    },
+    "atomic77_preparation_validation": {
+      "status": "PASS",
+      "tool_sha256": "6a22f681c7fb2a5d55386aad24a3fc13b1cdc9e07a4d7da57b362fac4ad59296",
+      "test_sha256": "d24cce5895071eaa9071f70c6e4f12c8226fe20f863edbac58fd29cc35fae289",
+      "agent_selected_tests": 15,
+      "root_selected_tests": 3,
+      "SQL77_runtime52_exact": true,
+      "formal_application": "PASS_ISOLATED_LOCAL_ONLY"
+    },
+    "atomic77_formal_validation": {
+      "status": "PASS",
+      "scope": "isolated_native76_to77_formal_cli",
+      "receipt": "/private/tmp/yumidang-native77-rollout-reviewed/application-receipt.json",
+      "receipt_sha256": "1b24b7d643cac797391a39e46f5a533aa2bf7b24962eca881b54b6f84891c799",
+      "driver_sha256": "63def4cfee23670d7995953d9c24de40f94545f52b059af101c9c54090b2b577",
+      "history": 77,
+      "pending": 0,
+      "new_functions": 1,
+      "modified_functions": 0,
+      "new_tables": 1,
+      "new_columns": 3,
+      "new_constraints": 3,
+      "new_indexes": 1,
+      "new_triggers": 0,
+      "old_metadata_preserved": true,
+      "auth_audit_288_preserved": true,
+      "guard": false,
+      "worker": "idle",
+      "files": 0,
+      "operating": "NOT_RUN"
+    },
+    "atomic77_auth_API_validation": {
+      "status": "PASS",
+      "scope": "isolated_native77_Auth_REST_Storage_in_process_HTTP",
+      "checks": 30,
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native77-21PaLF/result.json",
+      "receipt_sha256": "dab0d69b4993ee9f77cbbe188e26e3f8380c594e7032a5eab069319a9d9a98b7",
+      "driver_sha256": "e8e875102bd0a284a12ea63e39eb41887a34003976c1afec221fce58566aa1fb",
+      "cleanup_checks": 11,
+      "cleanup_errors": [],
+      "full_restoration": "PASS",
+      "observed_reapplication_SQLSTATE": "55000",
+      "observed_reapplication_upstream_HTTP_status": 500,
+      "real_naver_oauth": "NOT_RUN",
+      "hosted_edge": "NOT_RUN",
+      "mobile": "NOT_RUN",
+      "operating": "NOT_RUN"
+    },
+    "atomic77_concurrency_validation": {
+      "status": "PASS",
+      "scope": "isolated_native77_two_session_SQL_metadata_only",
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-review-concurrency77-wgzbte7z/receipt.json",
+      "receipt_sha256": "e17ac78f36df2845ae77bbce56da8abf81ca3ff76e748fa8fcb6b87c43a491dd",
+      "driver_sha256": "530289e0d43bc0b6cc32447cbb0158ff94dfc7cf555c10e90ebbcd00609e3dc0",
+      "cases": 12,
+      "blocking_observations": 19,
+      "session_outcomes": 218,
+      "full_restoration": "PASS",
+      "remote_completion_uncertain": false,
+      "auto_retry": false,
+      "HTTP": "NOT_ASSERTED",
+      "provider": 0,
+      "operating": "NOT_RUN"
+    }
+  },
+  "gates": [
+    "각 작업자는 수정 전 ownership 검사; 경로는 한 lane만 수정",
+    "별도 worktree·인덱스, root는 후보 SHA 확인 후 복사 통합",
+    "DB 변경·fixture 검사는 root가 한 번에 하나씩 실행",
+    "운영 자료·비밀키·실제 네이버·외부AI·자동 커밋/푸시는 task 허용 범위 밖",
+    "검증된67 적용·회귀·경합 결과를 source SHA와 함께 기록",
+    "종현과 성호 파일 직접 수정 금지; M 요청 문서로 연결"
+  ],
+  "observation_contract": {
+    "status": [
+      "running",
+      "pass",
+      "fail",
+      "waiting"
+    ],
+    "summary": "확인한 한 줄 결과",
+    "next_actions": "다음 실행 또는 정확한 대기 원인",
+    "artifacts": "경로·SHA·실행 영수증",
+    "failure": "원인·안전 재시도·중단 조건"
+  },
+  "parallelism": {
+    "max_active_agents": 4,
+    "shared_database_mutations": 1,
+    "new_agent_spawn": "thread limit; 기존 agent 재사용 성공",
+    "completion_metric": "현재63.5%: 동일한 민규13영역 단계 기준 재감사. native69 핵심 로컬 검증 뒤 인증/사진 및 탈퇴/정리75 복원. 9×75+2×50+2×25=825/1300. 운영·모바일·신고 전체 요구는 남은100 기준으로 유지.",
+    "actual_active_agents_verified": 4
+  },
+  "results": {
+    "A_native67_formal_application": {
+      "status": "pass",
+      "summary": "정확한41000한번적용·이력67·대기0·권한자료보존",
+      "artifacts": [
+        "/private/tmp/yumidang-native67-rollout/application-receipt.json"
+      ],
+      "next_actions": [
+        "반영후SQL회귀",
+        "B 실제두세션검사"
+      ]
+    },
+    "B_concurrency_driver": {
+      "status": "pass",
+      "summary": "정정·탈퇴 경합2건과 정확자료·권한·세션 복원",
+      "artifacts": [
+        "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-normal-retirement-race67-wi2d1vy0/result.json"
+      ],
+      "next_actions": [
+        "회원/운영 HTTP 통합"
+      ]
+    },
+    "C_public_deletion_page": {
+      "status": "pass",
+      "summary": "조유미 명의 HTML 초안 구현·구조 검사",
+      "artifacts": [
+        "docs/collaboration/requests/minkyu/2026-10-05-public-deletion-page.html",
+        "docs/collaboration/requests/minkyu/2026-10-05-public-deletion-page.md"
+      ],
+      "next_actions": [
+        "실제 게시·메일 접수·본인 확인·법적 검토"
+      ]
+    }
+  },
+  "current_tasks": {
+    "A": {
+      "status": "integrating_source78_and_preparation_gate",
+      "summary": "v2 단일TX PASS 후 source78 정확3파일·준비 gate/test 연결",
+      "next_actions": [
+        "정정 제재 시각·종료 회차 최초효과 사용자답변",
+        "확정 기준 정상회차·due·통지 연결 구현"
+      ]
+    },
+    "B": {
+      "status": "API_v2_compatible_frozen_bootstrap_review",
+      "summary": "실제 API7 신규그룹 구현 및 v2 정리 보완 동결·scratch bootstrap 독립검토",
+      "next_actions": [
+        "C strict client와 연결 계약 합의",
+        "모형·타입 검증 후 root 선별 통합"
+      ]
+    },
+    "C": {
+      "status": "implementing_scratch_due_race_verifier",
+      "summary": "v2핀 고정·scratch fixture/실제PID 장벽/전체원복 본문 구현",
+      "next_actions": [
+        "A SQL 동결 후 실제 outerTX 후보 검증기 핀 고정",
+        "B HTTP handler와 연결·기존75~77 계약 검증"
+      ]
+    },
+    "coordinator": {
+      "status": "active",
+      "summary": "HTTP 모형95 및 최소 직원 해소 SQL 실제 회귀 PASS·전체 원복 확인·v2/API/경합 후속 병렬 검토",
+      "next_actions": [
+        "S21 원자 접수와 직원 결정 흐름 후속",
+        "운영과 모바일 검증은 별도"
+      ]
+    }
+  },
+  "validation_results": {
+    "native67_actual_member_api": {
+      "status": "PASS",
+      "groups": 15,
+      "driver_sha256": "8f991caf9ab45c31fc46e878522dd6d80375fe6ea8ce243f1fa5a323cf6eff28",
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-naver-native67-J8W8Gy/result.json",
+      "cleanup_verified": true,
+      "external_naver": false,
+      "hosted_edge": false
+    },
+    "source68_candidate_sql": {
+      "status": "PASS",
+      "scope": "native67 single transaction source68 candidate and test; full rollback",
+      "receipt": "/private/tmp/yumidang-sanction68-candidate/receipt.json",
+      "migration_sha256": "c6dfa91e15bf8b97c1878b53ec62d887e18061fa5704aeee8f946a5ea5cc3b8c",
+      "test_sha256": "18f2add1fc6bd2370fa049aa2a7d16703ab2a3c4fa9180db5b733f83eee8ae82",
+      "source_integrated": true,
+      "operating_changed": false
+    },
+    "native67_signed_photo_access": {
+      "status": "FAIL",
+      "driver_sha256": "b149566c513ae058ceb430f2edfe8e04784d6d48d9afe7f021e24372e54514a8",
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-cleanup-native67-pWIGtL/result.json",
+      "processing_before_delete": "HTTP200 exact original photo",
+      "after_storage_delete_ack": "HTTP400 no photo",
+      "full_cleanup_verified": true,
+      "remediation_required": true
+    },
+    "native68_formal_application": {
+      "status": "PASS",
+      "receipt": "/private/tmp/yumidang-native68-rollout-reviewed/application-receipt.json",
+      "history": 68,
+      "pending": 0,
+      "existing_auth_audit_288_preserved": true,
+      "operating_changed": false
+    },
+    "native68_postformal_sql": {
+      "status": "PASS",
+      "receipt": "/private/tmp/yumidang-sanction68-regression/receipt.json",
+      "full_rollback_verified": true,
+      "operating_changed": false
+    },
+    "source68_http": {
+      "status": "PASS",
+      "groups": 22,
+      "scope": "root mocked HTTP and narrow transport unit tests; actual native68 member HTTP pending A"
+    },
+    "legacy77_active_initial": {
+      "status": "FAIL",
+      "driver_sha256": "482b9e9e544c4857f1a025c27f8977a76004e214a5bd8f304604b684c021e22a",
+      "receipt": "/private/tmp/yumidang-legacy77-root-reviewed/active/receipt.json",
+      "receipt_sha256": "3628cab30868e098a99e50c4c8843a490ccfa3a8706dc40f1d945d5cb96c7983",
+      "phase": "fixture_commit",
+      "cause": "metadata DEFINITIONS query missing outer closing parenthesis; PostgreSQL syntax 42601 observed by separate read-only diagnosis",
+      "fixture_committed": true,
+      "fixture_counts": {
+        "auth": 3,
+        "profiles": 3,
+        "posts": 2,
+        "appointments": 1,
+        "objects": 2
+      },
+      "migrations57_applied": false,
+      "application_state_unknown": false,
+      "automatic_retry": false,
+      "operating_changes": 0
+    },
+    "legacy77_readonly_catalog_syntax": {
+      "status": "PASS",
+      "scope": "new synthetic history20 readonly catalog six queries; corrected DEFINITIONS parenthesis only",
+      "receipt": "/private/tmp/yumidang-legacy77-readonly-syntax-c3prgp60/receipt.json",
+      "receipt_sha256": "f3920681dd3a4096da7a311333b4c0da5f3602d9935386ea6e9ec20e801cf42e",
+      "query_count": 6,
+      "DB_writes": 0,
+      "SQL57_applied": false
+    },
+    "legacy77_active_continuation": {
+      "status": "FAIL",
+      "phase": "postflight",
+      "driver_sha256": "82dfc9dc3fd605246e70723b8bd9c2ecbdb349f61b52b156d77f70709ecf8914",
+      "receipt": "/private/tmp/yumidang-legacy77-active-continuation-reviewed/active/continuation-receipt.json",
+      "receipt_sha256": "760c70c9fc38848d7d7ca800419baa5cb6a236cff532907c24f92989834d872e",
+      "application_completed": true,
+      "application_state_unknown": false,
+      "failure_code": "ORIGINAL_RAW_COLUMNS_OR_APPROVED_BACKFILL_CHANGED",
+      "approved_metadata_delta_matched": true,
+      "approved_all_counts_delta_matched": true,
+      "original_row_hashes_missing": 0,
+      "sole_probe_vs_actual_delta": "new storage.buckets report-evidence row default clock values; verification follow-up pending",
+      "history77_readonly_observed": true,
+      "automatic_retry": false,
+      "operating_changes": 0
+    },
+    "legacy77_active_readonly_postflight": {
+      "status": "PASS",
+      "scope": "applied synthetic legacy77 read-only final verification; initial and applied FAIL retained",
+      "driver_sha256": "b7e90981fbe066d42005a0160474c1200d0caeb3f1fbb03d491974c330cadd8c",
+      "receipt": "/private/tmp/yumidang-legacy77-active-postflight-reviewed/readonly-receipt.json",
+      "receipt_sha256": "dd14be587bb7a1bda43d6f56e7b3599ac246a836511866541c9006d5d381be95",
+      "original_rows_exact": true,
+      "approved_metadata_counts_exact": true,
+      "new_bucket_nonclock_exact": true,
+      "bucket_clock_scope": "fixture-to-current DB clock coarse bounds; exact application clock window NOT_PROVEN",
+      "SQL57_redispatched": false,
+      "DB_writes": 0,
+      "operating_changes": 0
+    },
+    "legacy77_completed_fresh_upgrade": {
+      "status": "PASS",
+      "scope": "fresh synthetic past manual completed legacy20 to77; one existing author confirmation retained",
+      "driver_sha256": "0c30bf7a2f1ec2a76380d786f6ed31bb527559e0c8291d81db14dbc19a9104f7",
+      "receipt": "/private/tmp/yumidang-legacy77-completed-clock-reviewed/completed/receipt.json",
+      "receipt_sha256": "e5dae21e8aa244eb697240918b5d79b856cb4c9acd30b5dcb1615762503bd518",
+      "history": 77,
+      "pending": 0,
+      "applied_new_migrations": 57,
+      "original_rows_exact": true,
+      "approved_metadata_counts_exact": true,
+      "manual_author_completed": 1,
+      "completion_confirmation_count": 1,
+      "new_bucket_probe_apply_DB_clock_windows": true,
+      "protected_containers_preserved": true,
+      "operating_changes": 0,
+      "provider_API": "NOT_RUN",
+      "storage_bytes": "NOT_RUN"
+    },
+    "resolution78_first_candidate": {
+      "status": "FAIL",
+      "sqlstate": "40001",
+      "error": "cancel_resolution_state_conflict",
+      "rollback_verified": true,
+      "remote_completion_uncertain": false,
+      "auto_retry": false,
+      "operating_changes": 0,
+      "formal_history": 77
+    },
+    "resolution78_HTTP_mock": {
+      "status": "PASS",
+      "files": 10,
+      "tests": 95,
+      "failed": 0,
+      "receipt": "/private/tmp/yumidang-resolution78-http-root-10xkd8jg/integration.json",
+      "receipt_sha256": "2684c3b921bb4d4b9ef317c44c877aca53bc1eb85663f41587e56dd348d4cae5",
+      "actual_DB_API": "NOT_RUN",
+      "operating_changes": 0
+    },
+    "resolution78_corrected_revision": {
+      "status": "FAIL",
+      "receipt": "/private/tmp/yumidang-cancel-resolution78-revision-corrected-approved/receipt.json",
+      "receipt_sha256": "cdd08afca99ceaaad90306a75678b4f611e449fe7a0b66b4a831e3c463d32326",
+      "sqlstate": "55000",
+      "error": "held_order_record_unassigned",
+      "rollback_verified": true,
+      "sql_started": true,
+      "remote_completion_uncertain": false,
+      "auto_retry": false,
+      "migration_committed": false,
+      "formal_history": 77,
+      "operating_changes": 0
+    },
+    "resolution78_corrected_preflight": {
+      "status": "FAIL_BEFORE_SQL",
+      "receipt_sha256": "f0339f6b5837c7fc9a705dcd07a55af7267291c95b1ebb1c266c7284f889c058",
+      "reason": "sandbox Docker socket denied",
+      "sql_started": false,
+      "database_writes": 0
+    },
+    "resolution78_minimal_SQL": {
+      "status": "PASS",
+      "receipt": "/private/tmp/yumidang-cancel-resolution78-held-record-corrected-reviewed/receipt.json",
+      "receipt_sha256": "9e47b7b2615c8398be8bde88199e82a9e69f83b2cae04a7a30a21c881c231481",
+      "driver_sha256": "331720cee9503501b943dbc757ed64fd97e2ef6692a6183c5d6db911cc860ddc",
+      "sql_sha256": "25a51bd5169e48339f15c9d2370a07e84735fecc208b7daefcf3f4b8a315ff1d",
+      "regression_sha256": "dc4c15da22eb5a11d1003f7d787711a135abc7fc0b59f07109891169201eb18a",
+      "checks_all_true": true,
+      "scope": "single TX SQL and full rollback only",
+      "formal_history": 77,
+      "migration_committed": false,
+      "actual_auth_HTTP": "NOT_RUN",
+      "two_session_due_race": "NOT_RUN",
+      "operating_changes": 0
+    },
+    "resolution78_v2_SQL": {
+      "status": "PASS",
+      "scope": "single TX SQL regression and full rollback only",
+      "receipt": "/private/tmp/yumidang-cancel-resolution78-v2-single-tx-reviewed/receipt.json",
+      "receipt_sha256": "a7b04d16c627720ccb65f724ec732cd1245250ad9230efaca6abb4a1fcd320a3",
+      "driver_sha256": "20401b68b0968ae3b1e787d8fc00468cfeb2ec9ef1f42702fc5f9737499d7354",
+      "sql_sha256": "542d2efcc3c44e45e4d3cd1f7caeb2f22e5649615a22ff547f319267a45b3efa",
+      "regression_sha256": "f8fb5738345e5b3334e7fc254273de136b5c116589bb2494d8a426e98c03d478",
+      "checks_all_true": true,
+      "formal_history": 77,
+      "migration_committed": false,
+      "actual_auth_HTTP": "NOT_RUN",
+      "two_session_due_race": "NOT_RUN",
+      "operating_changes": 0
+    },
+    "operating_readonly_followup": {
+      "status": "PASS_READ_ONLY_AGGREGATES",
+      "receipt": "/private/tmp/yumidang-operating-readiness-followup-20261006/receipt.json",
+      "receipt_sha256": "fd31a5be86c8f277d8be86b9d459a9832a917a78dabc90f6e3109325885b32c0",
+      "migration_count": 20,
+      "auth_users": 3,
+      "storage_objects": 2,
+      "operating_changes": 0
+    }
+  },
+  "next_resolution_candidate": {
+    "status": "FORMAL78_ACTUAL_API38_AND_SCRATCH_RACE12_PASS",
+    "leaf": "20261005203258_appointment_cancel_resolution_and_due.sql",
+    "cli_generated_private_path": "/private/tmp/yumidang-cancel-resolution-leaf-y8wih_25/supabase/migrations/20261005203258_appointment_cancel_resolution_and_due.sql",
+    "source_written": true,
+    "policy_pending": [
+      "정정 anchor 제재 시계 승계",
+      "종료 회차 최초 취소 효과"
+    ],
+    "DB_changed": true,
+    "sql_executed": true,
+    "migration_committed": true,
+    "formal_history": 78,
+    "receipt": "/private/tmp/yumidang-cancel-resolution78-v2-single-tx-reviewed/receipt.json",
+    "receipt_sha256": "a7b04d16c627720ccb65f724ec732cd1245250ad9230efaca6abb4a1fcd320a3",
+    "prepared78": {
+      "path": "/private/tmp/yumidang-policy78-root-prepared",
+      "databaseManifestSha256": "785d375c9d0c224beb007e830ad9beecb73be22e2dffa9ab6487ba2206248e2b",
+      "edgeManifestSha256": "c29418f2a219e2c7025e1f2ef720e8372d6976b32b70a8b0cee8b0feca78964d"
+    },
+    "operating_test_accounts_user_confirmed": 3,
+    "formal78_probe_attempt": {
+      "status": "FAIL_BEFORE_APPLICATION_VERIFIED_ROLLBACK",
+      "receipt": "/private/tmp/yumidang-native78-rollout-dispatch-corrected/application-receipt.json",
+      "receipt_sha256": "57e771d7f8300372fb8171f4fabd262624f3258cbf67ff79af69f841db0f4f1f",
+      "failure": "EFFECTIVE_BODY_EXPECTED_HASH_MISMATCH",
+      "rollback_receipt": "/private/tmp/yumidang-native78-probe-rollback-readonly.json",
+      "rollback_sha256": "7064afc5d162127eed239c04e16d9cbdfedc416d2aff09971a4ea436fbe1c4e5",
+      "application_started": false
+    },
+    "scratch_race_actual": {
+      "v1": {
+        "status": "FAIL_FIXTURE_CHECK_RESTORED",
+        "receipt_sha256": "56869ff5bc7fe7487d807605f45e95de5da9c51cbc8c533a4fae6594c91044ee",
+        "full_cleanup": true
+      },
+      "v2": {
+        "status": "FAIL_PRESERVED_EXPLICIT_RECOVERY_PASS",
+        "receipt_sha256": "c9503b3dd206035a7551e57edaeeda90e6b1de9a7bf9f73029fb799a08cf752c",
+        "full_cleanup": false,
+        "remote_completion_uncertain": true,
+        "readonly_observation": {
+          "remaining_sessions": 0,
+          "active_transactions": 0,
+          "jobs": 0,
+          "appeals": 1,
+          "applications": 0,
+          "due_enabled": true,
+          "worker_idle": false
+        },
+        "recovery_receipt": "/private/tmp/yumidang-cancel-resolution78-v2-explicit-recovery-all-fixture-identities/receipt.json",
+        "recovery_sha256": "f5120be6bd6a12f9a506b53967e0a61b3c60b2f6b362e03b226b4db0bfa39ff7",
+        "current_fixture_empty": true,
+        "current_due_enabled": false,
+        "current_worker_idle": true
+      }
+    },
+    "formal78": {
+      "status": "PASS",
+      "receipt": "/private/tmp/yumidang-native78-rollout-prosrc-corrected/application-receipt.json",
+      "receipt_sha256": "8cbd1ef70d84cc860d92a255dec0d048fedcaade02842867d0c838e9888bb3cd",
+      "pending_after": 0,
+      "source_sql_sha256": "542d2efcc3c44e45e4d3cd1f7caeb2f22e5649615a22ff547f319267a45b3efa",
+      "operating_changes": 0
+    },
+    "actual_api78": {
+      "status": "PASS",
+      "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native78-Qx9zGm/result.json",
+      "receipt_sha256": "6e7981437a3206760afa2e3d2023479f907ad6d72993cea05ba99d4a39111dbc",
+      "groups": 38,
+      "korean4000_actual_http": true,
+      "cleanup_checks": 12,
+      "due_race_proven": false,
+      "hosted_edge_proven": false,
+      "operating_changes": 0
+    },
+    "race_compare_observations": {
+      "v1": {
+        "status": "PASS_V1_RACE_REPRODUCED_ONLY",
+        "receipt": "/private/tmp/yumidang-cancel-resolution78-installed-v1-root-reviewed/receipt-v1.json",
+        "sha256": "78858bc0d9ff5bcbb42d37ed30d97d4b3219713d7dbfe666d40457793df99754",
+        "full_cleanup": true
+      },
+      "v2": {
+        "status": "FAIL_TTL_FIXTURE_AFTER_SEVEN_PASS",
+        "receipt": "/private/tmp/yumidang-cancel-resolution78-installed-v2-root-reviewed/receipt-v2.json",
+        "sha256": "5a7dc847dc82d20109d670894cc8d5aac104e99976f4522f807156057c65085f",
+        "observed_passed_cases": 7,
+        "full_cleanup": true,
+        "remote_completion_uncertain": false,
+        "complete_12_proven": false
+      }
+    },
+    "scratch_race_latest": {
+      "status": "PASS",
+      "receipt": "/private/tmp/yumidang-cancel-resolution78-installed-v2-ttl-stable-root-reviewed/receipt-v2.json",
+      "sha256": "54e8de8a30b287a7c263b203d5a630d5cd8e74f437a1e90b0598dd9a4840e3a8",
+      "cases": 12,
+      "blocking_observations": 3,
+      "session_outcomes": 106,
+      "full_cleanup": true,
+      "remote_completion_uncertain": false,
+      "baseline_snapshot_preserved": true,
+      "sql_reinstalled": false,
+      "worker_dispatch_proven": false,
+      "operating_changes": 0,
+      "clock_observations": 2
+    }
+  },
+  "runtime_request_cap_observation": {
+    "status": "SOURCE_INTEGRATED_OFFLINE_PASS",
+    "files": 11,
+    "minimum_request_bytes": 65536,
+    "review_sha256": "da0b4ccaf5fcf5159e50749f450d46569178e44793a7ad06caf6f4e2430fb9a2",
+    "agent_node_pass": 265,
+    "root_service_api_pass": 35,
+    "root_deno": "PASS",
+    "new_prepared_root": "/private/tmp/yumidang-policy78-runtime-cap-root-prepared",
+    "migration_manifest_sha256": "34cf7f60ba2aa9947211e1940f79a6746032702cf1e4f069b043f24f3b596e85",
+    "edge_manifest_sha256": "81227585e817aa2e77820544d72e304619835cd02e898dc557afa697604051bd",
+    "actual_database_changed": false,
+    "operating_changed": false,
+    "previous_actual_api_receipt_preserved": true
+  },
+  "race_latest_role_journal_observation": {
+    "status": "FAIL",
+    "receipt": "/private/tmp/yumidang-cancel-resolution78-installed-v2-role-root-reviewed/receipt-v2.json",
+    "sha256": "13ad23765f688c81c77812c0d69620540ae4eb8722c84bbbc4ecee9a60953f2c",
+    "cases_pass": 7,
+    "whole_12_pass": false,
+    "full_cleanup": true,
+    "remote_completion_uncertain": false,
+    "next": "safe exception and TTL barrier diagnosis"
+  },
+  "privacy_inventory_observation": {
+    "status": "INTERNAL_REVIEW_SOURCE_INTEGRATED",
+    "path": "docs/collaboration/requests/minkyu/2026-10-06-privacy-data-inventory.md",
+    "sha256": "d753c458b1db5eade099f73dc2f1a27acb988f74cd53f71ee55f2e28474abd2c",
+    "published": false,
+    "stage_changed": false
+  },
+  "runtime_factory_api_latest": {
+    "status": "PASS",
+    "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native78-runtime-cap-18PdUI/result.json",
+    "sha256": "b6d49739c201daa92576faf7a432fcc6e73700a249a8a04f1d68a2ea93fe52bf",
+    "driver_sha256": "9d8fe8ac8b8f7e4ae8ff8c9860836d536ecf05e408193a4816bf275e4957b85b",
+    "groups_pass": 38,
+    "factory_requests": 163,
+    "all_in_process_http_via_factory": true,
+    "cleanup_all_12": true,
+    "cleanup_errors": 0,
+    "sql_reapplied": false,
+    "operating_changes": 0,
+    "hosted_edge_proven": false
+  },
+  "runtime_factory_api_first_attempt": {
+    "status": "FAIL_MISSING_AUTH_TEST_WRAPPER_FULL_CLEANUP",
+    "receipt": "/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native78-runtime-cap-QEhkQy/result.json",
+    "sha256": "0c13159f8efb7d8ca52a6968b8253b211f45bac540a988a84c6b441e9da4ea3d",
+    "driver_sha256": "78575d55b604aae6bdbf4ab0edcc6e916b15260400dbd81d990124112bbc7b38",
+    "groups_pass": 5,
+    "factory_requests": 17,
+    "cleanup_all_12": true,
+    "cleanup_errors": 0,
+    "sql_reapplied": false,
+    "operating_changes": 0
+  },
+  "next_report_retention_candidate": {
+    "status": "SOURCE_INTEGRATED_SINGLE_TX_SQL_REGRESSION_PASS",
+    "leaf": "20261005225107_report_retention_purge.sql",
+    "cli_generated_private_path": "/private/tmp/yumidang-report-retention-leaf-20261006/supabase/migrations/20261005225107_report_retention_purge.sql",
+    "source_written": true,
+    "database_changed": false,
+    "operating_changed": false,
+    "scope": "valid final-closed reports plus exact evidence purge; final-close policy authority and sanction-detail purge remain required",
+    "receipt": "/private/tmp/yumidang-report79-claim80-single-tx-reviewed/receipt.json",
+    "receipt_sha256": "f4480057255cb7fa733b8504e5943a0a91a1001aba4375b34ec0f0aafec6c0a3",
+    "permanent_database_history": 78
+  },
+  "next_supported_claim_candidate": {
+    "status": "SOURCE_INTEGRATED_SINGLE_TX_SQL_REGRESSION_PASS",
+    "leaf": "20261005225951_worker_supported_claim.sql",
+    "cli_generated_private_path": "/private/tmp/yumidang-worker-supported-claim-leaf-20261006/supabase/migrations/20261005225951_worker_supported_claim.sql",
+    "source_written": true,
+    "database_changed": false,
+    "operating_changed": false,
+    "receipt": "/private/tmp/yumidang-report79-claim80-single-tx-reviewed/receipt.json",
+    "receipt_sha256": "f4480057255cb7fa733b8504e5943a0a91a1001aba4375b34ec0f0aafec6c0a3",
+    "permanent_database_history": 78
+  },
+  "due_internal_client_observation": {
+    "status": "SOURCE_INTEGRATED_OFFLINE_PASS",
+    "paths": [
+      "backend/supabase/functions/_shared/db/internal-client.ts",
+      "tests/functions/minkyu/cancellation_due_internal_client.test.ts"
+    ],
+    "client_sha256": "5aa3211cbcc8308c44ac67e71d1f00fddcf067f8ad661ba56a164436cc5142e7",
+    "test_sha256": "a8e8b4ac9f31f16ce897045d3ed228c48c8c05000558ec5b66f11db9c334870a",
+    "root_test_pass": 5,
+    "root_deno": "PASS",
+    "agent_combined_pass": 38,
+    "database_changed": false,
+    "worker_dispatch_proven": false,
+    "new_prepared_root": "/private/tmp/yumidang-policy78-due-client-root-prepared",
+    "migration_manifest_sha256": "64234982e53af80875fe71b87c7df762d8f60145f102c163c3d77469e547e474",
+    "edge_manifest_sha256": "96ef5dbdf1564ceeca9aaa3715e6323baadcf59bc9ca26c889503f0b528f78ce"
+  },
+  "report_purge_contract_observation": {
+    "status": "PROPOSAL_INTEGRATED",
+    "path": "docs/collaboration/requests/minkyu/2026-10-06-report-retention-purge-contract.md",
+    "sha256": "da91a7b3e3dc146c0af5dc5ee371b47ba5d4ee1369abf4e2a0160456590c8b77",
+    "mime": [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ],
+    "maximum_bytes": 5242880,
+    "actual_purge_proven": false
+  },
+  "report_retention_storage_observation": {
+    "status": "SOURCE_INTEGRATED_MOCK13_PASS_TYPECHECK_PASS",
+    "sourceSha256": "1b15fad483e073bc7320e1335390a520d9b33ea9c8f022350bb9876f15df7cd8",
+    "testSha256": "a8f07a8ac6f4f75c679a68095ce5b8fb7fc96eb2cdf29a4b6cc860c4524615fc",
+    "runtimeConnected": false,
+    "providerDelete": "NOT_RUN"
+  },
+  "operating_readonly_latest": {
+    "receipt": "/private/tmp/yumidang-operating-drift-readonly-20261006/receipt.json",
+    "sha256": "a247c8e6d3b60160b5e3c676a9a533d257fcfb090493fb17011f862dc7f6b8a5",
+    "migrations": 20,
+    "writes": 0
+  },
+  "report_dispatch_fence_candidate": {
+    "status": "LOCAL_FORMAL_APPLIED_PASS",
+    "cliLeaf": "/private/tmp/yumidang-report-retention-dispatch-leaf-20261006/supabase/migrations/20261005232700_report_retention_dispatch_fence.sql",
+    "sourceIntegrated": true,
+    "databaseExecuted": true,
+    "operatingChanged": false,
+    "formalApplied": true,
+    "rollbackReceipt": "/private/tmp/yumidang-report81-cancel-guard82-single-tx-root-reviewed/receipt.json",
+    "rollbackReceiptSha256": "2587abfa5000ec6ec40493acd2502b0f76606d13da3a33312822309ea151b4a4",
+    "formalReceiptSha256": "db9a5bad3975e2df984de7832a4b06e1d5b8a258bb69df086c5452a4b4ff3765"
+  },
+  "policy80_preparation": {
+    "status": "LOCAL_FORMAL_APPLIED_PASS",
+    "migrationCount": 80,
+    "runtimeFiles": 52,
+    "toolSha256": "8038ce987f282e081d40188716af044b10f2471f4eb96a036c0fc71ab1e89ed6",
+    "testSha256": "d62f9a6dc765e4184e5006d7f2f444371ca0c02fc6d73496ccac4e484ff71a91",
+    "rootGateTests": 8,
+    "path": "/private/tmp/yumidang-policy80-report-rpc-root-prepared",
+    "migrationManifestSha256": "5065cd49b214856286fe816202cc2a630254dccbc850fdabf84ca8f82b17357b",
+    "edgeManifestSha256": "53e2fdd002869b740f7fcfd765e801f725b7b44695fe353b7b16dbe18c03f971",
+    "actualDatabaseHistory": 80,
+    "applicationReceipt": "/private/tmp/yumidang-native80-rollout-root-reviewed/application-receipt.json",
+    "applicationReceiptSha256": "7e0ad80bb0174d6e7253b60798f19c873b68a2d5506548c6421e941cb8bee8e7",
+    "operatingChanged": false
+  },
+  "report_retention_rpc_observation": {
+    "status": "SOURCE_INTEGRATED_MOCK28_TYPE3_PASS",
+    "sourceClientSha256": "f0641a6965b386aadecb7ff7ba152edbaf7e7f468f562d8e3387953d1220d4d6",
+    "internalClientSha256": "c4b1c5d67fdb185cce2eae9beea4209772fdc51c41878f01f18c082076b02f56",
+    "testSha256": "6862c4d4f36a1f7e94cd8d4c7cef8f5575868b4259f88721f42a374ac87586be",
+    "providerExecution": "NOT_RUN",
+    "gatewayImportConnected": false,
+    "operatingChanged": false
+  },
+  "cancellation_due_guard_candidate": {
+    "status": "LOCAL_FORMAL_APPLIED_PASS",
+    "sourceWritten": true,
+    "databaseExecution": true,
+    "operatingChanged": false,
+    "sourceIntegrated": true,
+    "databaseExecuted": true,
+    "formalApplied": true,
+    "rollbackReceipt": "/private/tmp/yumidang-report81-cancel-guard82-single-tx-root-reviewed/receipt.json",
+    "rollbackReceiptSha256": "2587abfa5000ec6ec40493acd2502b0f76606d13da3a33312822309ea151b4a4",
+    "formalReceiptSha256": "db9a5bad3975e2df984de7832a4b06e1d5b8a258bb69df086c5452a4b4ff3765"
+  },
+  "policy82_preparation": {
+    "status": "LOCAL_FORMAL_APPLIED_PASS",
+    "migrationCount": 82,
+    "runtimeFiles": 52,
+    "toolSha256": "4e9067752825c867b9d5cb7ff35471ea1be76aa8f8d0b2d722d1636b1e8e4851",
+    "testSha256": "fa5bfeba5e3567b43a43eb1ae4631eb6174fd7ecffc7c48848eb9c87d2a6de5d",
+    "rootGateTests": 7,
+    "path": "/private/tmp/yumidang-policy82-begin-root-prepared",
+    "migrationManifestSha256": "f3f5371765ebd149113bee1f7c2b0101a55d16208f56a58e5ccc9ce2c64f8614",
+    "edgeManifestSha256": "1d7caed652412d2c8a7ae7dca2ceffb1985e11c2eb0fb241bda0aed884020387",
+    "databaseManifestSha256": "87a82ae42dda3d9660628d6e9879aeb9e61bcf0f3e7b0feb358ae2c7302015d4",
+    "actualDatabaseHistory": 82,
+    "operatingChanged": false,
+    "sourceGraphNote": "Exact prepared graph formally applied locally; Edge/provider execution NOT_RUN",
+    "applicationReceipt": "/private/tmp/yumidang-native82-rollout-root-reviewed/application-receipt.json",
+    "applicationReceiptSha256": "db9a5bad3975e2df984de7832a4b06e1d5b8a258bb69df086c5452a4b4ff3765"
+  },
+  "report_retention_begin_observation": {
+    "status": "SOURCE_INTEGRATED_MOCK_PASS",
+    "sourceFiles": 5,
+    "rootMockTests": 32,
+    "rootDenoChecks": 5,
+    "independentSqlContractReview": "PASS",
+    "providerExecuted": false,
+    "externalReady": false,
+    "review": "/private/tmp/yumidang-report-retention-begin-frozen/review.json"
+  },
+  "policy82_before_begin_preparation": {
+    "status": "READY_NOT_EXECUTED",
+    "migrationCount": 82,
+    "runtimeFiles": 52,
+    "toolSha256": "4e9067752825c867b9d5cb7ff35471ea1be76aa8f8d0b2d722d1636b1e8e4851",
+    "testSha256": "fa5bfeba5e3567b43a43eb1ae4631eb6174fd7ecffc7c48848eb9c87d2a6de5d",
+    "rootGateTests": 7,
+    "path": "/private/tmp/yumidang-policy82-gateway-root-prepared",
+    "migrationManifestSha256": "aff13d63242af1db5305652b2ff4f463bc35169f5f4b40844e5b77e6af892e41",
+    "edgeManifestSha256": "9d61657071f456d55001adfae39a2c9e97e6c1d9afe09e9ecda5ab9df2f8b40a",
+    "databaseManifestSha256": "c0f25d7fa4c169a784b88b7303fa54be95785d659db652d37e4b8930a9f61480",
+    "actualDatabaseHistory": 80,
+    "operatingChanged": false,
+    "sourceGraphNote": "Prepared before begin-client integration; regenerate latest graph before formal82"
+  },
+  "worker_queue_retention_schedule_candidate": {
+    "status": "PRIVATE_FROZEN_NOT_EXECUTED",
+    "cliLeaf": "/private/tmp/yumidang-worker-queue-retention-schedule-leaf-20261006/supabase/migrations/20261005235230_worker_queue_retention_schedule.sql",
+    "sourceIntegrated": false,
+    "databaseExecuted": false,
+    "operatingChanged": false,
+    "frozenPath": "/private/tmp/yumidang-schedule83-a-frozen-zi2ef4um"
+  },
+  "execution_state": {
+    "status": "SEQUENTIAL_PROGRESS_EXTERNAL_AND_OWNER_GATES_PENDING",
+    "activeDatabaseProcesses": 0,
+    "normalRetentionActual": "PASS",
+    "originalFailureReceiptSha256": "14af932f55f47686394b11f13de33c62f6e9bc8bcbbc201475f90740effc2a5b",
+    "explicitSyntheticProfileRecovery": "PASS",
+    "fullRecoveryReceiptSha256": "73ea1158b7cac8aebdf63c2a2ac7f702edc7cf5561b3ace440c19b6eb533593f",
+    "storageFiles": 0,
+    "remoteCompletionUncertain": false,
+    "operatingChanged": false,
+    "normalRetentionPassReceipt": "/private/tmp/yumidang-retention82-normal-BgMcm2/result.json",
+    "parallelAgentsEnabled": false,
+    "currentPlanStep": 4,
+    "normalRetentionRestartActual": "PASS",
+    "normalRetentionRestartReceipt": "/private/tmp/yumidang-retention82-normal-zjI0Pq/result.json",
+    "localHistoryCount": 84,
+    "localPendingCount": 0,
+    "local84ApplyReceipt": "/private/tmp/yumidang-native84-sequential-rollout-v2/application-receipt.json"
+  },
+  "cancellation_terminal_dedupe_reproduction": {
+    "status": "DEFECT_REPRODUCED_ROLLBACK_PASS",
+    "receiptSha256": "56c97707084e47c90dc214a9c2e98a9862ab07c8107c22ab44950b8b12076bff",
+    "fixed": true,
+    "actual24HourPolicy": false,
+    "fixScope": "SOURCE_AND_LOCAL_ROLLBACK_REGRESSION_ONLY",
+    "fixReceipt": "/private/tmp/yumidang-cancellation-next-due-generation-v4-reviewed/receipt.json",
+    "formalApplied": true
+  },
+  "local84_sequential": {
+    "status": "PASS",
+    "scheduleAndGenerationRegression": "/private/tmp/yumidang-schedule-generation84-v4-reviewed/receipt.json",
+    "prepareFolder": "/private/tmp/yumidang-policy84-sequential-prepared",
+    "applyReceipt": "/private/tmp/yumidang-native84-sequential-rollout-v2/application-receipt.json",
+    "changedFunctionBodies": 2,
+    "newStatementTriggers": 15,
+    "operating": false
+  },
+  "reportRetentionBackupVerification": {
+    "status": "LOCAL_SYNTHETIC_PASS",
+    "actualDeleteResponseLoss": "EXPECTED_UNKNOWN_STOP_PASS",
+    "restoredStorageFiles": 2,
+    "originalNative84Preserved": true,
+    "operatingBackupVerified": false,
+    "receipt": "/private/tmp/yumidang-retention-unknown84-restore-v8/restore-receipt.json"
+  }
+}

@@ -1,3 +1,5 @@
+> 최신 시작 기준은 [2026-10-06 종현 출시 시작](2026-10-06-jonghyun-release-start.md)이다. 아래3kind/TLS 첫 구현 안내는 이전 기록이며 현재 J1은 취소·신고 소비자 연결이다.
+
 # 종현 작업 시작: 상주 큐 실행기 연결
 
 작성자 `minkyu`, 2026-10-05. GitHub의 `minkyu/handoff-20261005`를 시작 기준으로 종현에게 첫 구현을 맡긴다. 종현의 별도 clone에서 `jonghyun/queue-integration` 브랜치를 만들고 아래 작업을 지금 구현한다. 자기소개만 받은 상황과 다르므로 계획 설명에서 멈추지 않는다. [GitHub 시작·제출 안내](2026-10-05-jonghyun-start.md)를 따른다. ZIP이나 별도 launcher는 사용하지 않는다.

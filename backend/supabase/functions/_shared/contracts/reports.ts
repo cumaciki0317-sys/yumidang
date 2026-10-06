@@ -30,3 +30,37 @@ export function parseMemberReport(value: JsonValue): MemberReportInput {
   if (!Array.isArray(input.assetIds) || input.assetIds.length > 5 || new Set(input.assetIds).size !== input.assetIds.length || input.context === "online" && input.assetIds.length === 0 || typeof input.hideTarget !== "boolean") return fail();
   return { clientRequestId: reportUuid(input.clientRequestId), targetType: input.targetType as MemberReportInput["targetType"], targetId: reportUuid(input.targetId), context: input.context as MemberReportInput["context"], reasonCodes: input.reasonCodes as string[], description: input.description, assetIds: input.assetIds.map(reportUuid), hideTarget: input.hideTarget };
 }
+
+/** 본인 조치의 대표 사유 코드만 허용한다. 운영 원문 code를 그대로 공개하지 않는다. */
+export const SANCTION_PUBLIC_REASONS = ["sexual_harassment", "threat", "money_or_personal_data", "impersonation", "spam", "no_show", "rule_violation", "repeated_cancellation", "other"] as const;
+export const SANCTION_KINDS = ["cancel_warning", "cancel_restriction", "general_warning", "general_7d", "general_30d", "permanent"] as const;
+
+/** 본인 회차의 서버 게시/명시 ACK facts. 외부 통지·이의 마감·제재 값이 아니다. */
+export const DECISION_NOTICE_REASONS = ["normal", "no_show", "decision_corrected", "spam", "rule_violation", "sexual_harassment", "threat", "violence", "stalking", "privacy_exposure", "sexual_exploitation"] as const;
+export const DECISION_MINOR_TYPES = ["spam", "rule_violation"] as const;
+export const DECISION_MAJOR_TYPES = ["sexual_harassment", "threat", "violence", "stalking", "privacy_exposure", "sexual_exploitation"] as const;
+export interface MemberDecisionNotice {
+  noticeId: string;
+  appointmentId: string | null;
+  appointmentOutcome: "normal" | "no_show" | null;
+  violationOutcome: "confirmed" | "invalidated" | null;
+  reasonCode: typeof DECISION_NOTICE_REASONS[number];
+  violationClass: "none" | "minor" | "major" | null;
+  violationType: typeof DECISION_MINOR_TYPES[number] | typeof DECISION_MAJOR_TYPES[number] | null;
+  availableAt: string;
+  firstReadAt: string | null;
+}
+
+/** 취소 이의 해소/계획의 본인 회차 facts. 기존 판정 통지 exact9와 별도 계약이다. */
+export interface MemberCancellationNotice {
+  noticeId: string;
+  appointmentId: string;
+  appealState: "reviewing" | "accepted" | "rejected" | null;
+  planState: "held" | "applied" | "corrected" | "policy_pending";
+  eligibleCount: number | null;
+  provisionalCount: number | null;
+  hasCancellationWarning: boolean;
+  restrictedUntil: string | null;
+  availableAt: string;
+  firstReadAt: string | null;
+}

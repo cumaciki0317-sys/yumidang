@@ -82,3 +82,43 @@ export function requireInternalConfig(config: RuntimeConfig): { serviceKey: stri
     !/^[A-Za-z0-9_-]+$/.test(workerSecret) || workerSecret === serviceKey || workerSecret === config.supabaseAnonKey || serviceKey === config.supabaseAnonKey) return fail();
   return { serviceKey, workerSecret };
 }
+
+export interface PotensServerAccount {
+ readonly accountId:string;
+ /** 서버 factory에서만 명시 접근. enumerable/JSON 출력에서 제외한다. */
+ readonly apiKey:string;
+ readonly dailyTokenBudget:number;
+}
+export interface PotensAccountPoolConfig {
+ readonly accounts:readonly PotensServerAccount[];
+ readonly model:"claude-5-sonnet";
+ readonly resetTimezone:"Asia/Seoul";
+ readonly globalDailyTokenBudget:number;
+}
+/** 다중 계정 전용 검사. null은 기존 단일키 설정 경로이며 새 설정 오류 때 fallback하지 않는다.
+ * 로더 성공은 공급사 승인·원자 DB 원장·실제 호출 준비를 뜻하지 않는다. */
+export function loadPotensAccountPoolConfig(read:EnvReader):PotensAccountPoolConfig|null{
+ try{
+  const approved=["yumi","jonghyun","minkyu","sungho"];
+  const order=optional(read,"POTENS_ACCOUNT_ORDER");
+  const keys=approved.map(account=>optional(read,"POTENS_API_KEY_"+account.toUpperCase()));
+  const budget=optional(read,"POTENS_ACCOUNT_TOKEN_BUDGET"),timezone=optional(read,"POTENS_RESET_TIMEZONE");
+  if(order===undefined){if(keys.some(Boolean)||budget!==undefined||timezone!==undefined)return fail();return null;}
+  const ids=order.split(",");
+  if(!ids.length||ids.some(id=>!approved.includes(id))||new Set(ids).size!==ids.length||
+   ids.some((id,index)=>index>0&&approved.indexOf(id)<approved.indexOf(ids[index-1])))return fail();
+  if(required(read,"POTENS_MODEL")!=="claude-5-sonnet"||timezone!=="Asia/Seoul")return fail();
+  const daily=positive(read,"POTENS_ACCOUNT_TOKEN_BUDGET");
+  // 사용자 선택320만을 설정에서 명시한다. 코드에서 기본값·공급사 포함량을 추정하지 않는다.
+  if(daily!==3200000)return fail();
+  if(keys.some((key,index)=>Boolean(key)!==ids.includes(approved[index]))||new Set(keys.filter(Boolean)).size!==ids.length)return fail();
+  const accounts=ids.map(accountId=>{
+   const apiKey=keys[approved.indexOf(accountId)]!;
+   if(apiKey.length>4096||!/^[\x21-\x7e]+$/.test(apiKey))return fail();
+   const item={accountId,dailyTokenBudget:daily}as PotensServerAccount;
+   Object.defineProperty(item,"apiKey",{value:apiKey,enumerable:false});return Object.freeze(item);
+  });
+  const config:PotensAccountPoolConfig={accounts:Object.freeze(accounts),model:"claude-5-sonnet",resetTimezone:"Asia/Seoul",globalDailyTokenBudget:daily*accounts.length};
+  Object.defineProperty(config,"toJSON",{value:()=>({configured:true,accountCount:accounts.length})});return Object.freeze(config);
+ }catch{return fail();}
+}

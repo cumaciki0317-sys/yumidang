@@ -1,8 +1,193 @@
 # 현재 문서·구현 확인 현황
 
-## 상시 표시할 전체 진행률
 
-**전체 달성률 추정: 57% · 현재 작업: GitHub 공유 브랜치 인수인계 · 운영 배포: 대기**
+## 현재 표시 기준: 민규 담당 달성률
+
+**민규 전체 단계 점수: 63.5% · 현재 작업: 신고 숨김 분리 SQL/HTTP 검증 PASS·이의 안내 anchor 연결 대기 · 운영 배포: 대기**
+
+이 점수는13개 영역의25점 단위 단계 추정이며 실제 작업량·실시간 완료 비율이 아니다. 같은 단계 안의 구현·검증 진척은 아래 완료 항목으로 함께 표시한다. 분모와 원래 전체 완료 기준은 유지한다.
+
+| 현재 신고 파기 연결 작업 | 확인 상태 |
+|---|---|
+| 신고 파기·지원 종류 점유 SQL2개와 회귀 | 실제 로컬 DB 정식 적용 PASS·이력80·미적용0 · source6 통합 |
+| SQL84개 검토 목록·배포 준비 도구 | exact84 파일 준비 READY·과거 strict gate 및 신규 tail 검증 |
+| 신고 파기 RPC/Storage 연결 | 전송 의도 포함 source5 갱신·모형32/32·타입5 PASS |
+| 전송 의도 DB 기록·지연 DELETE 차단 | 후속SQL81 실제 회귀·durable ACK의 새 프로세스 GET-only 복구 PASS |
+| 취소 실행 제어·다음 기한 누락 차단 | 후속SQL82/84 실제 회귀·로컬 정식84 적용 PASS |
+| 실제 Storage 삭제·재조회·복구 | 수정 후 실제 삭제·ACK·재삭제 없음·메타데이터 정리·전체 원복 PASS |
+| 상주 실행·운영·모바일 통합 | 아직 미완료 |
+
+
+
+### 종현 시작 안내·GitHub 공유 검증
+
+사용자 요청으로 AGENTS와 최신 종현 시작 안내에 J1 취소/신고 소비자 로컬 구현·가상 검증의 시작 범위를 연결했다. 현재 민규 함수535/535 PASS·선택149경로 소유권 PASS·비밀값 검사 PASS이며 cache/사본/실제env/private 영수증/기존zip은 제외했다. GitHub 공유는 운영 적용을 뜻하지 않고 실제DB84/검토86을 구분한다.
+
+### 최종 출시 백엔드 재분담
+
+[민규·종현 출시 작업 분담](requests/minkyu/2026-10-06-backend-release-work-split.md)을 저장했다. 민규는 신고/이의·원자예산·DB/API·운영환경, 종현은 신규 소비자·AI/검색/행사·실제 런타임을 담당한다. 첫 묶음은 민규 신고/이의 완성 + 종현 취소/신고 소비자다. 미공유 민규86후속/port는 최신26aca72에 없는 점과 출시 외부조건을 명시했다. 문서 분담으로 달성률은 바뀌지 않는다.
+
+### 2026-10-06 신고 숨김 분리 연결
+
+[신고 숨김 분리](requests/minkyu/2026-10-06-report-hidden-targets.md): 최소 식별 저장소와 기존 자료 이관을 후속SQL2개로 분리하고 회원 목록/해제 API를 구현했다. 실제 두 합성 회원·타인권한·신고삭제 뒤 최소키 유지·90일 만료 대상 판정이 PASS·전체 native84 원복이다. HTTP19/19·strict준비4개·Deno gateway 타입 PASS,86파일 준비 READY(Git65+대기21)다. 실제DB84·정식86/REST/모바일/운영은 미적용이며 일반 이의7일 anchor도 후속이다. 전체63.5%는 유지하고 완료 항목을 별도로 표시한다.
+
+### 2026-10-06 최신 푸시 수신·후속 연결
+
+[26aca72 통합 기록](requests/minkyu/2026-10-06-remote-queue-integration.md): 최신 종현 큐·모바일·다중 계정 포트와 확정 정책을 fast-forward로 수신했다. 미커밋288개 파일을 별도 백업/stash 후 복원하고 종현 큐/계정52개·민규 공급사 설정12개·신고 유지관리/RPC17개가 PASS했다. 신고 유지관리 단일 batch 포트와 다중 계정 서버 설정만 추가했으며 실제 키·운영 설정은 변경하지 않았다. 기존 단일키·새 다중키 계약·320만/등록합계·비밀값 출력 제외를 검증했다. 최신 신고 숨김/안내 anchor 선택은 확정됐으나 DB/API 연결은 후속이다. 원자 다중 원장·실제 호출·상주 취소/신고 consumer·기기·배포는 미완료로 전체63.5%를 유지한다.
+
+### 2026-10-06 응답 유실·로컬 백업 복원
+
+[실제 검증 기록](requests/minkyu/2026-10-06-report-retention-backup-verification.md): DELETE200 후 호출자 응답 유실을 주입해 미확정 의도1·ACK0·메타데이터 미완료·자동 재실행 제외를 확인했다. 소유 테스트 프로젝트만 초기화하고 DB/Storage 백업을 복원한 뒤 전체 건수·미확정 상태·파일2개 바이트가 일치했다. 기존 정식84 전체 상태와 보호 컨테이너를 보존했다. 실패한 복원 실행은 보존하며 운영 백업 완료로 확대하지 않는다. 전체 단계63.5%는 유지한다.
+
+### 2026-10-06 최신 실제 적용·재시작·연결 검증
+
+로컬 정식 이력84·미적용0이다.83 예약 조회/빈 알림과84 새 취소 기한 세대를 CLI로 한 번 적용했고 적용 전 전체 rollback probe와 적용 후 정확한 delta를 비교했다. 함수 본문2개·statement trigger15개만 변경했으며 원 자료·모든 기존 metadata/OID/권한·가입/감사288 ID와 payload·Storage 파일0·닫힌 guard·worker idle·보호 컨테이너를 보존했다. 적용 영수증 `/private/tmp/yumidang-native84-sequential-rollout-v2/application-receipt.json` SHA `705405e32ea034b4fd86e7fc10c4806ce8cde7062abfe73e1bd22e4287973a45`다. 최초 검증기는 catalog가 본문 해시가 아니라 전체 함수 정의 해시인 점을 잘못 비교해 probe에서 실패했다. 적용 dispatch0회·전체 rollback 상태를 새 검증기의 정식82 기준으로 확인한 뒤 함수 정의를 정확히 비교해 한 번 적용했다. 과거 실패는 그대로 보존한다.
+
+신고 삭제 뒤 새 Node 프로세스가 원 DB의 durable ACK를 읽고 check/getAck/인증 GET만 수행해 복구했다. child는 begin/DELETE/ACK mutation 경로를 허용하지 않으며 실제 요청도0이었다. 원 정상 삭제1회·원 ACK1회·메타데이터 완료·전체 fixture/ACL/감사/파일 복구를 확인했다. 영수증 `/private/tmp/yumidang-retention82-normal-zjI0Pq/result.json` SHA `7b4963fa81f1edb54d93b87080a6232751b73e3a7a195b591fd33583c148c456` PASS다. 이 검증은 정식82 시점의 고정 graph/최신 Storage 수정 범위이며 이후84 상주 runner 전체 시작/재접속·실제 Provider 응답 유실·운영 백업 검증으로 확대하지 않는다.
+
+두 후속 SQL 실제 단일 TX 회귀 `/private/tmp/yumidang-schedule-generation84-v4-reviewed/receipt.json` SHA `480708da3b1885c2e3248ce225deb571b52e4cadd82f6b9b3a578dd6648e1de6` PASS다. 실제 예산 REST 영수증 `/private/tmp/yumidang-worker-budget-native84-v2-reviewed/receipt.json`은 exact1 잔여시간·typed host budget·기존 토큰 비연장·타인 토큰 거절·정확 해제·임시 EXEC 원복 PASS다. 기존 닫힌 권한에서의 첫 실제 실패/복구는 별도 보존한다. 예산/마감/신고 모형41/41, 종현 기존 작업/예약 모형41/41도 PASS다. 종현 모형 성공은 새 취소/신고 dispatch 구현의 완료 증거가 아니다.
+
+84 준비 묶음 `/private/tmp/yumidang-policy84-sequential-prepared` READY·SQL/Edge 실행 NOT_RUN이며 manifest SHA `3f09f5ab815d14fb28e7d4c057b844d9583271785dae321a6581d9a2e8cb6fe3`다. 준비 도구의106개 검사 중101개가 첫 실행에서 통과했고, 변경된84/과거82 경계의 테스트 기대값5개를 교정한 뒤 해당5개를 다시 검증했다. 마지막2개 재검증 PASS이며 잘못 지정한 테스트 메서드명 실행은 인프라 오류로 구분한다. 원 strict41·과거 exact history·해시 불일치·미승인 SQL 거절은 유지한다.
+
+운영 Supabase는 프로젝트 healthy와 count만 읽었다. 이력20·Auth/프로필3·공고2·약속1·Storage2·cron1로 이전 기준과 같다. 운영 mutation0이며 기존 테스트 계정도 삭제하거나 이름/생일로 자동 연결하지 않았다. 전체 단계63.5%·완료 범위1~3의 민규 로컬 작업과4 일부를 유지한다.
+
+### 사용자 승인 1~10번 실행 범위
+
+병렬 없이 순서대로 진행한다. 아래 항목의 완료는 전체 단계 점수와 구분한다. 정책·담당 파일·외부 배포 조건을 생략하거나 목표를 코드만으로 축소하지 않는다.
+
+| 순서 | 작업 | 현재 상태 |
+|---|---|---|
+| 1 | 신고 Storage 삭제 오류 | 실제 로컬 정상 경로·전체 복구 PASS |
+| 2 | 취소 다음 기한 dedupe 누락 | 후속 SQL·기존 취소/새 기한 회귀·로컬 정식84 적용 PASS |
+| 3 | 예약 조회·실행 예산 | 예약 실제 SQL 회귀·예산 실제 REST·모형7/7·로컬 정식84 적용 PASS |
+| 4 | 보관/삭제·응답 유실·재시작·백업 | 실제 DELETE 응답 유실 안전 정지·재시작·합성 DB/Storage 백업 복원 PASS; 운영 백업·상주 연결 남음 |
+| 5 | 종현 소비자·상주 연결 | 종현 소유 구현 경계 유지; 최신 연결 계약/실제 통합 필요 |
+| 6 | 신고·제재·통지·이의·정정·최종 종결 | 기존 로컬 증거 유지; 미정 정책 질문 및 전체 종결 검증 필요 |
+| 7 | 실제 네이버·모바일 전체 흐름 | 기존 로컬 인증 증거 유지; 모바일 담당 연결·실기기 필요 |
+| 8 | 운영 Supabase 전환 | 기존 자료 보존 전환 계획·로컬 후속 적용/전환 증거 준비 필요 |
+| 9 | Railway 배포·상주·복구 | 서비스 URL 확인 대기; 로컬 준비 계속 |
+| 10 | 개인정보·삭제 공개·지원 | 운영자/이메일 확정; 공개 URL·공급사 보관·지원 체계 확인 필요 |
+
+2번 실제 영수증 `/private/tmp/yumidang-cancellation-next-due-generation-v4-reviewed/receipt.json`는 새 기한 세대·같은 기한 멱등·이전 terminal 보존·새 enqueue·상한 초과 원자 거절 및 기존 취소 회귀 PASS다. 전체 원복7항목 PASS·불확실false·정식 이력82는 유지한다. 앞선 검증 실패는 최신 기준 이전 claim fixture와 합성 시각 설정 오류로 별도 보존했으며 성공으로 덮어쓰지 않았다. 이번 변경은 정책을 추가하지 않고 기존24시간 기한을 유지한다.
+
+### 2026-10-06 순차 실행 재개
+
+사용자 실행 요청으로 병렬 없이 1번부터 재개했다. 로컬 Storage v1.70.3의 InfoRenderer 구현을 읽어 실제 정보 응답의 `size`·`content_type`과 사용자 입력 `metadata`를 구분했다. 삭제 어댑터와 모형 응답을 실제 스키마에 맞췄으며 사용자 metadata만으로 삭제를 허용하지 않는 회귀 검증을 추가했다. 수정 후 실제 Auth·업로드·첨부·삭제200·durable ACK·인증 조회 부재·추가 삭제 없는 ACK 복구·메타데이터 원자 정리가 PASS다. 테스트용 프로필 삭제를 사진 정리보다 먼저 수행해 정리 오류를 방지했다. 전체 정식82 기준·감사288·권한·보호 컨테이너·파일0을 복구했고 불확실false다. 모형28/28과 타입 검사도 PASS다. 새 실제 영수증 `/private/tmp/yumidang-retention82-normal-BgMcm2/result.json` SHA `a82b8e6fa1fc2e931c26244be925d6a347bc84c72eb46f9d08e47647199ff349`를 보존했다. 업무 최종 종결은 합성 fixture이며 실제 직원 종결·운영·상주 소비자·응답 유실은 이 검증의 성공 범위에 포함하지 않는다. 기존 실패 및 복구 증거는 보존하며 전체 점수 63.5%를 유지한다.
+
+### 이전 일시정지: 현재 작업 결과와 복구
+
+2026-10-06 사용자가 진행 중인 작업만 마무리하고 멈추도록 요청했다. 새로운 DB 적용·실행기 구현·재검증을 시작하지 않고 현재 실패 검증의 잔여물 정리와 결과 저장만 마쳤다. 에이전트는 모두 정지/종료 상태이며 다음 진행은 사용자 재개 요청 후 수행한다.
+
+실제 신고 파기 정상 경로 검증은 FAIL이다. 실제 회원 Auth·PNG 업로드·신고 첨부·정확 bytes 조회는 통과했지만 `actual_begin_delete_ack_absence`에서 HttpError가 발생했다. 주 실패 원인은 아직 확정하지 않았고 성공으로 재분류하지 않는다. 원 영수증 `/private/tmp/yumidang-retention82-normal-nabXAE/result.json` SHA `14af932f55f47686394b11f13de33c62f6e9bc8bcbbc201475f90740effc2a5b`를 보존했다. unknown=false·미확정 전송 의도0이며 실행 제어·서비스EXEC·전역점유·계정/신고 자료는 원복됐다. 초기 정리의 프로필 사진2개는 현재 프로필 사진 보호 규칙에 걸렸고, 프로필 삭제 이후 정확한 합성 경로2개만 명시 복구해 실제 DELETE200/정확 경로 응답을 확인했다.
+
+복구 후 전체 정식82 스키마15항목·모든 건수·권한/정책·원 Auth 감사288 ID/payload·보호 컨테이너·파일0·활성 트랜잭션0을 읽기 검사해 PASS했다. 복구 영수증 `/private/tmp/yumidang-retention82-normal-nabXAE/recovery-verification.json` SHA `73ea1158b7cac8aebdf63c2a2ac7f702edc7cf5561b3ace440c19b6eb533593f`다. 원 FAIL과 복구 PASS는 다른 범위다. 정상 검증 자동 재실행0, 운영 변경0이다.
+
+취소 큐의 완료 dedupe 키가 다음 enqueue를 막는 기술적 결함도 실제82 단일TX에서 재현하고 전체 롤백했다. 영수증 SHA `56c97707084e47c90dc214a9c2e98a9862ab07c8107c22ab44950b8b12076bff`이며 정상 동작이 아니라 결함 재현/원복 PASS다. 24시간 경과와 실제 정책 processor 결과를 증명하지 않는다. 다음 generation/기한 연결 수정은 아직 수행하지 않았다.
+
+83 예약 조회 후보3파일과 budget 허용 목록 후보2파일은 private 동결 상태로 보존했다. root 통합·DB 적용·실제 회귀는 미수행이다. 재개 시에는 정상 삭제 경로의 HttpError 원인과 정리 순서를 먼저 수정·검증하고, 후보83·중복 방지 기한 후속·상주/운영/모바일 전체 요구를 이어간다. 전체 단계 점수63.5%와 원래100% 목표를 유지한다.
+
+### 최신 실제 검증: 로컬82 정식 적용
+
+2026-10-06 기존80 기준에서81/82만 실제 PostgreSQL probe/전체 롤백해 정확 원복한 뒤 공식 CLI로 한 번 적용했다. 최종 이력82·미적용0·적용 완료·불확실false다. 영수증 `/private/tmp/yumidang-native82-rollout-root-reviewed/application-receipt.json` SHA `db9a5bad3975e2df984de7832a4b06e1d5b8a258bb69df086c5452a4b4ff3765`, root driver SHA `b151626351c3e6ee5aa4cb3bf2cfa0ac7d36eb157ff20094f6ed3823514b1cb4`다. 새 함수2·표1·열10·제약4·인덱스2·private trigger1과 기존6함수 본문만 변경했다. 실제 본문은 원 source에서 별도로 도출한 완전한 기대값과 일치한다.
+
+기존 함수OID/owner/ACL/config·claim2/3·worker 제약·정책·Auth/Storage schema·모든 기존 건수·Auth 감사288 ID/payload·파일0·실행 제어false·worker idle·보호 컨테이너·과거 증거를 보존했다. postflight SHA `76275849a0ca2507432d59683b453e62d8a76cce3b92bcf25e838b45487f7264`, schema-after SHA `9a6ff70647364e8f12c9e54ade2c43ea31812b126b01ef7430c511b3eee2d6b1`다. 적용은 격리 로컬에 한정하며 Provider 삭제·상주 소비자·모바일·운영 검증은 아직 완료하지 않았다. 전체 단계 점수63.5%는 유지하며 새 완료2항목을 위 표에 반영한다.
+
+### 최신 실제 검증: 로컬80 적용·후속81/82 회귀
+
+2026-10-06 격리 로컬 DB에79·80 변경을 공식 CLI로 한 번 적용하고 최종 이력80·미적용0을 확인했다. 영수증 `/private/tmp/yumidang-native80-rollout-root-reviewed/application-receipt.json` SHA `7e0ad80bb0174d6e7253b60798f19c873b68a2d5506548c6421e941cb8bee8e7`이며 적용 완료·불확실 상태false다. 신규 함수21·표5·열39·제약24·인덱스11·trigger3, 기존 claim 함수2개와 worker 제약2개 변경을 정확 비교했다. 기존 metadata·권한·정책·자료·Auth 감사288 ID와 payload·파일0·실행 제어false·worker idle·보호 컨테이너·과거 증거를 보존했다.
+
+그보다 앞서 실제 native78 기준에서79~82 변경과81·82 회귀를 단일 트랜잭션으로 실행하고 전체 롤백했다. 영수증 `/private/tmp/yumidang-report81-cancel-guard82-single-tx-root-reviewed/receipt.json` SHA `2587abfa5000ec6ec40493acd2502b0f76606d13da3a33312822309ea151b4a4`다. 전송 의도 재사용·응답 유실 후 재DELETE 차단에 필요한 DB 경계와 취소 실행 제어 행 누락 차단이 SQL 범위에서 PASS다. 검증된81·82 소스6개를 통합했지만 정식 DB 이력은80이다. 실제 Storage/provider 삭제·상주 소비자·모바일·운영 검증은 아직 완료하지 않았다.
+
+후속82 준비 게이트2파일도 동결본으로 통합했고 root 신규7검사가 PASS했다. 실제 소스82개/runtime52개 준비는 `/private/tmp/yumidang-policy82-gateway-root-prepared` READY이며 migration manifest SHA `aff13d63242af1db5305652b2ff4f463bc35169f5f4b40844e5b77e6af892e41`다. 최초 명시적 `--gateway-probe` 없는 호출은 BLOCKED/DB실행0으로 보존했고 명시모드의 새 경로에서 준비했다. Git 기준 미커밋41개는 실제 로컬 DB 미적용2개와 구분한다. 준비 READY는82 정식 적용이나 실제 삭제 성공의 증거가 아니다.
+
+전송 의도 RPC와 Storage adapter 연결5파일을 동결 SHA로 통합했다. root 모형32/32(RPC12·Storage15·취소due5), Deno 타입5와 독립 SQL 계약 검토가 PASS다. 최초 `alreadyApplied=false`만 DELETE하며 중복·응답 유실·변조·중단은 dispatch UNKNOWN으로 중단한다. durableACK 복구는 begin/DELETE 없이 GET 부재 조회만 한다. 실제 Provider 호출은0이며 DB 점검과 외부 DELETE 사이의 만료·Provider 종료 여부는 아직 미검증이다. 갱신 전 준비82는 보존했고, 최신5파일을 포함한 `/private/tmp/yumidang-policy82-begin-root-prepared`를 다시 준비해 READY다. migration manifest SHA `f3f5371765ebd149113bee1f7c2b0101a55d16208f56a58e5ccc9ce2c64f8614`, edge SHA `1d7caed652412d2c8a7ae7dca2ceffb1985e11c2eb0fb241bda0aed884020387`이며 실제 SQL/Edge 실행은NOT_RUN이다.
+
+전체63.5%는13개 영역의 단계 점수다. 이번에 완료한 로컬 적용과 회귀는 위 별도 항목에 즉시 표시하며, 같은 단계에서 끝난 세부 작업을 전체 완료율 상승으로 환산하지 않는다.
+
+2026-10-06 사용자 요청에 따라 실제 검증 영수증과 기존 단계 기준을 재감사했다. 민규 담당13개 영역은 동일 비중이며 단계0/25/50/75/100을 유지한다. 75는 핵심 로컬 검증,100은 전체 요구·모바일·운영 검증 완료다. 9영역×75 + 2영역×50 + 2영역×25 =825/1300=63.46%이며 소수 첫째 자리로63.5%를 표시한다. 작업시간이나 출시 승인율을 뜻하지 않는다.
+
+63%→60% 하락은 native67에서 탈퇴 processing 직후 기존 signed URL이 사진을 반환한 실제 정책 FAIL에 따라 인증/사진과 탈퇴/정리를75→50으로 낮춘 결과였다. 이후 native69에서 신규 서명 발급 차단·정상 사진 업로드/교체/조회·삭제 ACK0에서 인증 사진 접근 차단·실제 Storage2회/Auth1회 삭제와 완료를 검증했는데, 두 영역을75로 복원하지 않은 표시 갱신 누락이 있었다. 이를 바로잡았다. 현재 신규 인증 사진 흐름의 핵심 로컬 검증은 PASS다. 과거 발급 URL의 FAIL 증거는 보존하고 운영의 기존 URL/CDN 전환·모바일 연결·실제 OAuth·상주 실행/백업 검증은100의 남은 조건으로 유지한다. 이전63과 동일한 단계 기준이며 분모를 줄이지 않는다.
+
+| 민규 담당 영역 | 단계 | 남은 완료 기준 |
+|---|---:|---|
+| 네이버 가입·로그인·사진·프로필 | 75 | native68 회원 API16그룹·native69 실제 인증 사진11항목 통과; 실제 OAuth·모바일·운영의 기존 URL/CDN 전환 검증 |
+| 공통 환경·권한·DB/RPC·계약 | 75 | 종현 검색·AI·행사·작업과 실제 연결, revision/예산/로그 권한 통합 |
+| 공고 등록·수정·정보 공개 | 75 | 실제 화면/접근 회수/운영 통합 |
+| 첫 채팅·신청·확정 동의 | 75 | 모바일/운영 및 전체 실패·만료 흐름 |
+| 차단·대화 접근·모집 재개 | 75 | 연결된 회원 화면/운영 통합 |
+| 일정·장소 변경·철회·취소 | 75 | 실제 모바일/운영, 검토 중 일정 충돌 처리 |
+| 완료·후기 작성/공개 | 75 | native67 정식 적용·회귀·검토/완료3건·정정/탈퇴2건 핵심 로컬 통과; 신뢰 접수·운영자 HTTP·모바일·운영 연결 |
+| 당도·완료 횟수·결과 원장 | 75 | 실제 판정/이의 정정·회원 화면·운영 흐름 |
+| 신고·제재·이의 처리 | 50 | native71 실제 직원 Auth/REST/Storage/HTTP 조회·회수12그룹 통과; 접수→검토→판정→정정·알림·이의 전체 연결 |
+| 탈퇴·재가입·보관·정리 | 75 | native69 processing/ACK0 접근 차단·실제 Storage/Auth 삭제와 완료·정리 검증 통과; 노쇼/검토 종결 전체 연결·실제 상주 worker·기존 URL/CDN·삭제/백업 재삭제 |
+| 운영 Supabase 전환 | 25 | 스키마 차이·권한·예약/cron 전환·실제 API 검증·복구 계획 |
+| 상주 서버·배포·통합 검증 | 25 | Railway 서비스 확인·환경 연결·실제 재접속/종현 통합·모바일 서버 연결 |
+| 공개 삭제 안내·개인정보·지원 체계 | 50 | 조유미 명의 삭제 안내 HTML 구현·구조 검사; 실제 게시·메일 접수/본인확인/회신·개인정보 전체 문서·담당/법적 확인 |
+
+종현의 AI·검색·행사 구현과 성호의 UX/UI 산출물은 민규 분모에서 제외한다. 민규 담당 공통 계약·SQL·연결·운영 책임은 유지한다. 외부 확인이 필요한 조건도 완료 기준에서 지우지 않는다. 이 수치는 작업시간 비율이나 출시 승인율이 아니다.
+
+2026-10-06 사용자 확인: 운영 Supabase의 기존 휴대폰 로그인 계정3개는 모두 개발용 테스트 계정이다. 실제 사용자 계정으로 추정하지 않으며, 이 답변은 삭제·자동 네이버 연결 승인으로 해석하지 않는다. 운영 전환 전에 테스트 기록 보존과 전환 절차를 구체화한다.
+
+이후 운영 프로젝트의 사진·테스트 계정 보존 대상을 읽기 전용 집계로 확인했다. profile3·사진 값2·Storage 객체2·migration20이며 profile-images는 private/JPEG/2MiB다. 현재 profile 사진 값에서 public URL과 signed URL은 각각0이었다. 영수증 `/private/tmp/yumidang-operating-test-account-readiness-20261006/receipt.json` SHA `4867ce66ca8fd9a1bccda0297babeb637e330809d835bc93a1b2ce9b82ba8261`에 원문·실명·URL·키 없이 집계만 저장했다. 이 조회로 과거 별도 발급 URL의 부재나 회수를 증명하지 않는다. 운영 DB·계정·사진 변경0이며 운영25·전체63.5%를 유지한다.
+
+native71 정식 적용 후 첨부 접근 SQL 회귀를 단일 트랜잭션에서 실행·롤백해 PASS했다. 영수증 `/private/tmp/yumidang-report-capture71-regression-reviewed/receipt.json` SHA `a47873ec1c7a7b175fc594caf7e031308093d5a96df9089f1b35302e29475574`, root driver SHA `48821d1f1a5749fa7091ff9afce214b28ebab0bc79d75fbc0d1b0ec2e9e8f8f9`다. 기존 정식71 증거·정책·전체 catalog·권한·전체 건수·Auth 감사288개 ID와 payload 해시·파일0·보호 컨테이너·guard=false·worker idle·다른 활성 DB 세션0을 보존했다. migration 재적용0, 운영 DB 변경0이다. source72 검토 시작 SQL·회귀·문서는 후보로 동결했으며 실제 실행은 NOT_RUN이다. 준비나 정적 검사만으로 신고50을 올리지 않고 전체63.5%를 유지한다.
+
+이어서 안전 정수 경계를 보완한 source72 검토 시작 SQL과 회귀를 격리 native71에서 실제 실행·전체 롤백해 PASS했다. 영수증 `/private/tmp/yumidang-review-start72-candidate-reviewed/receipt.json` SHA `9c816aa8a57c1a8d9eb09f73b4c5908a7f87a77265c15c9d31862cec0c85c1f3`, driver `b7caee829ed28fe87b3f74daf80fa8945e0735794fe76b793262a129ff3335bd`다. 직원 권한·멱등·버전 충돌·약속 보류/예약 회수·영수증 저장 실패/세션 만료 시 전체 원자 복원을 검사했고 일반 신고에 약속 보류를 추가하지 않았다. 버전 MAX-1→MAX 성공과 초과값 거절도 통과했다. 현재 ASSERT 기본값 on/source default는 별도 읽기 영수증 `5ad644af35ce14cd1e088155b15bdacbbfea343cdd6f55435984e867b4dc0f4e`로 확인했다.
+
+그 다음 고정72→73 SQL과73 회귀만 같은 격리 DB에서 단일 TX로 실행해 PASS했다. 영수증 `/private/tmp/yumidang-review-state73-candidate-reviewed/receipt.json` SHA `f48e0bec4bb3a711c35704623e886b22926c2a0ff84f707bc444443d3945c03a`, driver `557d81c7a285a61120659f988626fa7a782edfc7e5b7b036936950fff1a71e64`다. ASSERT를 명시적으로 켰으며 현재 상태/버전과 과거 성공 영수증의 분리·정확3키·권한/보관/세션 거절·실패 시 읽기 감사0을 검사했다. 두 실행 모두 기존71 정책·전체 catalog/자료/권한·Auth 감사288개 ID와 payload 해시·파일0·guard/worker·보호 컨테이너·과거 증거를 보존했고 새72/73 객체는 롤백 후 부재다. 검증된 SQL/회귀4개를 source에 통합했지만 실제 DB 이력은71개이며 정식72/73 적용·HTTP·실제 두 세션·운영은 후속이다. 신고 판정/통지/이의 전체 미완료에 따라 신고50·전체63.5%는 유지한다.
+
+72/73 전용 client·검토 HTTP·각 의미 검사4파일을 고정 SHA로 통합했다. root의 기존 사진/service-api를 포함한 통합 mock76/76 PASS와 Deno 타입4파일 PASS다. B의 기존17+신규 입력1 검사는 먼저 통과했고 신규4개는 C client 허용 목록 연결 전 ACCESS_DENIED 실패였다. 실제 통합 후 해결됐으며 실패 원인을 SQL/직원 Auth 성공으로 바꾸어 설명하지 않는다. 현재 graph 준비 gate는 후속 갱신 중이고 실제 DB 이력은71개다. [신고 계약](../../backend/contracts/reports.md)에 정확한 요청/응답·현재 상태와 성공 영수증의 구분·남은 실행 범위를 기록했다. 이번 통합은 커밋/푸시/운영 배포하지 않았다.
+
+source73 준비 gate의 고정 도구 `29bbc74c862985f6746c15ddb1abf3c8b79ee28ca3ffa9d6c4d8746d08999c2b`와 검사 `15c5c626be815975f9b3cc16ed7c43666e4813d8d9046a2d178f323fd2c0bb62`를 통합했다. 선별16개+기존 strict/HEAD/해시 추가5개 PASS로 기존30핀을 보존하고 신규72/73 누락·변조·미승인 미래 집합을 거절한다. root 실제 준비 `/private/tmp/yumidang-policy73-reviewed/prepared`는 SQL73/runtime52 READY·종료0이다. migration manifest SHA `eafbcfd77266fcfdafffb18539c89ce0501f721901b41f4435692942ada2fde9`, edge manifest SHA `4a46666ca6666155ffc209af45ef7e8fc05059aa742852276a1b872d5ee8b156`다. READY는 파일 준비이며 실제 DB 이력은71개다. 정식71→73 두 SQL 적용 후보와 실제 검토 API·두 세션 검증을 병렬 준비 중이고 전체63.5%는 유지한다.
+
+정식73 적용 전 검사에서 증거 필드 `status/result` 구분 누락과 PostgreSQL CASE 표시 공백 차이를 각각 발견했다. 첫 FAIL SHA `7c088978f60a4c05f437c381bc513bc85e935bab192d781508358392096fb58c`, 둘째 FAIL `ed8317348b6751eaf3e648af6770db5dc22c8a22dacc5ce1e40f4f2d8958a8b6`를 보존했으며 두 시도 모두 probe/적용 시작 전이었다. 정확한 증거 구조와 공백만 교정한 root driver `ce06bb0bd8fca43e397cc10aaaf8aed8159fd2ed21da660c6f7abad9d58c1bc5`로 격리 native71→73을 한 번 정식 적용해 PASS했다. 영수증 `/private/tmp/yumidang-native73-rollout-format-reviewed/application-receipt.json` SHA `ba1c86ef5c36397d2a9bef3f2d8a3fa4647cc0b4df4314448f65ddee1363cf14`다. 대기2→적용→이력73→대기0이며 실제 새 메타데이터는 사전 롤백 probe와 일치했다. 기존 전체 catalog/권한/정책/건수/Auth 감사288 ID+payload 해시/파일0/guard=false/worker idle/보호 컨테이너와 과거 증거를 보존했다. 실제 검토 mutation API·두 세션·판정/통지/이의/운영은 후속이며 신고50·전체63.5% 유지다.
+
+실제 native73 Auth/REST/Storage/in-process HTTP 검사는 검토 시작 단계에서 FAIL했고 아직 PASS로 전환하지 않는다. 원본 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native73-VqJgSJ/result.json` SHA `9f0b10cf1e929df415e39c0c018fc4da7b2d8426175fb7f4f97f162ebd08ae76`다. 시험 정리는 검토 보류보다 신고를 먼저 삭제해 보호 trigger가55000으로 거절했다. 자기 fixture만 hold/window→신고→약속/공고→회원 순서로 복구하고 Storage/Auth API 삭제를 완료했다. 복구 driver의 audit 조회 괄호 오류 FAIL `b1fefb0a3492874e3a4b4390670ac954893df16bd4c6e0262a9972e15afee090`도 보존하며 이미 완료한 삭제는 재실행하지 않았다. 별도 audit/전체 검증 영수증 `/private/tmp/yumidang-native73-fixture-recovery-audit-reviewed/receipt.json` SHA `f00fa2343a414b60d17345209a1fc07bde092091c8fbaaa78c6cac53c0a03242`가 PASS다. 정식73 전체 snapshot·자료/권한/정책·Auth 감사288 ID+payload·파일0·컨테이너·활성 TX0·cleanup닫힘·원본 FAIL/journal 보존을 확인했다. API의 첫 실패 지점은 안전한 세부 진단 후보로 후속 확인하고, 실제 두 세션 후보와 정식 적용 후 SQL 회귀도 실행 대기다. 전체63.5%·신고50은 유지한다.
+
+정식 native73에서72·73 SQL 회귀를 단일 TX의 별도 SAVEPOINT로 실행해 모두 PASS·전체 롤백했다. 영수증 `/private/tmp/yumidang-review73-regression-reviewed/receipt.json` SHA `7e285f80f2654e77292a3b68d87df42cf2dd43b1d60311c9a504a481b11b1fb7`, driver `988a609089ca28d605ca486e50a93c61e3e51895b4c86447a42c7959ab39c74c`다. migration 재적용0·ASSERTon·전체 정식73 snapshot/자료/ACL/정책/감사288/파일/컨테이너/idle 보존이며 sequence 값은 미검증이다.
+
+검토 API 후속 검사에서 만료 세션 복원 SQL의 `nullwhere` 공백 누락으로 FAIL `57c54e5f3656cb13c3ed1a239a09b9872e25bef35d9ed9c646877dbdb4814990`이 발생했으나 전체 정리7항목은 모두 PASS였다. null·timestamp 두 생성 분기를 교정한 driver `b9662bb375699e7c2d61abc1897ba753d2b44a0fec75cbc84e4a1f31391aede7`로 별도 실행해 실제 Auth/REST/Storage/in-process HTTP14그룹 PASS했다. 영수증 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native73-vdUzU4/result.json` SHA `aaea10f3e207b24da9170933c15b5c9f0305fa844e21cb63786e13e475a23b9f`다. 약속 검토1보류/1영수증/예약회수·동일요청재시도·낡은버전409/변경0·권한/세션거절·일반신고 보류0·현재버전과 과거 성공영수증 분리를 확인했다. 이후 실제 탈퇴·사진 삭제·Auth harddelete와 직원 증거접근도 함께 통과했고 전체 catalog/counts/policies/ACL/roles/Auth 감사288 ID+payload/파일0/guard=false/worker idle/보호 컨테이너/활성TX0을 복원했다. 원본 두 API FAIL은 보존하며 실제 두 세션·hosted/mobile/운영·판정/통지/이의 전체는 후속이다. 전체63.5%·신고50을 유지한다.
+
+실제 두 세션 검증의 첫 실행은 관측 SQL의 숫자 PID 뒤 `and` 공백 누락42601로 FAIL했고, 원본 SHA `2e64b160277578c16451a12655eb106b803335cfb4de05b001ba4012509a84f9`와 전체 복원 PASS를 보존했다. 숫자 token 경계를 교정한 C driver `632d9712b80d61f6cd17c2670310a076dbba8f105dda4103a9ba777fce1b6774`로 별도 실행해11사례 모두 PASS했다. 영수증 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-review-concurrency73-_in1_rx6/receipt.json` SHA `885f3b29276f1f462882959752833479ad84ce80191cab2255b4adb3ace94f13`다. 같은 request1영수증/1보류·다른 request40001/무변경·승인/배정 회수 양순서·요청 대기 중 세션 만료·조회 대기 중 최신 버전/보관 만료·약속NOWAIT·양쪽 완료와 보류 양순서·탈퇴 session DELETE와 직원 SHARE 직렬화를 검증했다. 실제 pg_blocking_pids 관측17개·session outcome75개이며 SQLSTATE를 HTTP 성공으로 대체하지 않는다. 전체 catalog/권한/역할/정책/자료/Auth 감사288 ID+payload/guard/worker/파일/보호 컨테이너를 원복해 before/after SHA `4af656f7f58da8bb35dbb2a6e0d0dd8614198a60af2fe380cfe7b29b1a28d1c5`가 일치했다. remoteCompletionUncertain=false·자동 재시도0이다. 검토 시작/조회 검증은 완료했고 판정·정정/통지/이의 전체는 다음 단계다. 전체63.5%·신고50을 유지한다.
+
+동일일 격리 native70 CLI 적용은 완료되어 이력70개를 확인했다. 적용 후 검증은 `NEW_COLUMN_TYPE_NULLABILITY_OR_ACL_INVALID`로 FAIL이며 실패 영수증을 보존한다. 실제8개 컬럼의 타입 OID가 JSON 문자열인데 검증 코드가 정수와 비교한 오류를 확인했다. 재적용하지 않고 별도 읽기 검증을 준비한다. 운영 DB 변경0, 신고 영역은50과 전체63.5%를 유지하며 정식 전체 검증 PASS로 표시하지 않는다.
+
+이어 별도 읽기 postflight와 CLI dry-run 대기0 검사 PASS를 확인했다. 영수증은 `/private/tmp/yumidang-native70-postflight-reviewed/verification-receipt.json`(SHA `0e9cf816b5662c9866a8156144fcd2798eeea7a85f2607554c9fb3b2b48189a5`)이다. 기존 함수384개·테이블86개·컬럼508개·인덱스152개와 trigger·권한·자료 건수·Storage 정책·역할·보호 컨테이너를 보존하고 신규 닫힌 테이블2개·함수6개·컬럼8개·제약7개·인덱스3개만 확인했다. Auth audit288개이며 읽기 검사 전후 ID 동일을 검증했다. 최초 적용 전 audit ID는 미수집이므로 그 구간 ID 보존까지 주장하지 않는다. 원래 FAIL 영수증·실행 시작 기록은 불변이고 재적용0이다. 실제 직원 Auth/Storage/HTTP 및 판정·알림·이의 연결은 아직 완료하지 않았다.
+
+native70 적용 후 SQL 회귀를 실제 실행해 PASS했고 모든 합성 자료를 단일 TX로 ROLLBACK했다(`/private/tmp/yumidang-operator70-regression-reviewed/receipt.json`). 기존 catalog·모든 정책·index·전체 건수·원 Auth audit288개 ID·보호 컨테이너·Storage 파일0·닫힌 cleanup 권한·guard=false·worker idle 보존을 확인했다. source71 첨부 접근 후보3파일과 신고 담당 HTTP wiring를 선택 통합했고, HTTP/전용 client/사진/기존 service-api 테스트66/66 PASS다. source71 SQL·실제 binary/API·직원 로그인 통합은 아직 미실행이므로 완료율은63.5%를 유지한다.
+
+이어서 source71 SQL과 회귀를 실제 격리 native70에 단일 TX로 실행해 PASS했고 전체 ROLLBACK을 확인했다(`/private/tmp/yumidang-report-capture71-reviewed/receipt.json`). 미승인·미배정·다른 사건 담당·만료 세션 거부, 비회원 담당의 GET/HEAD 허용, 배정/승인 회수 거부, 신규 서명 발급 제한, 기존 회원 업로드/취소/삭제 보존, 실제 신고자 탈퇴 RPC 후 다른 담당의 보존 증거 접근 및 본인 탈퇴 UID의 차단을 SQL/RLS 범위에서 검증했다. 기존 정책 OID/식·역할·전체 스키마·건수·Auth audit288개 ID·파일0·보호 컨테이너·비활성 DB 세션 상태를 복원했고 신규71 helper/정책은 남지 않았다. 실제 Auth/Storage binary/API는 NOT_RUN이다. source71 준비는 SQL71개/runtime52개 READY이며 실행 이력은 여전히70개다. 준비 gate 선별8개 PASS, 정식 로컬71 적용과 직원 파일 API 통합은 후속 작업이다.
+
+그 다음 격리 native71 정식 CLI 적용·전체 postflight·최종 dry-run 대기0 검사를 PASS했다. `/private/tmp/yumidang-native71-rollout-reviewed/application-receipt.json` SHA `fe9d153c810bb9b83d937bab1043638b0f15718bc494776cce018e5512bef027`이며 root driver SHA `3e3ef82062c0ae551cdb83389e5120a7a9f345e27c1b849e64af9f2affbd0d23`다. 신규 authenticated-only boolean helper1개·Storage 정책3개·기존 owner-read 식만 변경됐고 기존 owner 정책 OID/role/command/check와 나머지 함수·전체 스키마·권한·역할·자료·원 Auth audit288개 ID·파일0·보호 컨테이너를 보존했다. 실제 PostgreSQL에서 검증기 예상 정책식을 사전 TX 비교/ROLLBACK해 일치 확인 후 한 번만 적용했다. 원래70 FAIL/후속 읽기 PASS·회귀 증거는 불변이다. 현재 실제 DB 이력71개이며 운영 DB 변경0, 실제 직원 로그인/파일 API와 신고 판정·통지·이의 절차는 아직 미완료다.
+
+이후 실제 native71 Auth/REST/Storage와 in-process HTTP 통합12그룹을 PASS했다. driver SHA `246b939706157a336435964d83e9da1034bdce542d8b08cdce15d4faf367ef7e`, 영수증은 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native71-ST2mHj/result.json`이다. 실제 회원 캡처 예약/업로드/확인/신고 접수, 회원 프로필·네이버 binding 없는 직원의 실제 fresh Auth 세션, 미승인/미배정/다른 사건·일반회원 거절, 원 JWT GET/HEAD/info와 정확 JPEG bytes HTTP 조회, GET 뒤 재확인 전 및 HEAD 직전 실제 배정 철회, 승인 철회·로그아웃 세션 폐기, 신규 서명/서명 업로드 발급0, 만료 신고 조회 거절을 검증했다. 실제 신고자 탈퇴 processing 뒤 본인 접근을 차단하고 담당자의 증거 조회를 유지했으며, 실제 cleanup engine이 본인 profile Storage DELETE200와 Auth DELETE200를 수행해 Auth 행0·탈퇴 completed인 뒤에도 reportObject 보관과 담당자의 exact JPEG GET/HTTP200이 동시에 성립했다. 탈퇴한 다른 담당 UID의 접근도 차단됐다.
+
+모든 합성 계정·파일·신고를 정리했고 원 Auth audit288개 ID와 payload fingerprint·모든 catalog/정책/역할·schema ACL·index·column·건수·파일0·보호 컨테이너·guardfalse·workeridle·다른 활성/트랜잭션 DB 세션0을 복원했다. journal은 검증 후 제거됐다. 네이버 OAuth·실운영 직원 설정·hosted Edge·모바일·운영 CDN·S3/TUS 직접 프로토콜·두 세션 DB 직렬화·판정/통지/이의 전체 절차의 증거는 아니다. 신고 영역은50, 전체63.5%를 유지하며 다음 좁은 검토 시작 RPC와 판정 연결을 진행한다.
+
+
+## 신고 판정·정정 후보 검증 추가
+
+source74 SQL·HTTP·전용 클라이언트 후보를 민규 root에 선택 통합했다. 기존22 HTTP 회귀를 포함한 모형44/44 PASS다. 실제 단일TX 검증에서 PL/pgSQL row변수와 SQL alias 충돌42702를 발견했고 두 변수명만 바꾼 교정본을 독립 검토한 뒤 실제 SQL 회귀 PASS했다. 원 사건·귀책·제재/당도·hold·3버전·멱등·권한·중간 실패 롤백을 검증하며 최종 통지/이의/종결 시각을 임의 생성하지 않는다.
+
+교정 후보 영수증 SHA `4f2712f38fc8de8eec208c7694dd6f0ef6b3c0ba525fcf3d24313626fe4b6eab`, 첫 FAIL `f4e2ad49ea49b65fa4dbbf400923cc3b17235a9c077ef4ea356380e5de49bfad`를 보존했다. 둘 다 전체 catalog/count/ACL/정책/Auth 감사288/파일/보호 컨테이너와 cleanup 폐쇄 복원은 PASS다. 후보 SQL은 rollback했으므로 정식 로컬 이력은73이며 source74 정식 적용·실제 판정 API/동시성·모바일/운영은 NOT_RUN이다. 다음 검증을 A/B/C로 병렬 준비한다. 전체63.5%·신고50을 유지한다.
+
+
+### 정식 로컬74 적용 검증
+
+검토 준비74개 SQL/runtime52개 바이트를 실제 root와 대조한 뒤 신규 판정 SQL1개를 격리 로컬에 공식 CLI로 한 번 적용했다. 적용 전 실제 PostgreSQL rollback probe와 적용 후 새 객체 OID만 정규화한 metadata가 정확히 일치했다. 최종 이력74·미적용0·새함수4/표1/열9/제약7/인덱스2/trigger0이며, 기존 metadata/정책/역할/ACL/전체 건수/Auth 감사288 ID+payload/파일0/guardfalse/workeridle/보호 컨테이너를 보존했다. 공개 함수2개만 authenticated EXEC이며 private helper와 영수증 표의 일반 역할 전체권한은 폐쇄다.
+
+정식 적용 영수증 SHA `5099b62eba44200125c21dc9c642c8630f0b98172ebc13f5d1928a550b132926`, postflight `484858bb600171ff8079ea0d3c94e435a243a328fb17dd027d43fbd507c9e7bc`, schema-after `fb0241ea16744f493fa958468bab4fb928ceceebff1ad9c8f33f2a03afcb8be8`다. SQL 준비 manifest SHA `5006c517b54a63bf3e7ccb2d0f25e1ad0034ad83bc98fa49fcf25c8c409ed2d5`와 runtime manifest `df22a40254b1fc269930a5dfe083e3c11a67ec23ff252aecfc8ede3ad02e982c`의 SQL/Edge NOT_RUN은 준비물 상태이며 실제 SQL 적용은 별도 영수증으로 구분한다. 실제 판정 API·두 세션, 통지/이의/종결, hosted/mobile/운영은 아직 NOT_RUN이다. 전체63.5%·신고50을 유지한다.
+
+## 기존 개발 계정 보존 검증 추가
+
+기존 휴대폰 계정3개는 모두 개발용이라는 사용자 답변을 반영했다. 삭제/네이버 자동 연결 승인은 아니다. 독립 합성20개 기준에서 기존 회원3·공고2·약속1·사진 객체 메타데이터2가 있는 상태로 추가53개를 실제 CLI 한 번 적용해73개·미적용0을 확인했다. 선택한 기존 필드/관계의7개 테이블 행 수와 해시는 모두 보존됐고 네이버 연결0·identity key0·가입 회차3개는 identity 미연결이다. 영수증 SHA `302d7fa9ff14ea6b531049936c03a1b3318f0394f36f9efdb07cee4782ff4eed`이며 Auth 제공사/사진 바이트/운영 이식은 NOT_RUN이다.
+
+운영 읽기 집계는 기존 약속1개가 과거 완료 상태이고 완료 확인1개임을 추가로 확인했다. 첫 합성 약속은 미래 확정 상태여서 과거 완료 보존을 증명하지 않는다. 두 번째 독립 합성 이식도 PASS했다. 과거 완료와 작성자 확인1개를 포함한8개 테이블의 선택 필드/관계 해시를 보존했고 확인을 추가 생성하지 않았다. 실제53개 once CLI 적용 영수증 SHA `dbb4511a526408229439a3af8407b6152da6e914dbe2ecbae27508002b3837cc`다. 초기 Storage schema 설정 실패2건은 원본 증거를 보존했다. 상세 결과는 [운영 드리프트·기존 계정 보존](requests/minkyu/2026-10-05-production-drift-preparation.md)에 기록했다. 전체63.5%·신고50·운영25는 유지한다.
+
+
+## 이전 전체 서비스 지표 — 비교용 기록
+
+**전체 달성률 추정: 57% · 이전 작업: 성호 UX/UI 소유권 차단 공유 완료 · 운영 배포: 대기**
 
 최종 목표 전체15개 영역을 동일 비중으로 계산한 단계 지표다. 작업 시간의 정확한 비율이나 출시 승인율이 아니다. 단계는 미착수0·설계/준비25·구현 진행50·핵심 로컬 검증75·전체 요구/운영 연결 검증 완료100으로 고정한다.75는 해당 영역의 모든 검증이 끝났다는 뜻이 아니며 표의 남은 요구를 완료하기 전100으로 올리지 않는다. 기존 연결9/9를 전체 목표로 계산하지 않는다. 새 결함이나 요구 누락이 확인되면 근거와 함께 조정한다.
 
@@ -24,7 +209,7 @@
 | 공개 삭제 안내·법적·스토어 | 25% | 정책·연락처 준비; 게시·운영 검토 남음 |
 | 모바일·실기기 전체 연결 | 25% | 모바일 병합; 최신 서버 연결·실기기 검증 남음 |
 
-모든 작업 업데이트 첫 줄에 `전체 달성률 추정: 57% | 현재 작업: ... | 운영 배포: 대기`를 표시한다. 작업 시작·검증 결과·대기 상태를 알릴 때마다 표시하며, 작업 중에는 60초 이내 간격으로 갱신한다. 전체 달성률은 영역의 완료 단계가 바뀐 근거가 있을 때 조정한다.
+이전 전체 지표의 표시 규칙은 기록용이다. 현재 작업 업데이트와 최종 응답은 이 문서 맨 위의 **민규 작업 기준 달성률**을 사용하며, 작업 중에는 60초 이내 간격으로 갱신한다. 완료 단계가 바뀐 검증 근거가 있을 때 수치를 조정한다.
 
 > 현재 기준: [정책.md](../../정책.md) · 문서 기준일: 2026-10-05
 
@@ -444,3 +629,278 @@ ZIP과 한 번 실행 launcher, 첫 구현 TASK, 최신 M 코드·65 SQL 연결 
 ## GitHub 방식으로 변경 — 2026-10-05
 
 사용자 지시에 따라 ZIP 대신 minkyu/handoff-20261005를 공유 기준으로 올리고 종현은 자기 branch에서 작업 후 PR로 제출한다. 이전 ZIP 검증은 과거 기록이며 현재 시작 절차는 [GitHub 안내](requests/minkyu/2026-10-05-jonghyun-start.md)를 따른다. 운영 배포와 전체 달성률은 57%/대기를 유지한다.
+
+
+## 승인된 GitHub 공유 푸시 완료 — 2026-10-05
+
+사용자 명시 승인 후 기존 origin으로 minkyu/handoff-20261005를 신규 푸시했다. 원격 조회로 f12f19effe0125282fd78bbfe51d7a0451bdc17e 일치를 확인했다. GitHub가 저장소 이동 주소 cumaciki0317-sys/yumidang을 안내했으며 기존 주소의 redirect로 동일 저장소에 성공했다. main/운영 DB 변경은 0이다. 종현은 해당 기준에서 자기 브랜치로 작업 후 PR base를 공유 브랜치로 지정한다. 전체 달성률 57% 유지.
+
+
+## 성호 UX/UI 경계 공유 완료 — 2026-10-05
+
+공유 브랜치 remote HEAD 9dfca36cfe88f6da658fcbf863d5f4a33c2d0513 확인. 성호 sungho actor·전용 UI 경로·미배정 기본 거절·혼합 파일 보호·수정 전 symlink 대상 검사·로컬 hook·trusted-base PR workflow·최초 본인 clone 설정 안내를 9개 파일로 반영했다. 격리 실제 Git 8개와 기존 소유권 14개 PASS. OS 파일쓰기 잠금과 GitHub 필수 검사/보호 설정은 포함하지 않으며 실제 CI 실행은 아직 NOT_RUN. 기존 모바일 UI/API 코드는 변경하지 않았다.
+
+
+### 민규 기준 다음 완료 증거
+
+40900 최신합의종료 정책 단일TX SQL 회귀 PASS, 실행 후 native65 전체 원복. 신규main 실행본문은 동일하며 상태 주석만 갱신했다. native66 준비/정식격리적용/실제두세션 및 최종노쇼 lifecycle 후속을 계속한다. 부분 검증만으로 해당영역75/100으로 올리지 않고 개인60%를 유지한다.
+
+
+## 민규 완료·신고 검토 native66 실제 반영
+
+민규 기준60% 유지. 격리된 native65에서 CLI dry-run으로40900 한 개만 확인한 뒤 한 번 적용했다. 실제 이력66·대기0, 기존 함수 OID/owner/ACL·역할·회원 자료·보호 컨테이너 불변과 예상9개 함수 본문 변경·owner-only 신규5개 helper를 확인했다. 증거는 `/private/tmp/yumidang-native66-rollout/application-receipt.json` PASS다. 최종 main SQL/test 바이트로 실제 native66 회귀도 PASS했고 모든 합성 자료를 롤백했다. 증거는 `/private/tmp/yumidang-review-holds66-regression/receipt.json`이다. 새로 합의한 종료 시각+24시간 정책을 포함한다. 운영 DB·실제 네이버·HTTP 운영 담당자 권한은 이 증거의 범위 밖이다. 두 세션 경합과 최종 불발 lifecycle은 별도 검증한다.
+
+
+## 검토·완료 실제 경합 통과
+
+민규 기준60% 유지. native66의 실제 두 세션3건 PASS: 검토 COMMIT은 두 번째 완료를22023으로 거절, 검토 ROLLBACK은 양쪽 수동 완료·7일·멱등, 이미 지난 예약은 stale. 모든 경우 실제 blocking PID barrier를 확인했다. 정확한 합성 자료와 세션을 정리했고 권한/전체 관계 counts/함수 catalog/보호 컨테이너/사진 files0 원복 PASS. [상세 증거](requests/minkyu/2026-10-05-appointment-review-holds.md)를 따른다. 최종 불발 후보 실제 SQL 첫 실행은 테스트에서 사례7 계정이 남은 상태로 사례2 신고를 시도해 실패했으며 native66 baseline 완전 복원 true다. 본체 권한을 넓히지 않고 fixture를 수정해 후속 검증한다.
+
+
+## 최종 불발 lifecycle 실제 SQL 통과
+
+민규 기준60% 유지. 41000 후보를 실제 native66에 한 트랜잭션으로 검증한 뒤 전부 롤백했고 SQL exit0·baselineRestored true다. 완료 전 불발의 완료 필드NULL/종결, 다중 검토 보류, 기존 완료 정정의 시각 보존/후기·완료 횟수 제외와 정상 복구, 신고 파기 후 최소 closure 시각 보존, 탈퇴 및 보관 지문 stale 거절을 확인했다. 신규SQL/test를 main worktree의 민규 파일에 반영했으며 영속 native67·HTTP·불발/보관 경합은 별도 후속이다. 탈퇴 후 미완료 불발의 정상 정정은 정책 확인 전40001 기술 경계를 유지한다. [실제 증거와 한계](requests/minkyu/2026-10-05-appointment-review-no-show-lifecycle.md)를 따른다.
+
+
+## 사용자 확정: 탈퇴 후 정상 정정 최초 완료
+
+민규 기준60% 유지. 한 명 탈퇴한 미완료 불발의 정상 정정은 정정 시각 시스템 완료·탈퇴자 후기 불가로 정책/PLAN/상세 설계를 반영했다. 최종 SQL b780/test0fdb 실제native66 단일TX PASS, 전체 원복 true. 한 명 탈퇴/남은 상대 후기/알림/결과원장/최초7일/정정 멱등/다른검토보류를 검증했다. 당사자 profile NOWAIT 보강도 최종바이트로 SQL 회귀 PASS. 실제 두 세션 정정↔탈퇴와 native67영속·HTTP운영 연결은 후속이다. 준비gate67 최종pin을 반영 중이다.
+
+
+## 최종67 준비 검사 완료
+
+최종41000 pin b780의 준비 도구를 main에 반영했다. 구조37개 PASS 후 최종pin 관련6개 PASS, 같은 전체 검사를 불필요 반복하지 않았다. 실제 main으로 `/private/tmp/yumidang-policy67-final-reviewed/prepared` READY67(HEAD41+pending26) 생성, 모든67개 SQL 및49개 서버 파일의 main/준비본 SHA가 일치한다. manifest SHA1c56f6353a229bdae16fbb3c4d1106e8d45aec5a9cc9981311ec38b470cb7431, edge SHA9576fa79c91f8645e9064359c8c5c27958dee500c497df081b371e4a043acf9e. 준비본 자체 SQL/Edge NOT_RUN은 유지하며 실제41000 단일TX PASS와 구분한다. 격리 DB는 아직 native66이고41000은 후보 실행 뒤 롤백했다. 다음은 native67 격리 영속 적용·정정/탈퇴 실제 경합, 회원/운영 권한 연결이다. 이번 변경은 아직 커밋·푸시하지 않았다.
+
+
+## 병렬 하네스 가동과 native67 정식 적용
+
+사용자는 민규100%까지의 병렬 작업을 요청했다. [하네스](minkyu-parallel-completion-harness.json)와 [작업선 설명](requests/minkyu/2026-10-05-parallel-completion-harness.md)을 작성했고 실제root+3개agent active를 확인했다. 기존검사기로root/B/C 허용경로PASS·다른lane SQL수정거절 확인. 신규threadlimit은기존agent재사용으로진행했다. 단계A 스크립트를root가검토실행했다. `/private/tmp/yumidang-native67-rollout/application-receipt.json` PASS: native66에서41000만한번적용·이력67·대기0, 기존함수OIDownerACLproconfig·전체tablecounts보존, 예상9본문/신규helper3/ledger1/hold열1/CHECK확장1/constraint5/reporttrigger1·helper/table권한닫힘·guardfalse/idle/files0/보호컨테이너불변. 운영DB/실제네이버/Provider변경0. 반영후회귀와B 실제경합은별도확인한다. C 운영읽기는20migration·profile3·post2·appointment1·매분cron활성·새권한/모듈없음을재확인했다. 운영자명은사용자가조유미로확정했다. 공개삭제페이지초안은C에서독립진행하며실제메일접수/게시/법적검토는별도다. 민규13영역60% 유지.
+
+
+## 병렬 결과와 개인63% 단계 근거
+
+최종driver769c7c5cf385e2422da6c2b1b84269e8673cbd74cf218c4097af760fa1507ef8를실제native67에서실행했다. `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-normal-retirement-race67-wi2d1vy0/result.json` PASS/cleanupVerifiedtrue: owner의정확profile잠금fixture에서normal40001원자롤백→실제retireRPC롤백→normal재시도/활성후기, 반대순서정정KEYSHARE→실제retireRPC PID대기→정정COMMIT→탈퇴COMMIT. trigger/RLS·catalog/전체자료·권한/guard/worker·세션/Storagefiles0/보호컨테이너원복. case1의fixture잠금을실제탈퇴접두실행으로확대하지않는다. 반영후SQL `/private/tmp/yumidang-no-show67-regression/receipt.json`도PASS다.
+
+C산출물 [공개 삭제 HTML](requests/minkyu/2026-10-05-public-deletion-page.html) SHA b97d6069c4c4ca0342e31ccc318cfc5e304733fa990475f452d58adfc3752914와 [검증범위](requests/minkyu/2026-10-05-public-deletion-page.md) SHA76d9bbc83bedcf95a3cc71cb8d5fa42422a0e8a852518277088be1dfe5f1c7a4를고정후통합했다. 운영자조유미·확정삭제/보관·재설치없는메일요청·민감키금지·직접anchor, 구조/인코딩/ownership검사PASS. 공개게시·실메일·법적검토·실브라우저는NOT_RUN. 기존단계정의로완료/후기50→75,공개삭제25→50; 독립읽기감사도근거를확인했고개인825/1300=63%로갱신했다. 코드와HTML이존재한다는이유로전체완료를주장하지않는다.
+
+## native67 회원 API 후속 검증
+
+실제 로컬 Auth·REST·Storage와 main 회원 HTTP handler를 연결한15그룹이 PASS다. 검증 파일 SHA는 `8f991caf9ab45c31fc46e878522dd6d80375fe6ea8ce243f1fa5a323cf6eff28`, 영수증은 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-naver-native67-J8W8Gy/result.json`이다. 한쪽 완료 확인 뒤 선제 후기는 비공개이고, 양쪽 확인 뒤 최초 완료+7일을 유지하며, 쌍방 후기 제출 때 공개되고 재시도 때 상태가 보존됨을 확인했다. 경과 일정은 owner SQL 합성 fixture다. 기존 사진·자격·성향·철회·본인 안전 상태 검증도 유지됐으며 생성 자료 정리와 권한 복원이 PASS다. 실제 네이버 OAuth·hosted Edge·신뢰 접수 마감·운영자 HTTP·운영 배포는 이 결과에 포함하지 않는다. 영역75의 추가 근거이므로 전체 달성률63%를 유지한다. 운영자명 조유미는 공개 삭제 안내 HTML에 반영되어 있다.
+
+## 본인 제재 이력 조회 후보의 실제 SQL 검증
+
+기존 GET `/me/safety`를 보존하고 새 GET `/me/sanctions`와 회원 전용 `list_my_sanctions(integer,uuid)`를 연결하는9파일 후보를 검토했다. source68 후보 SQL `c6dfa91e15bf8b97c1878b53ec62d887e18061fa5704aeee8f946a5ea5cc3b8c`, SQL 회귀 `18f2add1fc6bd2370fa049aa2a7d16703ab2a3c4fa9180db5b733f83eee8ae82`을 native67에서 단일 트랜잭션으로 실제 실행하고 전체 롤백한 결과 PASS다. 영수증은 `/private/tmp/yumidang-sanction68-candidate/receipt.json`이다. 같은 신원의 현재·기간 종료·정정 기록만 반환하며 타인/없는 커서를 동일하게 거절하고, 신규 활동 자격 누락과 제한 중에도 본인 지원 자료를 읽는다. 원문 사유는 허용된 대표 코드 또는 other로 제한하고 실제 통지/취소 연결이 없는 이의 마감은 NULL이다. 기존 catalog·owner·ACL·RLS·제약·trigger·자료·예약 guard·worker 상태·사진 파일·migration67·보호된 네이버 컨테이너 보존과 새 함수 롤백 후 부재를 확인했다. 후보 HTTP 신규7+기존15는 별도 clone에서22/22 PASS다. 현재 root source 및 운영에는 통합하지 않았으며 실제 통지·이의 접수·운영자·모바일은 남아 있어 신고 영역50/전체63%를 유지한다. source67에 고정된 탈퇴 사진 검증 후68 준비 gate와 함께 통합한다.
+
+## 탈퇴 사진 URL 실제 검증: 정책 실패와 환경 복원
+
+최종 검증 파일 `b149566c513ae058ceb430f2edfe8e04784d6d48d9afe7f021e24372e54514a8`의 실제 Auth/Storage/RPC 실행 영수증은 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-cleanup-native67-pWIGtL/result.json`이다. 합성 사진 URL은 탈퇴 전200, 탈퇴 processing 직후 저장소 삭제 ACK0에서도200으로 같은634바이트 사진을 반환했고, 실제 저장소 삭제 ACK2 뒤400으로 차단됐다. 즉시 접근 회수는 FAIL이며 만료·삭제 후 차단을 즉시 회수로 확대하지 않는다. 정리 자체는 PASS로 전체 catalog/행 수/Auth 감사/역할/worker/guard/정리 권한/사진 파일/보호 컨테이너를 복원했다. 첫 사전 검사 실패 Yi6hL6도 보존하며 새 실행으로 덮어쓰지 않는다. 관련 두 영역을50으로 낮춰 개인60%를 표시한다. [수정 검토](requests/minkyu/2026-10-05-profile-photo-access-revocation.md)를 따른다.
+
+## native68 제재 이력 조회 통합과 정식 로컬 적용
+
+C 후보9파일과 A 준비 gate2파일을 고정 SHA로 검토·통합했다. root의 HTTP 신규7+기존15=22/22 PASS이며 source68은 SQL68/runtime49 준비본 `/private/tmp/yumidang-policy68-reviewed/prepared`로 만들었다. migration manifest `78fcb141e81e0bbcd16e24220c1fce9525f824f4f7bfdb232f68d8082f3fd7a2`, edge manifest `fbc72f92fc3718b442c55514473825f139eb43c64fdf0a78e9680a6bcd9640d8`다.
+
+정식 native67→68 CLI 단일 적용은 `/private/tmp/yumidang-native68-rollout-reviewed/application-receipt.json` PASS, 이력68/남은0이다. 신규 auth-only 함수1개와 identity 페이지 index1개 외 기존 함수OID/owner/ACL/본문·테이블/RLS/열/제약/trigger/index·역할/회원 자료/사진 파일/worker/guard/보호 컨테이너를 보존했다. 적용 후 SQL 회귀 `/private/tmp/yumidang-sanction68-regression/receipt.json`도 PASS이며 fixture 전체 롤백과 함수 보존을 확인했다. 실제 통지·이의 접수·운영자 HTTP·모바일·운영 배포는 미완료다.
+
+첫 사전 검사는 과거 formal67의 Auth 감사274행과 실제 회원 API 후288행의 차이 때문에 적용 전에 거절됐다. 원본 실패는 `/private/tmp/yumidang-native68-rollout/initial-preflight-failure.json`에 보존했다. 읽기 집계로 당시 API 실행 구간의14행(login5/signup2/delete2/recovery5)을 확인했으며 기록을 삭제하지 않았다. 현재 집계 SHA `bbc9c1d5e6c0a38b74ec2209f753587eb8b8b8d97f64f0b3164c615fbf62ebc6`을 고정하여 기존 모든 schema invariants와 실제 감사288행의 적용 전후 보존을 검사했다. 이전 가입 driver의 Auth 감사 정리는 NOT_ASSERTED다. 회원·사진·약속 fixture 정리 증거와 제공처 Auth 감사 보존을 구분한다.
+
+사진 즉시 접근 회수 FAIL은 아직 수정되지 않아 개인60%를 유지한다. 후속 source69는 사진 서명 발급 차단과 인증된 바이너리 조회, source70은 기본 승인/배정0의 담당자 자료 접근 경계 후보다. 문서·하네스나 부분 조회를 전체 신고/이의 완료로 계산하지 않는다.
+
+
+## native68 실제 회원 API와 source69 사진 정책 후보 검증
+
+민규 기준60%를 유지한다. 고정 driver `eb78280467db6972a098ec162a139832b8ef20cbe8c86ddec354428bb49ddd75`를 실제 격리 native68 Auth/REST/Storage와 회원 HTTP에 실행하여16그룹 PASS를 확인했다. 영수증은 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-naver-native68-EFNbOe/result.json`이다. 본인 제재의 현재·기간 종료·정정 상태, 개인정보 제한, 페이지 누락/중복 없음, 타인 커서 거절, 자격 정보 누락 중 조회와 정정 반영을 확인했다. 실제 통지·이의 제출·운영자 업무·네이버 OAuth·hosted Edge는 검증하지 않았다. 기존 Auth 감사288행의 정확한 ID를 보존하고 새 합성 회원의 UID/별칭과 정확히 일치하는 신규 감사만 마지막 Auth 삭제 후 정리했다. 전체 행 수·catalog·권한·사진 파일·보호 컨테이너와 fixture 정리도 PASS다.
+
+source69 고정 사진 SQL `c191b5808a970c7649edd1ba9b221a444d686ae3342c49b765629f0543f4f83e`와 SQL 회귀 `5c7f2ee6570bf9b17e21536d55c5da47cb18d4d9ed97ad9491a2e02e5cb97381`를 native68에서 단일 트랜잭션으로 실행하고 전부 롤백했다. `/private/tmp/yumidang-photo69-candidate/receipt.json` PASS로 서명/서명 업로드 차단, 기존 정상 업로드·사진 교체·삭제 제약, 실제 탈퇴 RPC processing 중 객체가 남아 있는 상태에서 본인/상대 사진 조회 거절과 기존 상태 원복을 확인했다. 실제 Storage HTTP operation 호환성과 새 인증 바이너리 조회 검증은 다음 단계이며, 과거 서명 URL 즉시 회수 FAIL과 운영/CDN 전환 미완료를 유지한다.
+
+
+## 사진 HTTP 통합과 담당자 승인 경계 후보
+
+사진 신규7파일을 고정 SHA로 통합했다. root 사진 HTTP12개 PASS 후 변경된 handler의 기존 service-api·신고·제재 이력·탈퇴 연결60개 회귀도 PASS다. native69 준비/정식 적용/실제 Storage API는 후속이며 개인60%를 유지한다. [종현 모바일 연결 요청](requests/minkyu/2026-10-05-profile-photo-access-revocation.md)에 회원 Bearer 사진 조회와 세션 변경·탈퇴 시 이미지 상태 해제를 기록했다. 상대 소유 파일은 수정하지 않았다.
+
+source70 기본 승인/배정0의 담당자 SQL 후보는 첫 회귀에서 기존 신고 target 검사에 거절됐다. `/private/tmp/yumidang-operator70-candidate/receipt.json` FAIL을 보존했고 전체 롤백·catalog/자료/권한/보호 컨테이너 원복은 PASS다. fixture의 JWT가 자기 자신 대상 신고로 남아 있었으므로 실제 신고자1→타인2를 명시했으며 trigger나 권한 검사를 끄지 않았다. 수정 SQL 회귀 `f5aa5c17e1723b49573df40f66303cf13ecfe6c41f68209bff35fb847587b182`와 불변 migration `296cc4fc48fce2f66f1ad72d10b39b3a12d2f7a225033a61fb8ab2b56a4486fd`의 새 단일 TX 실행은 `/private/tmp/yumidang-operator70-candidate-reviewed/receipt.json` PASS다. 승인/사건 배정 전 거절, 승인 회수/배정 회수, 만료·삭제·타인·누락 세션, 다른 담당 사건 거절, 정확 제출 자료 metadata와 읽기 감사, Auth 삭제 시 새 FK 비차단을 확인했고 전부 롤백했다. 실제 동시성·Storage bytes·HTTP·직원 운영 설정·판정·통지·이의와 운영 배포는 검증하지 않았다. source70은 root 미통합 상태다.
+
+
+## native69 사진 정책 정식 로컬 적용
+
+A 준비 gate 최종 도구 `24d5034b440245631258a1137e57e3e95cb4a7068222c278ca1055d13781a00b`와 검사 `6a480fdcf1296ad2daa6d3b4caadc2f90960845e6414828c05af05bb4afd576e`를 고정 통합했다. 준비 검사45개 PASS이며 기존 strict41과 HEAD28/41/60..69 정확 집합·누락/변조 거절을 보존했다. main 실제 준비본 `/private/tmp/yumidang-policy69-reviewed/prepared`는 SQL69/runtime50 READY다. migration manifest `4e4a7e1c8111628e87c4fc4120cb80dd4163f1f7fc568f98ec8201e1d52812ea`, edge manifest `f722925e555b1457450b2fb22336322ae6e4b48b672a9b482a6c4e77011b592c`이며 main/준비본의 고정 바이트가 일치한다.
+
+root가 검토한 적용 driver `92942866e7e92a308f734fda0ae721293bdd202b1e5e774048565393c423a968`의 실제 native68→69 정식 CLI 단일 적용은 `/private/tmp/yumidang-native69-rollout-reviewed/application-receipt.json` PASS다. dry-run1→해당 SQL1회 적용→최종 대기0/이력69를 확인했고 허용 변화는 storage.objects의 authenticated restrictive SELECT/INSERT 정책2개뿐이다. 기존 함수OID/owner/ACL/본문·테이블·RLS·열·제약·trigger·index·역할·전체 행 수와 감사288행·worker·guard·사진 파일·보호된 네이버 컨테이너를 보존했다. 적용 후 SQL 회귀 `/private/tmp/yumidang-photo69-regression/receipt.json`도 PASS이며 전체 합성 fixture 롤백과 신규 정책 보존을 확인했다. 운영 DB·실제 네이버·외부 공급사를 변경하지 않았다. 실제 Storage API와 회원 인증 바이너리 사진 검증은 다음 단계이며 기존 signed URL/CDN 전환 미완료 때문에 개인60%를 유지한다.
+
+
+## native69 실제 Auth·Storage·인증 사진 검증
+
+민규 기준60% 유지. 최종 검증 파일 `3d892d005f4f2a1eb45476b532e15290fc832ae2c9cec76e860a2f86611c5848`의 실제 native69 결과 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-cleanup-native69-ienEqP/result.json`은 PASS11개다. 단건 서명400, 다건200이지만 signedURL NULL/항목 오류, JPEG/정상 크기의 signed upload400/RLS 거절, 변환 서명400으로 bearer 발급이 없음을 확인했다. 정상 canonical 업로드·현재사진 삭제 거절·회원 RPC 대표사진 교체·이전사진 삭제도 실제 Storage로 검증했다.
+
+탈퇴 전 본인/활성 상대의 GET·HEAD·INFO·인증 바이너리 HTTP는200이며 GET/HTTP는 정확 JPEG였다. 실제 탈퇴 RPC의 processing·삭제 ACK0·사진 파일2개 상태에서 본인 Storage400/HTTP401, 상대 Storage400/HTTP404로 이미지 bytes가 차단됐고, 대상 Storage DELETE ACK2 뒤에도 차단됐다. 남은 상대의 본인 사진은 계속200이다. 외부 정리 task는 실제 Storage2회 삭제→Auth1회 삭제→completed이며 가짜 완료를 넣지 않았다.
+
+정리는 기존 Auth 감사 정확한 ID·전체 catalog/행 수/사진 파일0·guardfalse·worker 해제·정리 RPC owner/ACL·보호된 네이버 컨테이너 복원 모두 PASS다. 새 인증 요청의 실제 차단과 과거 발급 URL 회수는 별개다. 기존 native67 pWIGtL FAIL을 유지하고, 이미 발급된 URL/운영 CDN 전환·hosted Edge·모바일 캐시는 미검증 상태다. 실제 네이버 OAuth나 운영 DB를 변경하지 않았다. 모바일 연결과 운영 전환이 남아 있으므로 전체 인증/탈퇴 정책을 완료로 표시하지 않는다.
+
+
+## 담당자 승인 경계 source70 통합 준비
+
+실제 native69 사진 검증 완료 후 고정 staff SQL/전용 client/HTTP transport 모형/수정 SQL회귀/요청 문서5개를 root에 통합했다. root client 검사5개 PASS다. 이 단계는 기본 승인/배정0·회원 가입과 독립된 담당자 Auth 세션·정확 배정 사건의 제출 자료 metadata만 읽는 경계이며, 실제 운영자 계정이나 배정 자료를 생성하지 않았다. 정식 native70 적용·별도 두 세션 검증·증거 bytes HTTP·판정/통지/이의 흐름은 후속이다. A는 기존 준비 도구2개에 고정 source70 한 개만 추가하는 검토를 진행한다. source69 준비 산출물과 actual영수증은 보존하며 신규 runtime 변경과 혼합하지 않는다. 이번 추가 변경도 아직 커밋/푸시/운영 배포하지 않았다.
+
+
+## 2026-10-06 진행률 재감사와 표시 정정
+
+사용자는63%에서60%로 내려간 이유와 실제 진행률을 확인하도록 요청했다. 현재 진행표의 실제 JSON 참조30개를 읽었고 누락된 영수증0, 원본 FAIL과 후속 PASS의 구분을 확인했다. 특히 native68 회원 API16그룹과 native69 사진11항목/정식 적용/SQL 회귀/전체 정리를 확인했다. 독립 검토자도75=핵심 로컬·100=전체 운영이라는 동일 기준으로 인증/사진 및 탈퇴/정리의75 복원에 동의했다.9×75+2×50+2×25=825/1300=63.46%다. 상단 현재 표시를63.5%로 정정하고 과거60% 기록은 당시 상태와 갱신 누락의 역사로 보존한다.
+
+제재 이력 읽기·담당 승인/배정 일부가 통과했어도 신고 판정→통지→이의→정정 전체가 끝나지 않아 신고50은 유지한다. 운영 DB25·상주 서버25·공개 삭제/개인정보/지원50도 실제 배포·게시·업무 체계가 미검증이므로 유지한다. 이번 수치는 정해진13영역의 단계 점수이며 실제 소요 시간·남은 날짜·테스트 통과 비율의 정밀한 추정이 아니다.
+
+
+source74 정식 적용 후 실제 Auth/REST/Storage/in-process HTTP17그룹 PASS다. 영수증 SHA `769781f94ebb212ef68bea6454dee7b59ee7041b32fd1bc6ed3261770f318251`이며 노쇼 명시 귀책·원 사건 정정·중대 위반 무효화·탈퇴 당사자가 포함된 정상 완료 정정·원래 세션과 권한 경계를 검사했다. 정리8항목 모두 통과해 기존 전체 자료·권한·정책·Auth 감사288 ID/payload·파일0·guard/worker·보호 컨테이너를 복원했다. 최초 실행 권한 누락은 데이터 호출 전 NOT_STARTED 영수증 `49318a93cf20494e7c30d4794181995e9f179dfc6418855b4654117bd1a6cc6e`로 보존한다.
+
+별도 실제 두 세션 SQL12사례도 PASS다. 영수증 SHA `ec5c571d04221b527c0b64fb4a96dc69b45ffc12e8ee184b1fdecd8076b7aa9a`이며 잠금 관측16개·세션 결과123개로 판정 중복/정정·직원 및 당사자 탈퇴·권한/배정 회수·대기 중 세션/보관 만료·완료 충돌을 확인했다. 전체 자료와 catalog/ACL/정책/감사/파일/컨테이너를 복원했다. 이는 SQL 경합 증거이며 통지·이의·실제 OAuth·모바일·운영 검증은 아니다. 75 본인 통지 후보는 보관 만료 차단·기록 대기 후 권한 재검사·책임 해제 정정 안내를 보완 중이다. 신고 전체 흐름이 남아 신고50·전체63.5%를 유지한다.
+
+
+75 회원 통지 HTTP6파일을 최신74 runtime 기준에서 선별 통합했다. `GET /decision-notices`는 `{items,nextCursor}`, `POST /decision-notices/:id/read`는 empty body와 정확9키 본인 통지 DTO를 사용한다. 원 JWT/anon key 유지·타인 및 만료404·상대 원문/귀책 미노출·목록 조회의 ACK0·명시 ACK의 최초 시각을 검사한 신규10개와 기존 제재7개 모형 검사가 root에서17/17 PASS다. 이는 모형 HTTP 검증이며 실제 통지 SQL/RPC·Auth API·이의·운영은 NOT_RUN이다. 현재 root runtime은 통지 연결을 포함하므로 이전 prepared74 runtime manifest를 새 구현의 증거로 사용하지 않는다. 신고50·전체63.5% 유지다.
+
+
+source75 본인 통지 SQL과 회귀를 정식 native74 격리 DB에서 단일 TX로 실제 실행·롤백해 PASS했다. 영수증 `/private/tmp/yumidang-notice75-candidate-reviewed/receipt.json` SHA `c369784ca1197f100c98152ad78c1bacba7ab1db919948c93ec3704910b693cc`, driver SHA `0bd762bd0d204be3e47b3b1e27337e7620a25a8d15e43d9345f2615603443328`다. 명시 읽기 최초시각/멱등·회차/identity 분리·책임 해제 정정·만료된 미삭제 자료 거절·통지/읽기 trigger 후 세션/보관 만료 전체 원복·기존 판정 metadata·report 파기 CASCADE를 검사했다. 부모 Auth session→Naver child 순서와 대기 후 만료검사는 독립 읽기에서 확인했으며 실제 두 세션 경합 증거로 확대하지 않는다. 전체 catalog/자료/ACL/정책/Auth 감사288/파일0/보호컨테이너/cleanup 폐쇄를 보존했다. 검증된 SQL·회귀·문서3개를 선별 통합했지만 정식 로컬 이력은74이며 준비75 gate·정식75 적용·실제 통지 Auth API/두 세션·이의·운영은 후속이다. 신고50·전체63.5% 유지다.
+
+
+source75 준비 도구/선별검사를 통합하고 root74→75/변조/미승인미래3개 회귀 PASS 후 최신 실제 source graph를 준비했다. `/private/tmp/yumidang-policy75-agent-reviewed/prepared`는 SQL75/runtime52 READY이며 migration SHA `0f3f9a30234349b2837673782655c59ec0af5e2750d9c630de244db59accdb10`, edge SHA `b459d05404f7599cb197028a1ec407872e653e12ca5b87f35a913071a3b314ca`다. 준비 자체의 SQL/Edge 실행 상태는 NOT_RUN이다. 별도 root 정식75 적용은 독립검토 후 once CLI PASS했다. `/private/tmp/yumidang-native75-rollout-reviewed/application-receipt.json` SHA `bdc4827ba529b26dce01f163edb53fcf01f6022b65a9cdaef3b44ac9a47543f7`이며 history75·pending0이다. 신규 함수5/표2/열25/제약26/인덱스3와 기존 판정 함수1의 본문만 변경됐고 OID/owner/ACL/config 등 기존metadata·다른본문·전자료/Auth감사288 ID+payload/정책/역할/파일0/guardfalse/workeridle/보호컨테이너를 보존했다. 실제 결과는 사전 rollback probe와 일치했다. 실제 통지 Auth API·두 세션·이의·최종종결·모바일·운영은 후속이며 신고50·전체63.5% 유지다.
+
+
+실제 native75 Auth/REST/Storage/in-process HTTP 첫 실행은 통지 본인 조회 단계에서 FAIL했다. 원본 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native75-wSlQox/result.json` SHA `9c01eb967e49eca2ebe8376fdbe203369c25bd0622af34d0fb7e15d2c435fcfa`를 보존한다. 7개 이전 단계 통과 후 실패했으며 통지 API 성공으로 설명하지 않는다. 정리9항목은 모두 PASS/errors0이며 catalog/전자료/ACL/정책/Auth감사288 ID+payload/파일0/guardfalse/workeridle/보호컨테이너/활성TX0와 새 상세표 CASCADE0을 복원했다. 자료 복구나 삭제는 재실행하지 않고 첫 통지의 직접 REST와 회원 HTTP 호출 단계를 분리한 원문 없는 유한 오류 진단을 준비한다. 신고50·전체63.5% 유지, 운영 변경0이다.
+
+
+통지 API 유한 진단 실행도 모듈 import 단계에서 FAIL했지만 원인이 구체화됐다. 영수증 SHA `fce3edf98e29d6739979afbafe84e802c3a1e73244e1edb281da3461e2ae7ecd`를 보존한다. 본인 통지 직접 REST는 HTTP200/오류코드 없음이며 검증기의 신청 결과 변수 `join`이 node:path의 `join` 함수를 가려 TypeError가 발생했다. 원본 모듈의 별도 로컬 import는 PASS했다. 정리9항목/전체기준 복원은 모두 PASS였고 원문·키·유효 토큰은 저장하지 않았다. 검증기 변수 이름만 교정하고 실제 전체 재검증 전에는 통지 HTTP PASS로 전환하지 않는다.
+
+
+source75 실제 두 세션 SQL12사례 PASS다. 영수증 SHA `4bdf715b33754ff34175e34caf2e550e65c7ec3ccfef0ddde204b6d4bd67d892`이며 실제 잠금 관측23개/세션 결과187개다. 중복 ACK·부모 로그아웃 두 순서·child 대기 및 ACK 대기 중 세션/보관 만료·책임 정정·report CASCADE 삭제·탈퇴 양방향 경합을 확인했다. 전체 native75 자료/메타데이터/ACL/정책/역할/감사288/파일0/guardworker/컨테이너/활성세션을 복원했다. SQL 합성 JWT/Storage metadata 증거이며 Provider/HTTP0이다. 목록 TTL 경합은 query 단계만 증명하고 반환직전 검사는 별도 실제 단일TX hook 회귀로 구분한다. 최초 driver의 journal 정적결함은 실행 전 교정했고 실패 경합으로 세지 않는다.
+
+통지 API 후속 실행의 실패3개째는 정상 bulk-read RPC204를200으로 기대한 fixture 오류(SHA `8a306404c049d413909609bc24b0f639ecb6e65e84b73fe8990c4a7ed6676b07`)다. 이를 교정한4개째는 실제 notice 목록/명시ACK/타인404/제재 및 자격미충족 관리조회까지 포함11그룹 통과 후 nullable SQL scalar를 JSON으로 읽다가 중단됐다(SHA `3a7413778f1197e75e24fb123abec6b152389c2500b0a7c6fddaa0416f60afce`). 각 실행의 정리9항목은 모두 PASS/errors0이며 원본 증거와 driver를 보존한다. nullable snapshot을 객체로 교정한 뒤 전체 실제 API 재검증이 필요하다. 신고50·전체63.5% 유지다.
+
+
+source75 실제 로컬 Auth/REST/Storage/in-process HTTP 전체21그룹이 후속 실행에서 PASS했다. 영수증 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native75-sOVRdX/result.json` SHA `323d4e323c669f28da24a53290634b383805f3548c583f784d0f1526d3bd56ca`, driver SHA `6eac744390c13024fe89ce6a890793152751183ce26a512b7c2974fc69dc6133`다. 본인 통지 정확9키·상대 정보 보호·조회/일괄읽기의 명시 ACK 미변경·최초 읽기 시각 멱등·타인404·제재/자격 미충족 관리조회·정정 전 기록 보존·세션 만료/로그아웃·합성 동일 identity 새 회차 분리·탈퇴 당사자 차단을 확인했다. 정리9항목 모두 PASS/errors0이며 기존 전체 자료/catalog/권한/정책/Auth감사288 ID+payload/Storage 파일0/guard와 worker/보호컨테이너를 복원했다. 기존 실패4개와 원본 검증기는 보존한다. 실제 네이버 OAuth·hosted Edge·모바일·운영·일반 이의 7일 시작점은 미검증이다. 신고 전체 흐름이 남아 신고50·전체63.5%를 유지하며 다음은 확정24시간 취소 이의 접수·본인 조회 후보다.
+
+
+취소 이의 HTTP 후보5개를 독립 읽기 검토 후 root에 정확 SHA로 선별 통합했다. `GET /appointments/:id/cancellation-appeals`는 본인 현재 상태 정확8키, POST는 `{clientRequestId,expectedResultRevision,reportId}`와 원 접수 스냅샷 정확9키를 사용한다. 원 JWT/anon만 전달하고 회원 시각·actor·다른 회차·원문 입력과 오류 원문 노출을 차단한다. microsecond 시각을 보존해 DB 결과를 검증하며 HTTP에서 접수 기한을 새로 판정하지 않는다. root 신규10+기존 통지10+제재7=27/27 모형 검사 PASS다. 원본4파일은 `/private/tmp/yumidang-appeal76-http-root-integration/`에 보존했다. SQL76은 아직 후보이며 정식 DB/source SQL 이력75를 유지한다. 현재 runtime이 변경되어 prepared75 edge manifest는 이전 통지 runtime 증거이고 새 runtime 준비는 NOT_RUN이다.
+
+현재 POST는 기존 신고 reportId를 참조하는 별도 이의 접수다. 신고 최초 도착을 이의 접수로 소급하지 않으며, 신고 제출과 이의 판정을 사용자 한 번의 제출·동일 DB statement/TX로 묶는 S21 최종 연결은 후속 요구로 남긴다. 검토 승인/거절·경고 및 제한 실제 적용·통지·최종 종결·정리·실제 OAuth/모바일/운영도 남아 신고50·전체63.5%를 유지한다.
+
+
+source76 SQL 후보 실제 검증의 첫 실행은 SQLSTATE42702로 FAIL했다. 회귀 보조 함수 `pg_temp.cancel_appeal_age`의 인수 n과 테이블 열 n이 겹쳐24시간 경계 fixture 조정에서 중단됐다. 영수증 `/private/tmp/yumidang-appeal76-candidate-reviewed/receipt.json` SHA `7ec912252c09911aba197809be117eb3a471a9b2d872eb68492f22eca23a4a83`, driver SHA `496324784d13b45d7a3dcd1a4103416e2125bd3b48c9645f51e6eea2a81bec44`를 원본 그대로 보존한다. 고정 입력·전체 catalog/자료/권한/정책/Auth 감사288·정식75 증거·파일0·보호컨테이너·다른 활성 TX0·정리 helper ACL의 복원7항목은 모두 TRUE이며 원격 완료 불확실성은 false다. 후보 변경은 모두 롤백됐고 DB 이력75/운영 변경0이다. 추가 복구나 삭제는 하지 않는다. A가 보조 함수 이름만 교정하며 migration SHA `359a8093c3a32bf7d547a17df98173de677307933780a8e78db323bc4c26fcd8`는 유지한다. 교정 회귀를 새로 고정·검토한 뒤 별도 실행하며 현재 SQL 전체 성공은 주장하지 않는다. 신고50·전체63.5% 유지다.
+
+
+교정한 source76 회귀를 별도 고정 단일TX로 실행해 PASS했다. 영수증 `/private/tmp/yumidang-appeal76-age-reviewed/receipt.json` SHA `a1c048c47d40bc13afe80d0674f80575c7f8ddb9c0305f7e7cb70250580183db`, driver SHA `4e07d567da92de74f195764d94349444e351286ac7dfa9efba34c1a4981566a7`다. 검증된 SQL `359a8093c3a32bf7d547a17df98173de677307933780a8e78db323bc4c26fcd8`와 회귀 `b4cf7fc3a45cbd4b27f761e7c61717bcf323e5f6d56e239216ac1e550cd3da5e`를 root에 선별 통합했다. 최초42702 FAIL·driver·inputs는 보존한다. ASSERT on·equal/late/1microsecond early·원 접수/replay/CAS·MAXSAFE·원 취소/순서 보존·세션 만료 후 전체 원복·자격 누락 관리조회·TTL·합성 accepted-exempt의 상세 CASCADE 후 최소 결과 보존·회차/탈퇴·권한/역할/guard/worker를 검사했다. 전체8체크가 TRUE이며 candidate변경은 모두롤백했고 정식75 메타데이터/자료/권한/Auth감사288/파일0/컨테이너/활성TX0을 보존했다.
+
+현재 승인 source graph는76이고 정식 로컬 DB는75다. 원래 제외한 중복 SQL1개가 남아 raw 파일 수는77이지만 승인 목록을 늘리지 않았으며 기존75개 SHA는 모두 그대로다. 통합 뒤 raw 파일 수를 승인 graph 수와 동일시한 root 후검사 assertion은 이를 구분해 교정했고 복사된2파일의 SHA와 이전75개/제외 파일 집합을 다시 확인했다. 새 prepared76·정식76·실제 이의 Auth/HTTP/두 세션·S21 원자 접수·직원 승인/거절·최종 종결/90일 엔진·모바일/운영은 후속이다. 신고50·전체63.5%를 유지한다.
+
+
+source76 준비 gate/tool/test와 실제 PASS 문서를 root에 통합했다. 기존75 source핀·제외 중복·정확한 과거 승인집합을 보존하고 root75→76 pending1/변조/미승인 미래3개 선별 회귀가 PASS다. tool SHA `57ce1632d8759f35ddc642083154d7d98c6a984ce304e20051b4ccdc5cf6cdc7`, test SHA `09311f3a132be2437cf874059425bab3bcb886abd04a3c1a65e2418017ea42a6`다. 최신 source를 `/private/tmp/yumidang-policy76-agent-reviewed/prepared`에 실제 준비해 SQL76/runtime52 READY를 확인했다. migration manifest SHA `501144f17a46a8442d35ff24375c3f9c8ba941d9fb789f5b0adc21dc15a48621`, edge manifest SHA `a22e2b20306de8eff3340e2c46c8ede3bda108c9fdf4516c509f693f286cd126`이며 root source의 모든76 SQL/52runtime bytes와 일치한다. SQL/Edge 실행 상태는 NOT_RUN이며 정식DB 이력은75를 유지한다. 정식75→76 검증기·새25그룹 실제 Auth/HTTP 초안·두 세션 후보를 병렬 준비한다. prepared75/runtime는 과거 통지 검증 증거로 보존하고 현재76의 증거로 확대하지 않는다. 전체13영역과 남은S21/운영 요구를 유지하며 신고50·전체63.5%다.
+
+격리 로컬 DB의 정식75→76 적용이 PASS했다. 영수증 `/private/tmp/yumidang-native76-rollout-reviewed/application-receipt.json` SHA `69c7dcf942a9de44669db19a398629b6e628a6d2bdc544a7f1db75d4222d32b9`에 이력76·대기0·기존 메타데이터/권한/자료·Auth 감사288개·파일0·guard=false·worker idle 보존을 기록했다. 운영 DB 변경0이다. 취소 이의 실제 Auth API25그룹과 동시 요청 검증은 아직 NOT_RUN이며 전체63.5%를 유지한다.
+
+정식76에서 실제 로컬 Auth/REST/Storage/in-process HTTP25그룹이 PASS했다. 영수증 SHA `6a76e79742e3f7e7eb457293f912b4ad949c59d4bfe656e771a8a509defcfe2b`, 검증기 SHA `30fb1a736431fd7eca35747f8ebe66edd793b0917390bd41a4afba8cd7cace87`다. 신규 취소 이의 조회·접수·재시도·버전 충돌·타인 접근·잘못된 입력·만료 세션과 이전21그룹을 함께 확인했다. 정리10항목 모두 통과·오류0·기존 Auth 감사288개와 catalog/자료/권한/파일0 보존이다. 실제 네이버 OAuth·hosted Edge·모바일·운영은 NOT_RUN이며 신고 접수와 이의의 한 번에 저장되는 전체 S21 흐름 및 직원 결정은 후속이다. 전체63.5% 유지.
+
+정식76 실제 두 세션 SQL12사례가 모두 PASS했다. 영수증 SHA `6db722cfc112839e580f6f453a89fc4e36fb9ecae567072f9d1bb5f528affc5e`, 검증기 `172ec7e3884046d42b25392ab6188fec102ab14cc114ddf6c481d1925aa16476`다. 중복/CAS·다른 약속 키·로그아웃 양순서·세션/신고 만료·신고 삭제 양순서·탈퇴 양순서와 DB statement 접수 시각의 마감 경계를 확인했다. 실제 blocking 관측21개·세션 결과136개이며 전체 snapshot 전후 SHA가 동일하고 Auth 감사288개·guard/worker/파일/컨테이너/권한/자료 보존 PASS다. remoteCompletionUncertain=false·자동 재시도0이다. SQL 경합 증거를 hosted HTTP/실제 OAuth/운영 검증으로 확대하지 않는다. 기존 신고50·전체63.5% 유지이며 다음은 S21 신고+이의 원자 접수와 직원 판정/통지/정정 전체다.
+
+source77 원자 접수 SQL·HTTP·회귀를 A/C에서 병렬 구현하고 B는 독립 검토한다. 실제CLI가 생성한 신규 leaf는 `20261005195033_appointment_cancel_appeal_atomic_report.sql`이며 현재 정식 DB76에 적용하지 않았다. 빈 파일 생성은 대상 경로 검사보다 먼저 이루어졌고 이후 소유권/하네스 검사는 통과했다. 내용 수정은 담당 A의 검사 후 진행한다. 기존 상세가 남아 있는 보관 만료는 PT404, 상세 파기 후 원 접수 키 구분 근거가 없을 때는 기존 최소 결과에 따른 안전 거절을 유지한다. 새로운 무기한 tombstone·보관 기간을 만들지 않으며 신고·이의 재생성 성공0을 검증한다. 전체63.5% 유지.
+
+source77 HTTP5파일을 기존76 바이트와 대조·독립검토 후 통합했다. root 모형 검증은 신규6+기존27=33/33 PASS다. 최초 두 명령은 존재하지 않는 통지 test 파일명을 지정해 실행 전 실패했고, 실제 파일 `decision_notices_http.test.ts`를 확인한 뒤 올바른3파일을 실행했다. 원 JWT/anon·strict6→typed7·exact10·기존76 계약·안전 오류/비노출을 확인했다. 실제77 SQL·인증 API·운영은 NOT_RUN이다. 준비76은 이전 runtime snapshot이며77용 현재 준비는 후속이다. 전체63.5% 유지.
+
+source77 후보 SQL과 회귀를 정식76 격리 DB의 같은 outer TX에서 실제 실행하고 전체 롤백해 PASS했다. 영수증 `/private/tmp/yumidang-appeal77-candidate-reviewed/receipt.json` SHA `a9bf3db6c15c43165728502069bf35286b03f5c7d17528a385ee00c6e8343f9c`, 검증기 `a998f5b8151ea7ac7694cd249ff13227eb565facf21f907695c5392365e00e07`다. ASSERT ON·checks8 모두true·uncertainfalse·자동재시도0이며 기존 전체catalog/건수/권한/정책/역할/Auth감사288개/파일0/guard/worker/보호컨테이너/정식76증거가 원복됐다. 같은DBstatement 마감동일/1µs전후, 원자신고+이의+hashbinding 성공, CAS/마감/session 실패시 신고/원문/첨부전이/숨김/결과revision/binding 전체원복과 uploaded 준비metadata보존, replay/다른입력충돌/배열정규화, 상세TTL·파기후 안전거절/최소exempt 유지·재생성0을 확인했다. 실제Storage파일 업로드·HTTP·직원판정·정식77·운영 증거는 아니다. SQL/test/계약3파일을 핀대로 통합했다. 전체63.5%를 유지하며 준비77·정식76→77 검증기·실제Auth API를 병렬 준비한다.
+
+source77 준비 도구와 테스트2개를 독립 검토 후 통합했다. A 선별15개·root 선별3개 PASS, 기존 승인35핀/정확 과거집합/strict41 보존과 신규77 누락·변조·미승인 미래 거절을 확인했다. 처음 명령의 명시적 `--gateway-probe` 누락은 준비 전 차단됐으며 flag를 지정한 파일 준비는 READY였다. `/private/tmp/yumidang-policy77-agent-reviewed/prepared`의 SQL77/runtime52 전체 바이트가 source와 일치한다. migration manifest SHA `501bc9a741a6c64a6ebf7c5a5bd77aebb93dc7fb99b7a2d1b2eff444e3e04ee8`, edge manifest `e9ee9553ad57abe350aa0b1bc982446b79b062d9f1554e865ed7365e865b654e`다. 준비의 SQL/Edge NOT_RUN은 파일 준비 상태이며 실제77 적용은 별도 영수증으로 검증한다. root 검증기 `63def4cfee23670d7995953d9c24de40f94545f52b059af101c9c54090b2b577`는 ROOT와 준비핀2개만 변경해 독립검토했고 격리 정식76→77 적용을 한 번 실행 중이다. 운영 변경0·전체63.5% 유지.
+
+정식 격리 로컬76→77 CLI 한 번 적용이 PASS했다. 영수증 `/private/tmp/yumidang-native77-rollout-reviewed/application-receipt.json` SHA `1b24b7d643cac797391a39e46f5a533aa2bf7b24962eca881b54b6f84891c799`에 이력77/대기0/새함수1·표1·열3·제약3·index1·trigger0과 기존 함수 변경0을 기록했다. 실제 PostgreSQL rollback probe와 정식 적용 뒤 schema가 신규 객체 OID만 정규화한 전체비교에서 일치했다. 기존 전체metadata/자료/권한/정책/역할/Auth감사288 ID+payload/파일0/guardfalse/workeridle/보호컨테이너/과거증거를 보존했다. 현재 실제77Auth API·경합은 NOT_RUN이며 운영 변경0·전체63.5% 유지다.
+
+정식77에서 실제 로컬Auth/REST/Storage/in-process HTTP30그룹이 PASS했다. 영수증 SHA `dab0d69b4993ee9f77cbbe188e26e3f8380c594e7032a5eab069319a9d9a98b7`, 검증기 `e8e875102bd0a284a12ea63e39eb41887a34003976c1afec221fce58566aa1fb`다. 기존25를 유지하고 실제 첨부 업로드/확인→CAS실패시uploaded/원bytes보존→한RPC exact10 원자성공/attached/hide→원입력replay·충돌·타인접근·입력주입·자격관리·만료세션·owner합성TTL파기거절을 추가했다. 실제 취소 이의 재접수 거절55000의 upstream HTTP500을 유한코드·상태로만 관측했으며 원문 기록0이다. 그 관측 한 건을 모든 SQLSTATE의 HTTP상태로 확대하지 않는다. 정리11항목 모두PASS/errors0·기존전체metadata/자료/권한/정책/roles/Authaudit288 ID+payload/files0/guardfalse/workeridle/보호컨테이너/활성TX0을 원복했다. hosted/실제NaverOAuth/직원인정·불인정/90d종결engine/모바일/운영은 NOT_RUN이다. 신규경합77을 병렬준비하며 신고50·전체63.5% 유지다.
+
+정식77 실제두세션 원자 접수12사례 PASS. 영수증 SHA `e17ac78f36df2845ae77bbce56da8abf81ca3ff76e748fa8fcb6b87c43a491dd`, 검증기 `530289e0d43bc0b6cc32447cbb0158ff94dfc7cf555c10e90ebbcd00609e3dc0`다. 실제blocking19/세션결과218을 관측했고 동일request551·기존report/다른AP키·AP/resultNOWAIT·sortedcapture·첨부취소/metadata·session대기·DBstatement마감·report삭제·logout/탈퇴·binding INSERT뒤session만료를 검증했다. 정확snapshot 전후 SHA가 같고 전체catalog/자료/권한/정책/roles/Auth감사288개/파일0/guard/worker/보호컨테이너를 원복했다. remoteCompletionUncertain=false·자동retry0·provider0이며 Storage metadata 경합을 실제binary/hostedHTTP 증거로 확대하지 않는다. 별도API30은 실제Auth/Storage/in-processHTTP 증거다. source77 접수 검증은 완료했고 직원인정·불인정/연속취소계산의실제경고·제재·당도·취소전용통지/무이의24h워커/최종종결·90d·모바일·운영은 남는다. 정책질문2개는 정정시 제재시각 승계/탈퇴회차 최초효과이며 독립운영자료 전환준비를 계속한다. 신고50·전체63.5% 유지.
+
+2026-10-06 최신 답변 재확인: 운영 휴대폰 계정3개는 모두 개발용 테스트 계정이다. 기존 기록 보존 조건을 유지한다. source77 정식 적용·실제 인증 API30그룹·두 세션12사례는 완료했고, B는 legacy20→77 별도 합성 전환 검증기를 private 경로에서 구현 중이다. 현재 CLI 도움말의 서비스13개 제외 목록은 신규 DB-only 후보의 근거이며 역사적 실행 명령으로 주장하지 않는다. DB 실행은 후보 검토 후 root가 순차 수행한다. 신고50·운영25·전체63.5% 유지.
+
+직원 해소·취소 경고/제재·통지·24h due의 확정 영역 구현을 A에서 시작하고 C가 HTTP 연결 설계/전환 입력을 독립 검토한다. 실제 CLI migration new는 별도 private 프로젝트에서 leaf `20261005203258_appointment_cancel_resolution_and_due.sql`만 생성했다. 소스 leaf/SQL 적용0이며 소유권 통과 후 하네스 A의 정확3경로를 예약했다. 미답변 두 정책은 의존 분기에 한정해 보류하고 전체 목표는 유지한다. B의 동결 입력 두 모드는 SQL20/77·전 파일핀·동일config/storage enabled 검사가 통과했으며 새 포트20개 현재 충돌0을 읽기 확인했다. 검증기 기존 객체 OID 비교 보완을 요청했고 실제 새 DB 시작은 아직0이다. 전체63.5% 유지.
+
+새 active 합성20→77 최초 실제 실행은 metadata 조회 문법 오류로 FAIL했다. 원영수증 `/private/tmp/yumidang-legacy77-root-reviewed/active/receipt.json` SHA `3628cab30868e098a99e50c4c8843a490ccfa3a8706dc40f1d945d5cb96c7983`, driver482b9e9e…/unknownfalse/적용57=0이다. start·fixture COMMIT은 완료했고 별도 실제 읽기에서 Auth3/profile3/posts2/AP1/Storage metadata2를 확인했다. 메타데이터6종 중5종 조회PASS, DEFINITIONS의 outer 괄호 누락42601을 확인했다. 정적 검토 blocker0를 실제 SQL PASS로 확대하지 않는다. 기존FAIL·marker·새DB를 보존하며 start/fixture/동일run재실행0, 별도 continuation 후보로 남은 단계만 검토한다. 운영변경0·전체63.5% 유지.
+
+원FAIL의 DEFINITIONS outer 괄호1개만 교정한 실제 readonly6 query는 PASS했다. 영수증 `/private/tmp/yumidang-legacy77-readonly-syntax-c3prgp60/receipt.json` SHA `f3920681dd3a4096da7a311333b4c0da5f3602d9935386ea6e9ec20e801cf42e`, DB쓰기0·SQL57적용0이다. 이어 source57과 실제20 함수 목록을 대조해 원함수20개가20135에서 private으로 이동/rename되고 새 public wrapper가 생기는 사실을 확인했다. 기존 signature의 OID를 무조건 유지하는 후보 비교는 이 승인된 이동을 잘못 실패시킬 수 있으므로, 원OID의 정확 destination 보존·명시 source 근거·새 wrapper OID를 분리 검증하도록 B/C에 보완 요청했다. 아직 실행 안 한 completed 교정copy08802f6d…는 ROOT/DEFINITIONS2상수만 독립검토했지만 이 논리 검증이 끝나기 전 실행하지 않는다. active는 원FAIL·fixture·history20를 보존하고 start/fixture 반복0, 남은57단계 별도 continuation을 준비한다. 전체63.5% 유지.
+
+active 이어가기의 첫root호출은 신규승인flag 대신 과거freshflag를 지정해 argparse에서 DB 접근 전 차단됐다. 올바른 --continue-legacy77-approved로 실제한번 실행한 session1537은 SQL57 적용완료 후 postflight에서 FAIL했다. driver82dfc9dc…·영수증 `/private/tmp/yumidang-legacy77-active-continuation-reviewed/active/continuation-receipt.json` SHA `760c70c9fc38848d7d7ca800419baa5cb6a236cff532907c24f92989834d872e`이며 appliedtrue/unknownfalse·자동retry0이다. 승인된 전체metadata/OID목적지·전체건수 비교는PASS, 원20행hash누락0이다. 유일 probe/실제원열집합 차이는 Storage 신규 report-evidence bucket1행의 defaultclock이다. 원profile-images 전체열hash는보존됐으며 새bucket 정적필드와 시각을 분리검증하는 별도read-only후속을 준비한다. 별도 실제읽기는 history77/legacy미연결회차3/Naveraccounts0/identitykeys0/guardfalse/workeridle/새bucket지정설정true를 확인했다. 첫FAIL·후속FAIL·markers·cluster 보존하며 migration재적용0/운영변경0이다. 아직 최종권한/cron/자료 전체후속 증거가 완료되지 않았으므로 전환전체PASS라고 하지 않는다. 전체63.5% 유지.
+
+legacy77 실제 두 시나리오 검증을 마쳤다. active 별도readonly postflight PASS는 `/private/tmp/yumidang-legacy77-active-postflight-reviewed/readonly-receipt.json` SHA `dd14be587bb7a1bda43d6f56e7b3599ac246a836511866541c9006d5d381be95`로 원FAIL·appliedFAIL 보존/57재적용0/원행 전체열hash·승인metadata/건수·역할/실효ACL·cron표적만제거·미연결episode3·guardfalse/workeridle·보호컨테이너/활성TX0를 확인했다. 새bucket 정적10필드 exact·fixture~현재DBclock 보수범위이며 정확적용clock창은 미증명이다. completed fresh 최초20→77은 `/private/tmp/yumidang-legacy77-completed-clock-reviewed/completed/receipt.json` SHA `e5dae21e8aa244eb697240918b5d79b856cb4c9acd30b5dcb1615762503bd518` PASS로 같은보존항목과 source15709 신규bucket의별도 probe/apply DBclock창을 확인했다. 과거완료1/manual author1/기존확인1을변경하지않았다. 두경로모두 Storage metadata/SQL 범위이며 사진bytes/Auth provider/모바일/운영복구·배포를증명하지않는다. 운영변경0·운영25·전체63.5% 유지. 이후 A의직원해소/일관된joblease due SQL회귀와 B/C의staff typed HTTP/member통지 구현을병렬진행한다.
+
+source78 첫 직원 해소·취소 due 후보를 정식77 격리 DB에서 실제 단일 TX로 실행했으나 `40001 cancel_resolution_state_conflict`로 FAIL했다. 영수증 `/private/tmp/yumidang-cancel-resolution78-candidate-reviewed/receipt.json` SHA `13fde8ae5fb7666406340f715bffbf91817b2f1b95858cfdf5840b474c919135`이며 원본 후보와 실패 증거를 보존한다. 모든 catalog·건수·정책·권한·Auth 감사288개·Storage 파일0·보호 컨테이너·정식77 증거·닫힌 helper·활성 TX0의 원복 확인은 PASS다. uncertain=false·자동 재시도0·migration commit0·운영 변경0이며 직원 전체 흐름 성공으로 표시하지 않는다. A는 실제 revision 충돌 원인과 마감 전 이의↔due 경합을 별도 후보로 보완하고 B/C는 동결 HTTP10파일을 독립 검토한다. 신고50·전체63.5%를 유지한다.
+
+source78 직원 판정·회원 취소 통지 HTTP10파일은 두 독립 읽기 검토와 현재 root 원본/후보 SHA 대조·소유권/하네스 검사 후 통합했다. root Deno 타입 검사와 모형95개 모두 PASS/실패0이다. 영수증 `/private/tmp/yumidang-resolution78-http-root-10xkd8jg/integration.json` SHA `2684c3b921bb4d4b9ef317c44c877aca53bc1eb85663f41587e56dd348d4cae5`에 현재 파일핀·원본 백업·범위를 기록했다. 직원 strict8 입력/7 출력·현재상태6과 본인 통지 exact10/UTC 마이크로초 정렬·명시 ACK·기존75~77 계약을 검증했다. actual SQL/Auth/API/운영은 이 모형 검사의 증거 범위 밖이다. SQL 첫40001 실패의 원인은 확정1→취소2→이의접수3의 실제 revision 흐름에 비해 회귀가 expected2를 지정한 정의/fixture 불일치로 분석됐으며 수정 후보의 실제 ASSERT 검증은 후속이다. 신고50·전체63.5% 유지.
+
+수정 회귀의 최초 sandbox 호출은 Docker socket 접근 거절로 SQL 시작 전에 차단됐다(영수증 SHA `f0339f6b5837c7fc9a705dcd07a55af7267291c95b1ebb1c266c7284f889c058`, SQL/쓰기0). 별도 경로에서 승인된 로컬 Docker 접근으로 실행한 수정 회귀는 초기2/접수3/공개state ASSERT 이후 `55000 record held_order is not assigned yet`로 FAIL했다. 영수증 `/private/tmp/yumidang-cancel-resolution78-revision-corrected-approved/receipt.json` SHA `cdd08afca99ceaaad90306a75678b4f611e449fe7a0b66b4a831e3c463d32326`이다. reconcile 함수가 non-held 상태에서도 AND 식의 미할당 record 필드를 참조한 오류이며 A가 별도 후보에서 보완한다. 실제 SQL 성공 여부 외 원복7개 모두 PASS, 정식77·Auth 감사288·파일0·보호 컨테이너·권한·전체 자료/정책 보존, uncertain=false·자동 재시도0·commit0·운영 변경0이다. 최초40001/후속 sandbox/현재55000 증거와 동결 입력은 보존하며 신고50·전체63.5% 유지.
+
+source78 최소 SQL 교정 후보의 실제 단일 TX 회귀가 PASS했다. 영수증 `/private/tmp/yumidang-cancel-resolution78-held-record-corrected-reviewed/receipt.json` SHA `9e47b7b2615c8398be8bde88199e82a9e69f83b2cae04a7a30a21c881c231481`, driver `331720cee9503501b943dbc757ed64fd97e2ef6692a6183c5d6db911cc860ddc`, SQL `25a51bd5169e48339f15c9d2370a07e84735fecc208b7daefcf3f4b8a315ff1d`, 회귀 `dc4c15da22eb5a11d1003f7d787711a135abc7fc0b59f07109891169201eb18a`다. 직원 reject/accepted 정정·첫 경고/7일 제한·원시계 보존·원회차 점수 복구·본인 통지 ACK/타인거절/TTL·job/global fence/세대·효과 삽입 뒤 만료 실패 원자성의 SQL 검사가 통과했다. ASSERT ON·checks8 true·uncertain=false·자동 재시도0이며 전체 catalog/자료/권한/정책/역할/Auth 감사288 ID+payload/파일0/guard/worker/보호 컨테이너/정식77 증거/활성TX0를 복원했다. 최초40001/미할당55000 FAIL은 보존한다. 이 증거는 owner 합성 직원·회차 fixture의 SQL 범위이며 실제 staff Auth/HTTP·두 세션 due 경합·90일 종결 engine·worker 실행·운영/모바일 완료를 뜻하지 않는다. source78 정식 파일/영속 적용0·형식이력77이다. A v2 보류/복원 구현, B 실제 API 검증 초안, C scratch 경합 검증 초안을 병렬 진행한다. 신고 전체 연결이 아직 남아 신고50·전체63.5% 유지.
+
+source78 v2 보류·복원 후보의 실제 단일 TX 회귀도 PASS했다. 영수증 `/private/tmp/yumidang-cancel-resolution78-v2-single-tx-reviewed/receipt.json` SHA `a7b04d16c627720ccb65f724ec732cd1245250ad9230efaca6abb4a1fcd320a3`이며 SQL `542d2efcc3c44e45e4d3cd1f7caeb2f22e5649615a22ff547f319267a45b3efa`와 회귀 `f8fb5738345e5b3334e7fc254273de136b5c116589bb2494d8a426e98c03d478`를 고정했다. 검토 중 취소 효과만 보류·일반 사건/다른 identity 불변·복수 검토 종료까지 보류·같은 원 application/기간/종료 원회차 점수 복원·accepted 확정 철회·unknown 순서의 정상 접수권리 유지/계산 보류·세션 실패 원자성·기존 helper 메타데이터 보존을 검사했다. ASSERT ON/checks8 true·전체 원복·formal77/감사288/파일0/컨테이너/guard/worker 보존·uncertain=false·commit0이다. 실제 두 세션의 마감 전 접수↔due 경합, 실제 직원 Auth/API·보관 engine·상주/운영/모바일은 NOT_RUN이다. source78 준비 gate와 actual API 후보, 별도 scratch 경합 검증을 이어가며 신고50·전체63.5% 유지.
+
+운영 read-only 집계를 다시 확인해 migration20/Auth3/phone3/profile3/posts2/AP1/Storage metadata2/active cron1이 유지됐다. 원문·사진 bytes·키는 읽지 않았고 운영쓰기0이다. 영수증 `/private/tmp/yumidang-operating-readiness-followup-20261006/receipt.json` SHA `fd31a5be86c8f277d8be86b9d459a9832a917a78dabc90f6e3109325885b32c0`에 기록했다. 연결 계약 상단은 현재77 실제 API30/경합12 및78 HTTP95/SQL후보 범위로 동기화했다.
+
+2026-10-06 후속: source78 SQL·회귀·설명·준비 도구·검사5파일 통합 및 root gate4개 PASS, SQL78/runtime52 준비 READY를 확인했다. 준비 경로 `/private/tmp/yumidang-policy78-root-prepared`, database SHA `785d375c9d0c224beb007e830ad9beecb73be22e2dffa9ab6487ba2206248e2b`, edge SHA `c29418f2a219e2c7025e1f2ef720e8372d6976b32b70a8b0cee8b0feca78964d`다. 정식 로컬 DB 이력77·운영 변경0·달성률63.5% 유지. 별도 scratch DB2개의 이력77·사용자 자료0·예약 작업0·worker 제어 닫힘·catalog·기존 컨테이너 보존 읽기 검증은 PASS다. source78 동시 처리 및 실제 API는 아직 미실행이며 실행기의 불확실 종료·job 완료 처리를 보완하고 한국어4000자와 요청 바이트 제한 호환을 검증한다. 사용자 확인: 운영 휴대폰 계정3개는 모두 개발용 테스트 계정이다. 삭제·자동 연결 승인을 뜻하지 않는다.
+
+2026-10-06 실행 결과: 정식78 적용은 probe에서 검증기의 prosrc/전체 함수 정의 해시 표현 혼동으로 FAIL했고 적용 시작0이다. 원FAIL SHA `57e771d7f8300372fb8171f4fabd262624f3258cbf67ff79af69f841db0f4f1f`와 실제 전체 정식77 원복 읽기 PASS `7064afc5d162127eed239c04e16d9cbdfedc416d2aff09971a4ea436fbe1c4e5`를 보존한다. 자동 승인 검토는 준비 pending37을 실제 대기로 오인해 한 번 거절했으나, 실제 이력77/대기1 읽기 증거 후 원 요청이 승인됐다. scratch v1은 합성 시각이 취소 외 이력까지 변경해23514 FAIL·전체 정리PASS(`56869ff5bc7fe7487d807605f45e95de5da9c51cbc8c533a4fae6594c91044ee`)다. scratch v2는 JSON 설정 반환값을 실제 결과로 중복 읽는 실행기 문제로 불확실 FAIL(`c9503b3dd206035a7551e57edaeeda90e6b1de9a7bf9f73029fb799a08cf752c`)이며 정리를 자동 진행하지 않았다. 실제 읽기에서 남은 테스트 세션0/활성TX0/job0/접수1/제재0을 확인했고 합성 자료와 제어 복구가 남아 있다. 동시 처리 PASS로 표시하지 않고 전체63.5% 유지다.
+
+정식 격리 로컬77→78 적용 PASS: `/private/tmp/yumidang-native78-rollout-prosrc-corrected/application-receipt.json` SHA `8cbd1ef70d84cc860d92a255dec0d048fedcaade02842867d0c838e9888bb3cd`다. 함수 prosrc 정확 비교로 검증기 표현 오류를 교정한 별도 driver `cb297d85cb1313a70601a487eb3cc49c67fd2a871c5535734d9d9372b56d1947`를 사용했다. 실제 대기1→이력78→대기0, 새20함수/6테이블/47컬럼/40제약/9인덱스/3trigger와 기존 effective body·worker CHECK2만 변경했다. 기존 전체 자료·정책·ACL/역할·Auth 감사288 ID+payload·파일0·guard=false·worker idle·보호 컨테이너/이전 증거가 유지됐다. 새due 제어는false·실제 작업 호출 닫힘이다. 실제 API/동시 처리/운영 미완료로 신고50·전체63.5%를 유지한다. 앞선 FAIL은 덮어쓰지 않았다.
+
+unknown 경합 fixture 명시 복구 PASS: `/private/tmp/yumidang-cancel-resolution78-v2-explicit-recovery-all-fixture-identities/receipt.json` SHA `f5120be6bd6a12f9a506b53967e0a61b3c60b2f6b362e03b226b4db0bfa39ff7`다. 실제 read-only로 세션0/job0/판정0·exact 자기globaltoken 및 응답 유실된 자기 접수 ID를 확인했다. 첫 복구는 동행자 identity 큐 누락으로23503 전체 롤백됐고 author-only 늦은삭제안도 실패 원본으로 보존했다. DELETE 재enqueue 추정은 trigger의 INSERT/UPDATE 정의 확인으로 철회했다. journal 회원5명의 정확 identity를 모두 포함한 별도 복구 SQL만 실행해 스키마·초기 빈 자료 집계·역할/카탈로그·guardfalse/workeridle/duefalse·cron0·활성TX0·전체 보호 컨테이너 및 원 unknown 증거가 유지됨을 확인했다. 실제 경합은 여전히 FAIL이며 재시험은 설정 반환값 중복 파서 처리 보완 후 별도 once 실행으로 진행한다.
+
+정식 native78 실제 Auth/REST/Storage/in-process HTTP38그룹 PASS: 영수증 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native78-Qx9zGm/result.json` SHA `6e7981437a3206760afa2e3d2023479f907ad6d72993cea05ba99d4a39111dbc`다. 기존30그룹을 유지하고 신규8개로 한국어4000자 원 JWT 신고+이의 접수(12000 UTF-8바이트/정책4000자), 직원현재상태6키·판정7키·재시도/낡은버전/권한/배정/만료세션 거절·기각에 따른 경고/168시간/-2효과·회원통지10키 및 조회와명시읽음 분리·승인정정의 원application/시계복원·정책보류/보관만료를 검증했다. local runtime max bytes65536 시험이며 실제 배포환경의하한설정은 별도다. 정리12항목 모두true/오류0으로 원전체catalog/권한/자료/Auth감사288 ID+payload/사진파일0/guardfalse/workeridle/활성TX0/보호컨테이너가 복원됐다. 원source77 driver를 백업하고 source test1개를 실제핀 후보8c64f5...로 통합·root Deno typecheck PASS했다. 첫 Deno 실행은 uid capability가 없어 DB/API 시작전 종료됐으며 uid 읽기만 보완한 새실행이 PASS다. 실제 자동제재 경합·hosted/mobile/운영 미완료이므로 신고50·전체63.5% 유지다.
+
+실제 두 세션 비교의 별도 새fixture 실행: v1은 마감 전 statement 시작·마감 뒤 due COMMIT→접수COMMIT과 잘못 남는 제재를 실제 재현했다(PASS는 결함 재현 의미). 영수증 SHA `78858bc0d9ff5bcbb42d37ed30d97d4b3219713d7dbfe666d40457793df99754`, 자료 전체 정리true/불확실false다. v2는 due먼저·접수먼저·기각원시계복원·승인suffix철회·복수검토보류·동일요청·세션만료7사례를 통과한 뒤 검토중사건을종결하는 TTL fixture UPDATE가 정상retentionguard55000에 거절돼 전체 실행FAIL이다. 원FAIL `5a7dc847dc82d20109d670894cc8d5aac104e99976f4522f807156057c65085f`와 전체정리true/불확실false를 보존하고 전체12 PASS로 표시하지 않는다. 정당한 판정 후 TTL fixture로 보완하며 서비스제약/이력/SQL을 임의완화하지 않는다. 전체63.5% 유지다.
+
+## 2026-10-06 요청 크기 설정 보완과 경합 검사 현재 결과
+
+실제 service-api factory가 신고 상세 4000자와 JSON 이스케이프를 수용하도록 최소 MAX_REQUEST_BYTES=65536을 검증한다. 일반 설정 parser와 독립 handler의8192 검사는 유지한다. 검토한11파일을 SHA 대조 후 통합했으며, 에이전트 Node265/265·Deno10개와 root service_api35/35·런타임 Deno 검사가 PASS다. 외부 Auth/REST 응답은 이 검사에서 모형이며 운영 환경 값은 변경하지 않았다. 검토 기록 SHA `da0b4ccaf5fcf5159e50749f450d46569178e44793a7ad06caf6f4e2430fb9a2`, 변경 전 자료는 `/private/tmp/yumidang-runtime-cap-root-before-7agwg2yc`에 보존했다.
+
+새 파일 준비는 `/private/tmp/yumidang-policy78-runtime-cap-root-prepared`이며 SQL78/runtime52 READY다. migration manifest SHA `34cf7f60ba2aa9947211e1940f79a6746032702cf1e4f069b043f24f3b596e85`, edge manifest SHA `81227585e817aa2e77820544d72e304619835cd02e898dc557afa697604051bd`다. 파일 준비의 SQL/Edge 실행은 NOT_RUN이며 이전 정식78 적용과 실제 API38 증거는 당시 소스의 증거로 보존한다. 새 준비만으로 운영 배포나 변경 후 실제 hosted Edge 검증을 주장하지 않는다.
+
+자동 제재 경합의 후속 실제 검사2건은 FAIL을 보존한다. TTL 판정/저널 역할 수정 전 영수증 SHA `88272ca0a07347383ad2caabd660fafffd81e9d1d3f5d785228f948829f8cf02`, 수정 후 `/private/tmp/yumidang-cancel-resolution78-installed-v2-role-root-reviewed/receipt-v2.json` SHA `13ad23765f688c81c77812c0d69620540ae4eb8722c84bbbc4ecee9a60953f2c`다. 수정 후7사례 PASS이며8번째 TTL barrier 진단이 부족해 전체12사례 PASS는 아니다. 두 실행 모두 fullCleanup=true·remoteCompletionUncertain=false다. 테스트 예외 분류/안전 진단을 보완 중이며 현재 근거로 제품의 TTL 보호 규칙을 완화하지 않는다. 운영 변경0·신고50·전체63.5%를 유지한다.
+
+## 2026-10-06 개인정보 자료 목록 통합
+
+[개인정보 자료 목록](requests/minkyu/2026-10-06-privacy-data-inventory.md)을 검토·통합했다. SHA `d753c458b1db5eade099f73dc2f1a27acb988f74cd53f71ee55f2e28474abd2c`이며 네이버/프로필/동행/채팅/후기/신고/안전 최소 기록/기술·비용/권리 문의 항목과 목적, 정책 보관기간·실제 로컬 증거·미정 운영 조건을 분리했다. 개인정보보호위원회의2026.4 작성지침 공식 게시물도 읽기 확인했다. 전체 공개 처리방침·실제 권리 회신·공급사/백업 검증을 대신하지 않으며 게시·메일·운영 변경0이다. 공개 문서50·전체63.5%는 유지한다.
+
+## 2026-10-06 자동 제재 경합12사례 실제 통과
+
+수정한 TTL 장벽과 예외 진단을 검토한 root driver `3859302f2a1430c38c80ffcd02ecd0d3ee4cd782093e0ccc7409fef937aa8d2c`로 기존 scratch v2에 SQL 재설치 없이 한 번 실행했다. 영수증 `/private/tmp/yumidang-cancel-resolution78-installed-v2-ttl-stable-root-reviewed/receipt-v2.json` SHA `54e8de8a30b287a7c263b203d5a630d5cd8e74f437a1e90b0598dd9a4840e3a8`가 PASS이며12사례·실제 PID 잠금 장벽3개·시각 관측2개·세션 결과106개·baseline 보존·fullCleanup=true·remoteCompletionUncertain=false를 확인했다.
+
+마감 전 이의와 due 순서 양쪽, 기각 원시계 복원·수락 잘못된 suffix 제거, 여러 미결 검토, 같은 요청 재시도, 세션 만료, 검토 신고 임의종결 거절·정상 해소 후 합성 TTL 만료, 종료 회차 원제재 복원, 다른 identity/일반 신고 불변, binding 실패 롤백, statement 시각 경계를 검사했다. TTL은 report NOWAIT을 기다린 것이 아니라 실제 회원 guard 잠금 대기 중 만료를 확인한다. 정확 microsecond 경계는 별도 단일TX 회귀 범위이며, 종료 회차와 캡처는 합성 metadata다. 실제 OAuth·Provider·탈퇴 pipeline·파일 파기·상주 worker·hosted/mobile/운영 증거로 확대하지 않는다.
+
+이전 모든 FAIL·명시 복구 증거를 보존한다. 현재 SQL due guard와 실행 ACL은 닫힌 상태이며 운영 변경0이다. 신고 전체 처리·미정 정책·상주/운영·모바일 조건이 남아 신고50·전체63.5%를 유지한다.
+
+독립 읽기 감사에서 위12PASS의 고정 입력/원baseline/모든567개 owner query와106개 세션 결과를 대조했다. scratch의 원Auth 감사는0개이며 native288개 직접 검증으로 확대하지 않는다. native 증거는 archived 파일 SHA 불변만 확인했다. 5개 관측 중 실제 PID 잠금 장벽은3개, 나머지2개는 시각 관측이다.
+
+## 2026-10-06 실제 런타임 factory 검증 진행
+
+기존 정식78 적용 증거와 과거 API38 영수증을 유지하고 별도 `--native78-runtime-cap-approved` 검증 모드를 통합했다. SQL78·설정·나머지51 런타임 소스의 정확 일치와 index 한곳의 검토 변경만 허용하며 모든 기존 in-process HTTP 조립8곳을 실제 factory로 연결한다. 새driver SHA `78575d55b604aae6bdbf4ab0edcc6e916b15260400dbd81d990124112bbc7b38`와 변경 전 `/private/tmp/yumidang-runtime-cap-api-root-before-lrehed2c`를 보존했다.
+
+첫 실제 실행은5그룹 뒤 미인증 요청 시험의 보조 함수가 토큰 없는 요청을 handler 호출 전에 막아 FAIL했다. 영수증 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native78-runtime-cap-QEhkQy/result.json` SHA `0c13159f8efb7d8ca52a6968b8253b211f45bac540a988a84c6b441e9da4ea3d`다. factory 요청17개·정리12항목 전부true·errors0·원Auth 감사288 ID/payload·파일0·전체catalog/권한/자료/보호환경을 복원했다. 같은 실패를 자동 재시도하지 않으며 미인증 실제401/전송0 시험의 보조 함수만 보완 후 새 후보로 검증한다. 기존 API38은 당시 증거로 유지하고 신규factory38 PASS로 표시하지 않는다. SQL 재적용·운영 변경0이다.
+
+## 2026-10-06 실제 런타임 factory API38 통과
+
+미인증 요청 시험을 제품 factory에 넘기고 인증 없는 외부 전송은 차단하는 두 줄 보완을 검토·통합했다. root driver SHA `9d8fe8ac8b8f7e4ae8ff8c9860836d536ecf05e408193a4816bf275e4957b85b`로 새 실제 실행38그룹 PASS다. 영수증 `/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-report-operator-native78-runtime-cap-18PdUI/result.json` SHA `b6d49739c201daa92576faf7a432fcc6e73700a249a8a04f1d68a2ea93fe52bf`이며 직원·회원 통지·취소 이의 모든 기존 in-process HTTP 조립8곳을 실제 createRuntimeHandler로 연결한 요청163개를 확인했다. 실제 Auth/REST/Storage, 원JWT/anon, 한국어4000, 미인증·세션·승인·배정·보관기한 거절과 기존 판정/정정/통지/이의 검증을 유지했다.
+
+정리12항목 전부true/errors0, Auth 감사288개 원ID/payload·전체catalog/정책/역할/권한/건수·파일0·guardfalse/workeridle·활성세션0·보호환경을 복원했다. 과거SQL 적용 graph9887/c294와 최신실행 graph34cf/8122를 별도로 검증하며 SQL 재적용0·운영 변경0이다. 첫factory FAIL0c131 및 이전 API38 결과는 보존한다. in-process 실제 런타임 증거이며 hosted Edge·네이버 OAuth·모바일·운영/상주 증거로 확대하지 않는다. 신고/제재 실제 파기와 상주 실행 등 전체 요구가 남아 신고50·전체63.5%를 유지한다.
+
+## 2026-10-06 취소 due 내부 전송과 파기 계약 통합
+
+내부 client가 검증된 enqueue_cancellation_safety_due/process_cancellation_safety_due 두 이름을 전송하도록2파일을 검토·통합했다. client SHA `5aa3211cbcc8308c44ac67e71d1f00fddcf067f8ad661ba56a164436cc5142e7`, 신규시험 SHA `a8e8b4ac9f31f16ce897045d3ed228c48c8c05000558ec5b66f11db9c334870a`다. root5/5·Deno2·에이전트 내부인증 결합38/38 PASS이며 원인자·서비스JWT/apikey·공개/사용자 미지원·임의명령 거절·timeout/원문 미노출을 확인했다. 전송 허용은 DB EXEC·due guard·J dispatcher 준비를 뜻하지 않는다.
+
+새 source78/runtime52 파일 준비는 `/private/tmp/yumidang-policy78-due-client-root-prepared` READY다. migration manifest SHA `64234982e53af80875fe71b87c7df762d8f60145f102c163c3d77469e547e474`, edge manifest SHA `96ef5dbdf1564ceeca9aaa3715e6323baadcf59bc9ca26c889503f0b528f78ce`이며 SQL/Edge 실행 NOT_RUN이다. 앞의 실제factory38은8122 실행 graph 당시 증거로 유지하고 새96ef graph의 실제 전체 검증으로 치환하지 않는다. 변경 전 자료는 `/private/tmp/yumidang-due-internal-client-root-before-av58_qyv`에 보존했다.
+
+[신고 파기 연결 계약](requests/minkyu/2026-10-06-report-retention-purge-contract.md) SHA `da91a7b3e3dc146c0af5dc5ee371b47ba5d4ee1369abf4e2a0160456590c8b77`도 통합했다. 신고 evidence는 JPEG/PNG/WebP·5MiB로 canonical 기준을 대조했고 claim/check/ACK/complete·unknown/임의 경로/이름 재사용 경합·미정 held·guardfalse/ACLclosed를 구분했다. 이 계약의 제안 RPC는 구현·실제 파기 성공으로 표시하지 않는다.
+
+후속 private 후보는 CLI생성 leaf `20261005225107_report_retention_purge.sql`과 `20261005225951_worker_supported_claim.sql`, 신고전용 Storage 어댑터다. root source SQL79/80 통합·DB 실행은 아직0이며 세 에이전트가 단독 경로에서 병렬 구현한다. 기존 claim2/3의 kind 필터 부재를 실제 코드에서 확인해 혼합 큐 지원 종류 제한을 보완하며, 새 파기 job payload/kind의 제안과 구현 차이는 동결 전 계약으로 조율한다. 정책 미정·실제상주·모바일·운영 조건은 유지하고 전체63.5%다.
+
+
+2026-10-06 후속 확인: 신고 전용 Storage 파기 어댑터와 모형 검사를 통합했다. source SHA `1b15fad483e073bc7320e1335390a520d9b33ea9c8f022350bb9876f15df7cd8`, test SHA `a8f07a8ac6f4f75c679a68095ce5b8fb7fc96eb2cdf29a4b6cc860c4524615fc`다. root 모형13/13 PASS·Deno 타입 검사 PASS이며 canonical 비영 UUID와 dispatch 직전 abort의 호출0을 확인했다. 아직 서비스/DB 포트에 연결하지 않았고 실제 Provider 삭제·물리 파일 제거·상주 실행은 NOT_RUN이다.
+
+운영 읽기 전용 집계를 재확인했다. migration20·Auth/휴대폰 계정3·profile3·공고2·약속1·Storage 객체2·활성 cron1이며 신규 cancellation/report 제어 테이블은 없다. 영수증 `/private/tmp/yumidang-operating-drift-readonly-20261006/receipt.json` SHA `a247c8e6d3b60160b5e3c676a9a533d257fcfb090493fb17011f862dc7f6b8a5`다. 원문·비밀키 조회0, 운영 쓰기0이다. SQL79/80 후보는 독립 검토 중이며 실행 제어 행 부재 때의 파기 차단 문제를 발견해 보완 요청했다. 실제 SQL 실행·운영 적용은 아직0, 전체63.5% 유지다.
+
+
+SQL79/80 보완 후보를 정식 native78의 한 트랜잭션에서 실제 실행하고 각 회귀를 별도 savepoint로 검증한 뒤 전체 ROLLBACK해 PASS했다. 영수증 `/private/tmp/yumidang-report79-claim80-single-tx-reviewed/receipt.json` SHA `f4480057255cb7fa733b8504e5943a0a91a1001aba4375b34ec0f0aafec6c0a3`, driver SHA `06e29071d52abaedf49859d4e5e0689e3afc956f23fb6135ca30dea87588f19d`다. SQL79 `c5b801c0f31dd8f058aafd844f90b5531cd582c7f668cc6703b0b01b3ce14a91`, SQL80 `bbe43a5adaef287145d832a37353c9c32991a813663b28975f8c1d5ad532fa8b`와 회귀/계약 총6파일을 source에 통합했다. 제어 행 부재 차단·상이한 ACK/완료 증거 거절·보류20건 뒤 유효 신고 처리·정확한 파기/최소 결과 보존·30일 완료 증거·지원 종류 제한·실행 준비/만료/권한을 합성 자료로 검사했다. 기존 전체 catalog/권한/건수/Auth감사288 ID+payload·사진파일0·보호컨테이너·닫힌 helper·다른 활성TX0을 복원했고 불확실 종료false다. DB 이력은78개이며 새79/80 영속 적용0·실제 Provider 삭제0·운영 변경0이다. 준비 도구의80개 검토 목록과 실제 상주/삭제 연결을 후속으로 진행하며 전체63.5% 유지다.
+
+
+2026-10-06 source80 준비 도구·검사2개 통합: tool SHA `8038ce987f282e081d40188716af044b10f2471f4eb96a036c0fc71ab1e89ed6`, test SHA `d62f9a6dc765e4184e5006d7f2f444371ca0c02fc6d73496ccac4e484ff71a91`. 기존37개 해시는 모두 보존하고 검증79/80 두개만 추가했다. root 신규8검사 PASS이며 A의 기존/신규 선별14검사도 PASS다. 최신 root 파일 준비 `/private/tmp/yumidang-policy80-report-rpc-root-prepared`는 SQL80/runtime52 READY, migration manifest SHA `5065cd49b214856286fe816202cc2a630254dccbc850fdabf84ca8f82b17357b`, edge SHA `53e2fdd002869b740f7fcfd765e801f725b7b44695fe353b7b16dbe18c03f971`다. 파일 준비는 DB 적용 증거가 아니며 정식 DB는78개다.
+
+신고 파기 DB 연결3파일도 통합했다. internal client SHA `c4b1c5d67fdb185cce2eae9beea4209772fdc51c41878f01f18c082076b02f56`, 신규 report-retention-client SHA `f0641a6965b386aadecb7ff7ba152edbaf7e7f468f562d8e3387953d1220d4d6`, RPC test SHA `6862c4d4f36a1f7e94cd8d4c7cef8f5575868b4259f88721f42a374ac87586be`. root RPC10+Storage13+기존due5 총28/28와 타입3파일 PASS다. exact6/7 전송·서비스 자격·불변 job context·원 객체 응답·caller/timeout 중단·응답 유실/5xx terminal unknown·재전송0 및 adapter+RPC 모형 체인을 확인했다. 신규 DB client는 gateway import graph 밖이며 실제 Provider/DB포트 사용·worker dispatch는 아직 미실행이다. 기존 API38의8122 실행graph와 이번53e2 준비graph를 혼동하지 않는다.
+
+실제 계약 문서 SHA `7a43df9415735dac6107be704aa8ca81d29613e447793949f12a0656a962baba`를 통합하고 원da91 제안은 보존했다. metadata 성공의 내부 parent 완료/재complete 금지와7 RPC 준비조건을 종현 연결 요청에 반영했다. 원 DELETE가 lease 만료 후 남아있을 때 자동 재claim을 막기 위한 durable 전송 의도 SQL81의 CLI 빈파일을 private 폴더에 생성했다. 후보 구현/검토 전 root source통합0·DB실행0이다. formal78→80 검증 실행기 후보와81을 병렬 준비하며 운영 변경0·전체63.5% 유지다.

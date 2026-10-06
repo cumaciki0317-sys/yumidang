@@ -6,7 +6,13 @@ import { createRpcTransport, type FetchLike, type RpcClient } from "./transport.
 const internalRpcs = new Set([
   "upsert_source_events_v1", "list_event_candidates_v1",
   "enqueue_job", "claim_job", "complete_job", "retry_job",
-  "acquire_worker_run", "release_worker_run",
+  "acquire_worker_run", "release_worker_run", "read_worker_run_budget",
+  // 전송 허용만 선언한다. 실제 DB execute 권한·due guard·dispatcher 연결은 별도이며 아직 닫혀 있다.
+  "enqueue_cancellation_safety_due", "process_cancellation_safety_due",
+  // 전송 목록만 추가한다. 실제 report guard/execute·예약·dispatcher 준비를 의미하지 않는다.
+  "enqueue_report_retention_purges", "claim_report_retention_task", "check_report_retention_task",
+  "get_report_retention_delete_ack", "record_report_retention_delete_ack", "complete_report_retention_task",
+  "purge_report_retention_terminal_receipts", "claim_supported_job", "begin_report_retention_delete",
   "set_review_publication",
   "set_post_search_location", "expire_match_consents", "process_due_review_publications", "process_review_summary_refresh",
   "expire_appointment_changes",

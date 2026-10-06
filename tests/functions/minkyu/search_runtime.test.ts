@@ -8,7 +8,7 @@ const jwt = "header.verified_by_fixture.signature";
 const env: Record<string, string> = {
   SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "fixture-anon",
   SUPABASE_SERVICE_ROLE_KEY: "fixture-private-service", INTERNAL_WORKER_SECRET: "fixture_internal_secret_at_least_32_characters",
-  ALLOWED_ORIGINS: '["https://app.example.test"]', MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000",
+  ALLOWED_ORIGINS: '["https://app.example.test"]', MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000",
 };
 const emptyPage = { status: "no_results" as const, posts: [], nextCursor: null };
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });

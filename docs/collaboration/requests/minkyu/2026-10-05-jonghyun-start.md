@@ -1,3 +1,5 @@
+> 최신 시작 기준은 [2026-10-06 종현 출시 시작](2026-10-06-jonghyun-release-start.md)이다. 아래3kind/TLS 첫 구현 안내는 이전 기록이며 현재 J1은 취소·신고 소비자 연결이다.
+
 # 종현 GitHub 작업 시작·병합 안내
 
 작성자 minkyu, 2026-10-05. 공유 기준은 `minkyu/handoff-20261005`, 종현 작업은 `jonghyun/queue-integration`이다.

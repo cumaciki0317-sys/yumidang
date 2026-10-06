@@ -20,7 +20,7 @@ const id = "11111111-1111-4111-8111-111111111111";
 const otherId = "22222222-2222-4222-8222-222222222222";
 const token = "header.payload.signature", secret = "synthetic_worker_" + "a".repeat(32);
 const env: Record<string, string> = { SUPABASE_URL: "https://project.example.test", SUPABASE_ANON_KEY: "synthetic-anon", SUPABASE_SERVICE_ROLE_KEY: "synthetic-service",
-  INTERNAL_WORKER_SECRET: secret, ALLOWED_ORIGINS: '["https://app.example.test"]', MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  INTERNAL_WORKER_SECRET: secret, ALLOWED_ORIGINS: '["https://app.example.test"]', MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
 const config = { supabaseUrl: env.SUPABASE_URL, supabaseAnonKey: env.SUPABASE_ANON_KEY, supabaseServiceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY,
   internalWorkerSecret: secret, allowedOrigins: [], maxRequestBytes: 8192, upstreamTimeoutMs: 1000 };
 type Call = { url: string; args: unknown; bearer: string | null };

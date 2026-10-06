@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createRuntimeHandler } from "../../../backend/supabase/functions/service-api/index.ts";
 const values: Record<string, string> = { SUPABASE_URL: "https://cleanup.example.invalid", SUPABASE_ANON_KEY: "fixture-anon",
   SUPABASE_SERVICE_ROLE_KEY: "fixture-service", INTERNAL_WORKER_SECRET: "fixture_worker_secret_longer_than_32_characters",
-  ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
 const token = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 function request(secret = values.INTERNAL_WORKER_SECRET) {
   return new Request("https://cleanup.example.invalid/functions/v1/service-api/internal/member-cleanup", {

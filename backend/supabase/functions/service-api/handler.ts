@@ -1,9 +1,11 @@
 /** 민규담당. Request → 호출자 인증 → 엄격한 입력 → 서비스 → RPC 연결. 원문 로그 없음. */
-import type { JsonValue } from "../_shared/contracts/common.ts";
+import type { JsonValue, RequestContext } from "../_shared/contracts/common.ts";
 import type { RpcClient } from "../_shared/db/transport.ts";
 import { createCors } from "../_shared/http/cors.ts";
 import { HttpError } from "../_shared/http/errors.ts";
 import { createRequestContext, readJson } from "../_shared/http/request.ts";
+import { reportOperatorRoute, type ReportOperatorRoute } from "./report-operator-http.ts";
+import { profileImageRoutePath } from "./profile-image-http.ts";
 import { jsonFailure, jsonSuccess } from "../_shared/http/response.ts";
 import { mapPublicPostSearchError, parsePublicPostSearchQuery, type PublicPostSearchExecutor } from "./search-http.ts";
 import { resolveRouteForMethod, type MaintenanceConfig } from "./routes.ts";
@@ -12,6 +14,8 @@ import { assertEventFilterQuery, mapEventHttpError, parseEventQuery, type Public
 export interface ServiceApiDependencies {
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
+  reportOperator?: { execute(request: Request, route: ReportOperatorRoute, context: RequestContext): Promise<Response> };
+  profileImages?: { execute(request: Request, path: string): Promise<Response> };
   authenticateUser(request: Request): Promise<RpcClient>;
   authenticateInternal(request: Request): Promise<RpcClient>;
   maintenance?: MaintenanceConfig;
@@ -48,6 +52,18 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
       cors.responseHeaders(request);
       originAllowed = true;
       const url = new URL(request.url);
+      const operatorRoute = reportOperatorRoute(url);
+      if (operatorRoute !== null && dependencies.reportOperator) {
+        const response = await dependencies.reportOperator.execute(request, operatorRoute, context);
+        response.headers.set("X-Request-Id", context.requestId);
+        return cors.apply(response, request);
+      }
+      const imagePath = profileImageRoutePath(url);
+      if (imagePath !== null && dependencies.profileImages) {
+        const response = await dependencies.profileImages.execute(request, imagePath);
+        response.headers.set("X-Request-Id", context.requestId);
+        return cors.apply(response, request);
+      }
       if (dependencies.publicEvents && ["/service-api/events", "/functions/v1/service-api/events", "/service-api/events/filters", "/functions/v1/service-api/events/filters"].includes(url.pathname)) {
         try {
           if (request.method !== "GET") throw new HttpError("METHOD_NOT_ALLOWED");

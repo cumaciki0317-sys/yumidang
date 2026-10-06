@@ -132,8 +132,28 @@ export function resolveRoute(url: URL): Route {
     // 소유자·존재·MIME·용량은 DB가 실제 storage 객체로 검증한다.
     return profiles.setProfileAvatar(db, avatarPath);
   });
+  if(path==="/me/hidden-targets")return route("GET",({db,url})=>reports.listMyHiddenTargets(db,...page(url)),false,true);
+  if(path==="/me/hidden-targets/unhide")return route("POST",({db,body,url})=>{
+    query(url,[]);const input=reportObject(body,["targetType","targetId"]);
+    if(typeof input.targetType!=="string"||!["post","chat","appointment","member","event"].includes(input.targetType))return invalid();
+    return reports.unhideMyReportTarget(db,input.targetType,reportUuid(input.targetId));
+  });
   if (path === "/reports") return route("POST", ({ db, body }) => reports.submitMemberReport(db, parseMemberReport(body)));
+  if (path === "/cancellation-notices") return route("GET", ({ db, url }) => {
+    const [limit,before]=page(url);
+    return reports.listMyCancellationNotices(db,limit,before);
+  }, false, true);
+  const cancellationNoticeMatch = /^\/cancellation-notices\/([^/]+)\/read$/.exec(path);
+  if (cancellationNoticeMatch) { const id=reportUuid(cancellationNoticeMatch[1]); return route("POST", ({ db, body, url }) => {
+    query(url,[]); empty(body); return reports.readMyCancellationNotice(db,id);
+  }); }
+  if (path === "/decision-notices") return route("GET", ({ db, url }) => reports.listMyDecisionNotices(db, ...page(url)), false, true);
+  const decisionNoticeMatch = /^\/decision-notices\/([^/]+)\/read$/.exec(path);
+  if (decisionNoticeMatch) { const id = reportUuid(decisionNoticeMatch[1]); return route("POST", ({ db, body, url }) => {
+    query(url, []); empty(body); return reports.readMyDecisionNotice(db, id);
+  }); }
   if (path === "/me/safety") return route("GET", ({ db }) => reports.getMySafetyState(db));
+  if (path === "/me/sanctions") return route("GET", ({ db, url }) => reports.listMySanctions(db, ...page(url)), false, true);
   if (path === "/me/reports") return route("GET", ({ db, url }) => reports.listMyReports(db, ...page(url)), false, true);
   if (path === "/report-captures") return route("POST", ({ db, body }) => {
     const input = reportObject(body, ["assetId", "extension"]);
@@ -157,7 +177,24 @@ export function resolveRoute(url: URL): Route {
   });
   if (path === "/reviews/praises") return route("GET", ({ db }) => reviews.getPraiseCatalog(db));
   if (path === "/appointments") return route("GET", ({ db }) => completion.listAppointments(db));
-  let match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|decline|withdraw))?$/.exec(path);
+  let match = /^\/appointments\/([^/]+)\/cancellation-appeals\/submit$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]);
+    return route("POST", ({ db, body, url }) => {
+      query(url, []);
+      const input = object(body, ["clientRequestId", "expectedResultRevision", "reasonCodes", "description", "assetIds", "hideTarget"]);
+      const report = parseMemberReport({ clientRequestId: input.clientRequestId, targetType: "appointment", targetId: id, context: "offline",
+        reasonCodes: input.reasonCodes, description: input.description, assetIds: input.assetIds, hideTarget: input.hideTarget });
+      return completion.submitAppointmentCancelAppealWithReport(db, id, { ...report,
+        expectedResultRevision: integer(input.expectedResultRevision, 1, Number.MAX_SAFE_INTEGER - 1) });
+    });
+  }
+  match = /^\/appointments\/([^/]+)\/cancellation-appeals$/.exec(path);
+  if (match) {
+    const id = uuid(match[1]);
+    return route("GET", ({ db, url }) => { query(url, []); return completion.getMyAppointmentCancelAppeal(db, id); });
+  }
+  match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|decline|withdraw))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]), action = match[2];
     if (!action) return route("GET", ({ db }) => completion.getAppointmentChangeState(db, id));
@@ -319,6 +356,14 @@ export function resolveRouteForMethod(url: URL, method: string): Route {
     } };
   }
   if (method === "POST" && base.method === "GET") {
+    const appeal = /\/appointments\/([^/]+)\/cancellation-appeals$/.exec(url.pathname);
+    if (appeal) return { method: "POST", internal: false, execute: ({ db, body, url }) => {
+      query(url, []);
+      const input = object(body, ["clientRequestId", "expectedResultRevision", "reportId"]);
+      return completion.submitAppointmentCancelAppeal(db, uuid(appeal[1]), {
+        clientRequestId: uuid(input.clientRequestId), expectedResultRevision: integer(input.expectedResultRevision, 1, Number.MAX_SAFE_INTEGER - 1), reportId: uuid(input.reportId),
+      });
+    } };
     const review = /\/appointments\/([^/]+)\/reviews$/.exec(url.pathname);
     if (review) return { method: "POST", internal: false, execute: ({ db, body, url }) => {
       query(url, []);

@@ -1,5 +1,12 @@
 # 내부 작업 큐·AI 예산 RPC — 민규 구현
 
+## 최신 연결 검증: 2026-10-06 순차 실행
+
+정식 격리 로컬 DB는84개·미적용0이다. 새 취소 기한의 generation 증가·예약 종류5개·빈 wake15개는 실제 SQL 회귀와 정식 적용/기존 자료·권한 보존을 통과했다. 실제 내부 budget REST와 신고 Storage 정상 삭제·durable ACK·새 프로세스의 GET-only 복구도 PASS다. 상세 범위와 영수증은 [민규 진행표](../../docs/collaboration/minkyu-progress.md)를 따른다. 아래 날짜별 이력·NOT_RUN·일시정지는 과거 기록이다.
+
+종현 현재 background는 review_summary/event_sync만 허용하며 queue-runner도 새 취소/신고 종류의 명시 dispatch가 없다. 기존 종현 테스트41개 PASS를 해당 연결 완료로 확대하지 않는다. 이 실행은 종현 소유 파일을 변경하지 않았고 변경 계약은 [취소 작업 연결 요청](../../docs/collaboration/requests/minkyu/2026-10-06-cancellation-due-worker-connection.md)에 갱신했다. guard/EXEC는 닫혀 있고 terminal30일 유지관리·실제 응답 유실/백업·일반 신고 정책·모바일/운영은 미완료다.
+
+
 ## 현재 실행·보관 정책
 
 현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.

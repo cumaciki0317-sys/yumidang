@@ -126,7 +126,7 @@ test("사용자 client는 catalog를 허용하고 후기 worker·내부 매칭 R
 });
 
 test("catalog의 기본 런타임 조립은 네이버 설정 없이 Auth 검증·사용자 JWT RPC에 연결한다", async () => {
-  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
   const previous = globalThis.fetch;
   const urls: string[] = [];
   globalThis.fetch = async (url, init) => {

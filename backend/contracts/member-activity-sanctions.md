@@ -68,3 +68,26 @@ GET `/me/safety` → 회원 `get_my_safety_state()`는 기존 회원 관리 가�
 후속40800은 실제 약속 확정·합의 일정·취소·완료 사실을 고정 회차/검증 identity의 결과원장에 연결한다. 새 자동 기록은 origin appointment, 과거 미상은 legacy_unknown으로 구분하고 운영 판정·검토·면제 기록을 덮어쓰지 않는다. 과거 순서는 현재 공고로 추정하지 않으며 미연결 집계/unknown은 전체 과거 이력 완성 증거가 아니다. owner 결과 함수 직접 실행 권한은 공개하지 않고 자동제재·사유 판정·통지를 추가하지 않는다.
 
 native64+40800 실제SQL/RPC·비어 있지 않은 과거이관·기존 계산 통합 회귀/rollback과 격리64→65 공식CLI 적용 PASS. native65 회원API14그룹은 실제HTTP 확정·합의수락·취소로 파생된 결과원장과 exactfixture정리/권한/이력/컨테이너 보존을 확인했다. 완료 연결은 SQL/RPC 증거이며 이번API에서 완료HTTP를 검증하지 않았다. 새원장의 실제두세션/완료전신고검토/통지/이의/운영/모바일은 남는다. [현재 연결 검증](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-safety-result-sync.md)을 따른다.
+
+## 본인 제재 사유·종료·정정 이력 읽기 후보 (source67 이후)
+
+GET `/me/sanctions?limit=20&before=UUID`는 회원 JWT의 `list_my_sanctions(p_limit integer,p_before uuid)`에만 연결한다. 기본20/최대100, 원장 UUID 오름차순 keyset이며 `before`는 직전 페이지 마지막 UUID다. 타인/없는 커서는404, 잘못된 한도는400이다. 기존 `/me/safety`의4키 현재 제한 DTO는 변경하지 않는다. 기존 회원 관리 가드와 현재 active episode/account/identity 연결을 사용하며 자격 누락·활동 제한이 본인 지원 조회를 막지 않는다.
+
+반환은 `{items,nextCursor}`다. 항목은 `sanctionId,kind,status,reasonCode,correctionReasonCode,appliedAt,expiresAt,notifiedAt,revokedAt,appealPolicy,appealDeadlineAt,appealState`의12키로 제한한다. `status`는 정정 `corrected` 우선, 그 외 DB 시각 기준 기간종료 `ended` 또는 현재 `active`다. 종료·정정도 본인의 검증 identity 이력만 포함한다. 원장·판정·통지 시각은 조회로 수정하지 않는다.
+
+대표 사유 코드는 sexual_harassment/threat/money_or_personal_data/impersonation/spam/no_show/rule_violation/repeated_cancellation와 중립 other다. 기존 원장 코드가 허용목록 밖이면 `other`로 표시하고 raw reason이나 설명을 보내지 않는다. 이 목록은 읽기 표시용 whitelist이며 새 운영 판정 분류·단계를 만들거나 확정하지 않는다. 정정 사유는 정정 때만 같은 whitelist로 반환한다. 신고자·피해자·사건ID·직원actor·설명·증거·원문·타인 신원은 없다. runtime 저장소가 추가 필드/변형 자료형/잘못된 순서·커서/추정 마감을503으로 거절한다.
+
+`appealPolicy`는 취소 종류의 cancellation_24h 또는 일반 종류의 general_7d로 정책 안내만 한다. 정책2-3의 취소자 본인 취소시각+24시간과6-3의 일반 사유 안내 후7일은 서로 다른 기준이다. 현재 원장 notified_at만으로 실제 전달·수신 증거가 완성되지 않았고 취소 조치와 특정 약속의 관계도 추정하지 않는다. **이번 후보는 notified_at이 NULL이면 물론, 값이 있어도 권위 있는 notice/취소 관계가 연결되기 전까지 appealDeadlineAt을 NULL로 유지한다.** 미통지 사실을 통지 성공으로 꾸미지 않는다. existing general appeal의 본인 identity+sanction 관계에만 reviewing/accepted/rejected 상태를 표시한다. NULL은 접수 관계 미확인이지 기한 종료·신청 불가가 아니다. 취소 이의는 임의 약속을 연결하지 않아 상태도NULL이다.
+
+종현 모바일 요청: 기존 `/me/safety` decoder는 보존하고 별도 `/me/sanctions` 위12키·페이지 계약을 연결한다. 코드별 대표 안내와 NULL 마감은 '기한 확인 필요'로 구분하며 임의 날짜를 계산하지 않는다. 이는 중간 읽기 계약으로, 실제 사유 통지·이의 접수/처리 gateway·운영 권한·모바일 화면 연결은 전체 목표의 남은 요구다. 이번 후보의 표시 응답은 그 기능들의 성공 증거가 아니다.
+
+후보 migration은 `20261005135215_member_sanction_history.sql`이며 기존21810/40700은 불변이다. 기존 본인 조회 owner와 실효 safety SELECT/RLS 호환만 검사해 불일치55000으로 중단한다. safety 원문 GRANT·역할 변경·운영 접근 권한을 새로 열지 않고 신규 RPC EXECUTE만 authenticated에 제한한다. 사용자/service_role/직원에게 원장 직접 읽기 권한을 추가하지 않는다.
+
+검증 상태: 합성 HTTP/transport 7그룹과 기존 reports HTTP15그룹은 별도 최신 source snapshot에서 타입검사 포함 22/22 PASS했다. 실제 SQL fixture는 `tests/database/minkyu/member_sanction_history.sql`이며 BEGIN/ROLLBACK으로 회원2명·8개 본인/1개 타인 원장, 기간종료/정정/중립 사유·일반 이의 관계·무통지/통지 존재 NULL 마감·페이지·타인 커서·익명·자격 누락·제한 본인 조회·원장/ACL/역할/guard 불변을 검사하도록 작성했다. DB 실행/실제 Auth/hosted HTTP/notice/appeal/mobile/운영은 NOT_RUN이며 root가 고정 후보를 검토 후 SQL을 실행한다. 최초 HTTP 타입검사의 invalid union fixture cast 오류는 테스트에서 수정했으며 성공 검증과 분리한다.
+
+
+## source68 후속 실제 검증 (root 통합 이후)
+
+Root 최신 후보 HTTP 신규7+기존15 합계22/22 PASS를 확인했다. 고정 SQL c6dfa91e15bf8b97c1878b53ec62d887e18061fa5704aeee8f946a5ea5cc3b8c, DB 회귀18f2add1fc6bd2370fa049aa2a7d16703ab2a3c4fa9180db5b733f83eee8ae82 기준이다. 후보 native67 단일TX 실제 SQL 적용/회귀/전체rollback PASS 후 source68 공식 로컬 영속 적용과 적용 후 SQL 회귀가 PASS했다. 이 후속 기록은 앞선 후보 단계 NOT_RUN을 현재 SQL 검증 상태로 대체하며 이전 관측을 지우지는 않는다.
+
+공식 증거는 /private/tmp/yumidang-native68-rollout-reviewed/application-receipt.json, 적용 후 회귀는 /private/tmp/yumidang-sanction68-regression/receipt.json이다. source68 manifest는78fcb…/Edge snapshot은fbc72…로 root가 고정했으며 이 문서 보완이 runtime source를 변경하지 않는다. 인증 감사288은 보존됐다. 과거274와 실제 실행14의 차이는 가입 감사의 cleanup 누락/제거 증거로 해석하지 않는다. 실제 통지·이의 접수·운영자 HTTP·모바일·운영 배포는 여전히 NOT_RUN이며 NULL 마감의 중간 계약을 전체 절차 완료로 표시하지 않는다.

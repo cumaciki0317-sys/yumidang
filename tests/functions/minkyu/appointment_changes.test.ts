@@ -236,7 +236,7 @@ test("사용자·내부 client는 일정 사용자 RPC와 내부 만료 RPC를 �
 });
 
 test("일정 제안 기본 런타임은 네이버 설정 없이 Auth 사용자와 같은 JWT로 고정 RPC를 호출한다", async () => {
-  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
   const previous = globalThis.fetch;
   const urls: string[] = [];
   globalThis.fetch = async (url, init) => {
@@ -257,7 +257,7 @@ test("일정 제안 기본 런타임은 네이버 설정 없이 Auth 사용자�
 });
 
 test("철회 런타임은 검증된 회원 JWT와 정확한 세 RPC 인자만 사용한다", async () => {
-  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
   const previous = globalThis.fetch;
   const urls: string[] = [];
   globalThis.fetch = async (url, init) => {

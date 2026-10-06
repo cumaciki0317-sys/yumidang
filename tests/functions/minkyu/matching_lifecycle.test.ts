@@ -195,7 +195,7 @@ test("사용자 RPC 허용 목록은 새 생명주기만 추가하며 내부 만
 });
 
 test("실제 런타임은 네이버 앱 설정 없이 검증된 Auth 사용자와 같은 토큰으로 수정 RPC에 연결한다", async () => {
-  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "1000" };
+  const env: Record<string, string> = { SUPABASE_URL: config.supabaseUrl, SUPABASE_ANON_KEY: config.supabaseAnonKey, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "1000" };
   const previous = globalThis.fetch;
   const urls: string[] = [];
   globalThis.fetch = async (url, init) => {

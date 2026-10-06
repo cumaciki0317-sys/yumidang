@@ -77,3 +77,11 @@ LISTEN/NOTIFY에는 채널별 ACL이 없다. 원형 실행기는 `yumidang_compl
 ## 원형 실행기 로컬 LOGIN 검증
 
 민규 전용 `tests/integration/minkyu/completion_runner_current_local.mjs`는 독립 schema54 scratch에서 종현 소유 실행기·scheduler를 수정하지 않고 실제 프로세스를 실행했다.7그룹 PASS: 전용 LOGIN의2개 RPC와 업무/권한상승 차단, 시작 시 누락 처리, 커밋 알림·예약, 양쪽 수동 완료, 합성 분쟁 자동 완료 제외, 실제 backend 종료 후5초 재접속·누락 처리, SIGTERM 정상 종료다. 일시 역할·회원·예약·세션 정리 PASS다. 다른 DB의 PUBLIC CONNECT를 회수하지 않았으므로 클러스터 전체 배타 접근을 주장하지 않는다. 운영 LOGIN·TLS·Railway·cron 전환은 NOT_RUN이다.
+
+
+## 완료 전 명시 신고 검토 연결
+
+40900은 일반 접수를 자동 분쟁으로 만들지 않고 owner-only 명시 약속 검토를 완료/예약/후기 쓰기·새 공개의 공통 보류에 연결한다. 쌍방 합의 종료가 검토 중 바뀌면 최신 합의 종료+24시간을 적용한다. 검토 후 첫 실제 완료부터7일, 기존 완료는 남은 기간 최소24시간을 재개한다. 단일TX 실제 SQL 회귀와 native66 격리 영속 적용·반영 후 SQL 회귀 PASS. 실제 두 세션 경합3건도 PASS. 회원·운영 HTTP/최종 불발 종결은 별도 후속이다. [검증 범위](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-review-holds.md)를 따른다.
+
+
+41000 최종 불발 lifecycle 후보는 native66 실제 단일TX SQL 검증 PASS 후 전체 롤백했다. 완료 전 불발은 완료 필드를 만들지 않는 종결이며, 기존 완료의 최종 불발 정정은 실제 시각을 유지하고 후기 기여·완료 횟수에서 제외한다. 귀책·감점·신고 종결은 별도다. 영속native67·HTTP·불발/보관 경합·탈퇴 후 미완료 불발 정정 정책은 후속이다. [범위와 실제 증거](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-review-no-show-lifecycle.md)를 따른다.
