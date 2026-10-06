@@ -8,13 +8,17 @@ import { readJson, createRequestContext } from "../_shared/http/request.ts";
 import { jsonSuccess } from "../_shared/http/response.ts";
 import { HttpError } from "../_shared/http/errors.ts";
 export const MAX_REPORT_CAPTURE_BYTES = 5242880;
-export type ReportOperatorRoute = { kind: "report" | "review-state" | "review-start" | "adjudication-state" | "adjudication"; reportId: string } | { kind: "capture"; reportId: string; assetId: string } | { kind: "cancel-resolution-state" | "cancel-resolution"; reportId: string; appealId: string };
+export type ReportOperatorRoute = { kind: "clock-state" | "clock-repair" | "report" | "review-state" | "review-start" | "adjudication-state" | "adjudication" | "final-closure"; reportId: string } | { kind: "capture"; reportId: string; assetId: string } | { kind: "cancel-resolution-state" | "cancel-resolution" | "general-resolution"; reportId: string; appealId: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 export function reportOperatorRoute(url: URL): ReportOperatorRoute | null {
   const prefix = ["/functions/v1/service-api/operator/reports/", "/service-api/operator/reports/"].find(p => url.pathname.startsWith(p));
   if (!prefix) return null;
   const parts = url.pathname.slice(prefix.length).split("/");
+  if (parts.length === 4 && parts[1] === "general-sanction-appeals" && parts[3] === "resolutions") return {kind:"general-resolution",reportId:parts[0],appealId:parts[2]};
   if (parts.length === 4 && parts[1] === "cancellation-appeals" && ["resolution-state","resolutions"].includes(parts[3])) return {kind:parts[3]==="resolution-state"?"cancel-resolution-state":"cancel-resolution",reportId:parts[0],appealId:parts[2]};
+  if (parts.length === 2 && parts[1] === "cancellation-clock-state") return {kind:"clock-state",reportId:parts[0]};
+  if (parts.length === 2 && parts[1] === "cancellation-clock-repairs") return {kind:"clock-repair",reportId:parts[0]};
+  if (parts.length === 2 && parts[1] === "final-closures") return {kind:"final-closure",reportId:parts[0]};
   if (parts.length === 1) return {kind:"report",reportId:parts[0]};
   if (parts.length === 2 && parts[1] === "adjudication-state") return {kind:"adjudication-state",reportId:parts[0]};
   if (parts.length === 2 && parts[1] === "adjudications") return {kind:"adjudication",reportId:parts[0]};
@@ -85,9 +89,9 @@ async function readCapture(response: Response, metadata: Record<string,JsonValue
 export function createReportOperatorExecutor(config: RuntimeConfig, fetchImpl: FetchLike = fetch) {
   return async (request: Request, route: ReportOperatorRoute, context: RequestContext = createRequestContext()): Promise<Response> => {
     const url=new URL(request.url);
-    const mutation=route.kind==="review-start" || route.kind==="adjudication" || route.kind==="cancel-resolution";
+    const mutation=route.kind==="clock-repair" || route.kind==="final-closure" || route.kind==="review-start" || route.kind==="adjudication" || route.kind==="cancel-resolution" || route.kind==="general-resolution";
     if(request.method!==(mutation?"POST":"GET"))throw new HttpError("METHOD_NOT_ALLOWED");
-    if(url.search || url.hash || (!mutation && request.body!==null) || request.headers.has("range") || !uuid.test(route.reportId) || !["report","capture","review-state","review-start","adjudication-state","adjudication","cancel-resolution-state","cancel-resolution"].includes(route.kind) || (route.kind==="capture" && !uuid.test(route.assetId)) || ((route.kind==="cancel-resolution-state" || route.kind==="cancel-resolution") && !uuid.test(route.appealId)))throw new HttpError("INVALID_REQUEST");
+    if(url.search || url.hash || (!mutation && request.body!==null) || request.headers.has("range") || !uuid.test(route.reportId) || !["clock-state","clock-repair","report","capture","review-state","review-start","adjudication-state","adjudication","cancel-resolution-state","cancel-resolution","general-resolution","final-closure"].includes(route.kind) || (route.kind==="capture" && !uuid.test(route.assetId)) || ((route.kind==="cancel-resolution-state" || route.kind==="cancel-resolution" || route.kind==="general-resolution") && !uuid.test(route.appealId)))throw new HttpError("INVALID_REQUEST");
     let startArgs:Record<string,JsonValue>|null=null;
     if(route.kind==="review-start") {
       const value=await readJson(request,{maxBytes:config.maxRequestBytes});
@@ -95,8 +99,30 @@ export function createReportOperatorExecutor(config: RuntimeConfig, fetchImpl: F
       // 클라이언트 멱등 키와 서버 응답 요청 ID는 독립적이다.
       startArgs={p_report_id:route.reportId,p_request_id:value.clientRequestId,p_expected_version:value.expectedVersion};
     }
+    if(route.kind==="clock-repair") {
+      const v=await readJson(request,{maxBytes:config.maxRequestBytes});
+      const keys=["clientRequestId","expectedReportVersion","planFingerprint","mappings"];
+      if(!v || typeof v!=="object" || Array.isArray(v) || Object.keys(v).length!==keys.length || keys.some(k=>!Object.hasOwn(v,k))) throw new HttpError("INVALID_REQUEST");
+      startArgs={p_report_id:route.reportId,p_client_request_id:v.clientRequestId,p_expected_report_version:v.expectedReportVersion,p_plan_fingerprint:v.planFingerprint,p_mappings:v.mappings};
+    }
+    if(route.kind==="final-closure") {
+      const v=await readJson(request,{maxBytes:config.maxRequestBytes});
+      const keys=["clientRequestId","expectedReportVersion","expectedIncidentRevision","resolutionSummary"];
+      if(!v || typeof v!=="object" || Array.isArray(v) || Object.keys(v).length!==keys.length || keys.some(k=>!Object.hasOwn(v,k))) throw new HttpError("INVALID_REQUEST");
+      startArgs={p_report_id:route.reportId,p_client_request_id:v.clientRequestId,p_expected_report_version:v.expectedReportVersion,p_expected_incident_revision:v.expectedIncidentRevision,p_resolution_summary:v.resolutionSummary};
+    }
     if(route.kind==="adjudication")startArgs=adjudicationArgs(await readJson(request,{maxBytes:config.maxRequestBytes}),route.reportId);
     if(route.kind==="cancel-resolution")startArgs=cancelResolutionArgs(await readJson(request,{maxBytes:config.maxRequestBytes}),route.reportId,route.appealId);
+    if(route.kind==="general-resolution") {
+      const value=await readJson(request,{maxBytes:config.maxRequestBytes});
+      const keys=adjudicationKeys.filter(k=>k!=="mode").concat("outcome");
+      if(!value || typeof value!=="object" || Array.isArray(value) || Object.keys(value).length!==keys.length || keys.some(k=>!Object.hasOwn(value,k))) throw new HttpError("INVALID_REQUEST");
+      if(value.outcome==="accepted") { const v:Record<string,JsonValue>={...value,mode:"correction"}; delete v.outcome; startArgs=adjudicationArgs(v,route.reportId); delete startArgs.p_mode; }
+      else if(value.outcome==="rejected") {
+        startArgs={p_report_id:route.reportId,p_client_request_id:value.clientRequestId,p_expected_report_version:value.expectedReportVersion,p_expected_hold_version:value.expectedHoldVersion,p_expected_incident_revision:value.expectedIncidentRevision,p_appointment_outcome:value.appointmentOutcome,p_incident_outcome:value.incidentOutcome,p_responsible_role:value.responsibleRole,p_representative_reason_code:value.representativeReasonCode,p_violation_class:value.violationClass,p_violation_type:value.violationType};
+      } else throw new HttpError("INVALID_REQUEST");
+      startArgs.p_appeal_id=route.appealId; startArgs.p_outcome=value.outcome;
+    }
     const signal=AbortSignal.any([request.signal,AbortSignal.timeout(config.upstreamTimeoutMs)]);
     const scopedFetch:FetchLike=(input,init)=>fetchImpl(input,{...init,signal:init?.signal?AbortSignal.any([signal,init.signal]):signal});
     let upstream:Response|null=null;
@@ -104,6 +130,20 @@ export function createReportOperatorExecutor(config: RuntimeConfig, fetchImpl: F
       if(signal.aborted)throw new HttpError("EXTERNAL_UNAVAILABLE");
       const principal=await requirePrincipal(request,config,scopedFetch);
       const db=createReportOperatorClient(config,principal,scopedFetch);
+      if(route.kind==="clock-state" || route.kind==="clock-repair") {
+        const result=await db.rpc(route.kind==="clock-state"?"get_assigned_cancellation_clock_state":"repair_assigned_cancellation_clocks",startArgs??{p_report_id:route.reportId});
+        if(signal.aborted)throw new HttpError("EXTERNAL_UNAVAILABLE");
+        const response=jsonSuccess(result,context);
+        for(const [name,value] of Object.entries(privateHeaders))response.headers.set(name,value);
+        return response;
+      }
+      if(route.kind==="final-closure" || route.kind==="general-resolution") {
+        const result=await db.rpc(route.kind==="final-closure"?"final_close_assigned_member_report":"resolve_assigned_general_sanction_appeal",startArgs!);
+        if(signal.aborted)throw new HttpError("EXTERNAL_UNAVAILABLE");
+        const response=jsonSuccess(result,context);
+        for(const [name,value] of Object.entries(privateHeaders))response.headers.set(name,value);
+        return response;
+      }
       if(route.kind==="cancel-resolution-state" || route.kind==="cancel-resolution") {
         const submit=route.kind==="cancel-resolution";
         const result=await db.rpc(submit?"resolve_assigned_appointment_cancel_appeal":"get_assigned_appointment_cancel_appeal_resolution_state",startArgs??{p_report_id:route.reportId,p_appeal_id:route.appealId});

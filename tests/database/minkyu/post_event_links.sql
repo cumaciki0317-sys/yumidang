@@ -218,7 +218,7 @@ do $$ declare p uuid:=gen_random_uuid();v_input jsonb;request jsonb;consent json
   old_fingerprint text;new_event_id uuid;detail jsonb;v_request_id uuid;begin
   v_input:=pg_temp.link_input(6)||jsonb_build_object('eventId',(select event_id from link_events where name='date'));
   perform pg_temp.link_actor(1);perform public.create_service_post(p,v_input);
-  perform pg_temp.link_actor(2);request:=public.request_service_post(p,'수동 행사 교체 합성 신청');v_request_id:=(request->>'id')::uuid;
+  perform pg_temp.link_actor(2);request:=public.request_service_post(p,gen_random_uuid(),'수동 행사 교체 합성 신청');v_request_id:=(request->>'id')::uuid;
   perform pg_temp.link_actor(1);consent:=public.propose_match(v_request_id);
   insert into link_cases(name,post_id,input,event_id,request_id) values('manual',p,v_input,(v_input->>'eventId')::uuid,v_request_id);
   -- A→B, 해제, 새 A 연결, 다시 해제. 마지막 null은 이후 제목 검색 fixture를 분리한다.
@@ -253,7 +253,7 @@ select 'PASS post_event_update_omission_clear_stale_owner';
 set local role authenticated;
 select pg_temp.link_actor(2);
 do $$ declare c link_cases;request jsonb;consent jsonb;begin
-  select * into c from link_cases where name='date';request:=public.request_service_post(c.post_id,'합성 행사 연결 신청');
+  select * into c from link_cases where name='date';request:=public.request_service_post(c.post_id,gen_random_uuid(),'합성 행사 연결 신청');
   perform pg_temp.link_actor(1);consent:=public.propose_match((request->>'id')::uuid);
   update link_cases set request_id=(request->>'id')::uuid,version=consent->>'conditionVersion',
     updated_at=(public.get_service_post(post_id)->>'updatedAt')::timestamptz where name='date';
@@ -288,15 +288,15 @@ do $$ declare detail jsonb;result jsonb;item jsonb;begin
   detail:=public.get_service_post((select post_id from link_cases where name='date'));
   assert detail#>>'{linkedEvent,title}'='최신 연결 행사명' and detail#>>'{linkedEvent,sourceStatus}'='cancelled';
   assert detail#>>'{linkedEvent,sourceUrl}' is null and detail#>>'{linkedEvent,admission,kind}'='unknown';
-  assert not(detail?'privateDetails') and not(detail?'participantNames') and detail->>'authorDisplayName' like '동행-%';
+  assert not(detail?'privateDetails') and not(detail?'participantNames') and detail->'authorDisplayName'='null'::jsonb;
   assert detail::text !~ '비공개 등록|검색 제외 상세|합성행사회원';
-  result:=public.search_public_posts_v2('{"query":"최신 연결 행사명"}',null);
+  result:=public.search_public_posts_v2('2026-10-05',null,'{"query":"최신 연결 행사명"}',null);
   assert jsonb_array_length(result->'items')=1;
   item:=result#>'{items,0}';
   assert (select count(*) from jsonb_object_keys(item))=9 and item ?& array['id','title','authorDisplayName','publicArea','startsAt','endsAt','cost','state','canApply'];
   assert item->>'id'=(select post_id::text from link_cases where name='date') and item->'canApply'='false'::jsonb;
-  assert public.search_public_posts_v2('{"query":"합성 행사 date"}',null)->'items'='[]'::jsonb;
-  assert public.search_public_posts_v2('{"query":"검색 제외 상세"}',null)->'items'='[]'::jsonb;
+  assert public.search_public_posts_v2('2026-10-05',null,'{"query":"합성 행사 date"}',null)->'items'='[]'::jsonb;
+  assert public.search_public_posts_v2('2026-10-05',null,'{"query":"검색 제외 상세"}',null)->'items'='[]'::jsonb;
   assert not exists(select 1 from jsonb_array_elements(public.list_public_events('{"mode":"post_selection"}',null,50)->'items') e
     where e->>'id'=(select event_id::text from link_events where name='date'));
   perform pg_temp.link_expect('select 1 from private.source_events','42501');
@@ -316,7 +316,7 @@ do $$ declare c link_cases;detail jsonb;begin
   assert detail#>>'{privateDetails,registeredAddress}'='비공개 등록 주소 123';
   perform pg_temp.link_expect(format('select public.create_service_post(%L,%L::jsonb)',gen_random_uuid(),c.input),'22023');
   perform pg_temp.link_actor(2);
-  assert public.search_public_posts_v2('{"query":"최신 연결 행사명","authorAge":{"min":19,"max":99}}',null)#>>'{items,0,canApply}'='false';
+  assert public.search_public_posts_v2('2026-10-05',null,'{"query":"최신 연결 행사명","authorAge":{"min":19,"max":99}}',null)#>>'{items,0,canApply}'='false';
   assert not(public.get_service_post(c.post_id)?'privateDetails');
   perform public.accept_match(c.request_id,c.version);
   perform pg_temp.link_actor(1);

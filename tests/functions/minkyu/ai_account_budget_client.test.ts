@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createRpcAccountBudget} from '../../../backend/supabase/functions/_shared/db/ai-account-budget-client.ts';
+import type {JsonValue} from '../../../backend/supabase/functions/_shared/contracts/common.ts';
+const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const input={accountId:'yumi',task:'intent' as const,inputBytes:10,maxOutputTokens:20,memberRequest:{userId:id,requestId:id,leaseToken:id}};
+const reservation={accountId:'yumi',reservationId:id,accountDay:'2026-10-06'};
+const reserved={status:'reserved',reservationId:id,accountId:'yumi',accountDay:'2026-10-06'};
+function setup(result:JsonValue=reserved){const calls:Array<{name:string,args:Record<string,JsonValue>}>=[];return{calls,port:createRpcAccountBudget({rpc:async(name,args)=>{calls.push({name,args});return result;}},{ledgerId:'existing-call-gate',promptOverheadBytes:5})};}
+test('계정 reserve는 기존 호출 원장/범위/보수 단위를 한 RPC로 전달',async()=>{const {port,calls}=setup();assert.deepEqual(await port.reserve(input),{status:'reserved',reservation});assert.equal(calls[0].name,'reserve_ai_chat_account_model');assert.equal(calls[0].args.p_units,35);assert.equal(calls[0].args.p_ledger_id,'existing-call-gate');assert.equal(calls[0].args.p_user_id,id);assert.equal(calls[0].args.p_account_id,'yumi');assert.equal(calls.length,1);});
+test('계정·날짜 오염/추가 원문 응답은 거절, 범위 없는 호출은 RPC 전에 거절',async()=>{for(const v of[{...reserved,accountId:'jonghyun'},{...reserved,accountDay:'2026-02-30'},{...reserved,raw:'private'}])await assert.rejects(setup(v).port.reserve(input));const s=setup();await assert.rejects(s.port.reserve({...input,memberRequest:undefined}));assert.equal(s.calls.length,0);for(const status of ['account_budget_denied','global_budget_denied']as const)assert.deepEqual(await setup({status,reservationId:null}).port.reserve(input),{status});});
+test('unknown은 원 계정/일자와 NULL 사용량, reported는 정산 facts만 전달',async()=>{const s=setup({settled:false,pending:true});await s.port.settle({reservation,outcome:'usage_unknown'});assert.deepEqual(s.calls[0],{name:'settle_ai_account_budget',args:{p_reservation_id:id,p_account_id:'yumi',p_account_day:'2026-10-06',p_outcome:'usage_unknown',p_input_tokens:null,p_output_tokens:null}});const t=setup({settled:true,pending:false});await t.port.settle({reservation,outcome:'usage_reported',usage:{inputTokens:1,outputTokens:2}});await assert.rejects(t.port.settle({reservation,outcome:'usage_unknown',usage:{inputTokens:1,outputTokens:2}}));assert.equal(t.calls.length,1);});

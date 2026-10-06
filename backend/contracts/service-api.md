@@ -321,3 +321,11 @@ GET `/me/safety`는 회원 JWT로 빈 인수의 고정 RPC를 호출한다. `{pe
 
 
 후속 native64 영속 적용과 실제Auth/REST/Storage를 거치는 프로세스 내부 회원HTTP 제재조회는 PASS다. 동일 최신 소스에서 기존12그룹+새조회1그룹 총13개 및정리를 확인했다. 실제OAuth·hosted Edge·통지·이의·모바일·운영은 미완료다.
+
+## 2026-10-07 추가 연결 계약
+
+- GET `/profiles/{profileId}/review-summary`: 회원 JWT 필요, query 없음. `{summary:null}` 또는 `{summary:{summaryId,text,sourceCount,updatedAt}}`를 반환한다. 공개 한마디 후기 3개 이상과 최신 source revision, 차단/공개 권한을 DB에서 검사한다. 원문·증거/작업 ID·비공개 후기를 반환하지 않는다.
+- POST `/operator/reports/{reportId}/final-closures`: 배정된 직원 JWT와 `{clientRequestId,expectedReportVersion,expectedIncidentRevision,resolutionSummary}`만 받는다. 정확한 결과는 `{reportId,status,version,finalClosedAt,retentionDueAt,alreadyApplied}`이며 최종 종결+90일을 서버에서 원자적으로 기록한다. SQL93은 현재 결과 revision·decision·원 이의 receipt·회차가 일치하고 ready plan/미정 정책 없음 조건을 통과하는 취소 전용 판정도 지원한다. 접수/읽기로 종결되지 않으며 이의 진행 중 또는 현재 성공 제공 기한 미완료이면 종결을 거절한다.
+
+- GET `/operator/reports/{reportId}/cancellation-clock-state`: 배정 직원만 `{reportId,reportVersion,planFingerprint,actions}`를 조회한다. actions는 명시적 연결이 필요한 `{anchorAppointmentId,kind}` 목록이다. fingerprint는 현재 계획과 전체 결과 revision·회차·순서에 묶인다.
+- POST `/operator/reports/{reportId}/cancellation-clock-repairs`: `{clientRequestId,expectedReportVersion,planFingerprint,mappings}`만 받는다. 각 mapping은 `{anchorAppointmentId,predecessorApplicationId}`이며 NULL은 명시적 신규 제재다. 동일 제재의 정확한 원 application만 서버가 검증하고 원 시각·원 회차를 유지한다. 회원/직원이 적용 시각을 직접 입력하지 않는다. 미연결 actions 전체를 정확히 한 번씩 제공해야 하며 결과는 `{reportId,reportVersion,repairedCount,alreadyApplied}`다. 실제 HTTP와 DB 검증 완료; 운영 활성화는 별도다.

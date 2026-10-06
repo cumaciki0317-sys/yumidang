@@ -186,3 +186,38 @@ export async function unhideMyReportTarget(db:RpcClient,targetType:string,target
  const result=exact(await db.rpc("unhide_my_report_target",{p_target_type:targetType,p_target_id:targetId}),["targetType","targetId","hidden"]);
  if(result.targetType!==targetType||result.targetId!==targetId.toLowerCase()||result.hidden!==false)return unavailable();return result;
 }
+
+/** 앱의 성공 제공 ACK 전용. 최초읽기와 별도이며 응답 전체를 검증한 뒤 앱이 ACK한다. */
+function generalDelivery(value: JsonValue, noticeId: string, deliveryId?: string): JsonValue {
+  const item = exact(value, ["deliveryId", "notice", "providedAt", "deadlineAt", "appealPolicy"]);
+  const notice = decisionNotice(item.notice);
+  const timestamp = (v: JsonValue) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(v) && Number.isFinite(Date.parse(v));
+  if (!validUuid(item.deliveryId) || item.deliveryId !== String(item.deliveryId).toLowerCase() || (deliveryId !== undefined && item.deliveryId !== deliveryId.toLowerCase())
+      || notice.noticeId !== noticeId.toLowerCase() || notice.violationOutcome !== "confirmed" || item.appealPolicy !== "general_7d") return unavailable();
+  if (item.providedAt === null && item.deadlineAt === null) { if (deliveryId !== undefined) return unavailable(); }
+  else if (!timestamp(item.providedAt) || !timestamp(item.deadlineAt)
+      || Date.parse(String(item.deadlineAt)) - Date.parse(String(item.providedAt)) !== 168 * 3600000) return unavailable();
+  return item;
+}
+export async function prepareMyGeneralNoticeDelivery(db: RpcClient, id: string): Promise<JsonValue> {
+  return generalDelivery(await db.rpc("prepare_my_general_notice_delivery", { p_notice_id: id }), id);
+}
+export async function acknowledgeMyGeneralNoticeProvided(db: RpcClient, id: string, deliveryId: string): Promise<JsonValue> {
+  return generalDelivery(await db.rpc("acknowledge_my_general_notice_provided", { p_notice_id: id, p_delivery_id: deliveryId }), id, deliveryId);
+}
+
+function generalAppeal(value: JsonValue, id: string, byNotice: boolean): JsonValue {
+  const item = exact(value, ["appealId", "noticeId", "state", "receivedAt", "deadlineAt", "alreadyApplied"]);
+  if (!validUuid(item.appealId) || !validUuid(item.noticeId) || item.appealId !== String(item.appealId).toLowerCase() || item.noticeId !== String(item.noticeId).toLowerCase() || item[byNotice ? "noticeId" : "appealId"] !== id.toLowerCase()
+      || !["reviewing", "accepted", "rejected"].includes(String(item.state)) || typeof item.alreadyApplied !== "boolean"
+      || typeof item.receivedAt !== "string" || typeof item.deadlineAt !== "string"
+      || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(item.receivedAt) || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(item.deadlineAt) || !Number.isFinite(Date.parse(item.receivedAt))
+      || !Number.isFinite(Date.parse(item.deadlineAt)) || Date.parse(item.receivedAt) >= Date.parse(item.deadlineAt)) return unavailable();
+  return item;
+}
+export async function submitMyGeneralSanctionAppeal(db: RpcClient, noticeId: string, requestId: string, reason: string): Promise<JsonValue> {
+  return generalAppeal(await db.rpc("submit_my_general_sanction_appeal", { p_notice_id: noticeId, p_client_request_id: requestId, p_reason: reason }), noticeId, true);
+}
+export async function getMyGeneralSanctionAppeal(db: RpcClient, id: string): Promise<JsonValue> {
+  return generalAppeal(await db.rpc("get_my_general_sanction_appeal", { p_appeal_id: id }), id, false);
+}

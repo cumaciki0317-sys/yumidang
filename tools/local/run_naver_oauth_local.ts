@@ -18,10 +18,15 @@ import { requirePrincipal, getPrincipalToken } from "../../backend/supabase/func
 export const LOCAL_ORIGIN = "http://127.0.0.1:5173";
 export const LOCAL_API = "http://127.0.0.1:56221";
 export const LOCAL_PROJECT = "yumidang-minkyu-naver-live";
+// 명시한 격리 release 검증 모드에서만 두 번째 고정 프로젝트를 허용한다.
+const RELEASE_HTTP_MODE = process.argv.includes("--release-http");
+const ACTIVE_LOCAL_API = RELEASE_HTTP_MODE ? "http://127.0.0.1:59621" : LOCAL_API;
+const ACTIVE_LOCAL_PROJECT = RELEASE_HTTP_MODE ? "yumidang-release88-http" : LOCAL_PROJECT;
+
 export const LOCAL_CALLBACK = LOCAL_ORIGIN + "/naver/callback";
 const LOCAL_HOST = "127.0.0.1:5173";
 const CONTEXT = "colima-yumidang-minkyu";
-const CONTAINER = "supabase_db_" + LOCAL_PROJECT;
+const CONTAINER = "supabase_db_" + ACTIVE_LOCAL_PROJECT;
 const MAX_BODY_BYTES = 8192;
 // 정책의 원본 10MB는 기존 사진 선택 계약과 같은 10 * 1024 * 1024바이트다.
 export const MAX_ORIGINAL_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -52,7 +57,7 @@ function validatedConfig(value: unknown): LocalNaverConfig {
     const text = row[key];
     if (typeof text !== "string" || !text || text.trim() !== text || text.length > 8192 || /[\u0000-\u001f\u007f]/u.test(text)) return fail();
   }
-  if (row.API_URL !== LOCAL_API || row.NAVER_REDIRECT_URI !== LOCAL_CALLBACK ||
+  if (row.API_URL !== ACTIVE_LOCAL_API || row.NAVER_REDIRECT_URI !== LOCAL_CALLBACK ||
     (row.ANON_KEY as string).length < 32 || (row.SERVICE_ROLE_KEY as string).length < 32 || row.ANON_KEY === row.SERVICE_ROLE_KEY) return fail();
   const config = Object.create(null);
   for (const key of CONFIG_KEYS) Object.defineProperty(config, key, { value: row[key] });
@@ -89,7 +94,7 @@ export function readSecureLocalConfig(filename: string): LocalNaverConfig {
 function assertLocalContainer(endpoint: string, container: unknown): void {
   const target = object(container), config = object(target?.Config), labels = object(config?.Labels), state = object(target?.State);
   if (endpoint !== "unix://" + homedir() + "/.colima/yumidang-minkyu/docker.sock" ||
-    target?.Name !== "/" + CONTAINER || labels?.["com.supabase.cli.project"] !== LOCAL_PROJECT ||
+    target?.Name !== "/" + CONTAINER || labels?.["com.supabase.cli.project"] !== ACTIVE_LOCAL_PROJECT ||
     state?.Running !== true) return fail();
 }
 export function validateLocalTarget(endpoint: string, container: unknown, authUserCount: string, resume = false): void {
@@ -110,7 +115,7 @@ export function createGuardedLocalFetch(fetchImpl: typeof fetch = fetch): typeof
       const localUpload = method === "POST" && storagePath !== null && UUID.test(storagePath[1]) && IMAGE_UUID.test(storagePath[2]) &&
         headers.get("content-type") === "image/jpeg" && headers.get("x-upsert") === "false" &&
         /^Bearer [A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(headers.get("authorization") ?? "");
-      const local = url.origin === LOCAL_API && (
+      const local = url.origin === ACTIVE_LOCAL_API && (
         (method === "GET" && url.pathname === "/auth/v1/user") ||
         (method === "POST" && ["/auth/v1/admin/generate_link", "/auth/v1/verify"].includes(url.pathname)) ||
         (method === "POST" && url.pathname.startsWith("/rest/v1/rpc/") && rpcPaths.has(url.pathname.slice("/rest/v1/rpc/".length))) || localUpload
@@ -390,7 +395,7 @@ async function boundedBody(request: Request, maximum = MAX_BODY_BYTES): Promise<
 export function createNaverOAuthLocalHandler(configInput: LocalNaverConfig, fetchImpl: typeof fetch = fetch): (request: Request) => Promise<Response> {
   const config = validatedConfig(configInput);
   const runtimeEnv: Record<string,string> = {
-    SUPABASE_URL:LOCAL_API,SUPABASE_ANON_KEY:config.ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:config.SERVICE_ROLE_KEY,
+    SUPABASE_URL:ACTIVE_LOCAL_API,SUPABASE_ANON_KEY:config.ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:config.SERVICE_ROLE_KEY,
     NAVER_CLIENT_ID:config.NAVER_CLIENT_ID,NAVER_CLIENT_SECRET:config.NAVER_CLIENT_SECRET,NAVER_REDIRECT_URI:LOCAL_CALLBACK,
     ALLOWED_ORIGINS:JSON.stringify([LOCAL_ORIGIN]),MAX_REQUEST_BYTES:String(MAX_BODY_BYTES),
     UPSTREAM_TIMEOUT_MS:"10000",NAVER_STATE_TTL_SECONDS:"600",
@@ -436,7 +441,7 @@ export function createNaverOAuthLocalHandler(configInput: LocalNaverConfig, fetc
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(),10000);
           try {
-            stored = await guardedFetch(LOCAL_API + "/storage/v1/object/profile-images/" + avatarPath, {
+            stored = await guardedFetch(ACTIVE_LOCAL_API + "/storage/v1/object/profile-images/" + avatarPath, {
               method:"POST",headers:{apikey:config.ANON_KEY,Authorization:"Bearer " + getPrincipalToken(principal),
                 "Content-Type":"image/jpeg","x-upsert":"false"},body:new Uint8Array(photoBytes).buffer,signal:controller.signal,
             });
@@ -543,8 +548,8 @@ export async function runLocalOAuthServer(configPath: string, resume = false): P
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const resume = args.includes("--resume");
-  const options = args.filter((argument) => argument !== "--resume");
-  const invalidFlags = args.filter((argument) => argument === "--resume").length > 1;
+  const options = args.filter((argument) => argument !== "--resume" && argument !== "--release-http");
+  const invalidFlags = args.filter((argument) => argument === "--resume").length > 1 || args.filter((argument) => argument === "--release-http").length > 1;
   const path = invalidFlags ? undefined : options.length === 2 && options[0] === "--config" ? options[1]
     : options.length === 0 ? process.env.YUMIDANG_NAVER_LIVE_CONFIG : undefined;
   if (!path) { console.error(JSON.stringify({status:"FAIL",code:"LOCAL_CONFIGURATION_REQUIRED"})); process.exitCode = 1; }

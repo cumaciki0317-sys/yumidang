@@ -4,6 +4,7 @@ import { createRpcTransport, type FetchLike, type RpcClient } from "./transport.
 // 최신 AI 원자 RPC는 실제 SQL 검증을 거쳤다. 행사 영속 RPC는 준비 전까지 허용하지 않는다.
 // supportsRpc는 이 목록만 반영하며 이름이 요청됐다는 이유로 능력을 선언하지 않는다.
 const internalRpcs = new Set([
+  "reserve_ai_chat_account_model", "reserve_review_summary_account_model", "settle_ai_account_budget",
   "upsert_source_events_v1", "list_event_candidates_v1",
   "enqueue_job", "claim_job", "complete_job", "retry_job",
   "acquire_worker_run", "release_worker_run", "read_worker_run_budget",

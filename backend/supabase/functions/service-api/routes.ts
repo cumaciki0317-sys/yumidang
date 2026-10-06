@@ -152,6 +152,22 @@ export function resolveRoute(url: URL): Route {
   if (decisionNoticeMatch) { const id = reportUuid(decisionNoticeMatch[1]); return route("POST", ({ db, body, url }) => {
     query(url, []); empty(body); return reports.readMyDecisionNotice(db, id);
   }); }
+  const generalDeliveryMatch = /^\/decision-notices\/([^/]+)\/(prepare-delivery|provided)$/.exec(path);
+  if (generalDeliveryMatch) { const id = reportUuid(generalDeliveryMatch[1]); return route("POST", ({ db, body, url }) => {
+    query(url, []);
+    if (generalDeliveryMatch[2] === "prepare-delivery") { empty(body); return reports.prepareMyGeneralNoticeDelivery(db, id); }
+    const input = reportObject(body, ["deliveryId"]);
+    return reports.acknowledgeMyGeneralNoticeProvided(db, id, reportUuid(input.deliveryId));
+  }); }
+  if (path === "/me/general-sanction-appeals") return route("POST", ({ db, body, url }) => {
+    query(url, []); const input = reportObject(body, ["noticeId", "clientRequestId", "reason"]);
+    if (typeof input.reason !== "string" || input.reason.trim() !== input.reason || [...input.reason].length < 1 || [...input.reason].length > 4000 || /[\x00-\x1f\x7f]/.test(input.reason)) invalid();
+    return reports.submitMyGeneralSanctionAppeal(db, reportUuid(input.noticeId), reportUuid(input.clientRequestId), input.reason as string);
+  });
+  const generalAppealMatch = /^\/me\/general-sanction-appeals\/([^/]+)$/.exec(path);
+  if (generalAppealMatch) { const id = reportUuid(generalAppealMatch[1]); return route("GET", ({ db, url }) => {
+    query(url, []); return reports.getMyGeneralSanctionAppeal(db, id);
+  }, false, true); }
   if (path === "/me/safety") return route("GET", ({ db }) => reports.getMySafetyState(db));
   if (path === "/me/sanctions") return route("GET", ({ db, url }) => reports.listMySanctions(db, ...page(url)), false, true);
   if (path === "/me/reports") return route("GET", ({ db, url }) => reports.listMyReports(db, ...page(url)), false, true);
@@ -236,6 +252,8 @@ export function resolveRoute(url: URL): Route {
     const id = uuid(match[1]), action = match[2];
     return route("POST", ({ db, body }) => { empty(body); return action === "block" ? profiles.blockMember(db, id) : profiles.unblockMember(db, id); });
   }
+  match = /^\/profiles\/([^/]+)\/review-summary$/.exec(path);
+  if (match) { const id = uuid(match[1]); return route("GET", ({ db, url }) => { query(url, []); return reviews.getVisibleSummary(db, id); }); }
   match = /^\/profiles\/([^/]+)\/reviews$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("GET", ({ db, url }) => reviews.getPublicReviews(db, id, ...page(url)), false, true); }
   match = /^\/profiles\/([^/]+)$/.exec(path);
