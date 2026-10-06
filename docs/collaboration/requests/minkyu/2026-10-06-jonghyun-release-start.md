@@ -2,6 +2,10 @@
 
 사용자(민규)가 2026-10-06 “푸쉬해 종현이 나 종현이야 말하면 시작할 수 있도록” 요청한 현재 시작 안내다. GitHub 공유 브랜치는 `minkyu/handoff-20261005`, 종현의 기존 작업 브랜치는 `jonghyun/queue-integration`이다. 이미 공유된 종현26aca72를 포함하므로 이전 구현을 다시 만들지 않는다.
 
+## GitHub 공유 완료
+
+코드 인계64ba542를 `minkyu/handoff-20261005`에 푸시했다. 공유본은86개 SQL과 최신 민규 port/설정/숨김 API를 포함하며, 실제 기존 로컬DB84와 운영DB20 이력은 변경하지 않았다. GitHub가 안내한 현재 저장소 위치는 [cumaciki0317-sys/yumidang](https://github.com/cumaciki0317-sys/yumidang/tree/minkyu/handoff-20261005)이다. J는 이 브랜치 최신 내용을 자기 clone에 받아 J1을 시작한다.
+
 ## 시작 절차
 
 “나 종현이야”를 받으면 작업자 jonghyun으로 구분한다. AGENTS.md의 현재 사용자 지정 J1 범위에 따라 담당과 첫 계획을 먼저 설명하고, 종현 본인의 별도 clone·브랜치·미커밋 작업을 확인한다. 미커밋은 보존하고 민규 clone/인덱스/설정을 사용하지 않는다. 원격 handoff를 자기 작업 브랜치에 가져와 충돌을 검토한다. 다른 담당 파일의 임의 편집·Git hook 우회로 해결하지 않는다.
