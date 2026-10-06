@@ -1,0 +1,74 @@
+{
+  "actor": "jonghyun",
+  "branch": "jonghyun/queue-integration",
+  "baseline": "b7af2e5ad7e7459d89047855cc174830055070c3",
+  "scope": "user approved provider account switching preparation and policy decision review",
+  "lanes": {
+    "ai_search_review": [
+      "backend/supabase/functions/_shared/ai/providers/account-pool.ts",
+      "tests/functions/jonghyun/ai-account-pool.test.ts"
+    ],
+    "root": [
+      "정책.md",
+      "docs/collaboration/jonghyun.md",
+      "docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md",
+      "docs/collaboration/requests/jonghyun/2026-10-06-potens-account-pool-handoff.md",
+      "docs/collaboration/requests/jonghyun/2026-10-06-account-pool-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-10-06-minkyu-policy-and-potens-briefing.md"
+    ]
+  },
+  "unresolved": [],
+  "not_authorized_to_edit": [
+    "common config",
+    "DB/RPC migrations",
+    "ownership policy",
+    "actor/hooks",
+    "real API keys"
+  ],
+  "runtime": "no live API calls or deployment",
+  "policy_source_sha256": "6558546796e8bdd6096b20668acea40875f8e6bba2877009324b15f3cb13a963",
+  "decision_review": {
+    "total": 3,
+    "fully_answered": 3,
+    "remaining": 0,
+    "items": [
+      {
+        "id": "report_hide_retention",
+        "status": "answered",
+        "existing": "report evidence final closure plus90days; personal hide lifecycle unspecified",
+        "answer": "A",
+        "decision": "delete report evidence final closure plus90days; retain separate minimal personal hide record until user unhides"
+      },
+      {
+        "id": "appeal_notice_start",
+        "status": "answered",
+        "existing": "noncancellation sanctions after notice7days; availability versus reading unspecified",
+        "answer": "A",
+        "decision": "server notice successfully available in app plus7days"
+      },
+      {
+        "id": "account_and_global_budget",
+        "status": "answered",
+        "existing": "account3200000 recommendation; service50percent unchanged",
+        "answer": "A",
+        "decision": "3200000/account/KSTday;global=sum registered account limits"
+      }
+    ]
+  },
+  "activation_request": "user approved yumi,jonghyun,minkyu,sungho in order; local server validation before production; actual keys not registered; M common contracts absent; member data holds retained",
+  "registration_decisions": {
+    "ordered_account_ids": [
+      "yumi",
+      "jonghyun",
+      "minkyu",
+      "sungho"
+    ],
+    "account_token_cap": 3200000,
+    "global_token_cap_when_all_four_registered": 12800000,
+    "environment": "local server first; production after validation",
+    "answers": {
+      "account_order": "A: yumi > jonghyun > minkyu > sungho",
+      "registration_environment": "A"
+    }
+  }
+}
