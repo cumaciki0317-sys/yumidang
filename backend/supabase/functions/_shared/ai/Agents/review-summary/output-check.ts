@@ -29,3 +29,32 @@ export function checkSummaryOutput(value: unknown, expectedIds: string[], maxOut
   checkEvidence(claims, expectedIds);
   return claims;
 }
+
+/**
+ * A안: 각 주장이 인용한 모든 공개 후기의 전체 문장과 정확히 같아야 한다.
+ * 부분 문자열은 부정·조건을 지울 수 있으므로 허용하지 않는다. 개인정보는 별도 승인 검사로 확인한다.
+ */
+export function createConservativeSummarySafety(privacy: import("../../providers/privacy.ts").ApprovedPrivacyCheck): SummarySafetyPort {
+  return { async check({ claims, publicTextReviews }) {
+    try {
+      const { assertPrivacy } = await import("../../providers/privacy.ts");
+      // 별도 async 검사기가 원본 객체를 변경해도 검증한 주장 snapshot만 판단한다.
+      checkSummaryOutput({ claims }, publicTextReviews.map(review => review.evidenceId), 300);
+      const sourceSnapshot = publicTextReviews.map(review => ({ evidenceId: review.evidenceId, comment: review.comment }));
+      const snapshot = claims.map(claim => ({ text: claim.text, evidenceIds: [...claim.evidenceIds] }));
+      checkSummaryOutput({ claims: snapshot }, publicTextReviews.map(review => review.evidenceId), 300);
+      const sources = new Map(sourceSnapshot.map(review => [review.evidenceId, review.comment]));
+      if (sources.size !== publicTextReviews.length) return false;
+      const used = new Set<string>();
+      for (const claim of snapshot) {
+        if (claim.evidenceIds.some(id => used.has(id))) return false;
+        claim.evidenceIds.forEach(id => used.add(id));
+        if (!claim.evidenceIds.every(id => typeof sources.get(id) === "string" && sources.get(id) === claim.text)) return false;
+        await assertPrivacy(claim.text, privacy, "output");
+      }
+      // 검사 도중 원본을 바꾸면 이 결과로 게시하지 않는다.
+      return JSON.stringify(snapshot) === JSON.stringify(claims) &&
+        JSON.stringify(sourceSnapshot) === JSON.stringify(publicTextReviews);
+    } catch { return false; }
+  } };
+}

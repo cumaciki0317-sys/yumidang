@@ -148,3 +148,6 @@ const entrypoint = {
 };
 export default entrypoint;
 if (import.meta.main) Deno.serve(entrypoint.fetch);
+
+/** 로컬 준비 소비자만 공개. HTTP 경로·운영 기본 등록은 민규 연결 계약 확정 전 추가하지 않는다. */
+export { createSafetyConsumerRegistry, createRpcSafetyConsumerPorts, createSafetyWorkerInvocation } from "../_shared/jobs/safety-consumers.ts";

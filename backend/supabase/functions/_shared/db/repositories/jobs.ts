@@ -2,8 +2,11 @@
 import type { JsonValue } from "../../contracts/common.ts";
 import { toPublicError } from "../../http/errors.ts";
 import type { RpcClient } from "../transport.ts";
+import { JobExecutionUnknown } from "../../jobs/retry.ts";
 
 export type JobReference =
+  | { kind: "cancellation_safety"; identityId: string; generation: number }
+  | { kind: "report_retention"; reportId: string; closureProofId: string }
   | { kind: "review_summary"; targetUserId: string; sourceRevision: string; modelVersion: string; promptVersion: string }
   | { kind: "event_sync"; provider: string; windowStart: string; windowEnd: string }
   | { kind: "auto_complete"; appointmentId: string; expectedDueAt: string }
@@ -43,9 +46,9 @@ export interface JobRepository {
 
 // ---- 실제 DB RPC 어댑터(제안 SQL 03 적용 전제) -------------------------------------------------
 /** 내부 클라이언트 허용 목록에 필요한 작업 RPC. yield/fail/supersede는 민규 허용 목록 추가가 필요하다. */
-export const JOB_RPCS = ["enqueue_job", "claim_job", "complete_job", "retry_job", "yield_job", "fail_job", "supersede_job"] as const;
-/** 현재 DB kind CHECK가 허용하는 유일한 작업 종류. 다른 kind는 DB 계약 확장 전까지 RPC로 보내지 않는다. */
-const DB_KINDS: ReadonlySet<JobKind> = new Set(["review_summary"]);
+export const JOB_RPCS = ["enqueue_job", "claim_supported_job", "claim_job", "complete_job", "retry_job", "yield_job", "fail_job", "supersede_job"] as const;
+/** 현재 scoped claim 계약의3종. 행사·회원 정리는 각각 기존 전용 소비자가 처리한다. */
+const DB_KINDS: ReadonlySet<JobKind> = new Set(["review_summary", "cancellation_safety", "report_retention"]);
 /**
  * 실행기 오류 코드 → DB last_error_code. DB 허용 목록은 5개이므로 명시적으로 축약한다(손실 있음).
  * 반대 방향 읽기는 현재 RPC가 반환하지 않으므로 제공하지 않는다.
@@ -98,10 +101,30 @@ function isStateConflict(error: unknown): boolean {
  * 제안 SQL 03의 작업 RPC 연결. payload.profileId ↔ reference.targetUserId, leaseExpiresAt → leaseUntil 등
  * DB 계약과 내부 계약의 이름 차이를 명시적으로 변환한다. RPC 'state_conflict'는 lease_lost로 바꾼다.
  */
-export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?: string } = {}): JobRepository {
+export interface SafetyClaimJournal {
+  prepare(input: { requestId: string; workerId: string; globalToken: string; supportedKinds: readonly JobKind[] }): Promise<void>;
+  confirmed(requestId: string): Promise<void>;
+  unknown(requestId: string): Promise<void>;
+}
+export interface SafetySettlementJournal {
+  prepare(input: { requestId: string; jobId: string; jobLeaseToken: string; globalToken: string; status: JobSettlement["status"] }): Promise<void>;
+  confirmed(requestId: string): Promise<void>;
+  unknown(requestId: string): Promise<void>;
+}
+function boundedSafety<T>(signal: AbortSignal, phase: "claim" | "complete" | "journal", operation: () => Promise<T>): Promise<T> {
+  if (signal.aborted) return Promise.reject(new JobExecutionUnknown(phase));
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(new JobExecutionUnknown(phase));
+    signal.addEventListener("abort", abort, { once: true });
+    Promise.resolve().then(() => { if (signal.aborted) throw new JobExecutionUnknown(phase); return operation(); })
+      .then(value => signal.aborted ? abort() : resolve(value), reject).finally(() => signal.removeEventListener("abort", abort));
+  });
+}
+export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?: string; supportedClaim?: boolean; claimJournal?: SafetyClaimJournal; settlementJournal?: SafetySettlementJournal; signal?: AbortSignal } = {}): JobRepository {
   if (!db || typeof db.rpc !== "function") throw new TypeError("INVALID_JOB_DB");
   if (options.workerRunToken !== undefined && !UUID.test(options.workerRunToken)) throw new Error("INVALID_WORKER_RUN_TOKEN");
   const fence: Record<string, JsonValue> = options.workerRunToken ? { p_worker_run_token: options.workerRunToken } : {};
+  const safetyJobs = new Set<string>();
   // 포트 타입을 명시해 claim 결과의 kind 리터럴 등 계약을 정적 검사한다.
   const repository: JobRepository = {
     async enqueue(input: EnqueuedJob) {
@@ -127,29 +150,55 @@ export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?
       if (!input || typeof input.workerId !== "string" || !UUID.test(input.workerId) || !Array.isArray(input.kinds) ||
           !Number.isSafeInteger(input.leaseDurationMs) || input.leaseDurationMs < 1000 || input.leaseDurationMs % 1000 !== 0 ||
           input.leaseDurationMs > 86_400_000) throw new Error("INVALID_CLAIM_INPUT");
-      // DB claim_job은 kind 필터가 없다. 요청 kinds에 DB 지원 kind가 없으면 점유하지 않는다.
-      if (!input.kinds.some((kind) => DB_KINDS.has(kind))) return null;
-      const envelope = object(await db.rpc("claim_job", {
-        p_worker_id: input.workerId, p_lease_seconds: input.leaseDurationMs / 1000, ...fence,
-      }), ["job"]);
-      if (envelope.job === null) return null;
-      const job = object(envelope.job, ["jobId", "kind", "payload", "leaseToken", "leaseExpiresAt", "attempt", "failedAttempts"]);
-      const payload = object(job.payload, ["profileId", "sourceRevision", "modelVersion", "promptVersion"]);
-      if (typeof job.jobId !== "string" || !UUID.test(job.jobId) || typeof job.leaseToken !== "string" || !UUID.test(job.leaseToken) ||
-          job.kind !== "review_summary" || !input.kinds.includes("review_summary") ||
-          typeof payload.profileId !== "string" || !UUID.test(payload.profileId) ||
-          typeof payload.sourceRevision !== "string" || !REVISION.test(payload.sourceRevision) ||
-          typeof payload.modelVersion !== "string" || !VERSION.test(payload.modelVersion) ||
-          typeof payload.promptVersion !== "string" || !VERSION.test(payload.promptVersion)) return wire();
-      count(job.attempt, 1);
-      return {
-        jobId: job.jobId, leaseToken: job.leaseToken, leaseUntil: normalizeDbInstant(job.leaseExpiresAt),
-        failedAttempts: count(job.failedAttempts, 0),
-        reference: {
-          kind: "review_summary", targetUserId: payload.profileId, sourceRevision: payload.sourceRevision,
-          modelVersion: payload.modelVersion, promptVersion: payload.promptVersion,
-        },
-      };
+      if (!input.kinds.length || new Set(input.kinds).size !== input.kinds.length) throw new Error("INVALID_CLAIM_INPUT");
+      const supported = input.kinds.filter((kind) => DB_KINDS.has(kind));
+      if (!supported.length) return null;
+      const scoped = options.supportedClaim === true || supported.some((kind) => kind !== "review_summary");
+      if (scoped && (!options.workerRunToken || supported.length !== input.kinds.length)) throw new Error("INVALID_SUPPORTED_CLAIM");
+      const safety = supported.some((kind) => kind !== "review_summary");
+      if (safety && !(options.signal instanceof AbortSignal)) throw new Error("SAFETY_CLAIM_SIGNAL_REQUIRED");
+      if (safety && !options.claimJournal) throw new Error("SAFETY_CLAIM_JOURNAL_REQUIRED");
+      const requestId = crypto.randomUUID();
+      if (safety) {
+        try { await boundedSafety(options.signal!, "journal", () => options.claimJournal!.prepare({ requestId, workerId: input.workerId, globalToken: options.workerRunToken!, supportedKinds: supported })); }
+        catch { throw new JobExecutionUnknown("journal"); }
+      }
+      let rpcReturned = false;
+      try {
+        const invoke = () => db.rpc(scoped ? "claim_supported_job" : "claim_job", {
+          p_worker_id: input.workerId, p_lease_seconds: input.leaseDurationMs / 1000, ...fence,
+          ...(scoped ? { p_supported_kinds: supported } : {}),
+        });
+        const raw = safety ? await boundedSafety(options.signal!, "claim", invoke) : await invoke();
+        rpcReturned = true;
+        const envelope = object(raw, ["job"]);
+        if (envelope.job === null) { if (safety) await boundedSafety(options.signal!, "claim", () => options.claimJournal!.confirmed(requestId)); return null; }
+        const job = object(envelope.job, ["jobId", "kind", "payload", "leaseToken", "leaseExpiresAt", "attempt", "failedAttempts"]);
+        if (typeof job.jobId !== "string" || !UUID.test(job.jobId) || typeof job.leaseToken !== "string" || !UUID.test(job.leaseToken) ||
+            typeof job.kind !== "string" || !supported.includes(job.kind as JobKind)) return wire();
+        let reference: JobReference;
+        if (job.kind === "review_summary") {
+          const payload = object(job.payload, ["profileId", "sourceRevision", "modelVersion", "promptVersion"]);
+          if (typeof payload.profileId !== "string" || !UUID.test(payload.profileId) ||
+              typeof payload.sourceRevision !== "string" || !REVISION.test(payload.sourceRevision) ||
+              typeof payload.modelVersion !== "string" || !VERSION.test(payload.modelVersion) ||
+              typeof payload.promptVersion !== "string" || !VERSION.test(payload.promptVersion)) return wire();
+          reference = { kind: "review_summary", targetUserId: payload.profileId, sourceRevision: payload.sourceRevision,
+            modelVersion: payload.modelVersion, promptVersion: payload.promptVersion };
+        } else reference = decodeSafetyJobPayload(job.kind, job.payload);
+        count(job.attempt, 1);
+        const claimed = { jobId: job.jobId, leaseToken: job.leaseToken, leaseUntil: normalizeDbInstant(job.leaseExpiresAt),
+          failedAttempts: count(job.failedAttempts, 0), reference };
+        if (safety) await boundedSafety(options.signal!, "claim", () => options.claimJournal!.confirmed(requestId));
+        if (safety) safetyJobs.add(claimed.jobId);
+        return claimed;
+      } catch (error) {
+        if (scoped && (rpcReturned || options.signal?.aborted || (!isStateConflict(error) && !["AUTH_REQUIRED", "ACCESS_DENIED"].includes(toPublicError(error).error.code)))) {
+          if (safety) { try { await boundedSafety(options.signal!, "journal", () => options.claimJournal!.unknown(requestId)); } catch { /* 원 intent 보존 */ } }
+          throw new JobExecutionUnknown("claim");
+        }
+        throw error;
+      }
     },
     async settle(input) {
       if (!input || typeof input.jobId !== "string" || !UUID.test(input.jobId) ||
@@ -175,18 +224,46 @@ export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?
         case "superseded": name = "supersede_job"; args = base; break;
         default: throw new Error("INVALID_SETTLEMENT");
       }
-      let result: JsonValue;
+      const safety = safetyJobs.has(input.jobId);
+      const requestId = crypto.randomUUID();
+      if (safety) {
+        if (!options.settlementJournal || !options.signal || !options.workerRunToken) throw new JobExecutionUnknown("journal");
+        try { await boundedSafety(options.signal, "journal", () => options.settlementJournal!.prepare({ requestId, jobId: input.jobId, jobLeaseToken: input.leaseToken, globalToken: options.workerRunToken!, status: input.status })); }
+        catch { throw new JobExecutionUnknown("journal"); }
+      }
+      let returned = false;
       try {
-        result = await db.rpc(name, args);
+        const result = safety ? await boundedSafety(options.signal!, "complete", () => db.rpc(name, args)) : await db.rpc(name, args);
+        returned = true;
+        const body = object(result, ["jobId", "status"]);
+        if (body.jobId !== input.jobId || body.status !== input.status) return wire();
+        if (safety) await boundedSafety(options.signal!, "complete", () => options.settlementJournal!.confirmed(requestId));
       } catch (error) {
-        if (isStateConflict(error)) return "lease_lost";
+        if ((!safety || !returned) && !options.signal?.aborted && isStateConflict(error)) return "lease_lost";
+        if (safety) {
+          try { await boundedSafety(options.signal!, "journal", () => options.settlementJournal!.unknown(requestId)); } catch { /* 원 intent 보존 */ }
+          throw new JobExecutionUnknown("complete");
+        }
         throw error;
       }
-      const expected = input.status;
-      const body = object(result, ["jobId", "status"]);
-      if (body.jobId !== input.jobId || body.status !== expected) return wire();
       return "applied";
     },
   };
   return Object.freeze(repository);
+}
+
+/** 신규2종 payload는 추가 키까지 거절하며 원문을 복제하지 않는다. */
+export function decodeSafetyJobPayload(kind: string, value: JsonValue | undefined): JobReference {
+  if (kind === "cancellation_safety") {
+    const v = object(value, ["identityId", "generation"]);
+    if (typeof v.identityId !== "string" || !UUID.test(v.identityId) || v.identityId === "00000000-0000-0000-0000-000000000000" ||
+        typeof v.generation !== "number" || !Number.isSafeInteger(v.generation) || v.generation < 1) return wire();
+    return { kind, identityId: v.identityId, generation: v.generation };
+  }
+  if (kind === "report_retention") {
+    const v = object(value, ["reportId", "closureProofId"]);
+    if ([v.reportId, v.closureProofId].some((id) => typeof id !== "string" || !UUID.test(id) || id === "00000000-0000-0000-0000-000000000000")) return wire();
+    return { kind, reportId: v.reportId as string, closureProofId: v.closureProofId as string };
+  }
+  return wire();
 }

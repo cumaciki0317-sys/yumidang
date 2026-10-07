@@ -1,7 +1,7 @@
 import { ApiError, ServiceApiClient } from "./api.ts";
 import type { FreePostInput } from "../../../backend/supabase/functions/_shared/contracts/posts";
 import type { ProfilePreferences, ProfileTraits } from "../../../backend/supabase/functions/_shared/contracts/signup";
-import type { MemberReportInput } from "../../../backend/supabase/functions/_shared/contracts/reports";
+import type { MemberDecisionNotice, MemberCancellationNotice, MemberReportInput } from "../../../backend/supabase/functions/_shared/contracts/reports";
 import type { AppointmentScheduleProposal } from "../../../backend/supabase/functions/_shared/contracts/matching";
 import type { ReviewSubmission } from "../../../backend/supabase/functions/_shared/contracts/reviews";
 
@@ -63,6 +63,83 @@ export function change(value: unknown): Wire {
     if (r.status !== "awaiting_response" && r.newLocation !== null) return fail();
   } else if (Object.hasOwn(r, "newLocation")) return fail();
   return r;
+}
+export type HiddenTargetType = MemberReportInput["targetType"];
+const hiddenTargetTypes = ["post", "chat", "appointment", "member", "event"] as const;
+export interface HiddenTarget { targetType: HiddenTargetType; targetId: string; }
+export interface NoticeDelivery { deliveryId: string; notice: MemberDecisionNotice; providedAt: string | null; deadlineAt: string | null; appealPolicy: "general_7d"; }
+function hiddenTarget(value: unknown): HiddenTarget {
+  const r = fields(value, ["targetType", "targetId"]);
+  if (!(hiddenTargetTypes as readonly unknown[]).includes(r.targetType)) return fail();
+  return { targetType: r.targetType as HiddenTargetType, targetId: uuid(r.targetId) };
+}
+function decisionNotice(value: unknown): MemberDecisionNotice {
+  const r = fields(value, ["noticeId", "appointmentId", "appointmentOutcome", "violationOutcome", "reasonCode", "violationClass", "violationType", "availableAt", "firstReadAt"]);
+  uuid(r.noticeId); if (r.appointmentId !== null) uuid(r.appointmentId);
+  timestamp(r.availableAt); if (r.firstReadAt !== null && Date.parse(timestamp(r.firstReadAt)) < Date.parse(string(r.availableAt))) return fail();
+  if (![null, "normal", "no_show"].includes(r.appointmentOutcome as string | null) || ![null, "confirmed", "invalidated"].includes(r.violationOutcome as string | null)) return fail();
+  if (r.appointmentOutcome !== null && r.appointmentId === null) return fail();
+  if (r.violationOutcome === null) {
+    if (r.appointmentOutcome === null || r.reasonCode !== r.appointmentOutcome || r.violationClass !== null || r.violationType !== null) return fail();
+  } else if (r.violationOutcome === "invalidated") {
+    if (r.reasonCode !== "decision_corrected" || r.violationClass !== null || r.violationType !== null) return fail();
+  } else if (r.violationClass === "none") {
+    if (r.reasonCode !== "no_show" || r.appointmentOutcome !== "no_show" || r.violationType !== null) return fail();
+  } else {
+    const types = r.violationClass === "minor" ? ["spam", "rule_violation"] : r.violationClass === "major" ? ["sexual_harassment", "threat", "violence", "stalking", "privacy_exposure", "sexual_exploitation"] : [];
+    if (!types.includes(string(r.violationType)) || r.reasonCode !== r.violationType) return fail();
+  }
+  return r as unknown as MemberDecisionNotice;
+}
+function cancellationNotice(value: unknown): MemberCancellationNotice {
+  const r = fields(value, ["noticeId", "appointmentId", "appealState", "planState", "eligibleCount", "provisionalCount", "hasCancellationWarning", "restrictedUntil", "availableAt", "firstReadAt"]);
+  uuid(r.noticeId); uuid(r.appointmentId); bool(r.hasCancellationWarning);
+  timestamp(r.availableAt); if (r.restrictedUntil !== null) timestamp(r.restrictedUntil);
+  if (r.firstReadAt !== null && Date.parse(timestamp(r.firstReadAt)) < Date.parse(string(r.availableAt))) return fail();
+  if (![null, "reviewing", "accepted", "rejected"].includes(r.appealState as string | null) || !["held", "applied", "corrected", "policy_pending"].includes(string(r.planState))) return fail();
+  if (r.eligibleCount === null || r.provisionalCount === null) {
+    if (r.eligibleCount !== null || r.provisionalCount !== null || r.planState !== "policy_pending") return fail();
+  } else if (![r.eligibleCount, r.provisionalCount].every(n => Number.isSafeInteger(n) && (n as number) >= 0)) return fail();
+  return r as unknown as MemberCancellationNotice;
+}
+function noticeDelivery(value: unknown, noticeId: string, deliveryId?: string): NoticeDelivery {
+  const r = fields(value, ["deliveryId", "notice", "providedAt", "deadlineAt", "appealPolicy"]), notice = decisionNotice(r.notice);
+  uuid(r.deliveryId);
+  if (notice.noticeId !== noticeId || notice.violationOutcome !== "confirmed" || r.appealPolicy !== "general_7d" || (deliveryId !== undefined && r.deliveryId !== deliveryId)) return fail();
+  if (r.providedAt === null && r.deadlineAt === null) { if (deliveryId !== undefined) return fail(); }
+  else if (Date.parse(timestamp(r.deadlineAt)) - Date.parse(timestamp(r.providedAt)) !== 168 * 3600000) return fail();
+  return { deliveryId: string(r.deliveryId), notice, providedAt: r.providedAt as string | null, deadlineAt: r.deadlineAt as string | null, appealPolicy: "general_7d" };
+}
+export interface GeneralAppeal { appealId: string; noticeId: string; state: "reviewing" | "accepted" | "rejected"; receivedAt: string; deadlineAt: string; alreadyApplied: boolean; }
+function generalAppeal(value: unknown, expected: string, byNotice: boolean): GeneralAppeal {
+  const r = fields(value, ["appealId", "noticeId", "state", "receivedAt", "deadlineAt", "alreadyApplied"]);
+  uuid(r.appealId); uuid(r.noticeId); bool(r.alreadyApplied);
+  if (r[byNotice ? "noticeId" : "appealId"] !== expected || !["reviewing", "accepted", "rejected"].includes(string(r.state)) || Date.parse(timestamp(r.receivedAt)) >= Date.parse(timestamp(r.deadlineAt))) return fail();
+  return r as unknown as GeneralAppeal;
+}
+export interface CancellationAppeal { appealId: string | null; appointmentId: string; resultRevision: number; state: "reviewing" | "accepted" | "rejected" | null; cancelledAt: string; deadlineAt: string; receivedAt: string | null; resolvedAt: string | null; alreadyApplied?: boolean; reportId?: string; }
+export interface CancellationAppealInput { clientRequestId: string; expectedResultRevision: number; reasonCodes: string[]; description: string; assetIds: string[]; hideTarget: boolean; }
+function timestampMicros(value: unknown): bigint {
+  const v = timestamp(value), fraction = /\.(\d{1,6})(?:Z|[+-])/.exec(v)?.[1] ?? "";
+  return BigInt(Date.parse(v.replace(/\.\d{1,6}(?=Z|[+-])/, ""))) * 1000n + BigInt(fraction.padEnd(6, "0"));
+}
+function cancellationAppeal(value: unknown, appointmentId: string, revision?: number): CancellationAppeal {
+  const submit = revision !== undefined;
+  const r = fields(value, ["appealId", "appointmentId", "resultRevision", "state", "cancelledAt", "deadlineAt", "receivedAt", "resolvedAt", ...(submit ? ["alreadyApplied", "reportId"] : [])]);
+  if (r.appointmentId !== appointmentId || !Number.isSafeInteger(r.resultRevision) || (r.resultRevision as number) < 1) return fail();
+  const cancelled = timestampMicros(r.cancelledAt), deadline = timestampMicros(r.deadlineAt);
+  if (deadline - cancelled !== 86_400_000_000n) return fail();
+  if (!submit && r.appealId === null) {
+    if (r.state !== null || r.receivedAt !== null || r.resolvedAt !== null) return fail();
+  } else {
+    uuid(r.appealId);
+    if (!["reviewing", "accepted", "rejected"].includes(string(r.state))) return fail();
+    const received = timestampMicros(r.receivedAt);
+    if (received < cancelled || received >= deadline) return fail();
+    if (r.state === "reviewing" ? r.resolvedAt !== null : timestampMicros(r.resolvedAt) < received) return fail();
+  }
+  if (submit) { bool(r.alreadyApplied); uuid(r.reportId); if (r.resultRevision !== revision! + 1 || r.state !== "reviewing") return fail(); }
+  return r as unknown as CancellationAppeal;
 }
 export class MemberService {
   private readonly client: ServiceApiClient;
@@ -137,6 +214,42 @@ export class MemberService {
   async notifications(before?: string, signal?: AbortSignal) { const result = await this.page(`/notifications?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal); result.items.forEach(r => { uuid(r.notificationId); string(r.kind); if (r.requestId !== null) uuid(r.requestId); timestamp(r.createdAt); if (r.readAt !== null) timestamp(r.readAt); }); return result; }
   async readNotification(id: string | null, signal?: AbortSignal) { const r = await this.send(id ? `/notifications/${uuid(id)}/read` : "/notifications/read-all", {}, signal); if (r !== null) return fail(); }
   async safety(signal?: AbortSignal) { const r = fields(await this.read("/me/safety", signal), ["permanent", "restrictedUntil", "hasWarning", "sanctions"]); bool(r.permanent); bool(r.hasWarning); if (r.restrictedUntil !== null) timestamp(r.restrictedUntil); rows(r.sanctions); return r; }
+  async hiddenTargets(before?: string, signal?: AbortSignal) {
+    const result = await this.page(`/me/hidden-targets?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal);
+    const items = result.items.map(hiddenTarget);
+    if (new Set(items.map(r => `${r.targetType}:${r.targetId.toLowerCase()}`)).size !== items.length) return fail();
+    return { items, nextCursor: result.nextCursor };
+  }
+  async unhide(target: HiddenTarget, signal?: AbortSignal) {
+    const input = hiddenTarget(target), r = fields(await this.send("/me/hidden-targets/unhide", input, signal), ["targetType", "targetId", "hidden"]);
+    if (r.targetType !== input.targetType || r.targetId !== input.targetId.toLowerCase() || r.hidden !== false) return fail();
+    return r;
+  }
+  async notices(kind: "decision" | "cancellation", before?: string, signal?: AbortSignal) {
+    const result = await this.page(`/${kind}-notices?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal);
+    const items = result.items.map((r): MemberDecisionNotice | MemberCancellationNotice => kind === "decision" ? decisionNotice(r) : cancellationNotice(r));
+    if (new Set(items.map(r => r.noticeId)).size !== items.length) return fail();
+    return { items, nextCursor: result.nextCursor };
+  }
+  async readNotice(kind: "decision" | "cancellation", id: string, signal?: AbortSignal) {
+    const result = await this.send(`/${kind}-notices/${uuid(id)}/read`, {}, signal);
+    const notice = kind === "decision" ? decisionNotice(result) : cancellationNotice(result);
+    if (notice.noticeId !== id || notice.firstReadAt === null) return fail();
+    return notice;
+  }
+  async prepareNotice(id: string, signal?: AbortSignal) { return noticeDelivery(await this.send(`/decision-notices/${uuid(id)}/prepare-delivery`, {}, signal), id); }
+  async acknowledgeNotice(id: string, deliveryId: string, signal?: AbortSignal) { return noticeDelivery(await this.send(`/decision-notices/${uuid(id)}/provided`, { deliveryId: uuid(deliveryId) }, signal), id, deliveryId); }
+  async submitGeneralAppeal(noticeId: string, clientRequestId: string, reason: string, signal?: AbortSignal) {
+    if (reason.trim() !== reason || [...reason].length < 1 || [...reason].length > 4000 || /[\x00-\x1f\x7f]/.test(reason)) throw new ApiError(400, "INVALID_REQUEST");
+    return generalAppeal(await this.send("/me/general-sanction-appeals", { noticeId: uuid(noticeId), clientRequestId: uuid(clientRequestId), reason }, signal), noticeId, true);
+  }
+  async generalAppeal(id: string, signal?: AbortSignal) { return generalAppeal(await this.read(`/me/general-sanction-appeals/${uuid(id)}`, signal), id, false); }
+  async cancellationAppeal(id: string, signal?: AbortSignal) { return cancellationAppeal(await this.read(`/appointments/${uuid(id)}/cancellation-appeals`, signal), id); }
+  async submitCancellationAppeal(id: string, input: CancellationAppealInput, signal?: AbortSignal) {
+    if (!Number.isSafeInteger(input.expectedResultRevision) || input.expectedResultRevision < 1 || input.expectedResultRevision >= Number.MAX_SAFE_INTEGER) throw new ApiError(400, "INVALID_REQUEST");
+    uuid(input.clientRequestId);
+    return cancellationAppeal(await this.send(`/appointments/${uuid(id)}/cancellation-appeals/submit`, input, signal), id, input.expectedResultRevision);
+  }
   async withdrawAi(kind: "exploration" | "review_summary", signal?: AbortSignal) { const r = fields(await this.send("/me/ai-processing/withdraw", { kind }, signal), ["withdrawn"]); if (r.withdrawn !== true) return fail(); return r; }
   async report(input: MemberReportInput, signal?: AbortSignal) { const r = fields(await this.send("/reports", input, signal), ["reportId", "status", "alreadySubmitted", "hideTarget"]); uuid(r.reportId); string(r.status); bool(r.alreadySubmitted); bool(r.hideTarget); return r; }
   async reports(before?: string, signal?: AbortSignal) { return this.page(`/me/reports?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal); }

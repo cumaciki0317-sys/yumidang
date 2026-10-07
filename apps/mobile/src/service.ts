@@ -1,4 +1,4 @@
-import { ApiError, ServiceApiClient } from "./api.ts";
+import { ApiError, checkAbort, ServiceApiClient } from "./api.ts";
 import type { Filters } from "./types.ts";
 import type { PlaceLookupResult } from "../../../backend/supabase/functions/_shared/integrations/places/port.ts";
 import { CATEGORIES } from "./domain.ts";
@@ -65,9 +65,6 @@ export interface PublicEventFilters {
   categories: { provider: string; value: string; count: number }[];
 }
 export interface ProfileSummary {
-  status: "available" | "pending" | "insufficient_reviews" | "withdrawn";
-  processingAllowed: boolean;
-  sourceRevision: string;
   summary: {
     summaryId: string;
     text: string;
@@ -613,7 +610,7 @@ function parseAi(value: unknown): AiChatResult {
   } as unknown as AiChatResult;
 }
 
-/** Proposed summary/ranking HTTP routes require Mingyu's server connection; no mock fallback exists. */
+/** Server-authorized summary is nullable; ranking remains pending server connection. */
 export class YumidangService {
   private readonly options: ServiceOptions;
   constructor(options: ServiceOptions) {
@@ -903,16 +900,11 @@ export class YumidangService {
     ) return fail();
     return { events, nextCursor };
   }
-  /** Proposed GET /events/:id returns the existing public source schema only. */
-  async getEvent(
-    eventId: string,
-    signal?: AbortSignal,
-  ): Promise<PublicEventItem> {
+  /** The current shared HTTP service has no public detail route. Never call an invented endpoint. */
+  async getEvent(eventId: string, signal?: AbortSignal): Promise<PublicEventItem> {
     if (!uuid.test(eventId)) return invalid();
-    const { data } = await this.read(`/events/${eventId}`, signal);
-    const result = event(data);
-    if (result.id.toLowerCase() !== eventId.toLowerCase()) return fail();
-    return result;
+    if (signal) checkAbort(signal);
+    throw new ApiError(503, "EVENT_DETAIL_NOT_CONNECTED");
   }
   async askAi(input: ChatInput, signal?: AbortSignal): Promise<AiChatResult> {
     if (!this.options.aiChatUrl) throw new ApiError(503, "AI_NOT_CONFIGURED");
@@ -1135,23 +1127,12 @@ export class YumidangService {
       this.options.fetcher,
     );
     const raw = exact(
-      await client.request<unknown>(`/profiles/${profileId}/summary`, {
+      await client.request<unknown>(`/profiles/${profileId}/review-summary`, {
         auth: "required",
         signal,
       }),
-      ["status", "processingAllowed", "sourceRevision", "summary"],
+      ["summary"],
     );
-    if (
-      !["available", "pending", "insufficient_reviews", "withdrawn"].includes(
-        String(raw.status),
-      ) || typeof raw.sourceRevision !== "string" ||
-      !/^(0|[1-9][0-9]*)$/.test(raw.sourceRevision)
-    ) return fail();
-    const allowed = boolean(raw.processingAllowed);
-    if (
-      (raw.status === "withdrawn") === allowed ||
-      (raw.status === "available") !== (raw.summary !== null)
-    ) return fail();
     if (raw.summary !== null) {
       const summary = exact(raw.summary, [
         "summaryId",
@@ -1164,69 +1145,16 @@ export class YumidangService {
       if (
         [...text(summary.text)].length > 300 ||
         !Number.isSafeInteger(summary.sourceCount) ||
-        (summary.sourceCount as number) < 3 || !allowed
+        (summary.sourceCount as number) < 3
       ) return fail();
     }
     return copy(raw) as unknown as ProfileSummary;
   }
-  async performanceRankings(
-    mode: "all" | "musical" = "all",
-    signal?: AbortSignal,
-  ): Promise<PerformanceRankings> {
+  /** Internal KOPIS RPC/HTTP is not a public member ranking API. */
+  async performanceRankings(mode: "all" | "musical" = "all", signal?: AbortSignal): Promise<PerformanceRankings> {
     if (mode !== "all" && mode !== "musical") return invalid();
-    const { data } = await this.read(`/events/rankings?mode=${mode}`, signal);
-    const raw = exact(data, [
-      "status",
-      "mode",
-      "sourceName",
-      "period",
-      "collectedAt",
-      "items",
-    ]);
-    if (
-      (raw.status !== "available" && raw.status !== "unavailable") ||
-      raw.mode !== mode || raw.sourceName !== "KOPIS" ||
-      !Array.isArray(raw.items) || raw.items.length > 10
-    ) return fail();
-    if (raw.status === "unavailable") {
-      if (raw.items.length || raw.period !== null || raw.collectedAt !== null) {
-        return fail();
-      }
-    } else {
-      const period = exact(raw.period, ["start", "end"]);
-      if (
-        date(period.start) > date(period.end) ||
-        new Date(`${period.end}T00:00:00Z`).getTime() -
-              new Date(`${period.start}T00:00:00Z`).getTime() !==
-          6 * 86400000 ||
-        !raw.items.length
-      ) return fail();
-      instant(raw.collectedAt);
-    }
-    const ranks = new Set<number>(), sources = new Set<string>();
-    for (const value of raw.items) {
-      const item = exact(value, [
-        "rank",
-        "sourceId",
-        "title",
-        "genre",
-        "performancePeriodText",
-        "placeName",
-        "region",
-      ]);
-      if (
-        !Number.isSafeInteger(item.rank) || (item.rank as number) < 1 ||
-        (item.rank as number) > 10 || ranks.has(item.rank as number) ||
-        sources.has(text(item.sourceId))
-      ) return fail();
-      ranks.add(item.rank as number);
-      sources.add(text(item.sourceId));
-      text(item.title);
-      for (
-        const key of ["genre", "performancePeriodText", "placeName", "region"]
-      ) nullableText(item[key]);
-    }
-    return copy(raw) as unknown as PerformanceRankings;
+    if (signal) checkAbort(signal);
+    throw new ApiError(503, "EVENT_RANKINGS_NOT_CONNECTED");
   }
   async getPost(postId: string, signal?: AbortSignal): Promise<PostDetails> {
     if (!uuid.test(postId)) return invalid();

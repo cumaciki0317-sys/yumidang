@@ -91,7 +91,7 @@ AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한�
 
 - `runReviewSummaryStep(job,deps)`는 명시된 호출 수·입력 크기 안에서 처리하고, 한 번에 끝나지 않으면 `yielded`로 반환한다. 실패 재시도와 정상 분할 실행을 구분한다.
 - 임시 checkpoint에는 생성된 중간 요약·근거 ID·원문 revision·모델/프롬프트 버전·진행 위치만 둔다. 원문 복제·회원 조회는 금지한다. 완료·폐기·revision 변경 시 정리하며 실제 접근 제어와 정리는 민규 DB 계약으로 보장한다.
-- `SummarySafetyPort`는 의미·개인정보 검사를 별도로 수행하는 필수 주입 경계다. 구조·근거 ID 검사만 통과했다고 의미 정확성을 보장하지 않는다. 현재 테스트의 검사기는 가상이며 실제 모델 품질/운영 검사 연결은 별도다.
+- `SummarySafetyPort`는 의미·개인정보 검사를 별도로 수행하는 필수 주입 경계다. 구조·근거 ID 검사만 통과했다고 의미 정확성을 보장하지 않는다. 현재 A안 보수적 검사 코드는 구현되어 있다. 합성 검증과 실제 원문 개인정보 검토·모델 품질·운영 주입은 별도다.
 - 조건부 게시 입력은 `jobId/leaseToken/targetUserId/sourceRevision/summaryText/claims/sourceReviewIds/sourceReviewCount/modelVersion/promptVersion/modelVersions`다. 여러 묶음/대체 모델을 썼다면 실제 사용 버전을 모두 추적한다. 게시·checkpoint 삭제는 원자 처리하고 작업 settle은 별도다. 게시 뒤 settle 전 중단에도 (jobId,sourceRevision) 기준 게시 멱등성으로 중복 효과를 막아야 한다.
 - `createReviewSummaryHandler`가 요약 결과를 작업 상태에 연결하고 점유 손실은 settle 없이 반환한다. `runNextJob`·`createJobRegistry`는 요약·행사 수집·자동 완료·후기 공개 작업을 구분한다. 자동 완료/공개는 공통 RPC만 호출하며 수동 확인·완료 시각을 워커에서 대신 기록하지 않는다.
 - Supabase Cron 등록·원격 실행·실제 DB 잠금/RLS·운영 수치·장애 알림은 아직 연결하지 않았다. [Edge 실행 제한](https://supabase.com/docs/guides/functions/limits)을 고려하여 분할 실행을 실제 런타임에서 검증해야 한다.
@@ -128,3 +128,20 @@ AI 요약은 **로그인 회원에게 프로필 공개 조건을 충족한 한�
 성공은 `{reservationId:UUID}`, 예산 소진은 `{reservationId:null}`, 자격 거부는 `{status:'consent_revoked'|'stale_revision'|'insufficient_reviews'|'invalid_evidence'|'lease_lost'}`다. 이외 반환형·미지원 RPC는 오류로 중단하며 generic 예약으로 대체하지 않는다. worker의 시작 전 준비 확인은 존재하지 않는 작업·전역 토큰으로 이 RPC를 호출하며 `lease_lost`를 받아야 한다. DB는 없는 작업의 점유 확인을 먼저 하여 이 확인 호출에서 예산을 예약하지 않는다. 내부 클라이언트 허용 목록·SQL 구현은 민규 소유 소스에 존재한다. 실제 대상 DB 적용·동시 철회/점유 만료 검증은 민규와 연결해 수행해야 하며 이번에는 실행하지 않았다.
 
 현재 소스 확인과 이번 합성 검증은 [AI·검색 구현 결과](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md)를 따른다. 승인된 요약 의미 검사기·개인정보 검사기·출력 상한 포트의 운영 기본값은 비어 있으며 준비 전 `not_enabled`를 유지한다.
+
+
+## 2026-10-07 현재 보수 검사·공유 실행·관측
+
+- `createConservativeSummarySafety`는 주장과 인용한 모든 공개 후기의 전체 원문이 정확히 일치해야 통과시킨다. 부분 인용으로 부정·조건을 지우거나 여러 원문을 새 주장으로 결합하지 않는다. 같은 근거를 여러 주장에 반복 연결하지 않으며 검사 중 주장·원문이 변하면 게시하지 않는다. 연락처·안전 보장은 구조 검사에서도 거절하고, 문자열 개인정보 적합성은 별도 서버 검토 목록으로 검사한다.
+- worker runtime은 개인정보 검사 포트가 주입됐을 때 이 보수적 safety를 기본으로 사용한다. 임의 allow-all 가상 함수를 운영 기본값으로 제공하지 않는다. 실제 회원 원문을 자동 승인하거나 보관·법적 근거·외부 전송·출력 제한 보류를 해제하지 않는다.
+- `createReviewSummaryWorkerExecution(read,overrides)`의 내부 `run(existingToken, {maxJobsPerRun,timeBudgetMs,signal})`은 공유 실행용 코드 API다. 새 HTTP 본문·헤더·DB 계약이 아니다. 승인된 caller가 공유 단위를 작업수로 변환하고 현재 DB 잔여 시간·token을 제공한다. 잘못된 값·0예산·미리 취소된 signal은 probe·점유·claim을 시작하지 않는다. probe 시간을 차감하고 서버 한도와 더 작은 값을 사용한다. 외부 signal과 자체 timeout을 결합하며 기존 token 검증만 수행하고 새 token 발급·연장·해제를 하지 않는다.
+- 외부 실행의 응답 유실·기한 뒤 늦은 응답은 이전 작업이 성공했더라도 aggregate 성공으로 반환하지 않는다. 공유 스케줄러의 영속 journal이 UNKNOWN을 유지하도록 예외를 전파한다. 기존 HTTP 호출은 서버 설정과 원래 직접 실행 동작을 유지한다.
+- `WorkerRuntimeOverrides.metrics`는 실행당 선택 관측 포트다. 결과·시간·프롬프트/모델 버전·확인된 전체 사용량만 전달한다. 불명 사용량·서로 다른 모델 버전·모든 내부 시도 사용량의 완전성이 확인되지 않은 경로의 합계는 기록하지 않는다. 원문·회원 ID·오류 객체를 전달하지 않으며 sink 실패·무응답으로 제품 실행을 지연하지 않는다. `retryCount=0`은 execution wrapper의 직접 재전송 0회를 뜻하고 내부 공급사 retry 관측값이 아니다.
+
+### 배포·주입 확인 목록
+
+1. `REVIEW_SUMMARY_WORKER_ENV`의 명시 한도·retry 설정과 `REVIEW_SUMMARY_MODEL_VERSION/REVIEW_SUMMARY_PROMPT_VERSION`을 현재 코드에 맞춰 주입한다. 기본값을 추정하지 않는다.
+2. 다중 계정 설정·원자 예산 RPC·승인 근거·공식 출력 제한·개인정보 검사기는 AI 탐색 체크리스트와 동일한 준비 조건을 유지한다. `config.toml`의 worker `verify_jwt=false`와 별개로 내부 인증·공통 service-role RPC ACL이 필수다.
+3. 공유 실행은 caller의 승인된 예산 변환·DBclock 조회·영속 journal·UNKNOWN 종결 계약이 준비됐을 때만 연결한다. 합성 포트로 동작한 결과를 실제 운영 준비로 표시하지 않는다.
+4. 합성 평가 실행기도 제품의 보수 검사와 같은 factory를 사용한다. `--checks`는 고정 합성 7사례를 로컬 평가하고 모델을 호출하지 않는다. 평가 오류는 정형 코드만 출력하고 외부 오류 message를 기록하지 않는다. 규칙 판정과 실제 모델의 문장 품질 판정을 구분한다.
+5. 실제 공개 회수·revision·DB 권한·예산 경쟁·공급사·배포 환경은 별도 실제 검증이 필요하다. 준비 문서·타입 검사·합성 테스트를 실제 처리 증거로 안내하지 않는다.

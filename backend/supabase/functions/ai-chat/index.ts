@@ -11,8 +11,9 @@ import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
 import { createRpcAiFeedback, type ReportEvidenceHandlingPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
 import type { AiFeedbackPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
 import { createRpcAiChatRequestGate } from "../_shared/ai/providers/member-request.ts";
+import type { MetricsRecorder } from "../_shared/observability/metrics.ts";
 import type { ApprovedPrivacyCheck } from "../_shared/ai/providers/privacy.ts";
-import type { ExplanationCheck } from "../_shared/ai/Agents/chatbot/output-check.ts";
+import { conservativeExplanationCheck, type ExplanationCheck } from "../_shared/ai/Agents/chatbot/output-check.ts";
 import type { PotensOutputLimit } from "../_shared/ai/providers/potens-adapter.ts";
 import { createConfiguredModel } from "../_shared/ai/providers/runtime.ts";
 import { loadAiChatSettings } from "../_shared/ai/Agents/chatbot/settings.ts";
@@ -24,6 +25,7 @@ import type { PublicDiscoveryPort } from "../_shared/ai/Agents/chatbot/tools.ts"
 import { createAiChatHandler, type AiChatEngine } from "./handler.ts";
 
 export interface AiChatRuntimeOptions {
+  metrics?: MetricsRecorder;
   /** 행사 탐색 포트 교체(테스트용). 생략하면 행사 저장소(list_public_events) 기반 기본 포트를 쓴다. */
   events?: (db: RpcClient) => PublicDiscoveryPort;
   now?: () => Date;
@@ -51,12 +53,13 @@ export function createAiChatRuntime(read: EnvReader, fetchImpl: FetchLike = fetc
     requestGate = createRpcAiChatRequestGate(budgetDb);
     const model = createConfiguredModel(read, { budgetDb, fetch: fetchImpl, outputLimit: options.outputLimit });
     engine = model.status === "ready" && options.privacy?.decisionId && typeof options.privacy.check === "function"
-      ? { status: "ready", model: model.model, limits: settings.limits, now: options.now ?? (() => new Date()), privacy: options.privacy, ...(options.verifyExplanation ? { verifyExplanation: options.verifyExplanation } : {}) }
+      ? { status: "ready", model: model.model, limits: settings.limits, now: options.now ?? (() => new Date()), usageIncludesAllAttempts: model.usageIncludesAllAttempts === true, privacy: options.privacy, verifyExplanation: options.verifyExplanation ?? conservativeExplanationCheck }
       : { status: "unavailable", code: model.status === "ready" ? "PRIVACY_CHECK_NOT_APPROVED" : model.code };
   } catch {
     engine = { status: "unavailable", code: "NOT_CONFIGURED" };
   }
   return createAiChatHandler({
+    metrics: options.metrics,
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
     authenticate: (request) => requirePrincipal(request, config, fetchImpl),

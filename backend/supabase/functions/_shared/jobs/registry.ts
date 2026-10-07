@@ -7,6 +7,8 @@ import { JobExecutionError } from "./retry.ts";
 export type JobStopReason = "budget_exhausted";
 export type JobHandlerResult =
   | { status: "succeeded" | "superseded" | "lease_lost" }
+  | { status: "completed_by_handler" }
+  | { status: "held" }
   | { status: "yielded"; reason?: JobStopReason }
   | { status: "deferred"; retryAt: string; reason?: JobStopReason };
 export type JobHandler = (job: ClaimedJob) => Promise<JobHandlerResult>;

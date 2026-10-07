@@ -806,3 +806,30 @@ test("READY 전 첫 HTTP 도중 stop은 다음 due를 시작하지 않음", { ti
   assert.equal(requests, 1);
   assert.equal(releases, 1);
 });
+
+
+test("준비된5kind runner는 공유소비자만 dispatch하고 취소LISTEN 복원, 구URL fallback0",async()=>{
+ const {EventEmitter}=await import("node:events");
+ const {startQueueRunner}=await import("../../../backend/supabase/functions/scheduled-jobs/queue-runner.mjs");
+ const sqls=[],invokes=[],reports=[];let due=true,released=0;
+ class Client extends EventEmitter {
+  async connect(){} async end(){}
+  async query(sql){sqls.push(sql);
+   if(sql.includes("current_user"))return {rows:[{currentRole:"yumidang_worker_queue",loginRole:"queue_login"}]};
+   if(sql.includes("acquire_worker_run"))return {rows:[{result:lease}]};
+   if(sql.includes("release_worker_run")){released++;return {rows:[{result:{status:"applied"}}]};}
+   return {rows:[]};
+  }
+ }
+ const sharedRuntime={
+  async schedule({globalToken}){if(globalToken!==null)assert.equal(globalToken,token);return {serverNow:now,nextDueAt:due?now:null,nextKind:due?"cancellation_safety":null};},
+  async invokeExisting(){assert.fail("existing kinds are not due");},
+  async invokeSafety(t,kind,options){assert.equal(t,token);assert.equal(kind,"cancellation_safety");assert.equal(options.limit,20);due=false;invokes.push(kind);return {status:"ran",counts:{claimed:1}};},
+  contracts:{decisionId:"synthetic-shared-contract",async readBudget(t){assert.equal(t,token);return {remainingMs:180000};},unitsFor:(_k,r)=>r.counts.claimed,
+   journal:{async hasPending(){return false;},async begin(){return token;},async confirm(){return true;},async unknown(){assert.fail("not unknown");}},
+   maintenance:{async readSchedule(){return {serverNow:now,nextDueAt:null};},async run(){assert.fail("not due");}}},
+ };
+ const runner=startQueueRunner({Client,config:runnerConfig,sharedRuntime,report:c=>reports.push(c),fetchImpl:async()=>assert.fail("no invented HTTP fallback")});
+ await runner.ready;assert.deepEqual(invokes,["cancellation_safety"]);assert.equal(released,1);
+ assert.ok(sqls.includes("LISTEN yumidang_worker_jobs"));assert.ok(sqls.includes("LISTEN yumidang_cancellation_due"));assert.ok(reports.includes("WORKER_QUEUE_READY"));await runner.stop();
+});

@@ -25,6 +25,7 @@ export function validateRetrySettings(settings: RetrySettings) {
 export function decideRetry(input: {
   failedAttempts: number; now: Date; error: unknown; settings: RetrySettings;
 }): { status: "retry_wait"; retryAt: string; errorCode: JobErrorCode } | { status: "failed"; errorCode: JobErrorCode } {
+  if (isJobExecutionUnknown(input.error)) throw input.error;
   validateRetrySettings(input.settings);
   if (!Number.isSafeInteger(input.failedAttempts) || input.failedAttempts < 0 || !Number.isFinite(input.now.getTime())) throw new Error("INVALID_RETRY_INPUT");
   const executionError = input.error instanceof JobExecutionError ? input.error : null;
@@ -38,4 +39,18 @@ export function decideRetry(input: {
   const retry = new Date(input.now.getTime() + delay);
   if (!Number.isFinite(retry.getTime())) throw new Error("INVALID_RETRY_INPUT");
   return { status: "retry_wait", retryAt: retry.toISOString(), errorCode };
+}
+
+/** 원격 종결 미확인은 일반 retry/fail 상태가 아니다. 원 요청을 보존하고 상위 실행을 중단한다. */
+export class JobExecutionUnknown extends Error {
+  readonly terminal = true;
+  readonly phase: "claim" | "process" | "task_claim" | "complete" | "journal";
+  constructor(phase: "claim" | "process" | "task_claim" | "complete" | "journal") {
+    super("JOB_REMOTE_COMPLETION_UNKNOWN"); this.name = "JobExecutionUnknown"; this.phase = phase;
+  }
+}
+export function isJobExecutionUnknown(error: unknown): boolean {
+  return error instanceof JobExecutionUnknown || (error instanceof Error &&
+    (error as Error & { terminal?: unknown }).terminal === true &&
+    ["ReportRetentionStorageUnknown", "ReportRetentionMaintenanceUnknown"].includes(error.name));
 }

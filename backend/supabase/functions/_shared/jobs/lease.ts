@@ -1,14 +1,15 @@
 import type { ClaimedJob, JobRepository, JobKind, JobSettlement } from "../db/repositories/jobs.ts";
 import type { JobRegistry, JobHandlerResult, JobStopReason } from "./registry.ts";
 import { normalizeJobReference, validInstant } from "./enqueue.ts";
-import { decideRetry, validateRetrySettings, JobExecutionError } from "./retry.ts";
+import { decideRetry, validateRetrySettings, JobExecutionError, JobExecutionUnknown, isJobExecutionUnknown } from "./retry.ts";
+import { toPublicError } from "../http/errors.ts";
 import type { RetrySettings } from "./retry.ts";
 
-const kinds: JobKind[] = ["review_summary", "event_sync", "auto_complete", "review_release"];
+const kinds: JobKind[] = ["review_summary", "event_sync", "auto_complete", "review_release", "cancellation_safety", "report_retention"];
 export interface JobRunnerSettings { leaseDurationMs: number; retry: RetrySettings }
 /** reason은 handler가 알린 정형 중단 사유(예: 예산 소진)이며 settle 결과와 함께 반환한다. */
 export type JobRunResult = {
-  status: "idle" | "lease_lost" | "succeeded" | "queued" | "retry_wait" | "failed" | "superseded";
+  status: "held" | "idle" | "lease_lost" | "succeeded" | "queued" | "retry_wait" | "failed" | "superseded";
   jobId?: string;
   reason?: JobStopReason;
 };
@@ -35,7 +36,8 @@ export async function runNextJob(input: {
   let job: ClaimedJob | null;
   try {
     job = await repository.claim({ workerId: input.workerId, kinds: enabled, leaseDurationMs: settings.leaseDurationMs });
-  } catch {
+  } catch (error) {
+    if (isJobExecutionUnknown(error)) throw error;
     throw new JobExecutionError("DEPENDENCY_UNAVAILABLE", true);
   }
   if (!job) return { status: "idle" };
@@ -55,15 +57,23 @@ export async function runNextJob(input: {
       failedAttempts: job.failedAttempts, reference,
     });
     if (handled?.status === "lease_lost") return { status: "lease_lost", jobId: job.jobId };
+    if (handled?.status === "completed_by_handler") return { status: "succeeded", jobId: job.jobId };
+    if (handled?.status === "held") return { status: "held", jobId: job.jobId };
     transition = settlementFor(handled, input.now());
     if ((handled.status === "yielded" || handled.status === "deferred") && handled.reason === "budget_exhausted") reason = handled.reason;
   } catch (error) {
+    if (isJobExecutionUnknown(error)) throw error;
+    if (job.reference.kind === "cancellation_safety" || job.reference.kind === "report_retention") {
+      if (toPublicError(error).error.code === "STATE_CONFLICT") return { status: "lease_lost", jobId: job.jobId };
+      throw new JobExecutionUnknown("process");
+    }
     transition = decideRetry({ failedAttempts: job.failedAttempts, now: input.now(), error, settings: settings.retry });
   }
   let written: "applied" | "lease_lost";
   try {
     written = await repository.settle({ jobId: job.jobId, leaseToken: job.leaseToken, ...transition });
   } catch {
+    if (job.reference.kind === "cancellation_safety" || job.reference.kind === "report_retention") throw new JobExecutionUnknown("complete");
     throw new JobExecutionError("DEPENDENCY_UNAVAILABLE", true);
   }
   if (written === "lease_lost") return { status: "lease_lost", jobId: job.jobId };

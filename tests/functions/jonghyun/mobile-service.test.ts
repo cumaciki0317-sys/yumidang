@@ -316,11 +316,8 @@ test("AI는 별도정확엔드포인트 POST·required인증으로 전송하고 
   );
 });
 
-test("요약은 새버전·300Unicode문자·현재처리동의를 검증하고 매조회 재호출한다", async () => {
+test("요약은 최신 서버 exact DTO·300Unicode문자를 검증하고 매조회 재호출한다", async () => {
   const data = {
-    status: "available",
-    processingAllowed: true,
-    sourceRevision: "9007199254740993",
     summary: {
       summaryId: postId,
       text: "😀".repeat(300),
@@ -333,14 +330,12 @@ test("요약은 새버전·300Unicode문자·현재처리동의를 검증하고 
   await service.profileSummary(postId);
   assert.equal(calls.length, 2);
   assert.equal(
-    new URL(calls[0].url).pathname.endsWith(`/profiles/${postId}/summary`),
+    new URL(calls[0].url).pathname.endsWith(`/profiles/${postId}/review-summary`),
     true,
   );
   for (
     const bad of [
-      { summary: data.summary },
-      { ...data, sourceRevision: 9007199254740993 },
-      { ...data, sourceRevision: "01" },
+      { ...data, sourceRevision: "1" },
       { ...data, processingAllowed: false },
       { ...data, summary: { ...data.summary, text: "😀".repeat(301) } },
       { ...data, summary: { ...data.summary, sourceCount: 2 } },
@@ -353,43 +348,11 @@ test("요약은 새버전·300Unicode문자·현재처리동의를 검증하고 
   }
 });
 
-test("Top10은공식원천ID와집계기간을보존하고 미수신을유효한unavailable로표시한다", async () => {
-  const ranking = {
-    status: "available",
-    mode: "all",
-    sourceName: "KOPIS",
-    period: { start: "2026-09-28", end: "2026-10-04" },
-    collectedAt: card.startsAt,
-    items: [{
-      rank: 1,
-      sourceId: "PF123456",
-      title: "공연",
-      genre: null,
-      performancePeriodText: null,
-      placeName: null,
-      region: null,
-    }],
-  };
-  assert.deepEqual(await setup(ranking).service.performanceRankings(), ranking);
-  const unavailable = {
-    status: "unavailable",
-    mode: "all",
-    sourceName: "KOPIS",
-    period: null,
-    collectedAt: null,
-    items: [],
-  };
-  assert.deepEqual(
-    await setup(unavailable).service.performanceRankings(),
-    unavailable,
-  );
-  await assert.rejects(
-    setup({
-      ...ranking,
-      items: [{ ...ranking.items[0], authorName: "secret" }],
-    }).service.performanceRankings(),
-    schemaError,
-  );
+test("공개 순위 HTTP 미연결은 미수신빈결과와 구분하고 내부 API로 우회하지 않는다", async () => {
+  const { service, calls } = setup({ status: "unavailable", items: [] });
+  await assert.rejects(service.performanceRankings(), { code: "EVENT_RANKINGS_NOT_CONNECTED" });
+  await assert.rejects(service.performanceRankings("musical"), { code: "EVENT_RANKINGS_NOT_CONNECTED" });
+  assert.equal(calls.length, 0);
 });
 
 test("401/네트워크장애는 익명재시도·자동재시도·빈결과fallback 없이 실패한다", async () => {
@@ -438,21 +401,11 @@ test("시도 변환은17개 alias와공식명·전체를 구분하고 임의지�
   );
 });
 
-test("행사 상세는 동일공개원천DTO만 받고 다른ID·계약외필드를 거절한다", async () => {
+test("행사 상세 HTTP 미연결은 대상삭제로 오해하지 않고 추측 경로를 호출하지 않는다", async () => {
   const { service, calls } = setup(event);
-  assert.deepEqual(await service.getEvent(postId), event);
-  assert.equal(
-    new URL(calls[0].url).pathname.endsWith(`/events/${postId}`),
-    true,
-  );
-  for (
-    const bad of [{ ...event, id: "22222222-2222-4222-8222-222222222222" }, {
-      ...event,
-      privateDescription: "비공개 소개",
-    }, { ...event, rawSourceBody: "private" }]
-  ) {
-    await assert.rejects(setup(bad).service.getEvent(postId), schemaError);
-  }
+  await assert.rejects(service.getEvent(postId), { code: "EVENT_DETAIL_NOT_CONNECTED" });
+  await assert.rejects(service.getEvent("invalid"), { code: "INVALID_REQUEST" });
+  assert.equal(calls.length, 0);
 });
 
 const profile = {
@@ -580,6 +533,7 @@ test("행사필터목록은제공처/value/count의실제RPC값을보존한다",
 });
 
 test("공식행사소개/운영안내/포스터/공연구분옵션은보존하되HTML·제어문자·credentialURL은거절한다", async () => {
+  const readEvent = async (value: unknown) => (await setup({ events: [value], nextCursor: null }).service.listEvents({ mode: "overlapping" })).events[0];
   const source = {
     ...event,
     description: "제공처가 확인한 소개",
@@ -587,15 +541,15 @@ test("공식행사소개/운영안내/포스터/공연구분옵션은보존하�
     posterUrl: "https://images.invalid/poster.jpg",
     performanceGenre: "concert",
   };
-  assert.deepEqual(await setup(source).service.getEvent(postId), source);
+  assert.deepEqual(await readEvent(source), source);
   assert.deepEqual(
-    await setup({
+    await readEvent({
       ...source,
       description: null,
       operatingInfo: null,
       posterUrl: null,
       performanceGenre: null,
-    }).service.getEvent(postId),
+    }),
     {
       ...source,
       description: null,
@@ -616,7 +570,7 @@ test("공식행사소개/운영안내/포스터/공연구분옵션은보존하�
       { ...source, posterUrl: "https://images.invalid/poster.jpg#token" },
       { ...source, performanceGenre: "unknown" },
     ]
-  ) await assert.rejects(setup(bad).service.getEvent(postId), schemaError);
+  ) await assert.rejects(readEvent(bad), schemaError);
 });
 
 test("무료/공연장르선택은정확히전달하고미확인입장료를무료로추정하지않는다", async () => {
@@ -661,7 +615,7 @@ test("AI요약장애에도프로필·원문후기·칭찬API성공을독립적�
     fetcher: (async (url: string | URL | Request) => {
       const path = new URL(String(url)).pathname;
       calls.push(path);
-      if (path.endsWith("/summary")) {
+      if (path.endsWith("/review-summary")) {
         return new Response(
           JSON.stringify({ error: { code: "EXTERNAL_UNAVAILABLE" } }),
           { status: 503 },

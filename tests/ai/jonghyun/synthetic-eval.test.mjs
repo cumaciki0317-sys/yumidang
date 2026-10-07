@@ -35,3 +35,19 @@ test("실행 예산은 호출·단위 상한 밖 호출을 공급사에 보내�
   assert.equal(reached, 2);
   assert.equal(budget.stats().unknownUsageCalls, 2);
 });
+
+test("합성 평가도 제품 보수검사와 같은 규칙을 적용하고 raw 오류는 출력하지 않음",async()=>{
+ const cases=loadCases(),secret="PRIVATE_MODEL_ERROR";
+ const rows=await runSyntheticEval({cases,maxOutputTokens:10,model:{async generate(){throw new Error(secret)}}});
+ assert.equal(JSON.stringify(rows).includes(secret),false);assert.ok(rows.every(row=>row.observed.includes("EVALUATION_FAILED")||row.observed.includes("needs_check")));
+ const exact=await runSyntheticEval({cases:{preferenceMatch:[],reviewSummary:[cases.reviewSummary[0]]},maxOutputTokens:10,model:{async generate(request){return{value:{claims:request.input.reviews.map(r=>({text:r.comment,evidenceIds:[r.evidenceId]}))},modelVersion:"synthetic",usage:null}}}});
+ assert.equal(exact[0].observed.startsWith("rejected:"),false);
+});
+test("고정 no-provider 보수 평가가 부정/조건축소/근거중복/결합/미검토이름을 검사",async()=>{
+ const {runConservativeChecks}=await import("./synthetic-eval.mjs");const rows=await runConservativeChecks();assert.equal(rows.length,7);assert.ok(rows.every(row=>row.matchesExpected));assert.equal(rows.filter(row=>row.allowed).length,1);
+});
+
+test("외부가 ModelError code를 변조해도 raw 오류 대신 정형코드",async()=>{
+ const {ModelError}=await import("../../../backend/supabase/functions/_shared/ai/providers/provider-errors.ts");const error=new ModelError("MODEL_UNAVAILABLE");error.code="PRIVATE_ERROR_CODE";
+ const rows=await runSyntheticEval({cases:{preferenceMatch:[],reviewSummary:[loadCases().reviewSummary[0]]},maxOutputTokens:10,model:{async generate(){throw error}}});assert.equal(rows[0].observed,"rejected:MODEL_UNAVAILABLE");
+});

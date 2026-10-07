@@ -1,3 +1,4 @@
+import { decodeSafetyJobPayload } from "../db/repositories/jobs.ts";
 import type { JobReference, JobRepository } from "../db/repositories/jobs.ts";
 import { isSourceRevision, isSummaryVersion } from "../db/repositories/review-summaries.ts";
 
@@ -14,6 +15,12 @@ export function validInstant(value: unknown): value is string {
 export function normalizeJobReference(value: JobReference): JobReference {
   if (!value || typeof value !== "object") throw new Error("INVALID_JOB_REFERENCE");
   switch (value.kind) {
+    case "cancellation_safety":
+      if (Object.keys(value).length !== 3) break;
+      return decodeSafetyJobPayload(value.kind, { identityId: value.identityId, generation: value.generation });
+    case "report_retention":
+      if (Object.keys(value).length !== 3) break;
+      return decodeSafetyJobPayload(value.kind, { reportId: value.reportId, closureProofId: value.closureProofId });
     case "review_summary":
       if (!validString(value.targetUserId) || !isSourceRevision(value.sourceRevision) ||
           !isSummaryVersion(value.modelVersion) || !isSummaryVersion(value.promptVersion)) break;
@@ -34,6 +41,7 @@ export function normalizeJobReference(value: JobReference): JobReference {
 }
 export async function enqueueJob(repository: JobRepository, reference: JobReference, runAt: string) {
   const normalized = normalizeJobReference(reference);
+  if (normalized.kind === "cancellation_safety" || normalized.kind === "report_retention") throw new Error("DEDICATED_DUE_ENQUEUE_REQUIRED");
   if (!validInstant(runAt)) throw new Error("INVALID_JOB_RUN_AT");
   // DB v2 요청용 명시 키. UUID 대상이면 최대201자이며 현재 DB의512자/허용문자 범위에 들어간다.
   // 나머지 kind의 JSON 키는 기존 가상 코어 호환용이며 실제 DB 등록에 사용하지 않는다.
@@ -47,4 +55,17 @@ export async function enqueueJob(repository: JobRepository, reference: JobRefere
     idempotencyKey,
     runAt: new Date(runAt).toISOString(),
   });
+}
+
+/** due 등록은 DB가 payload/세대를 결정한다. generic enqueue나 소비자 생성 job으로 대체하지 않는다. */
+export interface SafetyDueEnqueuePort {
+  enqueueCancellation(limit: number, globalToken: string, signal: AbortSignal): Promise<unknown>;
+  enqueueReportRetention(limit: number, globalToken: string, signal: AbortSignal): Promise<unknown>;
+}
+export async function enqueueSafetyDue(port: SafetyDueEnqueuePort, kind: "cancellation_safety" | "report_retention", limit: number, globalToken: string, signal: AbortSignal): Promise<{ enqueued: number }> {
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 20 || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(globalToken) || signal.aborted) throw new Error("INVALID_SAFETY_ENQUEUE");
+  const raw = kind === "cancellation_safety" ? await port.enqueueCancellation(limit, globalToken, signal) : await port.enqueueReportRetention(limit, globalToken, signal);
+  if (!raw || typeof raw !== "object" || Array.isArray(raw) || Object.keys(raw).length !== 1 || !Object.hasOwn(raw, "enqueued") ||
+      !Number.isSafeInteger((raw as { enqueued: unknown }).enqueued) || Number((raw as { enqueued: unknown }).enqueued) < 0 || Number((raw as { enqueued: unknown }).enqueued) > limit) throw new Error("INVALID_SAFETY_ENQUEUE_RESULT");
+  return { enqueued: Number((raw as { enqueued: unknown }).enqueued) };
 }

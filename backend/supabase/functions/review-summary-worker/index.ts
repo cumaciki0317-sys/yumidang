@@ -12,11 +12,13 @@ import { createRpcJobRepository } from "../_shared/db/repositories/jobs.ts";
 import { createRpcReviewSummaryRepository } from "../_shared/db/repositories/review-summaries.ts";
 import { createWorkerRunScope } from "../_shared/jobs/worker-run.ts";
 import { toPublicError } from "../_shared/http/errors.ts";
+import { beginAiObservation } from "../_shared/ai/providers/observability.ts";
+import type { MetricsRecorder } from "../_shared/observability/metrics.ts";
 import { assertPrivacy, AiPrivacyError, type ApprovedPrivacyCheck } from "../_shared/ai/providers/privacy.ts";
 import type { PotensOutputLimit } from "../_shared/ai/providers/potens-adapter.ts";
 import { createConfiguredModel, type ModelRuntime } from "../_shared/ai/providers/runtime.ts";
 import { REVIEW_SUMMARY_PROMPT_VERSION } from "../_shared/ai/Agents/review-summary/prompts.ts";
-import type { SummarySafetyPort } from "../_shared/ai/Agents/review-summary/output-check.ts";
+import { createConservativeSummarySafety, type SummarySafetyPort } from "../_shared/ai/Agents/review-summary/output-check.ts";
 import type { ReviewSummarySettings } from "../_shared/ai/Agents/review-summary/orchestrator.ts";
 import { runNextJob } from "../_shared/jobs/lease.ts";
 import { createReviewSummaryRegistry } from "../_shared/jobs/registry.ts";
@@ -92,6 +94,7 @@ export function loadWorkerSettings(read: EnvReader): WorkerSettings | WorkerNotE
 }
 
 export interface WorkerRuntimeOverrides {
+  metrics?: MetricsRecorder;
   fetch?: FetchLike;
   /** 테스트용 DB 주입. 운영은 민규 내부 클라이언트(createInternalClient)만 사용한다. */
   createDb?(config: RuntimeConfig): RpcClient;
@@ -104,21 +107,38 @@ export interface WorkerRuntimeOverrides {
   workerId?(): string;
 }
 
-export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: WorkerRuntimeOverrides = {}) {
+/** 내부 호출 전용. 공유 단위→작업수 변환은 승인된 caller 계약의 책임이며 HTTP 본문으로 받지 않는다. */
+export interface SharedSummaryExecution { maxJobsPerRun: number; timeBudgetMs: number; signal: AbortSignal; }
+export function createReviewSummaryWorkerExecution(read: EnvReader, overrides: WorkerRuntimeOverrides = {}) {
   const config = loadRuntimeConfig(read);
   requireInternalConfig(config);
   const fetchImpl = overrides.fetch ?? ((url, init) => fetch(url, init));
   const createDb = overrides.createDb ?? ((value: RuntimeConfig) => createInternalClient(value, fetchImpl));
   const createModel = overrides.createModel ?? createConfiguredModel;
-  const safety = overrides.safety === undefined ? APPROVED_SUMMARY_SAFETY_CHECKER : overrides.safety;
+  const safety = overrides.safety === undefined
+    ? (overrides.privacy ? createConservativeSummarySafety(overrides.privacy) : APPROVED_SUMMARY_SAFETY_CHECKER)
+    : overrides.safety;
   const now = overrides.now ?? (() => new Date());
   const elapsedMs = overrides.elapsedMs ?? (() => performance.now());
   const workerId = overrides.workerId ?? (() => crypto.randomUUID());
 
-  async function run(existingToken?: string): Promise<WorkerRunResult> {
+  async function execute(existingToken: string | undefined, external: SharedSummaryExecution | undefined, observation: ReturnType<typeof beginAiObservation>): Promise<WorkerRunResult> {
+    const start = elapsedMs();
+    const empty = (stopReason: "max_jobs" | "time_budget"): WorkerRunResult => ({ status: "ran", stopReason, hasMore: true,
+      counts: { claimed: 0, succeeded: 0, yielded: 0, deferred: 0, retryWait: 0, failed: 0, superseded: 0, leaseLost: 0 } });
     const notEnabled = (reason: WorkerNotEnabledReason): WorkerRunResult => ({ status: "not_enabled", reason });
+    if (external !== undefined) {
+      if (!existingToken || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existingToken) ||
+          !external || Object.keys(external).length !== 3 ||
+          !Number.isSafeInteger(external.maxJobsPerRun) || external.maxJobsPerRun < 0 ||
+          !Number.isSafeInteger(external.timeBudgetMs) || external.timeBudgetMs < 0 || !(external.signal instanceof AbortSignal)) return notEnabled("WORKER_SETTINGS_INVALID");
+      if (external.maxJobsPerRun === 0) return empty("max_jobs");
+      if (external.timeBudgetMs === 0 || external.signal.aborted) return empty("time_budget");
+    }
     const settings = loadWorkerSettings(read);
     if (typeof settings === "string") return notEnabled(settings);
+    const maxJobsPerRun = Math.min(settings.maxJobsPerRun, external?.maxJobsPerRun ?? settings.maxJobsPerRun);
+    const sharedRemaining = () => external ? external.timeBudgetMs - Math.max(0, elapsedMs() - start) : settings.timeBudgetMs;
     const versions = inspectReviewSummaryConfig({
       modelVersion: config.reviewSummaryModelVersion, promptVersion: config.reviewSummaryPromptVersion,
     });
@@ -136,6 +156,7 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
     const probe = await probeSummaryWorkerRpcs(db);
     if (probe !== "ready") return notEnabled(probe);
 
+    if (external?.signal.aborted || sharedRemaining() <= 0) return empty("time_budget");
     const scope = createWorkerRunScope(db);
     let lease;
     try { lease = await scope.open(existingToken); }
@@ -144,8 +165,14 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
     const protectedModel = { async generate(request: Parameters<typeof model.model.generate>[0]) {
       try {
         if (!request.summaryRequest || request.summaryRequest.workerRunToken !== lease.token) throw new Error("SUMMARY_MODEL_SCOPE_MISSING");
+        if (request.signal?.aborted) throw new Error("SUMMARY_EXECUTION_ABORTED");
         await assertPrivacy(request.input, overrides.privacy!, "input");
-        const response = await model.model.generate(request);
+        if (request.signal?.aborted) throw new Error("SUMMARY_EXECUTION_ABORTED");
+        let response;
+        try { response = await model.model.generate(request); }
+        catch (error) { observation.modelUnknown(); throw error; }
+        if (model.usageIncludesAllAttempts !== true) observation.modelUnknown();
+        observation.response(response);
         await assertPrivacy(response.value, overrides.privacy!, "output");
         return response;
       } catch (error) {
@@ -154,30 +181,60 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
       }
     } };
     const controller = new AbortController();
-    const remaining = Date.parse(lease.expiresAt) - now().getTime();
-    const timer = setTimeout(() => controller.abort(), Math.max(0, Math.min(settings.timeBudgetMs, remaining)));
+    const remaining = Math.floor(Math.min(Date.parse(lease.expiresAt) - now().getTime(), sharedRemaining(), settings.timeBudgetMs));
+    const signal = external ? AbortSignal.any([controller.signal, external.signal]) : controller.signal;
+    const timer = setTimeout(() => controller.abort(), Math.max(0, remaining));
     if (remaining <= 0) controller.abort();
     try {
       const repository = createRpcJobRepository(db, { workerRunToken: lease.token });
       const registry = createReviewSummaryRegistry({
         repository: createRpcReviewSummaryRepository(db, { workerRunToken: lease.token }), model: protectedModel, safety,
         settings: settings.summary, versions: { modelVersion: versions.modelVersion, promptVersion: versions.promptVersion },
-        signal: controller.signal, workerRunToken: lease.token,
+        signal, workerRunToken: lease.token,
       }, { budgetDeferMs: settings.budgetDeferMs, now });
       const id = workerId();
-      return await runSummaryWorkerBatch({
-        maxJobsPerRun: settings.maxJobsPerRun, timeBudgetMs: settings.timeBudgetMs, elapsedMs, signal: controller.signal,
-        runOne: () => runNextJob({
-          workerId: id, repository, registry, now,
-          settings: { leaseDurationMs: settings.leaseSeconds * 1000, retry: settings.retry },
-        }),
+      let uncertain = false;
+      const result = await runSummaryWorkerBatch({
+        maxJobsPerRun, timeBudgetMs: Math.max(1, remaining), elapsedMs, signal,
+        runOne: async () => {
+          try {
+            const current = await runNextJob({
+              workerId: id, repository, registry, now,
+              settings: { leaseDurationMs: settings.leaseSeconds * 1000, retry: settings.retry },
+            });
+            if (external && signal.aborted) throw new Error("SHARED_SUMMARY_EXECUTION_UNKNOWN");
+            return current;
+          } catch (error) {
+            if (external) uncertain = true;
+            throw error;
+          }
+        },
       });
+      // batch가 앞선 성공 뒤 dependency_unavailable로 변환해도 외부 실행의 미확인은 성공 응답으로 바꾸지 않는다.
+      // 공유 scheduler의 영속 journal이 UNKNOWN을 유지하며 소유하지 않은 token은 해제하지 않는다.
+      if (uncertain) throw new Error("SHARED_SUMMARY_EXECUTION_UNKNOWN");
+      return result;
     } finally {
       clearTimeout(timer);
       await scope.close(lease);
     }
   }
 
+  return async function run(existingToken?: string, external?: SharedSummaryExecution): Promise<WorkerRunResult> {
+    const observation = beginAiObservation(overrides.metrics, "review_summary", REVIEW_SUMMARY_PROMPT_VERSION);
+    try {
+      const result = await execute(existingToken, external, observation);
+      observation.finish(result.status === "not_enabled" ? "UNAVAILABLE" : result.stopReason === "budget_exhausted" ? "BUDGET_EXHAUSTED" :
+        result.stopReason === "dependency_unavailable" ? "UNAVAILABLE" : result.counts.failed > 0 ? "FAILED" : result.counts.succeeded > 0 ? "SUCCESS" :
+        result.counts.yielded > 0 || result.counts.deferred > 0 ? "YIELDED" : "EMPTY");
+      return result;
+    } catch (error) { observation.finish(external?.signal.aborted ? "CANCELLED" : "UNAVAILABLE"); throw error; }
+  };
+}
+
+export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: WorkerRuntimeOverrides = {}) {
+  const config = loadRuntimeConfig(read);
+  const run = createReviewSummaryWorkerExecution(read, overrides);
   return createReviewSummaryWorkerHandler({
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,

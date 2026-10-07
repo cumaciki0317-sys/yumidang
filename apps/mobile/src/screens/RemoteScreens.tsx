@@ -32,7 +32,11 @@ import type {
 import type { PublicEventItem } from "../../../../backend/supabase/functions/_shared/db/repositories/events";
 
 const errorMessage = (error: unknown) =>
-  error instanceof ApiError && error.code === "AUTH_REQUIRED"
+  error instanceof ApiError && error.code === "EVENT_DETAIL_NOT_CONNECTED"
+    ? "행사 상세 연결을 준비 중이에요. 행사 목록에서 공개 정보를 확인해 주세요."
+    : error instanceof ApiError && error.code === "EVENT_RANKINGS_NOT_CONNECTED"
+    ? "공식 공연 순위 연결을 준비 중이에요."
+    : error instanceof ApiError && error.code === "AUTH_REQUIRED"
     ? "로그인 후 확인할 수 있어요."
     : error instanceof ApiError && error.status === 404
     ? "삭제되었거나 접근할 수 없는 대상이에요."
@@ -616,7 +620,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
     <Screen title="행사 상세">
       {page.busy && <Body muted>행사를 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <Body muted>{page.error}</Body>
       )}
       {event && (
         <Card>
@@ -730,10 +734,8 @@ export function RemoteProfileSummary({ id }: { id: string }) {
         if (
           !controller.signal.aborted && serviceSessionEpoch() === session.epoch
         ) {
-          set({ key, text: response.summary?.text ?? null, error: "", notice:
-            response.status === "withdrawn" ? "후기 요약 제공이 중단되었어요. 공개 후기는 아래에서 확인할 수 있어요."
-              : response.status === "insufficient_reviews" ? "요약에 사용할 공개 후기가 3개 이상 모이면 안내해요."
-              : "후기 요약을 준비하고 있어요." });
+          set({ key, text: response.summary?.text ?? null, error: "",
+            notice: "현재 표시할 수 있는 후기 요약이 없어요. 공개 후기는 아래에서 확인할 수 있어요." });
         }
       }).catch((error) => {
         if (

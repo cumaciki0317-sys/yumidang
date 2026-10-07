@@ -614,8 +614,20 @@ export function createEventOperations(
         await scope.close(lease);
       }
     },
-    async worker(token?: string, signal?: AbortSignal) {
+    /** 내부 조립용 배정 한도. 공유 단위를 작업 수로 변환하는 책임은 승인된 호출자 계약에 있다.
+     * HTTP body를 확장하지 않으며 기본 실행 한도(10작업/60초)를 늘리지 않는다. */
+    async worker(token?: string, signal?: AbortSignal, execution?: { maxJobsPerRun: number; timeBudgetMs: number }) {
+      if (execution && (!token || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token) || !Number.isSafeInteger(execution.maxJobsPerRun) || execution.maxJobsPerRun < 0 ||
+        !Number.isSafeInteger(execution.timeBudgetMs) || execution.timeBudgetMs < 0)) throw new Error("INVALID_EVENT_WORKER_LIMITS");
+      const maxJobs = Math.min(10, execution?.maxJobsPerRun ?? 10);
+      const timeBudget = Math.min(60_000, execution?.timeBudgetMs ?? 60_000);
+      const empty = (stopReason: string) => ({ status: "ran" as const, stopReason, hasMore: true,
+        counts: { claimed: 0, succeeded: 0, yielded: 0, deferred: 0, retryWait: 0, failed: 0, superseded: 0, leaseLost: 0 } });
+      if (maxJobs === 0) return empty("max_jobs");
+      if (timeBudget === 0 || signal?.aborted) return empty("time_budget");
+      const started = performance.now();
       if (!await ready("collection")) return unavailable();
+      if (signal?.aborted || performance.now() - started >= timeBudget) return empty("time_budget");
       const scope = createWorkerRunScope(options.db),
         lease = await scope.open(token);
       if (!lease) {
@@ -631,18 +643,17 @@ export function createEventOperations(
         superseded: 0,
         leaseLost: 0,
       };
-      const started = performance.now(),
-        timeout = AbortSignal.timeout(
+      const timeout = AbortSignal.timeout(
           Math.max(
             1,
-            Math.min(60_000, Date.parse(lease.expiresAt) - Date.now()),
+            Math.floor(Math.min(timeBudget - (performance.now() - started), Date.parse(lease.expiresAt) - Date.now())),
           ),
         ),
         runSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
       const seen: EventCollectionReference[] = [];
       let stopReason = "idle", hasMore = false;
       try {
-        while (counts.claimed < 10 && performance.now() - started < 60000) {
+        while (counts.claimed < maxJobs && performance.now() - started < timeBudget) {
           if (runSignal.aborted) {
             stopReason = "time_budget";
             hasMore = true;
@@ -652,6 +663,7 @@ export function createEventOperations(
             p_worker_run_token: lease.token,
             p_excluded_references: json(seen),
           });
+          if (runSignal.aborted) { stopReason = "time_budget"; hasMore = true; break; }
           if (raw === null) break;
           if (
             !record(raw) || typeof raw.provider !== "string" ||
@@ -683,6 +695,7 @@ export function createEventOperations(
             lease.token,
             runSignal,
           );
+          if (execution && runSignal.aborted) throw new Error("EVENT_WORKER_OUTCOME_UNKNOWN");
           if (result.status === "not_enabled") {
             stopReason = "dependency_unavailable";
             hasMore = true;
@@ -699,10 +712,10 @@ export function createEventOperations(
           else if (result.status === "superseded") counts.superseded++;
           else counts.leaseLost++;
         }
-        if (counts.claimed >= 10) {
+        if (counts.claimed >= maxJobs) {
           stopReason = "max_jobs";
           hasMore = true;
-        } else if (performance.now() - started >= 60000) {
+        } else if (performance.now() - started >= timeBudget) {
           stopReason = "time_budget";
           hasMore = true;
         }

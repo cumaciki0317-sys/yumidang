@@ -21,7 +21,9 @@ import { createModelRouter } from "../../../backend/supabase/functions/_shared/a
 import { judgePreferences, evaluatePreferenceCondition } from "../../../backend/supabase/functions/_shared/ai/Agents/chatbot/preference-match.ts";
 import { PREFERENCE_MATCH_PROMPT } from "../../../backend/supabase/functions/_shared/ai/Agents/chatbot/prompts.ts";
 import { REVIEW_CHUNK_SYSTEM } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/prompts.ts";
-import { checkSummaryOutput } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/output-check.ts";
+import { createConservativePrivacyCheck } from "../../../backend/supabase/functions/_shared/ai/providers/privacy.ts";
+import { ModelError, safeModelError } from "../../../backend/supabase/functions/_shared/ai/providers/provider-errors.ts";
+import { createConservativeSummarySafety, checkSummaryOutput } from "../../../backend/supabase/functions/_shared/ai/Agents/review-summary/output-check.ts";
 
 /** 이 실행기가 쓰는 보관 검토 근거: 2026-09-29 사용자 결정 '외부 보관 검토 전에는 합성 입력만 사용'. 제품 경로 승인이 아니다. */
 export const SYNTHETIC_ONLY_DECISION = "user-decision-2026-09-29-synthetic-inputs-only";
@@ -70,6 +72,23 @@ export function createRunBudget(maxCalls, maxUnits) {
   };
 }
 
+/** 외부 오류 message는 출력하지 않는다. 고정 모델 코드/평가 코드만 기록한다. */
+function evaluationCode(error) {
+  if (error instanceof ModelError) return safeModelError(error).code;
+  const allowed = new Set(["INVALID_SUMMARY_OUTPUT", "SUMMARY_OUTPUT_TOO_LARGE", "UNSAFE_SUMMARY_OUTPUT", "INVALID_EVIDENCE", "INCOMPLETE_EVIDENCE"]);
+  return error instanceof Error && allowed.has(error.message) ? error.message : "EVALUATION_FAILED";
+}
+/** 고정 합성 자료만 쓰는 로컬 규칙 평가. 공급사·DB·운영 승인·품질 임계값 판정이 아니다. */
+export async function runConservativeChecks(cases = loadCases()) {
+  const rows = [];
+  for (const item of cases.conservativeChecks ?? []) {
+    const privacy = createConservativePrivacyCheck({ decisionId: "synthetic-fixture-review-only", approvedStrings: item.approvedStrings });
+    const allowed = await createConservativeSummarySafety(privacy).check({ claims: item.claims, publicTextReviews: item.reviews });
+    rows.push({ id: item.id, allowed, expectedAllowed: item.expectedAllowed, matchesExpected: allowed === item.expectedAllowed });
+  }
+  return rows;
+}
+
 export async function runSyntheticEval({ model, cases, maxOutputTokens, now = () => performance.now() }) {
   const rows = [];
   for (const item of cases.preferenceMatch) {
@@ -82,7 +101,7 @@ export async function runSyntheticEval({ model, cases, maxOutputTokens, now = ()
       rows.push({ id: item.id, kind: item.kind, observed: similarities.join(","),
         conditionSatisfied: evaluatePreferenceCondition(plan.condition, similarities), expectation: item.reviewerExpectation, ms: Math.round(now() - started) });
     } catch (error) {
-      rows.push({ id: item.id, kind: item.kind, observed: "judgment_failed:" + (error?.message ?? "ERROR"), expectation: item.reviewerExpectation, ms: Math.round(now() - started) });
+      rows.push({ id: item.id, kind: item.kind, observed: "judgment_failed:" + evaluationCode(error), expectation: item.reviewerExpectation, ms: Math.round(now() - started) });
     }
   }
   for (const item of cases.reviewSummary) {
@@ -91,10 +110,12 @@ export async function runSyntheticEval({ model, cases, maxOutputTokens, now = ()
     try {
       const response = await model.generate({ task: "review_chunk", system: REVIEW_CHUNK_SYSTEM, input: plan.input, maxOutputTokens });
       const claims = checkSummaryOutput(response.value, plan.expectedIds, 4000);
+      const privacy = createConservativePrivacyCheck({ decisionId: "synthetic-fixture-review-only", approvedStrings: item.approvedStrings ?? [] });
+      if (!await createConservativeSummarySafety(privacy).check({ claims, publicTextReviews: plan.input.reviews })) throw new Error("UNSAFE_SUMMARY_OUTPUT");
       rows.push({ id: item.id, kind: "review_summary", observed: claims.map((c) => `${c.text} [${c.evidenceIds.join(",")}]`).join(" / "),
         expectation: item.reviewerExpectation, usage: response.usage, ms: Math.round(now() - started) });
     } catch (error) {
-      rows.push({ id: item.id, kind: "review_summary", observed: "rejected:" + (error?.message ?? "ERROR"), expectation: item.reviewerExpectation, ms: Math.round(now() - started) });
+      rows.push({ id: item.id, kind: "review_summary", observed: "rejected:" + evaluationCode(error), expectation: item.reviewerExpectation, ms: Math.round(now() - started) });
     }
   }
   return rows;
@@ -108,7 +129,9 @@ function required(key) {
 
 if (import.meta.main) {
   const cases = loadCases();
-  if (!process.argv.includes("--live")) {
+  if (process.argv.includes("--checks")) {
+    console.log(JSON.stringify({ mode: "LOCAL_SYNTHETIC_RULE_CHECKS", modelCalls: 0, note: "합성 규칙 평가이며 운영 승인·실제 모델 품질 검증 아님", rows: await runConservativeChecks(cases) }, null, 2));
+  } else if (!process.argv.includes("--live")) {
     const assumedOutput = 1; // 계획 출력용 표시값. 실제 상한은 --live의 명시 설정을 쓴다.
     const plans = [...cases.preferenceMatch.map(preferencePlan).map((p) => ({ id: p.id, call: !p.skip,
       inputUnitsExcludingOutput: p.skip ? 0 : estimateUnits(PREFERENCE_MATCH_PROMPT, p.input, assumedOutput) - assumedOutput })),

@@ -4,7 +4,7 @@
 import { pathToFileURL } from "node:url";
 import { X509Certificate } from "node:crypto";
 import { createSecureContext } from "node:tls";
-import { createBackgroundQueueScheduler } from "../_shared/jobs/background.mjs";
+import { createBackgroundQueueScheduler, createSharedBackgroundQueueScheduler } from "../_shared/jobs/background.mjs";
 const CHANNEL = "yumidang_worker_jobs";
 const QUEUE_ROLE = "yumidang_worker_queue";
 export const QUEUE_RUNNER_RPCS = [
@@ -78,6 +78,8 @@ export function startQueueRunner(
     report = () => {},
     setTimer = setTimeout,
     clearTimer = clearTimeout,
+    // 5kind는 공통 계약 확정 뒤에만 조립한다. CLI는 준비 포트를 자동 생성하지 않는다.
+    sharedRuntime,
   },
 ) {
   // 테스트/호출자의 직접 주입도 TLS와 고정 목적지 검사를 생략할 수 없다.
@@ -95,6 +97,9 @@ export function startQueueRunner(
     WORKER_QUEUE_RECONNECT_MS: String(config.reconnectMs),
     WORKER_QUEUE_HTTP_TIMEOUT_MS: String(config.timeoutMs),
   });
+  if (sharedRuntime !== undefined && (!sharedRuntime || typeof sharedRuntime.schedule !== "function" ||
+    typeof sharedRuntime.invokeSafety !== "function" || typeof sharedRuntime.invokeExisting !== "function" ||
+    !sharedRuntime.contracts)) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
   let stopped = false, session = null, connecting = null, retryTimer = null;
   function retry() {
     if (!stopped && retryTimer === null) {
@@ -139,7 +144,7 @@ export function startQueueRunner(
         if (!current.closed) failed(current);
       });
       client.on("notification", (message) => {
-        if (message.channel === CHANNEL && !stopped && !current.failed && !current.closed) {
+        if ((message.channel === CHANNEL || sharedRuntime && message.channel === "yumidang_cancellation_due") && !stopped && !current.failed && !current.closed) {
           void current.scheduler?.wake();
         }
       });
@@ -165,7 +170,7 @@ export function startQueueRunner(
           identity[0].loginRole !== config.expectedLoginRole) {
           throw new Error("QUEUE_IDENTITY_UNAVAILABLE");
         }
-        current.scheduler = createBackgroundQueueScheduler({
+        const schedulerOptions = {
           repository: {
             async schedule({ excludeKinds, afterKind }) {
               return (await client.query(
@@ -249,8 +254,20 @@ export function startQueueRunner(
           onError: () => failed(current),
           setTimer,
           clearTimer,
-        });
+        };
+        if (sharedRuntime) {
+          schedulerOptions.repository.schedule = sharedRuntime.schedule;
+          schedulerOptions.contracts = sharedRuntime.contracts;
+          schedulerOptions.queryTimeoutMs = config.queryTimeoutMs;
+          // 구 HTTP worker는 현재 공유 limit/signal을 소비하지 않는다. 해당 소비자 어댑터도 명시 제공해야 한다.
+          schedulerOptions.invoke = (token, kind, options) =>
+            ["cancellation_safety", "report_retention"].includes(kind)
+              ? sharedRuntime.invokeSafety(token, kind, options)
+              : sharedRuntime.invokeExisting(token, kind, options);
+          current.scheduler = createSharedBackgroundQueueScheduler(schedulerOptions);
+        } else current.scheduler = createBackgroundQueueScheduler(schedulerOptions);
         await client.query(`LISTEN ${CHANNEL}`);
+        if (sharedRuntime) await client.query("LISTEN yumidang_cancellation_due");
         if (stopped || current.failed || current.closed) {
           await dispose(current);
           return;

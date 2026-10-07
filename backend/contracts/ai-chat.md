@@ -82,3 +82,21 @@ report의 `reportEvidenceHandling:ReportEvidenceHandlingPort`는 기존 정책13
 현재 일반 신고 서비스·SQL은 존재하지만 AI 전용 `submit_ai_feedback` SQL과 내부 RPC 허용 목록은 없다. AI 신고의 Storage 첨부 연결·ACL/접근기록/정리 capability와 `reportEvidenceHandling` 운영 주입도 확인해야 한다. 로컬 HTTP/RPC 합성 검증은 실제 접수·보관·삭제·외부 전송·운영 권한의 검증이 아니다. 회원 AI 답변 원문 전체를 영구 저장하거나 모델/공급사로 신고를 보내는 기능을 추가하지 않는다. 상세 연결 과제는 [AI 피드백 인계](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md)를 따른다.
 
 현재 소스·합성 검증과 민규 연결 요청은 [AI·검색 구현 결과](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md)를 따른다. 운영 미주입 검사기를 합성 통과 함수로 대체하지 않는다.
+
+
+## 2026-10-07 현재 런타임·검사·관측 연결
+
+- `createConfiguredModel`은 민규 `loadPotensAccountPoolConfig`와 `createRpcAccountBudget`을 연결한다. 다중 계정 설정 오류는 단일 키로 fallback하지 않는다. pool이 설정된 경우 단일 예산 router로 다시 감싸지 않으며, 전송 전 계정 예산 거절만 다음 계정 선택을 허용한다. 전송 이후 응답 유실·403/429·정산 유실은 계정을 바꾸거나 재전송하지 않는다. 위의 단일 router 자동 재시도 설명은 기존 단일 설정 경로에만 해당한다.
+- A안 `conservativeExplanationCheck`는 현재 카드의 공개 필드 하나와 정확히 일치하는 설명만 통과시킨다. 문장을 덧붙인 평가·안전 보장·다른 카드 근거·여분 DTO 필드는 거절한다. 의미가 비슷하다는 추정으로 승인하지 않는다.
+- `createConservativePrivacyCheck`는 서버 검토 목록의 문자열과 객체 키만 정확 일치로 허용한다. getter·숨은 속성·toJSON·비정상 배열·순환 입력·검사기 예외는 차단한다. 실제 회원 원문을 목록에 자동 등록하지 않는다. 고정 합성 목록은 로컬 검토용이며 운영 개인정보 적합성·외부 전송 승인으로 사용하지 않는다.
+- `AiChatRuntimeOptions.metrics`는 서버에서 준비한 `MetricsRecorder`를 선택 주입한다. HTTP 탐색 요청당 결과·시간·설정 모델 버전·확인된 사용량만 기록한다. 내부 모델 응답의 사용량이 모두 확인되고 모델 버전이 같을 때만 사용량을 합산하며, 한 호출이라도 불명이면 합계 필드를 생략한다. 내부 재시도 사용량의 완전성을 확인하지 못하는 기존 단일 router에서는 최종 응답에 usage가 있어도 요청 합계를 기록하지 않는다. 회원 ID·원문·임의 metadata·오류 객체는 전달하지 않는다. sink 실패·무응답은 제품 응답을 기다리게 하지 않는다. `retryCount=0`은 HTTP wrapper의 직접 재전송 0회이며 공급사 내부 재시도 횟수의 측정값이 아니다.
+
+### 배포·주입 확인 목록
+
+1. 공통 서비스 환경과 회원 인증 연결을 확인한다. 기존 `config.toml`의 ai-chat `verify_jwt=false`는 인증 면제가 아니며 handler의 공통 인증이 필수다.
+2. 다중 계정은 `POTENS_ACCOUNT_ORDER`, 선택 계정별 `POTENS_API_KEY_YUMI/JONGHYUN/MINKYU/SUNGHO`, `POTENS_ACCOUNT_TOKEN_BUDGET`, `POTENS_RESET_TIMEZONE`, `POTENS_MODEL`, `POTENS_API_BASE_URL`, `UPSTREAM_TIMEOUT_MS`를 서버에 주입한다. 값·키를 기록하거나 클라이언트에 제공하지 않는다.
+3. 기존 `AI_RUNTIME_ENV`의 retention/cost/legal/member-transmission/budget 근거와 공식 출력 상한 포트, 개인정보 검사 포트가 없으면 unavailable을 유지한다. usage 필드는 공식 확인된 입력·출력 쌍만 주입하며 미확인은 0으로 바꾸지 않는다.
+4. 관측 recorder/sink의 배포 연결·보관·삭제는 실제 운영 조건을 확인한다. 선택 주입과 합성 테스트만으로 실제 저장·알림 완료를 주장하지 않는다.
+5. 로컬 규칙 평가는 `node --experimental-strip-types tests/ai/jonghyun/synthetic-eval.mjs --checks`로 실행한다. 고정 합성 개인정보·근거·부정·조건 사례만 평가하며 공급사 호출은 0회다. `--live`는 이 인계에서 실행하지 않았다.
+
+AI 피드백 `submit_ai_feedback`의 공통 SQL/내부 RPC 허용 목록과 신고자료 handling 주입은 별도 연결 조건이다. 현재 이 체크리스트는 배포 준비 산출물이며 실제 네이버·DB·공급사·운영 배포 증거가 아니다.

@@ -1,0 +1,76 @@
+{
+  "actor": "jonghyun",
+  "branch": "jonghyun/queue-integration",
+  "baseline": "2d4cbf47c03e86e679b7c6cdea1d047cdb7f31a9",
+  "workspace": "/private/tmp/yumidang-jonghyun-implementation-20261007",
+  "scope": "Approved J1/J2/J3 local implementation and synthetic checks; no external requests, deployment, commit or push",
+  "lanes": {
+    "coordinator": [
+      "backend/supabase/functions/_shared/jobs/background.mjs",
+      "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
+      "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
+      "docs/collaboration/requests/jonghyun/2026-10-07-implementation-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-10-07-implementation-result.md",
+      "docs/collaboration/requests/jonghyun/2026-10-07-common-contract-requests.md",
+      "tests/functions/jonghyun/background-runner.test.mjs",
+      "backend/supabase/functions/_shared/jobs/event-runtime.ts",
+      "tests/functions/jonghyun/20261007-shared-event-budget.test.ts"
+    ],
+    "J1": [
+      "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+      "backend/supabase/functions/_shared/jobs/enqueue.ts",
+      "backend/supabase/functions/_shared/jobs/lease.ts",
+      "backend/supabase/functions/_shared/jobs/registry.ts",
+      "backend/supabase/functions/_shared/jobs/retry.ts",
+      "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
+      "backend/supabase/functions/scheduled-jobs/handler.ts",
+      "backend/supabase/functions/scheduled-jobs/index.ts",
+      "tests/functions/jonghyun/j1-consumers.test.ts"
+    ],
+    "J2": [
+      "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+      "backend/supabase/functions/_shared/ai/providers/privacy.ts",
+      "backend/supabase/functions/_shared/ai/Agents/chatbot/output-check.ts",
+      "backend/supabase/functions/_shared/ai/Agents/review-summary/output-check.ts",
+      "backend/supabase/functions/ai-chat/index.ts",
+      "backend/supabase/functions/review-summary-worker/index.ts",
+      "tests/functions/jonghyun/20261007-ai-runtime.test.ts",
+      "tests/functions/jonghyun/20261007-ai-conservative-checks.test.ts",
+      "tests/functions/jonghyun/20261007-ai-shared-summary.test.ts",
+      "backend/supabase/functions/ai-chat/handler.ts",
+      "tests/functions/jonghyun/20261007-ai-observability.test.ts",
+      "tests/ai/jonghyun/synthetic-eval.mjs",
+      "tests/ai/jonghyun/synthetic-eval.test.mjs",
+      "tests/fixtures/jonghyun/synthetic-eval-cases.json",
+      "backend/contracts/ai-chat.md",
+      "backend/contracts/review-summary.md",
+      "backend/supabase/functions/_shared/ai/providers/observability.ts"
+    ],
+    "J3": [
+      "apps/mobile/src/service.ts",
+      "apps/mobile/src/member-service.ts",
+      "apps/mobile/src/screens/RemoteScreens.tsx",
+      "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "tests/functions/jonghyun/20261007-integration-mobile.test.ts",
+      "tests/functions/jonghyun/mobile-service.test.ts",
+      "apps/mobile/README.md"
+    ]
+  },
+  "unresolved": [
+    "shared 20 counting unit",
+    "owned-token schedule and terminal due read port",
+    "durable runtime journal and reconciliation contract",
+    "missing own posts and read HTTP routes"
+  ],
+  "decisions": {
+    "workspace": "independent clone",
+    "ai_checks": "conservative rules and structured evidence"
+  },
+  "runtime": "synthetic only; existing legal/provider/member-data holds retained",
+  "sharing": {
+    "authorization": "2026-10-07 user requested commit and push",
+    "branch": "jonghyun/queue-integration",
+    "remote": "origin",
+    "scope": "Only the approved implementation paths; no deployment or operational activation"
+  }
+}

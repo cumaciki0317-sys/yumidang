@@ -20,6 +20,8 @@ import { assertPrivacy, AiPrivacyError, type ApprovedPrivacyCheck } from "../_sh
 import type { AiChatRequestGate, RequestOutcome } from "../_shared/ai/providers/member-request.ts";
 import type { MemberModelRequest } from "../_shared/ai/providers/model-port.ts";
 import { readAiFeedbackInput, type AiFeedbackPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
+import { beginAiObservation } from "../_shared/ai/providers/observability.ts";
+import type { MetricsRecorder, MetricResultCode } from "../_shared/observability/metrics.ts";
 import type { PublicDiscoveryPort } from "../_shared/ai/Agents/chatbot/tools.ts";
 
 export interface AiChatPrincipal { readonly userId: string }
@@ -31,9 +33,10 @@ export interface AiChatSession {
   loadPreferences(): Promise<NonNullable<TrustedChatContext["preferences"]>>;
 }
 export type AiChatEngine =
-  | { status: "ready"; model: ModelPort; limits: ChatLimits; now: () => Date; verifyExplanation?: ExplanationCheck; privacy?: ApprovedPrivacyCheck }
+  | { status: "ready"; model: ModelPort; limits: ChatLimits; now: () => Date; usageIncludesAllAttempts?: boolean; verifyExplanation?: ExplanationCheck; privacy?: ApprovedPrivacyCheck }
   | { status: "unavailable"; code: string };
 export interface AiChatHandlerDependencies {
+  metrics?: MetricsRecorder;
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
   authenticate(request: Request): Promise<AiChatPrincipal>;
@@ -66,6 +69,8 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
     const context = createRequestContext();
     const preflight = cors.preflight(request, context);
     if (preflight) return preflight;
+    const observation = beginAiObservation(["/functions/v1/ai-chat", "/ai-chat"].includes(new URL(request.url).pathname) ? deps.metrics : undefined, "ai_chat");
+    let metricResult: MetricResultCode = "UNAVAILABLE";
     let originAllowed = false;
     let scope: MemberModelRequest | undefined;
     let outcome: RequestOutcome = "finished";
@@ -99,15 +104,21 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
         const engine = deps.engine;
         // 전체 대화·조건을 검사한다. 오탐 문의에 원문을 자동 첨부하거나 최소 구간을 대신 선택하지 않는다.
         if (engine.privacy) {
-          try { await assertPrivacy(input, engine.privacy, "input"); }
+          try {
+            controller.signal.throwIfAborted();
+            await assertPrivacy(input, engine.privacy, "input");
+            controller.signal.throwIfAborted();
+          }
           catch (error) {
             if (!(error instanceof AiPrivacyError)) throw error;
             result = { requestId: context.requestId, status: "unavailable", interpretedFilters: validateFilters(input.currentFilters),
               cards: [], explanations: [], notice: "개인정보가 포함되어 전송하지 않았어요. 내용을 수정하거나 선택한 구간으로 문의해주세요.",
               recovery: { reason: "input_privacy", retryAllowed: false } };
+            metricResult = "FORBIDDEN";
             return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
           }
         }
+        controller.signal.throwIfAborted();
         if (deps.requestGate) {
           let acquired;
           try { acquired = await deps.requestGate.acquire({ userId: principal.userId, requestId: context.requestId,
@@ -121,6 +132,7 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
               reason === "daily_limit" ? "오늘의 AI 이용 한도에 도달했어요. 한국시간 자정 이후 다시 이용해주세요." : AI_CHAT_UNAVAILABLE_NOTICE;
             result = { requestId: context.requestId, status: "unavailable", interpretedFilters: validateFilters(input.currentFilters),
               cards: [], explanations: [], notice, recovery: { reason, retryAllowed: false } };
+            metricResult = reason === "daily_limit" ? "QUOTA_EXHAUSTED" : reason === "consent" ? "FORBIDDEN" : "UNAVAILABLE";
             return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
           }
           scope = acquired.scope;
@@ -129,8 +141,14 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
           timer = setTimeout(cancel, remaining);
         }
         const model: ModelPort = { async generate(request) {
+          controller.signal.throwIfAborted(); request.signal?.throwIfAborted();
           if (engine.privacy) await assertPrivacy(request.input, engine.privacy, "input");
-          const response = await engine.model.generate({ ...request, ...(scope ? { memberRequest: scope } : {}) });
+          controller.signal.throwIfAborted(); request.signal?.throwIfAborted();
+          let response;
+          try { response = await engine.model.generate({ ...request, ...(scope ? { memberRequest: scope } : {}) }); }
+          catch (error) { observation.modelUnknown(); throw error; }
+          if (engine.usageIncludesAllAttempts === false) observation.modelUnknown();
+          observation.response(response);
           if (engine.privacy) await assertPrivacy(response.value, engine.privacy, "output");
           return response;
         } };
@@ -168,12 +186,16 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
       }
       // 재시도 상태 기록·점유 해제 성공을 확인하고 응답한다. DB 실패를 완료로 숨기지 않는다.
       if (scope && deps.requestGate) { await deps.requestGate.finish(scope, outcome); scope = undefined; }
+      metricResult = result.status === "results" ? "SUCCESS" : result.status === "no_results" ? "EMPTY" :
+        result.status === "needs_clarification" ? "NEEDS_CLARIFICATION" : result.recovery?.reason === "output_privacy" ? "FORBIDDEN" : "UNAVAILABLE";
       return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
     } catch (error) {
       // 입력 오류 코드·메시지 원문을 응답에 넣지 않는다.
       const response = jsonFailure(error instanceof AiInputError ? new HttpError("INVALID_REQUEST") : error, context);
+      metricResult = response.status === 400 || response.status === 413 ? "INVALID_INPUT" : response.status === 401 || response.status === 403 ? "FORBIDDEN" : "UNAVAILABLE";
       return originAllowed ? cors.apply(response, request) : response;
     } finally {
+      observation.finish(controller.signal.aborted ? "CANCELLED" : metricResult);
       if (timer !== undefined) clearTimeout(timer);
       request.signal.removeEventListener("abort", cancel);
       if (scope && deps.requestGate) {

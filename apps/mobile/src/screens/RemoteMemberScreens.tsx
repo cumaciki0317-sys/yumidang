@@ -7,12 +7,12 @@ import { ApiError } from "../api";
 import { installMemberSessionDetails, serviceSessionEpoch, useMemberPorts, useMemberService, useService, useServiceSession } from "../remote";
 import { reconcilePhoto, replacePhoto, type PhotoInput, validateOriginalPhoto } from "../avatar-service";
 import { retirementResult } from "../member-session";
-import type { MemberService, Wire } from "../member-service";
+import type { MemberService, NoticeDelivery, Wire } from "../member-service";
 import { useApp } from "../state";
 import { Body, Button, Card, Chip, Empty, Field, Row, Screen, TextButton, Title } from "../ui";
 import RemotePlacePicker from "./RemotePlacePicker";
 import type { AppointmentLocationInput } from "../../../../backend/supabase/functions/_shared/contracts/matching";
-import type { MemberReportInput } from "../../../../backend/supabase/functions/_shared/contracts/reports";
+import type { MemberCancellationNotice, MemberDecisionNotice, MemberReportInput } from "../../../../backend/supabase/functions/_shared/contracts/reports";
 import type { FreePostInput } from "../../../../backend/supabase/functions/_shared/contracts/posts";
 
 const text = (value: unknown) => typeof value === "string" ? value : "";
@@ -276,6 +276,7 @@ function RemoteAppointment({ id }: { id: string }) {
       }}>변경 제안 보내기</Button>
     </Card>}
     {placeOpen && <RemotePlacePicker onCancel={() => setPlaceOpen(false)} onSelect={selected => { setLocation({ publicArea: selected.publicArea, registeredPlaceName: selected.placeName, registeredAddress: selected.address, meetingDetail: "" }); setPlaceOpen(false); }} />}
+    {detail.data?.status === "cancelled" && <CancellationAppealForm key={id} appointmentId={id} />}
     <Status busy={action.busy} error={action.error} />
   </Screen>;
 }
@@ -419,11 +420,92 @@ function RemoteNotifications() {
   </Screen>;
 }
 
+function GeneralAppealForm({ noticeId }: { noticeId: string }) {
+  const action = useMemberAction(), intent = useIntentId();
+  const [reason, setReason] = useState(""), [appealId, setAppealId] = useState("");
+  const result = useMemberResource(`general-appeal:${appealId}`, (s, signal) => appealId ? s.generalAppeal(appealId, signal) : Promise.resolve(null));
+  return <><Title>판정에 이의 신청</Title><Body small muted>서버가 접수 기한과 본인 권한을 확인해요.</Body>
+    {!appealId && <><Field editable={!action.busy} label="이의 이유 (줄바꿈 없이)" value={reason} onChangeText={setReason} />
+      <Button disabled={!reason.trim()} loading={action.busy} onPress={() => {
+        const input = { noticeId, reason: reason.trim() }, clientRequestId = intent(input);
+        void action.run((s, signal) => s.submitGeneralAppeal(noticeId, clientRequestId, input.reason, signal), receipt => setAppealId(receipt.appealId));
+      }}>이의 접수</Button></>}
+    {appealId && <><Status {...result} />{result.data && <><Body>이의 상태 · {statusLabel(result.data.state)}</Body><Body small>접수 · {result.data.receivedAt}</Body><Body small>접수 마감 · {result.data.deadlineAt}</Body></>}
+      <TextButton onPress={result.reload}>이의 상태 다시 확인</TextButton></>}
+    <Status error={action.error} />
+  </>;
+}
+function CancellationAppealForm({ appointmentId }: { appointmentId: string }) {
+  const action = useMemberAction(), intent = useIntentId();
+  const current = useMemberResource(`cancel-appeal:${appointmentId}`, (s, signal) => s.cancellationAppeal(appointmentId, signal));
+  const [description, setDescription] = useState(""), [reasons, setReasons] = useState<string[]>([]);
+  return <Card><Title>취소 사유 이의 신청</Title><Status {...current} />{current.data && <>
+    <Body small>접수 마감 · {current.data.deadlineAt}</Body>
+    {current.data.appealId ? <><Body>이의 상태 · {statusLabel(current.data.state)}</Body><Body small>접수 · {current.data.receivedAt}</Body></> : <>
+      <Body small muted>취소 사유와 설명을 접수해요. 서버가 접수 기한과 최신 판정을 확인해요.</Body>
+      <Row>{[{ value: "threat", label: "위협" }, { value: "sexual_harassment", label: "성희롱" }, { value: "money_or_personal_data", label: "금전·개인정보 요구" }, { value: "impersonation", label: "사칭" }, { value: "spam", label: "스팸" }, { value: "no_show", label: "노쇼" }, { value: "other", label: "기타" }].map(item => <Chip key={item.value} selected={reasons.includes(item.value)} onPress={() => { if (!action.busy) setReasons(old => old.includes(item.value) ? old.filter(v => v !== item.value) : [...old, item.value]); }}>{item.label}</Chip>)}</Row>
+      <Field editable={!action.busy} label="취소 사유 설명" value={description} onChangeText={setDescription} multiline />
+      <Button disabled={!description.trim() || !reasons.length} loading={action.busy} onPress={() => {
+        const input = { expectedResultRevision: current.data!.resultRevision, reasonCodes: [...reasons].sort(), description: description.trim(), assetIds: [], hideTarget: false };
+        const clientRequestId = intent(input);
+        void action.run((s, signal) => s.submitCancellationAppeal(appointmentId, { clientRequestId, ...input }, signal), current.reload);
+      }}>취소 사유 이의 접수</Button></>}
+    <TextButton onPress={current.reload}>취소 이의 상태 다시 확인</TextButton>
+  </>}<Status error={action.error} /></Card>;
+}
+
+const noticeReasonLabel: Record<string, string> = { normal: "정상 동행", no_show: "노쇼", decision_corrected: "판정 정정", spam: "스팸", rule_violation: "이용 규칙 위반", sexual_harassment: "성희롱", threat: "위협", violence: "폭력", stalking: "스토킹", privacy_exposure: "개인정보 노출", sexual_exploitation: "성 착취" };
+function RemoteNotices({ kind }: { kind: "decision" | "cancellation" }) {
+  const [cursor, setCursor] = useState<string | undefined>();
+  const page = useMemberResource(`notices:${kind}:${cursor ?? ""}`, (s, signal) => s.notices(kind, cursor, signal));
+  const action = useMemberAction();
+  const [selected, setSelected] = useState<{ notice: MemberDecisionNotice | MemberCancellationNotice; delivery: NoticeDelivery | null } | null>(null);
+  useFocusEffect(useCallback(() => () => setSelected(null), []));
+  const attemptedDelivery = useRef<string | null>(null);
+  const ack = useRef(action.run);
+  useEffect(() => { ack.current = action.run; }, [action.run]);
+  const delivery = selected?.delivery;
+  // Runs after the validated notice has committed to the focused screen. Reading/listing alone never ACKs delivery.
+  useEffect(() => {
+    if (!delivery || delivery.providedAt !== null || attemptedDelivery.current === delivery.deliveryId) return;
+    attemptedDelivery.current = delivery.deliveryId;
+    void ack.current((s, signal) => s.acknowledgeNotice(delivery.notice.noticeId, delivery.deliveryId, signal), current => setSelected(previous => previous?.delivery?.deliveryId === current.deliveryId ? { notice: current.notice, delivery: current } : previous));
+  }, [delivery]);
+  const general = selected && "reasonCode" in selected.notice ? selected.notice : null;
+  const cancellation = selected && "planState" in selected.notice ? selected.notice : null;
+  return <><Title>{kind === "decision" ? "운영 판정 안내" : "취소 처리 안내"}</Title><Status {...page} />
+    {page.data?.items.map(notice => <Card key={notice.noticeId}>
+      <Body>{notice.firstReadAt === null ? "새 안내" : "확인한 안내"} · {notice.availableAt}</Body>
+      <TextButton onPress={() => { setSelected(null); void action.run(async (s, signal) => {
+        const current = await s.readNotice(kind, notice.noticeId, signal);
+        const delivery = kind === "decision" && "violationOutcome" in current && current.violationOutcome === "confirmed" ? await s.prepareNotice(current.noticeId, signal) : null;
+        return { notice: current, delivery };
+      }, result => { setSelected(result); page.reload(); }); }}>안내 보기</TextButton>
+    </Card>)}
+    {page.data?.nextCursor && <Button secondary onPress={() => { setSelected(null); setCursor(page.data!.nextCursor!); }}>다음 안내</Button>}
+    {selected && <Card><Title>{general ? noticeReasonLabel[general.reasonCode] : "취소 처리 상태"}</Title>
+      {general && <Body>{general.violationOutcome === "confirmed" ? "위반이 확인되었어요." : general.violationOutcome === "invalidated" ? "이전 판정이 정정되었어요." : "동행 결과 안내예요."}</Body>}
+      {cancellation && <><Body>{({ held: "검토 중", applied: "반영 완료", corrected: "정정 완료", policy_pending: "정책 확인 중" })[cancellation.planState]}</Body>
+        <Body>{cancellation.eligibleCount === null ? "취소 횟수를 확인 중이에요." : `반영 취소 ${cancellation.eligibleCount}회 · 잠정 ${cancellation.provisionalCount}회`}</Body>
+        <Body>{cancellation.hasCancellationWarning ? "취소 관련 경고가 있어요." : "현재 취소 관련 경고 없음"}</Body>
+        {cancellation.restrictedUntil && <Body>제한 종료 · {cancellation.restrictedUntil}</Body>}
+        {cancellation.appealState && <Body>이의 상태 · {statusLabel(cancellation.appealState)}</Body>}</>}
+      {selected.delivery && <><Body>{selected.delivery.deadlineAt ? `이의 접수 마감 · ${selected.delivery.deadlineAt}` : "안내 제공 기록과 이의 접수 마감을 확인 중이에요."}</Body>
+        {!selected.delivery.providedAt && <Button loading={action.busy} onPress={() => void action.run((s, signal) => s.acknowledgeNotice(selected.notice.noticeId, selected.delivery!.deliveryId, signal), delivery => setSelected({ notice: delivery.notice, delivery }))}>제공 상태 다시 확인</Button>}</>}
+      {selected.delivery?.providedAt && <GeneralAppealForm key={selected.notice.noticeId} noticeId={selected.notice.noticeId} />}
+      {cancellation && <CancellationAppealForm key={cancellation.appointmentId} appointmentId={cancellation.appointmentId} />}
+      <TextButton onPress={() => setSelected(null)}>닫기</TextButton></Card>}
+    <Status error={action.error} />
+  </>;
+}
+
 export function RemoteAccountScreen() { return <Guard><RemoteAccount key={serviceSessionEpoch()} /></Guard>; }
 function RemoteAccount() {
   const app = useApp(), action = useMemberAction(), ports = useMemberPorts();
   const [blocksCursor, setBlocksCursor] = useState<string | undefined>(), [reportsCursor, setReportsCursor] = useState<string | undefined>(), [reportId, setReportId] = useState("");
   const safety = useMemberResource("safety", (s, signal) => s.safety(signal)), blocks = useMemberResource(`blocks:${blocksCursor ?? ""}`, (s, signal) => s.blocks(blocksCursor, signal)), reports = useMemberResource(`reports:${reportsCursor ?? ""}`, (s, signal) => s.reports(reportsCursor, signal));
+  const [hiddenCursor, setHiddenCursor] = useState<string | undefined>();
+  const hidden = useMemberResource(`hidden:${hiddenCursor ?? ""}`, (s, signal) => s.hiddenTargets(hiddenCursor, signal));
   const report = useMemberResource(`report:${reportId}`, (s, signal) => reportId ? s.getReport(reportId, signal) : Promise.resolve(null));
   const [withdraw, setWithdraw] = useState<"exploration" | "review_summary" | null>(null);
   const [retiring, setRetiring] = useState(false);
@@ -435,6 +517,12 @@ function RemoteAccount() {
     <Title>차단한 회원</Title><Status {...blocks} />{blocks.data?.items.map(row => <Card key={text(row.targetId ?? row.target_id)}><Body>{text(row.displayName ?? row.display_name) || "차단한 회원"}</Body><TextButton onPress={() => void action.run((s, signal) => s.block(text(row.targetId ?? row.target_id), false, signal), blocks.reload)}>차단 해제</TextButton></Card>)}
     {blocks.data?.nextCursor && <Button secondary onPress={() => setBlocksCursor(blocks.data!.nextCursor!)}>다음 차단 목록</Button>}
     <Body small muted>차단을 해제해도 종료된 신청과 약속은 자동 복원되지 않아요.</Body>
+    <Title>신고 후 숨긴 항목</Title><Status {...hidden} />{hidden.data?.items.map(target => <Card key={`${target.targetType}:${target.targetId}`}>
+      <Body>{({ post: "공고", chat: "대화", appointment: "약속", member: "회원", event: "행사" })[target.targetType]}</Body>
+      <TextButton onPress={() => void action.run((s, signal) => s.unhide(target, signal), hidden.reload)}>숨김 해제</TextButton></Card>)}
+    {hidden.data?.nextCursor && <Button secondary onPress={() => setHiddenCursor(hidden.data!.nextCursor!)}>다음 숨김 목록</Button>}
+    <Body small muted>숨김을 해제해도 차단과 신고는 유지돼요.</Body>
+    <RemoteNotices kind="decision" /><RemoteNotices kind="cancellation" />
     <Title>내 신고</Title><Status {...reports} />{reports.data?.items.map(row => <Card key={text(row.reportId ?? row.id)} onPress={() => setReportId(text(row.reportId ?? row.id))}><Body>{statusLabel(row.status)}</Body><Body small muted>{text(row.createdAt)}</Body></Card>)}
     {reports.data?.nextCursor && <Button secondary onPress={() => setReportsCursor(reports.data!.nextCursor!)}>이전 신고 목록</Button>}
     {reportId && <><Status {...report} />{report.data && <Card><Title>접수한 신고</Title><Body>{statusLabel(report.data.status)}</Body><Body>{text(report.data.description)}</Body><TextButton onPress={() => setReportId("")}>닫기</TextButton></Card>}</>}
