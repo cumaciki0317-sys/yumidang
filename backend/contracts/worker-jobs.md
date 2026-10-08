@@ -126,3 +126,9 @@ RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/le
 실제 두 DB 세션으로 개인 동시 점유, 동일 요청의 단일 차감, 전체 예산 마지막 단위 경쟁, 원장 잠금 대기 중 점유 만료 롤백, 동의 철회와 모델 시작 경합을 확인했다. 한국 날짜 귀속은 검사했으며 실제 자정 경과는 아직 검증하지 않았다. 요약6 RPC는 입력 `p_contract_version="2026-10-05"`와 전역 점유 token을 요구하고 최신 근거·동의·revision을 검사한다. 승인 보류는55000으로 원문 반환·checkpoint 변경·게시를 차단하고 기존 작업을 보존한다.
 
 검사는 자료를 복제하지 않은 `yumidang_policy_20261005` 합성 fixture로 수행했으며 운영 적용·공급사 실호출·Railway 배포 증거와 구분한다. 최신 검사는 `ai_atomic_requests.sql`, `worker_job_fences.sql`, `current_summary_fences.sql`, `ai_atomic_concurrency_local.py`다. 기존 unfenced 인수의 과거 회귀는 최신 권한 검사의 대체물이 아니다.
+
+## 2026-10-08 소비자 실제 연결과 제품 runner 경계
+
+기존 종현 registry와 민규 RPC/Storage 포트로 dedicated enqueue·supported claim·취소 재계산·신고 DELETE/ACK/부재·metadata/parent 완료를 실제 소유 로컬 환경에서 통과했다. 두 OS 프로세스 singleton 경쟁·stale token, DELETE 유실 후 보류·ACK 유실 후 기존 ACK 복구·추가 DELETE0도 확인했다. journal·budget readiness는 시험용 주입이며 제품 포트 준비를 뜻하지 않는다.
+
+제품 연결에는 잔여 배정 이하 allocate, 작업 수와 RPC/task 수의 일관된 전송 전 예약, 자기 전역 토큰 schedule, terminal next-due, 영속 journal, TLS/전용 LOGIN/HTTPS runner 검증이 남아 있다. 준비 전 기본 제어·실행 권한은 닫는다. [현재 실제 증빙·연결 요청](../../docs/collaboration/requests/minkyu/2026-10-08-runner-recovery.md)을 따른다.

@@ -9,3 +9,5 @@ export const deletePost = (db: RpcClient, id: string) => db.rpc("delete_service_
 
 /** 취소 처리와 모집 재개는 독립 요청이다. */
 export const reopenPost = (db: RpcClient, id: string) => db.rpc("reopen_service_post", { p_post_id: id });
+
+export const listMyPosts = (db: RpcClient, limit: number, before: string | null) => db.rpc("list_my_service_posts", { p_limit: limit, p_before: before });

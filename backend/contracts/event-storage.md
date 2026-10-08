@@ -137,3 +137,9 @@ private.profile_traits를 그대로 조회하고 새로운 traits테이블을 �
 tests/database/minkyu/common_connections.sql과 경합runner에서 null sourceUrl·강한URL차단·양방향 v1/v2저장호환·기존ID보존·sameTimestampstale·역순batch경합·view권한회수·기간/그룹/커서·filtercounts·공개성향/관계별이름/완료횟수·get_my_profile불변을 검사한다. 선행event_storage 원본을 적용하고 새2SQL을 순차재생한 단일rollback검증의 실제결과는 총괄이 기록한다. DB작성·정적검사와 실제공급사수집·모델호출·UI·운영배포 결과는 구분한다.
 
 기존 wide provider(33~80자 또는 밑줄)는 source_events/view 및 deprecated list_event_candidates_v1에서 그대로 보존한다. 신규 list_public_events와 list_event_filter_values는 현재 E reader가 지원하는 1~32자·하이픈 provider 범위에 한정한다. 따라서 legacy 형식의 기록이 신규 페이지나 필터 목록 전체를 오류로 만들지 않는다. 해당 기록을 삭제·이름 변경·재저장하지 않으며 신규 API가 과거 provider 전체를 지원한다고 설명하지 않는다. 더 넓은 provider를 신규 화면에 연결하려면 reader와 RPC 계약을 함께 확장해야 한다. 실제 운영 자료가 있다는 뜻은 아니며 회귀 검사는 합성 legacy 기록으로 수행한다.
+
+## 2026-10-08 공개 상세 HTTP
+
+`GET /events/{eventId}`는 기존 저장소의 공개 투영을 재사용하는 `get_public_event`에 연결했다. 비로그인과 선택적 회원 JWT를 지원하되 잘못된 JWT를 비로그인으로 낮추지 않는다. 최신 저장 정보 및 취소 상태를 제공하고 공고의 정확한 만남 위치를 추가하지 않는다. 본인 숨김 행사 직접 조회는 404이며 다른 회원에게는 그대로 제공한다.
+
+`GET /events/rankings` → `get_public_event_ranking_state`의 현재 응답은 `{status:"not_enabled",reason:"KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING"}`다. 공급사 공식 순위 검증 보류를 유지한다. 요청 날짜를 집계 기간으로 추정하거나 자체 순위를 생성하지 않는다. 공급사 호출은 발생하지 않는다.

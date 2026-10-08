@@ -64,6 +64,16 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
         response.headers.set("X-Request-Id", context.requestId);
         return cors.apply(response, request);
       }
+      const eventDetail = /^(?:\/functions\/v1)?\/service-api\/events\/([^/]+)$/.exec(url.pathname);
+      if (dependencies.publicEvents && eventDetail && eventDetail[1] !== "filters") {
+        if (request.method !== "GET") throw new HttpError("METHOD_NOT_ALLOWED");
+        if (url.search || request.body !== null) throw new HttpError("INVALID_REQUEST");
+        const id = eventDetail[1];
+        if (id !== "rankings" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) throw new HttpError("INVALID_REQUEST");
+        const { db } = await dependencies.publicEvents.authenticate(request);
+        const data = id === "rankings" ? await db.rpc("get_public_event_ranking_state", {}) : await db.rpc("get_public_event", { p_event_id: id });
+        return cors.apply(jsonSuccess(data, context), request);
+      }
       if (dependencies.publicEvents && ["/service-api/events", "/functions/v1/service-api/events", "/service-api/events/filters", "/functions/v1/service-api/events/filters"].includes(url.pathname)) {
         try {
           if (request.method !== "GET") throw new HttpError("METHOD_NOT_ALLOWED");

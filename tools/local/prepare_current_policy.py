@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""검토된 정식 41개와 최신 정책 SQL 53개를 service-api 로컬 검증 루트에 준비한다. 실행 없음."""
+"""검토된 정식 41개와 최신 정책 SQL 58개를 service-api 로컬 검증 루트에 준비한다. 실행 없음."""
 import argparse
 import json
 import os
@@ -13,6 +13,12 @@ from prepare_migrations import CANONICAL, COPY, MIGRATIONS, PreparationError, gi
 
 # 검토된 특정 경로와 바이트만 허용한다. 수정된 SQL을 자동으로 승인하지 않는다.
 CURRENT_POLICY_REVIEWED = {
+    'backend/supabase/migrations/20261008010000_member_own_posts.sql': '8d38e1ffbba8a4764438372b66f263c0d6cb3875b0411094d0706d53057d636c',
+    'backend/supabase/migrations/20261008011000_conversation_read_state.sql': '689475372776c2c85254cb7c895694607ef6157ff335b778400e922c972ab286',
+    'backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql': 'f264a46e13c39deaabcff7d548bea7f51c4de9301d9e2ff35ae5db670a46f84e',
+    'backend/supabase/migrations/20261008013000_public_event_detail.sql': '931c3c4f6578e7e8d88910a84419102a1c00dc22a44ce2621f63f37056926d41',
+    'backend/supabase/migrations/20261008014000_ai_feedback_receipts.sql': 'd8ed7f0a2738d59ccf3a5e77185ee75454f16d0ae8e9e75285353e2c39e66d9a',
+
     'backend/supabase/migrations/20261006160000_assigned_report_final_closure.sql': 'e52220edd8be14b753c17a1b53a6816342de3aa85f5ef0d9aee1e66bff5c885b',
     'backend/supabase/migrations/20261006151000_historical_safety_episode.sql': '8d4866ee9fa60321927109fa880cdf10d1d37e9d0a77f9a18892d66ba3dccb8a',
     'backend/supabase/migrations/20261006150000_general_sanction_appeal_resolution.sql': '718da5f5d8ccf27908190fd8d2511c1712d2af0fc7cd2d3518c46bae8b1ba50e',
@@ -101,12 +107,13 @@ ASSIGNED_REPORT_FINAL_CLOSURE_MIGRATION = 'backend/supabase/migrations/202610061
 AI_ACCOUNT_BUDGET_MIGRATION = 'backend/supabase/migrations/20261006170000_ai_account_budget.sql'
 CANCELLATION_REPORT_FINAL_CLOSURE_MIGRATION = 'backend/supabase/migrations/20261007010000_cancellation_report_final_closure.sql'
 CANCELLATION_CLOCK_LINEAGE_MIGRATION = 'backend/supabase/migrations/20261007020000_cancellation_clock_lineage.sql'
-NEW_PENDING_MIGRATIONS = NEW_QUEUE_MIGRATIONS | HIDDEN_TARGET_MIGRATIONS | {GENERAL_NOTICE_DELIVERY_MIGRATION, GENERAL_APPEAL_INTAKE_MIGRATION, GENERAL_APPEAL_RESOLUTION_MIGRATION, HISTORICAL_SAFETY_EPISODE_MIGRATION, ASSIGNED_REPORT_FINAL_CLOSURE_MIGRATION, AI_ACCOUNT_BUDGET_MIGRATION, CANCELLATION_REPORT_FINAL_CLOSURE_MIGRATION, CANCELLATION_CLOCK_LINEAGE_MIGRATION}
+ADDITIONAL_BACKEND_MIGRATIONS = {'backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql', 'backend/supabase/migrations/20261008010000_member_own_posts.sql', 'backend/supabase/migrations/20261008011000_conversation_read_state.sql', 'backend/supabase/migrations/20261008013000_public_event_detail.sql', 'backend/supabase/migrations/20261008014000_ai_feedback_receipts.sql'}
+NEW_PENDING_MIGRATIONS = ADDITIONAL_BACKEND_MIGRATIONS | NEW_QUEUE_MIGRATIONS | HIDDEN_TARGET_MIGRATIONS | {GENERAL_NOTICE_DELIVERY_MIGRATION, GENERAL_APPEAL_INTAKE_MIGRATION, GENERAL_APPEAL_RESOLUTION_MIGRATION, HISTORICAL_SAFETY_EPISODE_MIGRATION, ASSIGNED_REPORT_FINAL_CLOSURE_MIGRATION, AI_ACCOUNT_BUDGET_MIGRATION, CANCELLATION_REPORT_FINAL_CLOSURE_MIGRATION, CANCELLATION_CLOCK_LINEAGE_MIGRATION}
 CONFIG = Path("backend/supabase/config.toml")
 
 
 def inspect_current_migrations(repo):
-    """HEAD 28/41/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82의 정확한 집합과 현재 94개 바이트를 모두 검토 해시와 비교한다."""
+    """HEAD 28/41/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82의 정확한 집합과 현재 99개 바이트를 모두 검토 해시와 비교한다."""
     repo = Path(repo).resolve()
     if Path(git(repo, "rev-parse", "--show-toplevel").decode().strip()).resolve() != repo:
         raise PreparationError("--repo는 저장소 최상위 경로여야 합니다.")
@@ -114,10 +121,10 @@ def inspect_current_migrations(repo):
     policy = CURRENT_POLICY_REVIEWED
     reviewed = {**base, **policy}
     pending_base = {str(path) for path in edge.GATEWAY_PENDING}
-    if (len(base) != 41 or len(policy) != 53 or len(reviewed) != 94
+    if (len(base) != 41 or len(policy) != 58 or len(reviewed) != 99
             or not {QUEUE_RUNNER_ROLE_MIGRATION, PROFILE_PREFERENCES_MIGRATION, APPOINTMENT_CHANGE_WITHDRAWAL_MIGRATION, MEMBER_SAFETY_STATE_MIGRATION, APPOINTMENT_SAFETY_RESULT_SYNC_MIGRATION, APPOINTMENT_REVIEW_HOLDS_MIGRATION, APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, MEMBER_SANCTION_HISTORY_MIGRATION, PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, ASSIGNED_REPORT_REVIEW_START_MIGRATION, ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, ASSIGNED_REPORT_ADJUDICATION_MIGRATION, ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, REPORT_RETENTION_PURGE_MIGRATION, WORKER_SUPPORTED_CLAIM_MIGRATION, REPORT_RETENTION_DISPATCH_MIGRATION, CANCELLATION_DUE_GUARD_MIGRATION} <= set(policy)
             or not pending_base <= set(base)):
-        raise PreparationError("검토된 기존 41개와 최신 53개 목록이 필요합니다.")
+        raise PreparationError("검토된 기존 41개와 최신 58개 목록이 필요합니다.")
     source_head = git(repo, "rev-parse", "HEAD").decode().strip()
     head_names = git(repo, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--", str(MIGRATIONS)).decode().split("\0")
     head = set()
@@ -134,7 +141,8 @@ def inspect_current_migrations(repo):
         if edge.digest(git(repo, "show", f"HEAD:{name}")) != reviewed[name]:
             raise PreparationError(f"HEAD SQL 내용이 검토된 해시와 다릅니다: {name}")
         head.add(name)
-    historical93 = set(reviewed) - {CANCELLATION_CLOCK_LINEAGE_MIGRATION}
+    historical94 = set(reviewed) - ADDITIONAL_BACKEND_MIGRATIONS
+    historical93 = historical94 - {CANCELLATION_CLOCK_LINEAGE_MIGRATION}
     historical92 = historical93 - {CANCELLATION_REPORT_FINAL_CLOSURE_MIGRATION}
     historical91 = historical92 - {AI_ACCOUNT_BUDGET_MIGRATION}
     historical90 = historical91 - {ASSIGNED_REPORT_FINAL_CLOSURE_MIGRATION}
@@ -169,7 +177,7 @@ def inspect_current_migrations(repo):
     previous79 = historical82 - {WORKER_SUPPORTED_CLAIM_MIGRATION, REPORT_RETENTION_DISPATCH_MIGRATION, CANCELLATION_DUE_GUARD_MIGRATION}
     previous80 = historical82 - {REPORT_RETENTION_DISPATCH_MIGRATION, CANCELLATION_DUE_GUARD_MIGRATION}
     previous81 = historical82 - {CANCELLATION_DUE_GUARD_MIGRATION}
-    if head not in (set(base) - pending_base, set(base), previous60, previous61, previous62, previous63, previous64, previous65, previous66, previous67, previous68, previous69, previous70, previous71, previous72, previous73, previous74, previous75, previous76, previous77, previous78, previous79, previous80, previous81, historical82, historical83, historical84, historical85, historical86, historical87, historical88, historical89, historical90, historical91, historical92, historical93, set(reviewed)):
+    if head not in (set(base) - pending_base, set(base), previous60, previous61, previous62, previous63, previous64, previous65, previous66, previous67, previous68, previous69, previous70, previous71, previous72, previous73, previous74, previous75, previous76, previous77, previous78, previous79, previous80, previous81, historical82, historical83, historical84, historical85, historical86, historical87, historical88, historical89, historical90, historical91, historical92, historical93, historical94, set(reviewed)):
         raise PreparationError("검토된 HEAD 28개/41개/60개/61개/62개/63개/64개/65개/66개/67개/68개/69개/70개/71개/72개/73개/74개/75개/76개/77개/78개/79개/80개/81개/82개/83개/84개/85개/86개/87개/88개/89개/90개/91개/92개/93개/94개 전체만 준비할 수 있습니다.")
     # 기존 strict gateway 검사도 그대로 실행한다. 60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82개일 때는 기존 41개 집합만 전달한다.
     base_head = sorted(head & set(base))
@@ -258,11 +266,11 @@ def prepare_current_policy(repo, output, *, gateway_probe=False):
               "edge_execution": "NOT_RUN", "output_root": str(destination),
               "source_head": history["source_head"], "source_mode": "working_tree_snapshot",
               "canonical_count": len(history["canonical"]), "pending_count": len(history["pending"]),
-              "migration_count": 94, "base_migration_count": 41, "policy_migration_count": 53,
+              "migration_count": 99, "base_migration_count": 41, "policy_migration_count": 58,
               "base_snapshot_head": base_head, "base_manifests": [f"base-{name}-manifest.json" for name in ("migration", "database", "edge")],
               "preparation_note": "파일 준비 결과이며 실제 SQL 적용·Edge 실행·운영 배포 검증이 아니다."}
-    migration = {**shared, "count": 94, "migrations": history["entries"], "excluded": history["excluded"]}
-    database = {**shared, "count": len(history["canonical"]), "total_count": 94,
+    migration = {**shared, "count": 99, "migrations": history["entries"], "excluded": history["excluded"]}
+    database = {**shared, "count": len(history["canonical"]), "total_count": 99,
                 "migrations": history["canonical"], "pending": history["pending"],
                 "excluded": history["excluded"], "config_sha256": edge.digest(config)}
     report = {**base_report, **shared, "base_snapshot_head": base_head,

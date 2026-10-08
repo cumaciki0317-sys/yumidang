@@ -2,7 +2,7 @@
 import type { RuntimeConfig } from "../config/env.ts";
 import { createRpcTransport, type FetchLike, type RpcClient } from "./transport.ts";
 
-const publicRpcs = new Set(["search_public_posts_v2", "get_service_post", "list_event_candidates_v1", "list_public_events", "list_event_filter_values"]);
+const publicRpcs = new Set(["search_public_posts_v2", "get_service_post", "list_event_candidates_v1", "get_public_event", "get_public_event_ranking_state", "list_public_events", "list_event_filter_values"]);
 
 export function createPublicClient(config: RuntimeConfig, fetchImpl: FetchLike = fetch): RpcClient {
   return createRpcTransport(config, config.supabaseAnonKey, config.supabaseAnonKey, publicRpcs, fetchImpl);

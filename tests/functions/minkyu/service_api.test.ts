@@ -39,7 +39,7 @@ test("모든 읽기 경로를 명시 RPC에 연결하며 임의 RPC 경로는 �
   const paths = [
     ["/me", "get_my_profile"], ["/appointments", "list_my_appointments"], [`/appointments/${id}`, "get_appointment_state"],
     [`/appointments/${id}/reviews`, "get_appointment_review_state"], [`/profiles/${id}/reviews?limit=5&before=${otherId}`, "get_public_profile_reviews"],
-    ["/notifications?limit=5", "list_my_notifications"], ["/conversations", "list_conversations"], [`/conversations/${id}`, "get_conversation"],
+    ["/notifications?limit=5", "list_my_notifications"], ["/conversations", "list_conversations_with_read_state"], [`/conversations/${id}`, "get_conversation_with_read_state"],
     [`/conversations/${id}/messages?limit=10`, "list_conversation_messages"], [`/posts/${id}`, "get_service_post"],
     ["/requests/sent", "list_sent_join_requests"], ["/requests/received", "list_received_join_requests"],
   ];

@@ -118,8 +118,9 @@ test("행사·필터 경로는 메서드·prefix·encoding·불필요한 후행 
       assert.equal((await send(path, undefined, "POST")).status, 405);
       assert.equal((await send(path, undefined, "DELETE")).status, 405);
     }
-    for (const path of ["/%65vents?limit=2", "/events/", "/events/unknown", "//events?limit=2"])
+    for (const path of ["/%65vents?limit=2", "/events/", "//events?limit=2"])
       assert.equal((await send(path)).status, 404);
+    assert.equal((await send("/events/unknown")).status, 400);
     assert.equal(calls.length, 0);
   });
 });

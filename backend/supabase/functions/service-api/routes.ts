@@ -262,6 +262,8 @@ export function resolveRoute(url: URL): Route {
   if (path === "/notifications/read-all") return route("POST", ({ db, body }) => { empty(body); return notifications.readAllNotifications(db); });
   match = /^\/notifications\/([^/]+)\/read$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("POST", ({ db, body }) => { empty(body); return notifications.readNotification(db, id); }); }
+  match = /^\/conversations\/([^/]+)\/read$/.exec(path);
+  if (match) { const id = uuid(match[1]); return route("POST", ({ db, body }) => { const data = object(body, ["lastReadMessageId"]); return conversations.markConversationRead(db, id, uuid(data.lastReadMessageId)); }); }
   if (path === "/conversations") return route("GET", ({ db }) => conversations.listConversations(db));
   match = /^\/conversations\/([^/]+)\/leave$/.exec(path);
   if (match) {
@@ -275,6 +277,7 @@ export function resolveRoute(url: URL): Route {
       ? route("GET", ({ db, url }) => conversations.listMessages(db, id, ...page(url)), false, true)
       : route("GET", ({ db }) => conversations.getConversation(db, id));
   }
+  if (path === "/me/posts") return route("GET", ({ db, url }) => posts.listMyPosts(db, ...page(url)), false, true);
   if (path === "/posts") return route("POST", ({ db, body }) => { const { id, input } = postInput(body); return posts.createPost(db, id, input); });
   match = /^\/posts\/([^/]+)(?:\/(requests|update|close|delete|reopen))?$/.exec(path);
   if (match) {
@@ -328,6 +331,7 @@ export function resolveRoute(url: URL): Route {
     if (mode !== "all" && mode !== "musical") invalid();
     return route("GET", ({ db }) => db.rpc("get_kopis_top10_snapshot", { p_mode: mode }), true);
   }
+  if (path === "/internal/ai-feedback-maintenance") return route("POST", ({ db, body }) => { const input = object(body, ["limit"]); return db.rpc("purge_expired_ai_feedback", { p_limit: integer(input.limit, 1, 100) }); }, true);
   if (path === "/internal/maintenance") return route("POST", async ({ db, body, maintenance }): Promise<JsonValue> => {
     const limit = integer(object(body, ["limit"]).limit, 1, 100);
     const counts = (value: JsonValue, keys: string[]): Record<string, number> => {

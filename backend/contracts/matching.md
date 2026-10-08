@@ -108,3 +108,9 @@ propose/accept는 확정 조건 변경이라는 새 활동이므로 네이버 �
 40600과 POST `/appointments/:id/schedule-change/withdraw`를 연결했다. `{changeId,conditionVersion}`만 받으며 DB의 본인 제안자 검사 후 기존 종료 helper로 withdrawn 처리한다. 기존 약속·일정·장소·완료 예약은 유지하고 제안 위치 원문은 정리한다. withdrawn/expired/cancelled는 멱등 반환, 수락/거절 완료 및 옛 조건 버전은 충돌이다. 시간 전용 제안에 위치 키를 강제로 추가하지 않는다.
 
 격리 native63 영속 적용 및 실제 Auth/REST/Storage12그룹, 별도8개 약속/제안 SQL 회귀가 PASS다. HTTP handler는 프로세스 내부 실행이고 네이버 응답은 합성이다. 철회/수락 실제 경합·신뢰 접수 시각 마감·hosted/모바일/운영은 남는다. [검증 범위와 영수증](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-change-withdrawal.md)을 따른다.
+
+## 2026-10-08 채팅 읽음 서버 연결
+
+`POST /conversations/{requestId}/read`는 `{lastReadMessageId}`만 받는다. JWT 본인의 현재 열람 가능한 대화에 속하고 숨겨지지 않은 실제 메시지만 인정한다. 읽음 시각은 서버가 기록하며 `(메시지 생성 시각, UUID)` 위치가 후퇴하지 않는다. 중복·역순 요청은 현재 저장 결과를 반환한다. 새 메시지의 생성 시각은 대화 잠금 하에서 단조 증가한다. 조회와 알림 읽음은 이 상태를 변경하지 않는다.
+
+회원 DB 허용 목록에 `mark_conversation_read`, `list_conversations_with_read_state`, `get_conversation_with_read_state`를 추가했다. 기존 대화 행에 본인 `last_read_message_id`, `read_at`, `unread_count`를 추가하며 상대 읽음 상태는 반환하지 않는다. 메시지 삭제 시 FK로 최소 읽음 상태를 삭제한다. 메시지 숨김은 목록·상세·읽지 않은 수에 반영하고 확정 동행 관리 API는 유지한다. 모바일 DTO 연결은 종현 인계 범위다.

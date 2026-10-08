@@ -159,8 +159,8 @@ test("나가기 RPC는 사용자 client만 허용하고 공개·내부·spoof RP
 test("목록·상세·메시지·전송은 기존 RPC와 입력을 유지한다",async()=>{
   await probe(async(handler,calls)=>{
     for(const [path,method,body,name,args] of [
-      ["/conversations","GET",undefined,"list_conversations",{}],
-      [`/conversations/${ID}`,"GET",undefined,"get_conversation",{p_request_id:ID}],
+      ["/conversations","GET",undefined,"list_conversations_with_read_state",{}],
+      [`/conversations/${ID}`,"GET",undefined,"get_conversation_with_read_state",{p_request_id:ID}],
       [`/conversations/${ID}/messages?limit=20`,"GET",undefined,"list_conversation_messages",{p_request_id:ID,p_limit:20,p_before:null}],
       [`/conversations/${ID}/messages`,"POST",{messageId:USER,content:"합성 기존 메시지"},"send_conversation_message",{p_request_id:ID,p_message_id:USER,p_content:"합성 기존 메시지"}],
     ] as const) {
