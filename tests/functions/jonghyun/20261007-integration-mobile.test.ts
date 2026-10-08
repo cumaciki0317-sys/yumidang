@@ -16,7 +16,7 @@ function setup(respond: (name: string, args: Record<string, JsonValue>) => JsonV
   const db = { rpc: async (name: string, args: Record<string, JsonValue>) => { calls.push({ name, args }); return respond(name, args); } };
   const handler = createServiceApi({ allowedOrigins: [], maxBodyBytes: 65536, authenticateUser: async request => {
     assert.equal(request.headers.get("authorization"), "Bearer synthetic-member"); return db;
-  }, authenticateInternal: async () => { throw new Error("unexpected internal call"); } });
+  }, publicEvents: { authenticate: async () => ({ db }), execute: async () => { throw new Error("not used"); }, filters: async () => { throw new Error("not used"); } }, authenticateInternal: async () => { throw new Error("unexpected internal call"); } });
   const fetcher: typeof fetch = async (url, init) => handler(new Request(String(url), init));
   const options = { serviceApiUrl: "https://synthetic.invalid/service-api", accessToken: async () => token, fetcher };
   return { calls, member: new MemberService(new ServiceApiClient(options.serviceApiUrl, options.accessToken, fetcher)), public: new YumidangService(options) };
@@ -120,12 +120,11 @@ test("appeal lost response preserves explicit request ID and does not retry auto
   await assert.rejects(service.submitGeneralAppeal(resource, deliveryId, "설명"));
   assert.deepEqual(bodies[0], bodies[1]);
 });
-test("unsupported public event detail/ranking stop before HTTP rather than call internal or invented routes", async () => {
-  const ports = setup(() => { throw new Error("no unsupported RPC should be called"); });
-  await assert.rejects(ports.public.getEvent(resource), { code: "EVENT_DETAIL_NOT_CONNECTED" });
-  await assert.rejects(ports.public.performanceRankings("musical"), { code: "EVENT_RANKINGS_NOT_CONNECTED" });
-  assert.equal(ports.calls.length, 0);
+test("public ranking reaches verified route and aborted detail stops before HTTP", async () => {
+  const ports = setup(name => { assert.equal(name, "get_public_event_ranking_state"); return { status: "not_enabled", reason: "KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING" }; });
+  assert.equal((await ports.public.performanceRankings("musical")).status, "not_enabled");
+  assert.equal(ports.calls.length, 1);
   const controller = new AbortController(); controller.abort();
-  await assert.rejects(ports.public.getEvent(resource, controller.signal), { name: "AbortError" });
-  assert.equal(ports.calls.length, 0);
+  await assert.rejects(ports.public.getEvent(resource, controller.signal));
+  assert.equal(ports.calls.length, 1);
 });

@@ -348,11 +348,12 @@ test("요약은 최신 서버 exact DTO·300Unicode문자를 검증하고 매조
   }
 });
 
-test("공개 순위 HTTP 미연결은 미수신빈결과와 구분하고 내부 API로 우회하지 않는다", async () => {
-  const { service, calls } = setup({ status: "unavailable", items: [] });
-  await assert.rejects(service.performanceRankings(), { code: "EVENT_RANKINGS_NOT_CONNECTED" });
-  await assert.rejects(service.performanceRankings("musical"), { code: "EVENT_RANKINGS_NOT_CONNECTED" });
-  assert.equal(calls.length, 0);
+test("공식 순위 보류 DTO는 query 없는 공개 경로로 조회한다", async () => {
+  const { service, calls } = setup({ status: "not_enabled", reason: "KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING" });
+  assert.equal((await service.performanceRankings()).status, "not_enabled");
+  assert.equal((await service.performanceRankings("musical")).mode, "musical");
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every(call => String(call.url).endsWith("/events/rankings")));
 });
 
 test("401/네트워크장애는 익명재시도·자동재시도·빈결과fallback 없이 실패한다", async () => {
@@ -401,11 +402,12 @@ test("시도 변환은17개 alias와공식명·전체를 구분하고 임의지�
   );
 });
 
-test("행사 상세 HTTP 미연결은 대상삭제로 오해하지 않고 추측 경로를 호출하지 않는다", async () => {
+test("행사 상세 최신 공개 경로와 취소 조회를 연결한다", async () => {
   const { service, calls } = setup(event);
-  await assert.rejects(service.getEvent(postId), { code: "EVENT_DETAIL_NOT_CONNECTED" });
+  assert.deepEqual(await service.getEvent(postId), event);
   await assert.rejects(service.getEvent("invalid"), { code: "INVALID_REQUEST" });
-  assert.equal(calls.length, 0);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(await setup({ ...event, sourceStatus: "cancelled" }).service.getEvent(postId), { ...event, sourceStatus: "cancelled" });
 });
 
 const profile = {

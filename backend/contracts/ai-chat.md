@@ -100,3 +100,13 @@ report의 `reportEvidenceHandling:ReportEvidenceHandlingPort`는 기존 정책13
 5. 로컬 규칙 평가는 `node --experimental-strip-types tests/ai/jonghyun/synthetic-eval.mjs --checks`로 실행한다. 고정 합성 개인정보·근거·부정·조건 사례만 평가하며 공급사 호출은 0회다. `--live`는 이 인계에서 실행하지 않았다.
 
 AI 피드백 `submit_ai_feedback`의 공통 SQL/내부 RPC 허용 목록과 신고자료 handling 주입은 별도 연결 조건이다. 현재 이 체크리스트는 배포 준비 산출물이며 실제 네이버·DB·공급사·운영 배포 증거가 아니다.
+
+## 2026-10-08 정상 응답과 평가 증거 연결
+
+사용자 확정: 정상 `results`·`no_results`·`needs_clarification` 모두 helpful 대상이다. `unavailable`·개인정보 차단·시간 초과·취소는 정상 결과 증거를 만들지 않는다. HTTP handler는 최종 개인정보 검사 뒤 서버 `MemberModelRequest`로 민규 `recordAiResultAvailable`을 호출하고 그 다음 요청 점유를 해제한다. 기록 미연결·실패 및 해제 실패는 성공 응답으로 처리하지 않는다. 해제 응답 유실을 finally에서 자동 재전송하지 않는다.
+
+결과 증거는 서버에서 응답을 제공할 준비가 된 시각이다. 실제 화면 표시·회원 열람·모델의 유용함을 증명하지 않는다. 기록 RPC 시작 뒤 취소/응답 유실이면 원 기록이 남을 수 있으나 정상 응답 반환은 차단한다. 과거 finished 요청을 정상 결과로 backfill하지 않는다.
+
+helpful 기록은 접수+90일 만료 예약으로 정리한다. 만료 시각부터 새 helpful 접수를 거절하며 실제 삭제는 DB 기반 다음 만료 조회/예약과 기존 내부 유지관리 API를 연결한다. 장애 후 처리 지연은 별도로 기록하고 만료 시각을 연장하지 않는다. 탈퇴 즉시 삭제는 기존 DB 트리거를 유지한다. 매일00:01 정리로 대체하지 않는다. 종현의 예약/소비자 준비는 공통 next-due·영속 기록·점유 검증 포트 수신 후 실제 연결한다.
+
+AI 신고는 준비 RPC의 reportReady 및 Storage/ACL/감사/종결+90일 파기 연결 검증 전 비활성이다. 탐색·후기 원문 전송의 기존 공급사/법적/검사 자료 보류도 유지한다. 사용자 선택1A에 따라 최종 응답의 서버 생성 `requestId`는 UUID 형식과 서버 context와의 일치를 확인한 후 그 필드 하나만 본문 개인정보 검사에서 분리한다. 입력 `clientRequestId`·대화·모델 출력·카드 ID와 내용은 계속 검사한다. 다른 필드 제외로 확대하지 않는다. 연락처 형태 합성 UUID의 정상3응답과 위조 ID 거절·실제 연락처 차단을 로컬 검사했으며, 운영 개인정보 탐지 품질을 증명하지 않는다.

@@ -1,4 +1,4 @@
-import { ApiError, checkAbort, ServiceApiClient } from "./api.ts";
+import { ApiError, ServiceApiClient } from "./api.ts";
 import type { Filters } from "./types.ts";
 import type { PlaceLookupResult } from "../../../backend/supabase/functions/_shared/integrations/places/port.ts";
 import { CATEGORIES } from "./domain.ts";
@@ -73,7 +73,8 @@ export interface ProfileSummary {
   } | null;
 }
 export interface PerformanceRankings {
-  status: "available" | "unavailable";
+  status: "not_enabled";
+  reason: "KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING";
   mode: "all" | "musical";
   sourceName: "KOPIS";
   period: { start: string; end: string } | null;
@@ -900,11 +901,13 @@ export class YumidangService {
     ) return fail();
     return { events, nextCursor };
   }
-  /** The current shared HTTP service has no public detail route. Never call an invented endpoint. */
+  /** Public detail retains cancelled events for inspection. */
   async getEvent(eventId: string, signal?: AbortSignal): Promise<PublicEventItem> {
     if (!uuid.test(eventId)) return invalid();
-    if (signal) checkAbort(signal);
-    throw new ApiError(503, "EVENT_DETAIL_NOT_CONNECTED");
+    const { data } = await this.read(`/events/${eventId}`, signal);
+    const parsed = event(data, true);
+    if (parsed.id !== eventId) return fail();
+    return parsed;
   }
   async askAi(input: ChatInput, signal?: AbortSignal): Promise<AiChatResult> {
     if (!this.options.aiChatUrl) throw new ApiError(503, "AI_NOT_CONFIGURED");
@@ -1153,8 +1156,10 @@ export class YumidangService {
   /** Internal KOPIS RPC/HTTP is not a public member ranking API. */
   async performanceRankings(mode: "all" | "musical" = "all", signal?: AbortSignal): Promise<PerformanceRankings> {
     if (mode !== "all" && mode !== "musical") return invalid();
-    if (signal) checkAbort(signal);
-    throw new ApiError(503, "EVENT_RANKINGS_NOT_CONNECTED");
+    const { data } = await this.read("/events/rankings", signal);
+    const raw = exact(data, ["status", "reason"]);
+    if (raw.status !== "not_enabled" || raw.reason !== "KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING") return fail();
+    return { status: "not_enabled", reason: raw.reason, mode, sourceName: "KOPIS", period: null, collectedAt: null, items: [] };
   }
   async getPost(postId: string, signal?: AbortSignal): Promise<PostDetails> {
     if (!uuid.test(postId)) return invalid();

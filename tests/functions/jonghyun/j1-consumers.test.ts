@@ -17,7 +17,7 @@ function fixture() {
   let remaining = 10;
   const ports: SafetyConsumerPorts = {
     readiness: { scopedClaim: true, sharedBudgetContract: true, durableJournalContract: true, cancellationGuardAndAcl: true, reportGuardAndAcl: true, reportTerminalScheduleContract: true, storageProviderApproved: true },
-    budget: { globalToken: id(8), signal: new AbortController().signal, elapsed: () => 0, readRemaining: async () => ({ remainingMs: 10000 }), reserve: async () => remaining-- > 0 },
+    budget: { globalToken: id(8), signal: new AbortController().signal, elapsed: () => 0, readRemaining: async () => ({ remainingMs: 10000 }), reserveItem: async () => true, hasItemCapacity: () => true, reserve: async () => remaining-- > 0 },
     journal: { prepare: async i => { intents.push(i); events.push("journal"); }, unknown: async i => { unknown.push(i); }, confirmed: async () => { events.push("confirmed"); } },
     cancellationProcess: async () => { events.push("process"); return { status: "applied", generation: 7, changed: true }; },
     reportClaim: async () => { events.push("claim"); return task(); },
@@ -205,7 +205,7 @@ function workerChain(kind: "cancellation_safety" | "report_retention", conflict?
   const j = job(kind);
   const journal = { prepare: async () => { recorded.push("prepare"); }, confirmed: async () => { recorded.push("confirmed"); }, unknown: async () => { recorded.push("unknown"); } };
   const invoke = createSafetyWorkerInvocation(runtimeConfig(), { readiness: f.ports.readiness, journal: f.ports.journal, claimJournal: journal, settlementJournal: journal, enqueueJournal: journal,
-    allocate: () => ({ maxJobsPerRun: 1, enqueueLimit: 1 }), reserve: async () => true, elapsed: () => 0, workerId: id(9), jobLeaseDurationMs: 60000,
+    allocate: () => ({ maxJobsPerRun: 1, enqueueLimit: 1 }), reserveItem: async () => true, reserve: async () => true, elapsed: () => 0, workerId: id(9), jobLeaseDurationMs: 60000,
     retry: { maxAttempts: 3, baseDelayMs: 1000, maxDelayMs: 5000 }, now: () => new Date("2026-10-07T00:00:00Z") }, async (url, init) => {
       const name = String(url).split("/").at(-1)!; calls.push(name);
       if (name === "read_worker_run_budget") return Response.json({ remainingMs: 10000 });
@@ -222,7 +222,7 @@ function workerChain(kind: "cancellation_safety" | "report_retention", conflict?
 test("complete cancellation chain uses dedicated enqueue, scoped claim, process and journalled generic completion", async () => {
   const f = workerChain("cancellation_safety"), r = await f.invoke(id(8), "cancellation_safety", f.input);
   assert.equal(r.status, "ran"); if (r.status !== "ran") throw new Error();
-  assert.deepEqual(r.counts, { claimed: 1, succeeded: 1, held: 0, leaseLost: 0 });
+  assert.deepEqual(r.counts, { claimed: 1, succeeded: 1, held: 0, leaseLost: 0, processedItems: 1 });
   assert.deepEqual(f.calls.filter(name => name !== "read_worker_run_budget"), ["enqueue_cancellation_safety_due", "claim_supported_job", "process_cancellation_safety_due", "complete_job"]);
   assert.deepEqual(f.recorded, ["prepare", "confirmed", "prepare", "confirmed", "prepare", "confirmed"]);
 });
@@ -237,7 +237,7 @@ for (const [kind, conflict] of [["cancellation_safety", "generation"], ["report_
   test(`server rejects stale ${conflict} before any settle/retry/complete or second request`, async () => {
     const f = workerChain(kind, conflict), r = await f.invoke(id(8), kind, f.input);
     assert.equal(r.status, "ran"); if (r.status !== "ran") throw new Error();
-    assert.deepEqual(r.counts, { claimed: 1, succeeded: 0, held: 0, leaseLost: 1 });
+    assert.deepEqual(r.counts, { claimed: 1, succeeded: 0, held: 0, leaseLost: 1, processedItems: kind === "cancellation_safety" ? 1 : 0 });
     assert.equal(f.calls.some(name => ["complete_job", "complete_report_retention_task", "retry_job", "fail_job"].includes(name)), false);
     assert.equal(f.calls.filter(name => name === (kind === "cancellation_safety" ? "process_cancellation_safety_due" : "claim_report_retention_task")).length, 1);
   });
@@ -265,7 +265,7 @@ test("shared scheduler dispatch reaches actual safety composition and terminal m
 test("invalid factory retry settings fail before any RPC", () => {
   const f = fixture(); let calls = 0;
   assert.throws(() => createSafetyWorkerInvocation(runtimeConfig(), { readiness: f.ports.readiness, journal: f.ports.journal, claimJournal, settlementJournal: claimJournal, enqueueJournal: claimJournal,
-    allocate: () => ({ maxJobsPerRun: 1, enqueueLimit: 1 }), reserve: async () => true, elapsed: () => 0, workerId: id(9), jobLeaseDurationMs: 60000,
+    allocate: () => ({ maxJobsPerRun: 1, enqueueLimit: 1 }), reserveItem: async () => true, reserve: async () => true, elapsed: () => 0, workerId: id(9), jobLeaseDurationMs: 60000,
     retry: { maxAttempts: 0, baseDelayMs: 1, maxDelayMs: 1 }, now: () => new Date() }, async () => { calls++; return Response.json(null); }), /INVALID_RETRY_SETTINGS/);
   assert.equal(calls, 0);
 });
@@ -273,7 +273,7 @@ test("invalid factory retry settings fail before any RPC", () => {
 test("reused invocation factory forwards each original global token to shared reservation", async () => {
   const f = fixture(), reservations: { token: string; operation: string }[] = [];
   const invoke = createSafetyWorkerInvocation(runtimeConfig(), { readiness: f.ports.readiness, journal: f.ports.journal, claimJournal, settlementJournal: claimJournal, enqueueJournal: claimJournal,
-    allocate: () => ({ maxJobsPerRun: 1, enqueueLimit: 1 }), reserve: async (token, operation) => { reservations.push({ token, operation }); return true; }, elapsed: () => 0,
+    allocate: () => ({ maxJobsPerRun: 1, enqueueLimit: 1 }), reserveItem: async () => true, reserve: async (token, operation) => { reservations.push({ token, operation }); return true; }, elapsed: () => 0,
     workerId: id(9), jobLeaseDurationMs: 60000, retry: { maxAttempts: 3, baseDelayMs: 1000, maxDelayMs: 5000 }, now: () => new Date("2026-10-07T00:00:00Z") }, async (url, init) => {
       const name = String(url).split("/").at(-1)!; const args = JSON.parse(String(init?.body));
       const token = args.p_worker_run_token ?? args.p_global_token;

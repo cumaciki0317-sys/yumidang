@@ -1,15 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Image, View } from "react-native";
+import { FlatList, Image, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import * as Crypto from "expo-crypto";
 import * as ImagePicker from "expo-image-picker";
+import { bodyIntersectsViewport, dispatchVisibleMessages } from "../chat-read-state";
 import { ApiError } from "../api";
-import { installMemberSessionDetails, serviceSessionEpoch, useMemberPorts, useMemberService, useService, useServiceSession } from "../remote";
+import { installMemberSessionDetails, useMessageReadPort, serviceSessionEpoch, useMemberPorts, useMemberService, useService, useServiceSession } from "../remote";
 import { reconcilePhoto, replacePhoto, type PhotoInput, validateOriginalPhoto } from "../avatar-service";
 import { retirementResult } from "../member-session";
+import { appointmentCancellationGate, observedServerTime } from "../member-service";
 import type { MemberService, NoticeDelivery, Wire } from "../member-service";
 import { useApp } from "../state";
-import { Body, Button, Card, Chip, Empty, Field, Row, Screen, TextButton, Title } from "../ui";
+import { Body, Button, Card, Chip, dateLabel, Empty, Field, rangeLabel, Row, Screen, TextButton, timeLabel, Title } from "../ui";
 import RemotePlacePicker from "./RemotePlacePicker";
 import type { AppointmentLocationInput } from "../../../../backend/supabase/functions/_shared/contracts/matching";
 import type { MemberCancellationNotice, MemberDecisionNotice, MemberReportInput } from "../../../../backend/supabase/functions/_shared/contracts/reports";
@@ -31,7 +33,7 @@ export function useMemberResource<T>(key: string, load: (service: MemberService,
   const fullKey = `${session.epoch}:${key}:${revision}`;
   const loader = useRef(load);
   useEffect(() => { loader.current = load; }, [load]);
-  const [state, setState] = useState<{ key: string; data: T | null; error: string; busy: boolean }>({ key: "", data: null, error: "", busy: false });
+  const [state, setState] = useState<{ key: string; data: T | null; error: string; busy: boolean; observedAt?: number }>({ key: "", data: null, error: "", busy: false });
   useFocusEffect(useCallback(() => {
     const active = new AbortController();
     setState({ key: fullKey, data: null, error: "", busy: true });
@@ -40,13 +42,13 @@ export function useMemberResource<T>(key: string, load: (service: MemberService,
       return () => active.abort();
     }
     void loader.current(service, active.signal).then(data => {
-      if (!active.signal.aborted && serviceSessionEpoch() === session.epoch) setState({ key: fullKey, data, error: "", busy: false });
+      if (!active.signal.aborted && serviceSessionEpoch() === session.epoch) setState({ key: fullKey, data, error: "", busy: false, observedAt: Date.now() });
     }).catch(error => {
       if (!active.signal.aborted && serviceSessionEpoch() === session.epoch) setState({ key: fullKey, data: null, error: failure(error), busy: false });
     });
     return () => active.abort();
   }, [fullKey, service, session.authenticated, session.epoch]));
-  return { ...(state.key === fullKey ? state : { data: null, error: "", busy: true }), reload: () => setRevision(n => n + 1) };
+  return { ...(state.key === fullKey ? state : { data: null, error: "", busy: true, observedAt: undefined }), reload: () => setRevision(n => n + 1) };
 }
 
 export function useMemberAction() {
@@ -104,7 +106,7 @@ function RemoteChats() {
   return <Screen title="채팅" tab right={<TextButton onPress={list.reload}>새로고침</TextButton>}>
     <Status {...list} />
     {list.data?.map(row => <Card key={idOf(row, "request_id")} onPress={() => app.navigate("S11", `request:${idOf(row, "request_id")}`)}>
-      <Title>{text(row.post_title)}</Title><Body>{text(row.counterpart_masked_name)}</Body><Body muted>{text(row.last_message) || "대화를 확인해 주세요"}</Body>
+      <Title>{text(row.post_title)}</Title><Body>{text(row.counterpart_masked_name)}</Body><Body small>{statusLabel(row.request_status)}</Body><Body muted>{text(row.last_message) || "대화를 확인해 주세요"}</Body>{Number(row.unread_count) > 0 && <Body small>읽지 않은 메시지 {Number(row.unread_count)}개</Body>}
     </Card>)}
     {list.data?.length === 0 && <Empty title="진행 중인 대화가 없어요" action="동행 둘러보기" onPress={() => app.navigate("S01")} />}
   </Screen>;
@@ -114,9 +116,9 @@ export function RemoteChatScreen({ postId, conversationId }: { postId?: string; 
   return <Guard><RemoteChat key={`${postId}:${conversationId}:${serviceSessionEpoch()}`} postId={postId} conversationId={conversationId} /></Guard>;
 }
 function RemoteChat({ postId, conversationId }: { postId?: string; conversationId?: string }) {
-  const app = useApp(), action = useMemberAction();
+  const app = useApp(), action = useMemberAction(), readPort = useMessageReadPort(), readSession = useServiceSession();
   const [requestId, setRequestId] = useState(conversationId ?? ""), [input, setInput] = useState("");
-  const [confirmation, setConfirmation] = useState<"leave" | "withdraw" | null>(null);
+  const [confirmation, setConfirmation] = useState<"leave" | "withdraw" | "decline" | null>(null);
   const message = useRef<{ content: string; id: string } | null>(null);
   const conversation = useMemberResource(`chat:${requestId}`, async (s, signal) => requestId ? s.conversation(requestId, signal) : null);
   const messages = useMemberResource(`messages:${requestId}`, async (s, signal) => requestId ? s.messages(requestId, undefined, signal) : { items: [], nextCursor: null });
@@ -125,6 +127,52 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
   const [older, setOlder] = useState<Wire[]>([]), [before, setBefore] = useState<string | null | undefined>();
   const refresh = () => { conversation.reload(); messages.reload(); consent.reload(); setOlder([]); setBefore(undefined); };
   const olderCursor = before === undefined ? messages.data?.nextCursor : before;
+  const visibleIds = useRef(new Set<string>()), acknowledgedIds = useRef(new Set<string>());
+  const readController = useRef<AbortController | null>(null), readGeneration = useRef(0), focused = useRef(false);
+  const viewport = useRef<View | null>(null), messageBodies = useRef(new Map<string, View>()), measurementGeneration = useRef(0);
+  const [readError, setReadError] = useState("");
+  const flushRead = useRef<() => void>(() => {}), readFailed = useRef(false);
+  const cancelRead = useCallback(() => { readGeneration.current++; readController.current?.abort(); readController.current = null; }, []);
+  useEffect(() => {
+    flushRead.current = () => {
+      const targets = [...visibleIds.current].filter(id => !acknowledgedIds.current.has(id)), generation = readGeneration.current;
+      if (readFailed.current || !focused.current || targets.length === 0 || !requestId || !readPort || readController.current) return;
+      const controller = new AbortController(); readController.current = controller;
+      void dispatchVisibleMessages(readPort, requestId, targets, controller.signal).then(receipt => {
+        if (!receipt || controller.signal.aborted || generation !== readGeneration.current || serviceSessionEpoch() !== readSession.epoch) return;
+        receipt.confirmedMessageIds.forEach(id => acknowledgedIds.current.add(id)); setReadError("");
+      }).catch(() => {
+        if (!controller.signal.aborted && generation === readGeneration.current && serviceSessionEpoch() === readSession.epoch) { readFailed.current = true; setReadError("읽음 상태를 저장하지 못했어요. 다시 시도해 주세요."); }
+      }).finally(() => {
+        if (readController.current !== controller) return;
+        readController.current = null;
+        if (targets.every(id => acknowledgedIds.current.has(id))) flushRead.current();
+      });
+    };
+    flushRead.current();
+    return cancelRead;
+  }, [readPort, requestId, readSession.epoch, cancelRead]);
+  useFocusEffect(useCallback(() => {
+    if (!requestId || !readSession.authenticated || serviceSessionEpoch() !== readSession.epoch) return;
+    readGeneration.current++; readFailed.current = false; focused.current = true; acknowledgedIds.current.clear(); visibleIds.current.clear();
+    return () => { focused.current = false; readGeneration.current++; measurementGeneration.current++; readController.current?.abort(); readController.current = null; visibleIds.current.clear(); };
+  }, [requestId, readSession.authenticated, readSession.epoch]));
+  const measureVisibleBodies = useCallback(() => {
+    if (!focused.current) return;
+    const scan = ++measurementGeneration.current, generation = readGeneration.current;
+    viewport.current?.measureInWindow((x, y, width, height) => {
+      if (!focused.current || scan !== measurementGeneration.current || generation !== readGeneration.current) return;
+      const bounds = { x, y, width, height };
+      for (const [id, body] of messageBodies.current) body.measureInWindow((bx, by, bw, bh) => {
+        if (!focused.current || scan !== measurementGeneration.current || generation !== readGeneration.current || messageBodies.current.get(id) !== body) return;
+        if (bodyIntersectsViewport({ x: bx, y: by, width: bw, height: bh }, bounds)) { visibleIds.current.add(id); flushRead.current(); }
+      });
+    });
+  }, []);
+  useEffect(() => {
+    readFailed.current = false; visibleIds.current.clear(); acknowledgedIds.current.clear();
+    measureVisibleBodies();
+  }, [readPort, measureVisibleBodies]);
   const send = () => {
     const content = input.trim(); if (!content || [...content].length > 1000) { app.showToast("메시지는 1~1000자로 입력해 주세요."); return; }
     if (!message.current || message.current.content !== content) message.current = { content, id: Crypto.randomUUID() };
@@ -141,11 +189,15 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
   const expired = !text(consent.data?.expiresAt) || Date.parse(text(consent.data?.expiresAt)) <= app.now;
   const host = conversation.data?.my_role === "author";
   const sendAllowed = requestId ? conversation.data?.can_send === true : Boolean(postId);
-  return <Screen title={text(conversation.data?.post_title) || "1:1 대화"} right={<TextButton onPress={refresh}>새로고침</TextButton>} footer={<View style={{ gap: 8 }}>
+  return <Screen scroll={false} title={text(conversation.data?.post_title) || "1:1 대화"} right={<TextButton onPress={refresh}>새로고침</TextButton>} footer={<View style={{ gap: 8 }}>
     <Field editable={!action.busy} label={requestId ? "메시지" : "첫 메시지"} value={input} onChangeText={setInput} multiline placeholder="함께 하고 싶은 활동을 이야기해 주세요" />
     {!requestId && <Body small muted>첫 메시지가 전송되면 동행 신청이 함께 생성돼요.</Body>}
     <Button disabled={!sendAllowed || !input.trim()} loading={action.busy} onPress={send}>메시지 보내기</Button>
   </View>}>
+    {!readPort && requestId && <Body small muted>개별 메시지 읽음 연결 준비 중이에요.</Body>}
+    <View ref={viewport} collapsable={false} style={{ flex: 1 }} onLayout={measureVisibleBodies}><FlatList data={[...older, ...(messages.data?.items ?? [])]} keyExtractor={row => idOf(row, "messageId")} onScroll={measureVisibleBodies} scrollEventThrottle={16} onContentSizeChange={measureVisibleBodies} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 10, paddingVertical: 16 }}
+      renderItem={({ item: row }) => <Card><View collapsable={false} ref={body => { const id = idOf(row, "messageId"); if (body) messageBodies.current.set(id, body); else messageBodies.current.delete(id); }} onLayout={measureVisibleBodies}><Body>{text(row.content)}</Body></View><Body small muted>{text(row.createdAt)}</Body>{viewer.data && row.senderId !== viewer.data.userId && <RemoteReport targetId={idOf(row, "messageId")} targetType="chat" />}</Card>}
+      ListHeaderComponent={<>
     <Status busy={conversation.busy && Boolean(requestId)} error={conversation.error || messages.error || consent.error} reload={refresh} />
     {pending && <Card><Title>동행 확정 요청</Title><Body>응답 마감 · {text(consent.data?.expiresAt)}</Body>
       <ConsentConditions conditions={consent.data?.conditions} />
@@ -154,15 +206,37 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
           <TextButton onPress={() => void action.run((s, signal) => s.requestAction(requestId, "consent/decline", version, signal), refresh)}>확정 요청 거절</TextButton></>}
     </Card>}
     {host && !pending && conversation.data?.request_status === "pending" && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "propose", undefined, signal), refresh)}>동행 확정 요청 보내기</Button>}
-    {[...older, ...(messages.data?.items ?? [])].map(row => <Card key={idOf(row, "messageId")}><Body>{text(row.content)}</Body><Body small muted>{text(row.createdAt)}</Body>{viewer.data && row.senderId !== viewer.data.userId && <RemoteReport targetId={idOf(row, "messageId")} targetType="chat" />}</Card>)}
+    {host && !pending && conversation.data?.request_status === "pending" && <TextButton onPress={() => setConfirmation("decline")}>신청 거절</TextButton>}
+    </>} ListFooterComponent={<>
+    {readError && <><Body muted>{readError}</Body><TextButton onPress={() => { readFailed.current = false; flushRead.current(); }}>읽음 다시 시도</TextButton></>}
     {olderCursor && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.messages(requestId, olderCursor, signal), page => { setOlder(items => [...page.items, ...items]); setBefore(page.nextCursor); })}>이전 메시지 보기</Button>}
     {requestId && <Row><TextButton onPress={() => setConfirmation("leave")}>대화방 나가기</TextButton>{!host && <TextButton onPress={() => setConfirmation("withdraw")}>신청 철회</TextButton>}</Row>}
     {text(conversation.data?.appointment_id) && <Button secondary onPress={() => app.navigate("S16", text(conversation.data?.appointment_id))}>확정 약속 보기</Button>}
-    {confirmation && <Card><Title>{confirmation === "leave" ? "내 목록에서 이 대화를 숨길까요?" : "동행 신청을 철회할까요?"}</Title><Body muted>{confirmation === "leave" ? "약속은 취소되지 않고 상대의 대화방은 유지돼요." : "이미 확정된 동행은 약속에서 별도로 취소해야 해요."}</Body>
-      <Button loading={action.busy} onPress={() => void action.run((s, signal) => confirmation === "leave" ? s.leave(requestId, signal) : s.requestAction(requestId, "withdraw", undefined, signal), () => { setConfirmation(null); app.navigate("S10"); })}>확인</Button><TextButton onPress={() => setConfirmation(null)}>계속 대화하기</TextButton></Card>}
+    {confirmation && <Card><Title>{confirmation === "leave" ? "내 목록에서 이 대화를 숨길까요?" : confirmation === "decline" ? "이 동행 신청을 거절할까요?" : "동행 신청을 철회할까요?"}</Title><Body muted>{confirmation === "leave" ? "약속은 취소되지 않고 상대의 대화방은 유지돼요." : confirmation === "decline" ? "거절 후 상대는 이 공고에 다시 신청할 수 없어요." : "이미 확정된 동행은 약속에서 별도로 취소해야 해요."}</Body>
+      <Button loading={action.busy} onPress={() => void action.run((s, signal) => confirmation === "leave" ? s.leave(requestId, signal) : s.requestAction(requestId, confirmation === "decline" ? "decline" : "withdraw", undefined, signal), () => { setConfirmation(null); app.navigate("S10"); })}>확인</Button><TextButton onPress={() => setConfirmation(null)}>계속 대화하기</TextButton></Card>}
     {host && text(conversation.data?.post_id) && <RemotePostManagement postId={text(conversation.data?.post_id)} onChanged={refresh} />}
     <Status busy={action.busy} error={action.error} />
+    </>} /></View>
   </Screen>;
+}
+
+export function RemoteAccountHeader() {
+  const app = useApp(), profile = useMemberResource("header-profile", (s, signal) => s.profile(signal));
+  return <Row><Body small>{profile.data?.realName ?? (profile.error ? "내 정보 확인 필요" : "내 정보 확인 중")}</Body><TextButton onPress={() => app.navigate("S12")}>알림</TextButton></Row>;
+}
+export function RemoteUpcomingAppointments() {
+  const app = useApp(), appointments = useMemberResource("home-appointments", (s, signal) => s.appointments(signal));
+  const upcoming = appointments.data?.filter(row => {
+    const now = observedServerTime(row, appointments.observedAt, app.now);
+    return row.status === "confirmed" && Number.isFinite(Date.parse(text(row.post_ends_at))) && (now === null || Date.parse(text(row.post_ends_at)) > now);
+  }).sort((a, b) => Date.parse(text(a.post_starts_at)) - Date.parse(text(b.post_starts_at)));
+  return <><Status {...appointments} />{upcoming?.map(row => {
+    const now = observedServerTime(row, appointments.observedAt, app.now), start = Date.parse(text(row.post_starts_at));
+    const countdown = now === null || !Number.isFinite(start) ? "남은 일정은 서버 시각 확인 후 표시해요." : start <= now ? "진행 중" : `D-${Math.max(0, Math.ceil((start - now) / 86_400_000))}`;
+    const end = Date.parse(text(row.post_ends_at));
+    const scheduleLabel = !Number.isFinite(start) || !Number.isFinite(end) ? "일정 확인 필요" : dateLabel(start) === dateLabel(end) ? rangeLabel(start, end) : `${dateLabel(start)} ${timeLabel(start)} ~ ${dateLabel(end)} ${timeLabel(end)}`;
+    return <Card key={text(row.appointment_id)} onPress={() => app.navigate("S16", text(row.appointment_id))}><Title>{text(row.post_title)}</Title><Body>동행 확정 · {countdown}</Body><Body>{scheduleLabel}</Body><Body>{text(row.post_public_area)}</Body></Card>;
+  })}{upcoming?.length === 0 && <Body muted>다가오는 확정 약속이 없어요.</Body>}</>;
 }
 
 export function RemoteMeScreen() { return <Guard><RemoteMe /></Guard>; }
@@ -170,15 +244,29 @@ function RemoteMe() {
   const app = useApp(), profile = useMemberResource("me", (s, signal) => s.profile(signal)), appointments = useMemberResource("appointments", (s, signal) => s.appointments(signal));
   return <Screen title="마이페이지" tab right={<TextButton onPress={() => { profile.reload(); appointments.reload(); }}>새로고침</TextButton>}>
     <Status {...profile} />
-    {profile.data && <Card><Title>{profile.data.realName} 님</Title><Body>나의 당도 · {profile.data.sweetness}</Body><Body muted>{profile.data.bio || "소개를 작성해 보세요"}</Body></Card>}
+    {profile.data && <Card><Title>{profile.data.realName} 님</Title><Body>나의 당도 · {profile.data.sweetness}</Body><Body muted>{profile.data.bio || "소개를 작성해 보세요"}</Body><TextButton onPress={() => app.navigate("S14", profile.data!.userId)}>내 공개 프로필·후기 보기</TextButton></Card>}
     <Row><Button secondary onPress={() => app.navigate("S15")}>대표 사진</Button><Button secondary onPress={() => app.navigate("S15-2")}>취향·성향</Button></Row>
     <Title>내 약속</Title><Status {...appointments} />
     {appointments.data?.map(row => <Card key={idOf(row, "appointment_id")} onPress={() => app.navigate("S16", idOf(row, "appointment_id"))}><Title>{text(row.post_title)}</Title><Body>{statusLabel(row.status)}</Body><Body>{text(row.post_starts_at)}</Body></Card>)}
     {appointments.data?.length === 0 && <Body muted>확정된 약속이 없어요.</Body>}
+    <RemoteOwnPosts />
     <RemoteRequestList />
     <Button secondary onPress={() => app.navigate("S12")}>알림</Button>
     <Button secondary onPress={() => app.navigate("S21")}>계정·AI 처리·차단 관리</Button>
   </Screen>;
+}
+function RemoteOwnPosts() {
+  const app = useApp(), action = useMemberAction();
+  const page = useMemberResource("own-posts", (s, signal) => s.ownPosts(undefined, signal));
+  const [pagination, setPagination] = useState<{ source: typeof page.data; extra: Wire[]; cursor: string | null }>({ source: null, extra: [], cursor: null });
+  const extra = pagination.source === page.data ? pagination.extra : [];
+  const next = pagination.source === page.data ? pagination.cursor : page.data?.nextCursor;
+  return <View style={{ gap: 10 }}><Title>내 공고</Title><Status {...page} />
+    {(page.data ? [...page.data.items, ...extra] : []).map(row => <View key={text(row.postId)}><Card onPress={() => app.navigate("S02", text(row.postId))}><Title>{text(row.title)}</Title><Body>{statusLabel(row.status)}</Body></Card><RemotePostManagement postId={text(row.postId)} verifiedOwner onChanged={page.reload} /></View>)}
+    {page.data?.items.length === 0 && <Body muted>작성한 공고가 없어요.</Body>}
+    {next && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.ownPosts(next, signal), result => { setPagination({ source: page.data, extra: [...extra, ...result.items], cursor: result.nextCursor }); })}>내 공고 더 보기</Button>}
+    <Status error={action.error} />
+  </View>;
 }
 function RemoteRequestList() {
   const app = useApp(), [direction, setDirection] = useState<"sent" | "received">("sent");
@@ -188,12 +276,12 @@ function RemoteRequestList() {
   </View>;
 }
 
-/** Only a current server-owned author conversation establishes this management entry. */
-export function RemotePostManagement({ postId, onChanged }: { postId: string; onChanged?: () => void }) {
+/** Verified member-owned posts allow management before the first application. */
+export function RemotePostManagement({ postId, onChanged, verifiedOwner = false }: { postId: string; onChanged?: () => void; verifiedOwner?: boolean }) {
   const app = useApp(), action = useMemberAction();
-  const ownership = useMemberResource(`post-owner:${postId}`, (s, signal) => s.conversations(signal));
+  const ownership = useMemberResource(`post-owner:${postId}`, (s, signal) => verifiedOwner ? Promise.resolve(true) : s.ownsPost(postId, signal));
   const [choice, setChoice] = useState<"close" | "delete" | "reopen" | null>(null);
-  if (!ownership.data?.some(row => row.my_role === "author" && row.post_id === postId)) return null;
+  if (ownership.data !== true) return null;
   return <Card><Title>내 공고 관리</Title><Button secondary onPress={() => app.navigate("S03", `edit:${postId}`)}>공고 수정</Button>
     <Row><TextButton onPress={() => setChoice("close")}>모집 종료</TextButton><TextButton onPress={() => setChoice("reopen")}>모집 재개</TextButton><TextButton onPress={() => setChoice("delete")}>공고 삭제</TextButton></Row>
     {choice && <><Body>{choice === "delete" ? "공고를 삭제할까요? 기존 약속은 서버 정책에 따라 보호돼요." : choice === "close" ? "신규 신청을 받지 않도록 모집을 종료할까요?" : "이 공고의 모집을 다시 시작할까요? 서버에서 재개 조건을 확인해요."}</Body><Button loading={action.busy} onPress={() => void action.run((s, signal) => s.postAction(postId, choice, signal), () => { setChoice(null); onChanged?.(); app.showToast("공고 상태를 변경했어요."); })}>변경 확인</Button><TextButton onPress={() => setChoice(null)}>취소</TextButton></>}
@@ -221,8 +309,7 @@ export function RemotePostEditor({ id }: { id: string }) { return <Guard><PostEd
 function PostEditor({ id }: { id: string }) {
   const app = useApp(), publicService = useService(), action = useMemberAction();
   const source = useMemberResource(`post-edit:${id}`, async (s, signal) => {
-    const conversations = await s.conversations(signal);
-    if (!conversations.some(row => row.my_role === "author" && row.post_id === id) || !publicService) throw new ApiError(403, "POST_OWNERSHIP_NOT_VERIFIED");
+    if (!await s.ownsPost(id, signal) || !publicService) throw new ApiError(403, "POST_OWNERSHIP_NOT_VERIFIED");
     const post = await publicService.getPost(id, signal);
     if (!post.privateDetails) throw new ApiError(403, "POST_OWNERSHIP_NOT_VERIFIED");
     return post;
@@ -252,6 +339,7 @@ function RemoteAppointment({ id }: { id: string }) {
   const proposal = schedule.data?.change, pending = proposal?.status === "awaiting_response";
   const peerProposal = pending && proposal?.requestedByMe === false;
   const expired = Date.parse(text(proposal?.expiresAt)) <= app.now;
+  const cancellationGate = appointmentCancellationGate(detail.data, detail.observedAt, app.now);
   return <Screen title="약속 상세" right={<TextButton onPress={refresh}>새로고침</TextButton>}>
     <Status busy={detail.busy || schedule.busy} error={detail.error || schedule.error} reload={refresh} />
     {detail.data && <><Card><Title>{text(detail.data.post_title)}</Title><Body>{statusLabel(detail.data.status)}</Body>
@@ -260,7 +348,7 @@ function RemoteAppointment({ id }: { id: string }) {
       <Button disabled={detail.data.can_confirm_completion !== true} loading={action.busy} onPress={() => void action.run((s, signal) => s.confirmCompletion(id, signal), () => { refresh(); app.showToast("본인 완료 확인을 기록했어요."); })}>본인 동행 완료 확인</Button>
       <Body small muted>예상 종료 후 본인 확인을 하면 후기를 먼저 작성할 수 있어요. 공개는 실제 완료 후 후기 조건에 따라 처리돼요.</Body>
       <Button secondary onPress={() => app.navigate("S17", id)}>후기 작성·공개 상태 확인</Button>
-      {detail.data.status === "confirmed" && <><Button secondary onPress={() => { setStart(schedule.data?.startsAt ?? ""); setEnd(schedule.data?.endsAt ?? ""); setEditing(!editing); }}>일정·장소 변경 제안</Button><Button secondary onPress={() => app.navigate("S18", `appointment:${id}`)}>약속 취소·신고</Button></>}
+      {detail.data.status === "confirmed" && <><Button secondary onPress={() => { setStart(schedule.data?.startsAt ?? ""); setEnd(schedule.data?.endsAt ?? ""); setEditing(!editing); }}>일정·장소 변경 제안</Button><Button secondary onPress={() => app.navigate("S18", `appointment:${id}`)}>{cancellationGate === "before_start" ? "시작 전 취소·신고" : cancellationGate === "started" ? "중단·불발 신고" : "취소 가능 상태 확인·신고"}</Button></>}
     </>}
     {pending && <Card><Title>변경 제안</Title><Body>응답 마감 · {text(proposal?.expiresAt)}</Body><Body>{text((proposal?.newSchedule as Wire | undefined)?.startsAt)} ~ {text((proposal?.newSchedule as Wire | undefined)?.endsAt)}</Body>
       {proposal?.locationChanged === true && proposal.newLocation !== null && <Body>{text((proposal.newLocation as Wire).registeredAddress)} · {text((proposal.newLocation as Wire).meetingDetail)}</Body>}
@@ -302,11 +390,16 @@ function RemoteCancel({ id }: { id: string }) {
   const app = useApp(), action = useMemberAction(), [reason, setReason] = useState(""), [checked, setChecked] = useState(false);
   const cancellation = useIntentId();
   const appointmentId = id.startsWith("appointment:") ? id.slice(12) : "";
+  const detail = useMemberResource(`cancel-state:${appointmentId}`, (s, signal) => appointmentId ? s.appointment(appointmentId, signal) : Promise.resolve(null));
+  const gate = appointmentCancellationGate(detail.data, detail.observedAt, app.now);
   return <Screen title="동행 취소·신고">{appointmentId ? <>
+    <Status {...detail} />
     <Body>취소와 신고는 별도로 처리돼요. 노쇼나 위협이 있었다면 신고 내용을 남겨 주세요.</Body>
-    <Field editable={!action.busy} label="취소 사유" value={reason} onChangeText={setReason} multiline />
-    <Chip selected={checked} onPress={() => setChecked(!checked)}>확정 약속을 취소하는 데 동의해요</Chip>
-    <Button disabled={!reason.trim() || !checked} loading={action.busy} onPress={() => { const currentReason = reason.trim(), cancellationId = cancellation({ appointmentId, reason: currentReason }); void action.run((s, signal) => s.cancel(appointmentId, cancellationId, currentReason, signal), () => { app.showToast("약속을 취소했어요."); app.navigate("S16", appointmentId); }); }}>약속 취소</Button>
+    {gate === "before_start" ? <>
+      <Field editable={!action.busy} label="취소 사유" value={reason} onChangeText={setReason} multiline />
+      <Chip selected={checked} onPress={() => setChecked(!checked)}>확정 약속을 취소하는 데 동의해요</Chip>
+      <Button disabled={!reason.trim() || !checked} loading={action.busy} onPress={() => { if (appointmentCancellationGate(detail.data, detail.observedAt, Date.now()) !== "before_start") { detail.reload(); app.showToast("시작 전 취소 가능 상태를 다시 확인해 주세요."); return; } const currentReason = reason.trim(), cancellationId = cancellation({ appointmentId, reason: currentReason }); void action.run((s, signal) => s.cancel(appointmentId, cancellationId, currentReason, signal), () => { app.showToast("약속을 취소했어요."); app.navigate("S16", appointmentId); }); }}>약속 취소</Button>
+    </> : <Body muted>{gate === "started" ? "시작 이후에는 일방 취소 대신 중단·불발 신고를 접수해 주세요." : "시작 전 취소 가능 상태를 확인하지 못했어요. 상태를 다시 확인해 주세요."}</Body>}
     <RemoteReport targetType="appointment" targetId={appointmentId} />
   </> : <Body muted>약속 상세에서 취소할 동행을 선택해 주세요.</Body>}<Status error={action.error} /></Screen>;
 }

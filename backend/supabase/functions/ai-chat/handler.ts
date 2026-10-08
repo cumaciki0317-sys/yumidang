@@ -45,6 +45,8 @@ export interface AiChatHandlerDependencies {
   requestGate?: AiChatRequestGate;
   /** 별도 모델/일일 차감 없이 최소 평가·신고 포트만 호출한다. */
   feedback?: AiFeedbackPort;
+  /** 최종 개인정보 검사 후 서버 scope만 기록한다. 원문·응답 본문은 전달하지 않는다. */
+  recordResultAvailable?(scope: MemberModelRequest): Promise<void>;
   openSession(principal: AiChatPrincipal, model: ModelPort): AiChatSession;
 }
 
@@ -58,6 +60,16 @@ function readChatInput(body: JsonValue): ChatInput {
   if (typeof body.clientRequestId !== "string" || !body.clientRequestId.trim() || body.clientRequestId.length > 128 ||
     !Array.isArray(body.messages) || (body.outputRetryOf !== undefined && (typeof body.outputRetryOf !== "string" || !/^[0-9a-f-]{36}$/i.test(body.outputRetryOf)))) throw new HttpError("INVALID_REQUEST");
   return body as unknown as ChatInput;
+}
+
+/** 서버가 만든 요청 식별자 하나만 별도 검증한다. 카드·모델 출력·입력 식별자는 검사에서 제외하지 않는다. */
+export function aiChatPrivacyOutput(result: AiChatResult, serverRequestId: string): Omit<AiChatResult, "requestId"> {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(serverRequestId) || result.requestId !== serverRequestId || !uuid.test(result.requestId)) {
+    throw new HttpError("INTERNAL_ERROR");
+  }
+  const { requestId: _serverRequestId, ...privacyOutput } = result;
+  return privacyOutput;
 }
 
 export function createAiChatHandler(deps: AiChatHandlerDependencies) {
@@ -174,8 +186,9 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
         outcome = "output_privacy";
         result.recovery.retryAllowed = input.outputRetryOf === undefined;
       }
+      const privacyOutput = aiChatPrivacyOutput(result, context.requestId);
       if (deps.engine.status === "ready" && deps.engine.privacy) {
-        try { await assertPrivacy(result, deps.engine.privacy, "output"); }
+        try { await assertPrivacy(privacyOutput, deps.engine.privacy, "output"); }
         catch (error) {
           if (!(error instanceof AiPrivacyError)) throw error;
           outcome = "output_privacy";
@@ -184,8 +197,20 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
             recovery: { reason: "output_privacy", retryAllowed: input.outputRetryOf === undefined } };
         }
       }
-      // 재시도 상태 기록·점유 해제 성공을 확인하고 응답한다. DB 실패를 완료로 숨기지 않는다.
-      if (scope && deps.requestGate) { await deps.requestGate.finish(scope, outcome); scope = undefined; }
+      // 취소·점유 시간 초과는 정상 결과나 결과 준비 증거로 반환하지 않는다.
+      controller.signal.throwIfAborted();
+      if (scope && ["results", "no_results", "needs_clarification"].includes(result.status)) {
+        if (!deps.recordResultAvailable) throw new HttpError("EXTERNAL_UNAVAILABLE");
+        await deps.recordResultAvailable(scope);
+        controller.signal.throwIfAborted();
+      }
+      // finish 응답 유실을 finally에서 중복 호출하지 않는다. DB 점유 만료가 복구한다.
+      if (scope && deps.requestGate) {
+        const finishing = scope;
+        scope = undefined;
+        await deps.requestGate.finish(finishing, outcome);
+      }
+      controller.signal.throwIfAborted();
       metricResult = result.status === "results" ? "SUCCESS" : result.status === "no_results" ? "EMPTY" :
         result.status === "needs_clarification" ? "NEEDS_CLARIFICATION" : result.recovery?.reason === "output_privacy" ? "FORBIDDEN" : "UNAVAILABLE";
       return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);

@@ -1,11 +1,13 @@
-import { serviceMode, serviceConfigurationError } from "../remote";
-import React from "react";
+import React, { useEffect, useSyncExternalStore } from "react";
+import { subscribeWebMemberConfiguration, webMemberConfiguration } from "../web-member-connection";
+import { serviceMode, serviceConfigurationError, installWebMemberConnection, installMemberSessionDetails, installMemberSessionPort, installPhotoStoragePort, installMemberReportCaptureUpload, serviceSessionEpoch, useMemberPorts } from "../remote";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AppProvider, useApp } from "../state";
 import { colors } from "../ui";
+
 
 function Frame() {
   const app = useApp();
@@ -78,9 +80,31 @@ function Frame() {
     </View>
   );
 }
+function MemberConnection() {
+  const options = useSyncExternalStore(subscribeWebMemberConfiguration, webMemberConfiguration, () => null);
+  const ports = useMemberPorts();
+  useEffect(() => {
+    if (Platform.OS !== "web" || !serviceMode || !options) return;
+    try { installWebMemberConnection(options); }
+    catch { installMemberSessionPort(null); installPhotoStoragePort(null); installMemberReportCaptureUpload(null); }
+    return () => { installMemberSessionPort(null); installPhotoStoragePort(null); installMemberReportCaptureUpload(null); };
+  }, [options]);
+  useEffect(() => {
+    if (!ports.session) return;
+    const controller = new AbortController(), epoch = serviceSessionEpoch();
+    void ports.session.restore(controller.signal).then(details => {
+      if (!controller.signal.aborted && serviceSessionEpoch() === epoch) installMemberSessionDetails(details);
+    }).catch(() => {
+      if (!controller.signal.aborted && serviceSessionEpoch() === epoch) installMemberSessionDetails(null);
+    });
+    return () => controller.abort();
+  }, [ports.session]);
+  return null;
+}
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+      <MemberConnection />
       <AppProvider>
         <View style={{ flex: 1, backgroundColor: "#EEEAF5" }}>
           <Frame />

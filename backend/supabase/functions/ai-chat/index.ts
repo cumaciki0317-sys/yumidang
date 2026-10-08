@@ -7,8 +7,10 @@ import { loadRuntimeConfig, type EnvReader } from "../_shared/config/env.ts";
 import { requirePrincipal } from "../_shared/auth/principal.ts";
 import { createUserClient } from "../_shared/db/user-client.ts";
 import { createInternalClient } from "../_shared/db/internal-client.ts";
+import { createAiReportEvidenceHandling, recordAiResultAvailable } from "../_shared/db/ai-feedback-client.ts";
 import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
 import { createRpcAiFeedback, type ReportEvidenceHandlingPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
+import type { MemberModelRequest } from "../_shared/ai/providers/model-port.ts";
 import type { AiFeedbackPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
 import { createRpcAiChatRequestGate } from "../_shared/ai/providers/member-request.ts";
 import type { MetricsRecorder } from "../_shared/observability/metrics.ts";
@@ -41,7 +43,12 @@ export function createAiChatRuntime(read: EnvReader, fetchImpl: FetchLike = fetc
   const config = loadRuntimeConfig(read);
   let engine: AiChatEngine;
   let feedback: AiFeedbackPort | undefined;
-  try { feedback = createRpcAiFeedback(createInternalClient(config, fetchImpl), options.reportEvidenceHandling); }
+  let recordResultAvailable: ((scope: MemberModelRequest) => Promise<void>) | undefined;
+  try {
+    const feedbackDb = createInternalClient(config, fetchImpl);
+    feedback = createRpcAiFeedback(feedbackDb, options.reportEvidenceHandling ?? createAiReportEvidenceHandling(feedbackDb));
+    recordResultAvailable = (scope) => recordAiResultAvailable(feedbackDb, scope);
+  }
   catch { /* 내부 저장 연결 전에는 helpful/report 접수 성공으로 표시하지 않는다. */ }
   let requestGate: ReturnType<typeof createRpcAiChatRequestGate> | undefined;
   let discoveryLimits: ReturnType<typeof loadAiChatSettings>["discovery"] | undefined;
@@ -66,6 +73,7 @@ export function createAiChatRuntime(read: EnvReader, fetchImpl: FetchLike = fetc
     engine,
     requestGate,
     feedback,
+    recordResultAvailable,
     openSession: (principal, model) => {
       // 검색·성향 조회는 요청 회원 JWT로만 실행한다(RLS·auth.uid() 유지). service role을 쓰지 않는다.
       const db = createUserClient(config, principal as Parameters<typeof createUserClient>[1], fetchImpl);

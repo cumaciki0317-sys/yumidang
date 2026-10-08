@@ -4,7 +4,7 @@
 import { pathToFileURL } from "node:url";
 import { X509Certificate } from "node:crypto";
 import { createSecureContext } from "node:tls";
-import { createBackgroundQueueScheduler, createSharedBackgroundQueueScheduler } from "../_shared/jobs/background.mjs";
+import { createBackgroundQueueScheduler, createSharedBackgroundQueueScheduler, createDueMaintenanceGroup, QUEUE_KINDS } from "../_shared/jobs/background.mjs";
 const CHANNEL = "yumidang_worker_jobs";
 const QUEUE_ROLE = "yumidang_worker_queue";
 export const QUEUE_RUNNER_RPCS = [
@@ -12,6 +12,26 @@ export const QUEUE_RUNNER_RPCS = [
   "acquire_worker_run",
   "release_worker_run",
 ];
+
+/** 실제 DB 포트+기존 종류 소비자가 모두 제공된 경우만 5종/helpful runtime을 조립한다.
+ * CLI가 계약/자격증명/영속 journal을 자동 생성하지 않는다. HTTP 구 worker 대체 경로도 없다.
+ */
+export function createSharedQueueRuntime({ schedule, contracts, maintenanceProviders, invokeSafety, invokeExisting, supportedKinds = QUEUE_KINDS, elapsed }) {
+  if (typeof schedule !== "function" || typeof invokeSafety !== "function" || typeof invokeExisting !== "function" ||
+    !contracts?.decisionId?.trim() || typeof contracts.readBudget !== "function" ||
+    ["hasPending", "begin", "confirm", "unknown"].some(k => typeof contracts.journal?.[k] !== "function") ||
+    !Array.isArray(supportedKinds) || !supportedKinds.length || new Set(supportedKinds).size !== supportedKinds.length || supportedKinds.some(k => !QUEUE_KINDS.includes(k))) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
+  const maintenance = createDueMaintenanceGroup(maintenanceProviders, elapsed);
+  return Object.freeze({ schedule, invokeSafety, invokeExisting, supportedKinds: Object.freeze([...supportedKinds]),
+    contracts: Object.freeze({ ...contracts, maintenance,
+      unitsFor(kind, result) {
+        if (kind === null) return result.processedItems;
+        if (result.status === "not_enabled") return 0;
+        return ["cancellation_safety", "report_retention"].includes(kind) ? result.counts.processedItems : result.counts.claimed;
+      },
+    }),
+  });
+}
 
 export function readQueueRunnerConfig(env) {
   let db, url;
@@ -258,6 +278,7 @@ export function startQueueRunner(
         if (sharedRuntime) {
           schedulerOptions.repository.schedule = sharedRuntime.schedule;
           schedulerOptions.contracts = sharedRuntime.contracts;
+          if (sharedRuntime.supportedKinds) schedulerOptions.supportedKinds = sharedRuntime.supportedKinds;
           schedulerOptions.queryTimeoutMs = config.queryTimeoutMs;
           // 구 HTTP worker는 현재 공유 limit/signal을 소비하지 않는다. 해당 소비자 어댑터도 명시 제공해야 한다.
           schedulerOptions.invoke = (token, kind, options) =>

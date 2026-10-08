@@ -141,6 +141,22 @@ function cancellationAppeal(value: unknown, appointmentId: string, revision?: nu
   if (submit) { bool(r.alreadyApplied); uuid(r.reportId); if (r.resultRevision !== revision! + 1 || r.state !== "reviewing") return fail(); }
   return r as unknown as CancellationAppeal;
 }
+/** Server time plus elapsed time since the response arrived; missing server time stays unknown. */
+export function observedServerTime(row: Wire | null, observedAt: number | undefined, now: number): number | null {
+  if (!row || !Number.isFinite(observedAt) || !Number.isFinite(now)) return null;
+  try { return Date.parse(timestamp(row.server_now)) + Math.max(0, now - observedAt!); } catch { return null; }
+}
+export function appointmentCancellationGate(row: Wire | null, observedAt: number | undefined, now: number): "before_start" | "started" | "unavailable" {
+  if (!row || row.status !== "confirmed") return "unavailable";
+  const serverTime = observedServerTime(row, observedAt, now);
+  try { return serverTime === null ? "unavailable" : serverTime < Date.parse(timestamp(row.post_starts_at)) ? "before_start" : "started"; } catch { return "unavailable"; }
+}
+function readState(r: Wire): Wire {
+  if (r.last_read_message_id !== null) uuid(r.last_read_message_id);
+  if (r.read_at !== null) timestamp(r.read_at);
+  if (!Number.isSafeInteger(r.unread_count) || (r.unread_count as number) < 0) return fail();
+  return r;
+}
 export class MemberService {
   private readonly client: ServiceApiClient;
   constructor(client: ServiceApiClient) { this.client = client; }
@@ -163,8 +179,28 @@ export class MemberService {
     if (r.avatar_url !== path) return fail();
     return { avatarPath: string(r.avatar_url), previousPath: nullableString(r.previous_avatar_path) };
   }
-  async conversations(signal?: AbortSignal) { return rows(await this.read("/conversations", signal)).map(r => { uuid(r.request_id); string(r.post_title); string(r.counterpart_masked_name); nullableString(r.last_message); return r; }); }
-  async conversation(id: string, signal?: AbortSignal) { const r = one(await this.read(`/conversations/${uuid(id)}`, signal)); if (r.request_id !== id) return fail(); bool(r.can_send); string(r.my_role); string(r.post_title); return r; }
+  async conversations(signal?: AbortSignal) { return rows(await this.read("/conversations", signal)).map(r => { uuid(r.request_id); string(r.post_title); string(r.counterpart_masked_name); nullableString(r.last_message); return readState(r); }); }
+  async conversation(id: string, signal?: AbortSignal) { const r = one(await this.read(`/conversations/${uuid(id)}`, signal)); if (r.request_id !== id) return fail(); bool(r.can_send); string(r.my_role); string(r.post_title); return readState(r); }
+  async markRead(id: string, messageId: string, signal?: AbortSignal) {
+    const r = fields(await this.send(`/conversations/${uuid(id)}/read`, { lastReadMessageId: uuid(messageId) }, signal), ["request_id", "last_read_message_id", "read_at", "unread_count"]);
+    if (r.request_id !== id) return fail();
+    return readState(r);
+  }
+  async ownPosts(before?: string, signal?: AbortSignal): Promise<MemberPage> {
+    const page = await this.page(`/me/posts?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal);
+    for (const row of page.items) { uuid(row.postId); string(row.title); timestamp(row.createdAt); if (row.isOwner !== true) return fail(); }
+    return page;
+  }
+  async ownsPost(id: string, signal?: AbortSignal): Promise<boolean> {
+    uuid(id); let before: string | undefined; const seen = new Set<string>();
+    do {
+      const page = await this.ownPosts(before, signal);
+      if (page.items.some(row => row.postId === id)) return true;
+      if (!page.nextCursor) return false;
+      if (seen.has(page.nextCursor)) return fail();
+      seen.add(page.nextCursor); before = page.nextCursor;
+    } while (true);
+  }
   async messages(id: string, before?: string, signal?: AbortSignal): Promise<MemberPage> {
     const r = fields(await this.read(`/conversations/${uuid(id)}/messages?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal), ["items", "nextCursor"]);
     const items = rows(r.items).map(m => { uuid(m.messageId); uuid(m.senderId); string(m.content); timestamp(m.createdAt); return m; });

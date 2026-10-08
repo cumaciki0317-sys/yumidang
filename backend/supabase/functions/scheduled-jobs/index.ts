@@ -151,3 +151,6 @@ if (import.meta.main) Deno.serve(entrypoint.fetch);
 
 /** 로컬 준비 소비자만 공개. HTTP 경로·운영 기본 등록은 민규 연결 계약 확정 전 추가하지 않는다. */
 export { createSafetyConsumerRegistry, createRpcSafetyConsumerPorts, createSafetyWorkerInvocation } from "../_shared/jobs/safety-consumers.ts";
+
+/** 예약 조회·원자 항목 예약은 민규 실제 계약이 주입될 때만 사용한다. 일일 cron에 등록하지 않는다. */
+export { createAiFeedbackMaintenance } from "../_shared/jobs/ai-feedback-maintenance.ts";

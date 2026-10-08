@@ -609,7 +609,17 @@ export function RemotePostDetail({ id }: { id: string }) {
   );
 }
 
+export function useRemoteEventSource(id?: string) {
+  const service = useService();
+  const page = useRemotePage(`draft-event:${id ?? ""}`, async (_cursor, signal) => {
+    if (!id) return { items: [], nextCursor: null };
+    if (!service) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
+    return { items: [await service.getEvent(id, signal)], nextCursor: null };
+  });
+  return { event: page.items[0], error: page.error, busy: page.busy, retry: page.retry };
+}
 export function RemoteEventDetail({ id }: { id: string }) {
+  const app = useApp(), session = useServiceSession();
   const service = useService();
   const page = useRemotePage(id, async (_cursor, signal) => {
     if (!service) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
@@ -625,6 +635,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
       {event && (
         <Card>
           <Title large>{event.title}</Title>
+          {event.sourceStatus !== "active" && <Body muted>취소된 행사예요. 신규 동행에 연결할 수 없어요.</Body>}
           <Body>{event.placeName ?? "장소 미확인"}</Body>
           <Body>{event.publicAddress ?? ""}</Body>
           <Body>
@@ -650,6 +661,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
           )}
           {event.description && <Body>{event.description}</Body>}
           {event.operatingInfo && <Body>{event.operatingInfo}</Body>}
+          {event.sourceStatus === "active" && event.state !== "ended" ? <Button onPress={() => app.navigate(session.authenticated ? "S03" : "S05", session.authenticated ? `event:${event.id}` : undefined)}>이 행사로 동행 모집하기</Button> : <Body muted>종료·취소 행사는 신규 동행 모집에 연결할 수 없어요.</Body>}
           {event.sourceUrl && (
             <TextButton onPress={() => void Linking.openURL(event.sourceUrl!)}>
               공식 안내 보기
@@ -678,11 +690,7 @@ export function RemoteRankings({ mode }: { mode: "all" | "musical" }) {
           if (!controller.signal.aborted) {
             setValue({
               mode,
-              text: response.status === "available"
-                ? `KOPIS · ${response.period!.start} ~ ${
-                  response.period!.end
-                } · 갱신 ${response.collectedAt}`
-                : "공식 순위가 아직 수신되지 않았어요.",
+              text: "공식 순위는 공급사 확인 후 제공할 예정이에요.",
               items: response.items,
             });
           }
@@ -1030,7 +1038,7 @@ export function RemoteEventListScreen(
       )}
       {selecting && (
         <Body muted>
-          행사 조회를 제공하고 있어요. 작성 저장 연결은 준비 중이에요.
+          공고 작성 화면에서 작성 일정과 겹치는 행사를 선택할 수 있어요.
         </Body>
       )}
       {!past || validPeriod

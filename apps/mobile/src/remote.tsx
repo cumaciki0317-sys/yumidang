@@ -133,3 +133,15 @@ export function useAiReportCaptureUploadEpoch() {
     () => 0,
   );
 }
+
+/** No watermark fallback: unseen earlier messages must remain unread. */
+let messageReadPort: import("./chat-read-state").MessageReadPort | null = null;
+const messageReadListeners = new Set<() => void>();
+export function installMessageReadPort(port: import("./chat-read-state").MessageReadPort | null) {
+  if (messageReadPort === port) return;
+  messageReadPort = port;
+  messageReadListeners.forEach(listener => listener());
+}
+export function useMessageReadPort() {
+  return useSyncExternalStore(listener => { messageReadListeners.add(listener); return () => { messageReadListeners.delete(listener); }; }, () => messageReadPort, () => null);
+}

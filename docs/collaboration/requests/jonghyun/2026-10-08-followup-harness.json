@@ -1,0 +1,63 @@
+{
+  "actor": "jonghyun",
+  "branch": "jonghyun/queue-integration",
+  "baseline": "40f3c1d70f0cf83b87feaaad9939354985758921",
+  "workspace": "/private/tmp/yumidang-jonghyun-implementation-20261007",
+  "scope": "User approved all independent Jonghyun implementation excluding Minkyu dependencies; retain existing holds; no external AI/member data/deployment/commit/push",
+  "lanes": {
+    "coordinator": [
+      "docs/collaboration/requests/jonghyun/2026-10-08-followup-harness.json",
+      "docs/collaboration/requests/jonghyun/2026-10-08-followup-result.md",
+      "docs/collaboration/requests/jonghyun/2026-10-08-followup-common-contracts.md",
+      "backend/contracts/ai-chat.md",
+      "docs/collaboration/jonghyun.md",
+      "tests/integration/jonghyun/20261008-followup-browser.mjs",
+      "docs/collaboration/requests/jonghyun/2026-10-08-independent-result.md",
+      "tests/integration/jonghyun/20261008-independent-browser.mjs"
+    ],
+    "ai": [
+      "backend/supabase/functions/ai-chat/handler.ts",
+      "backend/supabase/functions/ai-chat/index.ts",
+      "backend/supabase/functions/_shared/ai/Agents/chatbot/feedback.ts",
+      "tests/functions/jonghyun/20261008-ai-result-receipt.test.ts",
+      "tests/ai/jonghyun/policy-guards.test.mjs"
+    ],
+    "runner": [
+      "backend/supabase/functions/_shared/jobs/background.mjs",
+      "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
+      "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+      "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
+      "backend/supabase/functions/scheduled-jobs/index.ts",
+      "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+      "tests/functions/jonghyun/20261008-followup-runner.test.mjs",
+      "tests/functions/jonghyun/20261008-followup-safety.test.ts",
+      "tests/functions/jonghyun/20261008-feedback-maintenance.test.ts",
+      "tests/functions/jonghyun/j1-consumers.test.ts"
+    ],
+    "mobile": [
+      "apps/mobile/src/service.ts",
+      "apps/mobile/src/member-service.ts",
+      "apps/mobile/src/screens/RemoteScreens.tsx",
+      "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "apps/mobile/src/screens/RemoteCoreScreens.tsx",
+      "apps/mobile/src/app/_layout.tsx",
+      "apps/mobile/App.tsx",
+      "apps/mobile/src/web-member-connection.ts",
+      "apps/mobile/src/chat-read-state.ts",
+      "apps/mobile/README.md",
+      "tests/functions/jonghyun/20261008-mobile-connections.test.ts",
+      "tests/functions/jonghyun/mobile-service.test.ts",
+      "tests/functions/jonghyun/20261007-integration-mobile.test.ts",
+      "apps/mobile/src/remote.tsx",
+      "apps/mobile/src/screens/BrowseScreens.tsx"
+    ]
+  },
+  "decisions": {
+    "shared20": "processing items; each report attachment purge and metadata cleanup count separately",
+    "feedback": "all normal response types",
+    "helpfulCleanup": "DB due-time reservation",
+    "chatRead": "per-message visible IDs; any actual body exposure; no unseen-history watermark fallback",
+    "privacyRequestId": "validate server-generated result.requestId separately; exclude only that field from final response privacy scan",
+    "integration": "wait for M common ports and isolated environment per request document"
+  }
+}

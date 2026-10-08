@@ -1,8 +1,8 @@
 import RemotePlacePicker from "./RemotePlacePicker";
 import { serviceMode, serviceSessionEpoch, useServiceSession } from "../remote";
-import { RemotePostEditor, useMemberAction } from "./RemoteMemberScreens";
+import { RemoteAccountHeader, RemoteUpcomingAppointments, RemotePostEditor, useMemberAction } from "./RemoteMemberScreens";
 import * as Crypto from "expo-crypto";
-import { RemotePostResults, RemoteEventResults, RemotePostDetail, RemoteEventDetail, RemoteRankings, RemoteEventListScreen, RemoteEventPicker } from "./RemoteScreens";
+import { RemotePostResults, RemoteEventResults, RemotePostDetail, RemoteEventDetail, RemoteRankings, RemoteEventListScreen, RemoteEventPicker, useRemoteEventSource } from "./RemoteScreens";
 import React, { useMemo, useRef, useState } from "react";
 import {
   Linking,
@@ -211,7 +211,7 @@ function ConfirmCard({
 function AccountHeader() {
   const app = useApp();
   const session = useServiceSession();
-  if (serviceMode && session.authenticated) return <Body small>로그인됨</Body>;
+  if (serviceMode && session.authenticated) return <RemoteAccountHeader />;
   return app.member ? (
     <Row>
       <Body small style={{ fontWeight: "700" }}>
@@ -339,10 +339,10 @@ export function HomeScreen() {
         </Section>
         <Section
           title="다가오는 약속"
-          action={app.member ? "나의 동행" : undefined}
+          action={app.member || (serviceMode && session.authenticated) ? "나의 동행" : undefined}
           onPress={() => app.navigate("S13", "activity")}
         >
-          {serviceMode && session.authenticated ? <Card><Body muted>약속 정보 연결을 준비 중이에요.</Body></Card> : !app.member ? (
+          {serviceMode && session.authenticated ? <RemoteUpcomingAppointments /> : !app.member ? (
             <Card style={{ backgroundColor: colors.lavender }}>
               <Body muted>로그인하면 다가오는 약속을 확인할 수 있어요.</Body>
               <TextButton onPress={() => app.navigate("S05")}>
@@ -1693,7 +1693,8 @@ function CreateForm({ id }: { id?: string }) {
   const [placeMode, setPlaceMode] = useState<"장소명" | "주소">("장소명");
   const [restoredDraft, setRestoredDraft] = useState(continuing);
   const [saving, setSaving] = useState(false);
-  const event = serviceMode ? (liveEvent?.id === draft.eventId ? liveEvent : undefined) : app.events.find((e) => e.id === draft.eventId);
+  const eventSource = useRemoteEventSource(serviceMode ? draft.eventId : undefined);
+  const event = serviceMode ? (liveEvent?.id === draft.eventId ? liveEvent : eventSource.event) : app.events.find((e) => e.id === draft.eventId);
   const change = (patch: Partial<Draft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
     setErrors({});
@@ -1955,7 +1956,8 @@ function CreateForm({ id }: { id?: string }) {
             연결할 행사 선택하기
           </Button>
         )}
-        {serviceMode && liveEvent?.placeName && <TextButton onPress={() => { setPlaceQuery(liveEvent.placeName!); setPlaceOpen(true); }}>행사장을 장소 후보로 찾기</TextButton>}
+        {serviceMode && event?.placeName && <TextButton onPress={() => { setPlaceQuery(event.placeName!); setPlaceOpen(true); }}>행사장을 장소 후보로 찾기</TextButton>}
+        {serviceMode && eventSource.error && <><Body muted>연결된 행사 정보를 확인하지 못했어요.</Body><TextButton onPress={eventSource.retry}>행사 다시 확인</TextButton></>}
         <Body small muted>
           행사 선택은 작성 중인 동행 일정을 바꾸지 않아요.
         </Body>
@@ -2137,7 +2139,8 @@ function PublishForm() {
   const [submitting, setSubmitting] = useState(false);
   const [checked, setChecked] = useState(false);
   const [leave, setLeave] = useState(false);
-  const event = app.events.find((e) => e.id === draft.eventId);
+  const eventSource = useRemoteEventSource(serviceMode ? draft.eventId : undefined);
+  const event = serviceMode ? eventSource.event : app.events.find((e) => e.id === draft.eventId);
   const change = (patch: Partial<Draft>) => {
     setDraft((prev) => ({ ...prev, ...patch }));
     setErrors({});

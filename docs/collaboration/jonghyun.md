@@ -1,3 +1,21 @@
+# 2026-10-08 민규 의존 제외 독립 구현 완료
+
+사용자 최신 요청에 따라 기존 독립 clone에서 누락을 재감사하고 홈·작성자 거절·대화 상태·내 공개 프로필·행사 기반 작성·취소 시각 분기, 읽음 포트 교체 및 실행기 예약 교체를 보완했다. 승인된 독립 범위 구현과 합성 검증은 완료했으며 민규 공통 연결·공급사/팀 보류·실제 통합·출시는 별도다. 상세 요구와 증거는 [독립 구현 결과](requests/jonghyun/2026-10-08-independent-result.md)를 따른다. 사용자 후속 승인에 따라 검증된34개 종현 경로를 `jonghyun/queue-integration`에 커밋·푸시한다. 운영 배포는 제외한다.
+
+---
+
+# 2026-10-08 종현 후속 연결 상태
+
+최신 사용자 설계 승인과 독립 clone `/private/tmp/yumidang-jonghyun-implementation-20261007`, 브랜치 `jonghyun/queue-integration`, 기준 `40f3c1d`에서 후속 연결을 진행했다. 아래 기존 기록은 이번 검사 수치가 아니다.
+
+- AI 정상3응답의 서버 준비 증거·실패 차단, 모바일 본인 공고/읽음/행사 상세·순위 보류 DTO, 명시 웹 설정 공급 포트를 연결했다.
+- 공유20 항목과 RPC 호출 계수를 분리하고 신고 첨부·metadata 각각 예약한다. helpful DB 만료 예약·내부 API 소비·shared runtime은 공통 포트 수신을 위한 준비다.
+- 실제 runner/DB/기기/네이버/공급사/운영 검증은 별도 미완료이며 신규 운영 소비자를 활성화하지 않았다. 공통 SQL·회원 정리·최상위 정책은 수정하지 않았다.
+- 후속 선택1A·2A·3A는 확정이다. 서버 요청 ID 오탐을 수정하고 메시지별 본문 노출 읽음 포트를 준비하며, 민규 공통 포트·환경을 기다려 실제 통합한다.
+- 요구별 검증과 선택 기록은 [후속 결과](requests/jonghyun/2026-10-08-followup-result.md), 민규 포트 요청은 [공통 연결 계약](requests/jonghyun/2026-10-08-followup-common-contracts.md)을 따른다. 커밋·푸시·배포는 수행하지 않았다.
+
+---
+
 # 종현 현재 작업과 연결 상태
 
 기준: [정책.md](../../정책.md)와 사용자 최신 답변, 공유 `9dfca36`에서 만든 독립 clone의 `jonghyun/queue-integration`. 기존 `jonghyun/policy-integration-20261005` 구현은 공유 기준에 포함되어 재사용했다. 민규 clone의 파일/actor/hook/index를 변경하지 않았다.

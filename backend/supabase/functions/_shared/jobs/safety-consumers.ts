@@ -21,8 +21,12 @@ export interface SafetyExecutionBudget {
   readonly signal: AbortSignal;
   /** exact {remainingMs}, 현재 token만 조회. 새 점유·연장 없음. */
   readRemaining(): Promise<unknown>;
-  /** 단위·총량은 승인된 공유 예산 계약이 판단한다. 소비자가 20 단위를 새로 정의하지 않는다. */
+  /** RPC별 허가/별도 계수. 공유 처리항목 20에서 차감하지 않는다. */
   reserve(operation: "cancellation_process" | "report_task_claim" | "report_task_complete" | "report_storage" | "due_enqueue" | "job_claim" | "job_complete"): Promise<boolean>;
+  /** 처리 전 원자적 공유 항목 예약. 신고 task의 DELETE+complete는 한 예약이다. */
+  reserveItem(input: { kind: "cancellation_safety" | "report_retention"; jobId: string; taskId?: string }): Promise<boolean>;
+  /** 현재 invocation에 배정된 잔여 항목 검사. DB 원자 예약을 대체하지 않는다. */
+  hasItemCapacity(): boolean;
   elapsed(): number;
 }
 export interface SafetyJournalIntent {
@@ -134,15 +138,26 @@ async function mutation<T>(p: SafetyConsumerPorts, job: ClaimedJob, phase: Safet
     throw new JobExecutionUnknown(phase);
   }
 }
+async function reserveProcessingItem(p: SafetyConsumerPorts, input: Parameters<SafetyExecutionBudget["reserveItem"]>[0], signal: AbortSignal): Promise<boolean> {
+  try {
+    const reserved = await bounded(signal, "process", () => p.budget.reserveItem(input));
+    if (typeof reserved !== "boolean") throw new JobExecutionUnknown("process");
+    return reserved;
+  } catch { throw new JobExecutionUnknown("process"); }
+}
 export function createSafetyConsumerRegistry(p: SafetyConsumerPorts): JobRegistry {
   if (!uuid(p.budget.globalToken)) throw new Error("INVALID_WORKER_RUN_TOKEN");
   const r = p.readiness;
-  if (!r.scopedClaim || !r.sharedBudgetContract || !r.durableJournalContract) return Object.freeze({});
+  if (!r.scopedClaim || !r.sharedBudgetContract || !r.durableJournalContract || typeof p.budget.reserveItem !== "function" || typeof p.budget.hasItemCapacity !== "function") return Object.freeze({});
   const cancellation: JobHandler = async job => {
     if (job.reference.kind !== "cancellation_safety") throw new HttpError("INVALID_REQUEST");
+    if (!p.budget.hasItemCapacity()) return { status: "held" };
     const scope = await budgetScope(p.budget, "cancellation_process");
     if (!scope) return { status: "held" };
     try {
+      const reserved = await reserveProcessingItem(p, { kind: "cancellation_safety", jobId: job.jobId }, scope.signal);
+      if (typeof reserved !== "boolean") throw new JobExecutionUnknown("process");
+      if (!reserved) return { status: "held" };
       const ref = job.reference;
       const result = await mutation(p, job, "process", scope.signal, () => p.cancellationProcess({ identityId: ref.identityId, generation: ref.generation, jobId: job.jobId, jobLeaseToken: job.leaseToken, globalToken: p.budget.globalToken }, scope.signal), raw => {
         const v = exact(raw, ["status", "generation", "changed"]);
@@ -155,6 +170,7 @@ export function createSafetyConsumerRegistry(p: SafetyConsumerPorts): JobRegistr
   const retention: JobHandler = async job => {
     if (job.reference.kind !== "report_retention") throw new HttpError("INVALID_REQUEST");
     while (true) {
+      if (!p.budget.hasItemCapacity()) return { status: "held" };
       const scope = await budgetScope(p.budget, "report_task_claim");
       if (!scope) return { status: "held" };
       let task: ReportRetentionTask | null;
@@ -164,6 +180,9 @@ export function createSafetyConsumerRegistry(p: SafetyConsumerPorts): JobRegistr
       const completeScope = await budgetScope(p.budget, task.kind === "storage_object" ? "report_storage" : "report_task_complete", task);
       if (!completeScope) return { status: "held" };
       try {
+        const reserved = await reserveProcessingItem(p, { kind: "report_retention", jobId: job.jobId, taskId: task!.taskId }, completeScope.signal);
+        if (typeof reserved !== "boolean") throw new JobExecutionUnknown("process");
+        if (!reserved) return { status: "held" };
         const evidenceSha256 = task.kind === "storage_object"
           ? await mutation(p, job, "process", completeScope.signal, () => p.reportStorage(task!, job, completeScope.signal), raw => {
             const value = exact(raw, ["evidenceSha256"]);
@@ -276,6 +295,7 @@ export function createSafetyWorkerInvocation(config: RuntimeConfig, deps: {
   enqueueJournal: SafetyEnqueueJournal;
   allocate(kind: "cancellation_safety" | "report_retention", sharedLimit: number): { maxJobsPerRun: number; enqueueLimit: number };
   reserve(globalToken: string, operation: Parameters<SafetyExecutionBudget["reserve"]>[0]): Promise<boolean>;
+  reserveItem(globalToken: string, input: Parameters<SafetyExecutionBudget["reserveItem"]>[0], signal: AbortSignal): Promise<boolean>;
   elapsed(): number;
   workerId: string;
   jobLeaseDurationMs: number;
@@ -287,18 +307,30 @@ export function createSafetyWorkerInvocation(config: RuntimeConfig, deps: {
   createInternalClient(config, fetchImpl); // 설정만 검증하며 요청하지 않는다.
   return async (globalToken: string, kind: "cancellation_safety" | "report_retention", input: { limit: number; remainingMs: number; signal: AbortSignal }) => {
     if (!uuid(globalToken) || !["cancellation_safety", "report_retention"].includes(kind) || !Number.isSafeInteger(input.limit) || input.limit < 0 || input.limit > 20 || !Number.isFinite(input.remainingMs) || input.remainingMs < 0 || input.remainingMs > 180000 || !(input.signal instanceof AbortSignal)) throw new Error("INVALID_SAFETY_WORKER_INPUT");
-    const counts = { claimed: 0, succeeded: 0, held: 0, leaseLost: 0 };
+    const counts = { claimed: 0, succeeded: 0, held: 0, leaseLost: 0, processedItems: 0 };
     const finish = (stopReason: "idle" | "max_jobs" | "held" | "lease_lost" | "time_budget") => ({ status: "ran" as const, stopReason, hasMore: stopReason !== "idle", counts });
     if (input.limit === 0) return finish("max_jobs");
     if (input.remainingMs === 0 || input.signal.aborted) return finish("time_budget");
     const allocation = deps.allocate(kind, input.limit);
-    if (!allocation || !Number.isSafeInteger(allocation.maxJobsPerRun) || allocation.maxJobsPerRun < 0 || allocation.maxJobsPerRun > 20 || !Number.isSafeInteger(allocation.enqueueLimit) || allocation.enqueueLimit < 1 || allocation.enqueueLimit > 20) throw new Error("INVALID_SAFETY_WORKER_ALLOCATION");
+    if (!allocation || !Number.isSafeInteger(allocation.maxJobsPerRun) || allocation.maxJobsPerRun < 0 || allocation.maxJobsPerRun > input.limit || !Number.isSafeInteger(allocation.enqueueLimit) || allocation.enqueueLimit < 1 || allocation.enqueueLimit > input.limit) throw new Error("INVALID_SAFETY_WORKER_ALLOCATION");
+    if (typeof deps.reserveItem !== "function") return { status: "not_enabled" as const, reason: "SHARED_ITEM_RESERVATION_NOT_READY" };
     if (allocation.maxJobsPerRun === 0) return finish("max_jobs");
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), Math.max(1, Math.floor(input.remainingMs)));
     const signal = AbortSignal.any([input.signal, controller.signal]);
     try {
     const wired = createRpcSafetyConsumerPorts(config, { readiness: deps.readiness, journal: deps.journal,
-      budget: { globalToken, signal, reserve: operation => deps.reserve(globalToken, operation), elapsed: deps.elapsed } }, fetchImpl);
+      budget: { globalToken, signal, reserve: operation => deps.reserve(globalToken, operation), elapsed: deps.elapsed,
+        hasItemCapacity: () => counts.processedItems < input.limit,
+        reserveItem: async item => {
+          if (counts.processedItems >= input.limit || signal.aborted) return false;
+          // 응답 유실은 원자 예약 여부 미확인: 재전송 없이 상위 journal을 보존한다.
+          let reserved: boolean;
+          try { reserved = await bounded(signal, "process", () => deps.reserveItem(globalToken, item, signal)); }
+          catch { throw new JobExecutionUnknown("process"); }
+          if (typeof reserved !== "boolean") throw new JobExecutionUnknown("process");
+          if (reserved) counts.processedItems++;
+          return reserved;
+        } } }, fetchImpl);
     const registry = createSafetyConsumerRegistry(wired.consumers);
     if (typeof registry[kind] !== "function") return { status: "not_enabled" as const, reason: "SAFETY_CONTRACT_NOT_READY" };
     const scopedFetch: FetchLike = (url, init) => {

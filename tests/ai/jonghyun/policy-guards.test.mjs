@@ -23,11 +23,12 @@ const input = {clientRequestId:"new-1",messages:[{role:"user",content:"전시"}]
 const response = value => ({ value, modelVersion:"synthetic",usage:null });
 const request = body => new Request("https://synthetic.invalid/ai-chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
 function handlerHarness(overrides={}) {
-  const seen={starts:0,finishes:[],calls:[],prefs:0};
-  const gate={async acquire(value){seen.starts++; return {status:"acquired",scope:{...scope,requestId:value.requestId},expiresAt:new Date(Date.now()+60_000).toISOString()};},async finish(s,outcome){seen.finishes.push({s,outcome});}};
+  const seen={starts:0,finishes:[],calls:[],prefs:0,receipts:[],lifecycle:[]};
+  const gate={async acquire(value){seen.starts++; return {status:"acquired",scope:{...scope,requestId:value.requestId},expiresAt:new Date(Date.now()+60_000).toISOString()};},async finish(s,outcome){seen.lifecycle.push("finish");seen.finishes.push({s,outcome});}};
   const model={async generate(value){seen.calls.push(value);return response({status:"search",filters:{...input.currentFilters}});}};
   const handler=createAiChatHandler({allowedOrigins:[],maxBodyBytes:12000,authenticate:async()=>({userId:scope.userId}),
     engine:{status:"ready",limits,privacy,model,now:()=>new Date()}, requestGate:gate,
+    recordResultAvailable:async s=>{seen.lifecycle.push("record");seen.receipts.push({...s});},
     openSession:()=>({loadPreferences:async()=>{seen.prefs++;return {};},discovery:{search:async()=>({cards:[],coverage:"exhausted"}),recheck:async()=>({cards:[],complete:true})}}),...overrides});
   return {handler,seen};
 }
@@ -103,7 +104,10 @@ test("지역 미설정은 모델 없는 질문이고 대화 내용이 잘못됐�
   const {handler,seen}=handlerHarness();
   const payload=await(await handler(request({...input,currentFilters:{target:"posts"}}))).json();
   assert.equal(payload.data.status,"needs_clarification");assert.match(payload.data.clarificationQuestion,/지역/);assert.equal(seen.calls.length,0);
+  assert.deepEqual(seen.receipts,[{...scope,requestId:payload.requestId}]);
+  assert.deepEqual(seen.lifecycle,["record","finish"],"모델 없는 정상 질문도 기록 후 한 번 해제한다");
   assert.equal((await handler(request({...input,messages:[{role:"system",content:"x"}],currentFilters:{target:"posts"}}))).status,400);
+  assert.equal(seen.receipts.length,1,"잘못된 입력은 정상 결과 증거를 추가하지 않는다");
 });
 test("연령은 숫자19~99범위, 공고지역은 공식17시도이며 이전 연령대와 축약지역은 거부한다",()=>{
   assert.deepEqual(validateFilters({...input.currentFilters,authorAge:{min:19,max:99}}).authorAge,{min:19,max:99});

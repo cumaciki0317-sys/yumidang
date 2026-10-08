@@ -184,7 +184,8 @@ export function createBackgroundQueueScheduler(
  * 5종 공유 cycle의 준비 포트. 공통 count/journal/terminal 계약을 주입한 경우만 사용한다.
  * 이 함수의 내부 객체는 제안 포트이며 새로운 DB RPC/HTTP wire 계약이 아니다.
  * readSchedule은 소유한 globalToken을 고려해 조회해야 한다. 자신의 lease를 기다리는 조회를 재사용하지 않는다.
- * unitsFor의 정책 단위·journal 영속 저장·terminal 조회는 민규 계약 확인 전 모형으로만 제공한다.
+ * 공유 단위는 처리항목이며 safety의 counts.processedItems와 maintenance.processedItems 예약수를 사용한다.
+ * 원자 reservation·journal 영속 저장·terminal/helpful 조회는 민규 실제 계약 제공 전 준비 포트다.
  */
 export function createSharedBackgroundQueueScheduler({
   repository, invoke, contracts, supportedKinds = QUEUE_KINDS,
@@ -206,7 +207,7 @@ export function createSharedBackgroundQueueScheduler({
   }
   let stopped = false, unknown = false, running = null, dirty = false;
   let timer = null, terminalTimer = null, lastKind = null;
-  const pendingReads = new Set();
+  const pendingReads = new Set(), activeInvocations = new Set();
   // 공통 DB query timeout을 사용한다. 새 폴링 주기나 자체 lease 기한을 만들지 않는다.
   const read = operation => new Promise((resolve, reject) => {
     const controller = new AbortController();
@@ -238,10 +239,16 @@ export function createSharedBackgroundQueueScheduler({
     return value;
   }
   function arm(value, started, terminal, continueDue = false) {
+    // 한 종류의 예약은 하나만 유지한다. null/이미 due인 새 조회도 옛 미래 예약을 취소한다.
+    const previous = terminal ? terminalTimer : timer;
+    if (previous !== null) clearTimer(previous);
+    if (terminal) terminalTimer = null; else timer = null;
     if (value.nextDueAt === null || stopped || unknown) return;
     const delay = Date.parse(value.nextDueAt) - Date.parse(value.serverNow) - Math.max(0, elapsed() - started);
     if (delay <= 0 && !continueDue) return;
     const handle = setTimer(() => {
+      // 취소된 callback이 이미 대기열에 들어갔어도 새 예약의 handle을 지우거나 깨우지 않는다.
+      if ((terminal ? terminalTimer : timer) !== handle) return;
       if (terminal) terminalTimer = null; else timer = null;
       void wake();
     }, Math.min(Math.max(1, delay), 2_147_483_647));
@@ -261,20 +268,22 @@ export function createSharedBackgroundQueueScheduler({
       let next = schedule(await getQueue(null), excluded);
       arm(next, started, false);
       started = elapsed();
-      const terminal = schedule(await read(() => contracts.maintenance.readSchedule()), excluded, true);
+      const terminal = schedule(await read(() => contracts.maintenance.readSchedule(null)), excluded, true);
       arm(terminal, started, true);
       let maintenanceDue = terminal.nextDueAt !== null && Date.parse(terminal.nextDueAt) <= Date.parse(terminal.serverNow);
       const due = next.nextDueAt !== null && Date.parse(next.nextDueAt) <= Date.parse(next.serverNow);
       if (stopped || (!due && !maintenanceDue)) return;
       lease = await read(() => repository.acquire());
       if (lease === null) {
+        // maintenance.readSchedule(null)도 외부 점유 만료를 반영해야 한다. 큐가 비어 있으면
+        // maintenance만이 재개 시각을 제공하며 과거 due 반환은 준비계약 위반이다.
         // 경쟁자의 점유 만료를 반영한 DB 기한을 다시 읽는다. 새 알림이 없어도 재개하되
         // 같은 due를 즉시 반복하거나 자연 만료를 원격 종결 증거로 사용하지 않는다.
         if (stopped) return;
         started = elapsed();
         arm(schedule(await getQueue(null), excluded), started, false);
         started = elapsed();
-        arm(schedule(await read(() => contracts.maintenance.readSchedule()), excluded, true), started, true);
+        arm(schedule(await read(() => contracts.maintenance.readSchedule(null)), excluded, true), started, true);
         return;
       }
       if (!record(lease) || !id(lease.token) || typeof lease.expiresAt !== "string" || !Number.isFinite(Date.parse(lease.expiresAt))) {
@@ -299,6 +308,7 @@ export function createSharedBackgroundQueueScheduler({
         if (remainingMs <= 0 || stopped) break;
         const kind = maintenanceDue ? null : next.nextKind;
         const controller = new AbortController();
+        activeInvocations.add(controller);
         const deadline = setTimer(() => controller.abort(), Math.max(1, Math.floor(remainingMs)));
         const bounded = operation => new Promise((resolve, reject) => {
           const abort = () => reject(new Error("QUEUE_DEADLINE_UNKNOWN"));
@@ -319,14 +329,16 @@ export function createSharedBackgroundQueueScheduler({
           const result = await bounded(() => kind === null ? contracts.maintenance.run(lease.token, options) : invoke(lease.token, kind, options));
           if (controller.signal.aborted) throw new Error("QUEUE_DEADLINE_UNKNOWN");
           const disabled = kind !== null && record(result) && result.status === "not_enabled" && typeof result.reason === "string";
-          const valid = kind === null ? record(result) && Object.keys(result).length === 1 && Number.isSafeInteger(result.purged) && result.purged >= 0 && result.purged <= remainingUnits :
+          const valid = kind === null ? record(result) && Object.keys(result).every(k => ["purged", "processedItems"].includes(k)) && Number.isSafeInteger(result.purged) && result.purged >= 0 && result.purged <= remainingUnits :
             disabled || record(result) && result.status === "ran" && record(result.counts) &&
             Number.isSafeInteger(result.counts.claimed) && result.counts.claimed >= 0 &&
             Object.values(result.counts).every(n => Number.isSafeInteger(n) && n >= 0);
           if (!valid) throw new Error("INVALID_QUEUE_INVOCATION");
           const units = contracts.unitsFor(kind, result);
+          const reservedItems = kind === null ? result.processedItems : result.counts?.processedItems;
+          if (reservedItems !== undefined && (!Number.isSafeInteger(reservedItems) || reservedItems < 0 || reservedItems > remainingUnits || units !== reservedItems)) throw new Error("INVALID_QUEUE_ITEM_ACCOUNTING");
           if (!Number.isSafeInteger(units) || units < 0 || units > remainingUnits ||
-            (!disabled && (kind === null ? result.purged > 0 : result.counts.claimed > 0) && units === 0)) throw new Error("INVALID_QUEUE_UNITS");
+            (!disabled && (kind === null ? result.purged > 0 : (result.counts.processedItems ?? result.counts.claimed) > 0) && units === 0)) throw new Error("INVALID_QUEUE_UNITS");
           if (await bounded(() => contracts.journal.confirm(ticket)) !== true) throw new Error("QUEUE_ACK_UNKNOWN");
           releasePermitted = true;
           remainingUnits -= units;
@@ -341,7 +353,7 @@ export function createSharedBackgroundQueueScheduler({
           // 최소 ID만 보존한다. 원문·Storage 경로·공급사 응답은 journal 인자가 아니다.
           try { await read(() => contracts.journal.unknown(ticket)); } catch { /* 미확인 상태 유지 */ }
           throw error;
-        } finally { clearTimer(deadline); }
+        } finally { clearTimer(deadline); activeInvocations.delete(controller); }
       }
     } catch {
       onError(unknown ? "WORKER_QUEUE_RECONCILIATION_REQUIRED" : "WORKER_QUEUE_UNAVAILABLE");
@@ -354,7 +366,7 @@ export function createSharedBackgroundQueueScheduler({
             let started = elapsed();
             arm(schedule(await getQueue(null), excluded), started, false, true);
             started = elapsed();
-            arm(schedule(await read(() => contracts.maintenance.readSchedule()), excluded, true), started, true, true);
+            arm(schedule(await read(() => contracts.maintenance.readSchedule(null)), excluded, true), started, true, true);
           }
         } catch { unknown = true; dirty = false; clear(); onError("WORKER_QUEUE_RECONCILIATION_REQUIRED"); }
       }
@@ -369,5 +381,40 @@ export function createSharedBackgroundQueueScheduler({
     });
     return running;
   }
-  return { wake, async stop() { stopped = true; dirty = false; clear(); for (const controller of pendingReads) controller.abort(); await running; } };
+  return { wake, async stop() { stopped = true; dirty = false; clear(); for (const controller of pendingReads) controller.abort(); for (const controller of activeInvocations) controller.abort(); await running; } };
+}
+
+/** 완료증거/helpful 등 DB 만료 예약을 한 공유 cycle에 묶는 주입 조립. cron/새 RPC를 만들지 않는다. */
+export function createDueMaintenanceGroup(providers, elapsed = () => performance.now()) {
+  if (!Array.isArray(providers) || !providers.length || providers.some(p => typeof p?.readSchedule !== "function" || typeof p?.run !== "function")) throw new Error("MAINTENANCE_CONTRACT_NOT_READY");
+  const valid = v => v && Object.keys(v).length === 2 && typeof v.serverNow === "string" && Number.isFinite(Date.parse(v.serverNow)) &&
+    (v.nextDueAt === null || typeof v.nextDueAt === "string" && Number.isFinite(Date.parse(v.nextDueAt)));
+  return {
+    async readSchedule(token = null) {
+      const schedules = await Promise.all(providers.map(p => p.readSchedule(token)));
+      if (!schedules.every(valid)) throw new Error("INVALID_MAINTENANCE_SCHEDULE");
+      const serverNow = schedules.reduce((a,b) => Date.parse(a.serverNow) > Date.parse(b.serverNow) ? a : b).serverNow;
+      const dates = schedules.map(s => s.nextDueAt).filter(v => v !== null).sort((a,b) => Date.parse(a) - Date.parse(b));
+      return { serverNow, nextDueAt: dates[0] ?? null };
+    },
+    async run(token, options) {
+      const started = elapsed(); let purged = 0, processedItems = 0;
+      for (const provider of providers) {
+        if (options.signal.aborted || processedItems >= options.limit) break;
+        const schedule = await provider.readSchedule(token);
+        // 조회가 AbortSignal을 무시하고 늦게 끝나도 새 유지관리 호출을 시작하지 않는다.
+        if (options.signal.aborted) break;
+        if (!valid(schedule)) throw new Error("INVALID_MAINTENANCE_SCHEDULE");
+        const remainingMs = options.remainingMs - Math.max(0, elapsed() - started);
+        if (remainingMs <= 0 || options.signal.aborted) break;
+        if (schedule.nextDueAt === null || Date.parse(schedule.nextDueAt) > Date.parse(schedule.serverNow)) continue;
+        const result = await provider.run(token, { ...options, limit: options.limit - processedItems, remainingMs });
+        if (options.signal.aborted) throw new Error("QUEUE_DEADLINE_UNKNOWN");
+        const reserved = result?.processedItems;
+        if (!Number.isSafeInteger(result?.purged) || result.purged < 0 || !Number.isSafeInteger(reserved) || reserved < result.purged || reserved > options.limit - processedItems) throw new Error("INVALID_MAINTENANCE_RESULT");
+        purged += result.purged; processedItems += reserved;
+      }
+      return { purged, processedItems };
+    },
+  };
 }
