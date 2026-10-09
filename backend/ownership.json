@@ -54,9 +54,24 @@
       "to": "minkyu",
       "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
       "scope": "검증된 개별 메시지 읽음과 신고 숨김·안내 소비 계약을 연결하는 모바일 member-service.ts, remote.tsx, web-member-session.ts, RemoteMemberScreens.tsx 네 파일만 재배정한다. 화면 재설계·다른 모바일·성호 경로는 유지한다."
+    },
+    {
+      "date": "2026-10-09",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
+      "scope": "현재 원자 jobId 슬롯·영속 의도 계약으로 필수 회귀를 동기화할 j1-consumers.test.ts와 20261008-followup-safety.test.ts 두 파일만 추가 재배정한다. 다른 종현·성호 경로는 유지한다."
     }
   ],
   "rules": [
+    {
+      "path": "tests/functions/jonghyun/20261008-followup-safety.test.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/functions/jonghyun/j1-consumers.test.ts",
+      "owner": "minkyu"
+    },
     {
       "path": "apps/mobile/src/member-service.ts",
       "owner": "minkyu"
