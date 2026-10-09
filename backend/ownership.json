@@ -69,9 +69,20 @@
       "to": "sungho",
       "authorization": "사용자: 성호한테 프론트엔드접근권한 + UI/UX 접근권한 부여",
       "scope": "웹 frontend 전체, 모바일 화면·라우팅·컴포넌트·스타일·디자인·자산 및 UI/UX 설계 문서. 백엔드·인증·세션·서비스 상태·API 연결·공통 환경은 기존 담당 유지. RemoteMemberScreens.tsx의 기존 민규 변경은 보존하고 후속 화면 편집은 성호가 담당한다."
+    },
+    {
+      "date": "2026-10-10",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
+      "scope": "백엔드 완료 계획 운영 3단계의 실제 완료 예약 CLI/TLS 연결에 필요한 completion-runner.mjs 한 파일만 추가 재배정한다. scheduler·다른 종현·성호 경로는 유지하며 기존 변경을 보존한다."
     }
   ],
   "rules": [
+    {
+      "path": "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
+      "owner": "minkyu"
+    },
     {
       "path": "tests/functions/jonghyun/20261008-followup-safety.test.ts",
       "owner": "minkyu"
