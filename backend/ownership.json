@@ -26,7 +26,44 @@
     "tests/fixtures/sungho/",
     ".github/"
   ],
+  "reassignments": [
+    {
+      "date": "2026-10-09",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
+      "scope": "백엔드 완료 계획의 큐20·별도 유지관리·영속 요청·실제 CLI·요약 worker 배정 연결. 아래 개별 파일 규칙만 변경하며 다른 종현·성호 경로는 유지한다."
+    }
+  ],
   "rules": [
+    {
+      "path": "backend/supabase/functions/_shared/jobs/background.mjs",
+      "owner": "minkyu"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/jobs/runtime.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
+      "owner": "minkyu"
+    },
+    {
+      "path": "backend/supabase/functions/review-summary-worker/handler.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "backend/supabase/functions/review-summary-worker/index.ts",
+      "owner": "minkyu"
+    },
     {
       "path": "backend/",
       "owner": "minkyu"
