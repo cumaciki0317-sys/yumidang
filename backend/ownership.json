@@ -47,9 +47,32 @@
       "to": "minkyu",
       "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
       "scope": "SQL114 원자 작업과 영속 요청의 동일 키 연결에 필요한 jobs 저장소와 공유 큐 계약 회귀 파일만 추가 재배정한다. 다른 종현·성호 경로는 유지한다."
+    },
+    {
+      "date": "2026-10-09",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
+      "scope": "검증된 개별 메시지 읽음과 신고 숨김·안내 소비 계약을 연결하는 모바일 member-service.ts, remote.tsx, web-member-session.ts, RemoteMemberScreens.tsx 네 파일만 재배정한다. 화면 재설계·다른 모바일·성호 경로는 유지한다."
     }
   ],
   "rules": [
+    {
+      "path": "apps/mobile/src/member-service.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "apps/mobile/src/remote.tsx",
+      "owner": "minkyu"
+    },
+    {
+      "path": "apps/mobile/src/web-member-session.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "owner": "minkyu"
+    },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
       "owner": "minkyu"
