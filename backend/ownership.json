@@ -40,9 +40,24 @@
       "to": "minkyu",
       "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
       "scope": "SQL111/112 행사 수집의 영속 실행 요청·최초 진입·배정 전달 연결에 필요한 event-sync/index.ts와operations.ts 두 파일만 추가 재배정한다. 공급사·AI·모바일·성호 경로는 유지한다."
+    },
+    {
+      "date": "2026-10-09",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
+      "scope": "SQL114 원자 작업과 영속 요청의 동일 키 연결에 필요한 jobs 저장소와 공유 큐 계약 회귀 파일만 추가 재배정한다. 다른 종현·성호 경로는 유지한다."
     }
   ],
   "rules": [
+    {
+      "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
+      "owner": "minkyu"
+    },
     {
       "path": "backend/supabase/functions/event-sync/index.ts",
       "owner": "minkyu"
@@ -193,10 +208,6 @@
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
-      "owner": "jonghyun"
-    },
-    {
-      "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
       "owner": "jonghyun"
     },
     {
