@@ -24,7 +24,8 @@
     "tests/functions/sungho/",
     "tests/integration/sungho/",
     "tests/fixtures/sungho/",
-    ".github/"
+    ".github/",
+    "docs/planning/design/"
   ],
   "reassignments": [
     {
@@ -61,6 +62,13 @@
       "to": "minkyu",
       "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
       "scope": "현재 원자 jobId 슬롯·영속 의도 계약으로 필수 회귀를 동기화할 j1-consumers.test.ts와 20261008-followup-safety.test.ts 두 파일만 추가 재배정한다. 다른 종현·성호 경로는 유지한다."
+    },
+    {
+      "date": "2026-10-09",
+      "from": "minkyu/jonghyun",
+      "to": "sungho",
+      "authorization": "사용자: 성호한테 프론트엔드접근권한 + UI/UX 접근권한 부여",
+      "scope": "웹 frontend 전체, 모바일 화면·라우팅·컴포넌트·스타일·디자인·자산 및 UI/UX 설계 문서. 백엔드·인증·세션·서비스 상태·API 연결·공통 환경은 기존 담당 유지. RemoteMemberScreens.tsx의 기존 민규 변경은 보존하고 후속 화면 편집은 성호가 담당한다."
     }
   ],
   "rules": [
@@ -86,7 +94,7 @@
     },
     {
       "path": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
-      "owner": "minkyu"
+      "owner": "sungho"
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
@@ -318,7 +326,7 @@
     },
     {
       "path": "frontend/",
-      "owner": "minkyu"
+      "owner": "sungho"
     },
     {
       "path": "frontend/src/assets/sungho/",
@@ -343,6 +351,38 @@
     {
       "path": ".github/",
       "owner": "minkyu"
+    },
+    {
+      "path": "apps/mobile/src/screens/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/src/app/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/src/components/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/src/ui.tsx",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/src/presentation/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/design/",
+      "owner": "sungho"
+    },
+    {
+      "path": "apps/mobile/assets/",
+      "owner": "sungho"
+    },
+    {
+      "path": "docs/planning/design/",
+      "owner": "sungho"
     }
   ]
 }
