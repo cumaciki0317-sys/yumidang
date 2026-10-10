@@ -98,7 +98,9 @@ class Runner(GuardedRunner):
                'requests':self.requests,'appointments':self.appointments,'reviews':self.reviews,
                'jobs':self.jobs,'invocations':self.invocations,'dedupeKeys':getattr(self,'dedupes',[]),
                'targetId':self.target['id'],'targetImage':self.target['image'],'targetProject':self.target['project'],
-               'baselineRowsDigest':getattr(self,'baseline',None),'baselineCatalogDigest':getattr(self,'catalog_before',None)}
+               'baselineRowsDigest':getattr(self,'baseline',None),'baselineRowsFingerprint':getattr(self,'baseline_rows_fingerprint',None),
+               'cleanupRowsDifferences':getattr(self,'row_differences',None),
+               'baselineCatalogDigest':getattr(self,'catalog_before',None)}
         path=self.root/('summary-owned-'+self.role+'.json')
         # This namespace is generated once in this process; no existing receipt
         # from another run or an unverified path is selected for rewriting.
@@ -134,13 +136,18 @@ class Runner(GuardedRunner):
             if self.first_sql_failure is None:self.first_sql_failure=dict(metadata)
             raise
 
-    def digest(self):
+    def fingerprint(self):
         # Protect every row, including budgets excluded by the AI fixture digest.
-        return self.sql("begin;create temp table fingerprints(n text,h text);do $$declare t record;h text;begin "
+        # Hash input and the composite digest retain the previous algorithm;
+        # only table names, row counts and hashes leave the SQL connection.
+        return json.loads(self.sql("begin;create temp table fingerprints(n text,h text,c bigint);do $$declare t record;h text;c bigint;begin "
           "for t in select schemaname,tablename from pg_tables where schemaname in('public','private','storage','auth') order by 1,2 loop "
-          "execute format('select md5(coalesce(string_agg(v,%L order by v),%L)) from(select to_jsonb(x)::text v from %I.%I x)s',E'\\n','',t.schemaname,t.tablename)into h;"
-          "insert into fingerprints values(t.schemaname||'.'||t.tablename,h);end loop;end $$;"
-          "select md5(string_agg(n||':'||h,E'\\n' order by n))from fingerprints;rollback;")
+          "execute format('select md5(coalesce(string_agg(v,%L order by v),%L)),count(*) from(select to_jsonb(x)::text v from %I.%I x)s',E'\\n','',t.schemaname,t.tablename)into h,c;"
+          "insert into fingerprints values(t.schemaname||'.'||t.tablename,h,c);end loop;end $$;"
+          "select jsonb_build_object('fullHash',md5(string_agg(n||':'||h,E'\\n' order by n)),'tables',jsonb_object_agg(n,jsonb_build_object('hash',h,'rowCount',c)))from fingerprints;rollback;"))
+
+    def digest(self):
+        return self.fingerprint()['fullHash']
 
     def catalog(self):
         return self.sql("select md5(coalesce(string_agg(to_jsonb(p)::text,E'\\n' order by p.oid),''))from pg_proc p where pronamespace in('public'::regnamespace,'private'::regnamespace);"
@@ -152,7 +159,7 @@ class Runner(GuardedRunner):
         require(json.loads(self.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))==self.target['versions'],'APPLIED_HISTORY_CHANGED')
         closed=self.sql("select count(*)from auth.users;select count(*)from public.profiles;select count(*)from private.worker_jobs;select count(*)from private.worker_invocations;select external_processing_allowed from private.ai_processing_guard where singleton;select enabled from private.worker_invocation_control where singleton;select enabled from private.worker_runtime_atomic_control where singleton;select current_setting('cron.launch_active_jobs');")
         require(closed.splitlines()==['0','0','0','0','f','f','f','off'],'FRESH_CLOSED_EMPTY_REQUIRED')
-        self.baseline=self.digest();self.catalog_before=self.catalog()
+        initial=self.fingerprint();self.baseline=initial['fullHash'];self.baseline_rows_fingerprint=initial['tables'];self.catalog_before=self.catalog()
         self.global_before=json.loads(self.sql('select to_jsonb(g)from private.global_worker_run g;'))
         self.changed=True
         self.own_receipt()
@@ -304,6 +311,16 @@ class Runner(GuardedRunner):
         q='begin;delete from private.worker_invocation_jobs where request_id in('+ids(self.invocations)+');delete from private.worker_invocations where request_id in('+ids(self.invocations)+');'
         q+='delete from private.worker_job_run_fences where job_id in('+ids(self.jobs)+');delete from private.worker_runtime_job_slots where job_id in('+ids(self.jobs)+');'
         q+='delete from private.worker_jobs where id in('+ids(self.jobs)+');delete from public.posts where id in('+ids(self.posts)+');'
+        # Profiles create durable episodes without a profile FK. Remove only
+        # this non-Naver synthetic fixture's two episodes after all appointment
+        # references were cascaded. Partial prepare may have committed no data.
+        expected=2 if hasattr(self,'context') else None
+        q+='do $$declare n integer;begin select count(*)into n from private.member_episodes where profile_id in('+ids(self.people)+');'
+        q+='assert n in(0,2);'
+        if expected==2:q+='assert n=2;'
+        q+='assert not exists(select 1 from private.member_episodes where profile_id in('+ids(self.people)+') and identity_id is not null);'
+        q+='assert not exists(select 1 from private.naver_accounts where user_id in('+ids(self.people)+'));'
+        q+='if n=2 then delete from private.member_episodes where profile_id in('+ids(self.people)+') and identity_id is null;assert not exists(select 1 from private.member_episodes where profile_id in('+ids(self.people)+'));end if;end;$$;'
         q+='delete from private.ai_member_processing where user_id in('+ids(self.people)+');delete from public.profiles where id in('+ids(self.people)+');delete from auth.users where id in('+ids(self.people)+');'
         if self.global_before is not None:q+='update private.global_worker_run set (token,expires_at)=(select token,expires_at from jsonb_populate_record(null::private.global_worker_run,'+quote(json.dumps(self.global_before))+'::jsonb)) where singleton;'
         q+='commit;';self.sql(q)
@@ -314,7 +331,12 @@ class Runner(GuardedRunner):
         require(present in ('t','f'),'OWN_ROLE_PRESENCE_PROOF')
         if present=='t':self.bootstrap_role(False)
         self.role_created=False;self.own_receipt()
-        require(self.digest()==self.baseline,'ALL_ROWS_RESTORED');require(self.catalog()==self.catalog_before,'ROLES_MEMBERSHIPS_PRODUCT_ACL_RESTORED')
+        after=self.fingerprint();self.row_differences=[]
+        for table in sorted(set(self.baseline_rows_fingerprint)|set(after['tables'])):
+            before=self.baseline_rows_fingerprint.get(table);current=after['tables'].get(table)
+            if before!=current:self.row_differences.append({'table':table,'before':before,'after':current})
+        self.own_receipt()
+        require(after['fullHash']==self.baseline and not self.row_differences,'ALL_ROWS_RESTORED');require(self.catalog()==self.catalog_before,'ROLES_MEMBERSHIPS_PRODUCT_ACL_RESTORED')
         isolated_prepared_target(self.root)
 
 def main():
@@ -382,7 +404,7 @@ def main():
                     runner.clean()
                     closure={'status':'PASS' if runner.changed else 'NOT_NEEDED','rowsRolesProductSchemaAclRestored':bool(runner.changed),'systemTemporarySchemaAcl':'NOT_VERIFIED'}
                 except Exception as error:
-                    closure={'status':'FAIL','failure':getattr(error,'summary_diagnostic',{'stage':'clean','code':safe_code(error)}),'rowsRolesProductSchemaAclRestored':False,'systemTemporarySchemaAcl':'NOT_VERIFIED'}
+                    closure={'status':'FAIL','failure':getattr(error,'summary_diagnostic',{'stage':'clean','code':safe_code(error)}),'rowsRolesProductSchemaAclRestored':False,'rowDifferences':getattr(runner,'row_differences',None),'systemTemporarySchemaAcl':'NOT_VERIFIED'}
             if original_failure or closure['status']=='FAIL':
                 print(json.dumps({'status':'FAIL','code':(original_failure or closure['failure'])['code'],'scope':'CURRENT119_SUMMARY14_SYNTHETIC','mutation':mutation,'phase':phase,'originalFailure':original_failure,'cleanup':closure,'firstSqlFailure':runner.first_sql_failure,'ownershipReceipt':getattr(runner,'own_receipt_path',None).name if hasattr(runner,'own_receipt_path') else None},ensure_ascii=False))
                 raise SystemExit(1)

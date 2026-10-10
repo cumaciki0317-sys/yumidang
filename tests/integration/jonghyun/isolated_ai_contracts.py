@@ -120,7 +120,12 @@ class Runner:
                  "delete from private.ai_chat_requests where user_id in("+ids+");"
                  "delete from private.ai_member_daily_usage where user_id in("+ids+");"
                  "delete from private.ai_member_processing where user_id in("+ids+");"
-                 "delete from public.profiles where id in("+ids+");delete from auth.users where id in("+ids+");commit;")
+                 "delete from public.profiles where id in("+ids+");delete from auth.users where id in("+ids+");"
+                 # Profile insert creates an episode without a profile FK. Only
+                 # these exact non-Naver fixture owners may be cleaned up.
+                 "do $$begin if exists(select 1 from private.member_episodes where profile_id in("+ids+") and identity_id is not null)"
+                 "then raise exception 'synthetic_episode_has_identity' using errcode='55000';end if;end $$;"
+                 "delete from private.member_episodes where profile_id in("+ids+") and identity_id is null;commit;")
         # Guarded UNKNOWN/90-day receipts and their budget/ledger metadata are intentionally preserved.
         for a in self.accounts:
             self.sql('update private.ai_budget_accounts set registered='+('true' if a['registered'] else 'false')+' where account_id='+quote(a['account_id'])+';')
