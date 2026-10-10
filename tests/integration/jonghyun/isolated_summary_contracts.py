@@ -72,6 +72,67 @@ class Runner(GuardedRunner):
         self.reviews=[str(uuid.uuid4()) for _ in range(5)]
         self.jobs=[];self.invocations=[];self.run_tokens=[];self.mutation_proof=None
         self.role_created=False
+        self.role_absent_confirmed=False
+        self.stage='prepare';self.sql_call_no=0;self.first_sql_failure=None
+
+    def sql(self,statement):
+        self.sql_call_no+=1
+        # Strict fixed metadata only; never persist SQL, fixture text, stderr or
+        # arguments. The digest identifies the exact submitted synthetic SQL.
+        metadata={'stage':self.stage,'sqlCallNo':self.sql_call_no,
+                  'statementSha256':hashlib.sha256(statement.encode()).hexdigest()}
+        try:return super().sql(statement)
+        except Exception as error:
+            metadata['executionLine']=getattr(error,'execution_line',None)
+            metadata['code']=safe_code(error)
+            error.summary_diagnostic=metadata
+            if self.first_sql_failure is None:self.first_sql_failure=dict(metadata)
+            raise
+
+    def own_receipt(self):
+        # Retained even on failure, unlike the ephemeral factory transport file.
+        # UUID ownership and fixed digests only: no JWT, lease/global token,
+        # SQL/raw text or connection credentials are included.
+        value={'scope':'CURRENT119_SUMMARY14_SYNTHETIC','stage':self.stage,'role':self.role,
+               'roleCreated':self.role_created,'people':self.people,'posts':self.posts,
+               'requests':self.requests,'appointments':self.appointments,'reviews':self.reviews,
+               'jobs':self.jobs,'invocations':self.invocations,'dedupeKeys':getattr(self,'dedupes',[]),
+               'targetId':self.target['id'],'targetImage':self.target['image'],'targetProject':self.target['project'],
+               'baselineRowsDigest':getattr(self,'baseline',None),'baselineCatalogDigest':getattr(self,'catalog_before',None)}
+        path=self.root/('summary-owned-'+self.role+'.json')
+        # This namespace is generated once in this process; no existing receipt
+        # from another run or an unverified path is selected for rewriting.
+        if not hasattr(self,'own_receipt_path'):
+            fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600);self.own_receipt_path=path
+        else:
+            require(path==self.own_receipt_path and not path.is_symlink(),'OWN_RECEIPT_IDENTITY')
+            fd=os.open(path,os.O_WRONLY|os.O_TRUNC|os.O_NOFOLLOW)
+        with os.fdopen(fd,'w')as stream:json.dump(value,stream)
+
+    def bootstrap_role(self,create):
+        """Local fresh target only: bootstrap creates/drops this generated role.
+
+        No product role membership, runtime RPC, data, ownership or guard is
+        changed by this helper. The runtime remains postgres SET LOCAL role.
+        """
+        require(re.fullmatch('ym_summary_isolated_[a-f0-9]{12}',self.role),'EXACT_GENERATED_ROLE_REQUIRED')
+        require(hasattr(self,'own_receipt_path'),'OWN_ROLE_INTENT_REQUIRED')
+        require(self.role_absent_confirmed,'OWN_ROLE_INITIAL_ABSENCE_REQUIRED')
+        if create:
+            command='create role '+self.role+' login noinherit nosuperuser nocreatedb nocreaterole noreplication nobypassrls;grant '+self.role+' to postgres with admin false,inherit false,set true;'
+        else:
+            # This role has no CREATE privilege or ownership assignment. DROP
+            # OWNED removes only grants to this exact synthetic role.
+            command='drop owned by '+self.role+';drop role '+self.role+';'
+        statement="begin;do $$begin assert current_user='supabase_admin' and(select rolsuper from pg_roles where rolname=current_user);end;$$;"+command+'commit;'
+        self.identity();self.sql_call_no+=1
+        metadata={'stage':self.stage,'sqlCallNo':self.sql_call_no,'statementSha256':hashlib.sha256(statement.encode()).hexdigest()}
+        try:
+            self.call(['exec','-i',self.target['id'],'psql','-XqAt','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-f','-'],"set statement_timeout='15s';set lock_timeout='10s';set plpgsql.check_asserts=on;\n"+statement)
+        except Exception as error:
+            metadata.update(executionLine=getattr(error,'execution_line',None),code=safe_code(error));error.summary_diagnostic=metadata
+            if self.first_sql_failure is None:self.first_sql_failure=dict(metadata)
+            raise
 
     def digest(self):
         # Protect every row, including budgets excluded by the AI fixture digest.
@@ -85,7 +146,7 @@ class Runner(GuardedRunner):
         return self.sql("select md5(coalesce(string_agg(to_jsonb(p)::text,E'\\n' order by p.oid),''))from pg_proc p where pronamespace in('public'::regnamespace,'private'::regnamespace);"
           "select md5(coalesce(string_agg(to_jsonb(r)::text,E'\\n' order by oid),''))from pg_roles r;"
           "select md5(coalesce(string_agg(to_jsonb(a)::text,E'\\n' order by roleid,member),''))from pg_auth_members a;"
-          "select md5(coalesce(string_agg(jsonb_build_object('schema',nspname,'acl',nspacl)::text,E'\\n' order by nspname),''))from pg_namespace;")
+          "select md5(coalesce(string_agg(jsonb_build_object('schema',nspname,'acl',nspacl)::text,E'\\n' order by nspname),''))from pg_namespace where nspname in('public','private','auth','storage');")
 
     def prepare(self):
         require(json.loads(self.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))==self.target['versions'],'APPLIED_HISTORY_CHANGED')
@@ -94,14 +155,16 @@ class Runner(GuardedRunner):
         self.baseline=self.digest();self.catalog_before=self.catalog()
         self.global_before=json.loads(self.sql('select to_jsonb(g)from private.global_worker_run g;'))
         self.changed=True
-        self.sql('begin;create role '+self.role+' login noinherit nosuperuser nocreatedb nocreaterole noreplication nobypassrls;'
-          'grant '+self.role+' to postgres with admin false,inherit false,set true;grant usage on schema public to '+self.role+';'
+        self.own_receipt()
+        require(self.sql('select exists(select 1 from pg_roles where rolname='+quote(self.role)+');')=='f','GENERATED_ROLE_ALREADY_EXISTS')
+        self.role_absent_confirmed=True
+        self.bootstrap_role(True);self.role_created=True;self.own_receipt()
+        self.sql('begin;grant usage on schema public to '+self.role+';'
           'grant execute on function '+','.join('public.'+s for s in SIGNATURES)+' to '+self.role+';'
           "do $$begin assert not has_schema_privilege("+quote(self.role)+",'private','USAGE');assert not has_table_privilege("+quote(self.role)+",'private.worker_invocations','SELECT');"
           "assert not pg_has_role("+quote(self.role)+",'service_role','SET');assert not has_function_privilege('service_role','public.publish_review_summary_for_job(uuid,uuid,text,uuid[],text,text,text,uuid,text)','EXECUTE');end;$$;"
           'update private.worker_runtime_atomic_control set enabled=true where singleton;update private.worker_invocation_control set enabled=true where singleton;'
           'update private.ai_processing_guard set external_processing_allowed=true where singleton;commit;')
-        self.role_created=True
         author,target=self.people
         q="begin;select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
         for member in self.people:
@@ -124,10 +187,15 @@ class Runner(GuardedRunner):
 
     def enqueue(self):
         source=json.loads(self.sql('select private.refresh_review_summary_state('+quote(self.people[1])+');'));revision=source['sourceRevision']
-        job=self.rpc('enqueue_job',{'p_kind':'review_summary','p_dedupe_key':'synthetic-summary:'+uuid.uuid4().hex,'p_payload':{'profileId':self.people[1],'sourceRevision':revision,'modelVersion':'synthetic-summary-v1','promptVersion':'review-summary-v1'},'p_available_at':'2000-01-01T00:00:00Z'})
+        dedupe='synthetic-summary:'+uuid.uuid4().hex
+        if not hasattr(self,'dedupes'):self.dedupes=[]
+        self.dedupes.append(dedupe);self.own_receipt()
+        job=self.rpc('enqueue_job',{'p_kind':'review_summary','p_dedupe_key':dedupe,'p_payload':{'profileId':self.people[1],'sourceRevision':revision,'modelVersion':'synthetic-summary-v1','promptVersion':'review-summary-v1'},'p_available_at':'2000-01-01T00:00:00Z'})
         require(job['deduplicated'] is False and job['status']=='queued','FRESH_JOB');self.jobs.append(job['jobId'])
+        self.own_receipt()
         run=self.rpc('acquire_worker_run',{'p_lease_seconds':180,'p_existing_token':None});require(run is not None,'RUN_ACQUIRED')
         token=run['token'];self.run_tokens.append(token);req=str(uuid.uuid4());self.invocations.append(req)
+        self.own_receipt()
         args={'p_request_id':req,'p_global_token':token,'p_kind':'review_summary','p_limit':1,'p_remaining_ms':60000}
         require(self.rpc('prepare_queue_invocation',args)=={'requestId':req,'state':'prepared','fresh':True},'PREPARED')
         require(self.rpc('claim_queue_invocation_dispatch',args)=={'claimed':True},'FIRST_DISPATCH')
@@ -159,6 +227,7 @@ class Runner(GuardedRunner):
           left join private.worker_invocation_jobs a on a.job_id=j.id left join private.worker_invocations r on r.request_id=a.request_id where j.id='{job}';"""))
 
     def mutate(self,body):
+        self.stage='mutate'
         require(self.mutation_proof is None,'ONE_MUTATION_ONLY');before=self.proof(self.context);scope=body['scope']
         require(scope==before['scope'] and before['dispatchable'] and before['settledStatus'] is None and before['effect'] is None,'LIVE_ORIGINAL_SCOPE')
         require(1<=before['parentRemainingMs']<=60000 and 1<=before['parentLimit']<=10 and before['parentRemainingMs']==60000 and before['parentLimit']==1,'ORIGINAL_PARENT_ALLOCATION_BOUNDS')
@@ -203,6 +272,7 @@ class Runner(GuardedRunner):
     def control(self,name,body):
         if name=='mutate':return self.mutate(body)
         if name=='complete':
+            self.stage='complete'
             require(body['requestId'] in self.invocations,'OWN_INVOCATION')
             value=self.rpc('complete_queue_invocation',{'p_request_id':body['requestId']})
             # SQL109 stores settled DB counts, not the HTTP/batch stopReason.
@@ -226,7 +296,9 @@ class Runner(GuardedRunner):
         raise ValueError('CONTROL_ALLOWLIST')
 
     def clean(self):
+        self.stage='clean'
         if not self.changed:return
+        self.own_receipt()
         self.sql('update private.ai_processing_guard set external_processing_allowed=false where singleton;update private.worker_invocation_control set enabled=false where singleton;update private.worker_runtime_atomic_control set enabled=false where singleton;')
         ids=lambda xs:','.join(quote(x)+'::uuid' for x in xs) or 'null::uuid'
         q='begin;delete from private.worker_invocation_jobs where request_id in('+ids(self.invocations)+');delete from private.worker_invocations where request_id in('+ids(self.invocations)+');'
@@ -234,8 +306,14 @@ class Runner(GuardedRunner):
         q+='delete from private.worker_jobs where id in('+ids(self.jobs)+');delete from public.posts where id in('+ids(self.posts)+');'
         q+='delete from private.ai_member_processing where user_id in('+ids(self.people)+');delete from public.profiles where id in('+ids(self.people)+');delete from auth.users where id in('+ids(self.people)+');'
         if self.global_before is not None:q+='update private.global_worker_run set (token,expires_at)=(select token,expires_at from jsonb_populate_record(null::private.global_worker_run,'+quote(json.dumps(self.global_before))+'::jsonb)) where singleton;'
-        if self.role_created:q+='drop owned by '+self.role+';drop role '+self.role+';'
         q+='commit;';self.sql(q)
+        # Handle a CREATE response loss using only this process's previously
+        # absent, generated role identity and retained intent; never scan/drop
+        # any other role, failed scope or protected source.
+        present=self.sql('select exists(select 1 from pg_roles where rolname='+quote(self.role)+');')
+        require(present in ('t','f'),'OWN_ROLE_PRESENCE_PROOF')
+        if present=='t':self.bootstrap_role(False)
+        self.role_created=False;self.own_receipt()
         require(self.digest()==self.baseline,'ALL_ROWS_RESTORED');require(self.catalog()==self.catalog_before,'ROLES_MEMBERSHIPS_PRODUCT_ACL_RESTORED')
         isolated_prepared_target(self.root)
 
@@ -249,6 +327,7 @@ def main():
     for mutation in ('edit','consent','hide','delete'):
         for phase in ('checkpoint','publish'):
             runner=Runner(args.prepared_root);runner.mutation=mutation;runner.phase=phase;server=None
+            original_failure=None;closure={'status':'NOT_RUN'}
             try:
                 require(manifest==graph(),'FROZEN_SOURCE_CHANGED');runner.prepare()
                 class Bridge(BaseHTTPRequestHandler):
@@ -259,7 +338,10 @@ def main():
                             require(self.headers.get('Authorization')=='Bearer synthetic-service','SYNTHETIC_TOKEN_REQUIRED')
                             size=int(self.headers.get('Content-Length','0'));require(0<size<=65536,'BODY_LIMIT');body=json.loads(self.rfile.read(size))
                             if self.path.startswith('/rpc/'):result=runner.rpc(self.path[5:],body)
-                            elif self.path.startswith('/control/'):result=runner.control(self.path[9:],body)
+                            elif self.path.startswith('/control/'):
+                                previous=runner.stage
+                                result=runner.control(self.path[9:],body)
+                                runner.stage=previous
                             else:raise ValueError('BRIDGE_PATH')
                             wire=json.dumps(result).encode();self.send_response(200)
                         except Exception as error:
@@ -271,9 +353,10 @@ def main():
                             if probe and label in ('SQLSTATE_55000','SQLSTATE_40001','SQLSTATE_P0001'):
                                 wire=b'{"code":"STATE_CONFLICT"}';self.send_response(409)
                             else:
-                                runner.failed=True;runner.failure_code=label;wire=b'{"code":"ISOLATED_SUMMARY_RPC_FAILED"}';self.send_response(500)
+                                runner.failed=True;runner.failure_code=label;runner.rpc_failure=getattr(error,'summary_diagnostic',{'stage':runner.stage,'code':label});wire=b'{"code":"ISOLATED_SUMMARY_RPC_FAILED"}';self.send_response(500)
                         self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(wire)));self.end_headers();self.wfile.write(wire)
                 server=ThreadingHTTPServer(('127.0.0.1',0),Bridge);threading.Thread(target=server.serve_forever,daemon=True).start()
+                runner.stage='factory'
                 fixture={'scope':'CURRENT119_SUMMARY14_SYNTHETIC','codeRoot':str(REPO),'origin':'http://127.0.0.1:'+str(server.server_port),'manifest':manifest,'rpcs':sorted(NAMES),'comment':COMMENT,'reviewIds':runner.reviews[:3],'mutation':mutation,'phase':phase,**runner.context}
                 path=args.prepared_root/('summary-synthetic-'+uuid.uuid4().hex+'.json');fd=os.open(path,os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
                 with os.fdopen(fd,'w')as stream:json.dump(fixture,stream)
@@ -282,14 +365,33 @@ def main():
                     output=json.loads(result.stdout.strip().splitlines()[-1])
                     safe_code=output.get('code','')
                     if not isinstance(safe_code,str) or not re.fullmatch('SUMMARY_CHECK_[A-Z0-9_]+|SUMMARY_BARRIER_TIMEOUT',safe_code):safe_code='SUMMARY_FACTORY_FAILED'
-                    require(result.returncode==0 and output['status']=='PASS' and not runner.failed,getattr(runner,'failure_code',safe_code));results.append(output)
+                    if result.returncode!=0 or output['status']!='PASS' or runner.failed:
+                        error=ValueError(getattr(runner,'failure_code',safe_code))
+                        error.summary_diagnostic=getattr(runner,'rpc_failure',{'stage':runner.stage,'code':str(error)})
+                        raise error
+                    results.append(output)
                 finally:path.unlink(missing_ok=True)
                 require(manifest==graph(),'FROZEN_SOURCE_CHANGED')
+            except Exception as error:
+                original_failure=getattr(error,'summary_diagnostic',{'stage':runner.stage,'code':safe_code(error)})
             finally:
-                if server:server.shutdown();server.server_close()
-                runner.clean()
+                # Cleanup failure is separate evidence, never a replacement for
+                # the original product/fixture failure. Close the bridge first.
+                try:
+                    if server:server.shutdown();server.server_close()
+                    runner.clean()
+                    closure={'status':'PASS' if runner.changed else 'NOT_NEEDED','rowsRolesProductSchemaAclRestored':bool(runner.changed),'systemTemporarySchemaAcl':'NOT_VERIFIED'}
+                except Exception as error:
+                    closure={'status':'FAIL','failure':getattr(error,'summary_diagnostic',{'stage':'clean','code':safe_code(error)}),'rowsRolesProductSchemaAclRestored':False,'systemTemporarySchemaAcl':'NOT_VERIFIED'}
+            if original_failure or closure['status']=='FAIL':
+                print(json.dumps({'status':'FAIL','code':(original_failure or closure['failure'])['code'],'scope':'CURRENT119_SUMMARY14_SYNTHETIC','mutation':mutation,'phase':phase,'originalFailure':original_failure,'cleanup':closure,'firstSqlFailure':runner.first_sql_failure,'ownershipReceipt':getattr(runner,'own_receipt_path',None).name if hasattr(runner,'own_receipt_path') else None},ensure_ascii=False))
+                raise SystemExit(1)
     require(len(results)==8 and sum(x['insufficient'] for x in results)==6,'EXACT_FOURTEEN_CASES')
-    print(json.dumps({'status':'PASS','scope':'CURRENT119_SUMMARY14_SYNTHETIC','races':8,'insufficient':6,'allRowsRolesMembershipsProductAclRestored':True,'sourcePins':manifest,'cases':results,'originalSource112PrivateGraphActualAuthProviderBudgetProductionSafety':'NOT_RUN'},ensure_ascii=False))
+    print(json.dumps({'status':'PASS','scope':'CURRENT119_SUMMARY14_SYNTHETIC','races':8,'insufficient':6,'allRowsRolesMembershipsProductAclRestored':True,'systemTemporarySchemaAcl':'NOT_VERIFIED','sourcePins':manifest,'cases':results,'originalSource112PrivateGraphActualAuthProviderBudgetProductionSafety':'NOT_RUN'},ensure_ascii=False))
+
+def safe_code(error):
+    message=str(error)
+    return message if re.fullmatch('[A-Z_0-9:]+',message) else 'ISOLATED_SUMMARY_FAILED'
 
 if __name__=='__main__':
     try:main()
