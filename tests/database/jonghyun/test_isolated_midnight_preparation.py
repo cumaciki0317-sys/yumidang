@@ -54,6 +54,8 @@ class MidnightPreparationTests(unittest.TestCase):
         evidence = m.inspect_evidence(self.root)
         self.assertEqual(len(evidence['publicEvidenceSha256']), 2)
         self.assertEqual(evidence['priorLiveBudgetDay'], 'NOT_OBSERVED')
+        self.assertEqual(evidence['productGraphMatchToCurrent'], 'NOT_VERIFIED')
+        self.assertEqual(evidence['targetBinding'], 'MANIFEST_ONLY_LIVE_NOT_OBSERVED')
 
     def test_tampered_public_log_is_rejected(self):
         with (self.root / self.log).open('a') as stream:
