@@ -201,4 +201,3 @@ async function aiCapsHttpCase(f:any){
   return {status:'PASS',case:'ai-caps',observations,nativeExternalAttempts,modelScope:'EXPLICIT_SYNTHETIC_IN_MEMORY_ADAPTER',syntheticUsageOnly:true,actualWallClockMidnight:'NOT_RUN',realProviderQualityAccountCostResetSharedUseLegalMemberLogin:'NOT_RUN',rawPromptModelResponseLogged:false};
  }finally{globalThis.fetch=native;}
 }
-
