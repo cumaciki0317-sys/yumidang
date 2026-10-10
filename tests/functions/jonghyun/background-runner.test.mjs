@@ -825,7 +825,8 @@ test("준비된5kind runner는 공유소비자만 dispatch하고 취소LISTEN �
   async schedule({globalToken}){if(globalToken!==null)assert.equal(globalToken,token);return {serverNow:now,nextDueAt:due?now:null,nextKind:due?"cancellation_safety":null};},
   async invokeExisting(){assert.fail("existing kinds are not due");},
   async invokeSafety(t,kind,options){assert.equal(t,token);assert.equal(kind,"cancellation_safety");assert.equal(options.limit,20);due=false;invokes.push(kind);return {status:"ran",counts:{claimed:1}};},
-  contracts:{decisionId:"synthetic-shared-contract",async readBudget(t){assert.equal(t,token);return {remainingMs:180000};},unitsFor:(_k,r)=>r.counts.claimed,
+  contracts:{decisionId:"synthetic-shared-contract",async readBudget(t){assert.equal(t,token);return {remainingMs:180000};},
+   async readSlots(t){assert.equal(t,token);const used=invokes.length;return {used,remaining:20-used};},unitsFor:(_k,r)=>r.counts.claimed,
    journal:{async hasPending(){return false;},async begin(){return token;},async confirm(){return true;},async unknown(){assert.fail("not unknown");}},
    maintenance:{async readSchedule(){return {serverNow:now,nextDueAt:null};},async run(){assert.fail("not due");}}},
  };

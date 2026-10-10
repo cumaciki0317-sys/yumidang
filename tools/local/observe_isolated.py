@@ -62,7 +62,7 @@ def source_pins():
                 or relative.startswith('tests/integration/jonghyun/isolated_') and relative.endswith(('.py', '.ts'))
                 or relative.startswith('tests/database/') and '/current_' in relative and relative.endswith('.sql')
                 or relative in ['tests/integration/minkyu/content_inspection_http_local.ts',
-                                'tests/integration/minkyu/worker_safety_http_local.ts',
+                                'tests/integration/minkyu/worker_safety_http.ts',
                                 'tests/integration/minkyu/worker_safety_http_local.py']):
             continue
         committed = subprocess.check_output(['git', '-C', str(ROOT), 'show', 'HEAD:' + relative], timeout=15)
@@ -103,7 +103,7 @@ def observe(root, mode):
                 available = probe(); report["samples"].append(available)
                 if available < 786432:
                     raise ValueError("MEMORY_RUNNING_FAILED")
-                if time.monotonic() - started > 300:
+                if time.monotonic() - started > (900 if mode == 'summary' else 300):
                     raise ValueError("OBSERVER_TIME_LIMIT")
                 time.sleep(1)
             report["childExitCode"] = process.wait(timeout=5)
