@@ -2,16 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {createDueMaintenanceGroup,createSharedBackgroundQueueScheduler} from "../../../backend/supabase/functions/_shared/jobs/background.mjs";
 const now="2026-10-08T00:00:00Z",future="2026-10-08T00:05:00Z",token="00000000-0000-4000-8000-000000000001";
-test("completion and helpful keep earliest DB due and share remainder",async()=>{
+test("completion and helpful keep earliest DB due and separate persisted provider allocations",async()=>{
  const calls=[];const group=createDueMaintenanceGroup([
  {readSchedule:async()=>({serverNow:now,nextDueAt:now}),run:async(t,o)=>{calls.push(o.limit);return{purged:2,processedItems:3};}},
  {readSchedule:async()=>({serverNow:now,nextDueAt:now}),run:async(t,o)=>{calls.push(o.limit);return{purged:1,processedItems:1};}}
- ],()=>0);assert.deepEqual(await group.readSchedule(token),{serverNow:now,nextDueAt:now});assert.deepEqual(await group.run(token,{limit:4,remainingMs:1000,signal:new AbortController().signal}),{purged:3,processedItems:4});assert.deepEqual(calls,[4,1]);
+ ],()=>0);assert.deepEqual(await group.readSchedule(token),{serverNow:now,nextDueAt:now});assert.deepEqual(await group.run(token,{limit:4,remainingMs:1000,signal:new AbortController().signal}),{purged:3,processedItems:4});assert.deepEqual(calls,[4,4]);
 });
 function scheduler(maintenance,invoke=async()=>{throw new Error("unexpected")},repositoryOverrides={}){
- const timers=[],errors=[];let released=0;const s=createSharedBackgroundQueueScheduler({supportedKinds:["report_retention"],queryTimeoutMs:1000,
+ const timers=[],errors=[];let released=0,used=0;const s=createSharedBackgroundQueueScheduler({supportedKinds:["report_retention"],queryTimeoutMs:1000,
  repository:{schedule:async()=>({serverNow:now,nextDueAt:null,nextKind:null}),acquire:async()=>({token,expiresAt:future}),release:async()=>{released++;return"applied";},...repositoryOverrides},
- contracts:{decisionId:"approved-item-unit-fixture",readBudget:async()=>({remainingMs:10000}),unitsFor:(k,r)=>k===null?r.processedItems:r.counts.processedItems,journal:{hasPending:async()=>false,begin:async()=>token,confirm:async()=>true,unknown:async()=>{}},maintenance},invoke,
+ contracts:{decisionId:"approved-item-unit-fixture",readBudget:async()=>({remainingMs:10000}),readSlots:async()=>({used,remaining:20-used}),unitsFor:(k,r)=>k===null?r.processedItems:r.counts.processedItems,journal:{hasPending:async()=>false,begin:async()=>token,confirm:async()=>true,unknown:async()=>{}},maintenance},invoke:async(...args)=>{const result=await invoke(...args);used+=result.counts?.claimed??0;return result;},
  setTimer:(fn,ms)=>{const h={fn,ms};timers.push(h);return h;},clearTimer:h=>h.cleared=true,elapsed:()=>0,onError:e=>errors.push(e)});
  return{s,timers,errors,released:()=>released};
 }
@@ -19,11 +19,11 @@ test("restart wake reads helpful DB due and arms exact timer, stop clears it",as
 test("stop aborts ongoing due maintenance and preserves UNKNOWN with no lease release",async()=>{let entered;const started=new Promise(r=>entered=r);const f=scheduler({readSchedule:async()=>({serverNow:now,nextDueAt:now}),run:async(_t,o)=>{entered();return new Promise(()=>{});}});const waking=f.s.wake();await started;await f.s.stop();await waking;assert.equal(f.released(),0);assert.deepEqual(f.errors,["WORKER_QUEUE_RECONCILIATION_REQUIRED"]);});
 
 import {createSharedQueueRuntime} from "../../../backend/supabase/functions/scheduled-jobs/queue-runner.mjs";
-test("runtime composition counts report attachment reservations rather than parent jobs",()=>{
+test("runtime composition counts unique queued jobs while maintenance has separate allocations",()=>{
  const runtime=createSharedQueueRuntime({schedule:async()=>{},invokeSafety:async()=>{},invokeExisting:async()=>{},supportedKinds:["report_retention"],
- contracts:{decisionId:"confirmed-item-policy",readBudget:async()=>{},journal:{hasPending:async()=>false,begin:async()=>{},confirm:async()=>{},unknown:async()=>{}}},
+ contracts:{decisionId:"confirmed-item-policy",readBudget:async()=>{},readSlots:async()=>({used:0,remaining:20}),journal:{hasPending:async()=>false,begin:async()=>{},confirm:async()=>{},unknown:async()=>{}}},
  maintenanceProviders:[{readSchedule:async()=>({serverNow:now,nextDueAt:null}),run:async()=>({purged:0,processedItems:0})}]});
- assert.equal(runtime.contracts.unitsFor("report_retention",{counts:{claimed:1,processedItems:3}}),3);
+ assert.equal(runtime.contracts.unitsFor("report_retention",{counts:{claimed:1,processedItems:3}}),1);
  assert.equal(runtime.contracts.unitsFor(null,{purged:2,processedItems:3}),3);
  assert.equal(runtime.contracts.unitsFor("review_summary",{counts:{claimed:4}}),4);
  assert.throws(()=>createSharedQueueRuntime({}),/SHARED_QUEUE_CONTRACT_NOT_READY/);
@@ -33,11 +33,11 @@ test("due helpful with zero item reservation cannot create a hot loop",async()=>
  await f.s.wake();assert.equal(runs,1);assert.equal(f.released(),1);assert.equal(f.timers.filter(t=>!t.cleared).length,0);assert.deepEqual(f.errors,[]);await f.s.stop();
 });
 test("claimed report without processing item is a valid held response, not unknown mutation",async()=>{
- let due=true,released=0;const errors=[];
+ let due=true,released=0,used=0;const errors=[];
  const s=createSharedBackgroundQueueScheduler({supportedKinds:["report_retention"],queryTimeoutMs:1000,
  repository:{schedule:async({excludeKinds})=>({serverNow:now,nextDueAt:due&&!excludeKinds.includes("report_retention")?now:null,nextKind:due&&!excludeKinds.includes("report_retention")?"report_retention":null}),acquire:async()=>({token,expiresAt:future}),release:async()=>{released++;return"applied";}},
- contracts:{decisionId:"approved-item-unit-fixture",readBudget:async()=>({remainingMs:10000}),unitsFor:(_k,r)=>r.counts.processedItems,journal:{hasPending:async()=>false,begin:async()=>token,confirm:async()=>true,unknown:async()=>assert.fail()},maintenance:{readSchedule:async()=>({serverNow:now,nextDueAt:null}),run:async()=>assert.fail()}},
- invoke:async()=>({status:"ran",counts:{claimed:1,held:1,processedItems:0}}),onError:e=>errors.push(e)});
+ contracts:{decisionId:"approved-item-unit-fixture",readBudget:async()=>({remainingMs:10000}),readSlots:async()=>({used,remaining:20-used}),unitsFor:(_k,r)=>r.counts.processedItems,journal:{hasPending:async()=>false,begin:async()=>token,confirm:async()=>true,unknown:async()=>assert.fail()},maintenance:{readSchedule:async()=>({serverNow:now,nextDueAt:null}),run:async()=>assert.fail()}},
+ invoke:async()=>{used=1;return{status:"ran",counts:{claimed:1,held:1,processedItems:0}};},onError:e=>errors.push(e)});
  await s.wake();await s.stop();assert.equal(released,1);assert.deepEqual(errors,[]);
 });
 
