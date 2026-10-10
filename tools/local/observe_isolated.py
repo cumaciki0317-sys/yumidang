@@ -32,6 +32,10 @@ def exclusive_file(path):
     return os.fdopen(os.open(path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600), "w+")
 
 
+def interrupted(_signal, _frame):
+    raise ValueError('OBSERVER_INTERRUPTED')
+
+
 def terminate(process):
     if process.poll() is None:
         try:
@@ -110,6 +114,7 @@ def observe(root, mode):
         except (OSError, ValueError, subprocess.SubprocessError):
             report["observerFailure"] = "OBSERVER_FIXED_FAILURE"
         finally:
+            previous_signal = signal.signal(signal.SIGTERM, signal.SIG_IGN)
             if process is not None:
                 try:
                     terminate(process)
@@ -117,10 +122,17 @@ def observe(root, mode):
                     report['status'] = 'FAIL'
                     report['observerFailure'] = 'OBSERVER_TERMINATION_UNCONFIRMED'
                 report["childExitCode"] = process.returncode
-            log.flush(); log.seek(0)
-            report["publicLogSha256"] = hashlib.sha256(log.read().encode()).hexdigest()
-            report["elapsedSeconds"] = round(time.monotonic() - started, 2)
-            json.dump(report, receipt); receipt.flush(); os.fsync(receipt.fileno())
+            try:
+                try:
+                    log.flush(); log.seek(0)
+                    report["publicLogSha256"] = hashlib.sha256(log.read().encode()).hexdigest()
+                except OSError:
+                    report['status'] = 'FAIL'
+                    report['observerFailure'] = 'OBSERVER_LOG_UNCONFIRMED'
+                report["elapsedSeconds"] = round(time.monotonic() - started, 2)
+                json.dump(report, receipt); receipt.flush(); os.fsync(receipt.fileno())
+            finally:
+                signal.signal(signal.SIGTERM, previous_signal)
         print(json.dumps({**report, "receipt": result_path.name}))
         return 0 if report["status"] == "PASS" else 1
 
@@ -134,6 +146,7 @@ if __name__ == "__main__":
     if not args.run:
         print('{"status":"NOT_RUN"}')
     else:
+        signal.signal(signal.SIGTERM, interrupted)
         try:
             raise SystemExit(observe(args.prepared_root, args.mode))
         except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):

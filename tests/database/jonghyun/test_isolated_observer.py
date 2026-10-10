@@ -13,6 +13,10 @@ import observe_isolated as observer
 
 
 class ObserverTests(unittest.TestCase):
+    def test_observer_sigterm_enters_exception_cleanup_path(self):
+        with self.assertRaisesRegex(ValueError, '^OBSERVER_INTERRUPTED$'):
+            observer.interrupted(signal.SIGTERM, None)
+
     def test_natural_exit_between_poll_and_signal_is_reaped(self):
         process = Mock(pid=123)
         process.poll.return_value = None
