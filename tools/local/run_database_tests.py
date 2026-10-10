@@ -3,6 +3,10 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import json
+import hashlib
+import os
+import re
+import tempfile
 from pathlib import Path
 import subprocess
 import select
@@ -15,6 +19,182 @@ PROJECT = "yumidang-minkyu-db"
 CONTAINER = "supabase_db_" + PROJECT
 TESTS = ("worker_jobs.sql", "public_post_search.sql", "review_summary_storage.sql",
          "bilateral_completion.sql", "review_automation.sql", "core_service_api.sql", "public_search_v2.sql")
+CURRENT_AI_FILES = ("ai_atomic_requests.sql", "ai_account_budget.sql", "ai_account_scopes.sql", "current_summary_fences.sql")
+
+
+def isolated_command_error(stderr):
+    """원 응답 대신 제한된 SQLSTATE와 stdin 실행 행만 남긴다."""
+    state = re.search(r"ERROR:\s+([0-9A-Z]{5})\b", stderr)
+    line = re.search(r"psql:<stdin>:([1-9][0-9]{0,5}):\s+ERROR:", stderr)
+    error = RuntimeError("SQLSTATE_" + state[1] if state else "ISOLATED_COMMAND_FAILED")
+    error.execution_line = int(line[1]) if line else None
+    return error
+
+
+def isolated_prepared_target(prepared_root):
+    """현재 소스의 좁은 overlay·SQL 바이트만 검사한다. Docker/SQL 호출은 없다."""
+    from prepare_database import isolated_config
+    from prepare_migrations import inspect_migrations
+    original = Path(prepared_root)
+    root = original.resolve()
+    if (root != original.absolute() or root == Path(tempfile.gettempdir()).resolve()
+            or not root.is_relative_to(Path(tempfile.gettempdir()).resolve())
+            or root.is_relative_to(ROOT) or root.is_symlink()
+            or root.stat().st_uid != os.getuid() or root.stat().st_mode & 0o777 != 0o700):
+        raise ValueError("ISOLATED_ROOT_INVALID")
+    def read(relative):
+        path = root / relative
+        if (path.is_symlink() or not path.is_file() or path.resolve() != path
+                or path.stat().st_nlink != 1 or path.stat().st_size > 4 * 1024 * 1024):
+            raise ValueError("ISOLATED_INPUT_INVALID")
+        return path.read_bytes()
+    manifest = json.loads(read("database-manifest.json"))
+    intent = json.loads(read("execution-intent.json"))
+    config = read("supabase/config.toml")
+    overlay = manifest["config_overlay"]
+    source = (ROOT / "backend/supabase/config.toml").read_bytes()
+    expected, expected_overlay = isolated_config(source, overlay["project_id"], overlay["api.port"])
+    if (config != expected or overlay != expected_overlay
+            or manifest["config_sha256"] != hashlib.sha256(config).hexdigest()
+            or manifest["source_config_sha256"] != hashlib.sha256(source).hexdigest()
+            or manifest["sql_execution"] != "NOT_RUN"):
+        raise ValueError("ISOLATED_CONFIG_CHANGED")
+    history = inspect_migrations(ROOT)
+    if manifest["migrations"] != history["migrations"]:
+        raise ValueError("ISOLATED_MIGRATION_CHANGED")
+    selected = {Path(x["path"]).name for x in history["migrations"]}
+    if {p.name for p in (root / "supabase/migrations").iterdir()} != selected:
+        raise ValueError("ISOLATED_MIGRATION_SET_CHANGED")
+    for entry in history["migrations"]:
+        if hashlib.sha256(read("supabase/migrations/" + Path(entry["path"]).name)).hexdigest() != entry["sha256"]:
+            raise ValueError("ISOLATED_MIGRATION_CHANGED")
+    project = overlay["project_id"]
+    host = "unix://" + str(Path.home() / ".colima/jonghyun-backend100/docker.sock")
+    if (intent["context"] != "colima-jonghyun-backend100" or intent["dockerHost"] != host
+            or intent["project"] != project or intent["scope"] != "new-synthetic-only"
+            or intent["existingContainers"] != [] or intent["existingNetworks"] != []):
+        raise ValueError("ISOLATED_INTENT_INVALID")
+    owned = json.loads(read("owned-containers.json"))
+    matching = [x for x in owned if x["name"] == "supabase_db_" + project]
+    if (len(matching) != 1 or not re.fullmatch(r"[a-f0-9]{64}", matching[0]["id"])
+            or not re.fullmatch(r"sha256:[a-f0-9]{64}", matching[0]["image"])):
+        raise ValueError("ISOLATED_DB_ID_INVALID")
+    return {"context": intent["context"], "host": host, "project": project,
+            "container": matching[0]["name"], "id": matching[0]["id"], "image": matching[0]["image"],
+            "versions": [x["version"] for x in history["migrations"]]}
+
+
+def current_ai_cases(payloads):
+    """계정 scope가 참조하는 helper만 재사용하고 각 fixture는 독립 rollback한다."""
+    helper = re.findall(r"create function pg_temp\.pool_failure\(.*?\$\$;", payloads["ai_account_budget.sql"], re.S)
+    if len(helper) != 1:
+        raise ValueError("BUDGET_HELPER_CHANGED")
+    return [
+        ("ai_atomic_requests", payloads["ai_atomic_requests.sql"]),
+        ("ai_account_budget", "begin;\n" + payloads["ai_account_budget.sql"] + "\nrollback;"),
+        ("ai_account_scopes", "begin;\n" + helper[0] + "\n" + payloads["ai_account_scopes.sql"] + "\nrollback;"),
+        ("current_summary_fences", payloads["current_summary_fences.sql"]),
+    ]
+
+
+def run_current_ai(prepared_root):
+    """새 전용 환경에서 현재 AI 계약만 검사한다. legacy 경쟁/외부 호출 없음."""
+    stage, completed, target = "prepared_guard", [], None
+    try:
+        target = isolated_prepared_target(prepared_root)
+        # 이름의 재해석 대신 검토한 socket을 모든 실제 Docker 호출에 고정한다.
+        base = ["docker", "--host", target["host"]]
+        def call(args, *, data=None):
+            result = subprocess.run(base + args, input=data, text=True, capture_output=True, timeout=30)
+            if result.returncode:
+                raise isolated_command_error(result.stderr)
+            return result.stdout.strip()
+        def verify_identity():
+            if call(["context", "inspect", target["context"], "--format", "{{.Endpoints.docker.Host}}"] ) != target["host"]:
+                raise ValueError("ISOLATED_SOCKET_CHANGED")
+            inspected = json.loads(call(["inspect", target["container"]]))
+            if len(inspected) != 1:
+                raise ValueError("ISOLATED_ID_CHANGED")
+            item = inspected[0]
+            if (item["Id"] != target["id"] or item["Image"] != target["image"]
+                    or item["Name"] != "/" + target["container"] or not item["State"]["Running"]
+                    or item["Config"]["Labels"].get("com.supabase.cli.project") != target["project"]):
+                raise ValueError("ISOLATED_ID_CHANGED")
+        def query(statement):
+            verify_identity()
+            return call(["exec", "-i", target["id"], "psql", "-XqAt", "-U", "postgres", "-d", "postgres",
+                         "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=sqlstate", "-f", "-"],
+                        data="set application_name='ym_current_ai_sql';set statement_timeout='15s';"
+                             "set lock_timeout='10s';set plpgsql.check_asserts=on;\n" + statement)
+        stage = "target_guard"
+        verify_identity()
+        actual_versions = json.loads(query("select json_agg(version order by version) from supabase_migrations.schema_migrations;"))
+        if actual_versions != target["versions"]:
+            raise ValueError("ISOLATED_APPLIED_HISTORY_CHANGED")
+        def closed_empty():
+            result = query("select (select count(*) from auth.users)+(select count(*) from public.profiles)"
+                           "+(select count(*) from private.worker_jobs)+(select count(*) from private.ai_chat_requests)"
+                           "+(select count(*) from private.ai_budget_reservations);"
+                           "select current_setting('cron.launch_active_jobs');"
+                           "select external_processing_allowed from private.ai_processing_guard where singleton;"
+                           "select count(*) from pg_stat_activity where application_name='ym_current_ai_sql'"
+                           " and pid<>pg_backend_pid();")
+            if result.splitlines() != ["0", "off", "f", "0"]:
+                raise ValueError("ISOLATED_NOT_EMPTY_OR_OPEN")
+        closed_empty()
+        def row_fingerprint():
+            # 행 원문을 DB 밖으로 반환하지 않고 모든 제품/AI/Storage 행의 digest만 비교한다.
+            return query("begin;create temp table isolated_row_fingerprints(name text,digest text);"
+                         "do $$declare t record;h text;begin for t in select schemaname,tablename from pg_tables"
+                         " where schemaname in ('public','private','storage') order by schemaname,tablename loop"
+                         " execute format('select md5(coalesce(string_agg(v,%L order by v),%L)) from"
+                         " (select to_jsonb(x)::text v from %I.%I x)s',E'\\n','',t.schemaname,t.tablename) into h;"
+                         " insert into isolated_row_fingerprints values(t.schemaname||'.'||t.tablename,h);"
+                         " end loop;end $$;select md5(string_agg(name||':'||digest,E'\\n' order by name))"
+                         " from isolated_row_fingerprints;rollback;")
+        baseline = row_fingerprint()
+        payloads = {}
+        for name in CURRENT_AI_FILES:
+            path = "tests/database/minkyu/" + name
+            data = (ROOT / path).read_bytes()
+            committed = subprocess.run(["git", "-C", str(ROOT), "show", "HEAD:" + path], capture_output=True, timeout=15)
+            if committed.returncode or data != committed.stdout:
+                raise ValueError("SQL_TEST_CHANGED")
+            payloads[name] = data.decode("utf-8")
+        for name, statement in current_ai_cases(payloads):
+            stage = name
+            # 같은 검사의 fixture 트랜잭션을 직렬화한다. 고정값 이외 입력을 SQL에 넣지 않는다.
+            query(statement.replace("begin;", "begin;\nselect pg_advisory_xact_lock(73109100);", 1))
+            closed_empty()
+            if row_fingerprint() != baseline:
+                raise ValueError("ISOLATED_ROWS_CHANGED_AFTER_ROLLBACK")
+            completed.append(name)
+            print(json.dumps({"status": "PASS", "test": name}), flush=True)
+        stage = "final_guard"
+        isolated_prepared_target(prepared_root)
+        verify_identity()
+        closed_empty()
+        print(json.dumps({"status": "PASS", "checks": completed, "fixtureCoreRows": 0,
+                          "externalGuard": "CLOSED", "cron": "OFF", "migrationCount": len(target["versions"]),
+                          "rowDigestScope": ["public", "private", "storage"], "sequenceOrFullRestore": "NOT_VERIFIED",
+                          "scope": "isolated_current_ai_sql_only", "fullAi22Or23": "NOT_RUN", "summary14": "NOT_RUN"}))
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, AssertionError, subprocess.SubprocessError) as exc:
+        # 동적 SQL/원응답/예외 원문은 출력하지 않는다. 연결 종료가 열린 TX를 rollback한다.
+        closure = "NOT_VERIFIED"
+        if "baseline" in locals():
+            try:
+                closed_empty()
+                closure = "ROWS_GUARDS_AND_SESSIONS_VERIFIED" if row_fingerprint() == baseline else "ROWS_CHANGED"
+            except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.SubprocessError):
+                pass
+        print(json.dumps({"status": "FAIL", "stage": stage, "completed": completed,
+                          "error": "ISOLATED_CURRENT_AI_CHECK_FAILED",
+                          "failureClosure": closure,
+                          "executionLine": getattr(exc, "execution_line", None),
+                          "sqlState": str(exc).removeprefix("SQLSTATE_")
+                          if re.fullmatch(r"SQLSTATE_[0-9A-Z]{5}", str(exc)) else None}))
+        return 1
 
 
 def require(condition, message):
@@ -237,7 +417,17 @@ def core_concurrency():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true", help="비어 있는 전용 로컬 DB에만 테스트 실행")
+    parser.add_argument("--prepared-root", type=Path, help="새 종현 합성 환경의 검증된 임시 루트")
+    parser.add_argument("--current-ai", action="store_true", help="현재 AI/예산/요약 SQL만 독립 rollback 검사")
     args = parser.parse_args()
+    if args.prepared_root is not None or args.current_ai:
+        if args.prepared_root is None or not args.current_ai:
+            print(json.dumps({"status": "BLOCKED", "error": "EXPLICIT_ISOLATED_MODE_REQUIRED"}))
+            return 1
+        if not args.run:
+            print(json.dumps({"status": "NOT_RUN", "tests": CURRENT_AI_FILES, "context": "colima-jonghyun-backend100"}))
+            return 0
+        return run_current_ai(args.prepared_root)
     if not args.run:
         print(json.dumps({"status": "NOT_RUN", "tests": TESTS, "context": CONTEXT, "container": CONTAINER}))
         return 0
