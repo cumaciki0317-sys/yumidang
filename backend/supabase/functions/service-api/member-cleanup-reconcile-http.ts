@@ -108,14 +108,29 @@ export function createMemberCleanupFinalizationExecutor(config: RuntimeConfig,
             assertLive(); resolve(value);
           }).catch(reject).finally(() => signal.removeEventListener('abort', expired));
         });
-        const scopedFetch: FetchLike = (url, init) => {
-          assertLive();
-          return fetchImpl(url, { ...init, signal: init?.signal ? AbortSignal.any([signal, init.signal]) : signal });
-        };
-        // 이 포트에는 prepare/claim/lease/task 복구/외부 삭제 능력이 없다.
-        const transport = createRpcTransport(config, serviceKey, serviceKey,
-          new Set(['get_queue_invocation', 'complete_queue_invocation']), scopedFetch);
-        const db = Object.freeze<RpcClient>({ rpc: (name, args) => bounded(() => transport.rpc(name, args)) });
+        // Each RPC keeps cancellation wired through response.json(), and
+        // cancellation itself detaches listeners even if transport never settles.
+        const db = Object.freeze<RpcClient>({ rpc: (name, args) => bounded(() => {
+          const disposers = new Set<() => void>();
+          const scopedFetch: FetchLike = (url, init) => {
+            assertLive();
+            const transportAbort = new AbortController();
+            const sources = [abort.signal, request.signal, ...(init?.signal ? [init.signal] : [])];
+            const dispose = () => {
+              for (const source of sources) source.removeEventListener('abort', cancel);
+              disposers.delete(dispose);
+            };
+            const cancel = () => { transportAbort.abort(); dispose(); };
+            disposers.add(dispose);
+            for (const source of sources) source.addEventListener('abort', cancel, { once: true });
+            if (sources.some(source => source.aborted)) cancel();
+            return fetchImpl(url, { ...init, signal: transportAbort.signal });
+          };
+          // This port can only inspect/finalize the original invocation.
+          const transport = createRpcTransport(config, serviceKey, serviceKey,
+            new Set(['get_queue_invocation', 'complete_queue_invocation']), scopedFetch);
+          return transport.rpc(name, args).finally(() => { for (const dispose of disposers) dispose(); });
+        }) });
         const runtime = createWorkerInvocationRuntime(db);
         const before = await runtime.getQueueInvocation(originalId);
         if (before.kind !== 'member_cleanup' || !['unknown', 'completed'].includes(before.state)) throw new HttpError('STATE_CONFLICT');

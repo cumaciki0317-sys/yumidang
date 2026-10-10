@@ -165,3 +165,19 @@ test('실제 factory는 기본 종결404이며 승인된 내부 두 경로에만
   }
   assert.equal(calls, 2);
 });
+
+// Header completion must not detach the parent cancellation before JSON body completion.
+test('본문 읽기 대기 중에도 서버 마감은 전송을 취소하고 추가 RPC를 막는다', async () => {
+  let signal: AbortSignal | undefined;
+  let calls = 0;
+  const handle = createMemberCleanupFinalizationExecutor(config, { ...approval, maxExecutionMs: 15 }, async (_url, init) => {
+    calls++; signal = init!.signal!;
+    const response = Response.json(row());
+    response.json = async () => await new Promise(() => {});
+    return response;
+  });
+  const result = await handle(request());
+  assert.equal(result.status, 409);
+  assert.equal(calls, 1);
+  assert.equal(signal?.aborted, true);
+});
