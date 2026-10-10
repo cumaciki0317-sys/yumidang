@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { QUEUE_KINDS, createSharedBackgroundQueueScheduler } from "../../../backend/supabase/functions/_shared/jobs/background.mjs";
 const token="00000000-0000-4000-8000-000000000001", ticket="00000000-0000-4000-8000-000000000002";
 const now="2026-10-07T00:00:00Z", future="2026-10-07T00:30:00Z";
-// 모형의 units는 한 처리 항목이다. 실제 운영 공유20의 단위 승인 증거가 아니다.
+// 고유 job 슬롯 조회 모형. 유지관리는 별도 배정이며 실제 DB 슬롯 검증과 구분한다.
 function fixture(overrides={}) {
-  const calls=[],timers=[],errors=[]; let acquired=0,released=0,begun=0,unknown=0,confirmed=0;
+  const calls=[],timers=[],errors=[]; let acquired=0,released=0,begun=0,unknown=0,confirmed=0,used=0;
   const left=Object.fromEntries(QUEUE_KINDS.map(k=>[k,0]));
   const repository={
     async schedule({excludeKinds,afterKind,globalToken}) {
@@ -15,10 +15,11 @@ function fixture(overrides={}) {
       const nextKind=order.find(k=>left[k]>0&&!excludeKinds.includes(k))??null;
       return {serverNow:now,nextDueAt:nextKind?now:null,nextKind};
     },
-    async acquire(){acquired++;return {token,expiresAt:"2026-10-07T00:03:00Z"};},
+    async acquire(){acquired++;used=0;return {token,expiresAt:"2026-10-07T00:03:00Z"};},
     async release(t){assert.equal(t,token);released++;return "applied";},
   };
   const contracts={decisionId:"synthetic-port-contract",
+    async readSlots(t){assert.equal(t,token);return {used,remaining:20-used};},
     async readBudget(t){assert.equal(t,token);return {remainingMs:180000};},
     unitsFor(kind,result){return kind===null?result.purged:result.counts?.claimed??0;},
     journal:{async hasPending(){return false;},async begin(ref){assert.equal(ref.globalToken,token);begun++;return ticket;},
@@ -26,7 +27,7 @@ function fixture(overrides={}) {
     maintenance:{async readSchedule(){return {serverNow:now,nextDueAt:null};},async run(){throw new Error("not due");}},
   };
   const options={repository,contracts,queryTimeoutMs:1000,
-    async invoke(t,kind,options){assert.equal(t,token);assert.ok(options.limit<=20);assert.ok(options.signal instanceof AbortSignal);calls.push({type:"invoke",kind,limit:options.limit});left[kind]--;return {status:"ran",counts:{claimed:1}};},
+    async invoke(t,kind,options){assert.equal(t,token);assert.ok(options.limit<=20);assert.ok(options.signal instanceof AbortSignal);calls.push({type:"invoke",kind,limit:options.limit});left[kind]--;used++;return {status:"ran",counts:{claimed:1}};},
     setTimer(fn,ms){const timer={fn,ms};timers.push(timer);return timer;},clearTimer(t){t.cleared=true;},elapsed:()=>0,onError:c=>errors.push(c),
   };
   overrides({options,contracts,repository,left,calls,timers,errors});
@@ -47,11 +48,11 @@ test("빈 큐는 타이머 없이 멈추고 DB 미래 terminal만 별도 timer",
  const f=fixture(({contracts})=>contracts.maintenance.readSchedule=async()=>({serverNow:now,nextDueAt:future}));
  await f.scheduler.wake();assert.equal(f.stats().acquired,0);assert.deepEqual(f.timers.filter(t=>!t.cleared).map(t=>t.ms),[1800000]);await f.scheduler.stop();assert.ok(f.timers.every(t=>t.cleared));
 });
-test("terminal 유지관리도 동일 공유20에서 차감, job kind로 가장하지 않음",async()=>{
+test("terminal 유지관리는 별도20 배정, 큐 고유20 슬롯을 차감하지 않음",async()=>{
  const f=fixture(({contracts,left,calls})=>{
   left.cancellation_safety=20;contracts.maintenance.readSchedule=async()=>({serverNow:now,nextDueAt:now});
-  contracts.maintenance.run=async(t,o)=>{assert.equal(t,token);assert.equal(o.limit,20);calls.push({type:"maintenance"});return {purged:3};};
- });await f.scheduler.wake();assert.equal(f.calls.filter(c=>c.type==="invoke").length,17);assert.equal(f.calls.filter(c=>c.type==="maintenance").length,1);assert.equal(f.stats().released,1);await f.scheduler.stop();
+  contracts.maintenance.run=async(t,o)=>{assert.equal(t,token);assert.equal(o.limit,20);calls.push({type:"maintenance"});return {purged:3,processedItems:20};};
+ });await f.scheduler.wake();assert.equal(f.calls.filter(c=>c.type==="invoke").length,20);assert.equal(f.calls.filter(c=>c.type==="maintenance").length,1);assert.equal(f.stats().released,1);await f.scheduler.stop();
 });
 for(const phase of ["invoke","confirm","begin","bad-dto"]) test(`응답 미확인 ${phase}: 해제/재전송0·journal 보존`,async()=>{
  const f=fixture(({left,options,contracts})=>{

@@ -4,7 +4,7 @@
 
 현재 로그인은 네이버만, 현재 동행은 무료 1:1이다. 과거 테스트 Auth/비밀번호 세션은 로컬 권한 검사 도구이며 네이버 필수 정보·성인 여성 자격·필수 사진의 실제 연동 성공이 아니다. 기관이메일·계좌·별도 전화 인증은 현재 제외한다.
 
-기존 SQL/HTTP 검사가 통과해도 작성자 만 나이 19~99 숫자 범위·연결 행사명 검색·개인 완료 후 선제 후기 제출·칭찬 6개·동의 만료/미선정 종료의 최신 정책 반영을 보장하지 않는다. 이 경계는 후속 코드 변경과 함께 검사한다. 문서 동기화 작업에서는 아래 DB 기동·reset·원격 호출을 실행하지 않는다. 현재 선택값(공고/행사10개·후기5개·AI하루20회·분당제한없음·전체포함량50%·일반JSON64KiB 등)과 실제 설정/공급사 한도 일치는 별도 검증한다.
+기존 SQL/HTTP 검사가 통과해도 작성자 만 나이 19~99 숫자 범위·연결 행사명 검색·개인 완료 후 선제 후기 제출·칭찬 6개·동의 만료/미선정 종료의 최신 정책 반영을 보장하지 않는다. 이 경계는 후속 코드 변경과 함께 검사한다. 문서 동기화 작업에서는 아래 DB 기동·reset·원격 호출을 실행하지 않는다. 현재 선택값(공고/행사10개·후기5개·AI하루20회·분당제한없음·계정별320만토큰·등록계정상한합계·일반JSON64KiB 등)과 실제 설정/공급사 한도 일치는 별도 검증한다.
 
 담당: 민규. Python 3.11 이상 표준 라이브러리와 Git을 사용한다. 명령은 현재 작업 중인 worktree의 최상위에서 실행한다. 환경/복사 도구는 DB를 기동하거나 SQL을 실행하지 않는다.
 
@@ -172,3 +172,30 @@ python3 -B tests/integration/minkyu/edge_e2e.py --workdir "$edge_output"
 ## 현재 정책의 추가 검증 대상
 
 첫채팅과 신청 원자성·기존방재신청·철회1분·확정요청6시간·변경제안6시간, 한쪽 후기 작성기한종료·검토중 기존공개유지·당도 산식, 익명일정제한·개인정보없는가드, AI새모델요청1회/버튼미차감·개인하루20회와 전체예산·동의철회·보관삭제를 현재 소스와 대조한다. 기존 fixture의 기대가 다르면 해당 구현 작업에서 갱신한다. 사용자 정책 확정과 실제 공급사·법적 조건·실운영 검증은 분리한다.
+
+
+## SQL108 운영 준비·런타임 구문 검사
+
+`prepare_production_backend.py`는 기존 검토 migration/hash와 private catalog 비교에 제품 소스 현재 바이트 목록·SHA256을 연결한다. 함수의 ts/mjs/json, package/lock/config만 선택하고 숫자 사본은 제외 목록으로 보존한다. HEAD와 working-tree snapshot을 구분하며 소스가 검사 중 바뀌면 거절한다. catalog/history는 권한600·디렉터리700의 같은 읽기 바이트로 파싱·해시를 계산한다. 입력 수집 시점은 별도 미검증이며 적용 직전 새 운영 자료가 필요하다.
+
+```sh
+python3 -B tools/local/prepare_production_backend.py \
+  --remote-history /private/tmp/PRIVATE/remote-migrations.json \
+  --baseline-catalog /private/tmp/PRIVATE/baseline-catalog.json \
+  --remote-catalog /private/tmp/PRIVATE/remote-catalog.json \
+  --runtime-env-file /absolute/private/runtime.env \
+  --queue-ca-file /absolute/private/queue-ca.crt \
+  --output /private/tmp/NEW_PRIVATE/deployment-plan.json
+```
+
+PRIVATE/NEW_PRIVATE는 예시 경로다. 출력은 새 파일만 허용한다. `--runtime-env-file`은 선택이며 권한600의 엄격한 단일행 dotenv를 사용한다. 다중행 queue PEM은 `--queue-ca-file`로 별도 읽고 기존 값과 동시에 제공하면 거절한다. 실제 환경이나 파일을 자동 수정하지 않는다.
+
+Node 검사 utility는 기존 API/내부 인증/다계정/completion/queue 설정 함수를 import하여 재사용하고 프로세스·DB 연결을 시작하지 않는다. 값은 stdin 메모리로만 전달한다. 64KiB, 한국시간320만/등록 합계, 전용 LOGIN·별도 역할·TLS/HTTPS 구문을 검사한다. config 누락/변형은 BLOCKED다. 구문 통과도 `SYNTAX_PASS_NOT_CONNECTED`, 실효 권한/TLS handshake/제품CLI/공급사 승인은 NOT_RUN이며 `activationAllowed=false`를 유지한다.
+
+검증: `tests/database/minkyu/test_production_preparation.py`, `tests/functions/minkyu/production_runtime_config.test.mjs`, `tests/database/minkyu/test_schema_catalog_comparison.py`.
+
+## SQL116개 최신 준비 — 2026-10-09
+
+검토된 기본41개와 정책75개, 총116개의 정확한 경로/해시를 준비한다. SQL109~117은8개 후속이며113 번호는 사용하지 않았다. HEAD는 기존99~108 이력 또는 이 후속8개가 순서대로 추가된 정확한 prefix만 허용한다. 개수만 같은 임의 부분 집합·누락·미검토 바이트·숫자 사본은 실행 목록으로 사용하지 않는다. 기존 strict gateway 검사는 유지한다.
+
+`prepare_current_policy.py --gateway-probe --output /private/tmp/NEW_PRIVATE`는 파일 준비만 수행하며 SQL/Edge 실행은 NOT_RUN이다. 최신 준비 root `/private/tmp/yumidang-policy116-reviewed-20261009-v2`는 HEAD99·미커밋17·전체116을 구분한다. 실제 SQL/HTTP 영수증과 준비 manifest는 별개다. 제품 변경이 더 통합되면 새 source snapshot과 새 출력 경로로 준비한다. 현재116 수정본의 실제 HTTP/동시성 결과, 전체5종 runner·실회원·공급사·지원/백업 조건·운영 적용이 모두 닫힌 것으로 표현하지 않는다.

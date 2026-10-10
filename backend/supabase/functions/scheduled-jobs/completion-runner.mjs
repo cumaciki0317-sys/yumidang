@@ -8,6 +8,8 @@ export function readCompletionConfig(env) {
   const parsed = new URL(databaseUrl);
   if (!["postgres:", "postgresql:"].includes(parsed.protocol) || parsed.hash || parsed.search) throw new Error("INVALID_COMPLETION_CONFIG");
   const local = ["127.0.0.1", "localhost", "[::1]"].includes(parsed.hostname);
+  const requireTls = env.COMPLETION_REQUIRE_TLS;
+  if (requireTls !== undefined && requireTls !== "true") throw new Error("INVALID_COMPLETION_CONFIG");
   // pg query parameters can override both host and SSL; only the explicit authority is accepted.
   const positive = (key) => {
     const raw = env[key];
@@ -16,7 +18,7 @@ export function readCompletionConfig(env) {
     if (!Number.isSafeInteger(n) || n > 2_147_483_647) throw new Error("INVALID_COMPLETION_CONFIG");
     return n;
   };
-  return { databaseUrl, ssl: local ? false : { rejectUnauthorized: true },
+  return { databaseUrl, ssl: local && requireTls === undefined ? false : { rejectUnauthorized: true },
     reconnectMs: positive("COMPLETION_RECONNECT_MS"), queryTimeoutMs: positive("COMPLETION_QUERY_TIMEOUT_MS") };
 }
 

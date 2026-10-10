@@ -23,6 +23,9 @@ function rpcFailure(status: number, body: JsonValue): never {
   // PostgREST는 로그인 필요 SQLSTATE도 HTTP 403으로 반환할 수 있다.
   if (status === 401 || code === "28000") throw new HttpError("AUTH_REQUIRED");
   if (status === 403) throw new HttpError("ACCESS_DENIED");
+  // SQL109의 원 실행 배정 거절만 충돌로 분류한다. 다른 준비/공급사 오류는 그대로 닫는다.
+  if (code === "55000" && body && typeof body === "object" && !Array.isArray(body) &&
+      body.message === "invocation_not_dispatchable") throw new HttpError("STATE_CONFLICT");
   switch (code) {
     case "PT404": throw new HttpError("RESOURCE_NOT_FOUND");
     case "PT503": throw new HttpError("EXTERNAL_UNAVAILABLE");

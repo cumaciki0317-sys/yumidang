@@ -1,5 +1,9 @@
 # 내부 작업 큐·AI 예산 RPC — 민규 구현
 
+## 2026-10-08 공통 포트 후속 상태
+
+사용자 확정: 실행기의 최대20은 같은 전역 실행의 고유 queue jobId 수이며 동일 작업의 첨부·metadata·ACK·완료는 추가 차감하지 않는다. helpful/terminal 별도 유지관리 배정과 RPC·Storage 호출 횟수는 구분한다. SQL100은 자기 토큰 일정과 terminal 일정 조회를 추가하고 기존 ABI를 보존한다. SQL101은 기본 비활성 최소 intent 포트로, 제품 journal·원격 종결·자동 재전송을 구현했다고 표시하지 않는다. 최신 범위·실제 TLS/HTTP 검증·활성화 전 조건은 [공통 실행기 인계](../../docs/collaboration/requests/minkyu/2026-10-08-common-runtime.md)를 따른다. 아래 날짜별 기록과 별도 요약 batch 한도는 구분한다.
+
 ## 최신 연결 검증: 2026-10-06 순차 실행
 
 정식 격리 로컬 DB는84개·미적용0이다. 새 취소 기한의 generation 증가·예약 종류5개·빈 wake15개는 실제 SQL 회귀와 정식 적용/기존 자료·권한 보존을 통과했다. 실제 내부 budget REST와 신고 Storage 정상 삭제·durable ACK·새 프로세스의 GET-only 복구도 PASS다. 상세 범위와 영수증은 [민규 진행표](../../docs/collaboration/minkyu-progress.md)를 따른다. 아래 날짜별 이력·NOT_RUN·일시정지는 과거 기록이다.
@@ -15,11 +19,11 @@
 
 행사·신규 요약 등록은 매일00:01KST, 자동 완료는 건별 DB 예약·상주 실행기로 분리한다. 작업큐는 아래 RPC의 현재 기술 연결이며 정책 전체 적용은 후속 검증 대상이다.
 
-실제 실패 최대3회·10분~6시간, 예산 부족은 실패 없이1시간 뒤 확인한다. 최대10작업·60초·lease180초·동시 실행기1개·점유 자동 연장 없음이다. 정상 분할/양보는 실패로 세지 않고 중간 결과를 보존한다. 중간 결과는 비공개·원문 사본 제외, 완료·폐기·원문 변경·실패 종결에 삭제하고 자동 TTL을 두지 않는다.
+실제 실패 최대3회·10분~6시간, 예산 부족은 실패 없이1시간 뒤 확인한다. 기존 종류별 batch의10작업·60초와 lease180초를 전역 고유 큐20·최대 실행시간180초와 구분한다. 동시 전역 점유1개·점유 자동 연장 없음이며 종류별 배정/실제 deadline 전달은 제품 연결 검증 대상이다. 정상 분할/양보는 실패로 세지 않고 중간 결과를 보존한다. 중간 결과는 비공개·원문 사본 제외, 완료·폐기·원문 변경·실패 종결에 삭제하고 자동 TTL을 두지 않는다.
 
 운영 보관 선택은 일반 진단 30일·보안 90일·작업 종료 후 세부 기록 30일·공급사 한도 기간 종료 후 비용 원장 90일이다. 원문·비밀값을 제외한다. 미정산 예약은 해결까지 제한 보관하고 자동 환불·초기화를 하지 않는다. 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 검증한다. 법적 근거·실제 삭제·백업 만료는 별도 확인이며 활성 자료 삭제를 백업 즉시 삭제로 안내하지 않는다.
 
-전체 AI 예산은 실제 계정의 포함량·계산 단위·초기화 주기를 확인한 뒤 포함량의 50%로 시작하고 추가 결제는 허용하지 않는다. 전체 예산 소진 시 개인 한도가 남아도 중단한다. 증액 희망은 공급사 회신·측정 후 검토하며 확인 전 활성화하지 않는다. 합성 검증 50,000은 기술 원장 단위로 원화·청구 토큰과 같지 않으며 합성 10회의 충분한 예산을 보장하지 않는다.
+최신 전체 AI 예산은 등록 계정별 한국시간 하루320만 토큰 상한의 합계다. 전송 전 계정별·전체 예산을 원자 예약하고 부족한 계정은 전송 전에 전환한다. 전송 후 오류/응답 유실에는 무조건 전환하지 않으며 미확인 예약을 보존한다. 공급사 실제 단위·초기화·출력 상한·공동 사용과 운영 연결은 별도 검증이고 추가 결제는 허용하지 않는다. 합성 원장 값은 실제 청구와 구분한다.
 
 회원별 하루20회는 모델 처리를 시작한 사용자 요청 단위이며 아래 내부 호출 원장과 다르다. 분당 횟수 제한 없이 동일 회원 진행 요청 하나만 허용한다. 세부 차감과 재설정은 [AI 계약](ai-chat.md)을 따른다. 실회원 외부 전송은 공급사 회신 팀 검토·사용자 확인 전 보류한다.
 
@@ -41,7 +45,7 @@
 
 ## 허용 payload와 보존 정보
 
-현재 kind는 **`review_summary`만 지원**한다. 새로운 kind를 임의 등록하지 않는다. 행사·자동 완료·후기 공개 처리의 큐 연결은 각 DB 실행 계약과 함께 후속 확장한다.
+아래 JSON은 기존 `review_summary` payload 계약이다. 최신 supported 종류는 `review_summary`, `event_sync`, `member_cleanup`, `cancellation_safety`, `report_retention`이며 각 종류의 기존 담당 포트와 권한을 따른다. DB 지원·factory 지원과 실제 제품 CLI 조립은 다르다. 제품 미연결 종류를 실제 처리 완료로 표시하거나 임의 종류를 추가하지 않는다. 자동 완료/후기 공개는 별도 건별 예약 실행기다.
 
 ```json
 {
@@ -70,7 +74,7 @@
 
 ## 원자 AI 예산
 
-원장은 사용자 ID·대화·후기·프롬프트를 저장하지 않는다. ledgerId, 제공처 표식, 기술 작업 종류, 예약·보고 사용량만 저장한다. 개인별 이력이나 운영 로그로 사용하지 않는다. 공급사 포함량50%·공급사 초기화 주기·기간 종료 후90일 보관을 선택했다. 비용 담당1명·개발 운영 담당만 접근하고 접근/변경을 기록한다. 실제 계정 단위·담당 지정·법적 근거·삭제 구현 확인 전 임의 초기화·기본 원장·자동 TTL을 넣지 않는다.
+원장은 사용자 ID·대화·후기·프롬프트를 저장하지 않는다. ledgerId, 제공처 표식, 기술 작업 종류, 예약·보고 사용량만 저장한다. 개인별 이력이나 운영 로그로 사용하지 않는다. 최신 정책은 등록 계정별 한국시간 하루320만 토큰과 실제 등록 계정 상한의 합계를 적용한다. 공급사 실제 초기화 주기와 사용량 단위는 별도 확인하며 비용 원장은 공급사 기간 종료 후90일 보관 기준이다. 비용 담당1명·개발 운영 담당만 접근하고 접근/변경을 기록한다. 실제 계정 단위·담당 지정·법적 근거·삭제 구현 확인 전 임의 초기화·기본 원장·자동 TTL을 넣지 않는다.
 
 직접 호출 가능한 예산 RPC는 service_role 전용이다. generic `reserve_ai_budget`는 새 범위 예약 함수 내부에서만 실행하며 서비스 역할의 직접 권한을 회수한다. configure/get은 신뢰된 운영·검증 경로에서만 호출하고 일반 HTTP 라우트에 노출하지 않는다.
 
@@ -132,3 +136,29 @@ RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/le
 기존 종현 registry와 민규 RPC/Storage 포트로 dedicated enqueue·supported claim·취소 재계산·신고 DELETE/ACK/부재·metadata/parent 완료를 실제 소유 로컬 환경에서 통과했다. 두 OS 프로세스 singleton 경쟁·stale token, DELETE 유실 후 보류·ACK 유실 후 기존 ACK 복구·추가 DELETE0도 확인했다. journal·budget readiness는 시험용 주입이며 제품 포트 준비를 뜻하지 않는다.
 
 제품 연결에는 잔여 배정 이하 allocate, 작업 수와 RPC/task 수의 일관된 전송 전 예약, 자기 전역 토큰 schedule, terminal next-due, 영속 journal, TLS/전용 LOGIN/HTTPS runner 검증이 남아 있다. 준비 전 기본 제어·실행 권한은 닫는다. [현재 실제 증빙·연결 요청](../../docs/collaboration/requests/minkyu/2026-10-08-runner-recovery.md)을 따른다.
+
+
+## SQL102/103 원자 결과·큐 작업 수·복구 (2026-10-08)
+
+공통 `createWorkerAtomicRuntime`은 기존 RPC의 DB 변경과 결과 저장을 원자화한다. 같은 requestId·입력은 저장 결과를 반환하고 다른 입력은 충돌한다. 조회 결과·replayed 결과는 외부 DELETE 허가가 아니다. SQL101 observed_response는 종결 근거로 사용하지 않는다. 정확한 operation 입력·권한·종현 연결은 [독립 실행 포트 인계](../../docs/collaboration/requests/minkyu/2026-10-08-independent-runtime.md)에 고정한다.
+
+SQL102 공유20은 활성화 시 기존 supported claim 지점의 전역 token당 고유 queue jobId20개다. 동일 job·첨부·ACK는 다시 차감하지 않으며 빈 claim은 예약하지 않는다. 회원 정리 batch는 기존 별도 task 포트에 배정≤10·deadline·signal을 연결한 것이다. event/member 별도 저장소를 큐 슬롯과 통합했다고 설명하지 않는다. 제품 scheduler 연결과 회원 UNKNOWN 재시작 차단이 준비되지 않으면 운영 기능을 비활성으로 둔다.
+
+SQL103은 DB 확인된 completed.closedAt+30일부터 상세 input/result만 정리한다. 최소 요청키·fingerprint와 external_pending은 보존한다. UNKNOWN 자동 전환·DELETE/ACK 자동 재전송·근거 없는 최소키 TTL 삭제는 없다. 복원 후 삭제를 재적용하고 권한/제어를 닫아 확인한다. 원문·첨부·인증정보는 원장에 저장하지 않는다.
+
+
+### 2026-10-09 현재 제품 연결과 증거 범위
+
+SQL109 부모 영속 배정/최초 CAS·SQL110 회원·111/112 행사·114 작업 선행 키·115 원 ACK 복구가 최신 후속이다. runtime의 trusted 서버 조립은 종류별 최대10과 event/review/safety60초, member180초·개별 task60초 및 전체global180초 상한을 유지한다. 회원 drain은 실제 남은60초를 확보할 수 없으면 새 claim을 시작하지 않는다. 따라서 HTTP/CAS 조회 시간까지 차감하는 공유 회원 배정을 단순60초로 설정해 실제 작업 성공을 주장하지 않는다.
+
+SQL115 task 복구와 원 부모 종결은 별도 경로다. 선택 승인된 service-api의 `/internal/member-cleanup/reconcile`은 현재 recovery global과 원 ACK·부재 확인으로 task를 정리한다. `/internal/member-cleanup/reconcile/finalize`는 정확한 원 invocation ID로 get/complete/get만 수행하며 current global·외부 요청을 요구하지 않는다. 이미 완료된 기록은 complete0, 미정산은 pending, 완료 응답 유실은 같은 원 기록 GET으로만 판단한다. 기본 두 경로404이며 내부 인증을 먼저 확인한다. 이 알려진 원 ID의 종결 포트가 UNKNOWN 자동 discovery나 전체5종 실행기 검증을 대신하지 않는다. 제품 회귀52개·Deno PASS이며 실제 factory/DB의 Storage 부재·Auth 부재·finish 응답 유실·원 부모 종결 응답 유실·begin 응답 유실·ACK 없음6경계가 PASS다. 최초 물리 DELETE/ACK는 이6경계에서 합성 전제이므로 전체 탈퇴 실행기의 증거와 구분한다.
+
+두 실제 Node/TLS runner의 취소20·신고 메타데이터20 검증은 각각 PASS이며 기본 stock CLI는 유지관리만 지원한다. Storage 실제 바이트 성공/응답 유실과 다섯 종류 합본은 별도로 진행 중이다. 합성 로컬 event/model port의 통합 증거는 실제 공급사·회원 AI 품질·운영 승인으로 대신하지 않는다. 최신 코드 hash·실제 영수증·실패 및 전체 완료 수는 [현재 실행 기록](../../docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md)을 따른다.
+
+## SQL118 승인된 UNKNOWN 부모 조회·자동 종결
+
+`read_member_cleanup_unknown_invocations(p_after_request_id,p_limit)`는 UNKNOWN/member_cleanup 원 요청만 UUID 오름차순으로 반환한다. ABI는 `{items:[{invocationRequestId}],nextAfterRequestId}`이며, 비어 있지 않으면 마지막 ID가 cursor이고 빈 페이지에만 null이다. claim·현재 global·ACK·task완료 여부로 조회 후보를 임의 제외하지 않는다. 서비스 context와 기존 guard를 요구하고 기본 EXEC는 닫혀 있다. DB106개 합성 UNKNOWN·페이지/권한/기존자료 보존 검증은 PASS이며 운영 적용은 아니다.
+
+제품은 신뢰된 `memberParentFinalization:{approved:true,decisionId,maxExecutionMs}` 옵션에서만 사용한다. decisionId는 현재 큐 계약과 같아야 하며 최대60초다. 기본 설정에는 조회0이며 stock CLI 활성화로 해석하지 않는다. scan은 공통 pending 검사 앞에서 수행해 다른 pending의 단락 평가가 조회를 생략하지 않게 한다. 발견된 원 ID마다 저장 GET→원 complete 최대1회→저장 GET을 사용하고, 원 kind/global/limit/deadline/input scope가 바뀌면 거절한다. 완료 응답 유실은 같은 원 ID 조회만 허용한다. 미완료 task 또는 다른 legacy pending은 그대로 차단한다. 새로운 global·claim·DELETE·ACK를 이 종결 과정에서 만들지 않는다.
+
+기술적으로 한 번에20항목, 최대2페이지·20원요청을 읽으며 이미 처리한 cursor에서 다음 scan을 이어간다. 이 조회 상한은 큐의 고유 job20과 별개다. 자체 기한·stop signal·singleflight를 적용하고 transport가 취소를 무시해도 후속 호출을 차단한다. 빈 페이지에서 cursor를 초기화해 낮은 ID를 다시 검사한다. 자기 UNKNOWN을 만난 현재 scheduler의 park 동작은 유지되므로 재시작 또는 정상 wake 시 자동 조회를 검증한다. 제품 모형33개 skip0와 Deno는 PASS지만 실제 실행기의 자동종결은 아직 NOT_RUN이며 새 격리 통합으로 검증한다.

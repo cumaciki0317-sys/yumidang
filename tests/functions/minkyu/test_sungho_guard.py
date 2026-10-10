@@ -51,9 +51,16 @@ class SunghoGuardTests(unittest.TestCase):
         self.assertNotEqual(self.git('rev-parse','HEAD').stdout.strip(),self.base)
 
     def test_backend_and_unassigned_blocked_before_edit_check(self):
-        for p in ['backend/core.ts','apps/mobile/src/api.ts','apps/mobile/src/ui.tsx',
+        for p in ['backend/core.ts','apps/mobile/src/api.ts','apps/mobile/src/remote.tsx',
                   'apps/mobile/package.json','.env','new-unassigned.txt']:
             with self.subTest(path=p):self.assertEqual(self.check('--paths',p).returncode,1)
+
+    def test_frontend_and_live_ui_allowed(self):
+        for p in ['frontend/src/App.tsx','apps/mobile/src/ui.tsx',
+                  'apps/mobile/src/screens/RemoteMemberScreens.tsx',
+                  'apps/mobile/src/app/account.tsx','apps/mobile/src/components/Button.tsx',
+                  'docs/planning/design/IA.md']:
+            with self.subTest(path=p):self.assertEqual(self.check('--paths',p).returncode,0)
 
     def test_allowed_symlink_cannot_edit_forbidden_target(self):
         link=self.repo/'apps/mobile/assets/sungho/link.ts'

@@ -1,5 +1,7 @@
 # 종현 다음 작업 — 실행기·AI 연결
 
+2026-10-08 후속: [민규 공통 포트·TLS 검증](2026-10-08-common-runtime.md)을 먼저 확인한다. SQL100/101은 아직 로컬 변경이며 제품 journal 어댑터는 미완성·비활성이다. 최대20은 사용자 확정 처리 대상 작업 수이고 RPC/Storage 호출 수가 아니다. 아래 cap20 미확정 문구보다 이 결정이 우선한다.
+
 종현은 GitHub의 `minkyu/foundation-harness` 최신 변경을 본인 clone에 받아 별도 `jonghyun/` 브랜치에서 시작한다. 구현 기준은 `edfc624`와 이번 민규 SQL95~99·서버 변경이다. 기존8/10·추가5/6이며 서비스 출시 완료를 뜻하지 않는다.
 
 먼저 [추가 백엔드 인계](2026-10-08-additional-backend.md), [소비자·복구 검증](2026-10-08-runner-recovery.md), 저장소 `PLAN.md`, `PLAN_상세설계.md` 11장과 `AGENTS.md`를 읽는다. 종현 소유 파일만 편집하고 SQL·공통 DB 포트 변경은 본인 요청 폴더에 명세를 남긴다.
@@ -10,7 +12,7 @@
 |---|---|---|
 | 1 | `functions/ai-chat/`, `_shared/ai/Agents/chatbot/orchestrator.ts`: 실제 성공 경로에 민규 `recordAiResultAvailable` 연결 | 서버 request scope 사용. 실패·unavailable·차단·시간 초과는 증거 미생성. 기록 실패는 성공으로 처리하지 않는다. 실제 연결 검사와 helpful 허용/거절 증빙. 외부 AI 호출은 별도 준비 전 금지 |
 | 2 | `functions/scheduled-jobs/`, `_shared/jobs/`: 기존 실행기에서 `/internal/ai-feedback-maintenance` 주기 소비 | 회당 bounded limit·내부 권한·재시작·만료 후 재접수 거절 검사. 새 cron 정책을 임의 생성하지 않는다. AI 신고는 준비 조건 충족 전 비활성 유지 |
-| 3 | `_shared/jobs/safety-consumers.ts`, 작업 저장소·scheduler·`scheduled-jobs/queue-runner.mjs`: 공유 배정 한도와 영속 처리 상태 연결 | 기존 작업 수 예산과 RPC 호출 수를 혼동하지 않는다. 먼저 현 ABI와 필요한 포트를 종현 요청 문서로 고정 → 민규 후속 RPC/SQL100 이후 보완 → 실제 연결 검증. 이번 시험 cap20을 제품 정책으로 사용하지 않는다 |
+| 3 | `_shared/jobs/safety-consumers.ts`, 작업 저장소·scheduler·`scheduled-jobs/queue-runner.mjs`: 공유 배정 한도와 영속 처리 상태 연결 | 기존 작업 수 예산과 RPC 호출 수를 혼동하지 않는다. 먼저 현 ABI와 필요한 포트를 종현 요청 문서로 고정 → 민규 후속 RPC/SQL100 이후 보완 → 실제 연결 검증. 사용자 확정 최대20 처리 대상 작업과 별도 전송 제한을 구분한다 |
 | 4 | 같은 실행기: 자기 전역 점유 중 일정 조회, terminal next-due·유지관리, unknown 복구 | 필요한 자기 토큰·next-due·journal 공통 포트를 민규에게 요청. 오래된 점유 거절·중복 완료 방지·재시작 상태 보존·미확인 DELETE/ACK 자동 추가 전송0회. 파일 시험 journal을 제품 구현으로 복제하지 않는다 |
 | 5 | 실제 queue-runner 환경 검사 | 검증 가능한 TLS DB·전용 LOGIN·HTTPS 함수에서 두 실행기 경쟁·연결 유실·자동 재시작을 검사. 로컬 소비자 시험으로 완료 표시하지 않는다 |
 

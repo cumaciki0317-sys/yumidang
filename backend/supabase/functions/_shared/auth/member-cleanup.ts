@@ -11,6 +11,7 @@ export interface CleanupFence {
   readonly taskId: string; readonly leaseToken: string; readonly workerRunToken: string; readonly objectId: string | null;
 }
 export interface MemberCleanupPorts {
+  beginDelete?(fence: CleanupFence, signal?: AbortSignal): Promise<unknown>;
   claim(workerRunToken: string, signal?: AbortSignal): Promise<unknown>;
   /** DB가 승인 guard·작업·전역 토큰·현재 lease·objectId를 다시 검사해야 한다. 대체 성공 구현 금지. */
   assertCurrent(fence: CleanupFence, signal?: AbortSignal): Promise<unknown>;
@@ -23,6 +24,32 @@ export interface CleanupExecutionBudget {
   readonly deadlineAt?: number;
   readonly signal?: AbortSignal;
 }
+/** SQL115 전용 복구. 일반 claim/dispatch/DELETE/ACK 쓰기를 노출하지 않는다. */
+export interface MemberCleanupReconcileBinding {
+  readonly recoveryRequestId: string;
+  readonly invocationRequestId: string;
+  readonly taskId: string;
+  readonly recoveryGlobalToken: string;
+}
+export interface MemberCleanupReconcilePorts {
+  readonly binding: MemberCleanupReconcileBinding;
+  begin(signal?: AbortSignal): Promise<unknown>;
+  get(signal?: AbortSignal): Promise<unknown>;
+  assertCurrent(fence: CleanupFence, signal?: AbortSignal): Promise<unknown>;
+  getDeleteAck(fence: CleanupFence, signal?: AbortSignal): Promise<unknown>;
+  finish(evidenceSha256: string, signal?: AbortSignal): Promise<unknown>;
+}
+export interface MemberCleanupReconcileProof {
+  readonly recoveryRequestId: string; readonly invocationRequestId: string; readonly taskId: string;
+  readonly state: "prepared" | "completed" | "superseded";
+  readonly original: { readonly withdrawalId: string; readonly objectId: string | null; readonly dispatchId: string;
+    readonly globalToken: string; readonly jobLeaseToken: string; readonly ackReceiptId: string; readonly ackSha256: string };
+  readonly recovery: { readonly globalToken: string; readonly leaseToken: string; readonly expiresAt: string };
+  readonly evidenceSha256: string | null; readonly closedAt: string | null;
+}
+export type MemberCleanupReconcileResult =
+  | { readonly status: "pending" | "superseded" }
+  | { readonly status: "applied"; readonly evidenceSha256: string };
 function withinBudget<T>(signal: AbortSignal, operation: () => Promise<T>): Promise<T> {
   if (signal.aborted) return Promise.reject(new HttpError("STATE_CONFLICT"));
   return new Promise((resolve, reject) => {
@@ -68,6 +95,93 @@ function decodeAck(value: unknown, task: MemberCleanupTask): DeleteAck {
 async function hash(value: unknown): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(value)));
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function exactRecord(value: unknown, keys: readonly string[]): Record<string, unknown> {
+  const v = record(value);
+  if (!v || Object.keys(v).length !== keys.length || keys.some(k => !Object.hasOwn(v, k))) return fail();
+  return Object.fromEntries(keys.map(k => [k, v[k]]));
+}
+const validHash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
+const validInstant = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}T.+(?:Z|[+-]\d{2}:\d{2})$/.test(v) && Number.isFinite(Date.parse(v));
+export function decodeMemberCleanupReconcileProof(value: unknown, binding: MemberCleanupReconcileBinding): MemberCleanupReconcileProof {
+  const v = exactRecord(value, ["recoveryRequestId", "invocationRequestId", "taskId", "state", "original", "recovery", "evidenceSha256", "closedAt"]);
+  const original = exactRecord(v.original, ["withdrawalId", "objectId", "dispatchId", "globalToken", "jobLeaseToken", "ackReceiptId", "ackSha256"]);
+  const recovery = exactRecord(v.recovery, ["globalToken", "leaseToken", "expiresAt"]);
+  if (v.recoveryRequestId !== binding.recoveryRequestId || v.invocationRequestId !== binding.invocationRequestId || v.taskId !== binding.taskId ||
+    !["prepared", "completed", "superseded"].includes(String(v.state)) || recovery.globalToken !== binding.recoveryGlobalToken ||
+    !validId(recovery.leaseToken) || !validInstant(recovery.expiresAt) ||
+    ["withdrawalId", "dispatchId", "globalToken", "jobLeaseToken", "ackReceiptId"].some(k => !validId(original[k])) ||
+    !(original.objectId === null || validId(original.objectId)) || !validHash(original.ackSha256) ||
+    (v.state === "completed" ? !validHash(v.evidenceSha256) : v.evidenceSha256 !== null) ||
+    (v.state === "prepared" ? v.closedAt !== null : !validInstant(v.closedAt))) return fail();
+  return Object.freeze({ ...v, original: Object.freeze({ ...original }), recovery: Object.freeze({ ...recovery }) }) as unknown as MemberCleanupReconcileProof;
+}
+
+/** fresh begin만 기존 작업 처리기를 재사용한다. 같은 키의 재호출·응답 유실은 최소 GET으로만 확인한다. */
+export async function processMemberCleanupReconciliation(ports: MemberCleanupReconcilePorts,
+  adapter: ReturnType<typeof createMemberCleanupAdapter>, budget: CleanupExecutionBudget = {}): Promise<MemberCleanupReconcileResult> {
+  if (!ports || typeof ports.begin !== "function" || typeof ports.get !== "function" || typeof ports.finish !== "function" ||
+    typeof ports.assertCurrent !== "function" || typeof ports.getDeleteAck !== "function") return fail();
+  const b = exactRecord(ports.binding, ["recoveryRequestId", "invocationRequestId", "taskId", "recoveryGlobalToken"]);
+  if (Object.values(b).some(v => !validId(v))) throw new HttpError("INVALID_REQUEST");
+  const binding = Object.freeze({ ...b }) as unknown as MemberCleanupReconcileBinding;
+  if (!budget || typeof budget !== "object" || Array.isArray(budget) || Object.keys(budget).some(k => !["deadlineAt", "signal"].includes(k)) ||
+    budget.deadlineAt !== undefined && !Number.isSafeInteger(budget.deadlineAt) || budget.signal !== undefined && !(budget.signal instanceof AbortSignal)) throw new HttpError("INVALID_REQUEST");
+  const controller = new AbortController(), signal = budget.signal ? AbortSignal.any([controller.signal, budget.signal]) : controller.signal;
+  const deadlineAt = Math.min(Date.now() + 60000, budget.deadlineAt ?? Infinity);
+  const timer = setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
+  try {
+    if (Date.now() >= deadlineAt || signal.aborted) throw new HttpError("STATE_CONFLICT");
+    return await withinBudget(signal, async () => {
+      let begin: unknown;
+      try { begin = await ports.begin(signal); } catch {
+        // 미확정 begin에는 원 task 주소·lease가 없다. 조회 성공도 실행 허가로 바꾸지 않는다.
+        const proof = decodeMemberCleanupReconcileProof(await ports.get(signal), binding);
+        return recoveredStatus(proof);
+      }
+      const started = exactRecord(begin, ["recoveryRequestId", "state", "fresh", "task"]);
+      if (started.recoveryRequestId !== binding.recoveryRequestId || typeof started.fresh !== "boolean" || !["prepared", "completed", "superseded"].includes(String(started.state))) return fail();
+      const proof = decodeMemberCleanupReconcileProof(await ports.get(signal), binding);
+      if (proof.state !== started.state) return fail();
+      if (!started.fresh) { if (started.task !== null) return fail(); return recoveredStatus(proof); }
+      if (proof.state !== "prepared") return fail();
+      const task = decode(started.task);
+      if (task.taskId !== binding.taskId || task.leaseToken !== proof.recovery.leaseToken || task.objectId !== proof.original.objectId ||
+        task.expiresAt !== proof.recovery.expiresAt || task.leaseToken === proof.original.jobLeaseToken) return fail();
+      let claimed = false;
+      const denied = () => Promise.reject(new HttpError("STATE_CONFLICT"));
+      const fixedOrigin = JSON.stringify({ original: proof.original, recovery: proof.recovery });
+      const getProof = async () => {
+        const current = decodeMemberCleanupReconcileProof(await ports.get(signal), binding);
+        if (JSON.stringify({ original: current.original, recovery: current.recovery }) !== fixedOrigin) return fail();
+        return current;
+      };
+      const taskPorts: MemberCleanupPorts = {
+        claim: async token => { if (claimed || token !== binding.recoveryGlobalToken) throw new HttpError("STATE_CONFLICT"); claimed = true; return task; },
+        assertCurrent: ports.assertCurrent.bind(ports),
+        getDeleteAck: async fence => {
+          const ack = decodeAck(await ports.getDeleteAck(fence, signal), task);
+          if (ack.receiptId !== proof.original.ackReceiptId || ack.evidenceSha256 !== proof.original.ackSha256) return fail();
+          return ack;
+        },
+        beginDelete: denied, recordDeleteAck: denied,
+        complete: async fence => {
+          // finish의 HTTP 응답은 성공 근거가 아니다. 원 recovery 키의 저장 증거를 다시 읽는다.
+          try { await ports.finish(fence.evidenceSha256, signal); } catch { /* GET-only */ }
+          const current = await getProof();
+          if (current.state !== "completed" || current.evidenceSha256 !== fence.evidenceSha256) return fail();
+          return { status: "applied" };
+        },
+      };
+      const result = await processMemberCleanupTask(binding.recoveryGlobalToken, taskPorts, adapter, { deadlineAt, signal });
+      if (result.status !== "applied") return fail();
+      return recoveredStatus(await getProof());
+    });
+  } catch (error) { if (error instanceof HttpError) throw error; return fail(); }
+  finally { clearTimeout(timer); }
+}
+function recoveredStatus(proof: MemberCleanupReconcileProof): MemberCleanupReconcileResult {
+  return proof.state === "completed" ? Object.freeze({ status: "applied", evidenceSha256: proof.evidenceSha256! }) : Object.freeze({ status: proof.state === "superseded" ? "superseded" : "pending" });
 }
 
 /** 네트워크 오류/응답 원문/키를 반환하거나 기록하지 않는다. 실제 파일 삭제 통합 증명은 별도 필요하다. */
@@ -184,7 +298,13 @@ async function processTask(workerRunToken: string, ports: MemberCleanupPorts,
   const existing = await ports.getDeleteAck(fence, signal);
   let receipt: DeleteAck | null = existing === null ? null : decodeAck(existing, task);
   if (receipt) await adapter.verifyAbsent(task, signal);
-  else await adapter.deleteAndVerify(task, assertCurrent, async () => {
+  else await adapter.deleteAndVerify(task, async () => {
+    await assertCurrent();
+    if (!ports.beginDelete) return fail();
+    const dispatch = record(await ports.beginDelete(fence, signal));
+    if (!dispatch || Object.keys(dispatch).length !== 2 || !validId(dispatch.dispatchId) || dispatch.alreadyDispatched !== false) return fail();
+    if (expired()) throw new HttpError("STATE_CONFLICT");
+  }, async () => {
     await assertCurrent();
     const ackSha256 = await hash({ version: 1, ...fence, kind: task.kind, deleteAcknowledged: true });
     receipt = decodeAck(await ports.recordDeleteAck({ ...fence, ackSha256 }, signal), task);
@@ -199,4 +319,21 @@ async function processTask(workerRunToken: string, ports: MemberCleanupPorts,
   const result = record(await ports.complete({ ...fence, evidenceSha256 }, signal));
   if (!result || Object.keys(result).length !== 1 || result.status !== "applied") return fail();
   return { status: "applied" };
+}
+
+/** Shared scheduler allocation may tighten the existing member cleanup limit, never raise it. */
+export async function processMemberCleanupBatch(workerRunToken:string,ports:MemberCleanupPorts,
+ adapter:ReturnType<typeof createMemberCleanupAdapter>,allocation:{limit:number;deadlineAt:number;signal:AbortSignal}):Promise<{processed:number;stopReason:'idle'|'limit'|'aborted'|'deadline'}>{
+ if(!validId(workerRunToken)||!allocation||Object.keys(allocation).length!==3||
+ !Number.isSafeInteger(allocation.limit)||allocation.limit<0||allocation.limit>10||
+ !Number.isSafeInteger(allocation.deadlineAt)||!(allocation.signal instanceof AbortSignal))throw new HttpError('INVALID_REQUEST');
+ let processed=0;
+ while(processed<allocation.limit){
+  if(allocation.signal.aborted)return{processed,stopReason:'aborted'};
+  if(Date.now()>=allocation.deadlineAt)return{processed,stopReason:'deadline'};
+  const r=await processMemberCleanupTask(workerRunToken,ports,adapter,{deadlineAt:allocation.deadlineAt,signal:allocation.signal});
+  if(r.status==='idle')return{processed,stopReason:'idle'};
+  processed++;
+ }
+ return{processed,stopReason:'limit'};
 }

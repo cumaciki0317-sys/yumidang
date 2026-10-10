@@ -1,3 +1,11 @@
+# 2026-10-09 권한 확대 — 최신 안내
+
+사용자 승인으로 성호는 웹 frontend 전체와 모바일 src/screens·src/app·src/components·src/ui.tsx·src/presentation, design·assets 및 docs/planning/design을 직접 편집한다. RemoteMemberScreens.tsx도 성호 담당이다. 아래 2026-10-05의 실제 화면 편집 금지는 이번 배정 경로에 적용하지 않는다. 인증·API·세션·상태·서비스 연결 파일과 모바일 패키지·환경·공통 설정, 백엔드는 기존 담당을 유지한다. 화면의 정책·공개 권한 조건과 기존 변경 내용을 보존한다.
+
+별도 clone/worktree에서 이번 정책 커밋을 반영하고 sungho 브랜치와 소유권 검사 후 작업한다. 현재 공유 작업 공간의 actor를 바꾸지 않는다. GitHub 저장소 초대나 외부 디자인 도구 계정 권한을 변경한 것은 아니다.
+
+---
+
 # 성호 UX/UI 시작 안내
 
 작성자 minkyu, 2026-10-05. 사용자 승인에 따라 성호를 sungho로 등록했다. 공유 기준은 minkyu/handoff-20261005다.

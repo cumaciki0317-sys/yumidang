@@ -27,6 +27,10 @@ callback의 `session`은 `accessToken`, `refreshToken`, `expiresIn`, `tokenType`
 
 성향은 `service-api`의 GET/POST `/me/traits`로 조회/전체 교체한다. POST는 `interests`, `conversationStyles`, `mbti`를 모두 요구한다. 빈 배열/null MBTI는 선택 성향 삭제다. 기존 사진 교체 RPC·최종 사진 삭제 차단을 유지한다.
 
+검토된 사전검사 조립은 `createSignupRuntimeHandler(read, fetchImpl, {contentInspection: readiness})`로 연결한다. `readiness`는 승인값·결정 ID·정책/검사기 버전을 요구하며 HTTP 입력으로 설치할 수 없다. 기존 두 인자 factory와 기본 진입점에는 설치하지 않는다. 검사 endpoint는 service-api의 `/content-inspections`를 사용한다. 승인된 가입 완료는 원 사용자 JWT로 가입 성향 티켓을 POST 조회하고 `x-content-operation-id`, `x-content-inspection-ticket`을 같은 입력의 `complete_naver_signup`에 전달한다. DB SQL116이 digest·대상·기한·소비를 원자적으로 다시 검증한다. 가입 상태 읽기는 티켓 없이 가능하다. 프로필 생성 전 최초 가입도 이 경계를 사용하며 검증된 Auth 사용자와 네이버 세션·필수 사진 검사는 유지한다.
+
+가입 factory 신규5·기존 네이버9·ticket client8 모형 검증22개와 Deno 검사 PASS다. 실제 격리 Auth/REST/SQL의 프로필 없는 최초 가입은 콘텐츠 full8-v9에서 PASS다. 검증된 합성 네이버 세션·사진 metadata→검사→가입 저장→ticket 소비→같은 키 재조회에서 전체 DB 추가 변경0을 확인했다. 실제 사진 업로드·네이버 공급사 로그인·분류기 품질·소비자 화면·운영 활성화 완료를 의미하지 않는다. [실행 기록4.16](../../docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md)을 따른다.
+
 ## 브라우저 연결 순서
 
 1. 브라우저에서 무작위 32바이트를 base64url로 바꿔 verifier(43자)를 만들고 SHA-256 hex challenge를 계산한다. 시작 요청 후 state별 verifier를 현재 탭의 sessionStorage에 보관하고 인증 URL로 이동한다. 요청·콜백 원문을 분석 로그에 남기지 않는다.
@@ -61,3 +65,14 @@ callback의 `session`은 `accessToken`, `refreshToken`, `expiresIn`, `tokenType`
 사진은 JPG·JPEG·PNG 원본10MB 이하이며 최종 저장 JPEG 경로와 원본 수신/변환 검증을 구분한다. 위 기존 `/complete` 본문에 동의 필드·철회 기능이 구현됐다고 해석하지 않는다. 다른 네이버 계정 연결·활동 이전은 제공하지 않는다.
 
 진행 중 확정 약속은 탈퇴를 막되 후기 기한만 남거나 진행 약속 없이 분쟁만 남으면 탈퇴할 수 있다. 탈퇴 시 프로필·사진 활성 저장소 삭제와 접근 회수, 공고·신청 취소, 최소 안전 기록 분리를 적용한다. 즉시 재가입은 새 프로필·당도15·완료0이고 동일 네이버 검증 식별값으로 경고·제재·연속취소만 연결한다. 식별값 보관 근거·기술 지원·백업 만료와 실제 삭제는 별도 확인이다. 정식 삭제 요청은 공개 처리방침의 삭제 구역과 `cumaciki0317@gmail.com`을 사용하며 게시 전 운영자명·처리시간·처리 체계를 준비한다.
+
+
+## 2026-10-09 탈퇴 HTTP 준비 — 기본 비활성
+
+`POST /functions/v1/service-api/me/retirement`(직접 서버 `/service-api/me/retirement`)은 회원 Bearer JWT와 `{withdrawalId: UUID}`만 받는다. query·actor·Auth ID·Storage 경로·완료 주장 등 추가 필드는 거절한다. 사용자 client는 원 JWT와 anon key로 `retire_my_account(p_withdrawal_id)`만 호출하며 서비스 키/내부 인증으로 대체하지 않는다.
+
+응답은 `{data:{withdrawalId,status:"processing"|"completed",memberAccessRevoked:true},requestId}`다. `processing`은 접근 회수와 삭제 작업 접수이며 외부 자료 파기 완료가 아니다. `completed`도 다른 보관 자료/백업의 즉시 삭제를 주장하지 않는다. DB 결과가 다른 요청이거나 접근 미회수/비정상 형태이면 성공 응답을 만들지 않는다.
+
+기본 진입점은 이 경로에404를 반환한다. 신뢰된 서버 조립의 `createRuntimeHandler(read,{memberCleanup:true,memberRetirement:true})`에서만 연결하며 cleanup 없이 retirement를 켜면 시작을 거절한다. 이는 로컬 통합 준비 옵션이고 DB의 삭제 승인 guard·실제 pipeline/제품 실행기 검증을 대신하지 않는다. HTTP body/header로 활성화할 수 없다.
+
+입력·권한·기본 닫힘·상태 계약·회원 client 연결은 모형13개 PASS다. 실제 Auth는 최초 탈퇴 때 세션이 삭제되므로 응답 유실 후 원 JWT 재시도·완료 후 상태 확인 가능 여부를 실제 Auth로 검증해야 한다. 실패를 익명/내부 권한으로 우회하거나 새 withdrawalId로 재전송하지 않는다. Storage→Auth 실제 정리·제품 실행기·실회원/운영 활성화는 미완료다.

@@ -28,6 +28,10 @@ function fixture(value: unknown = task(), failingFence = 0) {
     async assertCurrent(fence) { events.push("fence"); assert.deepEqual(fence, { taskId: (value as MemberCleanupTask).taskId, leaseToken: (value as MemberCleanupTask).leaseToken, workerRunToken: runToken,
       objectId: (value as MemberCleanupTask)?.objectId }); if (++fences === failingFence) throw new HttpError("STATE_CONFLICT"); return value; },
     async getDeleteAck() { events.push("getAck"); return null; },
+    // 합성 DB가 정확한 원 fence로 최초 dispatch를 허용한 경우만 삭제한다.
+    async beginDelete(fence) { events.push("begin"); assert.deepEqual(fence, { taskId: (value as MemberCleanupTask).taskId,
+      leaseToken: (value as MemberCleanupTask).leaseToken, workerRunToken: runToken, objectId: (value as MemberCleanupTask).objectId });
+      return { dispatchId: runToken, alreadyDispatched: false }; },
     async recordDeleteAck(args) { events.push("recordAck"); return { receiptId: runToken, taskId, kind: (value as MemberCleanupTask).kind,
       objectId: (value as MemberCleanupTask).objectId, evidenceSha256: args.ackSha256 }; },
     async complete(args) { events.push("complete"); completed.push(args); return { status: "applied" }; },
@@ -56,7 +60,7 @@ function storageFetch(events: string[], responses = [json(info()), json([{ id: o
 test("Storage 정확 객체 삭제·durable ack·404·네 번 fence 후 5인자 완료 증거만 기록한다", async () => {
   const f = fixture(); const adapter = createMemberCleanupAdapter(config, storageFetch(f.events));
   assert.deepEqual(await processMemberCleanupTask(runToken, f.ports, adapter), { status: "applied" });
-  assert.deepEqual(f.events, ["claim", "fence", "getAck", "http1", "fence", "http2", "fence", "recordAck", "http3", "fence", "complete"]);
+  assert.deepEqual(f.events, ["claim", "fence", "getAck", "http1", "fence", "begin", "http2", "fence", "recordAck", "http3", "fence", "complete"]);
   const evidence = f.completed[0] as Record<string, unknown>;
   assert.deepEqual(Object.keys(evidence).sort(), ["taskId", "leaseToken", "workerRunToken", "objectId", "evidenceSha256"].sort());
   assert.match(String(evidence.evidenceSha256), /^[a-f0-9]{64}$/);
@@ -108,6 +112,20 @@ test("삭제 직전 fence 거절이면 DELETE 없고 삭제 후 fence 거절이�
       (e) => toPublicError(e).error.code === "STATE_CONFLICT");
     assert.equal(f.completed.length, 0);
     assert.equal(f.events.includes("http2"), failure >= 3);
+  }
+});
+test("최초 BEGIN 거절·응답 유실·재전송 표시에는 DELETE와 ACK·완료가 없다", async () => {
+  for (const dispatch of [null, {}, { dispatchId: runToken, alreadyDispatched: true }, { dispatchId: "invalid", alreadyDispatched: false },
+    { dispatchId: runToken, alreadyDispatched: false, extra: true }, "lost", "denied"]) {
+    const f = fixture();
+    f.ports.beginDelete = async () => {
+      if (dispatch === "lost") throw new Error("synthetic BEGIN response loss");
+      if (dispatch === "denied") throw new HttpError("STATE_CONFLICT");
+      return dispatch;
+    };
+    await assert.rejects(processMemberCleanupTask(runToken, f.ports, createMemberCleanupAdapter(config, storageFetch(f.events))));
+    assert.equal(f.events.includes("http1"), true); assert.equal(f.events.includes("http2"), false);
+    assert.equal(f.events.includes("recordAck"), false); assert.equal(f.completed.length, 0);
   }
 });
 
@@ -186,6 +204,7 @@ const ack = (value = task()) => ({ receiptId: runToken, taskId: value.taskId, ki
 test("기존 durable ack가 있으면 Storage/Auth 재삭제 없이 부재 검증 후 완료한다", async () => {
   for (const value of [task(), authTask()]) {
     const f = fixture(value); f.ports.getDeleteAck = async () => ack(value); let calls = 0;
+    f.ports.beginDelete = async () => assert.fail("기존 ACK에는 신규 dispatch 없음");
     f.ports.recordDeleteAck = async () => assert.fail("재기록 없음");
     const adapter = createMemberCleanupAdapter(config, async (url, init) => {
       assert.equal(init?.method, "GET"); calls++;
@@ -210,6 +229,7 @@ test("durable ack 기록 후 complete 실패는 새 lease에서 재삭제 없이
   const second = fixture({ ...task(), leaseToken: profileId }); let gets = 0;
   second.ports.getDeleteAck = async () => durable;
   second.ports.recordDeleteAck = async () => assert.fail();
+  second.ports.beginDelete = async () => assert.fail("ACK 복구에는 신규 dispatch 없음");
   assert.deepEqual(await processMemberCleanupTask(runToken, second.ports, createMemberCleanupAdapter(config, async (_url, init) => {
     assert.equal(init?.method, "GET"); gets++; return json({}, 404);
   })), { status: "applied" });
@@ -223,6 +243,7 @@ test("durable record 응답 소실은 같은 task proof를 다음 lease에서 �
   await assert.rejects(processMemberCleanupTask(runToken, first.ports, createMemberCleanupAdapter(config, storageFetch(first.events))), unavailable);
   assert.equal(first.events.includes("http3"), false); assert.equal(first.completed.length, 0);
   const second = fixture({ ...task(), leaseToken: profileId }); second.ports.getDeleteAck = async () => durable;
+  second.ports.beginDelete = async () => assert.fail("ACK 복구에는 신규 dispatch 없음");
   assert.deepEqual(await processMemberCleanupTask(runToken, second.ports, createMemberCleanupAdapter(config, async (_url, init) => {
     assert.equal(init?.method, "GET"); return json({}, 404);
   })), { status: "applied" });

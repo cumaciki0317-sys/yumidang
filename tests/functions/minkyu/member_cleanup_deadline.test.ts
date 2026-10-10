@@ -102,3 +102,28 @@ test("시계가 앞으로 이동해 timer가 아직 실행되지 않아도 전�
     assert.equal(http, 0); assert.ok(!f.events.includes("ack")); assert.ok(!f.events.includes("complete"));
   } finally { Date.now = original; }
 });
+
+test("삭제 응답 유실 후 영속 dispatch가 같은 작업의 재삭제를 차단한다", async () => {
+  const f = fixture(); let dispatched = false, deletes = 0;
+  f.ports.beginDelete = async () => {
+    const alreadyDispatched = dispatched; dispatched = true;
+    return { dispatchId: id, alreadyDispatched };
+  };
+  const adapter = createMemberCleanupAdapter(config, async (_url, init) => {
+    if (init?.method === "DELETE") { deletes++; throw new Error("synthetic response loss"); }
+    return new Response(JSON.stringify({ id, name: task().objectName, bucket_id: "profile-images" }));
+  });
+  await assert.rejects(processMemberCleanupTask(id, f.ports, adapter));
+  assert.equal(dispatched, true); assert.equal(deletes, 1);
+  await assert.rejects(processMemberCleanupTask(id, f.ports, adapter));
+  assert.equal(deletes, 1); assert.ok(!f.events.includes("ack")); assert.ok(!f.events.includes("complete"));
+});
+test("영속 dispatch 포트가 없으면 외부 DELETE를 전송하지 않는다", async () => {
+  const f = fixture(); let deletes = 0;
+  const adapter = createMemberCleanupAdapter(config, async (_url, init) => {
+    if (init?.method === "DELETE") deletes++;
+    return new Response(JSON.stringify({ id, name: task().objectName, bucket_id: "profile-images" }));
+  });
+  await assert.rejects(processMemberCleanupTask(id, f.ports, adapter));
+  assert.equal(deletes, 0); assert.ok(!f.events.includes("ack"));
+});

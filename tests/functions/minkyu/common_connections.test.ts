@@ -248,6 +248,7 @@ test("worker는 실제 내부 client로 최신 모델 예약·요약 계약·전
         if (name === "claim_job") { assert.equal(args.p_worker_run_token, otherId); return Response.json({ job: null }); }
         assert.equal(args.p_contract_version, "2026-10-05");
         assert.equal(args.p_worker_run_token, nil);
+        if (name === "reserve_review_summary_model") return Response.json({ status: "consent_revoked" });
         return Response.json({ status: "lease_lost" });
       });
       return client;

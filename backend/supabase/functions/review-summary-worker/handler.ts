@@ -1,5 +1,5 @@
 /**
- * 담당: 종현담당
+ * 담당: 민규담당(2026-10-09 사용자 재배정)
  * 역할: 내부 후기 요약 worker의 HTTP 처리와 실행당 한도 안의 반복.
  * 요청 본문은 빈 객체만 허용한다. 모델·외부 목적지·점유 토큰·worker ID를 요청이 정하지 못한다.
  * 실행 한도는 index.ts가 명시 환경값으로만 만든다(기본값 없음). 기준: 260929_종현담당_PLAN.md 5.5·5.6.
@@ -82,22 +82,24 @@ export async function runSummaryWorkerBatch(input: WorkerBatchInput): Promise<Wo
 
 const NIL = "00000000-0000-0000-0000-000000000000";
 /**
- * 부작용 없는 접근 확인. 존재하지 않는 작업 ID로 호출하면 DB는 lease_lost/state_conflict만 반환한다.
+ * 존재하지 않는 NIL 작업의 최소 거절 결과만 확인한다. 모델 예약은 동의를 먼저 검사하므로
+ * consent_revoked도 반환할 수 있다. 이 결과는 동의·공급사·모델 사용 승인이 아니다.
  * 허용 목록에 없는 RPC(ACCESS_DENIED)나 미적용 함수가 있으면 작업을 점유하기 전에 멈춘다.
  */
 export async function probeSummaryWorkerRpcs(db: RpcClient): Promise<"ready" | "DB_RPC_NOT_ALLOWED" | "DB_RPC_UNAVAILABLE"> {
   const job = { p_job_id: NIL, p_lease_token: NIL, p_worker_run_token: NIL };
   const summaryJob = { ...job, p_worker_run_token: NIL, p_contract_version: "2026-10-05" };
   const withRevision = { ...summaryJob, p_source_revision: "0" };
-  const probes: Array<[string, Record<string, JsonValue>, "lease_lost" | "state_conflict"]> = [
+  const probes: Array<[string, Record<string, JsonValue>, "model_denied" | "lease_lost" | "lease_or_state_conflict" | "state_conflict"]> = [
     ["reserve_review_summary_model", { ...withRevision, p_target_user_id: NIL, p_source_review_ids: [], p_model_version: "probe",
-      p_prompt_version: "probe", p_ledger_id: "probe", p_provider_id: "probe", p_task: "review_chunk", p_units: 1 }, "lease_lost"],
+      p_prompt_version: "probe", p_ledger_id: "probe", p_provider_id: "probe", p_task: "review_chunk", p_units: 1 }, "model_denied"],
     ["load_review_summary_source", summaryJob, "lease_lost"],
     ["load_review_summary_checkpoint", withRevision, "lease_lost"],
     ["save_review_summary_checkpoint", { ...withRevision, p_checkpoint: { schemaVersion: 1, sourceReviewIds: [], nextReviewIndex: 0, nodes: [] } }, "lease_lost"],
     ["discard_review_summary_checkpoint", withRevision, "lease_lost"],
-    ["mark_review_summary_insufficient", withRevision, "lease_lost"],
-    ["publish_review_summary_for_job", { ...withRevision, p_evidence_review_ids: [], p_summary: "probe", p_model_version: "probe", p_prompt_version: "probe" }, "lease_lost"],
+    // SQL109의 정확한 dispatch 거절은 STATE_CONFLICT다. 구 lease_lost 최소 반환도 두 효과 RPC에만 허용한다.
+    ["mark_review_summary_insufficient", withRevision, "lease_or_state_conflict"],
+    ["publish_review_summary_for_job", { ...withRevision, p_evidence_review_ids: [], p_summary: "probe", p_model_version: "probe", p_prompt_version: "probe" }, "lease_or_state_conflict"],
     ["yield_job", { ...job, p_available_at: null }, "state_conflict"],
     ["fail_job", { ...job, p_error_code: "INTERNAL_ERROR" }, "state_conflict"],
     ["supersede_job", job, "state_conflict"],
@@ -105,13 +107,15 @@ export async function probeSummaryWorkerRpcs(db: RpcClient): Promise<"ready" | "
   for (const [name, args, expected] of probes) {
     try {
       const body = await db.rpc(name, args);
-      if (expected !== "lease_lost" || !body || typeof body !== "object" || Array.isArray(body) || body.status !== "lease_lost") {
+      const denied = expected === "model_denied" ? ["consent_revoked", "lease_lost"] : ["lease_lost", "lease_or_state_conflict"].includes(expected) ? ["lease_lost"] : [];
+      if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== 1 ||
+          typeof body.status !== "string" || !denied.includes(body.status)) {
         return "DB_RPC_UNAVAILABLE";
       }
     } catch (error) {
       const code = toPublicError(error).error.code;
       if (code === "ACCESS_DENIED") return "DB_RPC_NOT_ALLOWED";
-      if (!(expected === "state_conflict" && code === "STATE_CONFLICT")) return "DB_RPC_UNAVAILABLE";
+      if (!(["state_conflict", "lease_or_state_conflict"].includes(expected) && code === "STATE_CONFLICT")) return "DB_RPC_UNAVAILABLE";
     }
   }
   return "ready";
@@ -121,12 +125,23 @@ export interface ReviewSummaryWorkerDependencies {
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
   authenticateInternal(request: Request): Promise<void>;
-  run(existingToken?: string): Promise<WorkerRunResult>;
+  run(existingToken?: string, execution?: WorkerSharedExecution): Promise<WorkerRunResult>;
+  /** 서버 DB가 준비된 요청 키·token·kind·배정을 확인한다. 호출자 헤더만으로 승인하지 않는다. */
+  resolveSharedExecution?(input: WorkerSharedRequest): Promise<{ maxJobsPerRun: number; timeBudgetMs: number }>;
+}
+export interface WorkerSharedExecution { maxJobsPerRun: number; timeBudgetMs: number; signal: AbortSignal; }
+export interface WorkerSharedRequest { requestId: string; globalToken: string; maxJobsPerRun: number; timeBudgetMs: number; }
+const SHARED_HEADERS = ["x-worker-request-id", "x-worker-max-jobs", "x-worker-time-budget-ms"] as const;
+function sharedInt(value: string | null, maximum: number): number {
+  if (value === null || !/^(0|[1-9][0-9]{0,5})$/.test(value)) throw new HttpError("INVALID_REQUEST");
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number > maximum) throw new HttpError("INVALID_REQUEST");
+  return number;
 }
 
 export function createReviewSummaryWorkerHandler(deps: ReviewSummaryWorkerDependencies) {
   if (!Number.isSafeInteger(deps.maxBodyBytes) || deps.maxBodyBytes < 1) throw new TypeError("본문 크기 제한이 필요합니다.");
-  const cors = createCors({ allowedOrigins: deps.allowedOrigins, allowedMethods: ["POST"], allowedHeaders: ["authorization", "content-type", "apikey", "x-worker-run-token"] });
+  const cors = createCors({ allowedOrigins: deps.allowedOrigins, allowedMethods: ["POST"], allowedHeaders: ["authorization", "content-type", "apikey", "x-worker-run-token", ...SHARED_HEADERS] });
   return async (request: Request): Promise<Response> => {
     const context = createRequestContext();
     const preflight = cors.preflight(request, context);
@@ -145,7 +160,23 @@ export function createReviewSummaryWorkerHandler(deps: ReviewSummaryWorkerDepend
       if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== 0) throw new HttpError("INVALID_REQUEST");
       const token = request.headers.get("x-worker-run-token") ?? undefined;
       if (token !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(token)) throw new HttpError("INVALID_REQUEST");
-      const result = await deps.run(token);
+      let execution: WorkerSharedExecution | undefined;
+      if (SHARED_HEADERS.some(header => request.headers.has(header))) {
+        if (!token || !SHARED_HEADERS.every(header => request.headers.has(header))) throw new HttpError("INVALID_REQUEST");
+        const requestId = request.headers.get("x-worker-request-id")!;
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(requestId)) throw new HttpError("INVALID_REQUEST");
+        const maxJobsPerRun = sharedInt(request.headers.get("x-worker-max-jobs"), 20);
+        const timeBudgetMs = sharedInt(request.headers.get("x-worker-time-budget-ms"), 180_000);
+        if (!deps.resolveSharedExecution) throw new HttpError("EXTERNAL_UNAVAILABLE");
+        if (request.signal.aborted) throw new HttpError("STATE_CONFLICT");
+        const approved = await deps.resolveSharedExecution({ requestId, globalToken: token, maxJobsPerRun, timeBudgetMs });
+        if (!approved || Object.keys(approved).sort().join(",") !== "maxJobsPerRun,timeBudgetMs" ||
+            !Number.isSafeInteger(approved.maxJobsPerRun) || approved.maxJobsPerRun < 0 || approved.maxJobsPerRun > maxJobsPerRun ||
+            !Number.isSafeInteger(approved.timeBudgetMs) || approved.timeBudgetMs < 0 || approved.timeBudgetMs > timeBudgetMs) throw new HttpError("EXTERNAL_UNAVAILABLE");
+        if (request.signal.aborted) throw new HttpError("STATE_CONFLICT");
+        execution = { ...approved, signal: request.signal };
+      }
+      const result = await deps.run(token, execution);
       return cors.apply(jsonSuccess(result as unknown as JsonValue, context), request);
     } catch (error) {
       const response = jsonFailure(error, context);

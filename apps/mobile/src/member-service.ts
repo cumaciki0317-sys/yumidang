@@ -186,6 +186,18 @@ export class MemberService {
     if (r.request_id !== id) return fail();
     return readState(r);
   }
+  /** 실제 표시된 집합만 보낸다. 기존 watermark 읽음으로 fallback하지 않는다. */
+  async markMessagesRead(id: string, messageIds: string[], signal?: AbortSignal) {
+    const requestId = uuid(id).toLowerCase();
+    if (!Array.isArray(messageIds) || messageIds.length < 1 || messageIds.length > 100) throw new ApiError(400, "INVALID_MESSAGE_IDS");
+    const ids = messageIds.map(value => uuid(value).toLowerCase());
+    if (new Set(ids).size !== ids.length) throw new ApiError(400, "INVALID_MESSAGE_IDS");
+    const r = fields(await this.send(`/conversations/${requestId}/read/messages`, { messageIds: ids }, signal), ["messageIds", "unreadCount"]);
+    if (!Array.isArray(r.messageIds) || r.messageIds.length !== ids.length || !Number.isSafeInteger(r.unreadCount) || Number(r.unreadCount) < 0) return fail();
+    const confirmed = r.messageIds.map(value => uuid(value).toLowerCase());
+    if (new Set(confirmed).size !== ids.length || confirmed.some(value => !ids.includes(value))) return fail();
+    return { confirmedMessageIds: confirmed, unreadCount: Number(r.unreadCount) };
+  }
   async ownPosts(before?: string, signal?: AbortSignal): Promise<MemberPage> {
     const page = await this.page(`/me/posts?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal);
     for (const row of page.items) { uuid(row.postId); string(row.title); timestamp(row.createdAt); if (row.isOwner !== true) return fail(); }
@@ -287,7 +299,7 @@ export class MemberService {
     return cancellationAppeal(await this.send(`/appointments/${uuid(id)}/cancellation-appeals/submit`, input, signal), id, input.expectedResultRevision);
   }
   async withdrawAi(kind: "exploration" | "review_summary", signal?: AbortSignal) { const r = fields(await this.send("/me/ai-processing/withdraw", { kind }, signal), ["withdrawn"]); if (r.withdrawn !== true) return fail(); return r; }
-  async report(input: MemberReportInput, signal?: AbortSignal) { const r = fields(await this.send("/reports", input, signal), ["reportId", "status", "alreadySubmitted", "hideTarget"]); uuid(r.reportId); string(r.status); bool(r.alreadySubmitted); bool(r.hideTarget); return r; }
+  async report(input: MemberReportInput, signal?: AbortSignal) { const r = fields(await this.send("/reports", input, signal), ["reportId", "status", "alreadySubmitted", "hideTarget"]); uuid(r.reportId); string(r.status); bool(r.alreadySubmitted); bool(r.hideTarget); if (r.hideTarget !== input.hideTarget) return fail(); return r; }
   async reports(before?: string, signal?: AbortSignal) { return this.page(`/me/reports?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal); }
   async getReport(id: string, signal?: AbortSignal) { const r = wire(await this.read(`/me/reports/${uuid(id)}`, signal)); if (r.reportId !== id) return fail(); return r; }
   async reserveReportCapture(assetId: string, extension: "jpg" | "png" | "webp", signal?: AbortSignal) { const r = fields(await this.send("/report-captures", { assetId: uuid(assetId), extension }, signal), ["assetId", "bucket", "path", "state"]); if (r.assetId !== assetId || r.bucket !== "report-evidence") return fail(); string(r.path); if (!["reserved", "uploaded", "attached"].includes(string(r.state))) return fail(); return r; }

@@ -1,5 +1,5 @@
 /**
- * 담당: 종현담당
+ * 담당: 민규담당(2026-10-09 사용자 재배정)
  * 역할: 요약 worker 런타임 조립. 내부 인증 → 명시 설정 → 모델(createConfiguredModel) → 승인된 안전 검사 →
  * DB RPC 접근 확인 → 실행당 한도 안의 runNextJob 반복. 어느 전제라도 없으면 작업을 점유하지 않고 not_enabled를 반환한다.
  * import는 실행·예약 등록을 하지 않는다. 실제 Edge 배포·일일 호출 등록은 별도 운영 작업이다.
@@ -7,6 +7,8 @@
 import { inspectReviewSummaryConfig, loadRuntimeConfig, requireInternalConfig, type EnvReader, type RuntimeConfig } from "../_shared/config/env.ts";
 import { requireInternalCaller } from "../_shared/auth/internal-caller.ts";
 import { createInternalClient } from "../_shared/db/internal-client.ts";
+import { createWorkerInvocationRuntime } from "../_shared/db/worker-runtime-client.ts";
+import { HttpError } from "../_shared/http/errors.ts";
 import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
 import { createRpcJobRepository } from "../_shared/db/repositories/jobs.ts";
 import { createRpcReviewSummaryRepository } from "../_shared/db/repositories/review-summaries.ts";
@@ -27,6 +29,7 @@ import { requiredPositiveInt, SettingError } from "../_shared/jobs/settings.ts";
 import {
   createReviewSummaryWorkerHandler, probeSummaryWorkerRpcs, runSummaryWorkerBatch,
   type WorkerNotEnabledReason, type WorkerRunResult,
+  type WorkerSharedExecution,
 } from "./handler.ts";
 
 /** 설정 변수 이름(값은 서버 환경에서만 주입). 모두 필수이며 기본값이 없다. */
@@ -108,7 +111,7 @@ export interface WorkerRuntimeOverrides {
 }
 
 /** 내부 호출 전용. 공유 단위→작업수 변환은 승인된 caller 계약의 책임이며 HTTP 본문으로 받지 않는다. */
-export interface SharedSummaryExecution { maxJobsPerRun: number; timeBudgetMs: number; signal: AbortSignal; }
+export type SharedSummaryExecution = WorkerSharedExecution;
 export function createReviewSummaryWorkerExecution(read: EnvReader, overrides: WorkerRuntimeOverrides = {}) {
   const config = loadRuntimeConfig(read);
   requireInternalConfig(config);
@@ -239,6 +242,17 @@ export function createReviewSummaryWorkerRuntime(read: EnvReader, overrides: Wor
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
     authenticateInternal: (request) => requireInternalCaller(request, config),
+    async resolveSharedExecution(input) {
+      const db = overrides.createDb?.(config) ?? createInternalClient(config, overrides.fetch);
+      const invocation = createWorkerInvocationRuntime(db);
+      const state = await invocation.getQueueInvocation(input.requestId);
+      if (state.state !== "prepared" || state.globalToken !== input.globalToken || state.kind !== "review_summary" ||
+          state.limit !== input.maxJobsPerRun || state.remainingMs !== input.timeBudgetMs) throw new HttpError("STATE_CONFLICT");
+      // 동시 요청이 같은 prepared를 읽어도 DB의 한 번 CAS만 실행을 허용한다.
+      if (!await invocation.claimQueueInvocationDispatch({ requestId: input.requestId, globalToken: input.globalToken,
+        kind: "review_summary", limit: input.maxJobsPerRun, remainingMs: input.timeBudgetMs })) throw new HttpError("STATE_CONFLICT");
+      return { maxJobsPerRun: state.limit, timeBudgetMs: state.remainingMs };
+    },
     run,
   });
 }

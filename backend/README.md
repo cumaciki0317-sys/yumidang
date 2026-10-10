@@ -18,11 +18,13 @@
 
 탐색 AI와 후기 AI를 구분해 가입 시 각각 필수 동의를 받으려는 제품 의도를 유지한다. 가입 후 철회 요청을 접수하면 해당 처리의 신규 전송을 중단하고 관련 요약 숨김·필요한 원문/외부 사본 삭제를 처리하며 일반 동행·계정은 유지한다. 필수화와 철회 처리의 법적 정합성은 검토 대기다. 확인 전 관련 가입 차단·외부 전송을 시행하지 않는다. AI 화면 설명을 제공하고 별도 첫 이용 팝업은 추가하지 않는다.
 
-전체 AI 예산은 실제 계정의 포함량·계산 단위·초기화 주기를 확인한 뒤 포함량의 50%로 시작하고 추가 결제는 허용하지 않는다. 전체 예산 소진 시 개인 한도가 남아도 중단한다. 증액 희망은 공급사 회신·측정 후 검토하며 확인 전 활성화하지 않는다. 합성 검증 50,000은 기술 원장 단위로 원화·청구 토큰과 같지 않으며 합성 10회의 충분한 예산을 보장하지 않는다.
+최신 AI 예산은 등록 계정별 한국시간 하루320만 토큰, 전체는 실제 등록 계정별 상한의 합계다. 전송 전에 계정별·전체 예산을 함께 원자 예약하고 계정 부족 시 전송 전에 다음 계정을 선택한다. 전송 후 오류·응답 유실은 일반 소진으로 간주해 자동 전환하지 않으며 미확인 예약은 유지한다. 전체 소진 시 개인 한도가 남아도 중단하고 추가 결제는 허용하지 않는다. 공급사 실제 포함량·사용량 단위·출력 상한·자정 초기화·공동 사용 허용과 운영 연결은 별도 검증한다. 합성 원장 값은 실제 청구 단위가 아니다.
 
 실회원 AI 외부 전송은 공급사 보관 회신 검토·사용자 확인 전 보류한다. [AI 탐색](contracts/ai-chat.md)·[요약](contracts/review-summary.md)·[작업 큐](contracts/worker-jobs.md)에서 선택 숫자와 실제 구현을 구분한다.
 
 ## 실행·연결 안내
+
+[백엔드100% 계획](../docs/collaboration/requests/minkyu/2026-10-09-backend-100-plan.md)의 기능표와 운영7단계를 따른다. 탈퇴 HTTP 준비는 기본 비활성 상태이며 [가입·탈퇴 계약](contracts/signup.md)의 명시 조립 조건을 따른다. 준비 도구의 소스 해시·환경 구문 검사는 실제 연결/운영 활성화를 뜻하지 않는다.
 
 [완료 DB](contracts/completion-db.md)의 건별 DB 예약·상주 Node LISTEN/NOTIFY 실행기는 direct/session 연결을 사용한다. `COMPLETION_DATABASE_URL`, `COMPLETION_RECONNECT_MS`(5초), `COMPLETION_QUERY_TIMEOUT_MS`(10초)를 명시 준비하고 실제 복구를 검증한다. 실행기 준비와 기존 cron 전환은 함께 처리하며 운영 적용 완료를 가정하지 않는다.
 
@@ -32,6 +34,9 @@
 
 파일별 수정은 [소유권](ownership.json)·[협업 규칙](../docs/collaboration/README.md)과 해당 작업 하네스를 따른다. 기존 경로에서 후속 구현하고 같은 기능의 중복 폴더를 만들지 않는다. 아래 functions/는 supabase/functions/, _shared/는 그 아래다.
 
+일반 콘텐츠 검사는 [검사·저장 계약](contracts/content-inspection.md)을 따른다. SQL116과 전용 HTTP/DB adapter가 준비됐지만 기본 비활성이고 세부 탐지 품질·소비자·운영 승인은 남는다. 최신 실제 증거와 범위는 [백엔드 실행 기록](../docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md)을 확인한다.
+원 ACK 기반 회원 정리 복구는 SQL115 전용 bridge와 `service-api/member-cleanup-reconcile-http.ts`를 사용한다. 서버 factory의 `memberCleanupReconcile` 승인에서만 연결하며 기본404다. task 복구와 원 invocation 완료는 별도 증거가 필요하다. 실제 검증 범위는 [복구 연결 기록](../docs/collaboration/requests/minkyu/2026-10-09-member-cleanup-reconcile.md)과 현재 실행 기록을 따른다.
+
 ## 기능별 작성 위치
 
 | 기능 | 작성할 파일·폴더 | 주담당 |
@@ -40,6 +45,7 @@
 | 가입·인증 요청 | functions/signup/, verification/의 index.ts·handler.ts | 민규담당 |
 | 탐색·요약 요청 | functions/ai-chat/, review-summary-worker/의 index.ts·handler.ts | 종현담당 |
 | 장소·행사·예약 실행 | functions/places/, event-sync/, scheduled-jobs/의 index.ts·handler.ts | 종현담당 |
+| 일반 콘텐츠 검사·저장 결합 | _shared/services/content-inspection.ts, _shared/db/content-inspection-client.ts, functions/service-api/content-inspection-http.ts | 민규담당 |
 | 사용자·내부 호출자·세션 | _shared/auth/ | 민규담당 |
 | 환경·HTTP·공통 오류 | _shared/config/, http/ | 민규담당 |
 | 실행 시 계약 검증 | _shared/contracts/ | search.ts·ai.ts는 종현, 나머지는 민규 |
@@ -64,7 +70,7 @@
 
 요약 작업은 `functions/review-summary-worker/`에서 받고 `_shared/ai/Agents/review-summary/orchestrator.ts`로 연결한다. `source-loader.ts`, `eligibility.ts`, `prompts.ts`, `evidence-check.ts`, `output-check.ts`, `publisher.ts`에 원문 조회·3개 기준·생성 지침·근거 검증·출력 검사·조건부 게시를 작성한다.
 
-모델 호출 계약은 `_shared/ai/providers/model-port.ts`, 제공사 연결은 `provider-adapter.ts`, 오류 변환은 `provider-errors.ts`에 작성한다. 공급사·모델은 포텐스닷 Sonnet 5(`claude-5-sonnet`)이며 실제 회원 정보 전송은 보관 조건 팀 검토·사용자 확인 전 보류한다. 서비스 전체 초기 예산은 확인된 공급사 포함량의50%·추가 결제 없음이며 회원별20회/일·분당제한없음이다. 실제 계정·호출 토큰 비용을 확인해 재설정한다.
+모델 호출 계약은 `_shared/ai/providers/model-port.ts`, 제공사 연결은 `provider-adapter.ts`, 오류 변환은 `provider-errors.ts`에 작성한다. 공급사·모델은 포텐스닷 Sonnet 5(`claude-5-sonnet`)이며 실제 회원 정보 전송은 보관 조건 팀 검토·사용자 확인 전 보류한다. 계정당 한국시간 하루320만 토큰·실제 등록 계정 상한 합계·추가 결제 없음이며 회원별20회/일·분당제한없음이다. 실제 계정·호출 토큰 비용·공급사 조건과 제품 원장 연결을 확인한다.
 
 ## 구현 완료 판정
 

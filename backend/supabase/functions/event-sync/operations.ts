@@ -1,16 +1,27 @@
-/** event-sync의 내부 전용 영속 수집/등록/공식 순위/상세 진입점. 원천 본문은 응답하지 않는다. */
+/** 민규담당(2026-10-09 사용자 재배정). 내부 행사 진입점은 원천 본문을 응답하지 않는다. */
 import { createRequestContext, readJson } from "../_shared/http/request.ts";
 import { jsonFailure, jsonSuccess } from "../_shared/http/response.ts";
 import { HttpError } from "../_shared/http/errors.ts";
 import type { createEventOperations } from "../_shared/jobs/event-runtime.ts";
 import type { EventCollectionReference } from "../_shared/jobs/event-collection.ts";
 import type { JsonValue } from "../_shared/contracts/common.ts";
+export interface EventWorkerRequest { requestId: string; globalToken: string; maxJobsPerRun: number; timeBudgetMs: number; }
+const executionHeaders = ["x-worker-request-id", "x-worker-max-jobs", "x-worker-time-budget-ms"] as const;
+const workerUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+function positiveHeader(value: string | null, maximum: number) {
+  if (!value || !/^[1-9][0-9]{0,5}$/.test(value)) throw new HttpError("INVALID_REQUEST");
+  const n = Number(value);
+  if (!Number.isSafeInteger(n) || n > maximum) throw new HttpError("INVALID_REQUEST");
+  return n;
+}
 export function withEventOperations(
   base: (r: Request) => Promise<Response>,
   options: {
     authenticate: (r: Request) => Promise<void>;
     maxBytes: number;
     operations: ReturnType<typeof createEventOperations>;
+    /** 내부 인증 뒤 DB의 영속 요청·최초 실행 CAS를 확인한다. 헤더는 승인 근거가 아니다. */
+    resolveSharedExecution?(input: EventWorkerRequest): Promise<{ maxJobsPerRun: number; timeBudgetMs: number }>;
   },
 ) {
   return async (request: Request): Promise<Response> => {
@@ -42,9 +53,27 @@ export function withEventOperations(
       let result: unknown;
       if (operation === "worker") {
         exact([]);
+        const token = request.headers.get("x-worker-run-token") ?? undefined;
+        if (token !== undefined && !workerUuid.test(token)) throw new HttpError("INVALID_REQUEST");
+        let execution: { maxJobsPerRun: number; timeBudgetMs: number } | undefined;
+        if (executionHeaders.some(header => request.headers.has(header))) {
+          if (!token || !executionHeaders.every(header => request.headers.has(header))) throw new HttpError("INVALID_REQUEST");
+          const requestId = request.headers.get("x-worker-request-id")!;
+          if (!workerUuid.test(requestId)) throw new HttpError("INVALID_REQUEST");
+          const maxJobsPerRun = positiveHeader(request.headers.get("x-worker-max-jobs"), 10);
+          const timeBudgetMs = positiveHeader(request.headers.get("x-worker-time-budget-ms"), 60_000);
+          if (!options.resolveSharedExecution) throw new HttpError("EXTERNAL_UNAVAILABLE");
+          if (request.signal.aborted) throw new HttpError("STATE_CONFLICT");
+          execution = await options.resolveSharedExecution({ requestId, globalToken: token, maxJobsPerRun, timeBudgetMs });
+          if (!execution || Object.keys(execution).sort().join(",") !== "maxJobsPerRun,timeBudgetMs" ||
+              !Number.isSafeInteger(execution.maxJobsPerRun) || execution.maxJobsPerRun < 1 || execution.maxJobsPerRun > maxJobsPerRun ||
+              !Number.isSafeInteger(execution.timeBudgetMs) || execution.timeBudgetMs < 1 || execution.timeBudgetMs > timeBudgetMs) throw new HttpError("EXTERNAL_UNAVAILABLE");
+          if (request.signal.aborted) throw new HttpError("STATE_CONFLICT");
+        }
         result = await options.operations.worker(
-          request.headers.get("x-worker-run-token") ?? undefined,
+          token,
           request.signal,
+          execution,
         );
       } else if (operation === "register") {
         exact(["providers", "maxPeriodDays"]);

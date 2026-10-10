@@ -4,15 +4,25 @@ import { loadNaverConfig } from "../_shared/config/naver.ts";
 import { requirePrincipal } from "../_shared/auth/principal.ts";
 import { createNaverSessionBridge } from "../_shared/auth/session-bridge.ts";
 import { createUserClient } from "../_shared/db/user-client.ts";
+import { createContentWriteClient } from "../_shared/db/content-inspection-client.ts";
+import type { ContentInspectionReadiness } from "../_shared/services/content-inspection.ts";
 import { createRpcTransport, type FetchLike } from "../_shared/db/transport.ts";
 import { createNaverIdentityAdapter } from "../_shared/integrations/identity/adapter.ts";
 import { createSignupService } from "../_shared/services/signup-service.ts";
 import { HttpError } from "../_shared/http/errors.ts";
 import { createSignupHandler } from "./handler.ts";
-export function createSignupRuntimeHandler(read: EnvReader, fetchImpl: FetchLike = fetch) {
+export function createSignupRuntimeHandler(read: EnvReader, fetchImpl: FetchLike = fetch,
+  options: { contentInspection?: ContentInspectionReadiness } = {}) {
   const config = loadRuntimeConfig(read);
+  const inspection = options.contentInspection;
+  if (inspection && (inspection.approved !== true || ![inspection.decisionId, inspection.policyVersion, inspection.scannerVersion]
+      .every(value => typeof value === "string" && /^[A-Za-z0-9_.:-]{1,80}$/.test(value)))) throw new HttpError("EXTERNAL_UNAVAILABLE");
   return createSignupHandler({ allowedOrigins: config.allowedOrigins, maxBodyBytes: config.maxRequestBytes,
-    authenticateUser: async (request) => createUserClient(config, await requirePrincipal(request, config, fetchImpl), fetchImpl),
+    ...(inspection ? { contentInspection: true as const } : {}),
+    authenticateUser: async (request) => {
+      const principal = await requirePrincipal(request, config, fetchImpl);
+      return inspection ? createContentWriteClient(config, principal, request, fetchImpl) : createUserClient(config, principal, fetchImpl);
+    },
     service: () => {
       const naver = loadNaverConfig(read, config.allowedOrigins);
       const key = config.supabaseServiceRoleKey;

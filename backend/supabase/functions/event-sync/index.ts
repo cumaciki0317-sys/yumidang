@@ -1,10 +1,10 @@
 /**
- * 담당: 종현담당. 내부 행사 수집 런타임 진입점. import는 환경을 읽거나 서버를 시작하지 않는다.
+ * 담당: 민규담당(2026-10-09 사용자 재배정). 내부 행사 수집 런타임 진입점. import는 환경을 읽거나 서버를 시작하지 않는다.
  * 필수 환경값(기본값 없음):
  *  - EVENT_SYNC_PROVIDERS: 쉼표로 구분한 허용 제공처. kopis·tour-api 및 보안 연결 전 미설정 서울 포트.
  *  - EVENT_SYNC_MAX_PERIOD_DAYS / EVENT_SYNC_MAX_PAGE / EVENT_SYNC_PAGE_ROWS: 허용한 제공처 규격 상한 이하.
  *  - 제공처 키: KOPIS_API_KEY(loadKopisConfig), 공통 SUPABASE_*·INTERNAL_WORKER_SECRET·UPSTREAM_TIMEOUT_MS 등.
- * DB 저장은 내부 RPC 클라이언트(createInternalClient)로 upsert_events를 호출한다. 민규 허용 목록에 upsert_events가
+ * DB 저장은 내부 RPC 클라이언트의 검증된 RPC만 사용하고 실제 DB 제어·권한은 별도로 확인한다.
  * 연결 실패를 0건 성공으로 바꾸지 않는다.
  * 테스트는 createRpcClient를 주입한다. 운영 코드는 자체 transport를 만들어 허용 목록을 우회하지 않는다.
  */
@@ -13,6 +13,7 @@ import { loadKopisConfig, loadTourApiConfig } from "../_shared/config/providers.
 import { createTourApiEventProvider, createTourApiDetailProvider, TOUR_API_MAX_PAGE, TOUR_API_MAX_PERIOD_DAYS, TOUR_API_MAX_ROWS, TOUR_API_PROVIDER } from "../_shared/integrations/events/tourapi.ts";
 import { requireInternalCaller } from "../_shared/auth/internal-caller.ts";
 import { createInternalClient } from "../_shared/db/internal-client.ts";
+import { createWorkerInvocationRuntime } from "../_shared/db/worker-runtime-client.ts";
 import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
 import { createRpcEventRepository, syncEventPage } from "../_shared/db/repositories/events.ts";
 import { HttpError } from "../_shared/http/errors.ts";
@@ -143,7 +144,17 @@ export function createEventSyncRuntime(read: EnvReader, fetchImpl: FetchLike = f
   const operations = createEventOperations({ db, rpcAvailable, providers, providerMaxPage: maxPage, providerMaxPages: new Map([...providers.keys()].map(name => [name, registry[name].maxPage])), maxPages: 5, now,
     ongoingProviders, rankingProvider,
     detailProviders });
-  return withEventOperations(base, { authenticate: (request) => requireInternalCaller(request, config), maxBytes: config.maxRequestBytes, operations });
+  return withEventOperations(base, { authenticate: (request) => requireInternalCaller(request, config), maxBytes: config.maxRequestBytes, operations,
+    async resolveSharedExecution(input) {
+      const invocation = createWorkerInvocationRuntime(db);
+      const state = await invocation.getQueueInvocation(input.requestId);
+      if (state.state !== "prepared" || state.globalToken !== input.globalToken || state.kind !== "event_sync" ||
+          state.limit !== input.maxJobsPerRun || state.remainingMs !== input.timeBudgetMs) throw new HttpError("STATE_CONFLICT");
+      if (!await invocation.claimQueueInvocationDispatch({ requestId: input.requestId, globalToken: input.globalToken,
+        kind: "event_sync", limit: state.limit, remainingMs: state.remainingMs })) throw new HttpError("STATE_CONFLICT");
+      return { maxJobsPerRun: state.limit, timeBudgetMs: state.remainingMs };
+    },
+  });
 }
 
 let runtimeHandler: ((request: Request) => Promise<Response>) | undefined;

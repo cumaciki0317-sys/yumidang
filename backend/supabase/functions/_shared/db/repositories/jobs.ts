@@ -1,6 +1,7 @@
-/** 종현 작업 저장소 포트. 모든 시간·점유·멱등성의 원자적 판정은 실제 DB RPC 책임이다. */
+/** 민규: SQL114 scoped atomic 주입과 기존 리뷰 호환 저장소. 시간·점유·멱등성 판정은 DB 책임이다. */
 import type { JsonValue } from "../../contracts/common.ts";
 import { toPublicError } from "../../http/errors.ts";
+import type { WorkerScopedInvocationPort } from "../worker-runtime-client.ts";
 import type { RpcClient } from "../transport.ts";
 import { JobExecutionUnknown } from "../../jobs/retry.ts";
 
@@ -120,11 +121,14 @@ function boundedSafety<T>(signal: AbortSignal, phase: "claim" | "complete" | "jo
       .then(value => signal.aborted ? abort() : resolve(value), reject).finally(() => signal.removeEventListener("abort", abort));
   });
 }
-export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?: string; supportedClaim?: boolean; claimJournal?: SafetyClaimJournal; settlementJournal?: SafetySettlementJournal; signal?: AbortSignal } = {}): JobRepository {
+export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?: string; supportedClaim?: boolean; claimJournal?: SafetyClaimJournal; settlementJournal?: SafetySettlementJournal; signal?: AbortSignal; atomicInvocation?: WorkerScopedInvocationPort } = {}): JobRepository {
+  options = Object.freeze({ ...options }); // capture token/options before any awaited call
   if (!db || typeof db.rpc !== "function") throw new TypeError("INVALID_JOB_DB");
   if (options.workerRunToken !== undefined && !UUID.test(options.workerRunToken)) throw new Error("INVALID_WORKER_RUN_TOKEN");
   const fence: Record<string, JsonValue> = options.workerRunToken ? { p_worker_run_token: options.workerRunToken } : {};
   const safetyJobs = new Set<string>();
+  const atomic = options.atomicInvocation;
+  if (atomic && (atomic.globalToken !== options.workerRunToken || !(options.signal instanceof AbortSignal))) throw new Error("INVALID_ATOMIC_JOB_CONTEXT");
   // 포트 타입을 명시해 claim 결과의 kind 리터럴 등 계약을 정적 검사한다.
   const repository: JobRepository = {
     async enqueue(input: EnqueuedJob) {
@@ -153,13 +157,15 @@ export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?
       if (!input.kinds.length || new Set(input.kinds).size !== input.kinds.length) throw new Error("INVALID_CLAIM_INPUT");
       const supported = input.kinds.filter((kind) => DB_KINDS.has(kind));
       if (!supported.length) return null;
-      const scoped = options.supportedClaim === true || supported.some((kind) => kind !== "review_summary");
+      const scoped = !!atomic || options.supportedClaim === true || supported.some((kind) => kind !== "review_summary");
       if (scoped && (!options.workerRunToken || supported.length !== input.kinds.length)) throw new Error("INVALID_SUPPORTED_CLAIM");
       const safety = supported.some((kind) => kind !== "review_summary");
       if (safety && !(options.signal instanceof AbortSignal)) throw new Error("SAFETY_CLAIM_SIGNAL_REQUIRED");
-      if (safety && !options.claimJournal) throw new Error("SAFETY_CLAIM_JOURNAL_REQUIRED");
+      if (safety && !atomic) throw new Error("SAFETY_ATOMIC_INVOCATION_REQUIRED");
+      if (atomic && input.leaseDurationMs !== 180000) throw new Error("INVALID_ATOMIC_CLAIM_LEASE");
+      if (safety && !atomic && !options.claimJournal) throw new Error("SAFETY_CLAIM_JOURNAL_REQUIRED");
       const requestId = crypto.randomUUID();
-      if (safety) {
+      if (safety && !atomic) {
         try { await boundedSafety(options.signal!, "journal", () => options.claimJournal!.prepare({ requestId, workerId: input.workerId, globalToken: options.workerRunToken!, supportedKinds: supported })); }
         catch { throw new JobExecutionUnknown("journal"); }
       }
@@ -169,10 +175,13 @@ export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?
           p_worker_id: input.workerId, p_lease_seconds: input.leaseDurationMs / 1000, ...fence,
           ...(scoped ? { p_supported_kinds: supported } : {}),
         });
-        const raw = safety ? await boundedSafety(options.signal!, "claim", invoke) : await invoke();
+        const raw = atomic ? await boundedSafety(options.signal!, "claim", async () => {
+          const result = await atomic.run({ requestId, operation: "job_claim", input: { workerId: input.workerId, leaseSeconds: 180, supportedKinds: supported as ("review_summary" | "cancellation_safety" | "report_retention")[] } });
+          if (result.state !== "completed") throw new JobExecutionUnknown("claim");return result.result;
+        }) : safety ? await boundedSafety(options.signal!, "claim", invoke) : await invoke();
         rpcReturned = true;
         const envelope = object(raw, ["job"]);
-        if (envelope.job === null) { if (safety) await boundedSafety(options.signal!, "claim", () => options.claimJournal!.confirmed(requestId)); return null; }
+        if (envelope.job === null) { if (safety && !atomic) await boundedSafety(options.signal!, "claim", () => options.claimJournal!.confirmed(requestId)); return null; }
         const job = object(envelope.job, ["jobId", "kind", "payload", "leaseToken", "leaseExpiresAt", "attempt", "failedAttempts"]);
         if (typeof job.jobId !== "string" || !UUID.test(job.jobId) || typeof job.leaseToken !== "string" || !UUID.test(job.leaseToken) ||
             typeof job.kind !== "string" || !supported.includes(job.kind as JobKind)) return wire();
@@ -189,12 +198,13 @@ export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?
         count(job.attempt, 1);
         const claimed = { jobId: job.jobId, leaseToken: job.leaseToken, leaseUntil: normalizeDbInstant(job.leaseExpiresAt),
           failedAttempts: count(job.failedAttempts, 0), reference };
-        if (safety) await boundedSafety(options.signal!, "claim", () => options.claimJournal!.confirmed(requestId));
-        if (safety) safetyJobs.add(claimed.jobId);
+        if (safety && !atomic) await boundedSafety(options.signal!, "claim", () => options.claimJournal!.confirmed(requestId));
+        if (safety || atomic) safetyJobs.add(claimed.jobId);
         return claimed;
       } catch (error) {
-        if (scoped && (rpcReturned || options.signal?.aborted || (!isStateConflict(error) && !["AUTH_REQUIRED", "ACCESS_DENIED"].includes(toPublicError(error).error.code)))) {
-          if (safety) { try { await boundedSafety(options.signal!, "journal", () => options.claimJournal!.unknown(requestId)); } catch { /* 원 intent 보존 */ } }
+        if (atomic || scoped && (rpcReturned || options.signal?.aborted || (!isStateConflict(error) && !["AUTH_REQUIRED", "ACCESS_DENIED"].includes(toPublicError(error).error.code)))) {
+          if (atomic) { try { await atomic.unknown(requestId); } catch { /* stored request remains */ } }
+          else if (safety) { try { await boundedSafety(options.signal!, "journal", () => options.claimJournal!.unknown(requestId)); } catch { /* 원 intent 보존 */ } }
           throw new JobExecutionUnknown("claim");
         }
         throw error;
@@ -226,20 +236,30 @@ export function createRpcJobRepository(db: RpcClient, options: { workerRunToken?
       }
       const safety = safetyJobs.has(input.jobId);
       const requestId = crypto.randomUUID();
-      if (safety) {
+      if (safety && !atomic) {
         if (!options.settlementJournal || !options.signal || !options.workerRunToken) throw new JobExecutionUnknown("journal");
         try { await boundedSafety(options.signal, "journal", () => options.settlementJournal!.prepare({ requestId, jobId: input.jobId, jobLeaseToken: input.leaseToken, globalToken: options.workerRunToken!, status: input.status })); }
         catch { throw new JobExecutionUnknown("journal"); }
       }
       let returned = false;
       try {
-        const result = safety ? await boundedSafety(options.signal!, "complete", () => db.rpc(name, args)) : await db.rpc(name, args);
+        const result = atomic ? await boundedSafety(options.signal!, "complete", async () => {
+          const inputScope = { jobId: input.jobId, jobLeaseToken: input.leaseToken, status: input.status,
+            ...(Object.hasOwn(args, "p_available_at") ? { availableAt: args.p_available_at } : {}),
+            ...(Object.hasOwn(args, "p_error_code") ? { errorCode: args.p_error_code } : {}) };
+          const value = await atomic.run({ requestId, operation: "job_settlement", input: inputScope as Extract<import("../worker-runtime-client.ts").WorkerScopedOperationInput, { operation: "job_settlement" }>["input"] });
+          if (value.state !== "completed") throw new JobExecutionUnknown("complete");return value.result;
+        }) : safety ? await boundedSafety(options.signal!, "complete", () => db.rpc(name, args)) : await db.rpc(name, args);
         returned = true;
         const body = object(result, ["jobId", "status"]);
         if (body.jobId !== input.jobId || body.status !== input.status) return wire();
-        if (safety) await boundedSafety(options.signal!, "complete", () => options.settlementJournal!.confirmed(requestId));
+        if (safety && !atomic) await boundedSafety(options.signal!, "complete", () => options.settlementJournal!.confirmed(requestId));
       } catch (error) {
-        if ((!safety || !returned) && !options.signal?.aborted && isStateConflict(error)) return "lease_lost";
+        if (!atomic && (!safety || !returned) && !options.signal?.aborted && isStateConflict(error)) return "lease_lost";
+        if (atomic) {
+          try { await atomic.unknown(requestId); } catch { /* stored request remains */ }
+          throw new JobExecutionUnknown("complete");
+        }
         if (safety) {
           try { await boundedSafety(options.signal!, "journal", () => options.settlementJournal!.unknown(requestId)); } catch { /* 원 intent 보존 */ }
           throw new JobExecutionUnknown("complete");

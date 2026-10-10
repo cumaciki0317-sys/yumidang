@@ -7,3 +7,5 @@ export const listMessages = (db: RpcClient, id: string, limit: number, before: s
 export const sendMessage = (db: RpcClient, id: string, messageId: string, content: string) => db.rpc("send_conversation_message", { p_request_id: id, p_message_id: messageId, p_content: content });
 
 export const markConversationRead = (db: RpcClient, id: string, messageId: string) => db.rpc("mark_conversation_read", { p_request_id: id, p_last_read_message_id: messageId });
+
+export const markConversationMessagesRead = (db: RpcClient, id: string, messageIds: string[]) => db.rpc("mark_conversation_messages_read", { p_request_id: id, p_message_ids: messageIds });

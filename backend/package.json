@@ -4,7 +4,8 @@
   "type": "module",
   "engines": { "node": ">=22.18.0" },
   "scripts": {
-    "completion-scheduler": "node supabase/functions/scheduled-jobs/completion-runner.mjs"
+    "completion-scheduler": "node supabase/functions/scheduled-jobs/completion-runner.mjs",
+    "queue-runner": "node supabase/functions/scheduled-jobs/queue-runner.mjs"
   },
   "dependencies": { "pg": "8.22.0" }
 }

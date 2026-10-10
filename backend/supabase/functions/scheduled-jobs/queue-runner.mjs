@@ -16,18 +16,19 @@ export const QUEUE_RUNNER_RPCS = [
 /** 실제 DB 포트+기존 종류 소비자가 모두 제공된 경우만 5종/helpful runtime을 조립한다.
  * CLI가 계약/자격증명/영속 journal을 자동 생성하지 않는다. HTTP 구 worker 대체 경로도 없다.
  */
-export function createSharedQueueRuntime({ schedule, contracts, maintenanceProviders, invokeSafety, invokeExisting, supportedKinds = QUEUE_KINDS, elapsed }) {
+export function createSharedQueueRuntime({ schedule, contracts, maintenanceProviders, invokeSafety, invokeExisting, supportedKinds = QUEUE_KINDS, elapsed = () => performance.now(), maintenanceProofVerified = false }) {
   if (typeof schedule !== "function" || typeof invokeSafety !== "function" || typeof invokeExisting !== "function" ||
-    !contracts?.decisionId?.trim() || typeof contracts.readBudget !== "function" ||
+    !contracts?.decisionId?.trim() || typeof contracts.readBudget !== "function" || typeof contracts.readSlots !== "function" ||
     ["hasPending", "begin", "confirm", "unknown"].some(k => typeof contracts.journal?.[k] !== "function") ||
-    !Array.isArray(supportedKinds) || !supportedKinds.length || new Set(supportedKinds).size !== supportedKinds.length || supportedKinds.some(k => !QUEUE_KINDS.includes(k))) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
+    !Array.isArray(supportedKinds) || supportedKinds.length === 0 && maintenanceProofVerified !== true || new Set(supportedKinds).size !== supportedKinds.length || supportedKinds.some(k => !QUEUE_KINDS.includes(k))) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
   const maintenance = createDueMaintenanceGroup(maintenanceProviders, elapsed);
+  if (maintenanceProofVerified === true) Object.defineProperty(maintenance, "durableProofReady", { value: true });
   return Object.freeze({ schedule, invokeSafety, invokeExisting, supportedKinds: Object.freeze([...supportedKinds]),
     contracts: Object.freeze({ ...contracts, maintenance,
       unitsFor(kind, result) {
         if (kind === null) return result.processedItems;
         if (result.status === "not_enabled") return 0;
-        return ["cancellation_safety", "report_retention"].includes(kind) ? result.counts.processedItems : result.counts.claimed;
+        return result.counts.claimed;
       },
     }),
   });
@@ -119,7 +120,7 @@ export function startQueueRunner(
   });
   if (sharedRuntime !== undefined && (!sharedRuntime || typeof sharedRuntime.schedule !== "function" ||
     typeof sharedRuntime.invokeSafety !== "function" || typeof sharedRuntime.invokeExisting !== "function" ||
-    !sharedRuntime.contracts)) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
+    !sharedRuntime.contracts || typeof sharedRuntime.contracts.readSlots !== "function")) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
   let stopped = false, session = null, connecting = null, retryTimer = null;
   function retry() {
     if (!stopped && retryTimer === null) {
@@ -271,12 +272,19 @@ export function startQueueRunner(
               clearTimer(timer);
             }
           },
-          onError: () => failed(current),
+          onError: (code) => {
+            // 증거 대기는 연결 장애가 아니다. LISTEN을 유지하고 새 전송은
+            // scheduler의 영속 pending/unknown 경계에서 계속 차단한다.
+            if (code === "WORKER_QUEUE_RECONCILIATION_REQUIRED") { report(code); return; }
+            failed(current);
+          },
           setTimer,
           clearTimer,
         };
         if (sharedRuntime) {
-          schedulerOptions.repository.schedule = sharedRuntime.schedule;
+          schedulerOptions.repository.schedule = typeof sharedRuntime.scheduleForClient === "function"
+            ? sharedRuntime.scheduleForClient(client)
+            : sharedRuntime.schedule;
           schedulerOptions.contracts = sharedRuntime.contracts;
           if (sharedRuntime.supportedKinds) schedulerOptions.supportedKinds = sharedRuntime.supportedKinds;
           schedulerOptions.queryTimeoutMs = config.queryTimeoutMs;
@@ -318,25 +326,57 @@ export function startQueueRunner(
   };
 }
 
-if (
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+// runtime.ts는 이 파일의 조립 함수를 가져온다. 모듈 평가 중 동적 import를
+// top-level await하면 실제 CLI가 서로의 평가 완료를 기다리므로 시작을 분리한다.
+/** stock CLI와 검토된 서버 launcher의 같은 진입점이다.
+ * trustedAssembly는 서버 코드에서만 공급한다. 환경/HTTP/JSON 승인 설정이나 임의 import 경로를 읽지 않는다.
+ * dependencies는 격리 검증의 transport·신호 주입이며 운영 승인으로 사용하지 않는다.
+ */
+export async function runQueueRunnerCli({ env = process.env, trustedAssembly, dependencies = {} } = {}) {
+  const {
+    readConfig = readQueueRunnerConfig,
+    createRuntime = async (...args) => (await import("../_shared/jobs/runtime.ts")).createConfiguredQueueRuntime(...args),
+    loadClient = async () => (await import("pg")).Client,
+    start = startQueueRunner,
+    signals = process,
+    fetchImpl,
+    report = (code) => process.stderr.write(`${code}\n`),
+    setExitCode = (code) => { process.exitCode = code; },
+  } = dependencies;
+  let runner, stopping;
+  const cleanup = () => { for (const signal of ["SIGINT", "SIGTERM"]) signals.removeListener(signal, onSignal); };
+  const shutdown = () => stopping ??= Promise.resolve().then(() => runner.stop()).finally(cleanup);
+  const failure = () => { report("WORKER_QUEUE_NOT_CONFIGURED"); setExitCode(1); };
+  const onSignal = () => { void shutdown().catch(failure); };
   try {
-    const config = readQueueRunnerConfig(process.env);
-    const { Client } = await import("pg");
-    const runner = startQueueRunner({
+    const config = readConfig(env);
+    if (trustedAssembly !== undefined && (!trustedAssembly || typeof trustedAssembly !== "object" ||
+        Array.isArray(trustedAssembly) || Object.keys(trustedAssembly).some(key =>
+          !["review", "existing", "safety", "memberParentFinalization"].includes(key)))) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
+    const options = { ...trustedAssembly, ...(fetchImpl === undefined ? {} : { fetch: fetchImpl }) };
+    const sharedRuntime = Object.keys(options).length ? await createRuntime(env, config, options) : await createRuntime(env, config);
+    if (trustedAssembly) {
+      const expected = QUEUE_KINDS.filter(kind => kind === "review_summary" ? trustedAssembly.review !== undefined :
+        (trustedAssembly.existing ?? []).some(value => value.kind === kind) || (trustedAssembly.safety ?? []).some(value => value.kind === kind));
+      if (sharedRuntime.supportedKinds?.join(",") !== expected.join(",")) throw new Error("SHARED_QUEUE_CONTRACT_NOT_READY");
+    }
+    await sharedRuntime.preflight?.();
+    const Client = await loadClient();
+    runner = start({
+      sharedRuntime,
       Client,
       config,
-      report: (code) => process.stderr.write(`${code}\n`),
+      report,
+      ...(fetchImpl === undefined ? {} : { fetchImpl }),
     });
-    for (const signal of ["SIGINT", "SIGTERM"]) {
-      process.once(signal, () => {
-        void runner.stop();
-      });
-    }
+    for (const signal of ["SIGINT", "SIGTERM"]) signals.once(signal, onSignal);
     await runner.ready;
+    return Object.freeze({ ready: runner.ready, stop: shutdown });
   } catch {
-    process.stderr.write("WORKER_QUEUE_NOT_CONFIGURED\n");
-    process.exitCode = 1;
+    if (runner) { try { await shutdown(); } catch { /* 상세 오류·비밀을 출력하지 않는다. */ } }
+    cleanup(); failure(); return null;
   }
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  void runQueueRunnerCli();
 }

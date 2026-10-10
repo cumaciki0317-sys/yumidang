@@ -1,4 +1,4 @@
-"""합성 Git·모형 SQL로 최신 82개 준비 범위와 기존 strict guard 보존을 검사한다."""
+"""합성 Git·모형 SQL로 최신 119개 준비 범위와 기존 strict guard 보존을 검사한다."""
 import hashlib
 import json
 from pathlib import Path
@@ -22,6 +22,7 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         self.addCleanup(self.fixture.doCleanups)
         self.repo, self.output = self.fixture.repo, self.fixture.output
         self.new_queue_paths = [Path(name) for name in sorted(current.NEW_PENDING_MIGRATIONS)]
+        self.historical_queue_paths = [p for p in self.new_queue_paths if str(p) not in current.BACKEND_FOLLOWUP_MIGRATIONS]
         self.policy_paths = [Path(name) for name in current.CURRENT_POLICY_REVIEWED if name not in current.NEW_PENDING_MIGRATIONS]
         self.pre80_policy_paths = [path for path in self.policy_paths if path not in (Path(current.REPORT_RETENTION_DISPATCH_MIGRATION), Path(current.CANCELLATION_DUE_GUARD_MIGRATION))]
         self.pre78_policy_paths = [path for path in self.pre80_policy_paths if path not in (Path(current.REPORT_RETENTION_PURGE_MIGRATION), Path(current.WORKER_SUPPORTED_CLAIM_MIGRATION))]
@@ -37,7 +38,7 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
 
     def test_new_queue_tail_requires_exact_reviewed_bytes(self):
         report = self.prepare()
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual({entry["path"] for entry in manifest["pending"] if entry["path"] in current.NEW_PENDING_MIGRATIONS}, current.NEW_PENDING_MIGRATIONS)
 
@@ -61,8 +62,76 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.output.exists())
 
+    def test_followup_head_requires_exact_ordered_prefix_and_preserves_all_pending(self):
+        legacy = [*edge.GATEWAY_PENDING, *self.policy_paths, *self.historical_queue_paths]
+        self.commit_paths(legacy)
+        report = self.prepare()
+        self.assertEqual((report['canonical_count'], report['pending_count']), (108, 11))
+        database = json.loads((self.output / 'database-manifest.json').read_text())
+        self.assertEqual([p['path'] for p in database['pending']], list(current.BACKEND_FOLLOWUP_MIGRATIONS))
+        import shutil
+        for index, name in enumerate(current.BACKEND_FOLLOWUP_MIGRATIONS, 1):
+            shutil.rmtree(self.output)
+            self.commit_paths([Path(name)])
+            report = self.prepare()
+            self.assertEqual((report['canonical_count'], report['pending_count']), (108 + index, 11 - index))
+            self.assertEqual(report['sql_execution'], 'NOT_RUN')
+
+    def test_followup_nonprefix_head_is_rejected_before_preparation(self):
+        self.commit_paths([*edge.GATEWAY_PENDING, *self.policy_paths, *self.historical_queue_paths,
+                           Path(current.BACKEND_FOLLOWUP_MIGRATIONS[1])])
+        with self.assertRaisesRegex(current.PreparationError, '검토된 HEAD'):
+            self.prepare()
+        self.assertFalse(self.output.exists())
+
+    def test_followup_order_or_registration_change_blocks(self):
+        with patch.object(current, 'BACKEND_FOLLOWUP_MIGRATIONS', tuple(reversed(current.BACKEND_FOLLOWUP_MIGRATIONS))):
+            with self.assertRaises(current.PreparationError):
+                self.prepare()
+        removed = dict(current.CURRENT_POLICY_REVIEWED)
+        removed.pop(current.BACKEND_FOLLOWUP_MIGRATIONS[-1])
+        with patch.object(current, 'CURRENT_POLICY_REVIEWED', removed):
+            with self.assertRaises(current.PreparationError):
+                self.prepare()
+        self.assertFalse(self.output.exists())
+
     def prepare(self):
         return current.prepare_current_policy(self.repo, self.output, gateway_probe=True)
+
+    def test_runtime_sql99_preserves_history_and_requires_both_followups(self):
+        self.commit_paths([*edge.GATEWAY_PENDING, *self.policy_paths, *[p for p in self.historical_queue_paths if str(p) not in current.RUNTIME_MIGRATIONS | current.ATOMIC_RUNTIME_MIGRATIONS | current.CONNECTION_MIGRATIONS]])
+        report = self.prepare()
+        self.assertEqual((report['canonical_count'], report['pending_count']), (99, 20))
+        database = json.loads((self.output / 'database-manifest.json').read_text())
+        self.assertEqual({p['path'] for p in database['pending']}, current.RUNTIME_MIGRATIONS | current.ATOMIC_RUNTIME_MIGRATIONS | current.CONNECTION_MIGRATIONS | set(current.BACKEND_FOLLOWUP_MIGRATIONS))
+
+    def test_atomic_sql101_and_sql102_require_ordered_followups(self):
+        paths = [*edge.GATEWAY_PENDING, *self.policy_paths, *[p for p in self.historical_queue_paths if str(p) not in current.ATOMIC_RUNTIME_MIGRATIONS | current.CONNECTION_MIGRATIONS]]
+        self.commit_paths(paths)
+        report = self.prepare()
+        self.assertEqual((report['canonical_count'], report['pending_count']), (101, 18))
+        import shutil
+        shutil.rmtree(self.output)
+        self.commit_paths([Path('backend/supabase/migrations/20261008022000_worker_runtime_atomic.sql')])
+        report = self.prepare()
+        self.assertEqual((report['canonical_count'], report['pending_count']), (102, 17))
+
+    def test_runtime_sql101_without_sql100_is_rejected(self):
+        paths = [*edge.GATEWAY_PENDING, *self.policy_paths, *[p for p in self.historical_queue_paths if p.name != '20261008020000_worker_owned_schedule.sql']]
+        self.commit_paths(paths)
+        with self.assertRaises(current.PreparationError):
+            self.prepare()
+        self.assertFalse(self.output.exists())
+
+    def test_runtime_followup_tamper_never_produces_ready(self):
+        for name in sorted(current.RUNTIME_MIGRATIONS | current.ATOMIC_RUNTIME_MIGRATIONS | current.CONNECTION_MIGRATIONS):
+            path = self.repo / name
+            original = path.read_bytes()
+            path.write_bytes(original + b'-- not reviewed\n')
+            with self.assertRaises(current.PreparationError):
+                self.prepare()
+            self.assertFalse(self.output.exists())
+            path.write_bytes(original)
 
     def commit_paths(self, paths):
         self.fixture.git("add", *(str(path) for path in paths))
@@ -78,7 +147,7 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
     def test_committed81_requires_only_cancel_guard_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.pre80_policy_paths, Path(current.REPORT_RETENTION_DISPATCH_MIGRATION)])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (81, 18))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (81, 38))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(report["sql_execution"], "NOT_RUN")
@@ -139,16 +208,16 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
     def test_committed78_requires_exact_retention_and_supported_claim_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.pre78_policy_paths])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (78, 21))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (78, 41))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_committed79_requires_only_exact_supported_claim_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.pre78_policy_paths, Path(current.REPORT_RETENTION_PURGE_MIGRATION)])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (79, 20))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (79, 40))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
 
@@ -209,10 +278,10 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         previous = [path for path in self.pre78_policy_paths if path != Path(current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION)]
         self.commit_paths([*edge.GATEWAY_PENDING, *previous])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (77, 22))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (77, 42))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_cancel_resolution_missing_rejected(self):
@@ -259,10 +328,10 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         previous = [path for path in self.pre78_policy_paths if path not in (Path(current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION), Path(current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION))]
         self.commit_paths([*edge.GATEWAY_PENDING, *previous])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (76, 23))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (76, 43))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_atomic_appeal_missing_rejected(self):
@@ -309,16 +378,16 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         previous = [path for path in self.pre78_policy_paths if path not in (Path(current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION), Path(current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION), Path(current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION))]
         self.commit_paths([*edge.GATEWAY_PENDING, *previous])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (75, 24))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (75, 44))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_committed80_requires_dispatch_and_guard_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.pre80_policy_paths])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (80, 19))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (80, 39))
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_cancel_appeal_missing_rejected(self):
@@ -365,10 +434,10 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         previous = [path for path in self.pre78_policy_paths if path not in (Path(current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION),Path(current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION), Path(current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION), Path(current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION))]
         self.commit_paths([*edge.GATEWAY_PENDING, *previous])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (74, 25))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (74, 45))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_notice_missing_rejected(self):
@@ -415,10 +484,10 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         previous = [path for path in self.pre78_policy_paths if path not in (Path(current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION), Path(current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION), Path(current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION), Path(current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION), Path(current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION))]
         self.commit_paths([*edge.GATEWAY_PENDING, *previous])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (73, 26))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (73, 46))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_adjudication_missing_rejected(self):
@@ -466,16 +535,16 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
     def test_committed71_requires_exact_review_start_and_state_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.legacy_policy_paths])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (71, 28))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (71, 48))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
 
     def test_committed72_requires_only_review_state_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.legacy_policy_paths, Path(current.ASSIGNED_REPORT_REVIEW_START_MIGRATION)])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (72, 27))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (72, 47))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(report["edge_execution"], "NOT_RUN")
@@ -530,20 +599,20 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         report = self.prepare()
         self.assertEqual(report["source_head"], original_head)
         self.assertEqual(current.git(self.repo, "rev-parse", "HEAD").decode().strip(), original_head)
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual(report["migration_count"], 119)
         self.assertEqual(report["canonical_count"], 28)
-        self.assertEqual(report["pending_count"], 71)
+        self.assertEqual(report["pending_count"], 91)
         self.assertEqual(report["base_migration_count"], 41)
-        self.assertEqual(report["policy_migration_count"], 58)
+        self.assertEqual(report["policy_migration_count"], 78)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
         self.assertEqual(report["functions"], ["service-api"])
-        self.assertEqual(len(list((self.output / "supabase/migrations").glob("*.sql"))), 99)
+        self.assertEqual(len(list((self.output / "supabase/migrations").glob("*.sql"))), 119)
         self.assertEqual((self.output.stat().st_mode & 0o777), 0o700)
         self.assertEqual({path: path.read_bytes() for path in selected}, before)
         manifest = json.loads((self.output / "migration-manifest.json").read_text())
-        self.assertEqual(manifest["count"], 99)
-        self.assertEqual(len(manifest["migrations"]), 99)
+        self.assertEqual(manifest["count"], 119)
+        self.assertEqual(len(manifest["migrations"]), 119)
         base = json.loads((self.output / "base-edge-manifest.json").read_text())
         self.assertEqual(base["migration_count"], 41)
         self.assertEqual(base["canonical_count"], 41)
@@ -558,10 +627,10 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
     def test_committed41_plus_exact41_pending(self):
         self.commit_paths(edge.GATEWAY_PENDING)
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (41, 58))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (41, 78))
         database = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual(len(database["migrations"]), 41)
-        self.assertEqual(len(database["pending"]), 58)
+        self.assertEqual(len(database["pending"]), 78)
 
     def test_committed82_with_no_pending_keeps_original_strict41_guard(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.policy_paths])
@@ -569,7 +638,7 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
             edge.prepare_gateway_probe(self.repo, self.output)
         self.assertFalse(self.output.exists())
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (82, 17))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (82, 37))
         database = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual({entry["path"] for entry in database["pending"]}, current.NEW_PENDING_MIGRATIONS)
         self.assertEqual(len(database["migrations"]), 82)
@@ -587,12 +656,12 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
             edge.prepare_gateway_probe(self.repo, self.output)
         self.assertFalse(self.output.exists())
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (60, 39))
-        self.assertEqual(report["migration_count"], 99)
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (60, 59))
+        self.assertEqual(report["migration_count"], 119)
         database = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual(len(database["migrations"]), 60)
         self.assertEqual([entry["path"] for entry in database["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(role_path), str(preferences_path), str(withdrawal_path), str(safety_path), str(sync_path), current.APPOINTMENT_REVIEW_HOLDS_MIGRATION, current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(database["total_count"], 99)
+        self.assertEqual(database["total_count"], 119)
         self.assertEqual(database["pending"][0]["sha256"], hashlib.sha256(before[role_path]).hexdigest())
         self.assertEqual((self.output / "supabase/migrations" / role_path.name).read_bytes(), before[role_path])
         self.assertEqual({path: (self.repo / path).read_bytes() for path in self.policy_paths}, before)
@@ -611,10 +680,10 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         self.commit_paths([*edge.GATEWAY_PENDING,
                            *(path for path in self.previous_policy_paths if path != Path(current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION) and path not in (preferences, withdrawal, safety, sync, Path(current.APPOINTMENT_REVIEW_HOLDS_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (61, 38))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (61, 58))
         database = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in database["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(preferences), str(withdrawal), str(safety), str(sync), current.APPOINTMENT_REVIEW_HOLDS_MIGRATION, current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
-        self.assertEqual(database["total_count"], 99)
+        self.assertEqual(database["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -632,11 +701,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         sync = Path(current.APPOINTMENT_SAFETY_RESULT_SYNC_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.previous_policy_paths if path != Path(current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION) and path not in (withdrawal, safety, sync, Path(current.APPOINTMENT_REVIEW_HOLDS_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (62, 37))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (62, 57))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(withdrawal), str(safety), str(sync), current.APPOINTMENT_REVIEW_HOLDS_MIGRATION, current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / withdrawal).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(manifest["sql_execution"], "NOT_RUN")
 
     def test_arbitrary62_with40600_without40500_rejected(self):
@@ -651,11 +720,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         sync = Path(current.APPOINTMENT_SAFETY_RESULT_SYNC_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.previous_policy_paths if path != Path(current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION) and path not in (safety, sync, Path(current.APPOINTMENT_REVIEW_HOLDS_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (63, 36))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (63, 56))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(safety), str(sync), current.APPOINTMENT_REVIEW_HOLDS_MIGRATION, current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / safety).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(manifest["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -670,11 +739,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         sync = Path(current.APPOINTMENT_SAFETY_RESULT_SYNC_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.previous_policy_paths if path != Path(current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION) and path not in (sync, Path(current.APPOINTMENT_REVIEW_HOLDS_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (64, 35))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (64, 55))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(sync), current.APPOINTMENT_REVIEW_HOLDS_MIGRATION, current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / sync).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(manifest["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -689,11 +758,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         hold = Path(current.APPOINTMENT_REVIEW_HOLDS_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.previous_policy_paths if path not in (hold, Path(current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (65, 34))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (65, 54))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(hold), current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION, current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / hold).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -708,11 +777,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         terminal = Path(current.APPOINTMENT_REVIEW_NO_SHOW_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.previous_policy_paths if path != terminal)])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (66, 33))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (66, 53))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(terminal), current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / terminal).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -726,11 +795,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
     def test_committed67_requires_only_reviewed_sanction_history_pending(self):
         self.commit_paths([*edge.GATEWAY_PENDING, *self.previous_policy_paths])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (67, 32))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (67, 52))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [current.MEMBER_SANCTION_HISTORY_MIGRATION, current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION, current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / current.MEMBER_SANCTION_HISTORY_MIGRATION).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -745,11 +814,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         photo = Path(current.PROFILE_IMAGE_AUTHENTICATED_ACCESS_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.legacy_policy_paths if path not in (photo, Path(current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION), Path(current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (68, 31))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (68, 51))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(photo), current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION, current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / photo).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -764,11 +833,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         operator = Path(current.ASSIGNED_REPORT_OPERATOR_ACCESS_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.legacy_policy_paths if path not in (operator, Path(current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION)))])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (69, 30))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (69, 50))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(operator), current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION, current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / operator).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -783,11 +852,11 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         capture = Path(current.ASSIGNED_REPORT_CAPTURE_ACCESS_MIGRATION)
         self.commit_paths([*edge.GATEWAY_PENDING, *(path for path in self.legacy_policy_paths if path != capture)])
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (70, 29))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (70, 49))
         manifest = json.loads((self.output / "database-manifest.json").read_text())
         self.assertEqual([entry["path"] for entry in manifest["pending"] if entry["path"] not in current.NEW_PENDING_MIGRATIONS], [str(capture), current.ASSIGNED_REPORT_REVIEW_START_MIGRATION, current.ASSIGNED_REPORT_REVIEW_STATE_MIGRATION, current.ASSIGNED_REPORT_ADJUDICATION_MIGRATION, current.ASSIGNED_REPORT_NOTICE_RECEIPTS_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_INTAKE_MIGRATION, current.APPOINTMENT_CANCEL_APPEAL_ATOMIC_REPORT_MIGRATION, current.APPOINTMENT_CANCEL_RESOLUTION_AND_DUE_MIGRATION, current.REPORT_RETENTION_PURGE_MIGRATION, current.WORKER_SUPPORTED_CLAIM_MIGRATION, current.REPORT_RETENTION_DISPATCH_MIGRATION, current.CANCELLATION_DUE_GUARD_MIGRATION])
         self.assertEqual(manifest["pending"][0]["sha256"], hashlib.sha256((self.repo / capture).read_bytes()).hexdigest())
-        self.assertEqual(manifest["total_count"], 99)
+        self.assertEqual(manifest["total_count"], 119)
         self.assertEqual(report["sql_execution"], "NOT_RUN")
         self.assertEqual(report["edge_execution"], "NOT_RUN")
 
@@ -969,7 +1038,7 @@ class CurrentPolicyPreparationTests(unittest.TestCase):
         self.commit_paths(edge.GATEWAY_PENDING)
         self.fixture.git("add", *(str(path) for path in self.policy_paths))
         report = self.prepare()
-        self.assertEqual((report["canonical_count"], report["pending_count"]), (41, 58))
+        self.assertEqual((report["canonical_count"], report["pending_count"]), (41, 78))
 
     def test_partial_committed_policy_history_rejected(self):
         self.commit_paths([*edge.GATEWAY_PENDING, self.policy_paths[0]])

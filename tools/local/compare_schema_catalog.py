@@ -47,7 +47,7 @@ def parse_catalog(data):
         raise CatalogError("INVALID_JSON") from None
 
 
-def read_private_catalog(filename):
+def read_private_catalog(filename, *, with_bytes=False):
     """권한600·소유자·단일 링크 파일을 권한700 디렉터리의 열린 fd로 읽는다."""
     path = Path(filename)
     require(path.is_absolute(), "INVALID_INPUT_FILE")
@@ -75,7 +75,9 @@ def read_private_catalog(filename):
         require((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
                 == (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns),
                 "INPUT_FILE_CHANGED")
-        return parse_catalog(b"".join(chunks))
+        data = b"".join(chunks)
+        parsed = parse_catalog(data)
+        return (parsed, data) if with_bytes else parsed
     except CatalogError:
         raise
     except (OSError, ValueError, RuntimeError):

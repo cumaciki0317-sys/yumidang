@@ -33,6 +33,8 @@ DB가 약속별 `appointmentId`·`dueAt`·`generation` 예약을 영속 보존�
 - `COMPLETION_DATABASE_URL`: 위 RPC를 실행할 수 있는 서버 전용 PostgreSQL 연결 문자열. LISTEN 연결을 유지할 수 있는 direct 또는 session 연결을 사용한다. transaction pool 연결은 사용하지 않으며 비밀값을 문서·로그에 남기지 않는다.
 - `COMPLETION_RECONNECT_MS`: 재연결 대기 시간(밀리초). 사용자 확정 운영 값 `5000`을 명시한다. 코드의 암묵적 기본값으로 대체하지 않는다.
 - `COMPLETION_QUERY_TIMEOUT_MS`: 접속·쿼리·statement 제한 시간(밀리초). 사용자 확정 운영 값 `10000`을 명시한다. 코드의 암묵적 기본값으로 대체하지 않는다.
+- `COMPLETION_REQUIRE_TLS`: 선택값은 정확한 문자열 `true`만 허용한다. 로컬 주소에서도 인증서 검증 TLS를 강제할 때 지정한다. 미지정 로컬 연결의 기존 동작은 유지하고 비로컬 연결은 항상 검증 TLS를 사용한다.
+- 사설 CA를 사용하는 격리 환경은 Node 프로세스를 시작할 때 `NODE_EXTRA_CA_CERTS`로 CA 파일을 제공한다. 인증서·호스트명 검증을 끄거나 URL 인자로 우회하지 않는다.
 
 밀리초 설정 상한은 2,147,483,647이다. 비로컬 연결은 TLS 인증서 검증을 켜며 URL의 ssl 관련 query 인자를 허용하지 않는다. 환경을 준비한 뒤 저장소 루트에서 실행한다.
 
@@ -85,3 +87,6 @@ LISTEN/NOTIFY에는 채널별 ACL이 없다. 원형 실행기는 `yumidang_compl
 
 
 41000 최종 불발 lifecycle 후보는 native66 실제 단일TX SQL 검증 PASS 후 전체 롤백했다. 완료 전 불발은 완료 필드를 만들지 않는 종결이며, 기존 완료의 최종 불발 정정은 실제 시각을 유지하고 후기 기여·완료 횟수에서 제외한다. 귀책·감점·신고 종결은 별도다. 영속native67·HTTP·불발/보관 경합·탈퇴 후 미완료 불발 정정 정책은 후속이다. [범위와 실제 증거](../../docs/collaboration/requests/minkyu/2026-10-05-appointment-review-no-show-lifecycle.md)를 따른다.
+
+
+2026-10-10 완료 실행기 파일은 사용자 재배정에 따른 정책 전용 커밋 `52b813e`(통합 `88abce4`)부터 민규 담당이다. TLS 설정·기존 예약 실행·운영 설정의 관련 회귀15개는 PASS다. 이 설정 회귀를 실제 TLS 연결·예약 복구·운영 배포 성공으로 집계하지 않는다. 새 격리 환경에서 원 실행 명령의 실제 검증을 이어간다.

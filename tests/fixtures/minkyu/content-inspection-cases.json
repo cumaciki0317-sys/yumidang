@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 1,
+  "status": "PROPOSED_NOT_APPROVED",
+  "policyReference": "정책.md 6-4",
+  "syntheticOnly": true,
+  "classifierQualityVerified": false,
+  "externalTransmissionApproved": false,
+  "rawServiceLogsAllowed": false,
+  "reviewRequired": [
+    "세부 판정·오탐/미탐 기준",
+    "합성 사례의 의도와 맥락",
+    "정상·차단·확인 안내 및 오탐 문의 담당"
+  ],
+  "notes": [
+    "확정된 금지 범주를 구현하는 검토 초안이며 실제 분류기의 결과가 아니다.",
+    "채팅의 확인 판정은 공개 콘텐츠에 적용하지 않는다.",
+    "위장·변형·다중 문장·추가 맥락 사례는 기준 검토 후 확장한다.",
+    "실제 회원 원문·연락처·계정 정보는 포함하지 않는다."
+  ],
+  "cases": [
+    {
+      "id": "meeting_exit",
+      "action": "chat_message",
+      "text": "2번 출구 앞에서 만나자.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "정상 약속·경계"
+    },
+    {
+      "id": "meeting_time",
+      "action": "chat_message",
+      "text": "오늘 18시에 공연장 정문에서 만나자.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "정상 약속·경계"
+    },
+    {
+      "id": "venue_public",
+      "action": "chat_message",
+      "text": "공공도서관에서 같이 책을 읽어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "정상 약속·경계"
+    },
+    {
+      "id": "price_info",
+      "action": "chat_message",
+      "text": "공연 입장료는 각자 확인하고 직접 결제해요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "정상 약속·경계"
+    },
+    {
+      "id": "polite_decline",
+      "action": "chat_message",
+      "text": "이번 일정은 참여하기 어려워요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "정상 약속·경계"
+    },
+    {
+      "id": "boundary",
+      "action": "chat_message",
+      "text": "개인 연락처를 공유하고 싶지 않아요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "정상 약속·경계"
+    },
+    {
+      "id": "critical_punctuality",
+      "action": "review",
+      "text": "약속 시간을 지키지 않아 불편했어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "경험 기반 평가"
+    },
+    {
+      "id": "critical_schedule",
+      "action": "review",
+      "text": "진행 방식이 안내와 달라 아쉬웠어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "경험 기반 평가"
+    },
+    {
+      "id": "critical_detail",
+      "action": "review",
+      "text": "설명이 부족해서 다음에는 더 자세히 안내되면 좋겠어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "경험 기반 평가"
+    },
+    {
+      "id": "positive_review",
+      "action": "review",
+      "text": "시간을 잘 지켜 주셔서 편안하게 다녀왔어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "경험 기반 평가"
+    },
+    {
+      "id": "quotation_report",
+      "action": "post_create",
+      "text": "상대가 비밀번호를 달라고 해서 거절했어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "인용·숫자·공개 지역"
+    },
+    {
+      "id": "quotation_warning",
+      "action": "post_create",
+      "text": "협박하는 표현을 받으면 신고하세요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "인용·숫자·공개 지역"
+    },
+    {
+      "id": "benign_number",
+      "action": "post_create",
+      "text": "같이 10권씩 읽는 모임을 만들고 싶어요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "인용·숫자·공개 지역"
+    },
+    {
+      "id": "public_region",
+      "action": "post_create",
+      "text": "서울특별시 강남구에서 주말 산책을 같이 해요.",
+      "proposedDecision": "allow",
+      "proposedReason": null,
+      "group": "인용·숫자·공개 지역"
+    },
+    {
+      "id": "public_email",
+      "action": "profile_preferences",
+      "text": "개인 이메일 synthetic@example.invalid로 연락해 주세요.",
+      "proposedDecision": "block",
+      "proposedReason": "PERSONAL_DATA",
+      "group": "합성 개인정보 노출"
+    },
+    {
+      "id": "public_phone",
+      "action": "profile_preferences",
+      "text": "제 개인 번호는 010-0000-0000이에요.",
+      "proposedDecision": "block",
+      "proposedReason": "PERSONAL_DATA",
+      "group": "합성 개인정보 노출"
+    },
+    {
+      "id": "public_password",
+      "action": "profile_preferences",
+      "text": "제 계정 비밀번호는 합성검증용비밀문자열이에요.",
+      "proposedDecision": "block",
+      "proposedReason": "PERSONAL_DATA",
+      "group": "합성 개인정보 노출"
+    },
+    {
+      "id": "threat_direct",
+      "action": "chat_message",
+      "text": "원하지 않아도 따라가서 해치겠어.",
+      "proposedDecision": "block",
+      "proposedReason": "HIGH_RISK",
+      "group": "직접 위해·민감정보 강요"
+    },
+    {
+      "id": "secret_coercion",
+      "action": "chat_message",
+      "text": "계정 비밀번호를 보내지 않으면 위협할 거야.",
+      "proposedDecision": "block",
+      "proposedReason": "HIGH_RISK",
+      "group": "직접 위해·민감정보 강요"
+    },
+    {
+      "id": "money_coercion",
+      "action": "chat_message",
+      "text": "돈을 보내지 않으면 네 개인정보를 공개하겠어.",
+      "proposedDecision": "block",
+      "proposedReason": "HIGH_RISK",
+      "group": "직접 위해·민감정보 강요"
+    },
+    {
+      "id": "contact_coercion",
+      "action": "chat_message",
+      "text": "연락처를 주지 않으면 계속 쫓아다닐 거야.",
+      "proposedDecision": "block",
+      "proposedReason": "HIGH_RISK",
+      "group": "직접 위해·민감정보 강요"
+    },
+    {
+      "id": "ambiguous_persistence",
+      "action": "application_message",
+      "text": "답을 받을 때까지 계속 연락할게.",
+      "proposedDecision": "confirm_required",
+      "proposedReason": "AMBIGUOUS_RISK",
+      "group": "맥락 검토 필요"
+    },
+    {
+      "id": "ambiguous_persuasion",
+      "action": "application_message",
+      "text": "불편해도 이번에는 꼭 와 줘야 해.",
+      "proposedDecision": "confirm_required",
+      "proposedReason": "AMBIGUOUS_RISK",
+      "group": "맥락 검토 필요"
+    },
+    {
+      "id": "ambiguous_payment",
+      "action": "application_message",
+      "text": "먼저 돈을 보내면 자세히 알려 줄게.",
+      "proposedDecision": "confirm_required",
+      "proposedReason": "AMBIGUOUS_RISK",
+      "group": "맥락 검토 필요"
+    }
+  ]
+}

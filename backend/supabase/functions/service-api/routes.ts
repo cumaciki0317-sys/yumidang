@@ -23,6 +23,7 @@ interface RouteContext {
   url: URL;
   body: JsonValue;
   maintenance?: MaintenanceConfig;
+  worker?: { token: string; requestId: string };
 }
 export interface Route {
   method: "GET" | "POST";
@@ -262,6 +263,8 @@ export function resolveRoute(url: URL): Route {
   if (path === "/notifications/read-all") return route("POST", ({ db, body }) => { empty(body); return notifications.readAllNotifications(db); });
   match = /^\/notifications\/([^/]+)\/read$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("POST", ({ db, body }) => { empty(body); return notifications.readNotification(db, id); }); }
+  match = /^\/conversations\/([^/]+)\/read\/messages$/.exec(path);
+  if (match) { const id = uuid(match[1]); return route("POST", ({ db, body }) => { const input = object(body, ["messageIds"]); if (!Array.isArray(input.messageIds) || input.messageIds.length < 1 || input.messageIds.length > 100) return invalid(); const ids = input.messageIds.map(uuid).map(x => x.toLowerCase()); if (new Set(ids).size !== ids.length) return invalid(); return conversations.markConversationMessagesRead(db, id, ids); }); }
   match = /^\/conversations\/([^/]+)\/read$/.exec(path);
   if (match) { const id = uuid(match[1]); return route("POST", ({ db, body }) => { const data = object(body, ["lastReadMessageId"]); return conversations.markConversationRead(db, id, uuid(data.lastReadMessageId)); }); }
   if (path === "/conversations") return route("GET", ({ db }) => conversations.listConversations(db));
@@ -331,7 +334,7 @@ export function resolveRoute(url: URL): Route {
     if (mode !== "all" && mode !== "musical") invalid();
     return route("GET", ({ db }) => db.rpc("get_kopis_top10_snapshot", { p_mode: mode }), true);
   }
-  if (path === "/internal/ai-feedback-maintenance") return route("POST", ({ db, body }) => { const input = object(body, ["limit"]); return db.rpc("purge_expired_ai_feedback", { p_limit: integer(input.limit, 1, 100) }); }, true);
+  if (path === "/internal/ai-feedback-maintenance") return route("POST", ({ db, body, worker }) => { const input = object(body, ["limit"]); if (!worker) throw new HttpError("INVALID_REQUEST"); return db.rpc("purge_ai_feedback_scoped", { p_request_id: worker.requestId, p_global_token: worker.token, p_limit: integer(input.limit, 1, 20) }); }, true);
   if (path === "/internal/maintenance") return route("POST", async ({ db, body, maintenance }): Promise<JsonValue> => {
     const limit = integer(object(body, ["limit"]).limit, 1, 100);
     const counts = (value: JsonValue, keys: string[]): Record<string, number> => {

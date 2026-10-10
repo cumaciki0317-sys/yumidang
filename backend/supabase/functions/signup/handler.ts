@@ -10,8 +10,11 @@ export function createSignupHandler(dependencies: {
   maxBodyBytes: number;
   service(): ReturnType<typeof createSignupService>;
   authenticateUser(request: Request): Promise<RpcClient>;
+  /** 검토된 서버 조립에서만 가입 성향의 검사 결합 헤더를 허용한다. */
+  contentInspection?: true;
 }) {
-  const cors = createCors({ allowedOrigins: dependencies.allowedOrigins, allowedMethods: ["GET", "POST"], allowedHeaders: ["authorization", "content-type", "apikey"] });
+  const cors = createCors({ allowedOrigins: dependencies.allowedOrigins, allowedMethods: ["GET", "POST"], allowedHeaders: ["authorization", "content-type", "apikey",
+    ...(dependencies.contentInspection === true ? ["x-content-operation-id", "x-content-inspection-ticket"] : [])] });
   return async (request: Request): Promise<Response> => {
     const context = createRequestContext();
     const preflight = cors.preflight(request, context);

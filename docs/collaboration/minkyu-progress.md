@@ -1,7 +1,51 @@
+현재 추가 진행: 실제 콘텐츠 HTTP full8-v9의8개 저장/소비/같은 키 재조회·신고 Storage 성공/삭제 응답 유실 검증 PASS. SQL115 선택 복구/원 부모 종결은 제품 회귀52개, 최초 가입 검사 연결은22개·Deno PASS이며 실제 복구/5종 합본 검증을 진행 중이다. 최신 파일 준비116개와 read-only 운영20개 비교는 배포 준비이며 활성화하지 않았다. 전체 완료 수는 유지하며 [현재 실행 기록 4.16](requests/minkyu/2026-10-09-backend-execution.md)을 따른다. 아래 날짜별 기록은 당시 기준이다.
+
 # 현재 문서·구현 확인 현황
 
+## 최신 재개 표시 — 2026-10-09
 
-## 현재 표시 기준: 민규 담당 달성률
+**기존 8/10 · 추가 5/6 · 독립 5/5 · 운영 1/7**. 사용자 `다시 시작`에 따라 기존 운영 완료 계획을 재개했다. SQL108 실제 HTTPS/Storage GET-only 복구(GET2·추가 DELETE/dispatch/ACK0)와 두 격리 DB 전체 복원·상세 파기 재적용 PASS, 원 ACK/dispatch·읽음·task·미확정 전체 기록·함수/ACL 보존과 제어 닫힘을 확인했다. 복원 원 테스트 DB는 읽기만 했다. 테스트 실행기 3개를 보완했으며 제품 코드·SQL·종현 파일은 수정하지 않았다.
+
+Railway 현재 배포는 **CRASHED·0 Variables·COMPLETION_SCHEDULER_NOT_CONFIGURED**이며 원격/배포 commit은40f3c1d, 로컬 종현 후속은ac06f86이다. 제품 CLI 연결·주기 파기·운영 전체 Storage 복구 준비가 남아 완료율은 유지한다. 네이버 두 계정은 준비됐지만 사용자 요청으로 실제 로그인 검증은 지금 하지 않는다. 운영 변경·커밋·푸시0. 정확한 증빙·실패 기록·다음 `다시시작` 재개 지점은 [SQL108 재개 기록](requests/minkyu/2026-10-09-resume-sql108.md)을 따른다. 아래 날짜별 내용은 당시의 기록이며 최신 결과와 구분한다.
+
+
+[백엔드 100% 완료 작업 계획](requests/minkyu/2026-10-09-backend-100-plan.md)을 작성했다. 기존 운영 7단계를 유지하고 기능별 실제 연결·권한·장애·보관·복구·지원 조건을 포함했다. 실회원 검증은 현재 보류하고 서버 연결/배포 준비를 먼저 진행하는 순서다. 하네스 기능·운영 검토를 반영했으며 계획 작성만으로 완료 수는 바뀌지 않는다.
+
+## 완료 계획 실행 중 — 2026-10-09
+
+[백엔드 실행 기록](requests/minkyu/2026-10-09-backend-execution.md): gated 탈퇴 HTTP·오프라인 운영 설정/제품 해시 검사를 보완했고 함수80개·준비6개·catalog13개·archive2개 검증을 통과했다. 후기 worker 배정 전달6개도 PASS다. 실제 env 문법 조건은 전체 BLOCKED이며 운영 활성화하지 않았다. 전체 SQL108 DB178개 테이블·앱 catalog/권한·역할·Storage 파일6개 복원과 알려진 삭제의 실제 byte 재파기가 PASS다. 원 DB/파일·UNKNOWN·읽음·ACK는 보존됐다. 운영 백업/제품 CLI 완료로 확대하지 않는다.
+
+사용자가 필요한 종현 경로를 민규로 명시 재배정하여 정책만 별도 커밋2cabdc9로 반영했다. 실행기·DB 에이전트는 별도 worktree에서 구현 중이다. 다른 종현/성호 파일은 유지하고 실회원 로그인 보류도 유지한다. 기존8/10·추가5/6·독립5/5·운영1/7은 아직 그대로다. 운영 변경·푸시0이며 정책 커밋2개와 미커밋 구현을 구분한다.
+
+SQL109 영속 실행 기록의 실제 격리 DB 회귀가 PASS다. 최초 진입1회·효과 없는 성공 거절·재점유 고유 슬롯 보존·UNKNOWN 새 실행 차단을 확인했다. 제품 실행기 단위22개와 연결 client/HTTP 검증은 PASS이며 실제 HTTPS/두 CLI 프로세스는 준비 중이다. 기본 CLI는 유지관리만 조립하고 다섯 종류 전체를 지원한다고 표시하지 않는다. SQL110 회원 정리·SQL111 행사 연결도 별도 작업 공간에서 진행 중이다. 운영 적용·실회원·전체 완료 수는 그대로다.
+
+SQL111 행사 수집 실제 격리 DB 회귀도 PASS다. 중복/페이지 재개/실제job20/상세revision/만료 원복을 확인했으며 순위·서울·장문 가격 투영·실제 공급사/CLI 조건은 남아 있다. 실패v1/v2와 source불변 증거를 보존했다. 행사 HTTP 연결2파일 재배정을 정책 커밋0f10a65에 추가했고 worker 배정 계약9개PASS다. SQL112영속감사와 SQL109HTTPS/CLI실행은 진행 중이며 첫 준비의 포트 게시 실패는 PASS에 포함하지 않는다.
+
+SQL110 회원 삭제 fresh lane 실제 DB 회귀가 PASS다. 합성 ACK와 실제task/job/slot/fence/lease결합·UNKNOWN 재전송 차단을 확인했으며 실제외부삭제·tracked복구·제품CLI는 남아 있다. HTTPS준비에서 TLS검사순서를 보완했고 실제Node2개의 시작 오류로 제품CLI 순환 top-level await를 발견해 수정했다. 관련22개 회귀PASS, 실제시작 재검증은진행 중이다. 전체완료 수는 유지한다.
+
+
+## 후속 통합·실제 검증 — 2026-10-09
+
+SQL115 ACK 복구와117 실제 Auth 탈퇴 영수증은 격리 검증 PASS다. SQL116 동시 채팅 SQL 검증은 PASS이나 통합 HTTP ticket 조회 결함을 발견하여 수정·새 검증 중이다. 실제 두 Node runner에서 취소20건·신고 상세20건, 각각 고유20슬롯·응답 유실 원키 조회·UNKNOWN 재시작 신규전송0을 확인했다. 기본 stock CLI의 다섯 종류 전체 조립·Storage 바이트·회원 복구·소비자/분류기 품질·실회원·운영은 남는다. 워커 회귀43/43 skip0과 별도 모바일 타입 검사도 PASS이며 실제 증거와 구분한다. 정책만 별도5개 커밋(2cabdc9/0f10a65/65c1c83/836233f/a1fed86), 구현은 미커밋·푸시0·운영 변경0이다. 정확한 SHA·실패 보존·진행 범위는 [실행 기록 4.7~4.8](requests/minkyu/2026-10-09-backend-execution.md)을 따른다. 기존 완료 수와 실회원 검증 보류는 유지한다.
+
+## 최신 진행 표시 — 2026-10-08
+
+**기존 완료 8/10 · 추가 완료 5/6 · 이번 독립 보완 완료 5/5 · 현재 작업: SQL104~107 제품 연결·실제 HTTP 검증·복구 확인**
+
+
+최신 연결: SQL107 전체 복원·삭제 재적용·읽음과 영속 기록 보존을 통과했다. 메시지별 읽음과 helpful 동시 접수·응답 유실 복구를 실제 제품 handler→JWT→HTTPS→TLS DB로 검증했다. JWT는 합성 테스트 회원이며 실제 네이버 두 회원 검증은 대기다. 종현 reserveItem의 첨부별 차감, 유지관리의 큐20 차감, helpful 요청 식별자 누락, legacy cycle 확정 연결은 제품 활성화 전 수정 대기다. [제품 연결 검증과 종현 요청](requests/minkyu/2026-10-08-product-connection.md)을 따른다. 기존 완료율은 올리지 않는다.
+
+
+운영 완료 계획: **1/7**. 원격 ac06f86 확인·운영20개 정적 스키마 일치·검토SQL108/운영미적용88개 적용 순서를 고정했다. SQL108 ACK 읽기 복구 DB 및 계약 검사는 통과했고 제품 CLI·종현 연결·네이버 두 계정·최종 복원·Railway 현재 설정은 대기다. 추가 격리 Docker 검증은 연결 시간 초과로 PASS에 포함하지 않는다. [운영 체크리스트와 SQL108 인계](requests/minkyu/2026-10-08-production-completion.md)에 완료·부분 검증·미실행을 구분했다.
+
+SQL100/101을 보존하고 SQL102 원자 결과·고유 큐 작업20 슬롯, SQL103 확정 종결+30일 상세 파기·미확정 external_pending 복구 조회를 추가했다. 실제 DB rollback/종류 교대 상한, JWT/HTTPS 응답 유실·마지막 슬롯 경쟁, 실제 Storage DELETE3/ACK2와 추가 전송0, 전체 DB 백업 복원 뒤 삭제 재적용을 통과했다. 준비 도구는 검토103·기존99·미적용4를 구분한다. 정확한 검증·권한·인계는 [민규 독립 실행 포트](requests/minkyu/2026-10-08-independent-runtime.md)에 기록했다.
+
+이번5/5는 민규 공통 서버 준비다. 종현 제품 실행기의 경쟁·재시작 통합, AI 성공 증거·주기적 파기, 자격 있는 네이버 두 회원 검증이 남아 기존8/10·추가5/6은 유지한다. 회원 정리 batch는 배정≤10·signal·마감 연결이며 별도 task의 UNKNOWN 재시작을 해결했다고 주장하지 않는다. 큐 작업 최대20과 DB/Storage 호출·AI 토큰 예산은 별개다.
+
+운영 atomic 제어·EXEC는 기본 닫힘이다. 최소키 TTL은 근거가 없어 활성화하지 않았다. 운영 DB·Railway·외부 AI·모바일·커밋·푸시 변경0이다. 아래63.5% 및 날짜별 자료는 과거 단계 점수·이력이다.
+
+
+## 과거 단계 기준: 민규 담당 달성률
 
 **민규 전체 단계 점수: 63.5% · 현재 작업: 신고 숨김 분리 SQL/HTTP 검증 PASS·이의 안내 anchor 연결 대기 · 운영 배포: 대기**
 
@@ -908,3 +952,8 @@ SQL79/80 보완 후보를 정식 native78의 한 트랜잭션에서 실제 실�
 신고 파기 DB 연결3파일도 통합했다. internal client SHA `c4b1c5d67fdb185cce2eae9beea4209772fdc51c41878f01f18c082076b02f56`, 신규 report-retention-client SHA `f0641a6965b386aadecb7ff7ba152edbaf7e7f468f562d8e3387953d1220d4d6`, RPC test SHA `6862c4d4f36a1f7e94cd8d4c7cef8f5575868b4259f88721f42a374ac87586be`. root RPC10+Storage13+기존due5 총28/28와 타입3파일 PASS다. exact6/7 전송·서비스 자격·불변 job context·원 객체 응답·caller/timeout 중단·응답 유실/5xx terminal unknown·재전송0 및 adapter+RPC 모형 체인을 확인했다. 신규 DB client는 gateway import graph 밖이며 실제 Provider/DB포트 사용·worker dispatch는 아직 미실행이다. 기존 API38의8122 실행graph와 이번53e2 준비graph를 혼동하지 않는다.
 
 실제 계약 문서 SHA `7a43df9415735dac6107be704aa8ca81d29613e447793949f12a0656a962baba`를 통합하고 원da91 제안은 보존했다. metadata 성공의 내부 parent 완료/재complete 금지와7 RPC 준비조건을 종현 연결 요청에 반영했다. 원 DELETE가 lease 만료 후 남아있을 때 자동 재claim을 막기 위한 durable 전송 의도 SQL81의 CLI 빈파일을 private 폴더에 생성했다. 후보 구현/검토 전 root source통합0·DB실행0이다. formal78→80 검증 실행기 후보와81을 병렬 준비하며 운영 변경0·전체63.5% 유지다.
+
+
+### 2026-10-09 실제 CLI 경쟁·재시작 검증 후속
+
+SQL112 행사 invocation DB 검증 PASS, SQL109 HTTPS 실제 Node CLI2개 경쟁·helpful 응답 유실 조회 복구·runtime 파기·UNKNOWN 재시작 차단 v5 PASS를 [현재 실행 기록4.4](requests/minkyu/2026-10-09-backend-execution.md#44-sql112-실제-격리-db와-https-제품-cli-v5)에 추가했다. jobs 저장소·공유 큐 회귀2개를 정책 전용 `65c1c83`로 재배정했다. 행사/회원 typed 배정·행사 CAS 연결은 준비됐지만 다섯 종류 실제 CLI 및 공급사·실회원·운영 조건은 남는다. 기존8/10·추가5/6·독립5/5·운영1/7 유지, 전체100% 미완료다.
