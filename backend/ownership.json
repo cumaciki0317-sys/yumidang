@@ -76,32 +76,62 @@
       "to": "minkyu",
       "authorization": "사용자: 필요한 종현 담당 경로를 민규로 명시적으로 재배정",
       "scope": "백엔드 완료 계획 운영 3단계의 실제 완료 예약 CLI/TLS 연결에 필요한 completion-runner.mjs 한 파일만 추가 재배정한다. scheduler·다른 종현·성호 경로는 유지하며 기존 변경을 보존한다."
+    },
+    {
+      "date": "2026-10-10",
+      "from": "minkyu",
+      "to": "jonghyun",
+      "authorization": "사용자: 푸쉬해서 종현이 풀받고 나 종현이야 하면 백엔드 작업을100%까지 진행할 수 있도록",
+      "scope": "백엔드100 잔여 구현·격리 검증·배포 준비 전체 인계. backend 전체(ownership.json 제외), 기존 민규/공통 테스트, tools/local, .env.example, 모바일 서비스·세션 연결3파일을 종현 단독 담당으로 이관한다. 성호 UI/UX와 테스트 경로, 민규 정책·hook·지침·현황·요청 기록 관리 경로는 유지한다. 운영 변경·외부 전송·실회원 검증의 기존 승인/보류 조건은 유지한다.",
+      "paths": [
+        "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
+        "tests/functions/jonghyun/20261008-followup-safety.test.ts",
+        "tests/functions/jonghyun/j1-consumers.test.ts",
+        "apps/mobile/src/member-service.ts",
+        "apps/mobile/src/remote.tsx",
+        "apps/mobile/src/web-member-session.ts",
+        "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+        "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
+        "backend/supabase/functions/event-sync/index.ts",
+        "backend/supabase/functions/event-sync/operations.ts",
+        "backend/supabase/functions/_shared/jobs/background.mjs",
+        "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
+        "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+        "backend/supabase/functions/_shared/jobs/runtime.ts",
+        "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
+        "backend/supabase/functions/review-summary-worker/handler.ts",
+        "backend/supabase/functions/review-summary-worker/index.ts",
+        "backend/",
+        ".env.example",
+        "tools/local/",
+        "tests/"
+      ]
     }
   ],
   "rules": [
     {
       "path": "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/functions/jonghyun/20261008-followup-safety.test.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/functions/jonghyun/j1-consumers.test.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/member-service.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/remote.tsx",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/web-member-session.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
@@ -109,51 +139,51 @@
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/event-sync/index.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/event-sync/operations.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/background.mjs",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/runtime.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/review-summary-worker/handler.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/review-summary-worker/index.ts",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "AGENTS.md",
@@ -177,7 +207,7 @@
     },
     {
       "path": ".env.example",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": ".gitignore",
@@ -193,7 +223,7 @@
     },
     {
       "path": "tools/local/",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "docs/collaboration/",
@@ -201,7 +231,7 @@
     },
     {
       "path": "tests/",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/ai-chat/",
@@ -394,6 +424,10 @@
     {
       "path": "docs/planning/design/",
       "owner": "sungho"
+    },
+    {
+      "path": "backend/ownership.json",
+      "owner": "minkyu"
     }
   ]
 }
