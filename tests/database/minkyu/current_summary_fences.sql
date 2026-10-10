@@ -1,5 +1,24 @@
 -- 민규: 최신 요약 계약의 실제 역할·전역 점유·동의·300자 검증. 합성 자료만 사용하고 전체 rollback.
 begin;
+set local plpgsql.check_asserts=on;
+-- SQL109 효과 포트는 service_role 직접 호출을 닫는다. 격리 시험 역할만
+-- 정확한 함수에 연결하며 역할·멤버십·ACL·guard·fixture는 전부 rollback한다.
+create role ym_summary_fence_synthetic login noinherit nosuperuser nocreatedb nocreaterole noreplication nobypassrls;
+grant ym_summary_fence_synthetic to postgres with admin false, inherit false, set true;
+grant usage on schema public to ym_summary_fence_synthetic;
+grant execute on function public.acquire_worker_run(integer,uuid),
+ public.enqueue_job(text,text,jsonb,timestamptz),public.claim_job(uuid,integer,uuid),
+ public.prepare_queue_invocation(uuid,uuid,text,integer,integer),
+ public.claim_queue_invocation_dispatch(uuid,uuid,text,integer,integer),
+ public.load_review_summary_source(uuid,uuid,uuid,text),
+ public.load_review_summary_checkpoint(uuid,uuid,text,uuid,text),
+ public.save_review_summary_checkpoint(uuid,uuid,text,jsonb,uuid,text),
+ public.discard_review_summary_checkpoint(uuid,uuid,text,uuid,text),
+ public.mark_review_summary_insufficient(uuid,uuid,text,uuid,text),
+ public.publish_review_summary_for_job(uuid,uuid,text,uuid[],text,text,text,uuid,text)
+ to ym_summary_fence_synthetic;
+update private.worker_runtime_atomic_control set enabled=true where singleton;
+update private.worker_invocation_control set enabled=true where singleton;
 create function pg_temp.summary_uid(n integer) returns uuid language sql immutable as $$
  select ('73000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid;
 $$;
@@ -37,8 +56,8 @@ end $$;
 insert into private.ai_member_processing(user_id,summary_allowed)
   values(pg_temp.summary_uid(1),true),(pg_temp.summary_uid(2),true),(pg_temp.summary_uid(3),true);
 update private.ai_processing_guard set external_processing_allowed=true where singleton;
-create temp table summary_fence_probe(job_id uuid,lease uuid,run_token uuid,revision text,ids uuid[],checkpoint jsonb,published jsonb);
-grant all on summary_fence_probe to service_role;
+create temp table summary_fence_probe(job_id uuid,lease uuid,run_token uuid,revision text,ids uuid[],checkpoint jsonb,published jsonb,invocation_id uuid);
+grant all on summary_fence_probe to ym_summary_fence_synthetic;
 
 do $$ declare fn text;begin
   foreach fn in array array['public.load_review_summary_source(uuid,uuid)',
@@ -50,6 +69,10 @@ do $$ declare fn text;begin
   end loop;
   assert not has_function_privilege('anon','public.load_review_summary_source(uuid,uuid,uuid,text)','EXECUTE');
   assert not has_function_privilege('authenticated','public.load_review_summary_source(uuid,uuid,uuid,text)','EXECUTE');
+  assert not has_function_privilege('service_role','public.mark_review_summary_insufficient(uuid,uuid,text,uuid,text)','EXECUTE');
+  assert not has_function_privilege('service_role','public.publish_review_summary_for_job(uuid,uuid,text,uuid[],text,text,text,uuid,text)','EXECUTE');
+  assert not has_schema_privilege('ym_summary_fence_synthetic','private','USAGE');
+  assert not has_table_privilege('ym_summary_fence_synthetic','private.worker_invocations','SELECT');
 end $$;
 
 -- owner는 합성 fixture 원문 집합/revision 준비만 수행한다. worker검증은 실제 service_role로 한다.
@@ -62,16 +85,21 @@ do $$ declare s jsonb; ids uuid[]; cp jsonb;begin
     'modelVersions',jsonb_build_array('synthetic.model'))));
   insert into summary_fence_probe(revision,ids,checkpoint) values(s->>'sourceRevision',ids,cp);
 end $$;
-set local role service_role;
-do $$ declare f summary_fence_probe; s jsonb; j uuid; run uuid; t uuid; x jsonb; begin
+set local role ym_summary_fence_synthetic;
+do $$ declare f summary_fence_probe; s jsonb; j uuid; run uuid; t uuid; x jsonb; invocation uuid:=gen_random_uuid(); begin
+  assert current_user='ym_summary_fence_synthetic';
   select * into f from summary_fence_probe;
   run:=(public.acquire_worker_run(180,null)->>'token')::uuid;
   j:=(public.enqueue_job('review_summary','current-summary-fences',jsonb_build_object('profileId',pg_temp.summary_uid(2),
     'sourceRevision',f.revision,'modelVersion','summary-model','promptVersion','summary-prompt'),clock_timestamp())->>'jobId')::uuid;
+  x:=public.prepare_queue_invocation(invocation,run,'review_summary',1,180000);
+  assert x->>'state'='prepared' and x->>'fresh'='true';
+  assert public.claim_queue_invocation_dispatch(invocation,run,'review_summary',1,180000)->>'claimed'='true';
+  assert public.claim_queue_invocation_dispatch(invocation,run,'review_summary',1,180000)->>'claimed'='false';
   s:=public.claim_job(gen_random_uuid(),180,run)->'job';
   assert (s->>'jobId')::uuid=j;
   t:=(s->>'leaseToken')::uuid;
-  update summary_fence_probe set job_id=j,lease=t,run_token=run;
+  update summary_fence_probe set job_id=j,lease=t,run_token=run,invocation_id=invocation;
   assert public.load_review_summary_source(j,t,gen_random_uuid(),'2026-10-05')='{"status":"lease_lost"}'::jsonb;
   perform pg_temp.summary_expect(format('select public.load_review_summary_source(%L,%L,%L,%L)',j,t,run,'older'),array['22023']);
   s:=public.load_review_summary_source(j,t,run,'2026-10-05');
@@ -90,7 +118,7 @@ reset role;
 
 -- 외부 전송 보류에서는 source/checkpoint가 원문/중간 내용을 반환하지 않는다.
 update private.ai_processing_guard set external_processing_allowed=false where singleton;
-set local role service_role;
+set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe; begin
   select * into f from summary_fence_probe;
   perform pg_temp.summary_expect(format('select public.load_review_summary_source(%L,%L,%L,%L)',
@@ -106,7 +134,7 @@ do $$ declare f summary_fence_probe;begin
   assert not exists(select 1 from private.review_summary_job_publications where job_id=f.job_id),'unapproved processing published';
 end $$;
 update private.ai_processing_guard set external_processing_allowed=true where singleton;
-set local role service_role;
+set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe; x jsonb;begin
   select * into f from summary_fence_probe;
   x:=public.publish_review_summary_for_job(f.job_id,f.lease,f.revision,f.ids,'합성 최신 공개 요약','summary-model','summary-prompt',f.run_token,'2026-10-05');
@@ -117,6 +145,12 @@ do $$ declare f summary_fence_probe; x jsonb;begin
   update summary_fence_probe set published=x;
 end $$;
 reset role;
+do $$declare f summary_fence_probe;begin
+ select * into f from summary_fence_probe;
+ assert (select dispatch_started and claim_calls=1 and state='prepared' from private.worker_invocations where request_id=f.invocation_id);
+ assert (select effect='published' and settled_status is null from private.worker_invocation_jobs where request_id=f.invocation_id and job_id=f.job_id and job_lease_token=f.lease);
+ assert (select count(*)=1 from private.worker_runtime_job_slots where global_token=f.run_token);
+end;$$;
 set local role authenticated;
 do $$ begin
   perform pg_temp.summary_actor(1);
@@ -130,7 +164,8 @@ do $$ declare f summary_fence_probe; s jsonb;begin
   assert s->>'sourceRevision'<>f.revision,'author withdrawal did not change revision';
   assert not exists(select 1 from private.review_summary_state where profile_id=pg_temp.summary_uid(2) and visible_summary_id is not null);
 end $$;
-set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe;begin
   select * into f from summary_fence_probe;
   assert public.load_review_summary_source(f.job_id,f.lease,f.run_token,'2026-10-05')->>'status'='stale_revision';
@@ -138,7 +173,7 @@ do $$ declare f summary_fence_probe;begin
 end $$;
 reset role;
 update private.ai_member_processing set summary_allowed=false where user_id=pg_temp.summary_uid(2);
-set local role service_role;
+set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe; begin
   select * into f from summary_fence_probe;
   assert public.load_review_summary_source(f.job_id,f.lease,f.run_token,'2026-10-05')='{"status":"stale_revision"}'::jsonb;
@@ -148,7 +183,7 @@ end $$;
 reset role;
 update private.ai_member_processing set summary_allowed=true where user_id=pg_temp.summary_uid(2);
 update private.global_worker_run set expires_at=clock_timestamp()-interval '1 second' where singleton;
-set local role service_role;
+set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe; begin
   select * into f from summary_fence_probe;
   assert public.load_review_summary_source(f.job_id,f.lease,f.run_token,'2026-10-05')='{"status":"lease_lost"}'::jsonb;
@@ -156,3 +191,10 @@ do $$ declare f summary_fence_probe; begin
 end $$;
 reset role;
 rollback;
+do $$begin
+ assert not exists(select 1 from pg_roles where rolname='ym_summary_fence_synthetic');
+ assert not has_function_privilege('service_role','public.mark_review_summary_insufficient(uuid,uuid,text,uuid,text)','EXECUTE');
+ assert not has_function_privilege('service_role','public.publish_review_summary_for_job(uuid,uuid,text,uuid[],text,text,text,uuid,text)','EXECUTE');
+ assert (select not enabled from private.worker_invocation_control where singleton);
+ assert (select not enabled from private.worker_runtime_atomic_control where singleton);
+end;$$;

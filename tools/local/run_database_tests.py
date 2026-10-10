@@ -19,7 +19,7 @@ PROJECT = "yumidang-minkyu-db"
 CONTAINER = "supabase_db_" + PROJECT
 TESTS = ("worker_jobs.sql", "public_post_search.sql", "review_summary_storage.sql",
          "bilateral_completion.sql", "review_automation.sql", "core_service_api.sql", "public_search_v2.sql")
-CURRENT_AI_FILES = ("ai_atomic_requests.sql", "ai_account_budget.sql", "ai_account_scopes.sql", "current_summary_fences.sql")
+CURRENT_AI_FILES = ("ai_atomic_requests.sql", "ai_account_budget.sql", "ai_account_scopes.sql", "current_summary_fences.sql", "current_summary_invocation.sql")
 
 
 def isolated_command_error(stderr):
@@ -89,12 +89,15 @@ def current_ai_cases(payloads):
     helper = re.findall(r"create function pg_temp\.pool_failure\(.*?\$\$;", payloads["ai_account_budget.sql"], re.S)
     if len(helper) != 1:
         raise ValueError("BUDGET_HELPER_CHANGED")
-    return [
+    cases = [
         ("ai_atomic_requests", payloads["ai_atomic_requests.sql"]),
         ("ai_account_budget", "begin;\n" + payloads["ai_account_budget.sql"] + "\nrollback;"),
         ("ai_account_scopes", "begin;\n" + helper[0] + "\n" + payloads["ai_account_scopes.sql"] + "\nrollback;"),
         ("current_summary_fences", payloads["current_summary_fences.sql"]),
     ]
+    if "current_summary_invocation.sql" in payloads:
+        cases.append(("current_summary_invocation", payloads["current_summary_invocation.sql"]))
+    return cases
 
 
 def run_current_ai(prepared_root):
@@ -155,7 +158,7 @@ def run_current_ai(prepared_root):
         baseline = row_fingerprint()
         payloads = {}
         for name in CURRENT_AI_FILES:
-            path = "tests/database/minkyu/" + name
+            path = "tests/database/" + ("jonghyun/" if name == "current_summary_invocation.sql" else "minkyu/") + name
             data = (ROOT / path).read_bytes()
             committed = subprocess.run(["git", "-C", str(ROOT), "show", "HEAD:" + path], capture_output=True, timeout=15)
             if committed.returncode or data != committed.stdout:
