@@ -43,7 +43,7 @@ AI22의 `aiLimitsHttpCase`와 AI23의 `aiCapsHttpCase` 함수 본문은 기존 �
 
 실회원은 HOLD다. AI 공급사 보관·학습·삭제·공동 사용·출력 상한, 서울 HTTPS·KOPIS 공식7일, 지원·비용·운영 적용 승인은 그대로 남는다.
 
-GitHub Actions 공식 읽기 API의 `jonghyun/backend100` 결과는 실행0건이다. 저장소 workflow는 `pull_request`의 파일 소유권 검사만이며 제품 회귀 CI가 아니다. 최종 일반 push·원격 SHA 확인은 후속 기록한다.
+GitHub Actions 공식 읽기 API의 `jonghyun/backend100` 결과는 실행0건이다. 저장소 workflow는 `pull_request`의 파일 소유권 검사만이며 제품 회귀 CI가 아니다. 구현/검증 커밋 `33bb5030917806f22c562600b3f63f9e4a8dcf36`의 일반 push와 원격 SHA 일치를 확인했다. 아래 최종 검증 기록을 따른다.
 
 ## 체크포인트 재인수 검증과 최종 회귀
 
@@ -77,3 +77,5 @@ AI fixture는 기존 계약대로 UNKNOWN/90일 예산 metadata5테이블을 삭
 Node 회귀 선택은 tests 아래 `.test.ts`/`.test.mjs` 중 파일명에 `ai|summary|queue|budget|maintenance|worker|request-logging|http.test|service_api`가 포함된63파일이다. `node --experimental-strip-types --test --test-concurrency=1 <선택 파일>`로 실행한다. SQL/summary/AI 재현은0700 canonical prepared root의 고정 manifest·owned container·초기 baseline 검사를 통과해야 한다. summary는 `tools/local/observe_isolated.py --prepared-root <root> --mode summary --run`, AI는 `--mode ai --run`이다. AI 재실행은 보호 예산이 없는 새 승인된 합성 scope가 필요하며 현재 UNKNOWN을 삭제하거나 시간 이동해 fresh 검사를 통과시키지 않는다.
 
 GitHub 공식 Actions 읽기 API는 해당 브랜치 실행0건을 반환했다. workflow는 PR 파일 소유권만 검사하며 제품 CI PASS로 확대하지 않는다. 자연자정AI24·실제 Auth/PostgREST/네이버·외부 모델·원본 보호환경/Storage/백업복원·실회원 HOLD·운영 적용은 NOT_RUN/별도대기다. 관리 진행률은79%(22/28) 유지한다.
+
+구현/검증 커밋 `33bb503`을 승인 원격의 `jonghyun/backend100`으로 일반 push했고 SHA 일치·clean 상태를 확인했다. 미푸시 전체14경로의 종현 소유권 검사는 PASS였다. push 이후 Actions 공식 읽기 API도 실행0건이었다. 이 원격 확인 기록은 문서만 추가한 후속 정상 커밋으로 전달한다.
