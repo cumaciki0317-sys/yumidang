@@ -14,6 +14,7 @@ import { createInternalClient } from "../_shared/db/internal-client.ts";
 import { createReportOperatorExecutor } from "./report-operator-http.ts";
 import { createProfileImageExecutor } from "./profile-image-http.ts";
 import { createServiceApi } from "./handler.ts";
+import type { DiagnosticLogger } from "../_shared/observability/logger.ts";
 import { createRpcPublicPostSearchRepository } from "../_shared/db/repositories/search.ts";
 import { searchPublicPosts } from "../_shared/services/search-service.ts";
 import { createRpcEventRepository, listEventFilterValues } from "../_shared/db/repositories/events.ts";
@@ -22,7 +23,7 @@ import { createMemberCleanupExecutor, type MemberCleanupExecutionOptions } from 
 /** 실제 실행과 통합 검증이 같은 설정·인증·DB 의존성 조립을 사용한다. */
 export function createRuntimeHandler(
   read: EnvReader,
-  options: { publicPostSearch?: PublicPostSearchExecutor; memberCleanup?: boolean; memberRetirement?: boolean; memberCleanupExecution?: MemberCleanupExecutionOptions; memberCleanupReconcile?: MemberCleanupReconcileReadiness; contentInspection?: { readiness: ContentInspectionReadiness; classifier: ContentClassifier } } = {},
+  options: { diagnostics?: DiagnosticLogger; publicPostSearch?: PublicPostSearchExecutor; memberCleanup?: boolean; memberRetirement?: boolean; memberCleanupExecution?: MemberCleanupExecutionOptions; memberCleanupReconcile?: MemberCleanupReconcileReadiness; contentInspection?: { readiness: ContentInspectionReadiness; classifier: ContentClassifier } } = {},
 ): (request: Request) => Promise<Response> {
   const config = loadRuntimeConfig(read);
   // 신고 상세 4000자와 JSON 이스케이프를 실제 서비스 진입점에서 수용한다.
@@ -42,6 +43,7 @@ export function createRuntimeHandler(
       : { db: createPublicClient(config), caller: "anonymous" as const };
   };
   return createServiceApi({
+    ...(options.diagnostics ? { diagnostics: options.diagnostics } : {}),
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
     ...(options.memberRetirement === true ? { memberRetirement: true as const } : {}),

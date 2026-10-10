@@ -5,6 +5,8 @@ import type { RpcClient } from "../_shared/db/transport.ts";
 import { createWorkerInvocationRuntime } from "../_shared/db/worker-runtime-client.ts";
 import { createCors } from "../_shared/http/cors.ts";
 import { HttpError } from "../_shared/http/errors.ts";
+import type { DiagnosticLogger } from "../_shared/observability/logger.ts";
+import { diagnosticResultCode } from "../_shared/observability/redaction.ts";
 import { createRequestContext, readJson } from "../_shared/http/request.ts";
 import { reportOperatorRoute, type ReportOperatorRoute } from "./report-operator-http.ts";
 import { profileImageRoutePath } from "./profile-image-http.ts";
@@ -22,6 +24,10 @@ export interface MemberCleanupInvocationAllocation {
 }
 
 export interface ServiceApiDependencies {
+  /** 명시 조립된 원문 없는 진단만 사용한다. 기본 미설치·운영 저장/보관 승인과 별개다. */
+  diagnostics?: DiagnosticLogger;
+  /** 진단용 단조 시계. 업무 만료·DB 시각·실행기 deadline에는 사용하지 않는다. */
+  diagnosticNow?: () => number;
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
   reportOperator?: { execute(request: Request, route: ReportOperatorRoute, context: RequestContext): Promise<Response> };
@@ -60,8 +66,7 @@ export interface ServiceApiDependencies {
 export function createServiceApi(dependencies: ServiceApiDependencies) {
   if (!Number.isSafeInteger(dependencies.maxBodyBytes) || dependencies.maxBodyBytes < 1) throw new TypeError("본문 크기 제한이 필요합니다.");
   const cors = createCors({ allowedOrigins: dependencies.allowedOrigins, allowedMethods: ["GET", "POST"], allowedHeaders: ["authorization", "content-type", "apikey", "x-content-operation-id", "x-content-inspection-ticket"] });
-  return async (request: Request): Promise<Response> => {
-    const context = createRequestContext();
+  const dispatch = async (request: Request, context: RequestContext): Promise<Response> => {
     const preflight = cors.preflight(request, context);
     if (preflight) return preflight;
     let originAllowed = false;
@@ -233,5 +238,27 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
       const response = jsonFailure(error, context);
       return originAllowed ? cors.apply(response, request) : response;
     }
+  };
+  return async (request: Request): Promise<Response> => {
+    const context = createRequestContext();
+    const now = dependencies.diagnosticNow ?? (() => performance.now());
+    let started: number | undefined;
+    if (dependencies.diagnostics) {
+      try { const time = now(); if (Number.isFinite(time)) started = time; } catch { /* 진단 실패로 요청을 막지 않는다. */ }
+    }
+    const response = await dispatch(request, context);
+    if (dependencies.diagnostics && started !== undefined) {
+      try {
+        const ended = now();
+        const durationMs = typeof ended === "number" ? ended - started : NaN;
+        if (Number.isFinite(durationMs) && durationMs >= 0) {
+          // sink 완료를 기다리지 않는다. body/URL/헤더/원 오류는 읽거나 전달하지 않는다.
+          void Promise.resolve(dependencies.diagnostics.write({ requestId: context.requestId,
+            resultCode: request.method === "OPTIONS" && response.status === 204 ? "PREFLIGHT" : diagnosticResultCode(response.status),
+            status: response.status, durationMs })).catch(() => {});
+        }
+      } catch { /* 사용자 주입 logger/시계의 동기 실패도 HTTP 결과와 분리한다. */ }
+    }
+    return response;
   };
 }
