@@ -22,13 +22,16 @@ grant execute on function public.acquire_worker_run(integer,uuid),
  to ym_summary_invocation_synthetic;
 update private.worker_runtime_atomic_control set enabled=true where singleton;
 update private.worker_invocation_control set enabled=true where singleton;
+-- 이름 해석도 private USAGE를 요구하므로 owner가 지정 역할의 ACL을 검사한다.
+do $$begin
+ assert not has_table_privilege('ym_summary_invocation_synthetic','private.worker_invocations','SELECT');
+end;$$;
 select set_config('request.jwt.claim.role','service_role',true);
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 set local role ym_summary_invocation_synthetic;
 do $$declare req uuid:=gen_random_uuid();run uuid;v jsonb;finished jsonb;code text;begin
  assert current_user='ym_summary_invocation_synthetic';
  assert not has_schema_privilege(current_user,'private','USAGE');
- assert not has_table_privilege(current_user,'private.worker_invocations','SELECT');
  assert not pg_has_role(current_user,'service_role','USAGE');
  assert not pg_has_role(current_user,'service_role','SET');
  assert not has_function_privilege(current_user,'public.publish_review_summary_for_job(uuid,uuid,text,uuid[],text,text,text,uuid,text)','EXECUTE');
