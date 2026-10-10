@@ -363,10 +363,10 @@ def main():
                 try:
                     result=subprocess.run([args.node,'--experimental-strip-types',str(Path(__file__).with_name('isolated_summary_factory.ts')),str(path)],capture_output=True,text=True,timeout=150)
                     output=json.loads(result.stdout.strip().splitlines()[-1])
-                    safe_code=output.get('code','')
-                    if not isinstance(safe_code,str) or not re.fullmatch('SUMMARY_CHECK_[A-Z0-9_]+|SUMMARY_BARRIER_TIMEOUT',safe_code):safe_code='SUMMARY_FACTORY_FAILED'
+                    factory_failure_code=output.get('code','')
+                    if not isinstance(factory_failure_code,str) or not re.fullmatch('SUMMARY_CHECK_[A-Z0-9_]+|SUMMARY_BARRIER_TIMEOUT',factory_failure_code):factory_failure_code='SUMMARY_FACTORY_FAILED'
                     if result.returncode!=0 or output['status']!='PASS' or runner.failed:
-                        error=ValueError(getattr(runner,'failure_code',safe_code))
+                        error=ValueError(getattr(runner,'failure_code',factory_failure_code))
                         error.summary_diagnostic=getattr(runner,'rpc_failure',{'stage':runner.stage,'code':str(error)})
                         raise error
                     results.append(output)
