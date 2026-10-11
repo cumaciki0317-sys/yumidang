@@ -126,6 +126,16 @@
         "tests/database/minkyu/test_production_preparation.py",
         "tests/integration/minkyu/product_connection_restore108_local.py"
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 경로만 민규로 재배정",
+      "scope": "실제 signedAuth observer 연결의 기존 회귀 파일 한 개만 추가 이관. 나머지 종현·성호 경로 유지.",
+      "paths": [
+        "tests/database/jonghyun/test_isolated_observer.py"
+      ]
     }
   ],
   "rules": [
@@ -491,6 +501,10 @@
     },
     {
       "path": "tests/integration/minkyu/product_connection_restore108_local.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/database/jonghyun/test_isolated_observer.py",
       "owner": "minkyu"
     }
   ]
