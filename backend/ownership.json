@@ -106,6 +106,26 @@
         "tools/local/",
         "tests/"
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 필요한 경로만 민규로 재배정",
+      "scope": "백엔드100 실제 로컬 Auth·AI24 준비/재개·관찰·최종복원/배포준비의 아래11개 경로만 이관한다. 종현 나머지 경로와 성호 UI 담당은 유지한다. VM 재시작·운영 변경·실회원 HOLD 조건은 유지한다.",
+      "paths": [
+        "tests/integration/jonghyun/isolated_ai_contracts.py",
+        "tests/integration/jonghyun/isolated_ai_factory.ts",
+        "tools/local/prepare_isolated_midnight.py",
+        "tools/local/observe_isolated.py",
+        "tools/local/run_database_tests.py",
+        "tests/database/jonghyun/test_isolated_midnight_preparation.py",
+        "tests/database/minkyu/test_signed_auth_binding.py",
+        "tests/database/minkyu/test_ai24_live_binding.py",
+        "tools/local/prepare_production_backend.py",
+        "tests/database/minkyu/test_production_preparation.py",
+        "tests/integration/minkyu/product_connection_restore108_local.py"
+      ]
     }
   ],
   "rules": [
@@ -427,6 +447,50 @@
     },
     {
       "path": "backend/ownership.json",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/integration/jonghyun/isolated_ai_contracts.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/integration/jonghyun/isolated_ai_factory.ts",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tools/local/prepare_isolated_midnight.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tools/local/observe_isolated.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tools/local/run_database_tests.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/database/jonghyun/test_isolated_midnight_preparation.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/database/minkyu/test_signed_auth_binding.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/database/minkyu/test_ai24_live_binding.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tools/local/prepare_production_backend.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/database/minkyu/test_production_preparation.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/integration/minkyu/product_connection_restore108_local.py",
       "owner": "minkyu"
     }
   ]
