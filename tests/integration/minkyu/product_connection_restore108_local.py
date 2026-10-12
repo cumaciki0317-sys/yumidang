@@ -1775,8 +1775,8 @@ NATIVE_BACKUP_ACL_QUERY="""select jsonb_build_object(
 'defaults',(select coalesce(jsonb_agg(jsonb_build_array(pg_get_userbyid(d.defaclrole),coalesce(n.nspname,''),d.defaclobjtype,array(select a::text from unnest(d.defaclacl)a order by a::text))order by pg_get_userbyid(d.defaclrole),coalesce(n.nspname,''),d.defaclobjtype),'[]')from pg_default_acl d left join pg_namespace n on n.oid=d.defaclnamespace),
 'dbRoleSettings',(select coalesce(jsonb_agg(jsonb_build_array(coalesce(d.datname,''),case when s.setrole=0 then''else pg_get_userbyid(s.setrole)end,s.setconfig)order by coalesce(d.datname,''),case when s.setrole=0 then''else pg_get_userbyid(s.setrole)end),'[]')from pg_db_role_setting s left join pg_database d on d.oid=s.setdatabase));"""
 NATIVE_BACKUP_PERMISSION_QUERY="""select coalesce(jsonb_agg(jsonb_build_array(r.rolname,x.kind,x.name,x.privilege,x.allowed)order by r.rolname,x.kind,x.name,x.privilege),'[]')from(select rolname from pg_roles union select 'public')r cross join lateral(
- select 'database'kind,current_database()name,v privilege,has_database_privilege(r.rolname,current_database(),v)allowed from unnest(array['CONNECT','CREATE','TEMPORARY','CONNECT WITH GRANT OPTION','CREATE WITH GRANT OPTION','TEMPORARY WITH GRANT OPTION'])v
- union all select 'schema',nspname,v,has_schema_privilege(r.rolname,oid,v)from pg_namespace cross join unnest(array['USAGE','CREATE','USAGE WITH GRANT OPTION','CREATE WITH GRANT OPTION'])v where left(nspname,3)<>'pg_'and nspname<>'information_schema'
+ select 'database'kind,current_database()::text name,v privilege,has_database_privilege(r.rolname,current_database(),v)allowed from unnest(array['CONNECT','CREATE','TEMPORARY','CONNECT WITH GRANT OPTION','CREATE WITH GRANT OPTION','TEMPORARY WITH GRANT OPTION'])v
+ union all select 'schema',nspname::text,v,has_schema_privilege(r.rolname,oid,v)from pg_namespace cross join unnest(array['USAGE','CREATE','USAGE WITH GRANT OPTION','CREATE WITH GRANT OPTION'])v where left(nspname,3)<>'pg_'and nspname<>'information_schema'
  union all select 'table',format('%I.%I',n.nspname,c.relname),v,has_table_privilege(r.rolname,c.oid,v)from pg_class c join pg_namespace n on n.oid=c.relnamespace cross join unnest(array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN','SELECT WITH GRANT OPTION','INSERT WITH GRANT OPTION','UPDATE WITH GRANT OPTION','DELETE WITH GRANT OPTION','TRUNCATE WITH GRANT OPTION','REFERENCES WITH GRANT OPTION','TRIGGER WITH GRANT OPTION','MAINTAIN WITH GRANT OPTION'])v where c.relkind in('r','p','v','m','f')and left(n.nspname,3)<>'pg_'and n.nspname<>'information_schema'
  union all select 'column',format('%I.%I.%I',n.nspname,c.relname,a.attname),v,has_column_privilege(r.rolname,c.oid,a.attnum,v)from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace cross join unnest(array['SELECT','INSERT','UPDATE','REFERENCES','SELECT WITH GRANT OPTION','INSERT WITH GRANT OPTION','UPDATE WITH GRANT OPTION','REFERENCES WITH GRANT OPTION'])v where a.attnum>0 and not a.attisdropped and c.relkind in('r','p','v','m','f')and left(n.nspname,3)<>'pg_'and n.nspname<>'information_schema'
  union all select 'sequence',format('%I.%I',n.nspname,c.relname),v,has_sequence_privilege(r.rolname,c.oid,v)from pg_class c join pg_namespace n on n.oid=c.relnamespace cross join unnest(array['USAGE','SELECT','UPDATE','USAGE WITH GRANT OPTION','SELECT WITH GRANT OPTION','UPDATE WITH GRANT OPTION'])v where c.relkind='S'and left(n.nspname,3)<>'pg_'and n.nspname<>'information_schema'
@@ -1899,9 +1899,58 @@ def native_backup_database_archive(toc,state):
  return {'database':'postgres','owner':owner,'tocEntries':entries,'tocSha256':final_digest(toc),'sourceAuthoritySha256':final_digest(final_canonical(state['rawAuthority'])),'metadataOrigin':'ORIGINAL_PG_DUMP_ARCHIVE','noSyntheticDatabaseMetadata':True}
 
 
+def native_backup_permissions(query,name):
+ """원 실효 권한 행렬을 역할별로 읽고 모든 key의 완료를 확인한다."""
+ def read(statement):return platform_json(query(name,"set local statement_timeout='5s';"+statement))
+ roster_sql="select coalesce(json_agg(rolname order by rolname),'[]')from(select rolname from pg_roles union select 'public')r;"
+ roles=read(roster_sql)
+ assert isinstance(roles,list)and roles and 'public'in roles and len(set(roles))==len(roles),'NATIVE_PERMISSION_ROLE_ROSTER'
+ assert all(isinstance(role,str)and role and '\x00'not in role and len(role.encode('utf8'))<=63 for role in roles),'NATIVE_PERMISSION_ROLE_NAME'
+ authority=read(NATIVE_BACKUP_ACL_QUERY)
+ assert isinstance(authority,dict)and set(authority)=={'database','schemas','relations','columns','functions','defaults','dbRoleSettings'},'NATIVE_PERMISSION_AUTHORITY_FIELDS'
+ role_sql="select jsonb_build_object('roles',(select jsonb_agg(to_jsonb(r)-'oid'order by rolname)from pg_roles r),'memberships',(select coalesce(jsonb_agg(to_jsonb(m)order by roleid,member,grantor),'[]')from pg_auth_members m));"
+ role_state=read(role_sql)
+ assert isinstance(role_state,dict)and set(role_state)=={'roles','memberships'}and isinstance(role_state['roles'],list)and isinstance(role_state['memberships'],list),'NATIVE_PERMISSION_ROLE_METADATA'
+ assert {r['rolname']for r in role_state['roles']}|{'public'}==set(roles),'NATIVE_PERMISSION_ROLE_METADATA_INCOMPLETE'
+ original="(select rolname from pg_roles union select 'public')r"
+ assert NATIVE_BACKUP_PERMISSION_QUERY.count(original)==1,'NATIVE_PERMISSION_ORIGINAL_ROSTER_CHANGED'
+ def scoped(role):
+  # UTF-8 hex는 따옴표·역슬래시·SQL 설정에 영향을 받지 않는다.
+  literal="(select convert_from(decode('"+role.encode('utf8').hex()+"','hex'),'UTF8')::name rolname)r"
+  return NATIVE_BACKUP_PERMISSION_QUERY.replace(original,literal)
+ expected_sql=scoped('public')
+ expressions=('has_database_privilege(r.rolname,current_database(),v)',
+  'has_schema_privilege(r.rolname,oid,v)','has_table_privilege(r.rolname,c.oid,v)',
+  'has_column_privilege(r.rolname,c.oid,a.attnum,v)','has_sequence_privilege(r.rolname,c.oid,v)',
+  'has_function_privilege(r.rolname,p.oid,v)')
+ for expression in expressions:
+  assert expected_sql.count(expression)==1,'NATIVE_PERMISSION_ORIGINAL_EXPRESSION_CHANGED'
+  expected_sql=expected_sql.replace(expression,'(true)')
+ expected=read(expected_sql);ordered=[];keys=set()
+ assert isinstance(expected,list)and expected,'NATIVE_PERMISSION_EMPTY_INVENTORY'
+ for row in expected:
+  assert isinstance(row,list)and len(row)==5 and row[0]=='public'and row[4]is True and all(isinstance(x,str)and x for x in row[:4]),'NATIVE_PERMISSION_INVENTORY_ROW'
+  key=tuple(row[1:4]);assert key not in keys,'NATIVE_PERMISSION_INVENTORY_DUPLICATE';keys.add(key);ordered.append(key)
+ assert len([key for key in keys if key[0]=='database'])==6,'NATIVE_PERMISSION_DATABASE_INVENTORY'
+ result=[]
+ for role in roles:
+  chunk=read(scoped(role));seen={}
+  assert isinstance(chunk,list),'NATIVE_PERMISSION_CHUNK_TYPE'
+  for row in chunk:
+   assert isinstance(row,list)and len(row)==5 and row[0]==role and type(row[4])is bool and all(isinstance(x,str)and x for x in row[:4]),'NATIVE_PERMISSION_CHUNK_ROW'
+   key=tuple(row[1:4]);assert key in keys and key not in seen,'NATIVE_PERMISSION_CHUNK_EXTRA_OR_DUPLICATE';seen[key]=row
+  assert set(seen)==keys,'NATIVE_PERMISSION_CHUNK_INCOMPLETE'
+  result.extend(seen[key]for key in ordered)
+ assert read(roster_sql)==roles,'NATIVE_PERMISSION_ROLE_ROSTER_CHANGED'
+ assert read(expected_sql)==expected,'NATIVE_PERMISSION_OBJECT_INVENTORY_CHANGED'
+ assert read(NATIVE_BACKUP_ACL_QUERY)==authority,'NATIVE_PERMISSION_CATALOG_AUTHORITY_CHANGED'
+ assert read(role_sql)==role_state,'NATIVE_PERMISSION_ROLE_METADATA_CHANGED'
+ return result
+
+
 def native_backup_state(query,helper,name):
  from pathlib import PurePosixPath
- value={'snapshot':helper.normalized_snapshot(name),'rawAuthority':platform_json(query(name,NATIVE_BACKUP_ACL_QUERY)),'effectivePrivileges':platform_json(query(name,NATIVE_BACKUP_PERMISSION_QUERY)),'sequences':{}}
+ value={'snapshot':helper.normalized_snapshot(name),'rawAuthority':platform_json(query(name,NATIVE_BACKUP_ACL_QUERY)),'effectivePrivileges':native_backup_permissions(query,name),'sequences':{}}
  seq=platform_json(query(name,"select coalesce(json_agg(json_build_array(n.nspname,c.relname)order by n.nspname,c.relname),'[]')from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relkind='S'and left(n.nspname,3)<>'pg_'and n.nspname<>'information_schema';"))
  for schema,table in seq:
   relation='"'+schema.replace('"','""')+'"."'+table.replace('"','""')+'"';value['sequences'][schema+'.'+table]=platform_json(query(name,'select json_build_array(last_value,is_called)from '+relation+';'))
@@ -2076,7 +2125,7 @@ def run_native_final_backup(args):
   # tar stdout is captured by attached start, never Docker logs (LogDriver=none).
   archive=attached(utility);assert own(utility)['State']['ExitCode']==0,'NATIVE_BACKUP_ARCHIVE_UTILITY_FAILED';stop(utility)
   archived=native_backup_archive(archive);assert archived=={k:{f:v for f,v in item.items()if f not in('nlink','xattrs')}for k,item in prebackup['files'].items()},'NATIVE_BACKUP_TAR_FILES_CHANGED'
-  assert checkpoint(source)=={k:v for k,v in prebackup.items()if k!='files'},'NATIVE_BACKUP_SOURCE_CHANGED_DURING_DUMP';archive_database=native_backup_database_archive(docker('exec','-i',source,'pg_restore','--list',data=dump),prebackup);save('database-archive-metadata.json',archive_database);save('canonical-before-delete.dump',dump);save('roles-no-passwords.sql',roles);save('before-delete-storage.tar',archive)
+  assert checkpoint(source)=={k:v for k,v in prebackup.items()if k!='files'},'NATIVE_BACKUP_SOURCE_CHANGED_DURING_DUMP';archive_database=native_backup_database_archive(docker('exec','-i',source,'pg_restore','--create','--list',data=dump),prebackup);save('database-archive-metadata.json',archive_database);save('canonical-before-delete.dump',dump);save('roles-no-passwords.sql',roles);save('before-delete-storage.tar',archive)
   # A new utility reads the stopped API's volume; no protected source/service is restarted.
   meta_utility=create('source-metadata',platform['images']['storage']['imageId'],['-e',inventory_js],mounts=['type=volume,src='+source_volume+',dst=/mnt,readonly'],memory_mib=128,entrypoint='node',stdin=True)
   saved_inventory=native_backup_inventory(platform_json(attached(meta_utility,b'{}')));assert own(meta_utility)['State']['ExitCode']==0 and saved_inventory==prebackup['files'],'NATIVE_BACKUP_STOPPED_VOLUME_CHANGED';stop(meta_utility);save('backup-files-xattrs-private.json',saved_inventory)
@@ -2118,7 +2167,7 @@ def run_native_final_backup(args):
   assert target not in(source,protected)and owned[target]['kind']=='db'and owned[target]['image']==platform['images']['db']['imageId']and source_own()['State']['Running']is False,'NATIVE_BACKUP_FRESH_TARGET_DROP_SCOPE';caps(target)
   assert query(target,"select count(*)from pg_class c join pg_namespace n on n.oid=c.relnamespace where left(n.nspname,3)<>'pg_'and n.nspname<>'information_schema'and c.relkind in('r','p','v','m','f','S');").strip()==b'0','NATIVE_BACKUP_TARGET_EMPTY_BEFORE_FORCE_DROP'
   assert query(target,'show cron.database_name;show cron.launch_active_jobs;').split()==[b'postgres',b'off'],'NATIVE_BACKUP_TARGET_CRON_RESTORE_DATABASE_REQUIRED'
-  assert native_backup_database_archive(docker('exec','-i',target,'pg_restore','--list',data=dump),prebackup)==archive_database,'NATIVE_BACKUP_ORIGINAL_DATABASE_ARCHIVE_CHANGED'
+  assert native_backup_database_archive(docker('exec','-i',target,'pg_restore','--create','--list',data=dump),prebackup)==archive_database,'NATIVE_BACKUP_ORIGINAL_DATABASE_ARCHIVE_CHANGED'
   save('database-restore-intent.json',{'dumpSha256':final_digest(dump),'databaseArchiveMetadataSha256':final_digest(final_canonical(archive_database)),'singleTransaction':False,'recreatedFromOriginalArchive':True,'freshTargetOnlyForceDrop':True,'targetId':target,'attempt':1,'partialUnknownNoReplay':True})
   docker('exec',target,'dropdb','-h','/var/run/postgresql','-U','supabase_admin','--force','--maintenance-db=template1','postgres')
   docker('exec','-i',target,'pg_restore','-h','/var/run/postgresql','-U','supabase_admin','-d','template1','--create','--exit-on-error',data=dump)

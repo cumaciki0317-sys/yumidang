@@ -12,8 +12,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import uuid
+from contextlib import ExitStack
 
 REPO=Path(__file__).resolve().parents[3]
 RUNNER=REPO/'tests/integration/jonghyun/isolated_ai_contracts.py'
@@ -390,13 +391,50 @@ class BindingTests(unittest.TestCase):
         result=json.loads((runner.evidence/'cleanup.json').read_bytes())
         self.assertFalse(result['originalProtectedRowsPreserved']);self.assertEqual(result['protectedBudgetDelta'],'COMMITTED_NOT_ROLLED_BACK')
 
-    def test_original_python_functions_exact(self):
-        old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout
-        before=ast.parse(old);after=ast.parse(RUNNER.read_text())
+    def assert_original_python_preserved(self,before,after):
+        before=copy.deepcopy(before)
+        original_paths=('tests/integration/jonghyun/isolated_ai_contracts.py','tests/integration/jonghyun/isolated_ai_factory.ts',
+            'tools/local/run_database_tests.py','tools/local/prepare_database.py','tools/local/prepare_migrations.py')
+        additions=('tests/integration/minkyu/product_connection_restore108_local.py','tests/integration/minkyu/member_cleanup_reconcile_local.py')
+        history=ast.parse("if json.loads(self.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))!=self.target['versions']:\n raise ValueError('APPLIED_HISTORY_CHANGED')").body[0]
+        replacement=ast.parse('signed_verify_history(self)').body[0]
+        dump=lambda node:ast.dump(node,include_attributes=False)
+        for node in before.body:
+            if isinstance(node,ast.FunctionDef)and node.name=='signed_source_pins':
+                assignments=[n for n in node.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='paths'for t in n.targets)]
+                self.assertEqual(len(assignments),1)
+                paths=ast.literal_eval(assignments[0].value)
+                self.assertIn(paths,(original_paths,original_paths+additions))
+                if paths==original_paths:assignments[0].value=ast.parse(repr(original_paths+additions),mode='eval').body
+            if isinstance(node,ast.ClassDef)and node.name in ('SignedRunner','SignedMidnightRunner'):
+                name='prepare'if node.name=='SignedRunner'else'activate_fixture_registration'
+                method=next(n for n in node.body if isinstance(n,ast.FunctionDef)and n.name==name)
+                matching=[i for i,n in enumerate(method.body)if dump(n)==dump(history)]
+                if matching:
+                    self.assertEqual(len(matching),1);method.body[matching[0]]=copy.deepcopy(replacement)
+                else:self.assertEqual(sum(dump(n)==dump(replacement)for n in method.body),1)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
-                self.assertEqual(ast.dump(node,include_attributes=False),ast.dump(current[node.name],include_attributes=False),node.name)
+                self.assertEqual(dump(node),dump(current[node.name]),node.name)
+
+    def test_original_python_functions_exact(self):
+        old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout
+        self.assert_original_python_preserved(ast.parse(old),ast.parse(RUNNER.read_text()))
+
+    def test_reviewed_helper_pins_and_history_only_against_root7898(self):
+        old=subprocess.run(['git','show','7898a83:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout
+        before=ast.parse(old);after=ast.parse(RUNNER.read_text())
+        self.assert_original_python_preserved(before,after)
+        extra=copy.deepcopy(after)
+        pins=next(n for n in extra.body if isinstance(n,ast.FunctionDef)and n.name=='signed_source_pins')
+        paths=next(n for n in pins.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='paths'for t in n.targets))
+        paths.value.elts.append(ast.Constant(value='unreviewed/helper.py'))
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(before,extra)
+        altered=copy.deepcopy(after)
+        runner=next(n for n in altered.body if isinstance(n,ast.ClassDef)and n.name=='SignedRunner')
+        next(n for n in runner.body if isinstance(n,ast.FunctionDef)and n.name=='clean').body.append(ast.Pass())
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(before,altered)
 
     def test_original_ts_units_byte_exact(self):
         path='tests/integration/jonghyun/isolated_ai_factory.ts'
@@ -431,5 +469,343 @@ const response=await handler(new Request('http://127.0.0.1:56541/functions/v1/ai
 """%(json.dumps((REPO/'backend/supabase/functions/ai-chat/index.ts').as_uri()),json.dumps(token),json.dumps(user['userId']))
         result=subprocess.run([node,'--experimental-strip-types','--input-type=module','-e',script],capture_output=True,text=True,timeout=30)
         self.assertEqual(result.returncode,0,'offline bearer model failed: '+str(result.returncode));self.assertEqual(result.stdout.strip(),'PASS_AUTH_FORWARD_MODEL')
+
+
+class FakeProvisioningPorts:
+    """모형 Auth/DB만 사용한다. 실제 계정·HTTP·도커 생성 0이다."""
+    def __init__(self, value):
+        self.value=value;self.calls=[];self.users={};self.empty=True;self.memory=1100000
+        self.lose_create=False;self.lose_login=False;self.lose_delete=False;self.wrong_jwt=False
+        self.session_ok=True;self.authority_changed=False;self.links=[];self.accounts=[];self.extra_row=False;self.controls_open=False
+    def identity(self):return self.value['containers']
+    def empty_auth(self):return self.empty
+    def memory_kib(self):return self.memory
+    def snapshot(self):
+        rows={t:{}for t in module.PROVISION_OWNED_TABLES};rows.update({'storage.objects':{},'private.worker_invocations':{}})
+        for table,entries in self.added_rows(rows,self.accounts).items():
+            rows[table]={e['rowSha256']:1 for e in entries.values()}
+        if self.extra_row:rows['private.worker_invocations']['f'*64]=1
+        return {'rows':rows,'authoritySha256':'b'*64 if self.authority_changed and self.users else'a'*64}
+    def closed_controls(self):return {**{k:False for k in module.PROVISION_CLOSED_CONTROLS},'cronLaunchActiveJobs':'off',**({'worker_invocation_control':True}if self.controls_open else{})}
+    def added_rows(self,baseline,accounts):
+        result={t:{}for t in module.PROVISION_OWNED_TABLES}
+        for account in accounts:
+            for table in result:
+                for operation in (('login','user_signedup')if table=='auth.audit_log_entries'else('row',)):
+                    key=hashlib.sha256((table+account['userId']+operation).encode()).hexdigest()
+                    result[table][key[:32]]={'rowSha256':key,'ownerUserId':account['userId'],'operation':operation}
+        return result
+    def resolve_email(self,email):return self.users.get(email,{}).get('id')
+    def session_proof(self,account):return self.session_ok
+    def link_profile(self,identifier):self.links.append(identifier);return True
+    def unlink_profile(self,identifier):self.links=[u for u in self.links if u!=identifier]
+    def verify_population(self,accounts):self.accounts=accounts;return len(self.users)==len(self.links)==len(accounts)==6
+    def request(self,method,path,payload=None,token=None,admin=False):
+        self.calls.append((method,path))
+        if method=='POST'and path=='/admin/users':
+            user={'id':str(uuid.uuid4()),'email':payload['email'],'role':'authenticated','is_anonymous':False};self.users[user['email']]=user
+            if self.lose_create:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')
+            return 200,user
+        if method=='POST':
+            import time
+            user=self.users[payload['email']]
+            if self.lose_login:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')
+            claims={'sub':user['id'],'session_id':str(uuid.uuid4()),'exp':int(time.time())+3600,'email':user['email'],
+                    'iss':self.value['origin']+'/auth/v1','aud':'authenticated','role':'authenticated','is_anonymous':False}
+            if self.wrong_jwt:claims['iss']='https://outside.invalid'
+            return 200,{'user':user,'access_token':jwt(claims)}
+        if path=='/user':
+            claims=module.signed_claims(token);return 200,self.users[claims['email']]
+        identifier=path.rsplit('/',1)[1]
+        matching=next((u for u in self.users.values()if u['id']==identifier),None)
+        if method=='DELETE':
+            if matching:self.users.pop(matching['email'])
+            if self.lose_delete:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')
+            return 200,{}
+        return (200,matching)if matching else(404,{})
+
+
+class ProvisioningFunctionTests(unittest.TestCase):
+    setUp=BindingTests.setUp
+    tearDown=BindingTests.tearDown
+    write=BindingTests.write
+    def reviewed(self,ports=None):
+        import time
+        self.ports=ports or FakeProvisioningPorts(self.value)
+        return module.ReviewedSignedProvisioning('offline-function-test-only',self.root,self.value['sourcePins'],
+            self.value['containers'],self.value['credentials'],int(time.time())+600,self.ports)
+    def invoke(self,reviewed=None):
+        with patch.object(module,'provisioning_source_check',return_value='a'*40),patch.object(module,'signed_prepared_target',return_value=self.target),patch.object(module,'signed_source_pins',return_value=self.value['sourcePins']):
+            return module.provision_signed_accounts(self.root,reviewed or self.reviewed())
+    def failure(self):
+        paths=list(self.root.glob('auth-provision-*/failure.json'));self.assertEqual(len(paths),1)
+        return json.loads(paths[0].read_text())
+    def test_six_actual_transport_model_calls_emit_private_original_binding_only(self):
+        receipt=self.invoke();binding=self.root/'signed-ai-binding-private.json';value=json.loads(binding.read_bytes())
+        self.assertEqual(receipt['status'],'PASS_LOCAL_AUTH6_PROVISION_ONLY')
+        self.assertEqual(len(value['accounts']),6);self.assertFalse(value['approvedByRoot']);self.assertFalse(value['dockerSlotReady'])
+        self.assertEqual(sum(x==('POST','/admin/users')for x in self.ports.calls),6)
+        self.assertEqual(sum(x==('POST','/token?grant_type=password')for x in self.ports.calls),6)
+        self.assertEqual(sum(x==('GET','/user')for x in self.ports.calls),6)
+        self.assertEqual(binding.stat().st_mode&0o777,0o600)
+        self.assertNotIn('accessToken',json.dumps(receipt));self.assertEqual(receipt['actualAI22AI23AI24'],'NOT_RUN')
+        for path in self.root.glob('auth-provision-*/*.json'):
+            self.assertNotIn('accessToken',path.read_text());self.assertEqual(path.stat().st_mode&0o777,0o600)
+    def test_producer_reserves_absent_evidence_then_original_cli_creates_it_once(self):
+        self.invoke();binding=self.root/'signed-ai-binding-private.json';value=json.loads(binding.read_bytes())
+        evidence=Path(value['evidenceRoot'])
+        self.assertEqual(evidence.parent,self.root);self.assertEqual(evidence,evidence.resolve())
+        self.assertFalse(evidence.exists());self.assertFalse(evidence.is_symlink())
+        creation_roots=list(self.root.glob('auth-provision-*'))
+        self.assertEqual(len(creation_roots),1);self.assertEqual(creation_roots[0].stat().st_mode&0o777,0o700)
+        # 오프라인 조립의 검토 flag 모형이다. 실제 실행 승인이나 Auth/DB 증거가 아니다.
+        value.update(approvedByRoot=True,dockerSlotReady=True);binding.write_text(json.dumps(value))
+        original_calls=list(self.ports.calls)
+        def stop_before_ports(runner):
+            self.assertEqual(runner.evidence,evidence)
+            self.assertTrue(evidence.is_dir());self.assertEqual(evidence.stat().st_mode&0o777,0o700)
+            raise RuntimeError('MODEL_STOP_BEFORE_RESOURCE_PORTS')
+        argv=['isolated_ai_contracts.py','--signed-auth','--signed-auth-binding',str(binding),
+            '--prepared-root',str(self.root),'--node',sys.executable,'--run']
+        with patch.object(module.sys,'argv',argv),patch.object(module,'signed_prepared_target',return_value=self.target),\
+                patch.object(module,'signed_source_pins',return_value=self.value['sourcePins']),\
+                patch.object(module.SignedRunner,'prepare',autospec=True,side_effect=stop_before_ports)as prepare,\
+                patch.object(module.signal,'signal'),patch.object(module.subprocess,'Popen',side_effect=AssertionError('resource child')):
+            with self.assertRaisesRegex(RuntimeError,'MODEL_STOP_BEFORE_RESOURCE_PORTS'):module.signed_main()
+            prepare.assert_called_once()
+            with self.assertRaises(FileExistsError):module.signed_main()
+            prepare.assert_called_once()
+        self.assertEqual(self.ports.calls,original_calls)
+        self.assertTrue((evidence/'failure.json').is_file());self.assertEqual(evidence.stat().st_mode&0o777,0o700)
+    def test_json_boolean_is_not_provisioning_authority(self):
+        with self.assertRaisesRegex(ValueError,'PROVISION_REVIEWED_CODE_REQUIRED'):
+            self.invoke({'approvedByRoot':True,'dockerSlotReady':True})
+    def test_initial_nonempty_target_or_low_headroom_creates_no_accounts(self):
+        reviewed=self.reviewed();self.ports.empty=False
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls,[]);self.assertEqual(self.failure()['attemptedCount'],0)
+    def test_initial_floor_failure_retains_exact_fixed_code_no_http(self):
+        reviewed=self.reviewed();self.ports.memory=1048575
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls,[]);self.assertEqual(self.failure()['code'],'PROVISION_RESOURCE_GUARD')
+    def test_ambiguous_create_get_only_recovery_never_recreates(self):
+        reviewed=self.reviewed();self.ports.lose_create=True
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+        self.assertEqual(self.ports.calls.count(('POST','/token?grant_type=password')),0)
+        self.assertEqual(len(self.ports.users),0);self.assertEqual(self.failure()['closedCount'],1)
+    def test_ambiguous_login_and_delete_each_have_one_wire_attempt(self):
+        reviewed=self.reviewed();self.ports.lose_login=True;self.ports.lose_delete=True
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls.count(('POST','/token?grant_type=password')),1)
+        self.assertEqual(sum(method=='DELETE'for method,path in self.ports.calls),1)
+        self.assertEqual(len(self.ports.users),0);self.assertTrue(self.failure()['noResend'])
+    def test_wrong_original_issuer_never_forwards_to_member_factory(self):
+        reviewed=self.reviewed();self.ports.wrong_jwt=True
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls.count(('GET','/user')),0);self.assertEqual(len(self.ports.users),0)
+        self.assertEqual(self.failure()['code'],'PROVISION_ORIGINAL_JWT_METADATA')
+    def test_db_session_negative_restores_only_owned_new_user(self):
+        reviewed=self.reviewed();self.ports.session_ok=False
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.links,[]);self.assertEqual(len(self.ports.users),0)
+        self.assertEqual(self.failure()['closedCount'],1)
+    def test_authority_drift_cannot_emit_signed_binding(self):
+        reviewed=self.reviewed();self.ports.authority_changed=True
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertFalse((self.root/'signed-ai-binding-private.json').exists());self.assertEqual(len(self.ports.users),0)
+        self.assertEqual(self.failure()['closedCount'],6)
+    def test_invalid_reviewed_target_binding_rejects_before_any_http(self):
+        reviewed=self.reviewed();reviewed.containers=copy.deepcopy(reviewed.containers);reviewed.containers['db']['id']='9'*64
+        with self.assertRaisesRegex(ValueError,'PROVISION_DATABASE_BINDING'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls,[])
+    def test_cleanup_identity_drift_never_deletes_uncertain_target(self):
+        reviewed=self.reviewed();self.ports.lose_login=True
+        original=self.ports.identity
+        self.ports.identity=lambda: {} if any(path.startswith('/token')for method,path in self.ports.calls)else original()
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(sum(method=='DELETE'for method,path in self.ports.calls),0)
+        self.assertEqual(self.failure()['status'],'UNKNOWN')
+
+    def test_delayed_create_first_absent_read_remains_unknown_not_closed(self):
+        reviewed=self.reviewed();self.ports.lose_create=True
+        self.ports.resolve_email=lambda email:None
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        failure=self.failure();self.assertEqual(failure['status'],'UNKNOWN')
+        self.assertEqual(failure['unknownPostCount'],1);self.assertEqual(failure['closedCount'],0)
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+        self.assertEqual(sum(method=='DELETE'for method,path in self.ports.calls),0)
+        self.assertEqual(len(self.ports.users),1)  # 먼저 absent read 뒤 도착할 수 있는 실제 효과의 모형.
+    def test_replaced_successful_create_uuid_is_not_adopted_for_cleanup(self):
+        reviewed=self.reviewed();self.ports.lose_login=True
+        original=self.ports.resolve_email
+        def replaced(email):
+            if any(path.startswith('/token')for method,path in self.ports.calls):return str(uuid.uuid4())
+            return original(email)
+        self.ports.resolve_email=replaced
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.failure()['status'],'UNKNOWN')
+        self.assertEqual(sum(method=='DELETE'for method,path in self.ports.calls),0)
+
+    def test_unrelated_private_addition_never_emits_signed_binding(self):
+        reviewed=self.reviewed()
+        original=self.ports.verify_population
+        def verified(accounts):self.ports.extra_row=True;return original(accounts)
+        self.ports.verify_population=verified
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertFalse((self.root/'signed-ai-binding-private.json').exists())
+        self.assertEqual(self.failure()['code'],'PROVISION_UNOWNED_ROW_CHANGED')
+    def test_open_database_control_rejects_before_any_create(self):
+        reviewed=self.reviewed();self.ports.controls_open=True
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls,[]);self.assertEqual(self.failure()['code'],'PROVISION_DATABASE_CONTROLS_OPEN')
+    def test_same_prepared_root_cannot_repeat_even_after_failure_cleanup(self):
+        reviewed=self.reviewed();self.ports.lose_login=True
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        before=list(self.ports.calls)
+        with self.assertRaisesRegex(ValueError,'PROVISION_PREVIOUS_ATTEMPT_PRESERVED'):self.invoke(reviewed)
+        self.assertEqual(self.ports.calls,before)
+
+    def test_audit_owner_and_operation_proof_cannot_use_unrelated_actor(self):
+        reviewed=self.reviewed();uids=[{'userId':str(uuid.uuid4())}for _ in range(6)]
+        added=self.ports.added_rows({},uids)
+        baseline={t:{}for t in module.PROVISION_OWNED_TABLES}
+        current={t:{row['rowSha256']:1 for row in rows.values()}for t,rows in added.items()}
+        module.provisioning_added_scope(baseline,current,added,uids)
+        for field,replacement in(('ownerUserId',str(uuid.uuid4())),('operation','user_deleted')):
+            changed=copy.deepcopy(added);entry=next(iter(changed['auth.audit_log_entries'].values()));entry[field]=replacement
+            with self.assertRaisesRegex(ValueError,'PROVISION_ADDED_ROW'):
+                module.provisioning_added_scope(baseline,current,changed,uids)
+    def test_fixed_audit_sql_uses_admin_traits_pair_and_real_login_actor(self):
+        ports=object.__new__(module.FixedSignedProvisioningPorts);queries=[]
+        ports.read_sql=lambda query,timeout:(queries.append(query)or'{}')
+        accounts=[{'userId':str(uuid.uuid4()),'sessionId':str(uuid.uuid4()),'authEmail':'synthetic-ai-fixed@example.invalid'}]
+        ports.added_rows({},accounts)
+        audit=next(q for q in queries if'from auth.audit_log_entries'in q)
+        self.assertIn("r.payload->'traits'->>'user_id'=a.user_id",audit)
+        self.assertIn("r.payload->'traits'->>'user_email'=a.email",audit)
+        self.assertIn("r.payload->>'actor_id'=a.user_id",audit)
+        self.assertIn("r.payload->>'actor_username'=a.email",audit)
+        self.assertNotIn('accessToken',audit)
+    def test_create_receipt_save_failure_still_binds_in_memory_original_uuid(self):
+        reviewed=self.reviewed();native=module.provisioning_json
+        def save(root,name,value):
+            if name=='account-0-create-outcome.json':
+                self.ports.resolve_email=lambda email:str(uuid.uuid4())
+                raise OSError('private failure not retained')
+            return native(root,name,value)
+        with patch.object(module,'provisioning_json',side_effect=save):
+            with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(sum(method=='DELETE'for method,path in self.ports.calls),0)
+        self.assertEqual(self.failure()['status'],'UNKNOWN')
+    def test_unlisted_error_text_is_not_saved_as_code(self):
+        reviewed=self.reviewed()
+        self.ports.memory_kib=lambda:(_ for _ in()).throw(ValueError('PROVISION_RAW_PRIVATE_SECRET'))
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        self.assertEqual(self.failure()['code'],'PROVISION_FAILED')
+        self.assertNotIn('RAW_PRIVATE_SECRET',json.dumps(self.failure()))
+
+class NativeSignedHistoryTests(unittest.TestCase):
+    setUp=BindingTests.setUp
+    tearDown=BindingTests.tearDown
+    write=BindingTests.write
+    def prepare_proofs(self):
+        canon=lambda v:json.dumps(v,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()
+        digest=lambda v:hashlib.sha256(canon(v)).hexdigest()
+        self.canonical_root=self.root/'canonical';self.canonical_root.mkdir(mode=0o700)
+        self.roles={'roles':[{'rolname':'postgres','rolsuper':False,'rolconfig':None},{'rolname':'supabase_admin','rolsuper':True,'rolconfig':None}],
+            'memberships':[['supabase_admin','postgres','supabase_admin',True,True,True]]}
+        self.schema='CREATE SCHEMA public;\nCREATE TABLE public.fixture (id uuid);'
+        self.state={'snapshot':{'catalog':self.schema,'roles':self.roles,'rows':{'private.fixture_'+str(i):'0:fixed'for i in range(178)}}}
+        self.source=self.root/'source-state-private.json';self.write(self.source,canon(self.state));source_sha=digest(self.state)
+        self.entries=[{'version':str(20261000000000+i),'path':'backend/supabase/migrations/'+str(20261000000000+i)+'_fixture.sql',
+            'sha256':hashlib.sha256(str(i).encode()).hexdigest(),'bytes':i+1}for i in range(119)]
+        self.manifest.write_bytes(canon({'config_overlay':{'api.port':56541},'migrations':self.entries}))
+        receipt={'status':'PASS_NATIVE_CANONICAL_119_APPLICATION_ONLY','migrationCount':119,'nativeDbId':module.NATIVE_SIGNED_SOURCE_ID,'orderedAppliedMigrations':self.entries}
+        self.write(self.canonical_root/'receipt.json',canon(receipt));inventory=[];file_map={}
+        for e in self.entries:
+            value={'commandExit':0,'nativeDbId':module.NATIVE_SIGNED_SOURCE_ID,'sha256':e['sha256'],'storedIn':'PRIVATE_RECEIPT_NOT_DB_HISTORY','version':e['version']}
+            name=e['version']+'-applied.json';raw=canon(value);self.write(self.canonical_root/name,raw);sha=hashlib.sha256(raw).hexdigest();file_map[name]=sha
+            inventory.append({'receipt':name,'version':e['version'],'sqlSha256':e['sha256'],'commandExit':0,'receiptSha256':sha})
+        self.constants={'NATIVE_SIGNED_SOURCE_STATE':self.source,'NATIVE_SIGNED_SOURCE_STATE_SHA':source_sha,
+            'NATIVE_SIGNED_CANONICAL_ROOT':self.canonical_root,'NATIVE_SIGNED_CANONICAL_RECEIPT_SHA':digest(receipt),
+            'NATIVE_SIGNED_APPLIED_INVENTORY_SHA':digest(inventory),'NATIVE_SIGNED_APPLIED_FILE_MAP_SHA':digest(file_map)}
+        self.pins=module.signed_source_pins();self.value['sourcePins']=self.pins
+        self.provenance={'version':1,'kind':'NATIVE119_RUNTIME_PROVENANCE','preparedRoot':str(self.root),'preparedManifestSha256':hashlib.sha256(self.manifest.read_bytes()).hexdigest(),
+            'sourceStatePath':str(self.source),'sourceStateSha256':source_sha,'cloneBaselineStateSha256':source_sha,
+            'canonicalRoot':str(self.canonical_root),'canonicalReceiptSha256':digest(receipt),'canonicalAppliedInventorySha256':digest(inventory),
+            'canonicalAppliedFileMapSha256':digest(file_map),'sourceCatalogSha256':hashlib.sha256(self.schema.encode()).hexdigest(),
+            'sourcePortableRolesSha256':digest(self.roles),'database':self.value['containers']['db'],'creatorCodeSha256':'c'*64}
+        self.provenance_path=self.root/'native119-runtime-provenance.json';self.write(self.provenance_path,canon(self.provenance))
+        self.runner=object.__new__(module.SignedRunner);self.runner.root=self.root;self.runner.binding=self.value
+        self.runner.target={**self.target,'versions':[e['version']for e in self.entries]};self.runner.base=['docker','--host','unix:///fixed/socket']
+        self.runner.signed_identity=Mock();self.runner.sql=Mock(side_effect=AssertionError('DB history forbidden in native lineage'))
+        self.commands=[];self.schema_drift=False;self.role_drift=False;self.helper_drift=False
+    def fake_process(self,command,**kwargs):
+        self.commands.append(command);self.assertEqual(kwargs['timeout'],5)
+        if command[0]=='git':
+            data=(module.REPO/command[-1].removeprefix('HEAD:')).read_bytes()
+            return subprocess.CompletedProcess(command,0,b'# drift'if self.helper_drift else data,b'')
+        self.assertEqual(command[:3],self.runner.base);self.assertIn(self.target['id'],command)
+        if 'pg_dump'in command:
+            self.assertIn('PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=5000 -c lock_timeout=1000',command)
+            self.assertIn('--schema-only',command);self.assertIn('/var/run/postgresql',command)
+            value=self.schema+('\nCREATE TABLE public.drift (id uuid);'if self.schema_drift else'')
+            return subprocess.CompletedProcess(command,0,('-- header\n\\restrict fixed\n'+value+'\n\\unrestrict fixed\n').encode(),b'')
+        self.assertIn('psql',command);self.assertIn('/var/run/postgresql',command)
+        self.assertTrue(kwargs['input'].startswith(b'begin read only;'));self.assertIn(b"statement_timeout='5s'",kwargs['input'])
+        self.assertNotIn(b'auth.users',kwargs['input']);self.assertNotIn(b'schema_migrations',kwargs['input'])
+        roles=copy.deepcopy(self.roles)
+        for i,role in enumerate(roles['roles']):role['oid']=12345+i
+        if self.role_drift:roles['memberships'][0][-1]=False
+        return subprocess.CompletedProcess(command,0,json.dumps(roles).encode(),b'')
+    def verify(self):
+        with ExitStack()as stack:
+            for k,v in self.constants.items():stack.enter_context(patch.object(module,k,v))
+            stack.enter_context(patch.object(module,'signed_source_pins',return_value=self.pins))
+            stack.enter_context(patch.object(module.subprocess,'run',side_effect=self.fake_process))
+            return module.signed_verify_history(self.runner)
+    def test_native_actual_catalog_role_ports_match_without_dbhistory(self):
+        self.prepare_proofs();result=self.verify()
+        self.assertEqual(result['scope'],'NATIVE119_SCHEMA_ROLE_MATCH_LINEAGE');self.assertEqual(result['migrationReplay'],'NOT_RUN')
+        self.runner.sql.assert_not_called();self.runner.signed_identity.assert_called_once()
+        self.assertEqual(sum('pg_dump'in cmd for cmd in self.commands),1);self.assertEqual(sum('psql'in cmd for cmd in self.commands),1)
+    def test_ordinary_history_exact_and_missing_native_proof_is_no_pass(self):
+        runner=object.__new__(module.SignedRunner);runner.root=self.root;runner.target={'versions':['119']};runner.sql=Mock(return_value='["119"]')
+        self.assertEqual(module.signed_verify_history(runner)['method'],'SUPABASE_DB_HISTORY')
+        runner.sql.assert_called_once_with('select json_agg(version order by version)from supabase_migrations.schema_migrations;')
+        runner.sql.return_value='[]'
+        with self.assertRaisesRegex(ValueError,'APPLIED_HISTORY_CHANGED'):module.signed_verify_history(runner)
+        runner.sql.side_effect=ValueError('NATIVE_DB_HISTORY_ABSENT')
+        with self.assertRaisesRegex(ValueError,'NATIVE_DB_HISTORY_ABSENT'):module.signed_verify_history(runner)
+    def test_forged_provenance_reaches_no_live_db_ports(self):
+        self.prepare_proofs();mutations=[lambda v:v.update(version=True),lambda v:v.update(sourceStatePath='/private/tmp/other'),
+            lambda v:v.update(sourceStateSha256='0'*64),lambda v:v.update(canonicalAppliedInventorySha256='0'*64),
+            lambda v:v.update(preparedManifestSha256='0'*64),lambda v:v['database'].update(id='9'*64),
+            lambda v:v.update(sourceCatalogSha256='0'*64),lambda v:v.update(approvedByRoot=True)]
+        for mutate in mutations:
+            with self.subTest(index=mutations.index(mutate)):
+                v=copy.deepcopy(self.provenance);mutate(v);self.provenance_path.write_text(json.dumps(v));self.commands=[]
+                with self.assertRaises(ValueError):self.verify()
+                self.assertFalse(any(cmd[0]=='docker'for cmd in self.commands));self.runner.sql.assert_not_called()
+    def test_missing_changed_receipt_and_source_fail_closed(self):
+        self.prepare_proofs();file=self.canonical_root/(self.entries[0]['version']+'-applied.json');raw=file.read_bytes();file.unlink()
+        with self.assertRaisesRegex(ValueError,'APPLIED_SET'):self.verify()
+        self.write(file,raw);v=json.loads(raw);v['sha256']='0'*64;file.write_text(json.dumps(v))
+        with self.assertRaisesRegex(ValueError,'APPLIED_RECEIPT'):self.verify()
+        file.write_bytes(raw);self.source.write_bytes(self.source.read_bytes()+b' ')
+        with self.assertRaisesRegex(ValueError,'SOURCE_STATE_CHANGED'):self.verify()
+        self.assertFalse(any(cmd[0]=='docker'for cmd in self.commands))
+    def test_current_schema_and_membership_drift_rejected(self):
+        self.prepare_proofs()
+        for kind in ('schema','role'):
+            with self.subTest(kind=kind):
+                self.schema_drift=kind=='schema';self.role_drift=kind=='role';self.commands=[]
+                with self.assertRaisesRegex(ValueError,'CURRENT_SCHEMA_ROLES_CHANGED'):self.verify()
+                self.assertEqual(sum('pg_dump'in cmd for cmd in self.commands),1);self.assertEqual(sum('psql'in cmd for cmd in self.commands),1)
+    def test_uncommitted_helper_never_evaluated_or_given_live_db_ports(self):
+        self.prepare_proofs();self.helper_drift=True
+        with self.assertRaisesRegex(ValueError,'HELPER_UNCOMMITTED'):self.verify()
+        self.assertFalse(any(cmd[0]=='docker'for cmd in self.commands))
 
 if __name__=='__main__':unittest.main()

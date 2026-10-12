@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "recordedAt": "2026-10-11T17:00:41.199908+00:00",
+  "recordedAt": "2026-10-12T17:14:22.949057+00:00",
   "actor": "minkyu",
   "branch": "minkyu/backend100-20261012",
   "policyHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
-  "sourceState": "REVIEWED_WORKTREE_UNCOMMITTED",
+  "sourceState": "SUCCESSOR_WORKTREE_AFTER_USER_APPROVED_LOCAL_COMMIT_7898a83",
   "overall": {
     "completed": 22,
     "total": 28,
@@ -20,8 +20,8 @@
       "bytes": 86705
     },
     "tests/integration/jonghyun/isolated_ai_contracts.py": {
-      "sha256": "146046f638c7dd790d8647ab13eb8e8cab138296b93faad36ec9e1a9c7fae584",
-      "bytes": 80383
+      "sha256": "5ae7399bd13f2303dc2a4fd214d21a8d8ae21598213f49151184a41e74745456",
+      "bytes": 118554
     },
     "tests/integration/jonghyun/isolated_ai_factory.ts": {
       "sha256": "1d75f06e343e7d9296fa80f0eafcf66f82f0c6e7881f66452c449315e94830c7",
@@ -36,24 +36,33 @@
       "bytes": 8046
     },
     "tests/database/minkyu/test_signed_auth_binding.py": {
-      "sha256": "3e8dc4e7907d40794a99a0ef8c0e43dedb7687ba85e78dd463321b920a2d8cdc",
-      "bytes": 33968
+      "sha256": "4cd187e53e13d622da76477437d676dfafb94bb4295d72ef2887b692d3c47861",
+      "bytes": 64076
     },
     "tests/database/minkyu/test_ai24_live_binding.py": {
       "sha256": "6637e45ae4b5b77c7cc9f06dc68c76fd83aedd9ae47d55e0ba33784502f15549",
       "bytes": 47170
+    },
+    "tests/integration/minkyu/product_connection_restore108_local.py": {
+      "sha256": "767b719798a6536ba1088deb8e8bd32bb38092ee202019b462c65e49a1c69956",
+      "bytes": 237962
+    },
+    "tests/database/minkyu/test_production_preparation.py": {
+      "sha256": "c8d737b81aa64a4e2f491f68a5c5f14e362211267ca67419e9a8f2114dd16755",
+      "bytes": 34518
     }
   },
   "checks": {
     "integratedOfflineUnittest": {
-      "passed": 108,
+      "passed": 169,
       "failed": 0,
       "skipped": 0,
       "parts": {
+        "signedAuth": 57,
         "ai24": 48,
-        "signedAuth": 29,
         "midnightPreparation": 13,
-        "observer": 18
+        "observer": 18,
+        "productionPreparation": 33
       }
     },
     "denoCachedCheck": "PASS",
@@ -63,7 +72,20 @@
       "status": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND",
       "ai24Sha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0"
     },
-    "observerProfileSelection": "PASS_18_OFFLINE_CONTEXT_SOCKET_BINDING"
+    "observerProfileSelection": "PASS_18_OFFLINE_CONTEXT_SOCKET_BINDING",
+    "productionPreparationOffline": {
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0
+    },
+    "successorIntegrationAttempt": {
+      "passed": 119,
+      "failed": 1,
+      "skipped": 0,
+      "failure": "HEAD-sensitive original AST guard rejected explicitly reviewed signed_source_pins extension",
+      "status": "FAILURE_PRESERVED_SUPERSEDED_BY_169_PASS_EXACT_APPROVED_CHANGE_GUARD"
+    },
+    "native119IndependentReview": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND_SCHEMA_ROLE_LINEAGE_ONLY"
   },
   "actual": {
     "signedAuth": "NOT_RUN",
@@ -73,7 +95,9 @@
     "fullRestore": "NOT_RUN",
     "productionActivation": "NOT_RUN",
     "storage39MissingBytes": "UNRESOLVED",
-    "ownedChildGroupClosureSmoke": "PASS_PROCESS_ONLY"
+    "ownedChildGroupClosureSmoke": "PASS_PROCESS_ONLY",
+    "syntheticCanonicalWholeRead": "PASS_REPEATABLE_METADATA_ROWS_AUTHORITY_SEQUENCE",
+    "syntheticDbRedactedRoleArchive": "PASS_NOT_RESTORED_NOT_PHYSICAL_STORAGE"
   },
   "limitations": [
     "Offline tests do not prove actual Auth/DB/product midnight success.",

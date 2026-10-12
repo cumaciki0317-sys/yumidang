@@ -8,6 +8,8 @@ import json
 import os
 import subprocess
 import io
+import ast
+import re
 from contextlib import redirect_stdout
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[3]/'tools/local'))
@@ -242,5 +244,183 @@ let code;try{const m=await import(process.argv[1]);try{await m.startClosedQueue(
 process.stdout.write(JSON.stringify({code,calls}));"""
         child=subprocess.run(['node','--input-type=module','-e',script,(self.output/'queue-launcher.closed.mjs').as_uri()],capture_output=True,timeout=10)
         self.assertEqual(child.returncode,0);self.assertEqual(json.loads(child.stdout),{'code':'PRODUCTION_SCOPE_NOT_APPROVED','calls':{'timer':0,'fetch':0,'productEnv':0,'dbOrRuntimeImport':0}})
+
+class NativePermissionBatching(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        source=Path(__file__).resolve().parents[3]/'tests/integration/minkyu/product_connection_restore108_local.py'
+        tree=ast.parse(source.read_bytes())
+        selected=[node for node in tree.body if isinstance(node,ast.FunctionDef)and node.name in ('platform_json','native_backup_permissions')
+            or isinstance(node,ast.Assign)and any(isinstance(target,ast.Name)and target.id in ('NATIVE_BACKUP_PERMISSION_QUERY','NATIVE_BACKUP_ACL_QUERY')for target in node.targets)]
+        cls.ports={'json':json,'re':re}
+        exec(compile(ast.Module(body=selected,type_ignores=[]),str(source),'exec'),cls.ports)
+
+    def setUp(self):
+        self.roles=['O\'Brien','back\\slash','public','역할']
+        self.inventory=[]
+        privileges={'database':['CONNECT','CREATE','TEMPORARY','CONNECT WITH GRANT OPTION','CREATE WITH GRANT OPTION','TEMPORARY WITH GRANT OPTION'],
+            'schema':['USAGE','CREATE','USAGE WITH GRANT OPTION','CREATE WITH GRANT OPTION'],
+            'table':['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN','SELECT WITH GRANT OPTION','INSERT WITH GRANT OPTION','UPDATE WITH GRANT OPTION','DELETE WITH GRANT OPTION','TRUNCATE WITH GRANT OPTION','REFERENCES WITH GRANT OPTION','TRIGGER WITH GRANT OPTION','MAINTAIN WITH GRANT OPTION'],
+            'column':['SELECT','INSERT','UPDATE','REFERENCES','SELECT WITH GRANT OPTION','INSERT WITH GRANT OPTION','UPDATE WITH GRANT OPTION','REFERENCES WITH GRANT OPTION'],
+            'sequence':['USAGE','SELECT','UPDATE','USAGE WITH GRANT OPTION','SELECT WITH GRANT OPTION','UPDATE WITH GRANT OPTION'],
+            'function':['EXECUTE','EXECUTE WITH GRANT OPTION']}
+        self.privileges=privileges
+        for kind,values in privileges.items():
+            for privilege in values:self.inventory.append(['public',kind,'quoted.object.'+kind,privilege,True])
+        self.reference=[[role,*row[1:4],(i+index)%2==0]for index,role in enumerate(self.roles)for i,row in enumerate(self.inventory)]
+        self.chunks={role:[row for row in self.reference if row[0]==role]for role in self.roles}
+        self.calls=[];self.roster_reads=0;self.transform=lambda role,rows:rows;self.raise_role=None;self.change_roster=False
+        self.authority_reads=0;self.metadata_reads=0;self.inventory_reads=0;self.drift=None
+
+    def query(self,name,statement):
+        self.assertEqual(name,'exact-new-id')
+        self.assertTrue(statement.startswith("set local statement_timeout='5s';"))
+        statement=statement.removeprefix("set local statement_timeout='5s';");self.calls.append(statement)
+        if statement.startswith('select coalesce(json_agg(rolname'):
+            self.roster_reads+=1
+            return json.dumps(self.roles+(['changed']if self.change_roster and self.roster_reads==2 else[])).encode()
+        if statement==self.ports['NATIVE_BACKUP_ACL_QUERY']:
+            self.authority_reads+=1
+            result={k:[]for k in ('database','schemas','relations','columns','functions','defaults','dbRoleSettings')}
+            if self.drift=='authority'and self.authority_reads==2:result['columns']=['different-grantor']
+            return json.dumps(result).encode()
+        if statement.startswith("select jsonb_build_object('roles'"):
+            self.metadata_reads+=1
+            result={'roles':[{'rolname':r,'rolsuper':False}for r in self.roles if r!='public'],'memberships':[]}
+            if self.drift=='role'and self.metadata_reads==2:result['roles'][0]['rolsuper']=True
+            return json.dumps(result).encode()
+        encoded=re.findall(r"convert_from\(decode\('([a-f0-9]+)','hex'\),'UTF8'\)::name",statement)
+        self.assertEqual(len(encoded),1);role=bytes.fromhex(encoded[0]).decode()
+        if not re.search(r'has_[a-z]+_privilege\(',statement):
+            self.assertIn('(true)allowed',statement)
+            self.assertEqual(statement.count('(true)'),6)
+            self.inventory_reads+=1
+            return json.dumps(self.inventory[:-1]if self.drift=='inventory'and self.inventory_reads==2 else self.inventory).encode()
+        if role==self.raise_role:raise subprocess.TimeoutExpired('exact-bounded-chunk',5)
+        return json.dumps(self.transform(role,self.chunks[role])).encode()
+
+    def collect(self):return self.ports['native_backup_permissions'](self.query,'exact-new-id')
+
+    def test_complete_original_matrix_equivalence_and_escaping(self):
+        self.transform=lambda role,rows:list(reversed(rows))
+        self.assertEqual(self.collect(),self.reference)
+        self.assertEqual(len(self.calls),len(self.roles)+8)
+        original=self.ports['NATIVE_BACKUP_PERMISSION_QUERY']
+        for statement in self.calls[4:4+len(self.roles)]:
+            restored=re.sub(r"\(select convert_from\(decode\('[a-f0-9]+','hex'\),'UTF8'\)::name rolname\)r",
+                "(select rolname from pg_roles union select 'public')r",statement)
+            self.assertEqual(restored,original)
+            self.assertNotIn("O'Brien",statement);self.assertNotIn('back\\slash',statement)
+        for kind,privileges in self.privileges.items():
+            self.assertEqual({row[3]for row in self.collect()if row[0]=='public'and row[1]==kind},set(privileges))
+
+    def test_long_function_overload_keys_remain_distinct_without_name_coercion(self):
+        prefix='public.fail_job(p_job_id uuid, p_lease_token uuid, p_error_code text, '
+        signatures=[prefix+'p_context text)',prefix+'p_context jsonb)']
+        self.assertGreater(len(prefix.encode()),63)
+        self.assertEqual(signatures[0].encode()[:63],signatures[1].encode()[:63])
+        for signature in signatures:
+            for privilege in ('EXECUTE','EXECUTE WITH GRANT OPTION'):
+                self.inventory.append(['public','function',signature,privilege,True])
+        self.reference=[[role,*row[1:4],(i+index)%2==0]for index,role in enumerate(self.roles)for i,row in enumerate(self.inventory)]
+        self.chunks={role:[row for row in self.reference if row[0]==role]for role in self.roles}
+        query=self.query
+        def emulate_pg_union_type(name,statement):
+            raw=query(name,statement)
+            if 'r cross join lateral('in statement and 'current_database()::text name'not in statement:
+                rows=json.loads(raw)
+                for row in rows:row[2]=row[2].encode()[:63].decode()
+                return json.dumps(rows).encode()
+            return raw
+        value=self.ports['native_backup_permissions'](emulate_pg_union_type,'exact-new-id')
+        self.assertEqual(value,self.reference)
+        self.assertEqual({row[2]for row in value if row[0]=='public'and row[2]in signatures},set(signatures))
+        original=self.ports['NATIVE_BACKUP_PERMISSION_QUERY']
+        self.assertIn("select 'database'kind,current_database()::text name",original)
+        self.assertIn("union all select 'schema',nspname::text,v",original)
+        self.ports['NATIVE_BACKUP_PERMISSION_QUERY']=original.replace('current_database()::text name','current_database()name').replace('nspname::text,v','nspname,v')
+        try:
+            with self.assertRaisesRegex(AssertionError,'INVENTORY_DUPLICATE'):
+                self.ports['native_backup_permissions'](emulate_pg_union_type,'exact-new-id')
+        finally:self.ports['NATIVE_BACKUP_PERMISSION_QUERY']=original
+
+    def test_missing_duplicate_extra_and_nonboolean_chunks_fail(self):
+        variants=[lambda rows:rows[:-1],lambda rows:rows+[rows[0]],lambda rows:rows+[['public','function','unlisted','EXECUTE',True]],
+            lambda rows:[[row[0],*row[1:4],1]for row in rows],lambda rows:[],lambda rows:[['different',*row[1:]]for row in rows]]
+        for change in variants:
+            with self.subTest(variant=variants.index(change)):
+                self.transform=lambda role,rows,change=change:change(rows)if role=='public'else rows
+                with self.assertRaises(AssertionError):self.collect()
+
+    def test_failed_chunk_has_no_partial_success_or_following_queries(self):
+        self.raise_role='back\\slash'
+        with self.assertRaises(subprocess.TimeoutExpired):self.collect()
+        self.assertEqual(self.roster_reads,1)
+        self.assertFalse(any("'"+'역할'.encode().hex()+"'"in statement for statement in self.calls))
+
+    def test_catalog_inventory_and_role_drift_fail_closed(self):
+        self.change_roster=True
+        with self.assertRaisesRegex(AssertionError,'ROLE_ROSTER_CHANGED'):self.collect()
+        self.change_roster=False
+        for inventory in ([],self.inventory+[self.inventory[0]],self.inventory[1:]):
+            saved=self.inventory;self.inventory=inventory
+            with self.subTest(length=len(inventory)),self.assertRaises(AssertionError):self.collect()
+            self.inventory=saved
+        for roles in ([],['public','public'],['public','x\x00y']):
+            saved=self.roles;self.roles=roles
+            with self.subTest(roles=roles),self.assertRaises(AssertionError):self.collect()
+            self.roles=saved
+
+    def test_authority_role_and_object_change_during_collection_rejects(self):
+        for drift in ('authority','role','inventory'):
+            with self.subTest(drift=drift):
+                self.authority_reads=0;self.metadata_reads=0;self.inventory_reads=0;self.roster_reads=0;self.drift=drift
+                with self.assertRaisesRegex(AssertionError,'CHANGED'):self.collect()
+
+class NativeArchiveTocValidation(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        source=Path(__file__).resolve().parents[3]/'tests/integration/minkyu/product_connection_restore108_local.py'
+        cls.tree=ast.parse(source.read_bytes());cls.ports={'json':json,'re':re,'hashlib':hashlib}
+        nodes=[node for node in cls.tree.body if isinstance(node,ast.FunctionDef)and node.name in
+            ('native_backup_database_archive','final_canonical','final_digest')]
+        exec(compile(ast.Module(body=nodes,type_ignores=[]),str(source),'exec'),cls.ports)
+        # Captured partial PG17 metadata lines; the private whole TOC is not a repository fixture.
+        cls.toc=(b'6942; 1262 5 DATABASE - postgres postgres\n'
+            b'6943; 0 0 COMMENT - DATABASE postgres postgres\n'
+            b'6944; 0 0 ACL - DATABASE postgres postgres\n')
+
+    def state(self):
+        return {'rawAuthority':{'database':['postgres','postgres','UTF8','C.UTF-8','C.UTF-8','c',None,None,-1,True,False,
+            'pg_default','original-comment',[],['postgres=CTc/postgres']],'dbRoleSettings':[]},
+            'snapshot':{'roles':{'roles':[{'rolname':'postgres'},{'rolname':'supabase_admin'}]}}}
+
+    def test_captured_database_owner_acl_metadata_and_hidden_list_rejection(self):
+        state=self.state();before=json.dumps(state,sort_keys=True)
+        proof=self.ports['native_backup_database_archive'](self.toc,state)
+        self.assertEqual(proof['owner'],'postgres')
+        self.assertEqual(proof['tocEntries'],{'database':[6942],'acl':[6944],'comment':[6943],'settings':[],'securityLabel':[]})
+        self.assertTrue(proof['noSyntheticDatabaseMetadata']);self.assertEqual(before,json.dumps(state,sort_keys=True))
+        hidden=b'; Archive entries selected without --create omit DATABASE metadata.\n'
+        with self.assertRaisesRegex(AssertionError,'EXACT_DATABASE_ARCHIVE_ENTRY'):
+            self.ports['native_backup_database_archive'](hidden,state)
+        for needle in (b'DATABASE - postgres postgres',b'ACL - DATABASE postgres postgres'):
+            bad=self.toc.replace(needle,needle.rsplit(b' ',1)[0]+b' unauthorized')
+            with self.subTest(needle=needle),self.assertRaisesRegex(AssertionError,'OWNER_MISMATCH'):
+                self.ports['native_backup_database_archive'](bad,state)
+
+    def test_both_actual_source_and_target_list_ports_expose_create_entries(self):
+        function=next(node for node in self.tree.body if isinstance(node,ast.FunctionDef)and node.name=='run_native_final_backup')
+        calls=[node for node in ast.walk(function)if isinstance(node,ast.Call)and isinstance(node.func,ast.Name)
+            and node.func.id=='native_backup_database_archive'and isinstance(node.args[0],ast.Call)]
+        self.assertEqual(len(calls),2);seen=[];dump=b'fixed-archive-port-fixture'
+        def docker(*args,**kwargs):
+            self.assertEqual(args[:2],('exec','-i'));self.assertIn(args[2],('exact-source','exact-target'))
+            self.assertEqual(kwargs,{'data':dump});seen.append(args)
+            return self.toc if args[3:]==('pg_restore','--create','--list')else b'; hidden database entries\n'
+        namespace={**self.ports,'docker':docker,'source':'exact-source','target':'exact-target','dump':dump,'prebackup':self.state()}
+        results=[eval(compile(ast.Expression(body=call),'<frozen-native-toc-port>','eval'),namespace)for call in calls]
+        self.assertEqual(results[0],results[1]);self.assertEqual({args[2]for args in seen},{'exact-source','exact-target'})
+        self.assertEqual(len(seen),2)
 
 if __name__=='__main__':unittest.main()

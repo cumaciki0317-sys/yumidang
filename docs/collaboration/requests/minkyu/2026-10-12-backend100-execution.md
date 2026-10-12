@@ -92,3 +92,36 @@ public10/private4 tables, Storage metadata2 objects, cron1 job을 관측했다. 
 합성 signedAuth6계정의 admin 생성/로그인과 clone-only episode/session/profile 연결 영수증 producer가 기존 도구에 없다. 기존 탈퇴 fixture는 네이버 내부 이메일 형식이 달라 그대로 재사용할 수 없다. 기존 책임 runner와 민규 회귀에 이 연결을 구현하고 독립 검토한다. AI23 일별 예산 및 UNKNOWN은 유지하고 AI24는 별도 새 대상에서 실행한다.
 
 observer를 통합해 signed binding의DB ID와 새로 검증한 준비 대상을 대조한 뒤 exact context/socket 쌍으로 민규/종현 메모리 profile을 선택한다. 실행 전후 전체 target/profile proof가 같아야 한다. 기존 합성 모드와 메모리 기준은 유지했다. 기존13+신규5,18개 오프라인 회귀PASS. 별도 읽기 검토에서 추가 확정 차단 결함은 없다. 실제 signedAuth 실행은 아직 NOT_RUN이다.
+
+
+
+검증 완료19파일은 사용자 승인으로 로컬 commit7898a83에 고정했다.193개 구현/검증 그래프 파일의 HEAD바이트 일치와 sourcepins SHA e815f4598273114b547e31b555094bd2c144cf6b0c011953e06882a7d1844434를 확인했다. 푸시는 하지 않았다. 이 문서/검증 JSON의 UNCOMMITTED 표시는 해당 사전 동결 시점을 기록하며 이후 실제 실행 기준은7898a83이다.
+
+사용자가 canonical 합성 원본 한 개의 재시작·읽기를 승인했다. exactID·정지·이미지·설정 해시를 재확인한 뒤 기동했고 읽기 전용·다른 접속0개를 확인했다. DB에 migration 이력 테이블은 없으며119개는 기존 private 적용 영수증으로 기록돼 있다. 영수증119개 버전·바이트 SHA와 현재SQL이 정확히 같고 inventory SHA e879b213c91b4da96479322896bc33fb6f216b4f297f1382f2f90c907d7e1c10을 root도 재검증했다. 실제SQL 재생은 하지 않았다.
+
+[원본 읽기 증거](2026-10-13-native119-readonly-proof.json):178개 전체 테이블 행digest 조회와 원 ACL290,259바이트 조회PASS. 전체 상태 수집은 실효 권한 단일 쿼리의5초 timeout(SQLSTATE57014)로 FAIL이다. 권한 범위를 줄이지 않는 역할별 분할 조회를 기존 복원 helper와 재배정된 회귀에서 구현·검토한다. 원본/운영 데이터 쓰기·dump·Storage39원본 복구·전체 복원은 아직 하지 않았다.
+
+실제 Auth6 생성 연결의 독립 검토에서 응답 유실 POST의 늦은 반영, 같은 이메일의 다른 UUID 삭제, 원 범위 밖 추가 행 및 닫힌 제어 검사 공백을 확인했다. 원 생성 UUID·불확실 송신 기록·정확한 생성 행 범위·현재 닫힌 제어를 연결하도록 수정 중이며 성공으로 기록하지 않는다. 실제 계정 생성은 아직 하지 않았다.
+
+역할별 첫 조회는 inventory 함수key24개 충돌을 거절해 FAIL로 보존했다. 실제 원인은 UNION 첫 분기의current_database()/nspname 출력이name 타입이어서 긴 format 함수 식별자를63바이트로 자르는 것이다. 읽기 진단에서 두 출력만text로 캐스팅했을 때 전체15,128개 항목은 유지되고 충돌0개, 최대 식별자1,624바이트·63바이트 초과732항목을 확인했다. 기존 함수query를 그대로 보존한다는 초기 제안 대신 이 두 명시적text 캐스트를 수정하고 긴 식별자 회귀를 추가한다. 손실된 식별자·부분 권한 결과는 성공으로 판정하지 않는다.
+
+Auth6 생성 API의 최종 동결84ef9d63을 독립 검토 후 통합했다. 기존runner/SignedMidnightRunner AST는 보존했고 원래29+신규20개 signed/provisioning 회귀49개, AI24/자정준비/관찰기와 합쳐128개 root 통합 오프라인 회귀PASS(skip0). 한 번의 준비 intent·POST 재전송 금지·유실UNKNOWN·원 UUID 삭제 대조·7개 생성테이블만 허용·나머지전체행 정확일치·13개 제어값과cronoff를 검증한다. 실제 실행은 ports=None 고정 어댑터만 허용해 증거로 채택하며 주입 모형 포트의 계약 출력은 실제 성공으로 집계하지 않는다. 새 대상 생성과 최초 닫힌cron 설정은 API가 자동 변경하지 않고 별도 준비 영수증이 필요하다. 실제 Auth6 생성/AI22·23·24는 아직 NOT_RUN이다.
+
+[공식 Auth v2.196.0 audit 모델](https://raw.githubusercontent.com/supabase/auth/v2.196.0/internal/models/audit_log_entry.go)과 [admin 구현](https://raw.githubusercontent.com/supabase/auth/v2.196.0/internal/api/admin.go)을 참고해 admin 생성audit는 새 사용자traits의 UUID/email, 로그인audit는 원사용자actor를 묶었다. 공식 코드만으로 현재 새 이미지의schema 호환성·실제 연결 성공을 판정하지 않는다.
+
+
+최종 text-cast helper8c0a6b15 통합 후 기존25+분할5+긴 식별자1,31개 root 회귀PASS. 실제 exact원본에서 두 번 전체 읽기에 성공했고178table·31role·4sequence·484,096실효권한 항목이 동일했다. 기존 canonical snapshot과 일치하며 stateSHA5cb91cff88044b86375acacc9a9e1f37e939594225058527ffabaddd2d3606d2, 다른 접속0개다. 별도 query들의 반복 동일성 증거이며 단일 전체MVCC snapshot 또는 복원 증거가 아니다.
+
+원본Auth users/sessions/profiles0과cronoff를 재확인하고 DB custom archive1,999,065바이트와 비밀번호 제외 역할archive5,760바이트를600 비공개 파일로 만들었다. DB ef04ad912992c51345d8488c718e5c6b26435bd8f06e87b0095370bc9a3b3dc6, 역할6b6f60e45032548fc909404e09453afcf65a65ad518afda680828bf3d5cb64b0. 최초 roles-only 비밀번호 해시 덤프는 자동 승인 검토가 비밀번호 출력 금지와 충돌할 수 있다는 이유로 거절해 실행되지 않았다. --no-role-passwords 대안은 승인·실행됐고 비밀번호/해시가 역할 자료에 없음을 확인했다. Storage바이트·역할인증자료·운영 전체 백업/복원 완료로 확대하지 않는다.
+
+Auth 새 target의 준비 루트는 signed_private_read가 허용하는 /private/tmp로 새로 준비했다. 기존 시스템T 루트는 보존하고 실행에 쓰지 않는다. private700/600, SQL119·manifest cdcb79d855746c88cd1dc212f1f449da6368a872fef9e8f7bdd949563bccb5a5, 실제SQL/기동 NOT_RUN. CLI2.116의 exclude는 최초 schema migration 작업을 제외하지 않고 실패 때 자동정리할 수 있어 이를 그대로 실행하지 않았다. 검증된 합성 원본archive와 캐시4서비스를 직접 생성하는 대안을 준비·검토한다. 이미지 다운로드·CLI시작·새Auth 생성은 하지 않았다.
+
+## 2026-10-13 원본 읽기 종료와 native119 연결 검토
+
+전체 **79%(22/28)**를 유지한다. 합성 원본 전체 행 digest·catalog·portable 역할·raw ACL·실효 권한 484,096개·비시스템 sequence 4개를 반복 읽기했으며, archive 이후에도 동일함을 확인했다. 다른 접속 0개를 확인하고 재시작했던 원본 DB를 정상 중지해 원래 상태로 반환했다. 컨테이너와 데이터는 보존했다.
+
+새 archive의 `pg_restore --create --list`에서 테이블 데이터 178개와 원 DB 소유자 postgres·COMMENT·ACL 메타데이터를 확인했다. 역할 archive는 비밀번호와 비밀번호 hash를 제외했다. 실제 Storage 바이트와 전체 복원은 아직 미검증이다.
+
+native119 경로는 원 적용 영수증 119개와 현재 준비 SQL의 버전·hash, 고정 원본 증거를 대조한 뒤 실제 새 대상의 schema·역할·membership을 읽어 비교한다. 일반 Supabase 이력 검사는 유지한다. 독립 검토에서 추가 확정 결함은 발견하지 않았다. 실제 Auth와 자연 자정은 아직 실행하지 않았다. 통합 120개 중 1개는 HEAD 기반 원 함수 보존 검사가 승인된 source pin 확장을 허용하지 않아 실패했으며, 필요한 변경만 허용하도록 교정 중이다. 이 실패를 PASS로 집계하지 않는다.
+
+보존 검사는 승인된 helper 두 경로 추가와 두 history 검사 교체만 허용하고, 임의 추가 경로·다른 메서드 변경은 계속 거절하도록 교정했다. 7898a83 원본 비교를 포함한 통합 **169개 PASS·실패 0·skip 0**를 확인했다(Auth 57·AI24 48·준비 13·관찰기 18·복원 준비 33). 이전 1개 실패 기록은 보존한다. 전체는 **79%(22/28)**로 실제 Auth·자정·Storage·실회원·운영 검증은 계속 구분한다.

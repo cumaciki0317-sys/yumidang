@@ -303,7 +303,9 @@ def signed_exact_json(data):
 def signed_source_pins():
     paths = ('tests/integration/jonghyun/isolated_ai_contracts.py',
              'tests/integration/jonghyun/isolated_ai_factory.ts', 'tools/local/run_database_tests.py',
-             'tools/local/prepare_database.py', 'tools/local/prepare_migrations.py')
+             'tools/local/prepare_database.py', 'tools/local/prepare_migrations.py',
+             'tests/integration/minkyu/product_connection_restore108_local.py',
+             'tests/integration/minkyu/member_cleanup_reconcile_local.py')
     return {**product_graph(), **{p: hashlib.sha256((REPO/p).read_bytes()).hexdigest() for p in paths}}
 
 def validate_signed_binding(value, prepared_root, target, now=None):
@@ -411,6 +413,102 @@ def inspect_signed_binding(binding_path, prepared_root):
             'databaseManifestSha256':value['databaseManifestSha256'],'containerIds':{k:v['id']for k,v in value['containers'].items()},
             'declaredExpiresAt':[a['expiresAt']for a in value['accounts']],'executionAllowed':False,'actualAuth':'NOT_RUN'}
 
+NATIVE_SIGNED_SOURCE_STATE=Path('/private/tmp/yumidang-native119-full-identities-20261013-t1_ooz8b/state-before-private.json')
+NATIVE_SIGNED_SOURCE_STATE_SHA='5cb91cff88044b86375acacc9a9e1f37e939594225058527ffabaddd2d3606d2'
+NATIVE_SIGNED_CANONICAL_ROOT=Path('/private/tmp/yumidang-canonical-application-20261010-canonical-v1')
+NATIVE_SIGNED_CANONICAL_RECEIPT_SHA='fafeb72231850417dde552c00c39bb759baa536eacc5fcfb8e2cbf8551b20d4d'
+NATIVE_SIGNED_APPLIED_INVENTORY_SHA='e879b213c91b4da96479322896bc33fb6f216b4f297f1382f2f90c907d7e1c10'
+NATIVE_SIGNED_APPLIED_FILE_MAP_SHA='da62068194236f19e442d17a08807f15e93653f1893cb529e25444174dd7218b'
+NATIVE_SIGNED_SOURCE_ID='497e5d1bc98835d4074a2fbb7ccb37575d539984c18f571d38b6d8fbec692c2f'
+
+def signed_native_selected(relative, names, pins, namespace):
+    """현재 검토·커밋된 고정 helper의 지정 함수만 평가한다."""
+    import ast
+    path=REPO/relative;captured=path.read_bytes()
+    if hashlib.sha256(captured).hexdigest()!=pins.get(relative):raise ValueError('SIGNED_NATIVE_HELPER_PIN_CHANGED')
+    committed=subprocess.run(['git','-C',str(REPO),'show','HEAD:'+relative],capture_output=True,timeout=5)
+    if committed.returncode or committed.stdout!=captured:raise ValueError('SIGNED_NATIVE_HELPER_UNCOMMITTED')
+    nodes=[node for node in ast.parse(captured).body if isinstance(node,ast.FunctionDef)and node.name in names]
+    if len(nodes)!=len(names)or{node.name for node in nodes}!=set(names):raise ValueError('SIGNED_NATIVE_HELPER_FUNCTIONS')
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),str(path),'exec'),namespace)
+    return namespace
+
+def signed_verify_history(runner):
+    """일반 DB 이력과 고정 native119 원 영수증을 별도 증거로 검증한다."""
+    path=runner.root/'native119-runtime-provenance.json'
+    if not path.exists()and not path.is_symlink():
+        if json.loads(runner.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))!=runner.target['versions']:
+            raise ValueError('APPLIED_HISTORY_CHANGED')
+        return {'method':'SUPABASE_DB_HISTORY','native':'NOT_RUN'}
+    provenance=signed_exact_json(signed_private_read(path))
+    fields={'version','kind','preparedRoot','preparedManifestSha256','sourceStatePath','sourceStateSha256',
+        'canonicalRoot','canonicalReceiptSha256','canonicalAppliedInventorySha256','canonicalAppliedFileMapSha256',
+        'sourceCatalogSha256','sourcePortableRolesSha256','cloneBaselineStateSha256','database','creatorCodeSha256'}
+    if (not isinstance(provenance,dict)or set(provenance)!=fields or type(provenance['version'])is not int
+            or provenance['version']!=1 or provenance['kind']!='NATIVE119_RUNTIME_PROVENANCE'
+            or provenance['preparedRoot']!=str(runner.root)):raise ValueError('SIGNED_NATIVE_PROVENANCE_FIELDS')
+    fixed={'sourceStatePath':str(NATIVE_SIGNED_SOURCE_STATE),'sourceStateSha256':NATIVE_SIGNED_SOURCE_STATE_SHA,
+        'canonicalRoot':str(NATIVE_SIGNED_CANONICAL_ROOT),'canonicalReceiptSha256':NATIVE_SIGNED_CANONICAL_RECEIPT_SHA,
+        'canonicalAppliedInventorySha256':NATIVE_SIGNED_APPLIED_INVENTORY_SHA,'canonicalAppliedFileMapSha256':NATIVE_SIGNED_APPLIED_FILE_MAP_SHA,
+        'cloneBaselineStateSha256':NATIVE_SIGNED_SOURCE_STATE_SHA}
+    if any(provenance[k]!=v for k,v in fixed.items()):raise ValueError('SIGNED_NATIVE_FIXED_PROOF')
+    if provenance['database']!=runner.binding['containers']['db']:raise ValueError('SIGNED_NATIVE_DATABASE_BINDING')
+    if not isinstance(provenance['creatorCodeSha256'],str)or not re.fullmatch('[a-f0-9]{64}',provenance['creatorCodeSha256']):raise ValueError('SIGNED_NATIVE_CREATOR_METADATA')
+    canonical=lambda value:json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()
+    digest=lambda value:hashlib.sha256(canonical(value)).hexdigest()
+    manifest_raw=signed_private_read(runner.root/'database-manifest.json')
+    if provenance['preparedManifestSha256']!=hashlib.sha256(manifest_raw).hexdigest():raise ValueError('SIGNED_NATIVE_MANIFEST_BINDING')
+    manifest=signed_exact_json(manifest_raw);entries=manifest['migrations']
+    receipt_raw=signed_private_read(NATIVE_SIGNED_CANONICAL_ROOT/'receipt.json')
+    if hashlib.sha256(receipt_raw).hexdigest()!=NATIVE_SIGNED_CANONICAL_RECEIPT_SHA:raise ValueError('SIGNED_NATIVE_CANONICAL_RECEIPT')
+    receipt=signed_exact_json(receipt_raw)
+    if (receipt.get('status')!='PASS_NATIVE_CANONICAL_119_APPLICATION_ONLY'or receipt.get('migrationCount')!=119
+            or receipt.get('nativeDbId')!=NATIVE_SIGNED_SOURCE_ID or receipt.get('orderedAppliedMigrations')!=entries
+            or len(entries)!=119 or [e['version']for e in entries]!=runner.target['versions']):raise ValueError('SIGNED_NATIVE_ORDERED119')
+    files=sorted(NATIVE_SIGNED_CANONICAL_ROOT.glob('*-applied.json'));inventory=[];file_map={}
+    if len(files)!=119 or [p.name for p in files]!=[e['version']+'-applied.json'for e in entries]:raise ValueError('SIGNED_NATIVE_APPLIED_SET')
+    for file,entry in zip(files,entries):
+        raw=signed_private_read(file);value=signed_exact_json(raw);sha=hashlib.sha256(raw).hexdigest()
+        if (set(value)!={'commandExit','nativeDbId','sha256','storedIn','version'}or type(value['commandExit'])is not int
+                or value['commandExit']!=0 or value['nativeDbId']!=NATIVE_SIGNED_SOURCE_ID or value['sha256']!=entry['sha256']
+                or value['version']!=entry['version']or value['storedIn']!='PRIVATE_RECEIPT_NOT_DB_HISTORY'):raise ValueError('SIGNED_NATIVE_APPLIED_RECEIPT')
+        file_map[file.name]=sha;inventory.append({'receipt':file.name,'version':value['version'],'sqlSha256':value['sha256'],'commandExit':0,'receiptSha256':sha})
+    if digest(inventory)!=NATIVE_SIGNED_APPLIED_INVENTORY_SHA or digest(file_map)!=NATIVE_SIGNED_APPLIED_FILE_MAP_SHA:raise ValueError('SIGNED_NATIVE_APPLIED_DIGEST')
+    pins=signed_source_pins()
+    if pins!=runner.binding['sourcePins']:raise ValueError('SIGNED_NATIVE_SOURCE_PINS')
+    namespace=signed_native_selected('tests/integration/minkyu/product_connection_restore108_local.py',{'platform_open'},pins,{'__builtins__':__builtins__})
+    with namespace['platform_open'](NATIVE_SIGNED_SOURCE_STATE)as stream:
+        before=os.fstat(stream.fileno());raw=stream.read(64*1024*1024+1);after=os.fstat(stream.fileno());current=NATIVE_SIGNED_SOURCE_STATE.lstat()
+        identity=lambda value:(value.st_dev,value.st_ino,value.st_size,value.st_mtime_ns,value.st_ctime_ns,value.st_nlink)
+        if (len(raw)>64*1024*1024 or len(raw)!=before.st_size or identity(before)!=identity(after)or identity(after)!=identity(current)
+                or hashlib.sha256(raw).hexdigest()!=NATIVE_SIGNED_SOURCE_STATE_SHA):raise ValueError('SIGNED_NATIVE_SOURCE_STATE_CHANGED')
+    state=signed_exact_json(raw);snapshot=state['snapshot'];schema=snapshot['catalog'];roles=snapshot['roles']
+    if (len(snapshot['rows'])!=178 or provenance['sourceCatalogSha256']!=hashlib.sha256(schema.encode()).hexdigest()
+            or provenance['sourcePortableRolesSha256']!=digest(roles)):raise ValueError('SIGNED_NATIVE_SOURCE_METADATA')
+    from types import SimpleNamespace
+    def read_query(name,statement):
+        if name!=runner.target['id']:raise ValueError('SIGNED_NATIVE_QUERY_TARGET')
+        command=runner.base+['exec','-i',name,'psql','-XqAt','-h','/var/run/postgresql','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=1','-f','-']
+        result=subprocess.run(command,input=("begin read only;set local statement_timeout='5s';set local lock_timeout='1s';"+statement+'commit;').encode(),capture_output=True,timeout=5)
+        if result.returncode:raise ValueError('SIGNED_NATIVE_SCHEMA_ROLE_READ_FAILED')
+        return result.stdout
+    def read_dump(argv,data=None):
+        expected=runner.base+['exec',runner.target['id'],'pg_dump','-U','supabase_admin','-d','postgres','--schema-only']
+        if argv!=expected or data is not None:raise ValueError('SIGNED_NATIVE_SCHEMA_DUMP_SCOPE')
+        command=runner.base+['exec','-e','PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=5000 -c lock_timeout=1000',runner.target['id'],
+            'pg_dump','-h','/var/run/postgresql','-U','supabase_admin','-d','postgres','--schema-only']
+        result=subprocess.run(command,capture_output=True,timeout=5)
+        if result.returncode:raise ValueError('SIGNED_NATIVE_SCHEMA_ROLE_READ_FAILED')
+        return result.stdout
+    namespace=signed_native_selected('tests/integration/minkyu/member_cleanup_reconcile_local.py',{'catalog','roles'},pins,
+        {'json':json,'tls':SimpleNamespace(DOCKER=runner.base),'recovery':SimpleNamespace(BOOT='supabase_admin'),'query':read_query,'call':read_dump})
+    current_schema=namespace['catalog'](runner.target['id']);current_roles=namespace['roles'](runner.target['id'])
+    for role in current_roles['roles']:role.pop('oid',None)
+    if current_schema!=schema or current_roles!=roles:raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
+    runner.signed_identity()
+    return {'method':'PINNED_NATIVE119_RECEIPTS_AND_CURRENT_SCHEMA_ROLES','scope':'NATIVE119_SCHEMA_ROLE_MATCH_LINEAGE',
+        'migrationReplay':'NOT_RUN','authRows':'PROVISIONING_JOURNAL_SEPARATE','actualNaver':'NOT_RUN'}
+
 class SignedRunner(Runner):
     def __init__(self, root, binding):
         self.root=root;self.target=signed_prepared_target(root)
@@ -463,8 +561,7 @@ class SignedRunner(Runner):
 
     def prepare(self):
         self.signed_identity()
-        if json.loads(self.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))!=self.target['versions']:
-            raise ValueError('APPLIED_HISTORY_CHANGED')
+        signed_verify_history(self)
         if self.sql("select external_processing_allowed from private.ai_processing_guard where singleton;select current_setting('cron.launch_active_jobs');").splitlines()!=['f','off']:
             raise ValueError('SIGNED_CLOSED_BASELINE_REQUIRED')
         if self.sql("select(select count(*)from private.ai_account_daily_budget where kst_day=(clock_timestamp()at time zone'Asia/Seoul')::date)+(select count(*)from private.ai_global_daily_budget where kst_day=(clock_timestamp()at time zone'Asia/Seoul')::date);")!='0':
@@ -636,7 +733,7 @@ class SignedMidnightRunner(SignedRunner):
         self.validate_original_accounts()
         clock=json.loads(self.read_sql("with s as(select clock_timestamp()t)select jsonb_build_object('epoch',extract(epoch from t),'midnightEpoch',extract(epoch from(((t at time zone'Asia/Seoul')::date+1)::timestamp at time zone'Asia/Seoul')))from s;",timeout=2))
         if clock['midnightEpoch']!=self.boundary_epoch or not 600<=self.boundary_epoch-clock['epoch']<=3600:raise ValueError('MIDNIGHT_NATURAL_PREPARE_WINDOW')
-        if json.loads(self.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))!=self.target['versions']:raise ValueError('APPLIED_HISTORY_CHANGED')
+        signed_verify_history(self)
         if self.sql("select external_processing_allowed from private.ai_processing_guard where singleton;select current_setting('cron.launch_active_jobs');").splitlines()!=['f','off']:raise ValueError('SIGNED_CLOSED_BASELINE_REQUIRED')
         if self.sql("select(select count(*)from private.ai_account_daily_budget where kst_day=(clock_timestamp()at time zone'Asia/Seoul')::date)+(select count(*)from private.ai_global_daily_budget where kst_day=(clock_timestamp()at time zone'Asia/Seoul')::date);")!='0':raise ValueError('SIGNED_FRESH_CURRENT_DAY_REQUIRED')
         for uid in self.users:
@@ -942,6 +1039,344 @@ class SignedMidnightRunner(SignedRunner):
         self.save_signed('midnight-cleanup.json',result)
         if errors:raise ValueError('MIDNIGHT_CLEANUP_FAILED')
         return result
+
+
+PROVISION_FAILURE_CODES = ('PROVISION_AUTHORITY_HASH_REQUIRED', 'PROVISION_ADDED_ROW_SCOPE','PROVISION_ADDED_ROW_COUNT','PROVISION_ADDED_ROW_OWNER','PROVISION_UNOWNED_ROW_CHANGED','PROVISION_DATABASE_CONTROLS_OPEN', 'PROVISION_PREVIOUS_ATTEMPT_PRESERVED', 'PROVISION_CLEANUP_CREATED_ID_CHANGED', 'PROVISION_ACTUAL_AUTH_SESSION_FAILED', 'PROVISION_ARTIFACT_NAME', 'PROVISION_CLEANUP_SCOPE_UNKNOWN', 'PROVISION_CONTAINER_BINDING', 'PROVISION_CONTAINER_FIELDS', 'PROVISION_CREATE_FAILED', 'PROVISION_CREDENTIAL_FIELDS', 'PROVISION_CREDENTIAL_ROLE', 'PROVISION_DATABASE_BINDING', 'PROVISION_DELETE_UNKNOWN', 'PROVISION_EMAIL_ALREADY_PRESENT', 'PROVISION_EMAIL_SCOPE_UNKNOWN', 'PROVISION_EXACT_SIX_POPULATION_FAILED', 'PROVISION_EXPIRY_REQUIREMENT', 'PROVISION_FAILED', 'PROVISION_FAILED_PRIVATE_EVIDENCE_PRESERVED', 'PROVISION_FIXED_HTTP_PATH', 'PROVISION_FRESH_EMPTY_TARGET_REQUIRED', 'PROVISION_HEAD_CHANGED', 'PROVISION_HTTP_OUTCOME_UNKNOWN', 'PROVISION_IDENTITY_CHANGED', 'PROVISION_LOGIN_FAILED', 'PROVISION_LOOPBACK_REQUIRED', 'PROVISION_MEMORY_PARSE', 'PROVISION_MEMORY_READ', 'PROVISION_MONITOR_DID_NOT_CLOSE', 'PROVISION_ORIGINAL_JWT_METADATA', 'PROVISION_ORIGINAL_ROWS_OR_AUTHORITY_CHANGED', 'PROVISION_PROFILE_EPISODE_FAILED', 'PROVISION_RESOURCE_GUARD', 'PROVISION_RESOURCE_MONITOR_FAILED', 'PROVISION_REVIEWED_CODE_REQUIRED', 'PROVISION_SOURCE_CHANGED', 'PROVISION_SOURCE_NOT_COMMITTED', 'PROVISION_SOURCE_PATH')
+
+PROVISION_OWNED_TABLES = ('auth.users','auth.sessions','auth.identities','auth.refresh_tokens',
+    'auth.audit_log_entries','public.profiles','private.member_episodes')
+PROVISION_CLOSED_CONTROLS = ('ai_processing_guard','member_cleanup_guard','worker_runtime_journal_control',
+    'worker_runtime_atomic_control','worker_invocation_control','worker_intent_confirmation_control',
+    'report_purge_control','ai_report_handling_control','ai_feedback_maintenance_control',
+    'event_collection_control','cancellation_due_control','member_retirement_receipt_control','content_inspection_control')
+
+
+def provisioning_added_scope(baseline, current, added, accounts):
+    if (set(current)!=set(baseline)or set(added)!=set(PROVISION_OWNED_TABLES)
+            or not set(PROVISION_OWNED_TABLES).issubset(current)):raise ValueError('PROVISION_ADDED_ROW_SCOPE')
+    users={a['userId']for a in accounts}
+    for table,bag in current.items():
+        expected=dict(baseline[table])
+        if table in added:
+            entries=added[table]
+            if len(entries)!=(12 if table=='auth.audit_log_entries'else 6):raise ValueError('PROVISION_ADDED_ROW_COUNT')
+            owners={u:[]for u in users}
+            for identifier,row in entries.items():
+                if (not isinstance(identifier,str)or not identifier or len(identifier)>512
+                        or set(row)!={'rowSha256','ownerUserId','operation'}
+                        or not re.fullmatch(r'[a-f0-9]{64}',row['rowSha256'])or row['ownerUserId']not in users
+                        or row['rowSha256']in baseline[table]):raise ValueError('PROVISION_ADDED_ROW_SCOPE')
+                owners[row['ownerUserId']].append(row['operation'])
+                expected[row['rowSha256']]=expected.get(row['rowSha256'],0)+1
+            required=['login','user_signedup']if table=='auth.audit_log_entries'else['row']
+            if any(sorted(operations)!=required for operations in owners.values()):raise ValueError('PROVISION_ADDED_ROW_OWNER')
+        if bag!=expected:raise ValueError('PROVISION_UNOWNED_ROW_CHANGED')
+
+
+class ReviewedSignedProvisioning:
+    """검토한 서버 코드 객체만 공급하는 새 합성 Auth 생성 계약. JSON flags는 권한이 아니다."""
+    def __init__(self, decision_id, prepared_root, source_pins, containers, credentials, minimum_expiry, ports=None):
+        self.decision_id, self.prepared_root = decision_id, Path(prepared_root)
+        self.source_pins, self.containers, self.credentials = source_pins, containers, credentials
+        self.minimum_expiry, self.ports = minimum_expiry, ports
+
+
+def provisioning_json(root, name, value):
+    if not re.fullmatch(r'[a-z0-9-]+\.json', name): raise ValueError('PROVISION_ARTIFACT_NAME')
+    fd=os.open(root/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(fd,'w')as stream:
+        json.dump(value,stream,sort_keys=True);stream.flush();os.fsync(stream.fileno())
+    for directory in (root,root.parent):
+        fd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY)
+        try:os.fsync(fd)
+        finally:os.close(fd)
+    return hashlib.sha256(signed_private_read(root/name)).hexdigest()
+
+
+def provisioning_source_check(expected, expected_head=None):
+    head=subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],timeout=15,text=True).strip()
+    if not re.fullmatch(r'[a-f0-9]{40}',head)or expected_head is not None and head!=expected_head:raise ValueError('PROVISION_HEAD_CHANGED')
+    if expected!=signed_source_pins():raise ValueError('PROVISION_SOURCE_CHANGED')
+    for relative,digest in expected.items():
+        path=REPO/relative
+        if path.resolve()!=path or path.is_symlink():raise ValueError('PROVISION_SOURCE_PATH')
+        data=path.read_bytes()
+        result=subprocess.run(['git','-C',str(REPO),'show','HEAD:'+relative],capture_output=True,timeout=15)
+        if result.returncode or result.stdout!=data or hashlib.sha256(data).hexdigest()!=digest:
+            raise ValueError('PROVISION_SOURCE_NOT_COMMITTED')
+
+    return head
+
+
+def provisioning_metadata(reviewed, target, origin):
+    if not isinstance(reviewed.containers,dict)or set(reviewed.containers)!={'db','auth','rest','gateway'}:raise ValueError('PROVISION_CONTAINER_FIELDS')
+    names={'db':'supabase_db_','auth':'supabase_auth_','rest':'supabase_rest_','gateway':'supabase_kong_'}
+    ids=set()
+    for kind,item in reviewed.containers.items():
+        if (not isinstance(item,dict)or set(item)!={'id','name','image','configSha256','hostConfigSha256','mountsSha256'}
+                or item['name']!=names[kind]+target['project']or not re.fullmatch(r'[a-f0-9]{64}',item['id'])
+                or not re.fullmatch(r'sha256:[a-f0-9]{64}',item['image'])
+                or any(not re.fullmatch(r'[a-f0-9]{64}',item[k])for k in('configSha256','hostConfigSha256','mountsSha256'))
+                or item['id']in ids):raise ValueError('PROVISION_CONTAINER_BINDING')
+        ids.add(item['id'])
+    if reviewed.containers['db']['id']!=target['id']or reviewed.containers['db']['image']!=target['image']:raise ValueError('PROVISION_DATABASE_BINDING')
+    if not isinstance(reviewed.credentials,dict)or set(reviewed.credentials)!={'anon','service'}:raise ValueError('PROVISION_CREDENTIAL_FIELDS')
+    for key,role in(('anon','anon'),('service','service_role')):
+        if signed_claims(reviewed.credentials[key]).get('role')!=role:raise ValueError('PROVISION_CREDENTIAL_ROLE')
+    if not re.fullmatch(r'http://127[.]0[.]0[.]1:[0-9]{1,5}',origin):raise ValueError('PROVISION_LOOPBACK_REQUIRED')
+
+class FixedSignedProvisioningPorts:
+    """명시된 새 owned 네 컨테이너의 GoTrue·DB만 사용한다. 리소스를 기동하지 않는다."""
+    def __init__(self, reviewed):
+        self.reviewed=reviewed;self.target=signed_prepared_target(reviewed.prepared_root)
+        self.base=['docker','--host',self.target['host']]
+        self.runner=object.__new__(SignedRunner)
+        self.runner.root=reviewed.prepared_root;self.runner.target=self.target;self.runner.base=self.base
+        self.runner.binding={'containers':reviewed.containers}
+
+    def identity(self):
+        self.runner.signed_identity()
+        return self.reviewed.containers
+
+    def memory_kib(self):
+        result=subprocess.run(self.base+['exec',self.target['id'],'cat','/proc/meminfo'],capture_output=True,timeout=3)
+        if result.returncode or len(result.stdout)>65536:raise ValueError('PROVISION_MEMORY_READ')
+        lines=[x for x in result.stdout.decode('ascii').splitlines()if x.startswith('MemAvailable:')]
+        if len(lines)!=1 or not re.fullmatch(r'MemAvailable:\s+[0-9]+\s+kB',lines[0]):raise ValueError('PROVISION_MEMORY_PARSE')
+        return int(lines[0].split()[1])
+
+    def read_sql(self, query, timeout=3):
+        return SignedMidnightRunner.read_sql(self,query,timeout)
+
+    def sql(self, query):
+        return self.runner.sql(query)
+
+    def original_rows(self):
+        return SignedMidnightRunner.original_rows(self)
+
+    def snapshot(self):
+        rows=self.original_rows()
+        authority=self.read_sql("select encode(sha256(convert_to(jsonb_build_object('roles',(select jsonb_agg(to_jsonb(r)order by oid)from pg_roles r),'memberships',(select jsonb_agg(to_jsonb(m)order by roleid,member,grantor)from pg_auth_members m),'namespaces',(select jsonb_agg(to_jsonb(n)order by oid)from pg_namespace n),'relations',(select jsonb_agg(jsonb_build_array(c.oid,c.relowner,c.relacl)order by c.oid)from pg_class c),'columns',(select jsonb_agg(jsonb_build_array(a.attrelid,a.attnum,a.attacl)order by a.attrelid,a.attnum)from pg_attribute a),'defaultAcl',(select jsonb_agg(to_jsonb(d)order by oid)from pg_default_acl d),'functions',(select jsonb_agg(to_jsonb(p)order by oid)from pg_proc p))::text,'UTF8')),'hex');",timeout=5)
+        if not re.fullmatch(r'[a-f0-9]{64}',authority):raise ValueError('PROVISION_AUTHORITY_HASH_REQUIRED')
+        return {'rows':rows,'authoritySha256':authority}
+
+    def empty_auth(self):
+        return self.read_sql('select(select count(*)from auth.users)+(select count(*)from auth.sessions)+(select count(*)from auth.identities)+(select count(*)from public.profiles)+(select count(*)from private.ai_budget_ledgers)+(select count(*)from private.ai_budget_reservations)+(select count(*)from private.ai_account_budget_reservations)+(select count(*)from private.ai_account_daily_budget)+(select count(*)from private.ai_global_daily_budget);')=='0'and self.read_sql("select not external_processing_allowed and current_setting('cron.launch_active_jobs')='off'from private.ai_processing_guard where singleton;")=='t'
+
+    def closed_controls(self):
+        expressions=[]
+        for table in PROVISION_CLOSED_CONTROLS:
+            column='external_processing_allowed'if table=='ai_processing_guard'else'external_deletion_approved'if table=='member_cleanup_guard'else'enabled'
+            expressions.extend((quote(table),"(select "+column+"from private."+table+" where singleton)"))
+        expressions.extend(("'cronLaunchActiveJobs'","to_jsonb(current_setting('cron.launch_active_jobs'))"))
+        return json.loads(self.read_sql('select jsonb_build_object('+','.join(expressions)+');',timeout=3))
+
+    def added_rows(self, baseline, accounts):
+        # v2.196.0 admin audit는 admin actor가 아니라 traits user_id/email로 묶는다.
+        metadata=[{'user_id':a['userId'],'session_id':a['sessionId'],'email':a['authEmail']}for a in accounts]
+        source="jsonb_to_recordset("+quote(json.dumps(metadata))+"::jsonb)a(user_id text,session_id text,email text)"
+        conditions={'auth.users':'r.id::text=a.user_id','auth.sessions':'r.user_id::text=a.user_id and r.id::text=a.session_id',
+            'auth.identities':"r.user_id::text=a.user_id and r.provider='email'",
+            'auth.refresh_tokens':'r.user_id::text=a.user_id and r.session_id::text=a.session_id',
+            'public.profiles':'r.id::text=a.user_id','private.member_episodes':'r.profile_id::text=a.user_id and r.identity_id is null and r.ended_at is null',
+            'auth.audit_log_entries':"((r.payload->>'action'='user_signedup'and r.payload->'traits'->>'user_id'=a.user_id and r.payload->'traits'->>'user_email'=a.email)or(r.payload->>'action'='login'and r.payload->>'actor_id'=a.user_id and r.payload->>'actor_username'=a.email))"}
+        result={}
+        for table,condition in conditions.items():
+            operation="r.payload->>'action'"if table=='auth.audit_log_entries'else"'row'"
+            query="select coalesce(jsonb_object_agg(r.id::text,jsonb_build_object('rowSha256',encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex'),'ownerUserId',a.user_id,'operation',"+operation+")),'{}'::jsonb)from "+table+" r join "+source+" on "+condition+';'
+            result[table]=json.loads(self.read_sql(query,timeout=3))
+        return result
+
+    def request(self, method, path, payload=None, token=None, admin=False):
+        allowed=(method=='POST'and path in('/admin/users','/token?grant_type=password'))or(method=='GET'and(path=='/user'or re.fullmatch(r'/admin/users/[a-f0-9-]{36}',path)))or(method=='DELETE'and re.fullmatch(r'/admin/users/[a-f0-9-]{36}',path))
+        if not allowed:raise ValueError('PROVISION_FIXED_HTTP_PATH')
+        c=self.reviewed.credentials;credential=c['service']if admin else c['anon']
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self,*args):return None
+        body=None if payload is None else json.dumps(payload).encode()
+        request=urllib.request.Request(self.origin+'/auth/v1'+path,data=body,method=method,
+            headers={'apikey':credential,'Authorization':'Bearer '+(token or credential),'Content-Type':'application/json'})
+        opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+        try:
+            with opener.open(request,timeout=5)as response:
+                data=response.read(65537);status=response.status
+        except urllib.error.HTTPError as error:
+            status=error.code;data=error.read(65537)
+        except Exception:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')from None
+        if len(data)>65536:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')
+        return status,(signed_exact_json(data)if data else {})
+
+    def resolve_email(self, email):
+        value=json.loads(self.read_sql('select coalesce(jsonb_agg(id),\'[]\'::jsonb)from auth.users where email='+quote(email)+';'))
+        if len(value)>1:raise ValueError('PROVISION_EMAIL_SCOPE_UNKNOWN')
+        return value[0]if value else None
+
+    def session_proof(self, account):
+        a=account
+        return self.read_sql('select exists(select 1 from auth.users u join auth.sessions s on s.user_id=u.id where u.id='+quote(a['userId'])+'::uuid and s.id='+quote(a['sessionId'])+'::uuid and u.email='+quote(a['authEmail'])+' and not u.is_anonymous);')=='t'
+
+    def link_profile(self, user_id):
+        # clone-only 실제 Auth 세션/profile/episode 연결. Naver 자격 행을 만들지 않는다.
+        self.sql('begin;insert into public.profiles(id,real_name,birth_date,gender)values('+quote(user_id)+"::uuid,'합성 AI 검증회원','1990-01-01','female');commit;")
+        return self.read_sql('select(select count(*)from public.profiles where id='+quote(user_id)+'::uuid)=1 and(select count(*)from private.member_episodes where profile_id='+quote(user_id)+'::uuid and ended_at is null and identity_id is null)=1;')=='t'
+
+    def unlink_profile(self, user_id):
+        # AI fixture가 시작되었거나 native identity가 붙었다면 이 생성기 소유로 삭제하지 않는다.
+        self.sql("begin;do $$begin if exists(select 1 from private.member_episodes where profile_id="+quote(user_id)+"::uuid and identity_id is not null)or exists(select 1 from private.ai_member_processing where user_id="+quote(user_id)+"::uuid)or exists(select 1 from private.ai_chat_requests where user_id="+quote(user_id)+"::uuid)then raise exception 'provision_cleanup_scope'using errcode='55000';end if;end $$;delete from public.profiles where id="+quote(user_id)+"::uuid;delete from private.member_episodes where profile_id="+quote(user_id)+"::uuid and identity_id is null;commit;")
+
+    def verify_population(self, accounts):
+        ids=','.join(quote(a['userId'])+'::uuid'for a in accounts)
+        sessions=','.join(quote(a['sessionId'])+'::uuid'for a in accounts)
+        return self.read_sql('select(select count(*)from auth.users)=6 and(select count(*)from public.profiles)=6 and(select count(*)from auth.sessions)=6 and(select count(*)from auth.identities)=6 and not exists(select 1 from auth.sessions where user_id<>all(array['+ids+'])or id<>all(array['+sessions+']))and not exists(select 1 from auth.identities where user_id<>all(array['+ids+'])or provider<>\'email\')and(select count(*)from private.member_episodes where profile_id=any(array['+ids+'])and ended_at is null and identity_id is null)=6;')=='t'
+
+
+def provision_signed_accounts(prepared_root, reviewed):
+    """한 새 대상의 원 JWT6 입력을 만든다. 실제 호출은 검토 객체/준비 대상 없으면 거절한다."""
+    root=Path(prepared_root)
+    if type(reviewed)is not ReviewedSignedProvisioning or reviewed.prepared_root!=root or not isinstance(reviewed.decision_id,str)or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',reviewed.decision_id):raise ValueError('PROVISION_REVIEWED_CODE_REQUIRED')
+    source_head=provisioning_source_check(reviewed.source_pins)
+    target=signed_prepared_target(root)
+    manifest=signed_exact_json(signed_private_read(root/'database-manifest.json'))
+    origin='http://127.0.0.1:'+str(manifest['config_overlay']['api.port'])
+    if type(reviewed.minimum_expiry)is not int or reviewed.minimum_expiry<time.time()+300:raise ValueError('PROVISION_EXPIRY_REQUIREMENT')
+    provisioning_metadata(reviewed,target,origin)
+    if (root/'signed-ai-provision-intent.json').exists()or(root/'signed-ai-binding-private.json').exists():raise ValueError('PROVISION_PREVIOUS_ATTEMPT_PRESERVED')
+    scope=uuid.uuid4().hex;evidence=root/('auth-provision-'+scope);evidence.mkdir(mode=0o700)
+    signed_evidence=root/('signed-auth-'+scope)
+    if signed_evidence.resolve()!=signed_evidence or signed_evidence.exists()or signed_evidence.is_symlink():raise ValueError('PROVISION_FUTURE_EVIDENCE_NOT_ABSENT')
+    ports=reviewed.ports if reviewed.ports is not None else FixedSignedProvisioningPorts(reviewed)
+    ports.origin=origin
+    def save(name,value):return provisioning_json(evidence,name,value)
+    def resource(minimum):
+        began=time.monotonic();value=ports.memory_kib()
+        if type(value)is not int or value<minimum or time.monotonic()-began>3:raise ValueError('PROVISION_RESOURCE_GUARD')
+        return value
+    accounts=[];owned=[];attempted=[];unknown_posts=[];stopped=threading.Event();failures=[]
+    def monitor():
+        while not stopped.is_set():
+            began=time.monotonic()
+            try:resource(786432)
+            except BaseException:failures.append('PROVISION_RESOURCE_MONITOR_FAILED');stopped.set();return
+            stopped.wait(max(0,began+3-time.monotonic()))
+    observer=threading.Thread(target=monitor,daemon=True)
+    def single_post(index, phase, path, payload, admin=False):
+        try:
+            status,value=ports.request('POST',path,payload,admin=admin)
+        except BaseException:
+            unknown_posts.append((index,phase))
+            try:save('account-'+str(index)+'-'+phase+'-outcome.json',{'scopeId':scope,'phase':phase,'outcome':'UNKNOWN_NO_SERVER_CLOSURE_PROOF'})
+            except BaseException:pass
+            raise
+        known_id=None
+        if phase=='create'and status==200:
+            try:
+                known_id=str(uuid.UUID(value['id']))
+                if known_id!=value['id']or value.get('email')!=payload['email']:raise ValueError()
+                owned.append({'userId':known_id,'authEmail':payload['email']})
+            except (ValueError,KeyError,TypeError,AttributeError):
+                unknown_posts.append((index,'create-body'))
+                raise ValueError('PROVISION_CREATE_FAILED')from None
+        save('account-'+str(index)+'-'+phase+'-outcome.json',{'scopeId':scope,'phase':phase,'outcome':'HTTP_STATUS_OBSERVED','status':status,'knownCreatedId':known_id})
+        return status,value
+    def live():
+        if failures or stopped.is_set():raise ValueError('PROVISION_RESOURCE_MONITOR_FAILED')
+        provisioning_source_check(reviewed.source_pins,source_head)
+        if ports.identity()!=reviewed.containers:raise ValueError('PROVISION_IDENTITY_CHANGED')
+        controls=ports.closed_controls()
+        if set(controls)!=set(PROVISION_CLOSED_CONTROLS)|{'cronLaunchActiveJobs'}or controls['cronLaunchActiveJobs']!='off'or any(controls[k]is not False for k in PROVISION_CLOSED_CONTROLS):raise ValueError('PROVISION_DATABASE_CONTROLS_OPEN')
+        resource(786432)
+    try:
+        if ports.identity()!=reviewed.containers or not ports.empty_auth():raise ValueError('PROVISION_FRESH_EMPTY_TARGET_REQUIRED')
+        initial=resource(1048576)
+        controls=ports.closed_controls()
+        if set(controls)!=set(PROVISION_CLOSED_CONTROLS)|{'cronLaunchActiveJobs'}or controls['cronLaunchActiveJobs']!='off'or any(controls[k]is not False for k in PROVISION_CLOSED_CONTROLS):raise ValueError('PROVISION_DATABASE_CONTROLS_OPEN')
+        baseline=ports.snapshot();save('baseline-private.json',baseline)
+        save('scope-intent.json',{'scopeId':scope,'target':target,'sourcePins':reviewed.source_pins,'sourceHead':source_head,'initialMemoryKiB':initial,
+            'signedEvidenceRoot':str(signed_evidence),'noResend':True,'actualNaver':'NOT_RUN'})
+        provisioning_json(root,'signed-ai-provision-intent.json',{'scopeId':scope,'targetId':target['id'],'sourceHead':source_head,'creationReceiptRoot':str(evidence),'singleProvision':True,'noReplay':True})
+        observer.start()
+        for index in range(6):
+            live();resource(1048576 if index==0 else 786432)
+            email='synthetic-ai-'+scope+'-'+str(index)+'@example.invalid';password=base64.urlsafe_b64encode(os.urandom(36)).decode()
+            if ports.resolve_email(email)is not None:raise ValueError('PROVISION_EMAIL_ALREADY_PRESENT')
+            save('account-'+str(index)+'-intent-private.json',{'scopeId':scope,'authEmail':email,'password':password,'singleCreate':True})
+            attempted.append((index,email))
+            status,user=single_post(index,'create','/admin/users',{'email':email,'password':password,'email_confirm':True},admin=True)
+            if status!=200 or user.get('email')!=email:raise ValueError('PROVISION_CREATE_FAILED')
+            identifier=str(uuid.UUID(user['id']))
+            if owned[-1]!={'userId':identifier,'authEmail':email}:raise ValueError('PROVISION_CREATE_FAILED')
+            save('account-'+str(index)+'-created-private.json',{'scopeId':scope,**owned[-1],'createStatus':status})
+            live();save('account-'+str(index)+'-login-intent.json',{'scopeId':scope,'singleLogin':True})
+            status,session=single_post(index,'login','/token?grant_type=password',{'email':email,'password':password})
+            if status!=200 or session.get('user',{}).get('id')!=identifier:raise ValueError('PROVISION_LOGIN_FAILED')
+            token=session.get('access_token');claims=signed_claims(token)
+            account={'userId':identifier,'sessionId':str(uuid.UUID(claims.get('session_id'))),'accessToken':token,
+                     'expiresAt':claims.get('exp'),'authEmail':email}
+            if claims.get('sub')!=identifier or claims.get('email')!=email or claims.get('iss')!=origin+'/auth/v1'or claims.get('role')!='authenticated'or claims.get('aud')!='authenticated'or claims.get('is_anonymous')is True or type(account['expiresAt'])is not int or account['expiresAt']<max(reviewed.minimum_expiry,time.time()+300):raise ValueError('PROVISION_ORIGINAL_JWT_METADATA')
+            live();status,actual=ports.request('GET','/user',token=token)
+            if status!=200 or actual.get('id')!=identifier or actual.get('email')!=email or actual.get('role')!='authenticated'or actual.get('is_anonymous')is True or not ports.session_proof(account):raise ValueError('PROVISION_ACTUAL_AUTH_SESSION_FAILED')
+            save('account-'+str(index)+'-session-private.json',{'scopeId':scope,**{k:v for k,v in account.items()if k!='accessToken'},'actualGoTrueUser':True,'actualDatabaseSession':True})
+            live();save('account-'+str(index)+'-profile-intent.json',{'scopeId':scope,'userId':identifier,'singleLink':True,'syntheticNaverEligibility':False})
+            if not ports.link_profile(identifier):raise ValueError('PROVISION_PROFILE_EPISODE_FAILED')
+            save('account-'+str(index)+'-linked.json',{'scopeId':scope,'userId':identifier,'originalSessionId':account['sessionId'],'profile':True,'nativeIdentity':False})
+            accounts.append(account)
+        live()
+        if any(a['expiresAt']<max(reviewed.minimum_expiry,time.time()+300)for a in accounts):raise ValueError('PROVISION_ORIGINAL_JWT_METADATA')
+        if not ports.verify_population(accounts):raise ValueError('PROVISION_EXACT_SIX_POPULATION_FAILED')
+        final=ports.snapshot()
+        if final['authoritySha256']!=baseline['authoritySha256']:raise ValueError('PROVISION_ORIGINAL_ROWS_OR_AUTHORITY_CHANGED')
+        added=ports.added_rows(baseline['rows'],accounts)
+        provisioning_added_scope(baseline['rows'],final['rows'],added,accounts)
+        save('owned-added-rows-private.json',{'scopeId':scope,'createdUserIds':[a['userId']for a in accounts],'rows':added})
+        stopped.set();observer.join(timeout=3)
+        if observer.is_alive()or failures:raise ValueError('PROVISION_MONITOR_DID_NOT_CLOSE')
+        binding={'version':1,'kind':SIGNED_KIND,'preparedRoot':str(root),'databaseManifestSha256':hashlib.sha256(signed_private_read(root/'database-manifest.json')).hexdigest(),
+            'origin':origin,'jwtIssuer':origin+'/auth/v1','containers':reviewed.containers,'credentials':reviewed.credentials,'accounts':accounts,
+            'evidenceRoot':str(signed_evidence),'sourcePins':reviewed.source_pins,'approvedByRoot':False,'dockerSlotReady':False}
+        validate_signed_binding(binding,root,target)
+        binding_sha=provisioning_json(root,'signed-ai-binding-private.json',binding)
+        receipt={'status':'PASS_LOCAL_AUTH6_PROVISION_ONLY','scopeId':scope,'accounts':6,'bindingSha256':binding_sha,
+            'creationReceiptRoot':str(evidence),'signedEvidenceRoot':str(signed_evidence),'originalRowsPreserved':True,
+            'actualGoTrueAndDatabaseSessions':True,'actualNaver':'NOT_RUN','actualAI22AI23AI24':'NOT_RUN','authAccountsRetained':True}
+        save('receipt.json',receipt)
+        return receipt
+    except BaseException as error:
+        # 최초 POST가 유실되었어도 원 email GET/DB 조회만 한다. create/login은 재발신하지 않는다.
+        stopped.set()
+        if observer.ident is not None:observer.join(timeout=3)
+        uncertainty=bool(observer.is_alive()or unknown_posts);closed=[]
+        for index,email in attempted:
+            try:
+                if ports.identity()!=reviewed.containers:raise ValueError('PROVISION_CLEANUP_SCOPE_UNKNOWN')
+                identifier=ports.resolve_email(email)
+                if identifier is None:continue
+                identifier=str(uuid.UUID(identifier))
+                known=next((item['userId']for item in owned if item['authEmail']==email),None)
+                if known is not None and identifier!=known:raise ValueError('PROVISION_CLEANUP_CREATED_ID_CHANGED')
+                status,actual=ports.request('GET','/admin/users/'+identifier,admin=True)
+                if status!=200 or actual.get('id')!=identifier or actual.get('email')!=email:raise ValueError('PROVISION_CLEANUP_SCOPE_UNKNOWN')
+                save('account-'+str(index)+'-cleanup-intent.json',{'scopeId':scope,'userId':identifier,'authEmail':email,'singleDelete':True})
+                ports.unlink_profile(identifier)
+                if ports.identity()!=reviewed.containers:raise ValueError('PROVISION_CLEANUP_SCOPE_UNKNOWN')
+                try:status,_=ports.request('DELETE','/admin/users/'+identifier,admin=True)
+                except BaseException:status=None
+                # 유실 DELETE는 GET-only로 확인한다. 어떤 status도 추가 DELETE 허가가 아니다.
+                found=ports.resolve_email(email)
+                get_status,_=ports.request('GET','/admin/users/'+identifier,admin=True)
+                if found is not None or get_status!=404:raise ValueError('PROVISION_DELETE_UNKNOWN')
+                closed.append(identifier)
+                save('account-'+str(index)+'-cleanup-closed.json',{'scopeId':scope,'userId':identifier,'getAbsent':True,'deleteResponseObserved':status is not None})
+            except BaseException:uncertainty=True
+        code=str(error)if type(error)is ValueError and str(error)in PROVISION_FAILURE_CODES else'PROVISION_FAILED'
+        try:save('failure.json',{'status':'UNKNOWN'if uncertainty else'FAIL_OWN_CREATED_AUTH_ABSENT','scopeId':scope,'code':code,
+            'closedCount':len(closed),'attemptedCount':len(attempted),'unknownPostCount':len(unknown_posts),'noResend':True,'actualAI22AI23AI24':'NOT_RUN'})
+        except BaseException:pass
+        raise ValueError('PROVISION_FAILED_PRIVATE_EVIDENCE_PRESERVED')from None
+    finally:
+        stopped.set()
+        if observer.ident is not None:
+            observer.join(timeout=3)
+            if observer.is_alive():raise ValueError('PROVISION_MONITOR_DID_NOT_CLOSE')
 
 if __name__=='__main__':
     try:signed_main() if any(k in sys.argv for k in ('--signed-local-auth','--signed-auth')) else main()

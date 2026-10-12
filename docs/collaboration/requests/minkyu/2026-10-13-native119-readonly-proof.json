@@ -1,0 +1,118 @@
+{
+  "checkedAt": "2026-10-12T15:56:22.075652+00:00",
+  "scope": "USER_APPROVED_SYNTHETIC_CANONICAL_READ_ONLY",
+  "sourceId": "497e5d1bc98835d4074a2fbb7ccb37575d539984c18f571d38b6d8fbec692c2f",
+  "restart": "PASS_USER_APPROVED",
+  "identityConfigAndImageMatch": "PASS",
+  "actual119AppliedReceipts": {
+    "count": 119,
+    "inventorySha256": "e879b213c91b4da96479322896bc33fb6f216b4f297f1382f2f90c907d7e1c10",
+    "currentVersionBytesMatch": "PASS",
+    "sqlReplayed": false
+  },
+  "migrationHistoryRelation": null,
+  "actual119HistoryMode": "PRIVATE_APPLIED_RECEIPTS",
+  "readOnly": "on",
+  "otherClientSessions": 0,
+  "fullRowDigestTables": 178,
+  "rawAclQuery": {
+    "status": "PASS",
+    "bytes": 290259
+  },
+  "effectivePrivilegeQuery": {
+    "status": "FAIL_STATEMENT_TIMEOUT",
+    "sqlState": "57014",
+    "statementTimeoutSeconds": 5
+  },
+  "completeState": "PASS_REPEATABLE_READ_ONLY_NOT_SINGLE_WHOLE_MVCC",
+  "schemaScopedSequenceCount": 2,
+  "fullSequenceState": "PASS_ALL_4_NON_SYSTEM_SEQUENCES",
+  "dump": "PASS_SYNTHETIC_DB_REDACTED_ROLES_NOT_RESTORED",
+  "storageBytes": "NOT_VERIFIED",
+  "wholeRestore": "NOT_RUN",
+  "productionMutation": false,
+  "sourceCommit": "7898a83",
+  "overall": {
+    "completed": 22,
+    "total": 28,
+    "displayPercent": 79
+  },
+  "batchedAttempt": {
+    "status": "FAIL_INVENTORY_COLLISION",
+    "queryCallsBeforeFailure": 9,
+    "inventoryEntries": 15128,
+    "duplicateFunctionKeys": 24
+  },
+  "identityTruncationDiagnostic": {
+    "status": "PASS_TEXT_CAST_DIAGNOSTIC_READ_ONLY",
+    "sameEntryCount": 15128,
+    "duplicateKeys": 0,
+    "maximumIdentityUtf8Bytes": 1624,
+    "identityEntriesOver63Bytes": 732,
+    "originalNameTypeTruncation": "CONFIRMED",
+    "implementation": "REVIEWED_AND_33_OFFLINE_TESTS_PASS"
+  },
+  "completeReadAfterFix": {
+    "boundedCalls": 101,
+    "canonicalSnapshotMatch": true,
+    "effectivePrivilegeEntries": 484096,
+    "fullBackup": "NOT_RUN",
+    "fullRestore": "NOT_RUN",
+    "otherClientSessions": 0,
+    "physicalStorage": "NOT_VERIFIED",
+    "roles": 31,
+    "sequences": 4,
+    "singleWholeMvccSnapshot": false,
+    "sourceCodeSha256": "8c0a6b158b98aa00da8ccad24fb226ac2152806b6207cadedd529ca9c1ebb174",
+    "sourceId": "497e5d1bc98835d4074a2fbb7ccb37575d539984c18f571d38b6d8fbec692c2f",
+    "stateSha256": "5cb91cff88044b86375acacc9a9e1f37e939594225058527ffabaddd2d3606d2",
+    "status": "PASS_COMPLETE_REPEATABLE_READ_ONLY_STATE",
+    "tables": 178,
+    "receiptSha256": "350e061148bd6674d13dc48106f28ea3ca05b5ccb6c72805d32bb0fb470ef6f1"
+  },
+  "dbRoleArchive": {
+    "scope": "SYNTHETIC_NATIVE119_DATABASE_AND_REDACTED_ROLES",
+    "archives": {
+      "roles-no-passwords.sql": {
+        "bytes": 5760,
+        "privateMode": "600",
+        "sha256": "6b6f60e45032548fc909404e09453afcf65a65ad518afda680828bf3d5cb64b0"
+      },
+      "source.dump": {
+        "bytes": 1999065,
+        "privateMode": "600",
+        "sha256": "ef04ad912992c51345d8488c718e5c6b26435bd8f06e87b0095370bc9a3b3dc6"
+      },
+      "source-with-db-metadata.dump": {
+        "bytes": 1999065,
+        "privateMode": "600",
+        "sha256": "25d095bf5c77866e763e95e70968927cb84a52b7ce175780bfcc07ef647b00cf"
+      }
+    },
+    "rolePasswordsAndHashes": "EXCLUDED",
+    "storageBytes": "NOT_INCLUDED",
+    "fullRestore": "NOT_RUN",
+    "toc": {
+      "sha256": "e88089eab81c878b566362ab4eaec370d60dfadf84b2fa76fac8126a16fa2e5f",
+      "command": "pg_restore --create --list",
+      "tableDataEntries": 178,
+      "databaseOwner": "postgres",
+      "databaseMetadataEntries": 3,
+      "sqlExecuted": false
+    }
+  },
+  "autoReview": {
+    "rejectedAction": "roles-only archive including password hashes",
+    "reason": "Potential credential material conflicts with no-password-output requirement",
+    "saferAlternative": "--no-role-passwords redacted roles archive",
+    "alternativeResult": "PASS"
+  },
+  "readPhaseFinalization": {
+    "status": "PASS_RETURNED_ORIGINAL_STOPPED",
+    "logicalRowsCatalogRolesRawAclSequencesUnchanged": true,
+    "otherClientSessions": 0,
+    "exitCode": 0,
+    "retained": true,
+    "deleted": false
+  }
+}
