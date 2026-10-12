@@ -1,0 +1,17 @@
+{
+  "scope": "OPERATING_ROLE_METADATA_READ_ONLY",
+  "evidence": {
+    "readOnly": "on",
+    "rolesMd5": "ea70151accfbb4cfca48471ba6daa600",
+    "checkedAt": "2026-10-11T16:28:30.540778+00:00",
+    "roleCount": 31,
+    "membershipMd5": "59dc4694528babb46d93027645225109",
+    "membershipCount": 25,
+    "anonPublicCreate": false,
+    "authenticatedPublicCreate": false
+  },
+  "rolePasswordRead": false,
+  "hashNormalization": "DATABASE_LOCAL_OIDS_NOT_PORTABLE",
+  "crossEnvironmentComparison": "NOT_RUN",
+  "operatingChanged": false
+}

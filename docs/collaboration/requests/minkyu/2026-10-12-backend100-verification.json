@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-11T17:00:41.199908+00:00",
+  "actor": "minkyu",
+  "branch": "minkyu/backend100-20261012",
+  "policyHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
+  "sourceState": "REVIEWED_WORKTREE_UNCOMMITTED",
+  "overall": {
+    "completed": 22,
+    "total": 28,
+    "displayPercent": 79
+  },
+  "files": {
+    "tools/local/observe_isolated.py": {
+      "sha256": "4066e892fd4132bae080bd5997c9369ad552e4c04486a065d4e8878f813e1264",
+      "bytes": 12808
+    },
+    "tools/local/prepare_isolated_midnight.py": {
+      "sha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0",
+      "bytes": 86705
+    },
+    "tests/integration/jonghyun/isolated_ai_contracts.py": {
+      "sha256": "146046f638c7dd790d8647ab13eb8e8cab138296b93faad36ec9e1a9c7fae584",
+      "bytes": 80383
+    },
+    "tests/integration/jonghyun/isolated_ai_factory.ts": {
+      "sha256": "1d75f06e343e7d9296fa80f0eafcf66f82f0c6e7881f66452c449315e94830c7",
+      "bytes": 36851
+    },
+    "tests/database/jonghyun/test_isolated_observer.py": {
+      "sha256": "c787824c954daf82c32dd8180d58c2b21770b2d440477724743a15798185e3c8",
+      "bytes": 13801
+    },
+    "tests/database/jonghyun/test_isolated_midnight_preparation.py": {
+      "sha256": "5e19ce093dfa70539a220992716c66cf39e2a65c74429a257f53bd01b0aad35b",
+      "bytes": 8046
+    },
+    "tests/database/minkyu/test_signed_auth_binding.py": {
+      "sha256": "3e8dc4e7907d40794a99a0ef8c0e43dedb7687ba85e78dd463321b920a2d8cdc",
+      "bytes": 33968
+    },
+    "tests/database/minkyu/test_ai24_live_binding.py": {
+      "sha256": "6637e45ae4b5b77c7cc9f06dc68c76fd83aedd9ae47d55e0ba33784502f15549",
+      "bytes": 47170
+    }
+  },
+  "checks": {
+    "integratedOfflineUnittest": {
+      "passed": 108,
+      "failed": 0,
+      "skipped": 0,
+      "parts": {
+        "ai24": 48,
+        "signedAuth": 29,
+        "midnightPreparation": 13,
+        "observer": 18
+      }
+    },
+    "denoCachedCheck": "PASS",
+    "pythonCompile": "PASS",
+    "diffCheck": "PASS",
+    "independentReadOnlyRecoveryReview": {
+      "status": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND",
+      "ai24Sha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0"
+    },
+    "observerProfileSelection": "PASS_18_OFFLINE_CONTEXT_SOCKET_BINDING"
+  },
+  "actual": {
+    "signedAuth": "NOT_RUN",
+    "naturalMidnight": "NOT_RUN",
+    "externalProvider": "NOT_RUN",
+    "realMembers": "HOLD",
+    "fullRestore": "NOT_RUN",
+    "productionActivation": "NOT_RUN",
+    "storage39MissingBytes": "UNRESOLVED",
+    "ownedChildGroupClosureSmoke": "PASS_PROCESS_ONLY"
+  },
+  "limitations": [
+    "Offline tests do not prove actual Auth/DB/product midnight success.",
+    "Source graph must be frozen to reviewed HEAD before live execution.",
+    "Sequence current values and physical Storage bytes not verified by AI24.",
+    "Full ordinary dependency imports not proven immutable captured execution."
+  ],
+  "activationAllowed": false,
+  "secretsIncluded": false
+}

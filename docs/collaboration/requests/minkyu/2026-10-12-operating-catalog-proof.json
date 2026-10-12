@@ -1,0 +1,27 @@
+{
+  "scope": "OPERATING_SCHEMA_CATALOG_READ_ONLY",
+  "privateInputSha256": "4f50f04233145609d3ca16bc4554aac1c661d1e45f8453327383d7d94b5826c7",
+  "normalizedSha256": "602cb13b941ab99e9edaa67c986c9ee60c5c976a1d69b725413e82355cfc717c",
+  "staticCounts": {
+    "tables": 14,
+    "columns": 93,
+    "indexes": 35,
+    "schemas": 2,
+    "policies": 10,
+    "triggers": 6,
+    "functions": 46,
+    "constraints": 80,
+    "tableGrants": 201,
+    "columnGrants": 7,
+    "schemaGrants": 10,
+    "defaultGrants": 96,
+    "storagePolicies": 3,
+    "migrationVersions": 20
+  },
+  "collectedAtKstDate": "2026-10-12",
+  "formatValidated": true,
+  "baselineComparison": "NOT_RUN",
+  "rowsAndStorageBytes": "NOT_READ",
+  "roleMembershipAndPasswords": "NOT_READ",
+  "operatingChanged": false
+}

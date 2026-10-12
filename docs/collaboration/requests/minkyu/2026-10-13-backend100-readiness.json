@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-12T15:41:29.712677+00:00",
+  "scope": "READ_ONLY_LOCAL_OWNED_RUNTIME",
+  "profile": "yumidang-minkyu",
+  "availableKiB": 1015632,
+  "requiredStartKiB": 1048576,
+  "startupReady": false,
+  "dockerPs": "PASS",
+  "runningContainers": 28,
+  "candidateStop": {
+    "id": "206205a63a487f8990a4296abf4a51c8c18269f990b9042a89b2f1ee8835b8a5",
+    "name": "yumidang-minkyu-event112-20261009-v1",
+    "imageId": "sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518",
+    "running": true,
+    "paused": false,
+    "restartPolicy": "no",
+    "mounts": [],
+    "databaseCount": 1,
+    "otherClientSessions": 0,
+    "otherActiveClientSessions": 0,
+    "readOnly": "on",
+    "stop": "USER_APPROVED_NORMAL_STOP_PASS",
+    "runningAfterStop": false,
+    "exitCode": 0,
+    "containerRetained": true,
+    "removeExecuted": false
+  },
+  "overall": {
+    "completed": 22,
+    "total": 28,
+    "displayPercent": 79
+  },
+  "actualSignedAuth": "NOT_RUN",
+  "naturalMidnight": "NOT_RUN",
+  "productionMutation": false,
+  "availableKiBAfterStop": 1107232,
+  "startupReadyAfterStop": true,
+  "stopFinishedAt": "2026-10-12T15:42:16.686128561Z",
+  "preparedSource": {
+    "count": 119,
+    "manifestSha256": "0e0c2ca55160b5b41a0ff948e6d544c2df005351a87fe8465a0274470ab68d61",
+    "project": "jonghyun-backend100-6ac13a01",
+    "sqlExecution": "NOT_RUN",
+    "runtimeStarted": false
+  }
+}

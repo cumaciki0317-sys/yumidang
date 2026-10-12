@@ -17,3 +17,7 @@
 기존 화면의 직접 `session.retire` 호출 뒤 `installMemberSessionDetails(null)` 및 즉시 로그인 이동은 위 연결 함수로 교체해야 한다. 해당 세션 설치 호출은 원 영수증 재확인 문맥까지 폐기하므로 탈퇴 확인 처리에 넣지 않는다. 회원 Guard보다 먼저 최소 영수증 화면을 표시하고, 처리 중과 완료를 구분한다. 명시적 로그인 이동과 로그아웃은 이전 문맥을 폐기한다. 이 화면 변경은 성호 담당이며 아직 미완료다.
 
 root 검증은 신규 adapter16·소비 상태14·기존 민규 읽음4·기존 종현 웹 세션7, 총41개 PASS/skip0다. 테스트는 합성 요청·응답과 상태 계약 검증이며 실제 화면·실회원·배포 검증으로 집계하지 않는다. 기존 메시지 읽음 연결도 보존했다. 별도 정적 영수증은 `/private/tmp/yumidang-mobile-retirement-static-20261009-v2/receipt.json`이며 SHA `cf7fe91c73446fb73e5438a6ecd649fd6d376a73167881675de1844124549689`다.
+
+## 2026-10-12 현재 소스 재확인
+
+새 인수9d3291b에서도 RemoteMemberScreens.tsx624행은 session.retire를 직접 호출하고 상태 구분 없이 installMemberSessionDetails(null)과 로그인 이동을 수행한다. 위useMemberRetirement/requestMemberRetirement 연결 요청은 아직 미완료다. 화면 담당sungho를 유지하고 직접 수정하지 않았다. 현재원격소스의 개별읽음4·신고숨김/안내3·탈퇴adapter16·store14, 총37개 함수회귀PASS/skip0를 확인했다. 이는 실제 화면/실회원/운영 검증이 아니며 화면 문제의 완료 증거로 계산하지 않는다.

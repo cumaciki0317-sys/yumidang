@@ -142,6 +142,19 @@ class MidnightPreparationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'OFFSET_CLOCK_REQUIRED'):
             m.natural_windows(datetime(2026, 10, 11))
 
+    def test_live_windows_keep_original_exclusive_cutoffs(self):
+        from datetime import timedelta
+        boundary = m.boundary_time('2026-10-12T00:00:00+09:00')
+        for phase, accepted, rejected in [
+            ('initial', 1200, 1199), ('fixture', 600, 599),
+            ('fixture_finish', 300, 299), ('resume', 120, 5),
+            ('final_idle', 60, 3), ('pre_boundary', 2.1, 2.2),
+            ('post_boundary', -1.9, -2),
+        ]:
+            m.check_window(boundary - timedelta(seconds=accepted), boundary, phase)
+            with self.assertRaisesRegex(ValueError, 'NATURAL_WINDOW_REQUIRED'):
+                m.check_window(boundary - timedelta(seconds=rejected), boundary, phase)
+
 
 if __name__ == '__main__':
     unittest.main()

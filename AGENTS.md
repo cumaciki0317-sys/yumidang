@@ -59,3 +59,7 @@ Always use harness agent team architecture for complex tasks.
 성호는 ownership.json의 sungho 배정 경로만 수정·생성·삭제·이동할 수 있다. 편집 전 `check_ownership.py --actor sungho --paths 대상파일...`을 실행하고 거절된 파일은 편집하지 않는다. 미배정 파일도 성호에게는 거절된다. 2026-10-09 사용자 승인으로 웹 frontend 전체, 모바일 screens·app·components·ui.tsx·presentation·design·assets, docs/planning/design의 직접 편집을 성호에게 배정했다. 백엔드·환경·공통 정책·모바일 API·상태·인증·세션 연결 파일은 기존 담당을 유지한다. 화면 편집에서도 현재 정책·민감정보 공개·인증 조건을 유지한다.
 
 새 presentation 컴포넌트는 props로 표시 값과 이벤트를 받는다. API 호출·인증 세션·서비스 상태·domain 정책을 직접 가져오거나 정책·민감정보 공개 조건을 바꾸지 않는다. 기존 실제 화면의 UI/UX 적용은 성호가 담당하며, 인증·세션·서비스 연결 변경은 해당 담당자에게 요청한다. owner 선언은 협업 역할이며 사용자 인증이 아니다. AI 수정 전 검사·로컬 hook·PR 검사는 파일 쓰기 자체를 OS 권한으로 잠그지 않는다. --no-verify, actor 변경, hook/정책 수정으로 담당 검사를 우회하지 않는다.
+
+## 2026-10-12 실제 Auth·AI24·복원 재개
+
+사용자가 최신 백엔드100 계획 구현과 “필요한 경로만 민규로 재배정”을 명시했다. 정책 `eac8562`와 `ffce766`의12개 개별 경로만 minkyu 담당이며, 위2026-10-10 종현 전체 이관의 예외다. 나머지 jonghyun 및 sungho 담당은 유지한다. 현재 실행·검증·보류는 [재개 기록](docs/collaboration/requests/minkyu/2026-10-12-backend100-execution.md)을 따른다. 실제 Auth 포함 AI24를 구현하며 전체79%(22/28)에서 실제 완료 항목만 집계한다. 실회원 HOLD·운영 승인·외부 원문 조건은 유지한다. 이 컴퓨터에는 종현 Colima profile이 없으며 민규 VM의 시작 여유 기준/대상 identity를 통과하기 전 실제 신규 검증을 실행하지 않는다.

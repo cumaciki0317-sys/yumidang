@@ -1,0 +1,23 @@
+{
+  "scope": "OPERATING_EDGE_FUNCTIONS_READ_ONLY",
+  "projectId": "bndguguarijmghnkenvt",
+  "functions": [
+    {
+      "slug": "test-phone-auth",
+      "status": "ACTIVE",
+      "version": 6,
+      "verifyJwt": false,
+      "bundleSha256": "d4613bef09efcaa3554a875623597495eb5080e38268589160abd9bb858b8772"
+    },
+    {
+      "slug": "test-institutional-email-auth",
+      "status": "ACTIVE",
+      "version": 4,
+      "verifyJwt": true,
+      "bundleSha256": "e07e4fdf5504b3a829a9d7f34bad424bd6449e4885f7b926e2c9d04913727e27"
+    }
+  ],
+  "operatingChanged": false,
+  "functionExecution": "NOT_RUN",
+  "otherHosting": "NOT_OBSERVED"
+}

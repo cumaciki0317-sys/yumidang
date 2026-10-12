@@ -1,0 +1,124 @@
+{
+  "scope": "OPERATING_METADATA_READ_ONLY",
+  "projectId": "bndguguarijmghnkenvt",
+  "evidence": {
+    "cronJobs": 1,
+    "readOnly": "on",
+    "appCreate": false,
+    "checkedAt": "2026-10-11T16:20:09.74986+00:00",
+    "publicTables": 10,
+    "privateTables": 4,
+    "storageObjects": 2,
+    "migrationVersions": [
+      "20260916080335",
+      "20260916081429",
+      "20260916081750",
+      "20260916101123",
+      "20260916105220",
+      "20260916105738",
+      "20260916105916",
+      "20260916110052",
+      "20260916110758",
+      "20260916110943",
+      "20260916111030",
+      "20260916111437",
+      "20260916114036",
+      "20260916131906",
+      "20260917005621",
+      "20260917043418",
+      "20260917052827",
+      "20260917094753",
+      "20260917122744",
+      "20260917141449"
+    ],
+    "workerRolePresent": false,
+    "completionRolePresent": false
+  },
+  "migrations": [
+    {
+      "version": "20260916080335",
+      "name": "create_profiles"
+    },
+    {
+      "version": "20260916081429",
+      "name": "remove_profiles_neighborhood"
+    },
+    {
+      "version": "20260916081750",
+      "name": "restrict_profiles_column_writes"
+    },
+    {
+      "version": "20260916101123",
+      "name": "profiles_real_name_contract"
+    },
+    {
+      "version": "20260916105220",
+      "name": "feature03_posts"
+    },
+    {
+      "version": "20260916105738",
+      "name": "feature04_post_author_profile"
+    },
+    {
+      "version": "20260916105916",
+      "name": "feature05_join_requests"
+    },
+    {
+      "version": "20260916110052",
+      "name": "feature06_matching_chat"
+    },
+    {
+      "version": "20260916110758",
+      "name": "feature07_final_match"
+    },
+    {
+      "version": "20260916110943",
+      "name": "feature08_completion"
+    },
+    {
+      "version": "20260916111030",
+      "name": "feature09_mutual_review"
+    },
+    {
+      "version": "20260916111437",
+      "name": "appointments_request_post_fk_index"
+    },
+    {
+      "version": "20260916114036",
+      "name": "rpc_unavailable_errors_as_404"
+    },
+    {
+      "version": "20260916131906",
+      "name": "existing_ui_gender_category_author_cards"
+    },
+    {
+      "version": "20260917005621",
+      "name": "retry_completion_dispute_review_policy"
+    },
+    {
+      "version": "20260917043418",
+      "name": "signup_eligibility_author_demographics"
+    },
+    {
+      "version": "20260917052827",
+      "name": "profile_images_required"
+    },
+    {
+      "version": "20260917094753",
+      "name": "disable_legacy_signup_without_avatar"
+    },
+    {
+      "version": "20260917122744",
+      "name": "ut_notifications_and_discovery"
+    },
+    {
+      "version": "20260917141449",
+      "name": "notifications_join_request_index"
+    }
+  ],
+  "operatingChanged": false,
+  "dataRowsRead": false,
+  "storageBytesRead": false,
+  "backupAndRestore": "NOT_RUN",
+  "rolePasswordRead": false
+}
