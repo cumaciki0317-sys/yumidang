@@ -611,6 +611,29 @@ class SignedRunner(Runner):
         self.save_signed('cleanup.json',{'status':'FAIL' if errors else 'PASS','fixedFailureTypes':errors,'authLifecycleMutation':False,'originalProtectedRowsPreserved':not errors,'protectedBudgetDelta':'COMMITTED_NOT_ROLLED_BACK','sequence':'NOT_VERIFIED','ownedContainerLifecycle':'UNCHANGED'})
         if errors:raise ValueError('SIGNED_CLEANUP_FAILED')
 
+def signed_negative_receipt(value):
+    """실제 거절 결과와 아직 실행하지 않은 수명주기 검증을 함께 보존한다."""
+    coverage=('expiredBearer','revokedSession','anonymousBearer','memberChanged','differentOriginalContext')
+    if not isinstance(value,dict)or value.get('status')!='PASS' or type(value.get('nativeExternalAttempts'))is not int or value.get('nativeExternalAttempts')!=0:
+        raise ValueError('SIGNED_NEGATIVE_PROOF')
+    cases=value.get('cases')
+    expected={'missing':0,'malformed':0,'invalid_signature':1,'service_principal':0}
+    if not isinstance(cases,list)or len(cases)!=4:raise ValueError('SIGNED_NEGATIVE_CASES')
+    seen=set()
+    for item in cases:
+        if not isinstance(item,dict)or set(item)!={'case','status','httpStatus','actualAuthReads','rpcCalls','providerCalls'}:
+            raise ValueError('SIGNED_NEGATIVE_CASES')
+        name=item['case']
+        if name not in expected or name in seen or item['status']!='PASS' or type(item['httpStatus'])is not int or item['httpStatus']!=401:
+            raise ValueError('SIGNED_NEGATIVE_CASES')
+        if type(item['actualAuthReads'])is not int or item['actualAuthReads']!=expected[name]or type(item['rpcCalls'])is not int or item['rpcCalls']!=0 or type(item['providerCalls'])is not int or item['providerCalls']!=0:
+            raise ValueError('SIGNED_NEGATIVE_EFFECTS')
+        seen.add(name)
+    # 현재 네 검사만으로 실제 만료·철회·익명·회원 변경·다른 발급 문맥을 승격하지 않는다.
+    if any(value.get(key)!='NOT_RUN'for key in coverage):raise ValueError('SIGNED_NEGATIVE_COVERAGE')
+    return {'scenario':'SIGNED_AUTH_NEGATIVE','cases':cases,**{key:value[key]for key in coverage},
+            'fullLifecycleCoverage':'NOT_RUN','nativeExternalAttempts':0}
+
 def signed_main():
     parser=argparse.ArgumentParser();parser.add_argument('--signed-local-auth','--signed-auth',action='store_true',required=True)
     parser.add_argument('--signed-auth-input','--signed-auth-binding',type=Path);parser.add_argument('--prepared-root',type=Path,required=True)
@@ -652,7 +675,7 @@ def signed_main():
         common={'codeRoot':str(REPO),'origin':b['origin'],'anon':b['credentials']['anon'],'service':b['credentials']['service'],'signedLocalAuth':True,
                 'accounts':[{'userId':a['userId'],'token':a['accessToken']}for a in b['accounts'][:3]],'scenario':'ai-chat',
                 'productManifest':product_graph(),'aiQuery':'synthetic-absent-'+uuid.uuid4().hex}
-        negative=invoke(common,'--signed-auth-negative');proof.append({'scenario':'SIGNED_AUTH_NEGATIVE','cases':negative['cases']})
+        negative=invoke(common,'--signed-auth-negative');proof.append(signed_negative_receipt(negative))
         for label in ('limits','caps'):
             ledger='synthetic-signed-'+label+'-'+uuid.uuid4().hex;r.ledgers.append(ledger)
             r.save_signed('ledger-'+label+'-intent.json',{'ledgerId':ledger,'noReplay':True})

@@ -62,7 +62,7 @@ async function signedAuthNegative(f:any){
   assert.equal(authReads-before,expectedReads);assert.equal(rpcCalls,0);
   cases.push({case:name,status:'PASS',httpStatus:401,actualAuthReads:expectedReads,rpcCalls:0,providerCalls:0});
  }
- return {status:'PASS',cases,nativeExternalAttempts,expiredBearer:'NOT_RUN',revokedSession:'NOT_RUN',anonymousBearer:'NOT_RUN'};
+ return {status:'PASS',cases,nativeExternalAttempts,expiredBearer:'NOT_RUN',revokedSession:'NOT_RUN',anonymousBearer:'NOT_RUN',memberChanged:'NOT_RUN',differentOriginalContext:'NOT_RUN'};
 }
 async function aiMidnightHttpCase(f:any){
  const check=(value:unknown,code:string)=>{if(!value)throw new Error('AI_CHECK_'+code);};

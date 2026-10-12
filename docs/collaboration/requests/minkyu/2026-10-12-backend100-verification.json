@@ -4,7 +4,7 @@
   "actor": "minkyu",
   "branch": "minkyu/backend100-20261012",
   "policyHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
-  "sourceState": "SUCCESSOR_WORKTREE_AFTER_USER_APPROVED_LOCAL_COMMIT_7898a83",
+  "sourceState": "141240a_FROZEN_BASE_WITH_REVIEWED_AUTH_NEGATIVE_RECEIPT_SUCCESSOR",
   "overall": {
     "completed": 22,
     "total": 28,
@@ -63,7 +63,8 @@
         "midnightPreparation": 13,
         "observer": 18,
         "productionPreparation": 33
-      }
+      },
+      "sourceHead": "141240aa32fb13a3e82945c4187f3203e09603b7"
     },
     "denoCachedCheck": "PASS",
     "pythonCompile": "PASS",
@@ -85,7 +86,14 @@
       "failure": "HEAD-sensitive original AST guard rejected explicitly reviewed signed_source_pins extension",
       "status": "FAILURE_PRESERVED_SUPERSEDED_BY_169_PASS_EXACT_APPROVED_CHANGE_GUARD"
     },
-    "native119IndependentReview": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND_SCHEMA_ROLE_LINEAGE_ONLY"
+    "native119IndependentReview": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND_SCHEMA_ROLE_LINEAGE_ONLY",
+    "signedNegativeRetentionSuccessor": {
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_SIGNED_AUTH_SUITE_ONLY_NOT_NEW_170_TEST_FULL_RUN",
+      "sourceProof": "2026-10-13-auth-lifecycle-coverage.json"
+    }
   },
   "actual": {
     "signedAuth": "NOT_RUN",
@@ -97,7 +105,83 @@
     "storage39MissingBytes": "UNRESOLVED",
     "ownedChildGroupClosureSmoke": "PASS_PROCESS_ONLY",
     "syntheticCanonicalWholeRead": "PASS_REPEATABLE_METADATA_ROWS_AUTHORITY_SEQUENCE",
-    "syntheticDbRedactedRoleArchive": "PASS_NOT_RESTORED_NOT_PHYSICAL_STORAGE"
+    "syntheticDbRedactedRoleArchive": "PASS_NOT_RESTORED_NOT_PHYSICAL_STORAGE",
+    "nativeFourServiceCreation": {
+      "status": "FAIL_UNKNOWN_FIRST_NETWORK_CREATE",
+      "creatorSha256": "4746bcfa51b6180caac0d3db4f6a9e84002454b0ed0d9fea161953dadb3adbd2",
+      "sourceCommit": "141240aa32fb13a3e82945c4187f3203e09603b7",
+      "newContainers": 0,
+      "authUsers": 0,
+      "priorExact": true,
+      "unknown": [
+        "LOST_NETWORK_UNKNOWN"
+      ],
+      "finalReceiptSha256": "02422a44170b2a3557bb4bd2d40988c08eb90629a7d0b535d53101543f68934f",
+      "sameRequestRetried": false,
+      "oldResourcesRemoved": false
+    },
+    "nativeFourServiceCreationA2": {
+      "status": "FAIL_FRESH_DB_STARTUP_MEMORY_FLOOR",
+      "creatorSha256": "7dbf371cba6ffd50a389d6c1ebf824fb5978b9b88c460907617a11210a1402eb",
+      "networkCreation": "PASS_TWO_EXPLICIT_SUBNETS",
+      "dbCreated": 1,
+      "dbStarted": false,
+      "authUsers": 0,
+      "minimumKiB": 1048576,
+      "availableKiB": 1040736,
+      "priorExact": true,
+      "ownStopped": {
+        "fedf8fd8b806bc7f2f0ba42c0800ad48fbb70e0b56c2c7bd58667a8ed8b73308": {
+          "oomKilled": false,
+          "stopped": true
+        }
+      },
+      "unknown": [],
+      "finalReceiptSha256": "540130acfc70dd679c1d843bc467865c4b00d057ba32550c3e252f13ffb27799",
+      "sameRequestRetried": false,
+      "oldResourcesRemoved": false
+    },
+    "additionalOldDbMemoryStop": "WAITING_USER_APPROVAL_THREE_EXACT_NO_OTHER_CLIENTS",
+    "a3Preparation": {
+      "status": "READY_STATIC_ONLY_WAITING_MEMORY_STOP_APPROVAL",
+      "project": "jonghyun-backend100-7e14bf02",
+      "databaseManifestSha256": "2b6190e6dc7f9a1e568f872574894629a69aabdb7c764ca0bb9b73bbe2ad6dd0",
+      "creatorSha256": "ca2f10dac54c4c833d7d0a910c2a32e035c26949b106357671f92d3c26b4a992",
+      "affectedOfflineChecksPassed": 5,
+      "sourceLogic": "EXACT_A2_LOGIC_CONSTANT_ONLY_SUCCESSOR",
+      "sqlExecuted": false,
+      "runtimeExecuted": false,
+      "preparedDirectoryMode": "700",
+      "preparedFileMode": "600"
+    },
+    "seoulHttpsPublicProbe": {
+      "status": "NOT_VERIFIED_TWO_ACTUAL_TLS_FAILURES",
+      "port443": "TIMEOUT",
+      "port8088": "TLS_WRONG_VERSION_NUMBER",
+      "tlsValidationRelaxed": false,
+      "sampleGetCalls": 0,
+      "memberTextSent": false,
+      "fallbackHttpCalls": 0,
+      "receiptSha256": "a333de8621a113b3a243511e605a2432601e90e5e24ca1753ede3d675be42c8f"
+    },
+    "knownLocalProviderConfigurationPresence": {
+      "scope": "ONE_KNOWN_LOCAL_ENV_KEY_PRESENCE_ONLY",
+      "kopisKeyConfigured": true,
+      "potensKeyConfigured": true,
+      "potensBaseUrlConfigured": true,
+      "aiRetentionDecisionConfigured": false,
+      "secretValuesLogged": false,
+      "modelCalls": 0
+    },
+    "kopisOfficialSevenDays": "NOT_RUN_USER_KEY_TRANSMISSION_APPROVAL_PENDING",
+    "kopisPublicSystemTls": "PASS_HOST_ROOT_HEAD_ONLY_NOT_RANK_API",
+    "signedAuthLifecycleCoverage": {
+      "expiredBearer": "NOT_RUN",
+      "revokedSession": "NOT_RUN",
+      "anonymousBearer": "NOT_RUN",
+      "memberChanged": "NOT_RUN",
+      "differentOriginalContext": "NOT_RUN"
+    }
   },
   "limitations": [
     "Offline tests do not prove actual Auth/DB/product midnight success.",

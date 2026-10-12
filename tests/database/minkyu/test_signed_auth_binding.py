@@ -398,8 +398,15 @@ class BindingTests(unittest.TestCase):
         additions=('tests/integration/minkyu/product_connection_restore108_local.py','tests/integration/minkyu/member_cleanup_reconcile_local.py')
         history=ast.parse("if json.loads(self.sql('select json_agg(version order by version)from supabase_migrations.schema_migrations;'))!=self.target['versions']:\n raise ValueError('APPLIED_HISTORY_CHANGED')").body[0]
         replacement=ast.parse('signed_verify_history(self)').body[0]
+        old_negative=ast.parse("proof.append({'scenario':'SIGNED_AUTH_NEGATIVE','cases':negative['cases']})").body[0]
+        new_negative=ast.parse('proof.append(signed_negative_receipt(negative))').body[0]
         dump=lambda node:ast.dump(node,include_attributes=False)
         for node in before.body:
+            if isinstance(node,ast.FunctionDef)and node.name=='signed_main':
+                class NegativeReceipt(ast.NodeTransformer):
+                    def visit_Expr(inner,expression):
+                        return copy.deepcopy(new_negative)if dump(expression)==dump(old_negative)else inner.generic_visit(expression)
+                node=NegativeReceipt().visit(node)
             if isinstance(node,ast.FunctionDef)and node.name=='signed_source_pins':
                 assignments=[n for n in node.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='paths'for t in n.targets)]
                 self.assertEqual(len(assignments),1)
@@ -456,6 +463,23 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(result.returncode,0,'offline factory failed: '+str(result.returncode))
         proof=json.loads(result.stdout);self.assertEqual(proof['status'],'PASS');self.assertEqual(len(proof['cases']),4)
         self.assertEqual([c['actualAuthReads']for c in proof['cases']],[0,0,1,0]);self.assertEqual(proof['nativeExternalAttempts'],0)
+        retained=module.signed_negative_receipt(proof)
+        for key in ('expiredBearer','revokedSession','anonymousBearer','memberChanged','differentOriginalContext','fullLifecycleCoverage'):
+            self.assertEqual(retained[key],'NOT_RUN')
+
+    def test_partial_negative_receipt_never_promotes_unverified_lifecycle(self):
+        proof={'status':'PASS','nativeExternalAttempts':0,'cases':[{'case':name,'status':'PASS','httpStatus':401,
+            'actualAuthReads':reads,'rpcCalls':0,'providerCalls':0}for name,reads in (('missing',0),('malformed',0),('invalid_signature',1),('service_principal',0))],
+            **{key:'NOT_RUN'for key in ('expiredBearer','revokedSession','anonymousBearer','memberChanged','differentOriginalContext')}}
+        result=module.signed_negative_receipt(proof)
+        self.assertEqual(result['fullLifecycleCoverage'],'NOT_RUN')
+        for mutation in (lambda v:v.pop('expiredBearer'),lambda v:v.update(expiredBearer='PASS'),
+                lambda v:v.update(nativeExternalAttempts=1),lambda v:v.update(nativeExternalAttempts=False),
+                lambda v:v.update(nativeExternalAttempts=0.0),lambda v:v['cases'].append(copy.deepcopy(v['cases'][0])),
+                lambda v:v['cases'][1].update(case='missing'),lambda v:v['cases'][2].update(rpcCalls=1),
+                lambda v:v['cases'][2].update(providerCalls=True),lambda v:v['cases'][0].update(extra='raw-content')):
+            value=copy.deepcopy(proof);mutation(value)
+            with self.subTest(index=mutation),self.assertRaises(ValueError):module.signed_negative_receipt(value)
 
     def test_real_factory_positive_original_bearer_model(self):
         node=shutil.which('node')

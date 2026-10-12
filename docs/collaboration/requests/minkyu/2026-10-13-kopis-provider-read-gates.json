@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "overall": {
+    "completed": 22,
+    "total": 28,
+    "displayPercent": 79
+  },
+  "status": "WAITING_EXACT_USER_KEY_TRANSMISSION_APPROVAL",
+  "destination": "https://kopis.or.kr/openApi/restful/boxoffice",
+  "authorizedApiGetsSoFar": 0,
+  "actualApiGets": 0,
+  "parentKnownLocalKeyPresenceRead": true,
+  "apiRunnerCredentialReads": 0,
+  "actualRankingParser": "NOT_RUN",
+  "officialSource": "https://kopis.or.kr/upload/openApi/%EA%B3%B5%EC%97%B0%EC%98%88%EC%88%A0%ED%86%B5%ED%95%A9%EC%A0%84%EC%82%B0%EB%A7%9DOpenAPI%EA%B0%9C%EB%B0%9C%EA%B0%80%EC%9D%B4%EB%93%9C.pdf",
+  "contractNote": "Official table marks legacy date required while sample omits it; current service/stdate/eddate shape follows sample; response basedate is sole aggregation-period authority",
+  "autoReview": {
+    "rejectedAction": "KOPIS_API_KEY disclosure to official boxoffice endpoint for one read-only GET",
+    "reason": "Trusted explicit exact credential-transmission authorization missing",
+    "commandStarted": false,
+    "bypassed": false,
+    "receiptSha256": "4946cf387445367113680842cd094ab05424bac53116e231ba90c9c01c56030a"
+  },
+  "publicTlsObservations": {
+    "pythonDefault": {
+      "status": "FAIL_CERT_VERIFY_CODE_19_SELF_SIGNED_CHAIN",
+      "receiptSha256": "5c4a9f54caf9dadacab2fcd9ee6c128cd406c8fdae4cc45957f41bfdc0248954",
+      "certificateValidationRelaxed": false
+    },
+    "systemCurlRootHead": {
+      "status": "PASS_HOST_TLS_ONLY",
+      "httpStatus": 307,
+      "sslVerifyResult": 0,
+      "redirectsFollowed": 0,
+      "curlConfigDisabled": true,
+      "receiptSha256": "955e87d5682ff7d644189faef9ecd68a04521868426441d3fefd4c9550c05a24",
+      "rankPeriod": "NOT_VERIFIED"
+    }
+  },
+  "preparedActualRead": {
+    "scriptSha256": "a51a27d898e4bcecac50f23b42e6da410a5ead745d8420e506e8d930feb7dee6",
+    "parserSha256": "e7beb5c8aeac8739bc3338f66ae8ca5640e73536fe23ac1f3699ec9729161c38",
+    "handoffSha256": "2b82aa8d108e12d7380673e26e2ffd851073d5db826f870d089f6c9357d0c8b3",
+    "scope": "SYSTEM_OS_TLS_TRANSPORT_AND_CURRENT_PRODUCT_PARSER_ONLY",
+    "defaultExecution": "NOT_RUN",
+    "credentialsInArgvOrLogs": false,
+    "maximumBytes": 2097152,
+    "maximumSeconds": 15,
+    "retry": false,
+    "httpRedirect": false,
+    "currentPreparedKstDay": "2026-10-13",
+    "reprepareIfNaturalDateChanged": true
+  },
+  "productionDenoTransport": "NOT_RUN",
+  "activationAllowed": false,
+  "memberTextSent": false,
+  "modelCalls": 0
+}
