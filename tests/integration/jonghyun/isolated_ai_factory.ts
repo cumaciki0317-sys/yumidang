@@ -1,10 +1,13 @@
 /** 기본 Auth는 합성 bridge. 서명 모드는 실제 로컬 Auth/REST와 합성 모델을 쓴다. AI24는 실행 전 NOT_RUN. */
 import assert from 'node:assert/strict';
-import {readFileSync,lstatSync,openSync,fstatSync,closeSync,fsyncSync,writeSync,constants} from 'node:fs';
+import {readFileSync,lstatSync,openSync,fstatSync,closeSync,fsyncSync,writeSync,mkdirSync,chmodSync,readdirSync,realpathSync,constants} from 'node:fs';
 import {dirname,resolve,relative,sep} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {randomUUID,createHash} from 'node:crypto';
+let file:string;
+const directEntry=typeof process.argv[1]==='string'&&pathToFileURL(realpathSync(resolve(process.argv[1]))).href===import.meta.url;
+if(directEntry){file=process.argv[2];{
 const file=process.argv[2],mode=process.argv[3],info=lstatSync(file),directory=lstatSync(dirname(file));
 assert.ok(info.isFile()&&!info.isSymbolicLink()&&info.nlink===1&&info.uid===process.getuid!()&&(info.mode&0o777)===0o600);
 assert.ok(directory.isDirectory()&&!directory.isSymbolicLink()&&directory.uid===process.getuid!()&&(directory.mode&0o777)===0o700);
@@ -37,6 +40,7 @@ if(fixture.signedLocalAuth===true)globalThis.fetch=async(input:any,init:RequestI
 try { process.stdout.write(JSON.stringify(await (mode==='--signed-consent-case'?consentExecutionBoundary(fixture):mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
 catch(error){const code=error instanceof Error&&/^AI_CHECK_[A-Z_]+$/.test(error.message)?error.message:'AI_ISOLATED_FACTORY_FAILED';process.stderr.write(code+'\n');process.exitCode=1;}
 finally{if(fixture.signedLocalAuth===true)globalThis.fetch=signedNative;}
+}}
 
 async function signedAuthNegative(f:any){
  assert.equal(f.signedLocalAuth,true);
@@ -106,6 +110,103 @@ function consentExecutionBoundary(_fixture:unknown){
   runtimeSourceCapture:'NOT_PROVEN',actualAuthDatabase:'NOT_RUN',serviceMemberRetirement:'NOT_RUN'};
 }
 
+/** JSON은 이 객체나 callback을 만들지 못한다. 실제 target 검증 코드는 별도 root 조립 책임이다. */
+type ConsentRootInput={decisionId:string;fixturePath:string;fixtureSha256:string;sourceHead:string;unionSha256:string;
+ verifyReady:(capture:Readonly<{capturedRoot:string;sourceHead:string;fixtureSha256:string;unionSha256:string;memberId:string;originalTokenSha256:string;origin:string}>)=>Promise<void>};
+const consentRootCallers=new WeakMap<object,ConsentRootInput&{used:boolean}>();let consentCallerActive=false;
+const consentFixedRoot='/Users/minkyu/Documents/GitHub/yumidang/.worktrees/minkyu-backend100-20261012';
+export class ReviewedConsentRootCaller{
+ constructor(input:ConsentRootInput){
+  assert.equal(Object.keys(input).sort().join(','),'decisionId,fixturePath,fixtureSha256,sourceHead,unionSha256,verifyReady');
+  assert.match(input.decisionId,/^[A-Za-z0-9_.:-]{1,128}$/);assert.equal(typeof input.verifyReady,'function');
+  for(const value of[input.fixtureSha256,input.unionSha256])assert.match(value,/^[a-f0-9]{64}$/);
+  assert.match(input.sourceHead,/^[a-f0-9]{40}$/);assert.equal(resolve(input.fixturePath),input.fixturePath);assert.ok(input.fixturePath.startsWith('/private/tmp/'));
+  consentRootCallers.set(this,{...input,used:false});Object.freeze(this);
+ }
+}
+function consentStableRead(path:string,mode:number,maximum:number){
+ const state=lstatSync(path);assert.ok(state.isFile()&&!state.isSymbolicLink()&&state.nlink===1&&state.uid===process.getuid!()&&(state.mode&0o777)===mode&&state.size<=maximum);
+ const fd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW);
+ try{const before=fstatSync(fd),identity=(v:any)=>[v.dev,v.ino,v.mode,v.uid,v.nlink,v.size,v.mtimeMs,v.ctimeMs];assert.deepEqual(identity(before),identity(state));
+  const raw=readFileSync(fd),after=fstatSync(fd),now=lstatSync(path);assert.equal(raw.length,before.size);assert.deepEqual(identity(before),identity(after));assert.deepEqual(identity(after),identity(now));return raw;
+ }finally{closeSync(fd);}
+}
+function consentWriteBytes(path:string,raw:Buffer){
+ const fd=openSync(path,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);
+ try{let offset=0;while(offset<raw.length){const count=writeSync(fd,raw,offset,raw.length-offset);assert.ok(Number.isInteger(count)&&count>0&&count<=raw.length-offset);offset+=count;}fsyncSync(fd);}finally{closeSync(fd);}
+ assert.ok(consentStableRead(path,0o600,2097152).equals(raw));
+ for(const directory of[dirname(path),dirname(dirname(path))]){const handle=openSync(directory,constants.O_RDONLY|constants.O_DIRECTORY);try{fsyncSync(handle);}finally{closeSync(handle);}}
+}
+function consentGit(args:string[]){
+ const result=spawnSync('git',['-C',consentFixedRoot,...args],{timeout:15000,maxBuffer:2097152});assert.equal(result.status,0);assert.ok(!result.error);return result.stdout;
+}
+function consentUnionDigest(map:Record<string,string>){return createHash('sha256').update(JSON.stringify(Object.fromEntries(Object.entries(map).sort(([a],[b])=>a<b?-1:a>b?1:0)))).digest('hex');}
+function consentDirectory(path:string,mode:number){const state=lstatSync(path);assert.ok(state.isDirectory()&&!state.isSymbolicLink()&&state.uid===process.getuid!()&&(state.mode&0o777)===mode);assert.equal(realpathSync(path),path);}
+function consentCapturedPins(root:string,map:Record<string,string>){
+ const actual:string[]=[];
+ const walk=(path:string)=>{consentDirectory(path,0o500);for(const name of readdirSync(path).sort()){
+  const child=path+'/'+name,state=lstatSync(child);assert.ok(!state.isSymbolicLink());
+  if(state.isDirectory())walk(child);else{const key=relative(root,child).split(sep).join('/');assert.ok(Object.hasOwn(map,key));
+   assert.equal(createHash('sha256').update(consentStableRead(child,0o400,1048576)).digest('hex'),map[key]);actual.push(key);}
+ }};walk(root);assert.deepEqual(actual.sort(),Object.keys(map).sort());
+}
+function consentClaimCaller(caller:ReviewedConsentRootCaller){
+ assert.ok(caller&&Object.getPrototypeOf(caller)===ReviewedConsentRootCaller.prototype&&consentRootCallers.has(caller));
+ const reviewed=consentRootCallers.get(caller)!;assert.ok(!reviewed.used&&!consentCallerActive);reviewed.used=true;consentCallerActive=true;return reviewed;
+}
+function consentCaptureTree(reviewed:ConsentRootInput){
+ let capturedRoot:string,graph:Record<string,string>;
+  const parent=dirname(reviewed.fixturePath);consentDirectory(parent,0o700);
+  const raw=consentStableRead(reviewed.fixturePath,0o600,2097152);assert.equal(createHash('sha256').update(raw).digest('hex'),reviewed.fixtureSha256);
+  const fixture=JSON.parse(raw.toString('utf8'));assert.equal(fixture.codeRoot,consentFixedRoot);assert.equal(fixture.signedLocalAuth,true);assert.equal(fixture.aiConsentScenario,true);
+  assert.equal(consentGit(['rev-parse','HEAD']).toString().trim(),reviewed.sourceHead);
+  graph=consentSourceClosure(fixture);assert.equal(consentUnionDigest(graph),reviewed.unionSha256);
+  const captureFiles:Record<string,Buffer>={};
+  for(const[key,digest]of Object.entries(graph)){
+   const live=readFileSync(consentFixedRoot+'/'+key),committed=consentGit(['show',reviewed.sourceHead+':'+key]);
+   assert.ok(live.equals(committed));assert.equal(createHash('sha256').update(committed).digest('hex'),digest);captureFiles[key]=committed;
+  }
+  const factoryRelativePath='tests/integration/jonghyun/isolated_ai_factory.ts';
+  const factoryBytes=consentGit(['show',reviewed.sourceHead+':'+factoryRelativePath]);assert.ok(factoryBytes.equals(readFileSync(consentFixedRoot+'/'+factoryRelativePath)));
+  const factorySha256=createHash('sha256').update(factoryBytes).digest('hex');captureFiles[factoryRelativePath]=factoryBytes;
+  const capsulePins={...graph,[factoryRelativePath]:factorySha256};
+  assert.equal(consentGit(['rev-parse','HEAD']).toString().trim(),reviewed.sourceHead);
+  consentWriteBytes(parent+'/consent-root-capture-intent-private.json',Buffer.from(JSON.stringify({decisionId:reviewed.decisionId,fixtureSha256:reviewed.fixtureSha256,sourceHead:reviewed.sourceHead,unionSha256:reviewed.unionSha256,singleAttempt:true})));
+  capturedRoot=parent+'/captured-consent-source';mkdirSync(capturedRoot,{mode:0o700});const directories=new Set<string>([capturedRoot]);
+  for(const[key,bytes]of Object.entries(captureFiles)){
+   const path=capturedRoot+'/'+key;let current=capturedRoot;
+   for(const part of key.split('/').slice(0,-1)){current+='/'+part;if(!directories.has(current)){mkdirSync(current,{mode:0o700});directories.add(current);}consentDirectory(current,0o700);}
+   consentWriteBytes(path,bytes);chmodSync(path,0o400);assert.ok(consentStableRead(path,0o400,1048576).equals(bytes));
+  }
+  for(const directory of[...directories].sort((a,b)=>b.length-a.length)){const fd=openSync(directory,constants.O_RDONLY|constants.O_DIRECTORY);try{fsyncSync(fd);}finally{closeSync(fd);}chmodSync(directory,0o500);}
+  consentCapturedPins(capturedRoot,capsulePins);
+  const capturedFixture={...fixture,codeRoot:capturedRoot};assert.deepEqual(consentSourceClosure(capturedFixture),graph);
+  return {fixture,raw,capturedRoot,graph,capsulePins,factoryRelativePath,factorySha256,verify:()=>consentCapturedPins(capturedRoot,capsulePins)};
+}
+/** 원 CLI factory도 같은 tree로 묶는다. 이 반환 JSON을 실행 권한으로 사용하지 않는다. */
+export function captureReviewedFactoryTree(caller:ReviewedConsentRootCaller){
+ const reviewed=consentClaimCaller(caller);
+ try{const captured=consentCaptureTree(reviewed);captured.verify();return Object.freeze({capsuleRoot:captured.capturedRoot,
+  productPins:Object.freeze({...captured.graph}),capsulePins:Object.freeze({...captured.capsulePins}),factoryRelativePath:captured.factoryRelativePath,
+  factorySha256:captured.factorySha256,sourceHead:reviewed.sourceHead,unionSha256:reviewed.unionSha256,verify:captured.verify});
+ }catch{throw new Error('AI_CHECK_CONSENT_SOURCE_CAPTURE_FAILED');}finally{consentCallerActive=false;}
+}
+/** root의 검토된 in-process 조립만 호출한다. CLI의 JSON 경계는 계속 NOT_RUN이다. */
+export async function runReviewedConsentCase(caller:ReviewedConsentRootCaller){
+ const reviewed=consentClaimCaller(caller);let captured:ReturnType<typeof consentCaptureTree>|undefined,stage='CAPTURE';
+ try{
+  captured=consentCaptureTree(reviewed);const{fixture,raw,capturedRoot,graph}=captured;
+  const capturedFixture={...fixture,codeRoot:capturedRoot};
+  stage='READY';const ready=await reviewed.verifyReady(Object.freeze({capturedRoot,sourceHead:reviewed.sourceHead,fixtureSha256:reviewed.fixtureSha256,unionSha256:reviewed.unionSha256,
+   memberId:fixture.consentAccount.userId,originalTokenSha256:createHash('sha256').update(fixture.consentAccount.token).digest('hex'),origin:fixture.origin}));assert.equal(ready,undefined);
+  assert.ok(consentStableRead(reviewed.fixturePath,0o600,2097152).equals(raw));captured.verify();
+  stage='RUNTIME';const result=await signedConsentCase(capturedFixture,reviewed.fixturePath);stage='FINAL_PINS';captured.verify();
+  return {...result,runtimeImportSource:'PRIVATE_CAPTURED_UNION_TREE',runtimeSourceCustody:'PIN_VERIFIED_BEFORE_AND_AFTER_EXECUTION_NOT_OS_IMMUTABILITY',
+   sourceHead:reviewed.sourceHead,unionSha256:reviewed.unionSha256,capturedFileCount:Object.keys(graph).length,capturedFactorySha256:captured.factorySha256};
+ }catch(error){throw new Error(error instanceof Error&&/^AI_CHECK_CONSENT_[A-Z_]+$/.test(error.message)?error.message:'AI_CHECK_CONSENT_ROOT_'+stage);}
+ finally{consentCallerActive=false;if(captured){try{captured.verify();}catch{throw new Error('AI_CHECK_CONSENT_CAPTURED_PIN_FAILED');}}}
+}
+
 /** 고정 AI/service-api runtime 및 type-only closure를 native parser로 검증한다. 코드 evaluate는 0회다. */
 function consentSourceClosure(f:any){
  const root=resolve(f.codeRoot),base=resolve(root,'backend/supabase/functions'),expected=f.serviceProductManifest;
@@ -167,8 +268,9 @@ try{const output={};for(const[key,source]of Object.entries(JSON.parse(input))){
 }
 
 /** source-selected 모형 검증용 core. 실제 CLI는 닫힘이며 live import의 동결 custody는 caller 미구현 선행조건이다. */
-async function signedConsentCase(f:any){
- const check=(value:unknown,code:string)=>{if(!value)throw new Error('AI_CHECK_CONSENT_'+code);};
+async function signedConsentCase(f:any,privateFixtureFile:string=file){
+ const file=privateFixtureFile;
+ const fixedFailures:string[]=[];const check=(value:unknown,code:string)=>{if(!value){fixedFailures.push(code);throw new Error('AI_CHECK_CONSENT_'+code);}};
  check(f.signedLocalAuth===true&&f.aiConsentScenario===true,'SCOPE');
  const account=f.consentAccount;
  check(account&&Object.keys(account).sort().join(',')==='token,userId'&&/^[a-f0-9-]{36}$/.test(account.userId)&&typeof account.token==='string','ORIGINAL_ACCOUNT');
@@ -258,13 +360,13 @@ async function signedConsentCase(f:any){
   check(denied.status===200&&deniedBody.data?.status==='unavailable'&&deniedBody.data.recovery?.reason==='consent'&&deniedBody.data.recovery.retryAllowed===false,'CONSENT_NOT_FALLBACK_UNAVAILABLE');
   check(d.counts.auth===1&&d.counts.acquire_ai_chat_request===1&&Object.keys(d.counts).length===2&&d.providerCalls===0&&d.reservations.length===0&&d.requests.length===1&&d.requests[0].status==='consent_revoked','CONSENT_WITHOUT_RESERVATION');
   check(deniedBody.data.requestId===d.requests[0].requestId&&deniedBody.data.requestId===denied.headers.get('x-request-id'),'DENIED_REQUEST_BINDING');
-  sourceProof();check(nativeExternalAttempts===0,'EXTERNAL_ZERO');
+  sourceProof();check(nativeExternalAttempts===0,'EXTERNAL_ZERO');check(fixedFailures.length===0,'CAUGHT_CONTROL_FAILURE');
   return {status:'PASS',case:'signed-public-consent-withdrawal',phases,originalTokenSha256:hash(account.token),nativeExternalAttempts,
    actualFactoryRoute:'POST /functions/v1/service-api/me/ai-processing/withdraw',publicMutationCalls:1,providerScope:'EXPLICIT_SYNTHETIC_IN_MEMORY_ADAPTER',
    serviceMemberRetirement:'NOT_RUN',actualDatabaseBaselinePreservation:'CALLER_REQUIRED_NOT_VERIFIED_BY_FACTORY',actualProviderLegalBillingNaverRealMembers:'NOT_RUN'};
  }finally{
   globalThis.fetch=native;
-  save('consent-factory-evidence-private.json',{phases,withdrawStarted,withdrawn,nativeExternalAttempts,originalTokenSha256:hash(account.token),rawContentLogged:false});
+  save('consent-factory-evidence-private.json',{phases,fixedFailures,withdrawStarted,withdrawn,nativeExternalAttempts,originalTokenSha256:hash(account.token),rawContentLogged:false});
  }
 }
 

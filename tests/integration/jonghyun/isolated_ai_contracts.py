@@ -1620,11 +1620,12 @@ class SignedAuthLifecycleRunner(SignedRunner):
 
     def invoke_case(self, case, account, node):
         self.live();key=uuid.uuid4().hex
-        fixture={'codeRoot':str(REPO),'origin':self.binding['origin'],'anon':self.binding['credentials']['anon'],'service':self.binding['credentials']['service'],
+        code_root,factory_path=lifecycle_runner_factory_paths(self)
+        fixture={'codeRoot':str(code_root),'origin':self.binding['origin'],'anon':self.binding['credentials']['anon'],'service':self.binding['credentials']['service'],
             'signedLocalAuth':True,'authLifecycleScenario':True,'lifecycleCase':case,'originalUserId':account['userId'],'originalToken':account['accessToken'],
             'productManifest':product_graph(),'aiLedgerId':'synthetic-lifecycle-never-reserved'}
         self.save_signed('factory-'+key+'.json',fixture)
-        argv=[node,'--experimental-strip-types',str(Path(__file__).with_name('isolated_ai_factory.ts')),str(self.evidence/('factory-'+key+'.json')),'--signed-auth-lifecycle-case']
+        argv=[node,'--experimental-strip-types',str(factory_path),str(self.evidence/('factory-'+key+'.json')),'--signed-auth-lifecycle-case']
         self.save_signed('factory-'+key+'-intent.json',{'case':case,'singleAttempt':True,'argvSha256':hashlib.sha256(json.dumps(argv).encode()).hexdigest()})
         child=None
         try:
@@ -1643,7 +1644,8 @@ class SignedAuthLifecycleRunner(SignedRunner):
                 child.terminate()
                 try:child.communicate(timeout=5)
                 except subprocess.TimeoutExpired:child.kill();child.communicate(timeout=5)
-            self.save_signed('factory-'+key+'-closed.json',{'exited':child is None or child.poll()is not None,'exactPopenOnly':True,'started':child is not None})
+            try:self.save_signed('factory-'+key+'-closed.json',{'exited':child is None or child.poll()is not None,'exactPopenOnly':True,'started':child is not None})
+            finally:lifecycle_runner_factory_paths(self)
 
 
 def lifecycle_natural_expiry(account, now=time.time, sleep=time.sleep):
@@ -1677,8 +1679,7 @@ def run_signed_auth_lifecycle(reviewed, binding, value, node):
             or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',reviewed.decision_id)):
         raise ValueError('LIFECYCLE_REVIEWED_CODE_REQUIRED')
     root=reviewed.prepared_root
-    if reviewed.binding_path!=root/'signed-ai-binding-private.json' or reviewed.input_path!=root/('auth-lifecycle-input-'+value['scopeId']+'.json'):
-        raise ValueError('LIFECYCLE_REVIEWED_PRIVATE_PATH')
+    validate_lifecycle_reviewed_paths(reviewed,value)
     binding_bytes=signed_private_read(reviewed.binding_path);input_bytes=signed_private_read(reviewed.input_path)
     if (hashlib.sha256(binding_bytes).hexdigest()!=reviewed.binding_sha256 or hashlib.sha256(input_bytes).hexdigest()!=reviewed.input_sha256
             or signed_exact_json(binding_bytes)!=binding or signed_exact_json(input_bytes)!=value):
@@ -1705,6 +1706,9 @@ def run_signed_auth_lifecycle(reviewed, binding, value, node):
     if not node or not Path(node).is_file():raise ValueError('NODE_REQUIRED')
     r=SignedAuthLifecycleRunner(root,binding,value);r.evidence.mkdir(mode=0o700,exist_ok=False)
     r.reviewed_head=source_head
+    authority=getattr(reviewed,'dispatch_authority',None)
+    if type(authority)is ReviewedLifecycleDispatch:
+        lifecycle_dispatch_capsule(authority);r.dispatch_authority=authority
     proofs={k:{'status':'NOT_RUN'}for k in LIFECYCLE_CASES};foreign=None;errors=[];done=threading.Event()
     def interrupted(*args):raise RuntimeError('LIFECYCLE_OWN_PROCESS_TERMINATED')
     signal.signal(signal.SIGTERM,interrupted)
@@ -2220,6 +2224,287 @@ def cleanup_lifecycle_accounts(reviewed,phase,failure_sha256):
         'preservationProven':preserved and not errors,'fixedFailures':errors,'originalFailurePreserved':True,
         'noResend':True,'noSessionResurrection':True,'actualLifecycle':'NOT_RUN'}
     c.save('cleanup-receipt.json',result);return result
+
+
+class ReviewedLifecycleDispatch:
+    """Root의 고정 코드만 만드는 단일 전송 권한. JSON/CLI/반환 receipt로 재구성하지 않는다."""
+    def __init__(self,decision_id,producer_reviewed,source_head,late_sha256,handoff_sha256,binding_sha256,input_sha256,issuance_proofs,node_path,node_sha256,capsule_root,capsule_pins,factory_sha256):
+        self.decision_id=decision_id;self.producer=producer_reviewed;self.source_head=source_head
+        self.late_sha256=late_sha256;self.handoff_sha256=handoff_sha256;self.binding_sha256=binding_sha256;self.input_sha256=input_sha256
+        self.issuance_proofs=issuance_proofs;self.node_path=Path(node_path);self.node_sha256=node_sha256
+        self.capsule_root=Path(capsule_root);self.capsule_pins=capsule_pins;self.factory_sha256=factory_sha256
+
+
+def lifecycle_capsule_source_read(path,root):
+    """검토된 source 전용 봉인0400/0500. token/state600/700 reader와 섞지 않는다."""
+    path=Path(path);root=Path(root)
+    if(not root.is_absolute()or root.resolve()!=root or root==Path('/private/tmp')
+            or not path.is_absolute()or path.resolve()!=path or root not in path.parents):
+        raise ValueError('LIFECYCLE_CAPSULE_SOURCE_PATH')
+    # root 자신을 포함한 모든 source 디렉터리는0500, 그 위 private 부모는0700이다.
+    for directory in (path.parent,*path.parent.parents):
+        if directory==Path('/private/tmp'):break
+        info=directory.lstat();inside=directory==root or root in directory.parents
+        if(not stat.S_ISDIR(info.st_mode)or info.st_uid!=os.getuid()
+                or stat.S_IMODE(info.st_mode)!=(0o500 if inside else 0o700)):
+            raise ValueError('LIFECYCLE_CAPSULE_SOURCE_DIRECTORY')
+    else:raise ValueError('LIFECYCLE_CAPSULE_SOURCE_ROOT')
+    before=path.lstat();fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+    try:
+        first=os.fstat(fd)
+        if(not stat.S_ISREG(first.st_mode)or first.st_uid!=os.getuid()or first.st_nlink!=1
+                or stat.S_IMODE(first.st_mode)!=0o400 or first.st_size>2*1024*1024):
+            raise ValueError('LIFECYCLE_CAPSULE_SOURCE_FILE')
+        signature=lambda info:(info.st_dev,info.st_ino,info.st_mode,info.st_uid,info.st_nlink,
+            info.st_size,info.st_mtime_ns,info.st_ctime_ns)
+        if signature(before)!=signature(first):raise ValueError('LIFECYCLE_CAPSULE_SOURCE_CHANGED')
+        with os.fdopen(os.dup(fd),'rb')as stream:raw=stream.read(2*1024*1024+1)
+        after=os.fstat(fd);current=path.lstat()
+        if len(raw)!=first.st_size or signature(first)!=signature(after)or signature(first)!=signature(current):
+            raise ValueError('LIFECYCLE_CAPSULE_SOURCE_CHANGED')
+        return raw
+    finally:os.close(fd)
+
+
+def lifecycle_dispatch_capsule(reviewed):
+    """검토 객체의 고정 map만 권한이다. private manifest/fixture JSON으로 경로나 코드를 선택하지 않는다."""
+    if (type(reviewed)is not ReviewedLifecycleDispatch or type(reviewed.producer)is not ReviewedLifecycleProvisioning
+            or reviewed.producer.ports is not None or not isinstance(reviewed.source_head,str)
+            or not re.fullmatch(r'[a-f0-9]{40}',reviewed.source_head)):raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    root=reviewed.capsule_root;pins=reviewed.capsule_pins;factory='tests/integration/jonghyun/isolated_ai_factory.ts'
+    if(not root.is_absolute()or root.resolve()!=root or root==REPO or root==reviewed.producer.prepared_root
+            or not isinstance(pins,dict)or not 1<=len(pins)<=256 or not isinstance(reviewed.factory_sha256,str)
+            or not re.fullmatch(r'[a-f0-9]{64}',reviewed.factory_sha256)):
+        raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    expected={**product_graph(),factory:reviewed.producer.source_pins.get(factory)}
+    if expected[factory]!=reviewed.factory_sha256 or any(pins.get(k)!=v for k,v in expected.items()):raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    expected_directories={root};captured={}
+    for key,digest in pins.items():
+        if(not isinstance(key,str)or key.startswith('/')or any(x in('','..','.')for x in key.split('/'))
+                or key!=factory and not re.fullmatch(r'backend/supabase/functions/[A-Za-z0-9_./-]+\.ts',key)
+                or not isinstance(digest,str)or not re.fullmatch(r'[a-f0-9]{64}',digest)):
+            raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        path=root/key
+        for parent in path.parents:
+            if parent==root:break
+            expected_directories.add(parent)
+        raw=lifecycle_capsule_source_read(path,root)
+        if hashlib.sha256(raw).hexdigest()!=digest:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        live=REPO/key
+        if live.resolve()!=live or live.is_symlink()or live.read_bytes()!=raw:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        captured[key]=raw
+        if sum(len(v)for v in captured.values())+256*200>32*1024*1024:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    # 고정 파일들의 committed bytes를 한 bounded Git batch로 읽는다. N개의15초 대기는 하지 않는다.
+    requests=''.join(reviewed.source_head+':'+key+'\n'for key in captured).encode()
+    committed=subprocess.run(['git','-C',str(REPO),'cat-file','--batch'],input=requests,capture_output=True,timeout=15)
+    if committed.returncode or len(committed.stdout)>32*1024*1024:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    offset=0
+    for raw in captured.values():
+        end=committed.stdout.find(b'\n',offset)
+        if end<0 or end-offset>200:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        header=committed.stdout[offset:end]
+        if not re.fullmatch(rb'[a-f0-9]{40,64} blob [0-9]+',header):raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        size=int(header.split()[2]);offset=end+1
+        if size!=len(raw)or committed.stdout[offset:offset+size]!=raw or committed.stdout[offset+size:offset+size+1]!=b'\n':raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        offset+=size+1
+    if offset!=len(committed.stdout):raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    actual_files=set();actual_dirs={root}
+    for path in root.rglob('*'):
+        info=path.lstat()
+        if info.st_uid!=os.getuid()or stat.S_ISLNK(info.st_mode):raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+        if stat.S_ISDIR(info.st_mode):
+            if stat.S_IMODE(info.st_mode)!=0o500:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+            actual_dirs.add(path)
+        elif stat.S_ISREG(info.st_mode):actual_files.add(path.relative_to(root).as_posix())
+        else:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    if actual_files!=set(pins)or actual_dirs!=expected_directories:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    return root,root/factory
+
+
+def lifecycle_runner_factory_paths(runner):
+    authority=getattr(runner,'dispatch_authority',None)
+    if authority is None:return REPO,Path(__file__).with_name('isolated_ai_factory.ts')
+    return lifecycle_dispatch_capsule(authority)
+
+
+def lifecycle_dispatch_node(reviewed):
+    path=reviewed.node_path
+    if not path.is_absolute()or path.resolve()!=path or path.name!='node':raise ValueError('LIFECYCLE_DISPATCH_NODE')
+    before=path.lstat();fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+    try:
+        s=os.fstat(fd)
+        if(not stat.S_ISREG(s.st_mode)or s.st_nlink!=1 or s.st_uid not in(0,os.getuid())or s.st_mode&0o022
+                or not s.st_mode&0o111 or s.st_size>256*1024*1024 or(before.st_dev,before.st_ino)!=(s.st_dev,s.st_ino)):
+            raise ValueError('LIFECYCLE_DISPATCH_NODE')
+        digest=hashlib.sha256();remaining=s.st_size;began=time.monotonic()
+        while remaining:
+            if time.monotonic()-began>15:raise ValueError('LIFECYCLE_DISPATCH_NODE')
+            data=os.read(fd,min(1048576,remaining))
+            if not data:raise ValueError('LIFECYCLE_DISPATCH_NODE')
+            digest.update(data);remaining-=len(data)
+        after=os.fstat(fd);current=path.lstat()
+        if((s.st_size,s.st_mtime_ns,s.st_ctime_ns)!=(after.st_size,after.st_mtime_ns,after.st_ctime_ns)
+                or(current.st_dev,current.st_ino)!=(s.st_dev,s.st_ino)or digest.hexdigest()!=reviewed.node_sha256):
+            raise ValueError('LIFECYCLE_DISPATCH_NODE')
+    finally:os.close(fd)
+
+
+def lifecycle_dispatch_load(reviewed):
+    if(type(reviewed)is not ReviewedLifecycleDispatch or type(reviewed.producer)is not ReviewedLifecycleProvisioning
+            or reviewed.producer.ports is not None or not isinstance(reviewed.decision_id,str)
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',reviewed.decision_id)
+            or not isinstance(reviewed.source_head,str)or not re.fullmatch(r'[a-f0-9]{40}',reviewed.source_head)):
+        raise ValueError('LIFECYCLE_DISPATCH_REVIEWED_CODE_REQUIRED')
+    for digest in(reviewed.late_sha256,reviewed.handoff_sha256,reviewed.binding_sha256,reviewed.input_sha256,reviewed.node_sha256):
+        if not isinstance(digest,str)or not re.fullmatch(r'[a-f0-9]{64}',digest):raise ValueError('LIFECYCLE_DISPATCH_BINDING')
+    c=LifecycleProvisioningContext(reviewed.producer)
+    if c.binding['sourceHead']!=reviewed.source_head:raise ValueError('LIFECYCLE_DISPATCH_BINDING')
+    late=c.read_state('late-private.json',reviewed.late_sha256)
+    originals={}
+    paths={'handoff':c.evidence/'handoff-receipt.json','binding':c.root/'signed-ai-binding-private.json',
+        'input':c.root/('auth-lifecycle-input-'+reviewed.producer.scope_id+'.json')}
+    for name,path in paths.items():
+        raw=signed_private_read(path)
+        digest=getattr(reviewed,{'handoff':'handoff_sha256','binding':'binding_sha256','input':'input_sha256'}[name])
+        if hashlib.sha256(raw).hexdigest()!=digest:raise ValueError('LIFECYCLE_DISPATCH_ORIGINAL_CHANGED')
+        originals[name]=signed_exact_json(raw)
+    handoff=originals['handoff'];binding=originals['binding'];value=originals['input'];scope=reviewed.producer.scope_id;p=reviewed.producer
+    expected_binding={'version':1,'kind':SIGNED_KIND,'preparedRoot':str(c.root),'databaseManifestSha256':c.binding['manifestSha256'],
+        'origin':c.binding['origin'],'jwtIssuer':c.binding['origin']+'/auth/v1','containers':p.containers,'credentials':p.credentials,
+        'accounts':[late['accounts']['baseline-'+str(i)]for i in range(6)],'evidenceRoot':str(c.root/('signed-auth-'+scope)),
+        'sourcePins':p.source_pins,'approvedByRoot':False,'dockerSlotReady':False}
+    accounts={case:{**late['accounts'][case],'issuanceReceiptSha256':late['issuanceProofs'][case]['receiptSha256']}for case in('expiredBearer','revokedSession','memberChanged')}
+    expected_input={'version':1,'kind':LIFECYCLE_KIND,'scopeId':scope,'preparedRoot':str(c.root),'signedBindingSha256':reviewed.binding_sha256,
+        'sourcePins':p.source_pins,'evidenceRoot':str(c.root/('auth-lifecycle-'+scope)),'accounts':{**accounts,'anonymousBearer':None},'foreign':None,
+        'approvedByRoot':False,'dockerSlotReady':False}
+    if binding!=expected_binding or value!=expected_input or any(binding[k]is not False or value[k]is not False for k in('approvedByRoot','dockerSlotReady')):
+        raise ValueError('LIFECYCLE_DISPATCH_ORIGINAL_CHANGED')
+    proofs={case:late['issuanceProofs'][case]for case in accounts}
+    expected_handoff={'status':'LOCAL_LIFECYCLE_INPUT_BOUND_NOT_EXECUTED','bindingSha256':reviewed.binding_sha256,'inputSha256':reviewed.input_sha256,
+        'issuanceProofs':proofs,'actualLifecycle':'NOT_RUN','anonymous':'NOT_RUN','foreign':'NOT_RUN','protectedBudgetDelta':0,'sourceHead':reviewed.source_head}
+    if handoff!=expected_handoff or type(handoff['protectedBudgetDelta'])is not int or reviewed.issuance_proofs!=proofs:
+        raise ValueError('LIFECYCLE_DISPATCH_ISSUANCE_CHANGED')
+    lifecycle_dispatch_node(reviewed)
+    lifecycle_dispatch_capsule(reviewed)
+    approved_binding={**binding,'approvedByRoot':True,'dockerSlotReady':True}
+    encode=lambda v:json.dumps(v,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
+    binding_sha=hashlib.sha256(encode(approved_binding)).hexdigest()
+    approved_input={**value,'approvedByRoot':True,'dockerSlotReady':True,'signedBindingSha256':binding_sha}
+    input_sha=hashlib.sha256(encode(approved_input)).hexdigest()
+    approved_paths=(c.root/('auth-lifecycle-approved-binding-'+scope+'.json'),c.root/('auth-lifecycle-approved-input-'+scope+'.json'))
+    intent={'version':1,'kind':'ROOT_TYPED_LIFECYCLE_DISPATCH','scopeId':scope,'decisionId':reviewed.decision_id,'sourceHead':reviewed.source_head,
+        'lateSha256':reviewed.late_sha256,'handoffSha256':reviewed.handoff_sha256,'originalBindingSha256':reviewed.binding_sha256,
+        'originalInputSha256':reviewed.input_sha256,'approvedBindingSha256':binding_sha,'approvedInputSha256':input_sha,
+        'issuanceProofs':proofs,'nodePath':str(reviewed.node_path),'nodeSha256':reviewed.node_sha256,'noReplay':True}
+    intent.update(capsuleRoot=str(reviewed.capsule_root),capsulePinsSha256=hashlib.sha256(encode(reviewed.capsule_pins)).hexdigest(),factorySha256=reviewed.factory_sha256)
+    return c,late,approved_binding,approved_input,approved_paths,intent
+
+
+def validate_lifecycle_reviewed_paths(reviewed,value):
+    root=reviewed.prepared_root
+    if reviewed.binding_path==root/'signed-ai-binding-private.json'and reviewed.input_path==root/('auth-lifecycle-input-'+value['scopeId']+'.json'):
+        return
+    authority=getattr(reviewed,'dispatch_authority',None)
+    if type(authority)is not ReviewedLifecycleDispatch:raise ValueError('LIFECYCLE_REVIEWED_PRIVATE_PATH')
+    c,_,binding,expected,paths,intent=lifecycle_dispatch_load(authority)
+    if(root!=c.root or reviewed.binding_path!=paths[0]or reviewed.input_path!=paths[1]or value!=expected
+            or reviewed.binding_sha256!=intent['approvedBindingSha256']or reviewed.input_sha256!=intent['approvedInputSha256']
+            or reviewed.source_pins!=authority.producer.source_pins or reviewed.containers!=authority.producer.containers
+            or reviewed.issuance_proofs!=authority.issuance_proofs or reviewed.foreign_receipt_sha256 is not None):
+        raise ValueError('LIFECYCLE_REVIEWED_PRIVATE_PATH')
+    actual=signed_exact_json(signed_private_read(c.evidence/'dispatch-intent.json'))
+    if actual!=intent:raise ValueError('LIFECYCLE_DISPATCH_BINDING')
+    for path,body in zip(paths,(binding,expected)):
+        raw=signed_private_read(path)
+        if signed_exact_json(raw)!=body or hashlib.sha256(raw).hexdigest()!=intent['approvedBindingSha256'if path==paths[0]else'approvedInputSha256']:
+            raise ValueError('LIFECYCLE_DISPATCH_COPY_CHANGED')
+
+
+def lifecycle_dispatch_kernel_proof(raw,value):
+    proof=signed_exact_json(raw)
+    fields={'status','scope','cases','fixedFailures','fullLifecycleCoverage','authMutationsRetained','noSessionResurrection','noMutationReplay',
+        'originalBaselineSixPreserved','memberChangedMeaning','serviceMemberRetirement','consentRevocation','containerLifecycle',
+        'sequence','physical','actualNaver','externalProvider','naturalMidnight'}
+    if(not isinstance(proof,dict)or set(proof)!=fields or proof.get('scope')!=LIFECYCLE_KIND or proof.get('status')!='PASS_PARTIAL'
+            or proof.get('fixedFailures')!=[]or proof.get('fullLifecycleCoverage')!='NOT_RUN'
+            or not isinstance(proof.get('cases'),dict)or set(proof['cases'])!=set(LIFECYCLE_CASES)):
+        raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+    if(any(proof[k]is not True for k in('originalBaselineSixPreserved','noSessionResurrection','noMutationReplay'))
+            or proof['authMutationsRetained']!=['memberChanged','revokedSession']or proof['memberChangedMeaning']!='AUTH_USER_BANNED_ONLY'
+            or any(proof[k]!='NOT_RUN'for k in('serviceMemberRetirement','consentRevocation','actualNaver','externalProvider','naturalMidnight'))
+            or proof['sequence']!='NOT_VERIFIED'or proof['physical']!='NOT_VERIFIED'or proof['containerLifecycle']!='UNCHANGED_NOT_STOPPED_BY_RUNNER'):
+        raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+    for case,v in proof['cases'].items():
+        if case in('anonymousBearer','differentOriginalContext'):
+            if v!={'status':'NOT_RUN'}:raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+            continue
+        if not isinstance(v,dict)or type(v.get('authHttpStatus'))is not int or v['authHttpStatus']not in(401,403):
+            raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+        expected={'status':'PASS','case':case,'httpStatus':401,'authHttpStatus':v['authHttpStatus'],'actualAuthReads':1,'rpcCalls':0,
+            'providerCalls':0,'nativeExternalAttempts':0,'originalTokenSha256':hashlib.sha256(value['accounts'][case]['accessToken'].encode()).hexdigest(),
+            'actualNaver':'NOT_RUN','externalProvider':'NOT_RUN'}
+        if v!=expected or any(type(v[k])is not int for k in('httpStatus','actualAuthReads','rpcCalls','providerCalls','nativeExternalAttempts')):
+            raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+    return proof
+
+
+def inspect_lifecycle_dispatch(reviewed):
+    """파일 custody만 읽는다. 반환 JSON은 실행 권한이나 새 Auth/headroom 확인이 아니다."""
+    c,_,_,value,_,intent=lifecycle_dispatch_load(reviewed)
+    path=c.evidence/'dispatch-intent.json'
+    if not path.exists():return {'phase':'BOUND_ORIGINAL_INPUT_NOT_DISPATCHED','actualLifecycle':'NOT_RUN','readiness':'NOT_PROOF'}
+    if signed_exact_json(signed_private_read(path))!=intent:raise ValueError('LIFECYCLE_DISPATCH_BINDING')
+    terminal=c.evidence/'dispatch-receipt.json'
+    if not terminal.exists():return {'phase':'DISPATCH_UNKNOWN_NO_REPLAY','actualLifecycle':'UNKNOWN','readiness':'NOT_PROOF'}
+    result=signed_exact_json(signed_private_read(terminal))
+    if(result.get('scopeId')!=intent['scopeId']or result.get('intentSha256')!=hashlib.sha256(signed_private_read(path)).hexdigest()
+            or result.get('originalBindingSha256')!=reviewed.binding_sha256 or result.get('originalInputSha256')!=reviewed.input_sha256):
+        raise ValueError('LIFECYCLE_DISPATCH_BINDING')
+    raw=signed_private_read(c.root/('auth-lifecycle-'+intent['scopeId'])/'receipt.json')
+    if hashlib.sha256(raw).hexdigest()!=result['kernelReceiptSha256']:raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+    proof=lifecycle_dispatch_kernel_proof(raw,value)
+    expected={'status':'KERNEL_RETURNED_WITH_STORED_PROOF','scopeId':intent['scopeId'],'intentSha256':hashlib.sha256(signed_private_read(path)).hexdigest(),
+        'originalBindingSha256':reviewed.binding_sha256,'originalInputSha256':reviewed.input_sha256,
+        'kernelReceiptSha256':hashlib.sha256(raw).hexdigest(),'kernelStatus':proof['status'],'fullLifecycleCoverage':proof['fullLifecycleCoverage'],
+        'anonymous':'NOT_RUN','foreign':'NOT_RUN','originalProducerInputsPreserved':True,'noReplay':True}
+    if result!=expected:raise ValueError('LIFECYCLE_DISPATCH_KERNEL_PROOF_CHANGED')
+    return {'phase':'KERNEL_RETURNED_WITH_STORED_PROOF','kernelStatus':result['kernelStatus'],'fullLifecycleCoverage':result['fullLifecycleCoverage'],
+        'receiptSha256':hashlib.sha256(signed_private_read(terminal)).hexdigest(),'kernelReceiptSha256':result['kernelReceiptSha256'],'readiness':'NOT_PROOF'}
+
+
+def dispatch_lifecycle_accounts(reviewed):
+    """검토 객체와 원 SHA의 단일 실제 kernel 연결. CLI 경로·수명·토큰·원 receipt를 바꾸지 않는다."""
+    c,_,binding,value,paths,intent=lifecycle_dispatch_load(reviewed)
+    if any(p.exists()or p.is_symlink()for p in(c.evidence/'dispatch-intent.json',paths[0],paths[1],Path(value['evidenceRoot']))):
+        raise ValueError('LIFECYCLE_DISPATCH_PREVIOUS_ATTEMPT')
+    intent_sha=c.save('dispatch-intent.json',intent)
+    try:
+        if lcp_save(c.root,paths[0].name,binding)!=intent['approvedBindingSha256']:raise ValueError('LIFECYCLE_DISPATCH_COPY_CHANGED')
+        if lcp_save(c.root,paths[1].name,value)!=intent['approvedInputSha256']:raise ValueError('LIFECYCLE_DISPATCH_COPY_CHANGED')
+        child=ReviewedSignedAuthLifecycle(reviewed.decision_id,c.root,paths[0],paths[1],intent['approvedBindingSha256'],intent['approvedInputSha256'],
+            reviewed.producer.source_pins,reviewed.producer.containers,reviewed.issuance_proofs)
+        child.dispatch_authority=reviewed
+        validate_lifecycle_reviewed_paths(child,value)
+        # 기존 kernel이 현재 actual Auth/DB/closed controls/1GiB+768MiB/expiry를 검증하고 모든 mutation을 소유한다.
+        run_signed_auth_lifecycle(child,binding,value,str(reviewed.node_path))
+        raw=signed_private_read(Path(value['evidenceRoot'])/'receipt.json');proof=lifecycle_dispatch_kernel_proof(raw,value)
+        # 후속 코드 변경/원 JWT 파일 교체도 성공을 만들지 않는다.
+        lifecycle_dispatch_load(reviewed)
+        result={'status':'KERNEL_RETURNED_WITH_STORED_PROOF','scopeId':intent['scopeId'],'intentSha256':intent_sha,
+            'originalBindingSha256':reviewed.binding_sha256,'originalInputSha256':reviewed.input_sha256,
+            'kernelReceiptSha256':hashlib.sha256(raw).hexdigest(),'kernelStatus':proof['status'],'fullLifecycleCoverage':proof['fullLifecycleCoverage'],
+            'anonymous':'NOT_RUN','foreign':'NOT_RUN','originalProducerInputsPreserved':True,'noReplay':True}
+        c.save('dispatch-receipt.json',result);return result
+    except BaseException:
+        preserved=False
+        try:
+            preserved=(hashlib.sha256(signed_private_read(c.root/'signed-ai-binding-private.json')).hexdigest()==reviewed.binding_sha256
+                and hashlib.sha256(signed_private_read(c.root/('auth-lifecycle-input-'+intent['scopeId']+'.json'))).hexdigest()==reviewed.input_sha256)
+        except BaseException:pass
+        try:c.save('dispatch-failure.json',{'status':'UNKNOWN','scopeId':intent['scopeId'],'intentSha256':intent_sha,
+            'code':'LIFECYCLE_DISPATCH_FAILED','noReplay':True,'originalProducerInputsPreserved':preserved})
+        except BaseException:pass
+        raise ValueError('LIFECYCLE_DISPATCH_UNKNOWN_PRIVATE_EVIDENCE_PRESERVED')from None
 
 
 if __name__=='__main__':

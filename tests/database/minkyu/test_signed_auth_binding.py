@@ -402,6 +402,33 @@ class BindingTests(unittest.TestCase):
         new_negative=ast.parse('proof.append(signed_negative_receipt(negative))').body[0]
         dump=lambda node:ast.dump(node,include_attributes=False)
         for node in before.body:
+            if isinstance(node,ast.FunctionDef)and node.name=='run_signed_auth_lifecycle':
+                old_gate=ast.parse("if reviewed.binding_path!=root/'signed-ai-binding-private.json' or reviewed.input_path!=root/('auth-lifecycle-input-'+value['scopeId']+'.json'):\n raise ValueError('LIFECYCLE_REVIEWED_PRIVATE_PATH')").body[0]
+                new_gate=ast.parse('validate_lifecycle_reviewed_paths(reviewed,value)').body[0]
+                matches=[i for i,n in enumerate(node.body)if dump(n)==dump(old_gate)]
+                if matches:
+                    self.assertEqual(len(matches),1);node.body[matches[0]]=copy.deepcopy(new_gate)
+                else:self.assertEqual(sum(dump(n)==dump(new_gate)for n in node.body),1)
+                capsule_attach=ast.parse("authority=getattr(reviewed,'dispatch_authority',None)\nif type(authority)is ReviewedLifecycleDispatch:\n lifecycle_dispatch_capsule(authority);r.dispatch_authority=authority").body
+                if not any(dump(n)==dump(capsule_attach[0])for n in node.body):
+                    at=[i for i,n in enumerate(node.body)if dump(n)==dump(ast.parse('r.reviewed_head=source_head').body[0])]
+                    self.assertEqual(len(at),1);node.body[at[0]+1:at[0]+1]=copy.deepcopy(capsule_attach)
+            if isinstance(node,ast.ClassDef)and node.name=='SignedAuthLifecycleRunner':
+                method=next(n for n in node.body if isinstance(n,ast.FunctionDef)and n.name=='invoke_case')
+                override=ast.parse('code_root,factory_path=lifecycle_runner_factory_paths(self)').body[0]
+                if not any(dump(n)==dump(override)for n in method.body):
+                    fixture=next(n for n in method.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='fixture'for t in n.targets))
+                    i=next(i for i,k in enumerate(fixture.value.keys)if isinstance(k,ast.Constant)and k.value=='codeRoot')
+                    self.assertEqual(dump(fixture.value.values[i]),dump(ast.parse('str(REPO)',mode='eval').body))
+                    fixture.value.values[i]=ast.parse('str(code_root)',mode='eval').body
+                    method.body.insert(method.body.index(fixture),copy.deepcopy(override))
+                    argv=next(n for n in method.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='argv'for t in n.targets))
+                    self.assertEqual(dump(argv.value.elts[2]),dump(ast.parse("str(Path(__file__).with_name('isolated_ai_factory.ts'))",mode='eval').body))
+                    argv.value.elts[2]=ast.parse('str(factory_path)',mode='eval').body
+                    cleanup=next(n for n in method.body if isinstance(n,ast.Try))
+                    old_save=cleanup.finalbody.pop()
+                    self.assertIsInstance(old_save,ast.Expr)
+                    cleanup.finalbody.append(ast.Try(body=[old_save],handlers=[],orelse=[],finalbody=ast.parse('lifecycle_runner_factory_paths(self)').body))
             if isinstance(node,ast.FunctionDef)and node.name=='signed_main':
                 class NegativeReceipt(ast.NodeTransformer):
                     def visit_Expr(inner,expression):
@@ -1338,6 +1365,220 @@ class LifecycleProvisioningTests(unittest.TestCase):
         ports.cleanup_audits({'expiredBearer':{'userId':str(uuid.uuid4()),'authEmail':'synthetic-auth-lifecycle-fixed@example.invalid'}})
         self.assertIn("r.payload->>'action'='user_deleted'and r.payload->'traits'->>'user_id'=a.uid and r.payload->'traits'->>'user_email'=a.email",queries[0])
         self.assertNotIn("r.payload->'traits'->>'email'",queries[0])
+
+
+class LifecycleDispatchTests(unittest.TestCase):
+    setUp=BindingTests.setUp
+    def tearDown(self):
+        # 모형에서만 만든 봉인 트리를 해제한다. 실제 source/resource에는 적용하지 않는다.
+        if hasattr(self,'capsule')and self.capsule.exists():
+            self.capsule.chmod(0o700)
+            for directory in self.capsule.rglob('*'):
+                if directory.is_dir()and not directory.is_symlink():directory.chmod(0o700)
+        BindingTests.tearDown(self)
+    write=BindingTests.write
+    def invoke(self,fn,*args):
+        with patch.object(module,'provisioning_source_check',return_value=getattr(self,'source_head','a'*40)),patch.object(module,'signed_prepared_target',return_value=self.target),\
+             patch.object(module,'signed_source_pins',return_value=self.value['sourcePins']),patch.object(module.time,'time',side_effect=lambda:self.ports.now),\
+             patch.object(module,'FixedLifecycleProvisioningPorts',return_value=self.ports):return fn(*args)
+    def prepare(self):
+        self.source_head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=REPO,text=True).strip()
+        self.capsule=self.root/'captured-code';self.capsule.mkdir(mode=0o700)
+        factory='tests/integration/jonghyun/isolated_ai_factory.ts'
+        self.capsule_pins={**module.product_graph(),factory:hashlib.sha256((REPO/factory).read_bytes()).hexdigest()}
+        self.value['sourcePins'].update(self.capsule_pins)
+        for relative,digest in self.capsule_pins.items():
+            path=self.capsule/relative
+            pending=[];parent=path.parent
+            while not parent.exists():pending.append(parent);parent=parent.parent
+            for directory in reversed(pending):directory.mkdir(mode=0o700)
+            self.write(path,(REPO/relative).read_bytes())
+        for path in self.capsule.rglob('*'):
+            path.chmod(0o500 if path.is_dir()else 0o400)
+        self.capsule.chmod(0o500)
+        self.ports=FakeLifecycleProvisioningPorts(self.value)
+        self.producer=module.ReviewedLifecycleProvisioning('root-model-only',self.root,self.value['sourcePins'],self.value['containers'],self.value['credentials'],'e'*32)
+        staged=self.invoke(module.stage_lifecycle_accounts,self.producer);self.ports.now+=2700
+        self.late=self.invoke(module.resume_lifecycle_accounts,self.producer,staged['stateSha256']);self.ports.now=1900003570
+        self.bound=self.invoke(module.bind_lifecycle_accounts,self.producer,self.late['stateSha256'])
+        self.evidence=self.root/('auth-lifecycle-provision-'+'e'*32)
+        self.node=self.root/'node';self.write(self.node,b'OFFLINE_FIXED_EXECUTABLE_NEVER_RUN');self.node.chmod(0o700)
+        self.original_binding=(self.root/'signed-ai-binding-private.json').read_bytes()
+        self.original_input=(self.root/('auth-lifecycle-input-'+'e'*32+'.json')).read_bytes()
+        return module.ReviewedLifecycleDispatch('root-dispatch-model',self.producer,self.source_head,self.late['stateSha256'],
+            hashlib.sha256((self.evidence/'handoff-receipt.json').read_bytes()).hexdigest(),self.bound['bindingSha256'],self.bound['inputSha256'],
+            self.bound['issuanceProofs'],self.node,hashlib.sha256(self.node.read_bytes()).hexdigest(),
+            self.capsule,self.capsule_pins,self.capsule_pins[factory])
+    def kernel(self,reviewed,binding,value,node):
+        module.validate_lifecycle_reviewed_paths(reviewed,value)
+        self.assertEqual(Path(node),self.node)
+        self.assertEqual(reviewed.binding_path,self.root/('auth-lifecycle-approved-binding-'+'e'*32+'.json'))
+        self.assertEqual(reviewed.input_path,self.root/('auth-lifecycle-approved-input-'+'e'*32+'.json'))
+        evidence=Path(value['evidenceRoot']);evidence.mkdir(mode=0o700)
+        cases={c:{'status':'NOT_RUN'}for c in module.LIFECYCLE_CASES}
+        for case in('expiredBearer','revokedSession','memberChanged'):
+            cases[case]={'status':'PASS','case':case,'httpStatus':401,'authHttpStatus':403,'actualAuthReads':1,'rpcCalls':0,'providerCalls':0,
+                'nativeExternalAttempts':0,'originalTokenSha256':hashlib.sha256(value['accounts'][case]['accessToken'].encode()).hexdigest(),
+                'actualNaver':'NOT_RUN','externalProvider':'NOT_RUN'}
+        module.lcp_save(evidence,'receipt.json',{'status':'PASS_PARTIAL','scope':module.LIFECYCLE_KIND,'cases':cases,
+            'fullLifecycleCoverage':'NOT_RUN','fixedFailures':[],'authMutationsRetained':['memberChanged','revokedSession'],
+            'noSessionResurrection':True,'noMutationReplay':True,'originalBaselineSixPreserved':True,'memberChangedMeaning':'AUTH_USER_BANNED_ONLY',
+            'serviceMemberRetirement':'NOT_RUN','consentRevocation':'NOT_RUN','containerLifecycle':'UNCHANGED_NOT_STOPPED_BY_RUNNER',
+            'sequence':'NOT_VERIFIED','physical':'NOT_VERIFIED','actualNaver':'NOT_RUN','externalProvider':'NOT_RUN','naturalMidnight':'NOT_RUN'})
+    def test_typed_caller_fixed_copies_preserve_original_bytes_and_calls_kernel_once(self):
+        self.assertTrue(hasattr(module,'dispatch_lifecycle_accounts'),'typed bridge not implemented')
+        reviewed=self.prepare();before=[c for c in self.ports.calls if c[0]=='POST']
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=self.kernel)as kernel:
+            result=self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertEqual(kernel.call_count,1)
+        self.assertEqual((self.root/'signed-ai-binding-private.json').read_bytes(),self.original_binding)
+        self.assertEqual((self.root/('auth-lifecycle-input-'+'e'*32+'.json')).read_bytes(),self.original_input)
+        self.assertEqual(result['kernelStatus'],'PASS_PARTIAL');self.assertEqual(result['fullLifecycleCoverage'],'NOT_RUN')
+        self.assertEqual([c for c in self.ports.calls if c[0]=='POST'],before)
+        inspected=self.invoke(module.inspect_lifecycle_dispatch,reviewed)
+        self.assertEqual(inspected['phase'],'KERNEL_RETURNED_WITH_STORED_PROOF')
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=AssertionError('replay')):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+    def test_json_flags_and_injected_producer_ports_never_grant_dispatch(self):
+        with self.assertRaises(ValueError):module.dispatch_lifecycle_accounts({'approvedByRoot':True})
+        reviewed=self.prepare();reviewed.producer.ports=self.ports
+        with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertFalse((self.evidence/'dispatch-intent.json').exists())
+    def test_source_original_issuance_or_node_drift_refuses_before_approved_copy(self):
+        reviewed=self.prepare();self.node.write_bytes(b'CHANGED');self.node.chmod(0o700)
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=AssertionError('kernel')):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertFalse((self.evidence/'dispatch-intent.json').exists())
+    def test_partial_copy_failure_and_kernel_loss_are_unknown_no_second_attempt(self):
+        reviewed=self.prepare();native=module.lcp_save
+        def lost(root,name,value):
+            if name.startswith('auth-lifecycle-approved-input-'):raise OSError('PRIVATE_COPY_SECRET')
+            return native(root,name,value)
+        with patch.object(module,'lcp_save',side_effect=lost),patch.object(module,'run_signed_auth_lifecycle',side_effect=AssertionError('kernel')):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        inspected=self.invoke(module.inspect_lifecycle_dispatch,reviewed)
+        self.assertEqual(inspected['phase'],'DISPATCH_UNKNOWN_NO_REPLAY')
+        self.assertEqual((self.root/'signed-ai-binding-private.json').read_bytes(),self.original_binding)
+        with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+    def test_approved_copy_with_changed_original_token_cannot_pass_kernel_path_gate(self):
+        reviewed=self.prepare()
+        def changed(child,binding,value,node):
+            value=copy.deepcopy(value);value['accounts']['expiredBearer']['accessToken']=self.value['accounts'][0]['accessToken']
+            with self.assertRaises(ValueError):module.validate_lifecycle_reviewed_paths(child,value)
+            raise RuntimeError('SIMULATED_LOST_KERNEL')
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=changed):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertEqual(self.invoke(module.inspect_lifecycle_dispatch,reviewed)['phase'],'DISPATCH_UNKNOWN_NO_REPLAY')
+    def test_kernel_return_without_all_three_real_cases_is_not_a_dispatch_success(self):
+        reviewed=self.prepare()
+        def incomplete(child,binding,value,node):
+            self.kernel(child,binding,value,node)
+            path=Path(value['evidenceRoot'])/'receipt.json';body=json.loads(path.read_bytes())
+            body['cases']['expiredBearer']={'status':'NOT_RUN'};path.write_text(json.dumps(body));path.chmod(0o600)
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=incomplete):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertEqual(self.invoke(module.inspect_lifecycle_dispatch,reviewed)['phase'],'DISPATCH_UNKNOWN_NO_REPLAY')
+    def test_terminal_inspection_cannot_promote_partial_to_full_by_changing_summary(self):
+        reviewed=self.prepare()
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=self.kernel):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        path=self.evidence/'dispatch-receipt.json';body=json.loads(path.read_bytes());body['fullLifecycleCoverage']='PASS'
+        path.write_text(json.dumps(body));path.chmod(0o600)
+        with self.assertRaises(ValueError):self.invoke(module.inspect_lifecycle_dispatch,reviewed)
+    def test_original_input_drift_after_kernel_is_failure_and_never_claims_custody(self):
+        reviewed=self.prepare()
+        def drift(child,binding,value,node):
+            self.kernel(child,binding,value,node)
+            path=self.root/('auth-lifecycle-input-'+'e'*32+'.json');path.write_bytes(b'{}');path.chmod(0o600)
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=drift):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        failure=json.loads((self.evidence/'dispatch-failure.json').read_bytes())
+        self.assertFalse(failure['originalProducerInputsPreserved'])
+    def test_kernel_preservation_false_numeric_true_and_scope_expansion_are_refused(self):
+        for key,bad in [('originalBaselineSixPreserved',False),('noSessionResurrection',False),('noMutationReplay',1),
+                        ('serviceMemberRetirement','PASS'),('consentRevocation','PASS'),('naturalMidnight','PASS')]:
+            with self.subTest(key=key):
+                other=LifecycleDispatchTests();other.setUp()
+                try:
+                    reviewed=other.prepare()
+                    def expanded(child,binding,value,node):
+                        other.kernel(child,binding,value,node);path=Path(value['evidenceRoot'])/'receipt.json'
+                        v=json.loads(path.read_bytes());v[key]=bad;path.write_text(json.dumps(v));path.chmod(0o600)
+                    with patch.object(module,'run_signed_auth_lifecycle',side_effect=expanded):
+                        with self.assertRaises(ValueError):other.invoke(module.dispatch_lifecycle_accounts,reviewed)
+                finally:other.tearDown()
+    def test_private_capsule_whole_inventory_symlink_and_file_drift_refuse(self):
+        self.assertTrue(hasattr(module,'lifecycle_dispatch_capsule'),'capsule override missing')
+        reviewed=self.prepare();path=self.capsule/'unreviewed.ts';self.capsule.chmod(0o700)
+        self.write(path,b'UNREVIEWED');path.chmod(0o400);self.capsule.chmod(0o500)
+        with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertFalse((self.evidence/'dispatch-intent.json').exists())
+    def test_capsule_path_override_uses_original_token_and_checks_after_child_failure(self):
+        reviewed=self.prepare();r=object.__new__(module.SignedAuthLifecycleRunner)
+        r.binding=json.loads(self.original_binding);r.lifecycle=json.loads(self.original_input);r.children=[];r.live=lambda:None
+        r.evidence=self.root/'model-factory-evidence';r.evidence.mkdir(mode=0o700);r.dispatch_authority=reviewed
+        captured=[];capsule=self.capsule
+        class Child:
+            returncode=1
+            def __init__(self,argv,**kwargs):captured.append(argv)
+            def communicate(self,timeout):
+                f=json.loads(Path(captured[-1][3]).read_bytes())
+                self.asserted=(f['codeRoot']==str(capsule))
+                path=capsule/'backend/supabase/functions/ai-chat/index.ts';path.chmod(0o600);path.write_bytes(b'CHANGED_CAPTURE');path.chmod(0o400)
+                return b'',b'PRIVATE_NODE_ERROR'
+            def poll(self):return 1
+        native=module.subprocess.Popen
+        def popen(argv,**kwargs):return Child(argv,**kwargs)if argv[0]==str(self.node)else native(argv,**kwargs)
+        with patch.object(module.subprocess,'Popen',side_effect=popen):
+            with self.assertRaises(ValueError):r.invoke_case('expiredBearer',r.lifecycle['accounts']['expiredBearer'],str(self.node))
+        self.assertEqual(captured[0][2],str(self.capsule/'tests/integration/jonghyun/isolated_ai_factory.ts'))
+        fixture=json.loads(Path(captured[0][3]).read_bytes())
+        self.assertEqual(fixture['codeRoot'],str(self.capsule))
+        self.assertEqual(fixture['originalToken'],r.lifecycle['accounts']['expiredBearer']['accessToken'])
+        self.assertTrue(list(r.evidence.glob('factory-*-closed.json')))
+    def test_capsule_symlink_matching_committed_bytes_is_not_executable_custody(self):
+        reviewed=self.prepare();relative='backend/supabase/functions/ai-chat/index.ts'
+        path=self.capsule/relative;path.parent.chmod(0o700);path.unlink();path.symlink_to(REPO/relative);path.parent.chmod(0o500)
+        with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertFalse((self.evidence/'dispatch-intent.json').exists())
+    def test_sealed_source_reader_rejects_mixed_root_directory_and_file_modes(self):
+        reviewed=self.prepare();path=self.capsule/'backend/supabase/functions/ai-chat/index.ts'
+        self.assertEqual(module.lifecycle_capsule_source_read(path,self.capsule),(REPO/path.relative_to(self.capsule)).read_bytes())
+        for target,bad,good in[(self.capsule,0o700,0o500),(path.parent,0o700,0o500),(path,0o600,0o400)]:
+            with self.subTest(target=target.name):
+                target.chmod(bad)
+                try:
+                    with self.assertRaises(ValueError):module.lifecycle_capsule_source_read(path,self.capsule)
+                finally:target.chmod(good)
+    def test_source_reader_requires_private_parent_and_does_not_relax_token_reader(self):
+        self.prepare();path=self.capsule/'backend/supabase/functions/ai-chat/index.ts'
+        self.root.chmod(0o500)
+        try:
+            with self.assertRaises(ValueError):module.lifecycle_capsule_source_read(path,self.capsule)
+        finally:self.root.chmod(0o700)
+        with self.assertRaises(ValueError):module.signed_private_read(path)
+    def test_source_reader_rejects_path_replacement_and_hardlinked_bytes(self):
+        self.prepare();path=self.capsule/'backend/supabase/functions/ai-chat/index.ts';original=path.read_bytes()
+        native=module.os.fstat;calls=[]
+        def swapped(fd):
+            info=native(fd);calls.append(fd)
+            if len(calls)==2:
+                path.parent.chmod(0o700);replacement=path.with_name('replacement.ts')
+                self.write(replacement,original);replacement.chmod(0o400);replacement.replace(path);path.parent.chmod(0o500)
+            return info
+        with patch.object(module.os,'fstat',side_effect=swapped):
+            with self.assertRaises(ValueError):module.lifecycle_capsule_source_read(path,self.capsule)
+        path.parent.chmod(0o700);os.link(path,path.with_name('linked.ts'));path.parent.chmod(0o500)
+        with self.assertRaises(ValueError):module.lifecycle_capsule_source_read(path,self.capsule)
+
+    def test_kernel_other_original_token_hash_never_satisfies_selected_case(self):
+        reviewed=self.prepare()
+        def swapped(child,binding,value,node):
+            self.kernel(child,binding,value,node);path=Path(value['evidenceRoot'])/'receipt.json';v=json.loads(path.read_bytes())
+            v['cases']['expiredBearer']['originalTokenSha256']=hashlib.sha256(binding['accounts'][0]['accessToken'].encode()).hexdigest()
+            path.write_text(json.dumps(v));path.chmod(0o600)
+        with patch.object(module,'run_signed_auth_lifecycle',side_effect=swapped):
+            with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
+        self.assertEqual(self.invoke(module.inspect_lifecycle_dispatch,reviewed)['phase'],'DISPATCH_UNKNOWN_NO_REPLAY')
 
 
 if __name__=='__main__':unittest.main()
