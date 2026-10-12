@@ -836,6 +836,8 @@ class SignedMidnightRunner(SignedRunner):
     def warm_factory(self, fixture, phase='held'):
         if phase!='held':raise ValueError('MIDNIGHT_WARM_PHASE')
         if not self.prepared_units_complete or not self.changed or not hasattr(self,'midnight_unknown'):raise ValueError('MIDNIGHT_PREPARED_UNITS_REQUIRED')
+        if getattr(self,'midnight_custody',None)is not None:
+            self.held_custody=self.midnight_custody.descriptor();self.held_custody_signatures=midnight_warm_signatures(self)
         self.validate_original_accounts()
         for key,value in self.fixture.items():
             if fixture.get(key)!=value:raise ValueError('MIDNIGHT_FIXED_FIXTURE')
@@ -868,21 +870,27 @@ class SignedMidnightRunner(SignedRunner):
                     or hashlib.sha256(json.dumps(fixture,sort_keys=True).encode()).hexdigest()!=capability['fixtureSha256']):
                 raise ValueError('MIDNIGHT_HELD_NOT_WARMED')
             deadline=time.monotonic()+.25
+            if getattr(self,'midnight_custody',None)is not None:midnight_warm_recheck(self)
             for key,expected in self.held_warm_sources.items():
                 info=(REPO/key).lstat()
                 if time.monotonic()>=deadline or (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)!=expected:
                     raise ValueError('MIDNIGHT_HELD_SOURCE_DRIFT_OR_SLOW')
             self.held_warm_used=True
-        else:self.validate_original_accounts()
+        else:
+            midnight_custody_proof(self)
+            self.validate_original_accounts()
         filename='midnight-'+phase+'-fixture-private.json';self.save_signed(filename,fixture)
-        node=shutil.which('node')
+        typed=getattr(self,'midnight_custody',None)
+        node=str(typed.node_path)if typed is not None else shutil.which('node')
         if not node:raise ValueError('NODE_REQUIRED')
+        factory=Path(typed.descriptor()['capsuleRoot'])/'tests/integration/jonghyun/isolated_ai_factory.ts'if typed is not None else Path(__file__).with_name('isolated_ai_factory.ts')
         mode='--ai-midnight'if phase in('held','new-day')else'--ai-limits'
-        command=[node,'--experimental-strip-types',str(Path(__file__).with_name('isolated_ai_factory.ts')),str(self.evidence/filename),mode]
+        command=[node,'--experimental-strip-types',str(factory),str(self.evidence/filename),mode]
         self.save_signed('midnight-'+phase+'-node-intent.json',{'scopeId':self.scope_id,'phase':phase,'singleLaunch':True,
             'argvSha256':hashlib.sha256(json.dumps(command).encode()).hexdigest()})
-        process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        handle={'process':process,'phase':phase,'fixture':fixture};self.children.append(handle)
+        options={'env':midnight_minimal_env(self.evidence),'cwd':str(self.evidence),'start_new_session':True}if typed is not None else {}
+        process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE,**options)
+        handle={'process':process,'phase':phase,'fixture':fixture,'typedCustody':typed is not None};self.children.append(handle)
         try:self.save_signed('midnight-'+phase+'-node-created.json',{'pid':process.pid,'scopeId':self.scope_id,'signalsOnlyExactPopenObject':True})
         except Exception:
             self.cancel_factory(handle)
@@ -892,6 +900,12 @@ class SignedMidnightRunner(SignedRunner):
     def cancel_factory(self, handle):
         if not any(handle is h for h in self.children):raise ValueError('MIDNIGHT_CHILD_NOT_OWNED')
         process=handle['process']
+        if handle.get('typedCustody'):
+            try:
+                self.midnight_terminate(process)
+                if process.poll()is None:raise ValueError('MIDNIGHT_CHILD_EXIT_UNPROVEN')
+            finally:midnight_custody_proof(self)
+            return {'exited':True,'pid':process.pid,'exitCode':process.returncode,'ownedGroupClosed':True,'sourceCustody':'SEALED_PIN_RECHECKED'}
         if process.poll()is None:
             process.terminate()
             try:process.communicate(timeout=5)
@@ -968,11 +982,16 @@ class SignedMidnightRunner(SignedRunner):
             'baseline':getattr(self,'baseline',None),'catalog':getattr(self,'catalog',None),'protected':getattr(self,'protected',None),
             'fixtureBaseline':getattr(self,'fixture_baseline',None),'originalRows':getattr(self,'snapshot_original_rows',None),
             'ledgers':self.ledgers,'fixtureMetadata':{k:v for k,v in self.fixture.items()if k not in excluded},
-            'unknown':getattr(self,'midnight_unknown',None),'externalProcessingAllowedBefore':False}
+            'unknown':getattr(self,'midnight_unknown',None),'externalProcessingAllowedBefore':False,
+            **({'sourceCustody':self.midnight_custody.descriptor(),'sourceCustodySha256':hashlib.sha256(self.midnight_custody._data.encode()).hexdigest()}if getattr(self,'midnight_custody',None)is not None else {})}
 
     def restore_resume_state(self, value):
         """소유·scope·원 입력이 같은 상태만 복원한다. SQL·재기동·새 prepare 호출 없음."""
         current=self.export_resume_state()
+        if getattr(self,'midnight_custody',None)is not None:
+            if (not isinstance(value,dict)or value.get('sourceCustody')!=current['sourceCustody']or value.get('sourceCustodySha256')!=current['sourceCustodySha256']):
+                raise ValueError('MIDNIGHT_RESUME_CUSTODY_BINDING')
+            midnight_custody_proof(self)
         if not isinstance(value,dict) or set(value)!=set(current):raise ValueError('MIDNIGHT_RESUME_STATE_FIELDS')
         for key in ('version','kind','scopeId','boundaryEpoch','memberIds','preparedRoot','evidenceRoot','target','bindingCanonicalSha256','sourcePins','externalProcessingAllowedBefore'):
             if value[key]!=current[key]:raise ValueError('MIDNIGHT_RESUME_STATE_BINDING')
@@ -2278,6 +2297,14 @@ def lifecycle_dispatch_capsule(reviewed):
         raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
     expected={**product_graph(),factory:reviewed.producer.source_pins.get(factory)}
     if expected[factory]!=reviewed.factory_sha256 or any(pins.get(k)!=v for k,v in expected.items()):raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
+    return sealed_runtime_capsule(reviewed.source_head,root,pins,expected)
+
+
+def sealed_runtime_capsule(source_head,root,pins,expected):
+    """Lifecycle와 AI24가 같은 source-only reader와 inventory 검사를 사용한다."""
+    factory='tests/integration/jonghyun/isolated_ai_factory.ts'
+    if (not root.is_absolute()or root.resolve()!=root or root==REPO or not isinstance(pins,dict)or not 1<=len(pins)<=256
+            or any(pins.get(k)!=v for k,v in expected.items())):raise ValueError('MIDNIGHT_CUSTODY_CAPSULE')
     expected_directories={root};captured={}
     for key,digest in pins.items():
         if(not isinstance(key,str)or key.startswith('/')or any(x in('','..','.')for x in key.split('/'))
@@ -2295,7 +2322,7 @@ def lifecycle_dispatch_capsule(reviewed):
         captured[key]=raw
         if sum(len(v)for v in captured.values())+256*200>32*1024*1024:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
     # 고정 파일들의 committed bytes를 한 bounded Git batch로 읽는다. N개의15초 대기는 하지 않는다.
-    requests=''.join(reviewed.source_head+':'+key+'\n'for key in captured).encode()
+    requests=''.join(source_head+':'+key+'\n'for key in captured).encode()
     committed=subprocess.run(['git','-C',str(REPO),'cat-file','--batch'],input=requests,capture_output=True,timeout=15)
     if committed.returncode or len(committed.stdout)>32*1024*1024:raise ValueError('LIFECYCLE_DISPATCH_CAPSULE')
     offset=0
@@ -2325,6 +2352,117 @@ def lifecycle_runner_factory_paths(runner):
     authority=getattr(runner,'dispatch_authority',None)
     if authority is None:return REPO,Path(__file__).with_name('isolated_ai_factory.ts')
     return lifecycle_dispatch_capsule(authority)
+
+
+
+class TypedMidnightCustody:
+    """검토한 Python 코드 객체만 부여하는 source 권한. 상태 JSON은 권한이 아니다."""
+    __slots__=('_data',)
+    def __init__(self,source_head,scope_id,capsule_root,capsule_pins,factory_sha256,node_path,node_sha256,observer_sha256):
+        value={'sourceHead':source_head,'scopeId':scope_id,'capsuleRoot':str(capsule_root),'capsulePins':capsule_pins,
+            'factorySha256':factory_sha256,'nodePath':str(node_path),'nodeSha256':node_sha256,'observerSha256':observer_sha256}
+        if (not isinstance(source_head,str)or not re.fullmatch(r'[a-f0-9]{40}',source_head)
+                or not isinstance(scope_id,str)or not re.fullmatch(r'[A-Za-z0-9_.:-]{1,48}',scope_id)
+                or any(not isinstance(value[k],str)or not re.fullmatch(r'[a-f0-9]{64}',value[k])for k in ('factorySha256','nodeSha256','observerSha256'))):
+            raise ValueError('MIDNIGHT_CUSTODY_FIELDS')
+        object.__setattr__(self,'_data',json.dumps(value,sort_keys=True,separators=(',',':')))
+    def __setattr__(self,name,value):raise AttributeError('MIDNIGHT_CUSTODY_IMMUTABLE')
+    def descriptor(self):return json.loads(self._data)
+    @property
+    def node_path(self):return Path(self.descriptor()['nodePath'])
+    @property
+    def node_sha256(self):return self.descriptor()['nodeSha256']
+
+
+def midnight_custody_proof(runner):
+    authority=getattr(runner,'midnight_custody',None)
+    if authority is None:return None
+    if type(authority)is not TypedMidnightCustody:raise ValueError('MIDNIGHT_TYPED_CUSTODY_REQUIRED')
+    value=authority.descriptor();factory='tests/integration/jonghyun/isolated_ai_factory.ts'
+    if value['scopeId']!=runner.scope_id or value['factorySha256']!=runner.binding['sourcePins'].get(factory):
+        raise ValueError('MIDNIGHT_CUSTODY_BINDING')
+    head=subprocess.run(['git','-C',str(REPO),'rev-parse','HEAD'],capture_output=True,timeout=15)
+    if head.returncode or head.stdout.decode().strip()!=value['sourceHead']:raise ValueError('MIDNIGHT_CUSTODY_HEAD')
+    expected={**product_graph(),factory:value['factorySha256']}
+    root,path=sealed_runtime_capsule(value['sourceHead'],Path(value['capsuleRoot']),value['capsulePins'],expected)
+    lifecycle_dispatch_node(authority)
+    return value
+
+
+def midnight_bind_custody(runner,authority):
+    if(type(runner)is not SignedMidnightRunner or type(authority)is not TypedMidnightCustody
+            or runner.changed or runner.children or hasattr(runner,'midnight_custody')):
+        raise ValueError('MIDNIGHT_CUSTODY_BIND_ONCE')
+    runner.midnight_custody=authority
+    value=midnight_custody_proof(runner)
+    # 원 observer의 고정 3개 함수만 검증한 버퍼에서 캡처한다. 임의 모듈 loader가 아니다.
+    import ast
+    path=REPO/'tools/local/observe_isolated.py';raw=path.read_bytes()
+    committed=subprocess.run(['git','-C',str(REPO),'show',value['sourceHead']+':tools/local/observe_isolated.py'],capture_output=True,timeout=15)
+    if (committed.returncode or committed.stdout!=raw or hashlib.sha256(raw).hexdigest()!=value['observerSha256']):
+        raise ValueError('MIDNIGHT_CUSTODY_OBSERVER')
+    tree=ast.parse(raw);names={'group_alive','verify_group_closed','terminate'}
+    nodes=[node for node in tree.body if isinstance(node,ast.FunctionDef)and node.name in names]
+    if {node.name for node in nodes}!=names:raise ValueError('MIDNIGHT_CUSTODY_OBSERVER')
+    namespace={'os':os,'signal':signal,'subprocess':subprocess,'time':time}
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),str(path),'exec'),namespace)
+    runner.midnight_terminate=namespace['terminate']
+    runner.fixture['codeRoot']=value['capsuleRoot']
+    return {'custody':value,'sha256':hashlib.sha256(authority._data.encode()).hexdigest(),'actualMidnight':'NOT_RUN'}
+
+
+def midnight_warm_signatures(runner):
+    value=midnight_custody_proof(runner)
+    paths={str(Path(value['capsuleRoot'])/key):digest for key,digest in value['capsulePins'].items()}
+    paths[value['nodePath']]=value['nodeSha256'];result={}
+    signature=lambda p:(p.st_dev,p.st_ino,p.st_mode,p.st_uid,p.st_nlink,p.st_size,p.st_mtime_ns,p.st_ctime_ns)
+    root=Path(value['capsuleRoot']);directories={root}
+    for name in value['capsulePins']:
+        parent=(root/name).parent
+        while parent!=root:directories.add(parent);parent=parent.parent
+    for directory in directories:
+        info=directory.lstat()
+        if not stat.S_ISDIR(info.st_mode)or info.st_uid!=os.getuid()or stat.S_IMODE(info.st_mode)!=0o500:
+            raise ValueError('MIDNIGHT_CUSTODY_WARM')
+        result[str(directory)]=signature(info)
+    # 검증과 warm metadata 사이 교체를 신뢰하지 않는다. 같은 FD에서 해시와 식별자를 묶는다.
+    for name,digest in paths.items():
+        path=Path(name);info=path.lstat();fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+        try:
+            opened=os.fstat(fd)
+            if signature(info)!=signature(opened)or not stat.S_ISREG(opened.st_mode)or opened.st_nlink!=1:
+                raise ValueError('MIDNIGHT_CUSTODY_WARM')
+            maximum=256*1024*1024 if name==value['nodePath']else 2*1024*1024
+            if opened.st_size>maximum:raise ValueError('MIDNIGHT_CUSTODY_WARM')
+            hasher=hashlib.sha256();remaining=opened.st_size;began=time.monotonic()
+            while remaining:
+                if time.monotonic()-began>15:raise ValueError('MIDNIGHT_CUSTODY_WARM')
+                raw=os.read(fd,min(1048576,remaining))
+                if not raw:raise ValueError('MIDNIGHT_CUSTODY_WARM')
+                hasher.update(raw);remaining-=len(raw)
+            if (hasher.hexdigest()!=digest or signature(opened)!=signature(os.fstat(fd))
+                    or signature(opened)!=signature(path.lstat())):raise ValueError('MIDNIGHT_CUSTODY_WARM')
+            result[name]=signature(opened)
+        finally:os.close(fd)
+    midnight_custody_proof(runner)
+    if any(signature(Path(name).lstat())!=bound for name,bound in result.items()):raise ValueError('MIDNIGHT_CUSTODY_WARM')
+    return result
+
+
+def midnight_warm_recheck(runner):
+    deadline=time.monotonic()+.25
+    if runner.midnight_custody.descriptor()!=runner.held_custody:raise ValueError('MIDNIGHT_CUSTODY_WARM')
+    for name,expected in runner.held_custody_signatures.items():
+        info=Path(name).lstat()
+        if time.monotonic()>=deadline or (info.st_dev,info.st_ino,info.st_mode,info.st_uid,info.st_nlink,info.st_size,info.st_mtime_ns,info.st_ctime_ns)!=expected:
+            raise ValueError('MIDNIGHT_HELD_SOURCE_DRIFT_OR_SLOW')
+
+
+def midnight_minimal_env(evidence):
+    # 원 환경의 경로와 locale만 전달한다. HOME/locale을 evidence 용도로 바꾸지 않는다.
+    keys=('PATH','HOME','LANG','LC_ALL','LC_CTYPE','LC_NUMERIC','LC_TIME','LC_COLLATE','LC_MONETARY',
+        'LC_MESSAGES','LC_PAPER','LC_NAME','LC_ADDRESS','LC_TELEPHONE','LC_MEASUREMENT','LC_IDENTIFICATION')
+    return {key:os.environ[key]for key in keys if key in os.environ}
 
 
 def lifecycle_dispatch_node(reviewed):

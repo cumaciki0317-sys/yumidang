@@ -447,6 +447,69 @@ class BindingTests(unittest.TestCase):
                 if matching:
                     self.assertEqual(len(matching),1);method.body[matching[0]]=copy.deepcopy(replacement)
                 else:self.assertEqual(sum(dump(n)==dump(replacement)for n in method.body),1)
+        # AI24의 승인된 typed overlay만 정확한 AST로 확인한 뒤 제거한다.
+        # 나머지 전체 클래스/메서드는 기존 canonical 본문과 계속 동일해야 한다.
+        before=copy.deepcopy(before);after=copy.deepcopy(after)
+        approved={'warm': "if getattr(self, 'midnight_custody', None) is not None:\n    self.held_custody = self.midnight_custody.descriptor()\n    self.held_custody_signatures = midnight_warm_signatures(self)", 'held': "if getattr(self, 'midnight_custody', None) is not None:\n    midnight_warm_recheck(self)", 'cancel': "if handle.get('typedCustody'):\n    try:\n        self.midnight_terminate(process)\n        if process.poll() is None:\n            raise ValueError('MIDNIGHT_CHILD_EXIT_UNPROVEN')\n    finally:\n        midnight_custody_proof(self)\n    return {'exited': True, 'pid': process.pid, 'exitCode': process.returncode, 'ownedGroupClosed': True, 'sourceCustody': 'SEALED_PIN_RECHECKED'}", 'restore': "if getattr(self, 'midnight_custody', None) is not None:\n    if not isinstance(value, dict) or value.get('sourceCustody') != current['sourceCustody'] or value.get('sourceCustodySha256') != current['sourceCustodySha256']:\n        raise ValueError('MIDNIGHT_RESUME_CUSTODY_BINDING')\n    midnight_custody_proof(self)", 'export': "{'sourceCustody': self.midnight_custody.descriptor(), 'sourceCustodySha256': hashlib.sha256(self.midnight_custody._data.encode()).hexdigest()} if getattr(self, 'midnight_custody', None) is not None else {}"}
+        additions={'typed': "typed = getattr(self, 'midnight_custody', None)", 'node': "node = str(typed.node_path) if typed is not None else shutil.which('node')", 'factory': "factory = Path(typed.descriptor()['capsuleRoot']) / 'tests/integration/jonghyun/isolated_ai_factory.ts' if typed is not None else Path(__file__).with_name('isolated_ai_factory.ts')", 'command': "command = [node, '--experimental-strip-types', str(factory), str(self.evidence / filename), mode]", 'options': "options = {'env': midnight_minimal_env(self.evidence), 'cwd': str(self.evidence), 'start_new_session': True} if typed is not None else {}", 'popen': 'process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **options)', 'handle': "handle = {'process': process, 'phase': phase, 'fixture': fixture, 'typedCustody': typed is not None}"}
+        def exact_remove(body,source):
+            wanted=ast.parse(source).body
+            self.assertEqual(len(wanted),1)
+            matches=[i for i,n in enumerate(body)if dump(n)==dump(wanted[0])]
+            self.assertEqual(len(matches),1,source)
+            return body.pop(matches[0])
+        for revision in (before,after):
+            for candidate in revision.body:
+                if isinstance(candidate,ast.ClassDef)and candidate.name=='SignedMidnightRunner':
+                    methods={n.name:n for n in candidate.body if isinstance(n,ast.FunctionDef)}
+                    if not any(isinstance(n,ast.Name)and n.id=='midnight_warm_signatures'for n in ast.walk(methods['warm_factory'])):continue
+                    # 새 method를 무시하지 않으며 원 method 집합이 그대로여야 한다.
+                    oldclass=next(n for n in before.body if isinstance(n,ast.ClassDef)and n.name==candidate.name)
+                    self.assertEqual(set(methods),{n.name for n in oldclass.body if isinstance(n,ast.FunctionDef)})
+                    exact_remove(methods['warm_factory'].body,approved['warm'])
+                    exact_remove(methods['cancel_factory'].body,approved['cancel'])
+                    exact_remove(methods['restore_resume_state'].body,approved['restore'])
+                    result=methods['export_resume_state'].body[-1].value
+                    self.assertIsNone(result.keys[-1]);self.assertEqual(dump(result.values[-1]),dump(ast.parse(approved['export'],mode='eval').body))
+                    result.keys.pop();result.values.pop()
+                    start=methods['start_factory']
+                    held=next(n for n in start.body if isinstance(n,ast.If)and dump(n.test)==dump(ast.parse("phase=='held'",mode='eval').body))
+                    exact_remove(held.body,approved['held'])
+                    self.assertEqual(dump(held.orelse[0]),dump(ast.parse('midnight_custody_proof(self)').body[0]));held.orelse.pop(0)
+                    replacements={
+                        'node':"node=shutil.which('node')",
+                        'command':"command=[node,'--experimental-strip-types',str(Path(__file__).with_name('isolated_ai_factory.ts')),str(self.evidence/filename),mode]",
+                        'popen':"process=subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE)",
+                        'handle':"handle={'process':process,'phase':phase,'fixture':fixture}",
+                    }
+                    for name in ('typed','factory','options'):exact_remove(start.body,additions[name])
+                    for name,original in replacements.items():
+                        old=exact_remove(start.body,additions[name])
+                        # 원문 위치도 보존한다. canonical 흐름에서 statement를 재배치하지 않는다.
+                        assignment=ast.parse(original).body[0]
+                        target=assignment.targets[0].id
+                        anchors={'node':'filename','command':'mode','process':'command','handle':'process'}
+                        anchor=anchors[target]
+                        at=next(i for i,n in enumerate(start.body)if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id==anchor for t in n.targets))
+                        if target=='node':at+=1 # filename 다음 save()도 원 순서로 유지
+                        if target=='process':at+=1 # command 다음 intent도 원 순서로 유지
+                        start.body.insert(at+1,assignment)
+        for candidate in after.body:
+            if isinstance(candidate,ast.FunctionDef)and candidate.name=='lifecycle_dispatch_capsule'and any(isinstance(n,ast.FunctionDef)and n.name==candidate.name for n in before.body):
+                original=next(n for n in before.body if isinstance(n,ast.FunctionDef)and n.name==candidate.name)
+                cutoffs=[i for i,n in enumerate(original.body)if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='expected_directories'for t in n.targets)]
+                if not cutoffs:
+                    self.assertEqual(dump(candidate),dump(original));continue
+                self.assertEqual(len(cutoffs),1);cutoff=cutoffs[0]
+                self.assertEqual(dump(ast.Module(body=candidate.body,type_ignores=[])),dump(ast.Module(body=original.body[:cutoff]+ast.parse('return sealed_runtime_capsule(reviewed.source_head,root,pins,expected)').body,type_ignores=[])))
+                shared=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='sealed_runtime_capsule')
+                class GenericHead(ast.NodeTransformer):
+                    def visit_Attribute(inner,n):
+                        return ast.Name(id='source_head',ctx=ast.Load())if dump(n)==dump(ast.parse('reviewed.source_head',mode='eval').body)else inner.generic_visit(n)
+                tail=GenericHead().visit(ast.Module(body=copy.deepcopy(original.body[cutoff:]),type_ignores=[])).body
+                prefix=ast.parse('"""Lifecycle와 AI24가 같은 source-only reader와 inventory 검사를 사용한다."""\nfactory = \'tests/integration/jonghyun/isolated_ai_factory.ts\'\nif not root.is_absolute() or root.resolve() != root or root == REPO or (not isinstance(pins, dict)) or (not 1 <= len(pins) <= 256) or any((pins.get(k) != v for k, v in expected.items())):\n    raise ValueError(\'MIDNIGHT_CUSTODY_CAPSULE\')').body
+                self.assertEqual(dump(ast.Module(body=shared.body,type_ignores=[])),dump(ast.Module(body=prefix+tail,type_ignores=[])))
+                candidate.body=copy.deepcopy(original.body)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -455,6 +518,14 @@ class BindingTests(unittest.TestCase):
     def test_original_python_functions_exact(self):
         old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout
         self.assert_original_python_preserved(ast.parse(old),ast.parse(RUNNER.read_text()))
+        self.assert_original_python_preserved(ast.parse(RUNNER.read_text()),ast.parse(RUNNER.read_text()))
+        extra=ast.parse(RUNNER.read_text())
+        cls=next(n for n in extra.body if isinstance(n,ast.ClassDef)and n.name=='SignedMidnightRunner')
+        method=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='start_factory')
+        mode=next(n for n in method.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='mode'for t in n.targets))
+        mode.value=ast.Constant(value='unreviewed-mode')
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(ast.parse(old),extra)
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(ast.parse(RUNNER.read_text()),extra)
 
     def test_reviewed_helper_pins_and_history_only_against_root7898(self):
         old=subprocess.run(['git','show','7898a83:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout

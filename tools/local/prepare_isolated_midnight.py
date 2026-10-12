@@ -473,6 +473,20 @@ def record_resume_intent(root, expected_sha256, current_pins, now):
     return durable_json(root, 'ai24-resume-intent.json', intent)
 
 
+class TypedMidnightCustody:
+    """Root의 Python 코드가 만드는 캡처 source 권한. CLI/JSON 상태에서 생성하지 않는다."""
+    __slots__=('_data',)
+    def __init__(self,source_head,scope_id,capsule_root,capsule_pins,factory_sha256,node_path,node_sha256,observer_sha256):
+        value={'sourceHead':source_head,'scopeId':scope_id,'capsuleRoot':str(capsule_root),'capsulePins':capsule_pins,
+            'factorySha256':factory_sha256,'nodePath':str(node_path),'nodeSha256':node_sha256,'observerSha256':observer_sha256}
+        require(isinstance(source_head,str) and re.fullmatch(r'[a-f0-9]{40}',source_head)
+                and isinstance(scope_id,str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,48}',scope_id), 'MIDNIGHT_CUSTODY_FIELDS')
+        for key in ('factorySha256','nodeSha256','observerSha256'):digest_required(value[key])
+        object.__setattr__(self,'_data',json.dumps(value,sort_keys=True,separators=(',',':')))
+    def __setattr__(self,name,value):raise AttributeError('MIDNIGHT_CUSTODY_IMMUTABLE')
+    def descriptor(self):return json.loads(self._data)
+
+
 @dataclass(frozen=True)
 class ReviewedMidnightAssembly:
     """검토한 서버 코드가 주입할 실행 포트. JSON/환경 변수로 만들지 않는다.
@@ -888,7 +902,10 @@ class FixedSignedMidnightPorts:
     """
     RUNNER_PATH = 'tests/integration/jonghyun/isolated_ai_contracts.py'
 
-    def __init__(self, root, contract):
+    def __init__(self, root, contract, custody=None):
+        require(custody is None or type(custody) is TypedMidnightCustody, 'MIDNIGHT_TYPED_CUSTODY_REQUIRED')
+        if custody is not None:
+            require(custody.descriptor()['scopeId'] == contract['scopeId'], 'MIDNIGHT_CUSTODY_BINDING')
         self.root, self.contract = private_root(root), contract
         self.current_pins()
         path = ROOT / self.RUNNER_PATH
@@ -930,6 +947,11 @@ class FixedSignedMidnightPorts:
         self.runner = module.SignedMidnightRunner(Path(auth['preparedRoot']), self.binding,
             contract['signedSelectedUserIds'], self.root, contract['scopeId'],
             boundary_time(contract['boundary']).timestamp())
+        if custody is not None:
+            value = custody.descriptor()
+            authority = module.TypedMidnightCustody(value['sourceHead'], value['scopeId'], value['capsuleRoot'],
+                value['capsulePins'], value['factorySha256'], value['nodePath'], value['nodeSha256'], value['observerSha256'])
+            module.midnight_bind_custody(self.runner, authority)
         self.cancelled = threading.Event()
         self.cleanup_active = False
         original_sql, original_start = self.runner.sql, self.runner.start_factory
@@ -1376,15 +1398,16 @@ class FixedSignedMidnightPorts:
                 'ownedOnly': True, 'preservedBudget': self.budget()}
 
 
-def bind_fixed_execution(root, contract_sha, current_pins, reviewed_assembly):
+def bind_fixed_execution(root, contract_sha, current_pins, reviewed_assembly, custody=None):
     """검토 코드의 승인 객체를 고정 포트에 연결한다. CLI/JSON 승인 진입점은 없다."""
+    require(custody is None or type(custody) is TypedMidnightCustody, 'MIDNIGHT_TYPED_CUSTODY_REQUIRED')
     contract = load_live_contract(root, contract_sha, current_pins)
     require(type(reviewed_assembly) is ReviewedMidnightAssembly and reviewed_assembly.ports is None,
             'REVIEWED_FIXED_ASSEMBLY_REQUIRED')
     require(reviewed_assembly.contract_sha256 == contract_sha
             and reviewed_assembly.scope_id == contract['scopeId']
             and reviewed_assembly.boundary == contract['boundary'], 'EXECUTOR_ASSEMBLY_BINDING_CHANGED')
-    ports = FixedSignedMidnightPorts(root, contract)
+    ports = FixedSignedMidnightPorts(root, contract, custody=custody)
     result = ReviewedMidnightAssembly(contract_sha, contract['scopeId'], contract['boundary'],
                                      reviewed_assembly.decision_id, ports)
     execution_assembly(contract, contract_sha, result)
