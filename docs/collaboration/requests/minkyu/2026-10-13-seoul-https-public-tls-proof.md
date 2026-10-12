@@ -20,3 +20,9 @@
 비공개 영수증: `/private/tmp/yumidang-seoul-public-tls-20261013-cb8ad5a816904045bc64923cf110364f/receipt.json`, SHA256 `a333de8621a113b3a243511e605a2432601e90e5e24ca1753ede3d675be42c8f`. 폴더 700·파일 600·배타적 생성과 파일/폴더/상위 폴더 fsync를 사용했다. 비공개 경로 원본을 저장소에 추가하지 않았다.
 
 서울 HTTPS hold는 유지한다. 이번 결과로 실키 권한·전체 수집·100개 페이지 재개·진행 중 갱신·공식 HTTPS 지원·운영 완료를 인정하지 않는다. 공개 공식 문서 읽기와 두 번의 제한된 TLS 시험만 완료했으며, 관리 진행률을 올리지 않는다.
+
+## 시스템 기본 TLS의 별도 공개 호스트 확인
+
+2026-10-13, 전체 **79%(22/28)**를 유지한다. Python 신뢰 체인과 구분해 시스템 curl의 기본 SecureTransport로 `https://openapi.seoul.go.kr/` 공개 호스트 HEAD를 한 번 시도했다. curlrc를 읽지 않고 인증서/호스트명 검증을 유지했으며 redirect·retry·HTTP fallback·키는 사용하지 않았다. 연결 5초 한도에서 curl exit28, HTTP0, TLS app-connect0으로 실패했다. ssl_verify_result0은 handshake가 성립하지 않은 이 경우 TLS 성공 증거가 아니다.
+
+비공개 실제 영수증 SHA `deb817371ac741fd5383c527fbb130d0b6119fd997cef3cf990d8572e72abc3b`, 경과 5,043ms다. API sample GET0·실키 사용0·회원 원문0·모델 호출0을 유지한다. 이번 클라이언트/환경의 연결 실패로만 판정하며 서울 전체 HTTPS 지원 부재나 공급사 서비스 종료로 확대하지 않는다. 실제 행사 JSON/parser/수집/운영 활성화는 미검증이다.

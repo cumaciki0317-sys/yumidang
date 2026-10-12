@@ -1021,4 +1021,323 @@ class NativeSignedHistoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'HELPER_UNCOMMITTED'):self.verify()
         self.assertFalse(any(cmd[0]=='docker'for cmd in self.commands))
 
+class FakeLifecycleProvisioningPorts:
+    """독립 행 모형. 실제 GoTrue/DB/clock 변경은 없다."""
+    def __init__(self, value):
+        self.value=value;self.now=1900000000;self.users={};self.accounts=[];self.calls=[];self.memory=1100000
+        self.extra=False;self.authority=False;self.constraints=False;self.catalog=False;self.open=False;self.lose=None;self.replaced=False
+        self.login_user_changed=False
+        self.wrong_jwt=False
+        self.server_error=False
+        self.rows={t:{} for t in ('auth.users','auth.sessions','auth.identities','auth.refresh_tokens','auth.audit_log_entries',
+            'auth.mfa_amr_claims','public.profiles','private.member_episodes','private.ai_budget_ledgers','private.worker_invocations','storage.objects')}
+        self.rows.update({t:{}for t in ('private.ai_budget_reservations','private.ai_account_budget_reservations','private.ai_account_daily_budget','private.ai_global_daily_budget')})
+    def identity(self):return self.value['containers']
+    def memory_kib(self):return self.memory
+    def settings(self):return {'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True}
+    def history(self):return {'method':'MODEL_ONLY'}
+    def closed_controls(self):return {**{k:False for k in module.PROVISION_CLOSED_CONTROLS},'cronLaunchActiveJobs':'off',**({'worker_invocation_control':True}if self.open else{})}
+    def empty_auth(self):return not self.users
+    def snapshot(self):
+        rows=copy.deepcopy(self.rows)
+        if self.extra:rows['private.worker_invocations']['f'*64]=1
+        return {'rows':rows,'authoritySha256':('b'if self.authority else'a')*64,'constraintsSha256':('d'if self.constraints else'c')*64,'catalogSha256':('f'if self.catalog else'e')*64}
+    def added_rows(self, baseline, accounts):
+        result={t:{}for t in self.rows if t.startswith('auth.')or t in ('public.profiles','private.member_episodes')}
+        for a in accounts:
+            for table in result:
+                for op in (('user_signedup','login')if table=='auth.audit_log_entries'else('row',)):
+                    h=hashlib.sha256((table+a['userId']+op).encode()).hexdigest()
+                    result[table][h]={'rowSha256':h,'ownerUserId':a['userId'],'operation':op}
+        return result
+    def resolve_email(self,email):
+        if self.replaced and email in self.users:return str(uuid.uuid4())
+        return self.users.get(email,{}).get('id')
+    def request_original(self,path,payload):
+        self.calls.append(('POST',path))
+        if path=='/admin/users':
+            u={'id':str(uuid.uuid4()),'email':payload['email'],'role':'authenticated','is_anonymous':False,'user_metadata':{**payload['user_metadata'],'email_verified':True}}
+            self.users[u['email']]=u;body=u
+        else:
+            u=self.users[payload['email']];sid=str(uuid.uuid4())
+            body={'user':u,'access_token':jwt({'sub':u['id'],'session_id':sid,'iat':self.now,'exp':self.now+3600,
+                'iss':self.value['origin']+'/auth/v1','email':u['email'],'aud':'authenticated','role':'authenticated','is_anonymous':False}),
+                'token_type':'bearer','expires_in':3600,'expires_at':self.now+3600,'refresh_token':'model-private-refresh'}
+            if self.login_user_changed:body['user']={**u,'last_sign_in_at':'2030-03-17T00:00:00Z'}
+            if self.wrong_jwt:
+                claims=module.signed_claims(body['access_token']);claims['iss']='https://outside.invalid';body['access_token']=jwt(claims)
+            a={'userId':u['id'],'sessionId':sid,'authEmail':u['email'],'accessToken':body['access_token'],'expiresAt':self.now+3600}
+            self.accounts.append(a)
+        if self.lose==path:raise TimeoutError('RAW_SECRET_MUST_NOT_ESCAPE')
+        return (500 if self.server_error else 200),json.dumps(body).encode()
+    def request(self,method,path,payload=None,token=None,admin=False):
+        self.calls.append((method,path))
+        if path=='/user':
+            c=module.signed_claims(token);u=self.users.get(c['email']);return (200,u)if u and c['exp']>self.now else(403,{})
+        uid=path.rsplit('/',1)[1];u=next((x for x in self.users.values()if x['id']==uid),None)
+        if method=='DELETE':
+            if u:self.users.pop(u['email'])
+            # 현재 모형 cleanup은 원 비소유 bag를 별도로 복원한다. 삭제 audit는 allowed bag다.
+            self.rows={t:{}for t in self.rows}
+            return 200,{}
+        return (200,u)if u else(404,{})
+    def link_profile(self,uid):
+        added=self.added_rows({},self.accounts)
+        self.rows.update({t:{r['rowSha256']:1 for r in entries.values()}for t,entries in added.items()});return True
+    def session_proof(self,a):return any(x['userId']==a['userId']and x['sessionId']==a['sessionId']for x in self.accounts)
+    def metadata_proof(self,a,scope,case):return self.users[a['authEmail']]['user_metadata']=={'fixture_scope_id':scope,'fixture_case':case,'email_verified':True}
+    def unlink_profile(self,uid):pass
+    def cleanup_audits(self,created):return {}
+
+
+class LifecycleProvisioningTests(unittest.TestCase):
+    setUp=BindingTests.setUp
+    tearDown=BindingTests.tearDown
+    write=BindingTests.write
+    def context(self):
+        return ExitStack()
+    def reviewed(self):
+        self.ports=FakeLifecycleProvisioningPorts(self.value)
+        return module.ReviewedLifecycleProvisioning('offline-staged-model',self.root,self.value['sourcePins'],
+            self.value['containers'],self.value['credentials'],'e'*32,self.ports)
+    def invoke(self, fn, *args):
+        with patch.object(module,'provisioning_source_check',return_value='a'*40),patch.object(module,'signed_prepared_target',return_value=self.target),\
+             patch.object(module,'signed_source_pins',return_value=self.value['sourcePins']),patch.object(module.time,'time',side_effect=lambda:self.ports.now):
+            return fn(*args)
+    def stage(self):
+        self.review=self.reviewed();return self.invoke(module.stage_lifecycle_accounts,self.review)
+    def late(self):
+        stage=self.stage();self.ports.now+=2700
+        return self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+    def test_early_original_token_is_durable_and_stage_does_not_wait_or_create_six(self):
+        self.assertTrue(hasattr(module,'stage_lifecycle_accounts'),'staged producer not implemented')
+        stage=self.stage()
+        self.assertEqual(stage['status'],'STAGED_ORIGINAL_TOKEN_NOT_EXECUTED')
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+        self.assertEqual(self.ports.calls.count(('POST','/token?grant_type=password')),1)
+        self.assertEqual(stage['readyNotBefore'],1900003540)
+        self.assertFalse((self.root/'signed-ai-binding-private.json').exists())
+        state=self.root/('auth-lifecycle-provision-'+'e'*32)/'stage-private.json'
+        self.assertEqual(state.stat().st_mode&0o777,0o600)
+        self.assertEqual(hashlib.sha256(state.read_bytes()).hexdigest(),stage['stateSha256'])
+    def test_fresh_process_late_then_get_only_window_handoff_preserves_expire_identity(self):
+        late=self.late();early=copy.deepcopy(self.ports.accounts[0]);posts=list(self.ports.calls)
+        self.ports.now=1900003570
+        # 새 검토 객체는 원 private state로만 이어지며 expire는 재로그인하지 않는다.
+        second=module.ReviewedLifecycleProvisioning('offline-staged-model',self.root,self.value['sourcePins'],
+            self.value['containers'],self.value['credentials'],'e'*32,self.ports)
+        result=self.invoke(module.bind_lifecycle_accounts,second,late['stateSha256'])
+        self.assertEqual(result['status'],'MODEL_LIFECYCLE_INPUT_BOUND_NOT_EXECUTED')
+        self.assertEqual(len(self.ports.users),9)
+        self.assertEqual([c for c in self.ports.calls if c[0]=='POST'],[c for c in posts if c[0]=='POST'])
+        binding=json.loads((self.root/'signed-ai-binding-private.json').read_bytes())
+        value=json.loads((self.root/('auth-lifecycle-input-'+'e'*32+'.json')).read_bytes())
+        self.assertEqual(value['accounts']['expiredBearer']['userId'],early['userId'])
+        self.assertEqual(value['accounts']['expiredBearer']['accessToken'],early['accessToken'])
+        self.assertEqual(len(binding['accounts']),6);self.assertFalse(binding['approvedByRoot'])
+        self.assertIsNone(value['accounts']['anonymousBearer']);self.assertIsNone(value['foreign'])
+        for a in binding['accounts']:self.assertGreater(a['expiresAt']-self.ports.now,300)
+        self.assertFalse(Path(value['evidenceRoot']).exists())
+        approved=module.ReviewedSignedAuthLifecycle('model',self.root,self.root/'signed-ai-binding-private.json',self.root/('auth-lifecycle-input-'+'e'*32+'.json'),
+            result['bindingSha256'],result['inputSha256'],self.value['sourcePins'],self.value['containers'],result['issuanceProofs'])
+        for case in ('expiredBearer','revokedSession','memberChanged'):
+            module.lifecycle_issuance(self.root,binding,value,case,approved)
+        # 원 reviewed API의 경로·private bytes 검사를 실제로 통과하고 closed flag에서 멈춘다.
+        with patch.object(module,'signed_prepared_target',return_value=self.target),patch.object(module,'signed_source_pins',return_value=self.value['sourcePins']),\
+             patch.object(module.time,'time',return_value=self.ports.now):
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_APPROVAL_SLOT_REQUIRED'):
+                module.run_signed_auth_lifecycle(approved,binding,value,sys.executable)
+    def test_single_stage_and_resume_never_replay_original_post(self):
+        stage=self.stage();before=list(self.ports.calls)
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.assertEqual(self.ports.calls,before)
+        self.ports.now+=2700;self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256']);before=list(self.ports.calls)
+        with self.assertRaises(ValueError):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual(self.ports.calls,before)
+    def test_lost_create_stays_unknown_even_first_lookup_absent_and_blocks_late(self):
+        self.review=self.reviewed();self.ports.lose='/admin/users'
+        with self.assertRaisesRegex(ValueError,'LCP_FAILED_PRIVATE'):self.invoke(module.stage_lifecycle_accounts,self.review)
+        path=self.root/('auth-lifecycle-provision-'+'e'*32)
+        failure=json.loads((path/'failure-stage.json').read_bytes())
+        self.assertEqual(failure['status'],'UNKNOWN');self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+        self.assertNotIn('RAW_SECRET',json.dumps(failure))
+        self.assertFalse((path/'stage-private.json').exists())
+    def test_source_state_hash_or_original_rows_drift_refuses_before_late_mutation(self):
+        stage=self.stage();before=list(self.ports.calls);self.ports.extra=True
+        with self.assertRaisesRegex(ValueError,'LCP_FAILED_PRIVATE'):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual([c for c in self.ports.calls if c[0]=='POST'],[c for c in before if c[0]=='POST'])
+    def test_window_handoff_rejects_early_and_expired_without_token_renewal(self):
+        late=self.late();posts=[c for c in self.ports.calls if c[0]=='POST']
+        with self.assertRaises(ValueError):self.invoke(module.bind_lifecycle_accounts,self.review,late['stateSha256'])
+        self.assertEqual([c for c in self.ports.calls if c[0]=='POST'],posts)
+    def test_closed_controls_and_original_budget_added_rows_are_not_exempt(self):
+        review=self.reviewed();self.ports.open=True
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,review)
+        self.assertEqual(self.ports.calls,[])
+    def test_json_flags_cannot_create_reviewed_mutation_contract(self):
+        with self.assertRaisesRegex(ValueError,'LCP_REVIEWED_CODE_REQUIRED'):
+            module.stage_lifecycle_accounts({'approvedByRoot':True})
+    def test_actual_login_user_timestamp_update_is_not_a_changed_original_identity(self):
+        self.review=self.reviewed();self.ports.login_user_changed=True
+        receipt=self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.assertEqual(receipt['status'],'STAGED_ORIGINAL_TOKEN_NOT_EXECUTED')
+    def test_cleanup_different_uuid_same_email_deletes_nothing_and_retains_unknown(self):
+        self.review=self.reviewed();self.ports.lose='/token?grant_type=password'
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.ports.replaced=True
+        p=self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json'
+        result=self.invoke(module.cleanup_lifecycle_accounts,self.review,'stage',hashlib.sha256(p.read_bytes()).hexdigest())
+        self.assertEqual(result['status'],'UNKNOWN')
+        self.assertFalse(any(method=='DELETE'for method,path in self.ports.calls))
+    def test_cleanup_original_known_uuid_once_unknown_login_never_resurrects(self):
+        self.review=self.reviewed();self.ports.lose='/token?grant_type=password'
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        p=self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json'
+        digest=hashlib.sha256(p.read_bytes()).hexdigest()
+        result=self.invoke(module.cleanup_lifecycle_accounts,self.review,'stage',digest)
+        self.assertEqual(result['status'],'UNKNOWN')
+        self.assertEqual(sum(method=='DELETE'for method,path in self.ports.calls),1)
+        before=list(self.ports.calls)
+        with self.assertRaises(ValueError):self.invoke(module.cleanup_lifecycle_accounts,self.review,'stage',digest)
+        self.assertEqual(self.ports.calls,before)
+    def test_cleanup_zero_known_ids_does_not_clear_inflight_create_uncertainty(self):
+        self.review=self.reviewed();self.ports.lose='/admin/users'
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.ports.users={}
+        p=self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json'
+        result=self.invoke(module.cleanup_lifecycle_accounts,self.review,'stage',hashlib.sha256(p.read_bytes()).hexdigest())
+        self.assertEqual(result['status'],'UNKNOWN');self.assertFalse(result['preservationProven'])
+    def test_fresh_startup_floor_is_rechecked_after_slow_preservation_before_late_post(self):
+        stage=self.stage();before=[c for c in self.ports.calls if c[0]=='POST']
+        self.ports.now+=2700;native=self.ports.snapshot
+        def slow_read():
+            result=native();self.ports.memory=1048575;return result
+        self.ports.snapshot=slow_read
+        with self.assertRaises(ValueError):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual([c for c in self.ports.calls if c[0]=='POST'],before)
+    def test_known_failed_issuance_cleanup_is_failure_scope_not_lifecycle_pass(self):
+        self.review=self.reviewed();self.ports.metadata_proof=lambda *args:False
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        p=self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json'
+        result=self.invoke(module.cleanup_lifecycle_accounts,self.review,'stage',hashlib.sha256(p.read_bytes()).hexdigest())
+        self.assertEqual(result['status'],'FAIL_OWNED_PREPARATION_CLEANUP_PROVEN')
+        self.assertTrue(result['preservationProven']);self.assertEqual(result['actualLifecycle'],'NOT_RUN')
+    def test_initial_nonzero_budget_refuses_before_any_auth_post(self):
+        self.review=self.reviewed();self.ports.rows['private.ai_global_daily_budget']['f'*64]=1
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.assertEqual(self.ports.calls,[])
+    def test_authority_or_constraint_drift_never_authorizes_late_issuance(self):
+        for field in ('authority','constraints','catalog'):
+            with self.subTest(field=field):
+                other=LifecycleProvisioningTests();other.setUp()
+                try:
+                    stage=other.stage();setattr(other.ports,field,True);before=list(other.ports.calls)
+                    with self.assertRaises(ValueError):other.invoke(module.resume_lifecycle_accounts,other.review,stage['stateSha256'])
+                    self.assertEqual([x for x in other.ports.calls if x[0]=='POST'],[x for x in before if x[0]=='POST'])
+                finally:other.tearDown()
+    def test_private_stage_hardlink_and_wrong_sha_refuse_before_resume_calls(self):
+        stage=self.stage();before=list(self.ports.calls)
+        state=self.root/('auth-lifecycle-provision-'+'e'*32)/'stage-private.json'
+        os.link(state,state.with_name('extra.json'))
+        with self.assertRaises(ValueError):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual(self.ports.calls,before)
+    def test_pending_source_head_change_refuses_without_hydrating_any_port(self):
+        stage=self.stage();before=list(self.ports.calls)
+        with patch.object(module,'provisioning_source_check',return_value='b'*40),patch.object(module,'signed_prepared_target',return_value=self.target):
+            with self.assertRaises(ValueError):module.resume_lifecycle_accounts(self.review,stage['stateSha256'])
+        self.assertEqual(self.ports.calls,before)
+    def test_fixed_ports_preserve_wire_bytes_and_scope_no_anonymous_or_refresh(self):
+        ports=object.__new__(module.FixedLifecycleProvisioningPorts)
+        for path in('/signup','/token?grant_type=refresh_token','/logout?scope=local'):
+            with self.assertRaises(ValueError):ports.request_original(path,{})
+        queried=[]
+        ports.read_sql=lambda query,timeout=3:(queried.append(query)or'{}')
+        with patch.object(module.FixedSignedProvisioningPorts,'added_rows',return_value={t:{}for t in module.PROVISION_OWNED_TABLES}):
+            ports.added_rows({},[{'userId':str(uuid.uuid4()),'sessionId':str(uuid.uuid4())}])
+        self.assertIn("r.authentication_method='password'",queried[0])
+        self.assertIn('r.session_id::text=a.session_id',queried[0])
+    def test_post_response_journal_failure_retains_known_uuid_and_never_replays(self):
+        self.review=self.reviewed();native=module.lcp_save
+        def broken(root,name,value):
+            if name=='expiredBearer-created.json':raise OSError('PRIVATE_IO_SECRET')
+            return native(root,name,value)
+        with patch.object(module,'lcp_save',side_effect=broken):
+            with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        failure=json.loads((self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json').read_bytes())
+        self.assertEqual(failure['created']['expiredBearer']['userId'],next(iter(self.ports.users.values()))['id'])
+        self.assertEqual(failure['status'],'UNKNOWN');self.assertNotIn('PRIVATE_IO_SECRET',json.dumps(failure))
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+        self.assertFalse(any(path=='/token?grant_type=password'for method,path in self.ports.calls))
+    def test_monitor_failure_always_joins_even_when_done_was_already_set(self):
+        import threading
+        self.review=self.reviewed();created=[];native=module.threading.Thread
+        def capture(*args,**kwargs):
+            t=native(*args,**kwargs);created.append(t);return t
+        self.ports.memory_kib=lambda:1100000 if threading.current_thread()is threading.main_thread()else 786431
+        with patch.object(module.threading,'Thread',side_effect=capture):
+            with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.assertEqual(len(created),1);self.assertFalse(created[0].is_alive());self.assertEqual(self.ports.calls,[])
+    def test_late_lost_create_is_single_attempt_and_preserves_original_expire_token(self):
+        stage=self.stage();original=copy.deepcopy(self.ports.accounts[0]);self.ports.now+=2700;self.ports.lose='/admin/users'
+        with self.assertRaises(ValueError):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual(self.ports.accounts[0],original)
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),2)
+        self.assertEqual(self.ports.calls.count(('POST','/token?grant_type=password')),1)
+        before=list(self.ports.calls)
+        with self.assertRaises(ValueError):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual(self.ports.calls,before)
+    def test_confirmed_admin_user_metadata_is_exact_three_fields_and_real_bool(self):
+        stage=self.stage();user=next(iter(self.ports.users.values()))
+        self.assertEqual(user['user_metadata'],{'fixture_scope_id':'e'*32,'fixture_case':'expiredBearer','email_verified':True})
+        self.ports.now+=2700;user['user_metadata']['email_verified']=1
+        with self.assertRaises(ValueError):self.invoke(module.resume_lifecycle_accounts,self.review,stage['stateSha256'])
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+    def test_mid_live_monitor_failure_even_fresh_healthy_memory_sends_no_post(self):
+        self.review=self.reviewed();native=module.LifecycleProvisioningContext.live
+        def failed_after_read(ctx):
+            original=ctx.ports.closed_controls
+            def slow_controls():
+                result=original();ctx.failures.append('LCP_MONITOR_FAILED');ctx.done.set();return result
+            ctx.ports.closed_controls=slow_controls
+            try:return native(ctx)
+            finally:ctx.ports.closed_controls=original
+        with patch.object(module.LifecycleProvisioningContext,'live',failed_after_read):
+            with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.assertEqual(self.ports.calls,[])
+    def test_dispatch_guard_rechecks_monitor_after_live_return_before_wire(self):
+        self.review=self.reviewed();native=module.LifecycleProvisioningContext.live
+        def failure_after_live(ctx):
+            result=native(ctx)
+            if (ctx.evidence/'expiredBearer-create-intent-private.json').exists():
+                ctx.failures.append('LCP_MONITOR_FAILED');ctx.done.set()
+            return result
+        with patch.object(module.LifecycleProvisioningContext,'live',failure_after_live):
+            with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        self.assertEqual(self.ports.calls,[])
+    def test_server_error_after_create_commit_remains_unknown_and_never_resends(self):
+        self.review=self.reviewed();self.ports.server_error=True
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        failure=json.loads((self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json').read_bytes())
+        self.assertEqual(failure['status'],'UNKNOWN')
+        self.assertEqual(self.ports.calls.count(('POST','/admin/users')),1)
+        self.assertEqual(len(self.ports.users),1)
+    def test_login_500_after_issued_session_never_clears_unknown(self):
+        self.review=self.reviewed();native=self.ports.request_original
+        def error_reply(path,payload):
+            status,raw=native(path,payload)
+            return (500 if path=='/token?grant_type=password'else status),raw
+        self.ports.request_original=error_reply
+        with self.assertRaises(ValueError):self.invoke(module.stage_lifecycle_accounts,self.review)
+        failure=json.loads((self.root/('auth-lifecycle-provision-'+'e'*32)/'failure-stage.json').read_bytes())
+        self.assertEqual(failure['status'],'UNKNOWN')
+        self.assertEqual(self.ports.calls.count(('POST','/token?grant_type=password')),1)
+        self.assertEqual(len(self.ports.accounts),1)
+    def test_cleanup_delete_audit_is_exact_admin_user_email_not_generic_email(self):
+        ports=object.__new__(module.FixedLifecycleProvisioningPorts);queries=[]
+        ports.read_sql=lambda q,timeout=3:(queries.append(q)or'{}')
+        ports.cleanup_audits({'expiredBearer':{'userId':str(uuid.uuid4()),'authEmail':'synthetic-auth-lifecycle-fixed@example.invalid'}})
+        self.assertIn("r.payload->>'action'='user_deleted'and r.payload->'traits'->>'user_id'=a.uid and r.payload->'traits'->>'user_email'=a.email",queries[0])
+        self.assertNotIn("r.payload->'traits'->>'email'",queries[0])
+
+
 if __name__=='__main__':unittest.main()

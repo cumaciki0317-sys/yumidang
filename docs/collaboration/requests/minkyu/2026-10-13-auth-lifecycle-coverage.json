@@ -6,30 +6,29 @@
     "total": 28,
     "displayPercent": 79
   },
-  "sourceBase": "141240aa32fb13a3e82945c4187f3203e09603b7",
-  "status": "OFFLINE_LIFECYCLE_EXECUTION_HARNESS_PASS_PRODUCER_REQUIRED",
+  "sourceBase": "f66356b9425ed8263f8464c5753d1a46cfd764aa",
+  "status": "STAGED_PRODUCER_AND_CLOSED_CONSENT_CORE_OFFLINE_PASS_ACTUAL_NOT_RUN",
   "files": {
-    "tests/integration/jonghyun/isolated_ai_contracts.py": "bf10128688c740da792e31495462f706edd97d1803e1ff9a425d87517e4462f3",
-    "tests/integration/jonghyun/isolated_ai_factory.ts": "167f2b837a8eeb8c376ce1360ce8c326b81ea9978ed57ab77956d220de208edf",
-    "tests/database/minkyu/test_signed_auth_binding.py": "f5403596034e9d12479b1dc8e6aa0bf46c717b649b119e460dbda9babc978a2e"
+    "tests/integration/jonghyun/isolated_ai_contracts.py": "7fc60f96b7f2967f1ca0044523d318f811c365ddf880efb202826bc590bd3865",
+    "tests/integration/jonghyun/isolated_ai_factory.ts": "2c754c795cf236694a9de8276e4db2be3aa5a5d92884040eb28ba3edea446e4d",
+    "tests/database/minkyu/test_signed_auth_binding.py": "d5c23b4976b1d40c9c380bb1aaa77c2436b6d2d17e7d8ebb504c5841414f6ad0"
   },
   "offlineChecks": {
-    "signedAuthTests": 70,
+    "signedAuthTests": 98,
+    "retained": 70,
+    "producerNew": 28,
     "failed": 0,
     "skipped": 0,
     "resourceWarningsAsErrors": "PASS",
-    "cachedDeno": "PASS"
+    "cachedDeno": "PASS",
+    "consentPrivateModeled": 18,
+    "cleanupPrivateModeled": 32
   },
   "review": {
-    "independentReadOnlyReview": "PASS_AFTER_NULLABLE_AUDIT_CORRECTION",
-    "fixedFindings": [
-      "CLI never grants mutation authority",
-      "Stable private input and binding SHA reread",
-      "Original issued response and receipt root pins required",
-      "Exact session dependent bags and constraints preserved",
-      "Nullable unowned audit rows preserved"
-    ],
-    "sqlModelScope": "SQLITE_NULL_SEMANTICS_NOT_ACTUAL_POSTGRESQL"
+    "producerV1": "FIVE_FINDINGS_PRESERVED_CORRECTED_V2",
+    "producerV2": "READ_ONLY_PASS",
+    "consentCore": "SHORT_WRITE_FIXED_CLI_ALWAYS_NOT_RUN",
+    "cleanupAdapter": "POST_STOP_AND_FINAL_OWNED_STATE_FIXED_ACTUAL_ABI_NONE"
   },
   "existingNegativeCases": [
     "missing",
@@ -47,7 +46,7 @@
   "fullLifecycleCoverage": "NOT_RUN",
   "actualAuthUserCreations": 0,
   "actualLifecycleMutationCalls": 0,
-  "nextImplementation": "Journaled combined lifecycle provisioning with natural JWT3600 staging and late fresh baseline6; original global-empty six-account producer unchanged",
+  "nextImplementation": "Reviewed fixed root launch assembly and source custody; actual container/native119 proof and memory boundary remain required",
   "activationAllowed": false,
   "secretsIncluded": false,
   "receiptRetentionBaseline": {
@@ -63,8 +62,42 @@
       "skipped": 0
     }
   },
-  "producer": "REQUIRED_NOT_IMPLEMENTED_STAGED_FRESH_LIFECYCLE",
+  "producer": "IMPLEMENTED_OFFLINE_ONLY_ACTUAL_NOT_RUN",
   "memberChangedMeaning": "AUTH_USER_BANNED_ONLY",
   "serviceMemberRetirement": "NOT_RUN",
-  "consentRevocation": "NOT_RUN"
+  "consentRevocation": "NOT_RUN",
+  "previousExecutionHarness": {
+    "files": {
+      "tests/integration/jonghyun/isolated_ai_contracts.py": "bf10128688c740da792e31495462f706edd97d1803e1ff9a425d87517e4462f3",
+      "tests/integration/jonghyun/isolated_ai_factory.ts": "167f2b837a8eeb8c376ce1360ce8c326b81ea9978ed57ab77956d220de208edf",
+      "tests/database/minkyu/test_signed_auth_binding.py": "f5403596034e9d12479b1dc8e6aa0bf46c717b649b119e460dbda9babc978a2e"
+    },
+    "offlineChecks": {
+      "signedAuthTests": 70,
+      "failed": 0,
+      "skipped": 0,
+      "resourceWarningsAsErrors": "PASS",
+      "cachedDeno": "PASS"
+    },
+    "review": {
+      "independentReadOnlyReview": "PASS_AFTER_NULLABLE_AUDIT_CORRECTION",
+      "fixedFindings": [
+        "CLI never grants mutation authority",
+        "Stable private input and binding SHA reread",
+        "Original issued response and receipt root pins required",
+        "Exact session dependent bags and constraints preserved",
+        "Nullable unowned audit rows preserved"
+      ],
+      "sqlModelScope": "SQLITE_NULL_SEMANTICS_NOT_ACTUAL_POSTGRESQL"
+    }
+  },
+  "producerApis": [
+    "stage_lifecycle_accounts",
+    "resume_lifecycle_accounts",
+    "bind_lifecycle_accounts",
+    "cleanup_lifecycle_accounts"
+  ],
+  "actualConsentEndpoint": "NOT_RUN",
+  "runtimeCapturedExecution": "NOT_PROVEN",
+  "rootLaunchAbi": "NOT_IMPLEMENTED"
 }

@@ -1,7 +1,8 @@
 /** 기본 Auth는 합성 bridge. 서명 모드는 실제 로컬 Auth/REST와 합성 모델을 쓴다. AI24는 실행 전 NOT_RUN. */
 import assert from 'node:assert/strict';
-import {readFileSync,lstatSync,openSync,fstatSync,closeSync,constants} from 'node:fs';
-import {dirname} from 'node:path';
+import {readFileSync,lstatSync,openSync,fstatSync,closeSync,fsyncSync,writeSync,constants} from 'node:fs';
+import {dirname,resolve,relative,sep} from 'node:path';
+import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {randomUUID,createHash} from 'node:crypto';
 const file=process.argv[2],mode=process.argv[3],info=lstatSync(file),directory=lstatSync(dirname(file));
@@ -19,7 +20,7 @@ try{
 }finally{closeSync(fixtureFd);}
 const fixture=JSON.parse(fixtureBytes!.toString('utf8')),origin=new URL(fixture.origin);
 assert.equal(origin.hostname,'127.0.0.1');assert.equal(origin.protocol,'http:');assert.equal(origin.origin,fixture.origin);
-assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--ai-midnight'].includes(mode));
+assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--signed-consent-case','--ai-midnight'].includes(mode));
 if(mode==='--ai-midnight')assert.equal(fixture.signedLocalAuth,true);
 assert.ok(fixture.productManifest&&Object.keys(fixture.productManifest).length>0);
 for(const [relative,expected]of Object.entries(fixture.productManifest)){
@@ -33,7 +34,7 @@ if(fixture.signedLocalAuth===true)globalThis.fetch=async(input:any,init:RequestI
  assert.ok(url.pathname==='/auth/v1/user'||url.pathname.startsWith('/rest/v1/rpc/'));
  assert.ok(init.method!=='DELETE');return signedNative(input,{...init,redirect:'error'});
 };
-try { process.stdout.write(JSON.stringify(await (mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
+try { process.stdout.write(JSON.stringify(await (mode==='--signed-consent-case'?consentExecutionBoundary(fixture):mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
 catch(error){const code=error instanceof Error&&/^AI_CHECK_[A-Z_]+$/.test(error.message)?error.message:'AI_ISOLATED_FACTORY_FAILED';process.stderr.write(code+'\n');process.exitCode=1;}
 finally{if(fixture.signedLocalAuth===true)globalThis.fetch=signedNative;}
 
@@ -97,6 +98,174 @@ async function signedAuthLifecycleCase(f:any){
  assert.equal(authReads,1);assert.equal(rpcCalls,0);assert.equal(providerCalls,0);assert.equal(nativeExternalAttempts,0);
  return {status:'PASS',case:f.lifecycleCase,httpStatus:401,authHttpStatus:authStatus,actualAuthReads:1,rpcCalls:0,providerCalls:0,nativeExternalAttempts:0,
   originalTokenSha256:createHash('sha256').update(f.originalToken).digest('hex'),actualNaver:'NOT_RUN',externalProvider:'NOT_RUN'};
+}
+
+/** 실제 caller는 아직 연결하지 않았다. JSON 근거/flags는 이 경계를 활성화하지 못한다. */
+function consentExecutionBoundary(_fixture:unknown){
+ return {status:'NOT_RUN',actualCalls:0,scope:'SIGNED_PUBLIC_CONSENT_FACTORY',reason:'REVIEWED_TYPED_ROOT_CALLER_AND_FROZEN_SOURCE_CUSTODY_REQUIRED',
+  runtimeSourceCapture:'NOT_PROVEN',actualAuthDatabase:'NOT_RUN',serviceMemberRetirement:'NOT_RUN'};
+}
+
+/** 고정 AI/service-api runtime 및 type-only closure를 native parser로 검증한다. 코드 evaluate는 0회다. */
+function consentSourceClosure(f:any){
+ const root=resolve(f.codeRoot),base=resolve(root,'backend/supabase/functions'),expected=f.serviceProductManifest;
+ assert.ok(expected&&typeof expected==='object'&&!Array.isArray(expected));
+ const captured:Record<string,string>={},hashes:Record<string,string>={};
+ for(const [key,digest]of Object.entries(expected)){
+  assert.ok(/^backend\/supabase\/functions\/[A-Za-z0-9_./-]+\.ts$/.test(key)&&!key.split('/').includes('..'));
+  const path=resolve(root,key),state=lstatSync(path);
+  assert.ok(path.startsWith(base+sep)&&state.isFile()&&!state.isSymbolicLink()&&state.nlink===1);
+  const fd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW);
+  try{
+   const before=fstatSync(fd),raw=readFileSync(fd),after=fstatSync(fd),now=lstatSync(path);
+   assert.ok(raw.length<=1048576&&before.ino===state.ino&&before.dev===state.dev&&before.nlink===1);
+   assert.equal(before.size,raw.length);assert.equal(after.size,before.size);assert.equal(after.mtimeMs,before.mtimeMs);assert.equal(after.ctimeMs,before.ctimeMs);
+   assert.equal(now.ino,before.ino);assert.equal(now.dev,before.dev);
+   hashes[key]=createHash('sha256').update(raw).digest('hex');assert.equal(hashes[key],digest);captured[key]=raw.toString('utf8');
+  }finally{closeSync(fd);}
+ }
+ for(const [key,digest]of Object.entries(f.productManifest))assert.equal(hashes[key],digest,'original AI graph omitted');
+ const parser=String.raw`import{SourceTextModule,runInNewContext}from'node:vm';import{stripTypeScriptTypes}from'node:module';
+import{openSync,readFileSync,lstatSync,fstatSync,closeSync,constants}from'node:fs';import{createHash}from'node:crypto';import{performance}from'node:perf_hooks';
+// 검토된 단일 compiler byte만 파싱 도구로 사용한다. product module evaluate/link는 0회다.
+const path='/Users/minkyu/Documents/GitHub/yumidang/node_modules/typescript/lib/typescript.js';
+const state=lstatSync(path);if(!state.isFile()||state.isSymbolicLink()||state.nlink!==1)throw Error();
+const fd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW);let compiler;
+try{const before=fstatSync(fd);if(before.size>16777216||before.ino!==state.ino||before.dev!==state.dev||before.nlink!==1)throw Error();
+ compiler=readFileSync(fd);const after=fstatSync(fd),now=lstatSync(path);
+ if(compiler.length!==before.size||after.size!==before.size||after.mtimeMs!==before.mtimeMs||after.ctimeMs!==before.ctimeMs||now.ino!==before.ino||now.dev!==before.dev||now.nlink!==1)throw Error();
+ if(createHash('sha256').update(compiler).digest('hex')!=='dd17428736a07e1db1a138d8a14295ddb2699ba780ee15038acdd2c6da5373a0')throw Error();
+}finally{closeSync(fd)}
+const holder={exports:{}};runInNewContext(compiler.toString('utf8'),{module:holder,exports:holder.exports,require:name=>{if(name==='perf_hooks')return{performance};throw Error()}},{timeout:10000});
+const ts=holder.exports;
+let input='';for await(const part of process.stdin){input+=part;if(Buffer.byteLength(input)>4194304)throw Error()}
+try{const output={};for(const[key,source]of Object.entries(JSON.parse(input))){
+ const tree=ts.createSourceFile(key,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);if(tree.parseDiagnostics.length)throw Error();
+ const specs=[];const visit=node=>{
+  if(ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword){if(node.arguments.length!==1||!ts.isStringLiteral(node.arguments[0]))throw Error();specs.push(node.arguments[0].text)}
+  if(ts.isImportEqualsDeclaration(node))throw Error();
+  if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier){if(!ts.isStringLiteral(node.moduleSpecifier))throw Error();specs.push(node.moduleSpecifier.text)}
+  if(ts.isImportTypeNode(node)){if(!ts.isLiteralTypeNode(node.argument)||!ts.isStringLiteral(node.argument.literal))throw Error();specs.push(node.argument.literal.text)}
+  ts.forEachChild(node,visit);
+ };visit(tree);
+ const code=stripTypeScriptTypes(source,{mode:'strip'}),module=new SourceTextModule(code,{identifier:key});specs.push(...module.dependencySpecifiers);
+ output[key]=specs;
+}process.stdout.write(JSON.stringify(output));}catch{process.exitCode=2}`;
+ const parsed=spawnSync(process.execPath,['--experimental-vm-modules','--input-type=module','-e',parser],{
+  input:JSON.stringify(captured),encoding:'utf8',timeout:20000,maxBuffer:1048576});
+ assert.equal(parsed.status,0,'source graph native parser failed');assert.ok(!parsed.error);
+ const dependencies=JSON.parse(parsed.stdout),pending=['backend/supabase/functions/ai-chat/index.ts','backend/supabase/functions/service-api/index.ts'],seen=new Set<string>();
+ while(pending.length){const key=pending.pop()!;if(seen.has(key))continue;assert.ok(Object.hasOwn(captured,key));seen.add(key);
+  for(const spec of dependencies[key]){
+   assert.ok(typeof spec==='string'&&spec.startsWith('.')&&!spec.includes('\\')&&!spec.includes('?')&&!spec.includes('#'));
+   const path=resolve(root,dirname(key),spec);assert.ok(path.startsWith(base+sep)&&path.endsWith('.ts'));
+   const next=relative(root,path).split(sep).join('/');assert.ok(Object.hasOwn(captured,next));pending.push(next);
+  }
+ }
+ assert.deepEqual([...seen].sort(),Object.keys(captured).sort(),'complete fixed two-entry graph required');
+ return hashes;
+}
+
+/** source-selected 모형 검증용 core. 실제 CLI는 닫힘이며 live import의 동결 custody는 caller 미구현 선행조건이다. */
+async function signedConsentCase(f:any){
+ const check=(value:unknown,code:string)=>{if(!value)throw new Error('AI_CHECK_CONSENT_'+code);};
+ check(f.signedLocalAuth===true&&f.aiConsentScenario===true,'SCOPE');
+ const account=f.consentAccount;
+ check(account&&Object.keys(account).sort().join(',')==='token,userId'&&/^[a-f0-9-]{36}$/.test(account.userId)&&typeof account.token==='string','ORIGINAL_ACCOUNT');
+ check(typeof f.aiLedgerId==='string'&&/^[A-Za-z0-9_.:-]{1,64}$/.test(f.aiLedgerId)&&/^synthetic-consent-[a-f0-9]{32}$/.test(f.aiQuery),'OWN_SCOPE');
+ check(typeof f.positiveClientRequestId==='string'&&typeof f.deniedClientRequestId==='string'&&f.positiveClientRequestId!==f.deniedClientRequestId&&
+  /^[a-f0-9-]{36}$/.test(f.positiveClientRequestId)&&/^[a-f0-9-]{36}$/.test(f.deniedClientRequestId),'CLIENT_REQUEST_SCOPE');
+ const graph=consentSourceClosure(f),sourceProof=()=>{const now=consentSourceClosure(f);assert.deepEqual(now,graph);};
+ const {createAiChatRuntime}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/ai-chat/index.ts').href);
+ const {createRuntimeHandler}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/service-api/index.ts').href);
+ const native=globalThis.fetch,hash=(value:string)=>createHash('sha256').update(value).digest('hex');
+ const phases:any[]=[];let phase='positive',withdrawStarted=false,withdrawn=false,nativeExternalAttempts=0;
+ const observation=()=>{let item=phases.find(p=>p.phase===phase);if(!item){item={phase,counts:{},requests:[],reservations:[],providerCalls:0};phases.push(item);}return item;};
+ const save=(name:string,value:unknown)=>{const path=dirname(file)+'/'+name,bytes=Buffer.from(JSON.stringify(value));
+  const fd=openSync(path,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);let written;
+  try{let offset=0;while(offset<bytes.length){const count=writeSync(fd,bytes,offset,bytes.length-offset);check(Number.isInteger(count)&&count>0&&count<=bytes.length-offset,'ARTIFACT_WRITE_PROGRESS');offset+=count;}
+   fsyncSync(fd);written=fstatSync(fd);check(written.isFile()&&written.nlink===1&&written.uid===process.getuid!()&&(written.mode&0o777)===0o600&&written.size===bytes.length,'ARTIFACT_COMPLETE_WRITE');
+  }finally{closeSync(fd);}
+  for(const directory of[dirname(file),dirname(dirname(file))]){const handle=openSync(directory,constants.O_RDONLY|constants.O_DIRECTORY);try{fsyncSync(handle);}finally{closeSync(handle);}}
+  const readFd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW);
+  try{const before=fstatSync(readFd),state=(v:any)=>[v.dev,v.ino,v.size,v.nlink,v.uid,v.mode,v.mtimeMs,v.ctimeMs];
+   check(before.isFile()&&before.nlink===1&&JSON.stringify(state(written))===JSON.stringify(state(before)),'ARTIFACT_READ_IDENTITY');
+   const raw=readFileSync(readFd),after=fstatSync(readFd),now=lstatSync(path);
+   check(before.isFile()&&before.nlink===1&&raw.equals(bytes)&&JSON.stringify(state(written))===JSON.stringify(state(before))&&JSON.stringify(state(before))===JSON.stringify(state(after))&&JSON.stringify(state(after))===JSON.stringify(state(now)),'ARTIFACT_STABLE_EXACT_BYTES');
+  }finally{closeSync(readFd);}
+ };
+ const env:Record<string,string>={SUPABASE_URL:f.origin,SUPABASE_ANON_KEY:f.anon,SUPABASE_SERVICE_ROLE_KEY:f.service,
+  INTERNAL_WORKER_SECRET:'synthetic_ai_http_internal_secret_32_chars',ALLOWED_ORIGINS:'[]',MAX_REQUEST_BYTES:'65536',UPSTREAM_TIMEOUT_MS:'5000',
+  AI_RETENTION_DECISION_ID:'synthetic-fixture-only',AI_COST_EVIDENCE_ID:'synthetic-fixture-only',AI_PROCESSING_LEGAL_DECISION_ID:'synthetic-fixture-only',AI_MEMBER_TRANSMISSION_APPROVAL_ID:'synthetic-fixture-only',AI_BUDGET_LEDGER_ID:f.aiLedgerId,
+  POTENS_ACCOUNT_ORDER:'yumi,jonghyun,minkyu,sungho',POTENS_API_KEY_YUMI:'synthetic-ai-yumi',POTENS_API_KEY_JONGHYUN:'synthetic-ai-jonghyun',POTENS_API_KEY_MINKYU:'synthetic-ai-minkyu',POTENS_API_KEY_SUNGHO:'synthetic-ai-sungho',
+  POTENS_ACCOUNT_TOKEN_BUDGET:'3200000',POTENS_RESET_TIMEZONE:'Asia/Seoul',POTENS_MODEL:'claude-5-sonnet',POTENS_API_BASE_URL:'https://ai.potens.ai',POTENS_USAGE_INPUT_FIELD:'fixture_input',POTENS_USAGE_OUTPUT_FIELD:'fixture_output',
+  AI_CHAT_MAX_MESSAGES:'20',AI_CHAT_MAX_MESSAGE_CHARS:'500',AI_CHAT_MAX_TOTAL_CHARS:'4000',AI_CHAT_MAX_OUTPUT_TOKENS:'800',AI_CHAT_SEARCH_PAGE_SIZE:'10',AI_CHAT_MAX_SEARCH_PAGES:'3',AI_CHAT_RECHECK_MAX_PAGES:'3',AI_CHAT_MAX_RESULT_CARDS:'5',AI_CHAT_MATCH_BATCH_SIZE:'5',AI_CHAT_MAX_MATCH_CALLS:'3',AI_CHAT_MAX_MATCH_MAX_OUTPUT_TOKENS:'600',AI_CHAT_MATCH_MAX_OUTPUT_TOKENS:'600'};
+ const transport=async(input:any,init:RequestInit={})=>{
+  const url=new URL(input instanceof Request?input.url:String(input)),o=observation(),headers=new Headers(init.headers);
+  if(url.href==='https://ai.potens.ai/api/chat'){
+   check(phase==='positive'&&o.reservations.length===1&&init.method==='POST','PROVIDER_AFTER_REAL_RESERVE');
+   const reservation=o.reservations[0];check(!reservation.dispatched&&headers.get('authorization')==='Bearer synthetic-ai-'+reservation.accountId,'PROVIDER_SCOPE');
+   reservation.dispatched=true;o.providerCalls++;
+   return new Response(JSON.stringify({message:JSON.stringify({status:'search',filters:{target:'posts',region:'서울특별시',query:f.aiQuery,mbti:'INFP'}}),token_usage:{fixture_input:1,fixture_output:1}}),{status:200,headers:{'content-type':'application/json'}});
+  }
+  if(url.origin!==f.origin){nativeExternalAttempts++;throw new Error('AI_CHECK_CONSENT_EXTERNAL');}
+  check(!url.search&&!url.hash&&!url.username&&!url.password,'LOCAL_URL');
+  const name=url.pathname==='/auth/v1/user'?'auth':url.pathname.split('/').at(-1)!;
+  const internal=['acquire_ai_chat_request','reserve_ai_chat_account_model','settle_ai_account_budget','record_ai_chat_result_available','finish_ai_chat_request'];
+  check(name==='auth'||internal.includes(name)||['get_my_profile_traits','search_public_posts_v2','withdraw_my_ai_processing'].includes(name),'RPC_ALLOWLIST');
+  check(url.pathname===(name==='auth'?'/auth/v1/user':'/rest/v1/rpc/'+name),'RPC_PATH');
+  check(init.method===(name==='auth'?'GET':'POST'),'RPC_METHOD');
+  check(headers.get('authorization')==='Bearer '+(internal.includes(name)?f.service:account.token),'ORIGINAL_JWT');
+  if(phase==='withdraw')check(['auth','withdraw_my_ai_processing'].includes(name),'WITHDRAW_ONLY');
+  if(phase==='denied')check(['auth','acquire_ai_chat_request'].includes(name),'DENIED_BEFORE_OTHER_RPC');
+  const args=name==='auth'?{}:JSON.parse(String(init.body));
+  if(name==='withdraw_my_ai_processing'){
+   check(phase==='withdraw'&&withdrawStarted&&!withdrawn&&JSON.stringify(args)==='{"p_kind":"exploration"}','PUBLIC_WITHDRAW_SCOPE');
+   check(!o.counts.withdraw_my_ai_processing,'WITHDRAW_ONE_ATTEMPT');
+  }
+  if(internal.includes(name)&&name!=='settle_ai_account_budget')check(args.p_user_id===account.userId,'ACTUAL_MEMBER_SCOPE');
+  if(name==='acquire_ai_chat_request')check(args.p_client_request_id===(phase==='positive'?f.positiveClientRequestId:f.deniedClientRequestId)&&args.p_contract_version==='2026-10-05'&&args.p_output_retry_of===null,'REQUEST_KEY');
+  if(name==='reserve_ai_chat_account_model')check(phase==='positive'&&args.p_request_id===o.requests[0]?.requestId&&hash(args.p_lease_token)===o.requests[0]?.leaseSha256&&args.p_ledger_id===f.aiLedgerId&&args.p_task==='intent','RESERVE_ORIGINAL_SCOPE');
+  if(name==='settle_ai_account_budget')check(o.reservations[0]?.dispatched&&args.p_reservation_id===o.reservations[0].reservationId&&args.p_account_id===o.reservations[0].accountId&&args.p_account_day===o.reservations[0].accountDay&&args.p_outcome==='usage_reported'&&args.p_input_tokens===1&&args.p_output_tokens===1,'SETTLE_ORIGINAL_SCOPE');
+  if(['record_ai_chat_result_available','finish_ai_chat_request'].includes(name))check(args.p_request_id===o.requests[0]?.requestId&&hash(args.p_lease_token)===o.requests[0]?.leaseSha256,'FINISH_ORIGINAL_SCOPE');
+  o.counts[name]=(o.counts[name]??0)+1;
+  const response=await native(input,{...init,redirect:'error'});check(response.status===200,'ACTUAL_UPSTREAM_STATUS');const result=await response.clone().json();
+  if(name==='auth')check(result.id===account.userId&&result.role==='authenticated'&&result.is_anonymous!==true,'ACTUAL_MEMBER_AUTH');
+  if(name==='acquire_ai_chat_request')o.requests.push({requestId:args.p_request_id,clientRequestId:args.p_client_request_id,status:result.status,...(result.status==='acquired'?{leaseSha256:hash(result.leaseToken)}:{})});
+  if(name==='reserve_ai_chat_account_model'){check(result.status==='reserved','REAL_RESERVATION');o.reservations.push({reservationId:result.reservationId,accountId:result.accountId,accountDay:result.accountDay,units:args.p_units,requestId:args.p_request_id,dispatched:false,settled:false});}
+  if(name==='settle_ai_account_budget'){check(result.settled===true&&result.pending===false,'REAL_SETTLEMENT');o.reservations[0].settled=true;}
+  if(name==='search_public_posts_v2')check(Array.isArray(result.items)&&result.items.length===0&&result.nextCursor===null,'NORMAL_EMPTY_SEARCH');
+  if(name==='withdraw_my_ai_processing'){check(Object.keys(result).length===1&&result.withdrawn===true,'PUBLIC_WITHDRAW_RESULT');withdrawn=true;}
+  return response;
+ };
+ const outputLimit={decisionId:'synthetic-wire-only',apply:(body:any,limit:number)=>({...body,synthetic_max_output_tokens:limit})};
+ const ai=createAiChatRuntime((key:string)=>env[key],transport,{privacy:{decisionId:'synthetic-local-only',check:async()=>true},outputLimit});
+ const aiRequest=(clientRequestId:string)=>new Request(f.origin+'/functions/v1/ai-chat',{method:'POST',headers:{authorization:'Bearer '+account.token,'content-type':'application/json'},
+  body:JSON.stringify({clientRequestId,messages:[{role:'user',content:'합성 AI 동의 철회 검사'}],currentFilters:{target:'posts',region:'서울특별시',query:f.aiQuery,mbti:'INFP'}})});
+ globalThis.fetch=transport;
+ try{
+  const positive=await ai(aiRequest(f.positiveClientRequestId)),positiveBody=await positive.json(),p=observation();
+  check(positive.status===200&&positiveBody.data?.status==='no_results'&&positiveBody.data.requestId===positive.headers.get('x-request-id'),'READY_POSITIVE_CONTROL');
+  check(p.requests.length===1&&p.requests[0].status==='acquired'&&p.providerCalls===1&&p.reservations.length===1&&p.reservations[0].settled&&
+   p.counts.auth===1&&p.counts.acquire_ai_chat_request===1&&p.counts.reserve_ai_chat_account_model===1&&p.counts.settle_ai_account_budget===1&&p.counts.record_ai_chat_result_available===1&&p.counts.finish_ai_chat_request===1,'READY_POSITIVE_REAL_PORTS');
+  check(positiveBody.data.requestId===p.requests[0].requestId,'NORMAL_REQUEST_RESPONSE_BINDING');
+  phase='withdraw';sourceProof();save('consent-withdraw-intent-private.json',{singleAttempt:true,memberId:account.userId,originalTokenSha256:hash(account.token),kind:'exploration',positiveRequestId:p.requests[0].requestId});withdrawStarted=true;
+  const service=createRuntimeHandler((key:string)=>env[key]);
+  const response=await service(new Request(f.origin+'/functions/v1/service-api/me/ai-processing/withdraw',{method:'POST',headers:{authorization:'Bearer '+account.token,'content-type':'application/json'},body:JSON.stringify({kind:'exploration'})}));
+  const body=await response.json(),w=observation();check(response.status===200&&body.data?.withdrawn===true&&withdrawn,'PUBLIC_SERVICE_ROUTE');
+  check(w.counts.auth===1&&w.counts.withdraw_my_ai_processing===1&&Object.keys(w.counts).length===2,'PUBLIC_SERVICE_AUTH_AND_ONE_RPC');
+  phase='denied';const denied=await ai(aiRequest(f.deniedClientRequestId)),deniedBody=await denied.json(),d=observation();
+  check(denied.status===200&&deniedBody.data?.status==='unavailable'&&deniedBody.data.recovery?.reason==='consent'&&deniedBody.data.recovery.retryAllowed===false,'CONSENT_NOT_FALLBACK_UNAVAILABLE');
+  check(d.counts.auth===1&&d.counts.acquire_ai_chat_request===1&&Object.keys(d.counts).length===2&&d.providerCalls===0&&d.reservations.length===0&&d.requests.length===1&&d.requests[0].status==='consent_revoked','CONSENT_WITHOUT_RESERVATION');
+  check(deniedBody.data.requestId===d.requests[0].requestId&&deniedBody.data.requestId===denied.headers.get('x-request-id'),'DENIED_REQUEST_BINDING');
+  sourceProof();check(nativeExternalAttempts===0,'EXTERNAL_ZERO');
+  return {status:'PASS',case:'signed-public-consent-withdrawal',phases,originalTokenSha256:hash(account.token),nativeExternalAttempts,
+   actualFactoryRoute:'POST /functions/v1/service-api/me/ai-processing/withdraw',publicMutationCalls:1,providerScope:'EXPLICIT_SYNTHETIC_IN_MEMORY_ADAPTER',
+   serviceMemberRetirement:'NOT_RUN',actualDatabaseBaselinePreservation:'CALLER_REQUIRED_NOT_VERIFIED_BY_FACTORY',actualProviderLegalBillingNaverRealMembers:'NOT_RUN'};
+ }finally{
+  globalThis.fetch=native;
+  save('consent-factory-evidence-private.json',{phases,withdrawStarted,withdrawn,nativeExternalAttempts,originalTokenSha256:hash(account.token),rawContentLogged:false});
+ }
 }
 
 async function aiMidnightHttpCase(f:any){

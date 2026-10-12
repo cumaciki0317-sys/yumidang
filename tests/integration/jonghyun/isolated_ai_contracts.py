@@ -1784,6 +1784,444 @@ def run_signed_auth_lifecycle(reviewed, binding, value, node):
     if errors:raise ValueError('LIFECYCLE_FAILED_PRIVATE_EVIDENCE_PRESERVED')
 
 
+LCP_TABLES=PROVISION_OWNED_TABLES+('auth.mfa_amr_claims',)
+LCP_CODES=('LCP_REVIEWED_CODE_REQUIRED','LCP_PREVIOUS_ATTEMPT','LCP_PRIVATE_SCOPE','LCP_STATE_BINDING',
+    'LCP_FRESH_EMPTY_REQUIRED','LCP_SETTINGS_REQUIRED','LCP_CLOSED_REQUIRED','LCP_RESOURCE_GUARD',
+    'LCP_MONITOR_FAILED','LCP_MONITOR_UNCLOSED','LCP_HTTP_UNKNOWN','LCP_CREATE_PROOF','LCP_LOGIN_PROOF',
+    'LCP_AUTH_PROOF','LCP_PROFILE_PROOF','LCP_ROWS_CHANGED','LCP_AUTHORITY_CHANGED','LCP_OWNED_SCOPE',
+    'LCP_WINDOW_REQUIRED','LCP_HEAD_CHANGED','LCP_CLEANUP_UNKNOWN','LCP_FAILED')
+
+
+class ReviewedLifecycleProvisioning:
+    """검토된 코드 객체 전용. JSON/CLI는 발급 권한·대상·포트를 선택할 수 없다."""
+    def __init__(self,decision_id,prepared_root,source_pins,containers,credentials,scope_id,ports=None):
+        self.decision_id=decision_id;self.prepared_root=Path(prepared_root);self.source_pins=source_pins
+        self.containers=containers;self.credentials=credentials;self.scope_id=scope_id;self.ports=ports
+
+
+def lcp_save_bytes(root,name,data):
+    if not re.fullmatch(r'[A-Za-z0-9-]+\.json',name)or not isinstance(data,bytes)or len(data)>8*1024*1024:
+        raise ValueError('LCP_PRIVATE_SCOPE')
+    if root.resolve()!=root or root.is_symlink():raise ValueError('LCP_PRIVATE_SCOPE')
+    s=root.lstat()
+    if not stat.S_ISDIR(s.st_mode)or s.st_uid!=os.getuid()or stat.S_IMODE(s.st_mode)!=0o700:raise ValueError('LCP_PRIVATE_SCOPE')
+    # 기존 stable FD 검사를 부모에 적용한 뒤 O_EXCL로 첫 전송 journal만 만든다.
+    for p in root.parents:
+        if p==Path('/private/tmp'):break
+        s=p.lstat()
+        if not stat.S_ISDIR(s.st_mode)or s.st_uid!=os.getuid()or stat.S_IMODE(s.st_mode)!=0o700:raise ValueError('LCP_PRIVATE_SCOPE')
+    else:raise ValueError('LCP_PRIVATE_SCOPE')
+    fd=os.open(root/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(fd,'wb')as stream:stream.write(data);stream.flush();os.fsync(stream.fileno())
+    for p in(root,root.parent):
+        fd=os.open(p,os.O_RDONLY|os.O_DIRECTORY)
+        try:os.fsync(fd)
+        finally:os.close(fd)
+    saved=signed_private_read(root/name)
+    if saved!=data:raise ValueError('LCP_PRIVATE_SCOPE')
+    return hashlib.sha256(saved).hexdigest()
+
+
+def lcp_save(root,name,value):
+    return lcp_save_bytes(root,name,json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode())
+
+
+def lcp_binding(reviewed):
+    if(type(reviewed)is not ReviewedLifecycleProvisioning or not isinstance(reviewed.decision_id,str)
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',reviewed.decision_id)
+            or not isinstance(reviewed.scope_id,str)or not re.fullmatch(r'[a-f0-9]{32}',reviewed.scope_id)):
+        raise ValueError('LCP_REVIEWED_CODE_REQUIRED')
+    root=reviewed.prepared_root
+    manifest=signed_private_read(root/'database-manifest.json')
+    port=signed_exact_json(manifest)['config_overlay']['api.port']
+    if type(port)is not int or not 1<=port<=65535:raise ValueError('LCP_STATE_BINDING')
+    target=signed_prepared_target(root);origin='http://127.0.0.1:'+str(port)
+    provisioning_metadata(reviewed,target,origin)
+    head=provisioning_source_check(reviewed.source_pins)
+    return {'version':1,'kind':'STAGED_LIFECYCLE_ORIGINAL_ISSUANCE','scopeId':reviewed.scope_id,
+        'preparedRoot':str(root),'manifestSha256':hashlib.sha256(manifest).hexdigest(),'sourceHead':head,
+        'sourcePins':reviewed.source_pins,'target':target,'containers':reviewed.containers,'origin':origin,
+        'credentialSha256':{k:hashlib.sha256(v.encode()).hexdigest()for k,v in reviewed.credentials.items()},
+        'decisionId':reviewed.decision_id}
+
+
+def lcp_snapshot(value):
+    if not isinstance(value,dict)or set(value)!={'rows','authoritySha256','constraintsSha256','catalogSha256'}:
+        raise ValueError('LCP_OWNED_SCOPE')
+    if any(not isinstance(value[k],str)or not re.fullmatch(r'[a-f0-9]{64}',value[k])for k in('authoritySha256','constraintsSha256','catalogSha256')):
+        raise ValueError('LCP_OWNED_SCOPE')
+    rows=value['rows']
+    required=set(LCP_TABLES)|{'private.'+t for t in PROTECTED_BUDGET}
+    if not isinstance(rows,dict)or not required.issubset(rows):raise ValueError('LCP_OWNED_SCOPE')
+    for table,bag in rows.items():
+        if not re.fullmatch(r'(auth|public|private|storage)\.[a-z_][a-z_0-9]*',table)or not isinstance(bag,dict):raise ValueError('LCP_OWNED_SCOPE')
+        if any(not re.fullmatch(r'[a-f0-9]{64}',h)or type(n)is not int or n<1 for h,n in bag.items()):raise ValueError('LCP_OWNED_SCOPE')
+    return value
+
+
+def lcp_added_scope(baseline,current,added,accounts):
+    lcp_snapshot(baseline);lcp_snapshot(current)
+    if any(current[k]!=baseline[k]for k in('authoritySha256','constraintsSha256','catalogSha256')):
+        raise ValueError('LCP_AUTHORITY_CHANGED')
+    if set(current['rows'])!=set(baseline['rows'])or set(added)!=set(LCP_TABLES):raise ValueError('LCP_OWNED_SCOPE')
+    users={a['userId']for a in accounts}
+    if len(users)!=len(accounts):raise ValueError('LCP_OWNED_SCOPE')
+    for table,bag in current['rows'].items():
+        expected=dict(baseline['rows'][table])
+        if table in added:
+            entries=added[table];owners={u:[]for u in users}
+            if len(entries)!=len(users)*(2 if table=='auth.audit_log_entries'else 1):raise ValueError('LCP_OWNED_SCOPE')
+            for key,row in entries.items():
+                if(not isinstance(key,str)or not key or len(key)>512 or not isinstance(row,dict)
+                        or set(row)!={'rowSha256','ownerUserId','operation'}or row['ownerUserId']not in users
+                        or not re.fullmatch(r'[a-f0-9]{64}',row['rowSha256'])or row['rowSha256']in baseline['rows'][table]):
+                    raise ValueError('LCP_OWNED_SCOPE')
+                owners[row['ownerUserId']].append(row['operation']);h=row['rowSha256'];expected[h]=expected.get(h,0)+1
+            required=['login','user_signedup']if table=='auth.audit_log_entries'else['row']
+            if any(sorted(ops)!=required for ops in owners.values()):raise ValueError('LCP_OWNED_SCOPE')
+        if expected!=bag:raise ValueError('LCP_ROWS_CHANGED')
+
+
+class FixedLifecycleProvisioningPorts(FixedSignedProvisioningPorts):
+    """같은 고정 서비스에만 실제 원 HTTP bytes/SQL을 전달한다. 시간·서비스 설정은 변경하지 않는다."""
+    def __init__(self,reviewed):
+        super().__init__(reviewed);self.runner.binding['sourcePins']=reviewed.source_pins
+    def history(self):return signed_verify_history(self.runner)
+    def settings(self):
+        result=subprocess.run(self.base+['inspect',self.reviewed.containers['auth']['id']],capture_output=True,timeout=3)
+        if result.returncode or len(result.stdout)>1024*1024:raise ValueError('LCP_SETTINGS_REQUIRED')
+        values=json.loads(result.stdout)
+        if len(values)!=1 or values[0]['Id']!=self.reviewed.containers['auth']['id']:raise ValueError('LCP_SETTINGS_REQUIRED')
+        env=values[0]['Config']['Env'];keys=('GOTRUE_JWT_EXP','GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED','GOTRUE_DISABLE_SIGNUP')
+        selected={}
+        for key in keys:
+            found=[v.split('=',1)[1]for v in env if v.startswith(key+'=')]
+            if len(found)!=1:raise ValueError('LCP_SETTINGS_REQUIRED')
+            selected[key]=found[0]
+        if selected!={keys[0]:'3600',keys[1]:'false',keys[2]:'true'}:raise ValueError('LCP_SETTINGS_REQUIRED')
+        return {'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True}
+    def snapshot(self):
+        value=super().snapshot()
+        constraints=self.read_sql("select coalesce(jsonb_agg(to_jsonb(c)order by oid),'[]'::jsonb)from pg_constraint c;",timeout=5)
+        value['constraintsSha256']=hashlib.sha256(constraints.encode()).hexdigest()
+        # relpages/reltuples 같은 실행 통계는 제외하되 빈 테이블의 컬럼/타입/기본값 변경도 거절한다.
+        catalog=self.read_sql("select jsonb_build_object('relations',(select jsonb_agg(jsonb_build_array(c.oid,c.relname,c.relnamespace,c.relkind,c.relowner,c.relam,c.reltablespace,c.relpersistence,c.relreplident,c.relrowsecurity,c.relforcerowsecurity,c.reloptions)order by c.oid)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage')),'columns',(select jsonb_agg(jsonb_build_array(a.attrelid,a.attnum,a.attname,a.atttypid,a.atttypmod,a.attnotnull,a.attidentity,a.attgenerated,a.attcollation,a.attisdropped,a.attstorage,a.attcompression)order by a.attrelid,a.attnum)from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage')),'defaults',(select jsonb_agg(to_jsonb(d)order by d.oid)from pg_attrdef d join pg_class c on c.oid=d.adrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage')));",timeout=5)
+        value['catalogSha256']=hashlib.sha256(catalog.encode()).hexdigest();return value
+    def added_rows(self,baseline,accounts):
+        rows=super().added_rows(baseline,accounts)
+        metadata=[{'user_id':a['userId'],'session_id':a['sessionId']}for a in accounts]
+        source='jsonb_to_recordset('+quote(json.dumps(metadata))+'::jsonb)a(user_id text,session_id text)'
+        rows['auth.mfa_amr_claims']=signed_exact_json(self.read_sql("select coalesce(jsonb_object_agg(r.id::text,jsonb_build_object('rowSha256',encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex'),'ownerUserId',a.user_id,'operation','row')),'{}'::jsonb)from auth.mfa_amr_claims r join "+source+" on r.session_id::text=a.session_id and r.authentication_method='password';",timeout=3))
+        return rows
+    def metadata_proof(self,a,scope,case):
+        return self.read_sql('select exists(select 1 from auth.users u join auth.sessions s on s.user_id=u.id join public.profiles p on p.id=u.id join private.member_episodes e on e.profile_id=p.id where u.id='+quote(a['userId'])+'::uuid and s.id='+quote(a['sessionId'])+'::uuid and e.identity_id is null and e.ended_at is null and not u.is_anonymous and u.raw_user_meta_data @> '+quote(json.dumps({'fixture_scope_id':scope,'fixture_case':case,'email_verified':True}))+'::jsonb);')=='t'
+    def cleanup_audits(self,created):
+        metadata=[{'uid':v['userId'],'email':v['authEmail']}for v in created.values()]
+        source='jsonb_to_recordset('+quote(json.dumps(metadata))+'::jsonb)a(uid text,email text)'
+        condition="((r.payload->>'action'='user_signedup'and r.payload->'traits'->>'user_id'=a.uid and r.payload->'traits'->>'user_email'=a.email)or(r.payload->>'action'='login'and r.payload->>'actor_id'=a.uid and r.payload->>'actor_username'=a.email)or(r.payload->>'action'='user_deleted'and r.payload->'traits'->>'user_id'=a.uid and r.payload->'traits'->>'user_email'=a.email))"
+        return signed_exact_json(self.read_sql("select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from auth.audit_log_entries r join "+source+' on '+condition+' group by 1)s;',timeout=3))
+    def request_original(self,path,payload):
+        if path not in('/admin/users','/token?grant_type=password'):raise ValueError('LCP_HTTP_UNKNOWN')
+        credential=self.reviewed.credentials['service'if path=='/admin/users'else'anon']
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self,*args):return None
+        req=urllib.request.Request(self.origin+'/auth/v1'+path,data=json.dumps(payload).encode(),method='POST',
+            headers={'apikey':credential,'authorization':'Bearer '+credential,'content-type':'application/json'})
+        opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+        try:
+            try:
+                with opener.open(req,timeout=5)as response:status=response.status;raw=response.read(65537)
+            except urllib.error.HTTPError as error:status=error.code;raw=error.read(65537)
+            if len(raw)>65536:raise ValueError()
+            signed_exact_json(raw);return status,raw
+        except Exception:raise ValueError('LCP_HTTP_UNKNOWN')from None
+
+
+class LifecycleProvisioningContext:
+    def __init__(self,reviewed):
+        self.reviewed=reviewed;self.binding=lcp_binding(reviewed);self.root=reviewed.prepared_root
+        self.evidence=self.root/('auth-lifecycle-provision-'+reviewed.scope_id)
+        self.ports=reviewed.ports if reviewed.ports is not None else FixedLifecycleProvisioningPorts(reviewed)
+        self.ports.origin=self.binding['origin'];self.done=threading.Event();self.failures=[];self.unknown=False;self.created={}
+        self.baseline_sha256=None
+        self.observer=threading.Thread(target=self.observe,daemon=True)
+    def resource(self,minimum):
+        start=time.monotonic();value=self.ports.memory_kib()
+        if type(value)is not int or value<minimum or time.monotonic()-start>3:raise ValueError('LCP_RESOURCE_GUARD')
+        return value
+    def observe(self):
+        while not self.done.is_set():
+            start=time.monotonic()
+            try:self.resource(786432)
+            except BaseException:self.failures.append('LCP_MONITOR_FAILED');self.done.set();return
+            self.done.wait(max(0,start+3-time.monotonic()))
+    def start(self):
+        self.resource(1048576);self.observer.start();self.live();self.ports.history()
+    def live(self):
+        self.assert_monitor_live()
+        if provisioning_source_check(self.reviewed.source_pins,self.binding['sourceHead'])!=self.binding['sourceHead']:raise ValueError('LCP_HEAD_CHANGED')
+        if self.ports.identity()!=self.reviewed.containers:raise ValueError('LCP_STATE_BINDING')
+        if self.ports.settings()!={'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True}:raise ValueError('LCP_SETTINGS_REQUIRED')
+        controls=self.ports.closed_controls()
+        if set(controls)!=set(PROVISION_CLOSED_CONTROLS)|{'cronLaunchActiveJobs'}or controls['cronLaunchActiveJobs']!='off'or any(controls[k]is not False for k in PROVISION_CLOSED_CONTROLS):raise ValueError('LCP_CLOSED_REQUIRED')
+        self.resource(786432)
+        self.assert_monitor_live()
+    def assert_monitor_live(self):
+        if self.done.is_set()or self.failures:raise ValueError('LCP_MONITOR_FAILED')
+    def stop(self):
+        self.done.set()
+        if self.observer.ident is not None:self.observer.join(timeout=3)
+        if self.observer.is_alive()or self.failures:raise ValueError('LCP_MONITOR_UNCLOSED')
+    def finish(self,phase):
+        # observer의 실패가 done을 먼저 설정했어도 반드시 join한다.
+        self.done.set()
+        if self.observer.ident is not None:self.observer.join(timeout=3)
+        if self.observer.is_alive():
+            self.fail(phase,ValueError('LCP_MONITOR_UNCLOSED'))
+            raise ValueError('LCP_FAILED_PRIVATE_EVIDENCE_PRESERVED')
+    def save(self,name,value):return lcp_save(self.evidence,name,value)
+    def fail(self,phase,error):
+        code=str(error)if type(error)is ValueError and str(error)in LCP_CODES else'LCP_FAILED'
+        try:self.save('failure-'+phase+'.json',{'status':'UNKNOWN'if self.unknown else'FAIL_RETAINED_OWNED',
+            'code':code,'created':self.created,'binding':self.binding,'baselineSha256':self.baseline_sha256,
+            'noResend':True,'actualLifecycle':'NOT_RUN'})
+        except BaseException:pass
+    def post(self,case,operation,payload):
+        self.live();self.save(case+'-'+operation+'-intent-private.json',{'case':case,'scopeId':self.reviewed.scope_id,'payload':payload,'singlePost':True})
+        path='/admin/users'if operation=='create'else'/token?grant_type=password'
+        # journal 직후 불명확한 전송/저장 실패도 재전송 권한이 되지 않는다.
+        self.live();self.unknown=True
+        self.assert_monitor_live()
+        status,raw=self.ports.request_original(path,payload);body=signed_exact_json(raw)
+        if operation=='create'and status==200:
+            try:
+                uid=body['id']
+                if (str(uuid.UUID(uid))!=uid or body['email']!=payload['email']or body.get('user_metadata')!=payload['user_metadata']
+                        or body['user_metadata'].get('email_verified')is not True or body.get('role')!='authenticated'or body.get('is_anonymous')is not False):raise ValueError()
+                self.created[case]={'userId':uid,'authEmail':payload['email']}
+            except (KeyError,TypeError,ValueError):raise ValueError('LCP_CREATE_PROOF')from None
+            lcp_save_bytes(self.evidence,case+'-create-response-private.json',raw)
+            self.save(case+'-created.json',self.created[case])
+        self.save(case+'-'+operation+'-outcome.json',{'status':status,'responseSha256':hashlib.sha256(raw).hexdigest(),'responseBytes':len(raw)})
+        # login은 원 bytes/claims/issuance가 모두 검증·영속화될 때만 known이다.
+        # non-200은 commit 후 오류일 수 있으므로 어떤 status도 uncertainty를 지우지 않는다.
+        if operation=='create'and status==200:self.unknown=False
+        return status,raw,body
+    def issue(self,case):
+        scope=self.reviewed.scope_id
+        email=('synthetic-ai-'+scope+'-'+case.split('-')[1]if case.startswith('baseline-')else'synthetic-auth-lifecycle-'+scope+'-'+case.lower())+'@example.invalid'
+        if self.ports.resolve_email(email)is not None:raise ValueError('LCP_CREATE_PROOF')
+        password=base64.urlsafe_b64encode(os.urandom(36)).decode();meta={'fixture_scope_id':scope,'fixture_case':case,'email_verified':True}
+        status,_,user=self.post(case,'create',{'email':email,'password':password,'email_confirm':True,'user_metadata':meta})
+        if status!=200 or user.get('role')!='authenticated'or user.get('is_anonymous')is not False:raise ValueError('LCP_CREATE_PROOF')
+        status,raw,response=self.post(case,'login',{'email':email,'password':password})
+        if status!=200 or response.get('token_type')!='bearer':raise ValueError('LCP_LOGIN_PROOF')
+        claims=signed_claims(response.get('access_token'));uid=user['id'];now=time.time()
+        if (claims.get('sub')!=uid or claims.get('iss')!=self.binding['origin']+'/auth/v1'or claims.get('aud')!='authenticated'
+                or claims.get('role')!='authenticated'or claims.get('is_anonymous')is not False or claims.get('email')!=email
+                or type(claims.get('iat'))is not int or type(claims.get('exp'))is not int or claims['exp']-claims['iat']!=3600
+                or claims['iat']>now or claims['exp']<=now+300 or str(uuid.UUID(claims.get('session_id')))!=claims['session_id']
+                or not isinstance(response.get('user'),dict)
+                or any(response['user'].get(k)!=user.get(k)for k in('id','email','role','is_anonymous','user_metadata'))):raise ValueError('LCP_LOGIN_PROOF')
+        a={'userId':uid,'sessionId':claims['session_id'],'accessToken':response['access_token'],'expiresAt':claims['exp'],'authEmail':email}
+        response_sha=lcp_save_bytes(self.evidence,case+'-issued-response-private.json',raw)
+        receipt={'version':1,'kind':'GOTRUE_ORIGINAL_TOKEN_ISSUED','scopeId':scope,'case':case,'userId':uid,'sessionId':a['sessionId'],
+            'tokenSha256':hashlib.sha256(a['accessToken'].encode()).hexdigest(),'origin':self.binding['origin'],
+            'authContainerId':self.reviewed.containers['auth']['id'],'authImage':self.reviewed.containers['auth']['image'],
+            'issuedAt':claims['iat'],'expiresAt':claims['exp'],'httpStatus':200,'responseSha256':response_sha,'wire':'POST /token?grant_type=password'}
+        sha=self.save(case+'-issued.json',receipt)
+        self.unknown=False
+        self.live();self.save(case+'-profile-intent.json',{'scopeId':scope,'userId':uid,'singleLink':True})
+        self.unknown=True
+        if not self.ports.link_profile(uid):raise ValueError('LCP_PROFILE_PROOF')
+        self.save(case+'-profile-linked.json',{'userId':uid,'identityId':None,'syntheticOnly':True});self.unknown=False
+        self.verify(a,case)
+        return a,{'receiptSha256':sha,'responseSha256':response_sha}
+    def verify(self,a,case):
+        self.live();status,user=self.ports.request('GET','/user',token=a['accessToken'])
+        if(status!=200 or not isinstance(user,dict)or user.get('id')!=a['userId']or user.get('email')!=a['authEmail']
+                or user.get('role')!='authenticated'or user.get('is_anonymous')is not False
+                or user.get('user_metadata')!={'fixture_scope_id':self.reviewed.scope_id,'fixture_case':case,'email_verified':True}
+                or user['user_metadata'].get('email_verified')is not True
+                or not self.ports.session_proof(a)or not self.ports.metadata_proof(a,self.reviewed.scope_id,case)):raise ValueError('LCP_AUTH_PROOF')
+    def read_state(self,name,digest):
+        if not isinstance(digest,str)or not re.fullmatch(r'[a-f0-9]{64}',digest):raise ValueError('LCP_STATE_BINDING')
+        raw=signed_private_read(self.evidence/name)
+        if hashlib.sha256(raw).hexdigest()!=digest:raise ValueError('LCP_STATE_BINDING')
+        v=signed_exact_json(raw)
+        if set(v)!={'binding','baseline','current','accounts','issuanceProofs','readyNotBefore','expiresAt'}or v['binding']!=self.binding:raise ValueError('LCP_STATE_BINDING')
+        cases={'expiredBearer'}if name=='stage-private.json'else{'expiredBearer','revokedSession','memberChanged'}|{'baseline-'+str(i)for i in range(6)}
+        if not isinstance(v['accounts'],dict)or set(v['accounts'])!=cases or not isinstance(v['issuanceProofs'],dict)or set(v['issuanceProofs'])!=cases:
+            raise ValueError('LCP_STATE_BINDING')
+        lcp_snapshot(v['baseline']);lcp_snapshot(v['current'])
+        baseline_raw=signed_private_read(self.evidence/'baseline-private.json')
+        if signed_exact_json(baseline_raw)!=v['baseline']:raise ValueError('LCP_STATE_BINDING')
+        self.baseline_sha256=hashlib.sha256(baseline_raw).hexdigest()
+        if v['expiresAt']!=v['accounts']['expiredBearer']['expiresAt']or v['readyNotBefore']!=v['expiresAt']-60:raise ValueError('LCP_STATE_BINDING')
+        for case,a in v['accounts'].items():
+            if not isinstance(a,dict)or set(a)!={'userId','sessionId','accessToken','expiresAt','authEmail'}:raise ValueError('LCP_STATE_BINDING')
+            for k in('userId','sessionId'):
+                if not isinstance(a[k],str)or str(uuid.UUID(a[k]))!=a[k]:raise ValueError('LCP_STATE_BINDING')
+            proof=v['issuanceProofs'][case]
+            if not isinstance(proof,dict)or set(proof)!={'receiptSha256','responseSha256'}or any(not isinstance(h,str)or not re.fullmatch(r'[a-f0-9]{64}',h)for h in proof.values()):raise ValueError('LCP_STATE_BINDING')
+            raw=signed_private_read(self.evidence/(case+'-issued-response-private.json'))
+            if hashlib.sha256(raw).hexdigest()!=proof['responseSha256']:raise ValueError('LCP_STATE_BINDING')
+            if signed_exact_json(raw)['access_token']!=a['accessToken']:raise ValueError('LCP_STATE_BINDING')
+            receipt=signed_private_read(self.evidence/(case+'-issued.json'))
+            if hashlib.sha256(receipt).hexdigest()!=proof['receiptSha256']:raise ValueError('LCP_STATE_BINDING')
+            r=signed_exact_json(receipt)
+            claims=signed_claims(a['accessToken'])
+            expected={'version':1,'kind':'GOTRUE_ORIGINAL_TOKEN_ISSUED','scopeId':self.reviewed.scope_id,'case':case,
+                'userId':a['userId'],'sessionId':a['sessionId'],'tokenSha256':hashlib.sha256(a['accessToken'].encode()).hexdigest(),
+                'origin':self.binding['origin'],'authContainerId':self.reviewed.containers['auth']['id'],'authImage':self.reviewed.containers['auth']['image'],
+                'issuedAt':claims.get('iat'),'expiresAt':a['expiresAt'],'httpStatus':200,'responseSha256':proof['responseSha256'],'wire':'POST /token?grant_type=password'}
+            if r!=expected or type(r['version'])is not int or type(r['httpStatus'])is not int:raise ValueError('LCP_STATE_BINDING')
+            self.created[case]={'userId':a['userId'],'authEmail':a['authEmail']}
+        return v
+    def preservation(self,v):
+        accounts=list(v['accounts'].values());current=lcp_snapshot(self.ports.snapshot())
+        added=self.ports.added_rows(v['baseline']['rows'],accounts)
+        lcp_added_scope(v['baseline'],current,added,accounts)
+        if current!=v['current']:raise ValueError('LCP_ROWS_CHANGED')
+        for case,a in v['accounts'].items():self.verify(a,case)
+
+
+def stage_lifecycle_accounts(reviewed):
+    c=LifecycleProvisioningContext(reviewed)
+    if c.evidence.exists()or c.evidence.is_symlink()or any((c.root/x).exists()for x in('signed-ai-provision-intent.json','signed-ai-binding-private.json','auth-lifecycle-input-'+reviewed.scope_id+'.json')):raise ValueError('LCP_PREVIOUS_ATTEMPT')
+    c.evidence.mkdir(mode=0o700)
+    try:
+        c.save('stage-intent.json',c.binding);c.start()
+        if not c.ports.empty_auth():raise ValueError('LCP_FRESH_EMPTY_REQUIRED')
+        baseline=lcp_snapshot(c.ports.snapshot())
+        for t in set(LCP_TABLES)|{'private.'+t for t in PROTECTED_BUDGET}:
+            if baseline['rows'][t]:raise ValueError('LCP_FRESH_EMPTY_REQUIRED')
+        c.baseline_sha256=c.save('baseline-private.json',baseline);c.live();c.resource(1048576)
+        a,proof=c.issue('expiredBearer');current=lcp_snapshot(c.ports.snapshot())
+        lcp_added_scope(baseline,current,c.ports.added_rows(baseline['rows'],[a]),[a]);c.live();c.stop()
+        state={'binding':c.binding,'baseline':baseline,'current':current,'accounts':{'expiredBearer':a},'issuanceProofs':{'expiredBearer':proof},
+            'readyNotBefore':a['expiresAt']-60,'expiresAt':a['expiresAt']}
+        sha=c.save('stage-private.json',state)
+        result={'status':'STAGED_ORIGINAL_TOKEN_NOT_EXECUTED','stateSha256':sha,'scopeId':reviewed.scope_id,'readyNotBefore':state['readyNotBefore'],
+            'expiresAt':state['expiresAt'],'actualLifecycle':'NOT_RUN','anonymous':'NOT_RUN','foreign':'NOT_RUN','actualNaver':'NOT_RUN',
+            'executionScope':'OFFLINE_MODEL_ONLY'if reviewed.ports is not None else'LOCAL_GOTRUE_ORIGINAL_ISSUANCE'}
+        c.save('stage-receipt.json',result);return result
+    except BaseException as error:c.fail('stage',error);raise ValueError('LCP_FAILED_PRIVATE_EVIDENCE_PRESERVED')from None
+    finally:
+        c.finish('stage')
+
+
+def resume_lifecycle_accounts(reviewed,stage_sha256):
+    c=LifecycleProvisioningContext(reviewed);v=c.read_state('stage-private.json',stage_sha256)
+    if any((c.evidence/x).exists()for x in('late-intent.json','failure-stage.json')):raise ValueError('LCP_PREVIOUS_ATTEMPT')
+    try:
+        c.save('late-intent.json',{'binding':c.binding,'stageSha256':stage_sha256,'singleResume':True});c.start();c.preservation(v)
+        c.live();c.resource(1048576)
+        if time.time()>=v['expiresAt']:raise ValueError('LCP_WINDOW_REQUIRED')
+        for case in('revokedSession','memberChanged')+tuple('baseline-'+str(i)for i in range(6)):
+            a,proof=c.issue(case);v['accounts'][case]=a;v['issuanceProofs'][case]=proof
+        v['current']=lcp_snapshot(c.ports.snapshot())
+        lcp_added_scope(v['baseline'],v['current'],c.ports.added_rows(v['baseline']['rows'],list(v['accounts'].values())),list(v['accounts'].values()))
+        c.verify(v['accounts']['expiredBearer'],'expiredBearer');c.live();c.stop()
+        sha=c.save('late-private.json',v)
+        result={'status':'STAGED_LATE_TOKENS_NOT_EXECUTED','stateSha256':sha,'scopeId':reviewed.scope_id,'readyNotBefore':v['readyNotBefore'],
+            'expiresAt':v['expiresAt'],'actualLifecycle':'NOT_RUN','baselineSix':6,'ownedOriginalUsers':9,'anonymous':'NOT_RUN','foreign':'NOT_RUN'}
+        c.save('late-receipt.json',result);return result
+    except BaseException as error:c.fail('late',error);raise ValueError('LCP_FAILED_PRIVATE_EVIDENCE_PRESERVED')from None
+    finally:
+        c.finish('late')
+
+
+def bind_lifecycle_accounts(reviewed,late_sha256):
+    c=LifecycleProvisioningContext(reviewed);v=c.read_state('late-private.json',late_sha256)
+    if any((c.evidence/x).exists()for x in('handoff-intent.json','failure-stage.json','failure-late.json')):raise ValueError('LCP_PREVIOUS_ATTEMPT')
+    try:
+        c.save('handoff-intent.json',{'binding':c.binding,'lateSha256':late_sha256,'getOnly':True});c.start();c.preservation(v)
+        now=time.time();remaining=v['expiresAt']-now
+        if not 0<remaining<=60:raise ValueError('LCP_WINDOW_REQUIRED')
+        if any(a['expiresAt']<=now+(300 if case.startswith('baseline-')else 180)for case,a in v['accounts'].items()if case!='expiredBearer'):raise ValueError('LCP_WINDOW_REQUIRED')
+        c.live();c.resource(1048576)
+        if not 0<v['expiresAt']-time.time()<=60:raise ValueError('LCP_WINDOW_REQUIRED')
+        signed_evidence=c.root/('signed-auth-'+reviewed.scope_id);lifecycle_evidence=c.root/('auth-lifecycle-'+reviewed.scope_id)
+        if any(p.exists()or p.is_symlink()for p in(signed_evidence,lifecycle_evidence)):raise ValueError('LCP_PREVIOUS_ATTEMPT')
+        binding={'version':1,'kind':SIGNED_KIND,'preparedRoot':str(c.root),'databaseManifestSha256':c.binding['manifestSha256'],
+            'origin':c.binding['origin'],'jwtIssuer':c.binding['origin']+'/auth/v1','containers':reviewed.containers,'credentials':reviewed.credentials,
+            'accounts':[v['accounts']['baseline-'+str(i)]for i in range(6)],'evidenceRoot':str(signed_evidence),'sourcePins':reviewed.source_pins,
+            'approvedByRoot':False,'dockerSlotReady':False}
+        validate_signed_binding(binding,c.root,c.binding['target'],now=time.time());c.stop()
+        binding_sha=lcp_save(c.root,'signed-ai-binding-private.json',binding)
+        accounts={case:{**v['accounts'][case],'issuanceReceiptSha256':v['issuanceProofs'][case]['receiptSha256']}for case in('expiredBearer','revokedSession','memberChanged')}
+        value={'version':1,'kind':LIFECYCLE_KIND,'scopeId':reviewed.scope_id,'preparedRoot':str(c.root),'signedBindingSha256':binding_sha,
+            'sourcePins':reviewed.source_pins,'evidenceRoot':str(lifecycle_evidence),'accounts':{**accounts,'anonymousBearer':None},'foreign':None,
+            'approvedByRoot':False,'dockerSlotReady':False}
+        validate_lifecycle_input(value,c.root,binding,binding_sha)
+        input_sha=lcp_save(c.root,'auth-lifecycle-input-'+reviewed.scope_id+'.json',value)
+        result={'status':'MODEL_LIFECYCLE_INPUT_BOUND_NOT_EXECUTED'if reviewed.ports is not None else'LOCAL_LIFECYCLE_INPUT_BOUND_NOT_EXECUTED',
+            'bindingSha256':binding_sha,'inputSha256':input_sha,'issuanceProofs':{k:v['issuanceProofs'][k]for k in accounts},
+            'actualLifecycle':'NOT_RUN','anonymous':'NOT_RUN','foreign':'NOT_RUN','protectedBudgetDelta':0,'sourceHead':c.binding['sourceHead']}
+        c.save('handoff-receipt.json',result);return result
+    except BaseException as error:c.fail('handoff',error);raise ValueError('LCP_FAILED_PRIVATE_EVIDENCE_PRESERVED')from None
+    finally:
+        c.finish('handoff')
+
+
+def cleanup_lifecycle_accounts(reviewed,phase,failure_sha256):
+    """별도 검토한 실패 원 SHA로만 정리한다. 미확정 전송/UUID 교체는 UNKNOWN, 재발급·부활은 없다."""
+    c=LifecycleProvisioningContext(reviewed)
+    if phase not in('stage','late','handoff')or not isinstance(failure_sha256,str)or not re.fullmatch(r'[a-f0-9]{64}',failure_sha256):raise ValueError('LCP_STATE_BINDING')
+    raw=signed_private_read(c.evidence/('failure-'+phase+'.json'))
+    if hashlib.sha256(raw).hexdigest()!=failure_sha256:raise ValueError('LCP_STATE_BINDING')
+    failure=signed_exact_json(raw)
+    if(set(failure)!={'status','code','created','binding','baselineSha256','noResend','actualLifecycle'}
+            or failure['binding']!=c.binding or failure['status']not in('UNKNOWN','FAIL_RETAINED_OWNED')
+            or failure['code']not in LCP_CODES or failure['noResend']is not True or failure['actualLifecycle']!='NOT_RUN'):
+        raise ValueError('LCP_STATE_BINDING')
+    if (c.evidence/'cleanup-intent.json').exists():raise ValueError('LCP_PREVIOUS_ATTEMPT')
+    c.save('cleanup-intent.json',{'binding':c.binding,'failureSha256':failure_sha256,'noResend':True})
+    errors=[];closed=[];unknown=failure['status']=='UNKNOWN';preserved=False
+    try:
+        c.start()
+        for case,owned in failure['created'].items():
+            try:
+                expected=('synthetic-ai-'+reviewed.scope_id+'-'+case.split('-')[1]if re.fullmatch(r'baseline-[0-5]',case)else'synthetic-auth-lifecycle-'+reviewed.scope_id+'-'+case.lower())+'@example.invalid'
+                if(case not in('expiredBearer','revokedSession','memberChanged')and not re.fullmatch(r'baseline-[0-5]',case)
+                        or set(owned)!={'userId','authEmail'}or str(uuid.UUID(owned['userId']))!=owned['userId']or owned['authEmail']!=expected):raise ValueError('LCP_CLEANUP_UNKNOWN')
+                uid=owned['userId'];c.live()
+                found=c.ports.resolve_email(expected)
+                if found!=uid:raise ValueError('LCP_CLEANUP_UNKNOWN')
+                status,user=c.ports.request('GET','/admin/users/'+uid,admin=True)
+                if(status!=200 or user.get('id')!=uid or user.get('email')!=expected
+                        or user.get('user_metadata')!={'fixture_scope_id':reviewed.scope_id,'fixture_case':case,'email_verified':True}
+                        or user['user_metadata'].get('email_verified')is not True):raise ValueError('LCP_CLEANUP_UNKNOWN')
+                c.save(case+'-cleanup-intent.json',{'userId':uid,'authEmail':expected,'singleDelete':True})
+                c.live();c.ports.unlink_profile(uid);c.live()
+                try:c.ports.request('DELETE','/admin/users/'+uid,admin=True)
+                except BaseException:unknown=True
+                c.live();status,_=c.ports.request('GET','/admin/users/'+uid,admin=True)
+                if status!=404 or c.ports.resolve_email(expected)is not None:raise ValueError('LCP_CLEANUP_UNKNOWN')
+                closed.append(uid);c.save(case+'-cleanup-closed.json',{'userId':uid,'getAbsent':True})
+            except BaseException:errors.append('LCP_CLEANUP_UNKNOWN')
+        if failure['baselineSha256']is not None:
+            raw=signed_private_read(c.evidence/'baseline-private.json')
+            if hashlib.sha256(raw).hexdigest()!=failure['baselineSha256']:raise ValueError('LCP_STATE_BINDING')
+            baseline=lcp_snapshot(signed_exact_json(raw));current=lcp_snapshot(c.ports.snapshot())
+            expected={**baseline,'rows':{t:dict(bag)for t,bag in baseline['rows'].items()}}
+            audits=c.ports.cleanup_audits(failure['created'])
+            for h,n in audits.items():
+                if not re.fullmatch(r'[a-f0-9]{64}',h)or type(n)is not int or n<1:raise ValueError('LCP_OWNED_SCOPE')
+                expected['rows']['auth.audit_log_entries'][h]=expected['rows']['auth.audit_log_entries'].get(h,0)+n
+            preserved=current==expected and len(closed)==len(failure['created'])and not unknown
+            if not preserved:errors.append('LCP_CLEANUP_UNKNOWN')
+        else:errors.append('LCP_CLEANUP_UNKNOWN')
+        c.stop()
+    except BaseException:errors.append('LCP_CLEANUP_UNKNOWN')
+    finally:c.finish('cleanup')
+    result={'status':'UNKNOWN'if unknown or errors else'FAIL_OWNED_PREPARATION_CLEANUP_PROVEN','closedCount':len(closed),
+        'preservationProven':preserved and not errors,'fixedFailures':errors,'originalFailurePreserved':True,
+        'noResend':True,'noSessionResurrection':True,'actualLifecycle':'NOT_RUN'}
+    c.save('cleanup-receipt.json',result);return result
+
+
 if __name__=='__main__':
     try:signed_auth_lifecycle_main() if '--signed-auth-lifecycle'in sys.argv else signed_main() if any(k in sys.argv for k in ('--signed-local-auth','--signed-auth')) else main()
     except Exception as error:

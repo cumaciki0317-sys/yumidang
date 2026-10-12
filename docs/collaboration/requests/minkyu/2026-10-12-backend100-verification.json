@@ -4,7 +4,7 @@
   "actor": "minkyu",
   "branch": "minkyu/backend100-20261012",
   "policyHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
-  "sourceState": "REVIEWED_LIFECYCLE_SUCCESSOR_OF_3a0a42a_READY_TO_FREEZE",
+  "sourceState": "REVIEWED_STAGED_PRODUCER_AND_CLOSED_CONSENT_SUCCESSOR_OF_f66356b",
   "overall": {
     "completed": 22,
     "total": 28,
@@ -111,6 +111,32 @@
       "nullableAuditSqlScope": "SQLITE_MODEL",
       "independentReview": "PASS_AFTER_FIXED_NULL_PRESERVATION",
       "proof": "2026-10-13-auth-lifecycle-coverage.json"
+    },
+    "stagedProducerIntegration": {
+      "passed": 98,
+      "retained": 70,
+      "new": 28,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_ONLY",
+      "independentReview": "FIVE_FINDINGS_FIXED_V2_READ_ONLY_PASS",
+      "producerSha256": "7fc60f96b7f2967f1ca0044523d318f811c365ddf880efb202826bc590bd3865"
+    },
+    "consentPrivateCoreModels": {
+      "passed": 18,
+      "failed": 0,
+      "actualCalls": 0,
+      "cli": "ALWAYS_NOT_RUN",
+      "runtimeCapture": "NOT_PROVEN",
+      "caller": "NOT_IMPLEMENTED",
+      "factorySha256": "2c754c795cf236694a9de8276e4db2be3aa5a5d92884040eb28ba3edea446e4d"
+    },
+    "cleanupPrivateAdapterModels": {
+      "passed": 32,
+      "failed": 0,
+      "actualCalls": 0,
+      "actualLaunchAbi": null,
+      "adapterSha256": "9286affa199c0455842e1195053e8f12d1254ad2129b1dfc005b9f27de259359"
     }
   },
   "actual": {
@@ -200,9 +226,25 @@
       "memberChanged": "NOT_RUN",
       "differentOriginalContext": "NOT_RUN"
     },
-    "signedAuthLifecycleProducer": "REQUIRED_NOT_IMPLEMENTED",
+    "signedAuthLifecycleProducer": "IMPLEMENTED_OFFLINE_ONLY_NOT_RUN",
     "serviceMemberRetirement": "NOT_RUN",
-    "consentRevocation": "NOT_RUN"
+    "consentRevocation": "NOT_RUN",
+    "seoulPublicSystemTlsProbe": {
+      "status": "FAIL_CONNECT_TIMEOUT_NO_TLS_ESTABLISHED",
+      "method": "HEAD_HOST_ROOT_ONLY",
+      "curlExitCode": 28,
+      "httpStatus": 0,
+      "sslVerifyResult": 0,
+      "tlsAppConnectSeconds": 0,
+      "tlsConfirmed": false,
+      "elapsedMs": 5043,
+      "receiptSha256": "deb817371ac741fd5383c527fbb130d0b6119fd997cef3cf990d8572e72abc3b",
+      "sampleGetCalls": 0,
+      "keyUsed": false,
+      "validationRelaxed": false
+    },
+    "publicConsentWithdrawal": "NOT_RUN",
+    "rootReviewedLaunchAssembly": "NOT_IMPLEMENTED"
   },
   "limitations": [
     "Offline tests do not prove actual Auth/DB/product midnight success.",

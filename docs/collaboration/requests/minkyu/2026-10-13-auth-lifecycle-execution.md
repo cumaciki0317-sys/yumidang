@@ -19,3 +19,13 @@
 early 생성 행은 정확한 발급 영수증으로만 허용하고 임의 기존 행·가짜 빈 상태·원 토큰 갱신을 허용하지 않는다. 기존 A3의 익명 비활성·signup 비활성 설정은 그대로다. 익명까지 검증할 새 대상은 처음 생성할 설정부터 따로 검토해야 하며, 기존 서비스 설정을 바꾸지 않는다. 다른 인증 문맥은 별도 자기 격리 대상의 실제 Auth6 발급·binding 증거가 필요하다.
 
 실제 실행은 추가 격리 DB 3개 정상 중지 승인과 새 메모리/identity 확인 이후다. 시작 1GiB·실행 768MiB의 기준과 3초 감시를 유지한다. 원 Auth 변경은 보존하고 runner가 컨테이너를 임의 중지·재시작·삭제하지 않는다. 정리 중 연속 메모리 감시는 이번 경로가 보장하지 않으며 별도 검토된 root 정리 wrapper가 필요하다. 실제 sequence/physical/운영 복원 완료로 확대하지 않는다.
+
+## staged producer 통합 후 현재 상태
+
+producer를 같은 기존 runner에 구현했다. `ReviewedLifecycleProvisioning`을 고정 root 코드에서 구성하며 실제 포트는 `ports=None`이다. 초기 `stage_lifecycle_accounts`는 빈 Auth·profile·예산과 닫힌 제어·전체 행/권한/제약/스키마 및 실제 native119 이력을 확인한 뒤 만료용 계정을 한 번 생성·로그인한다. `resume_lifecycle_accounts`는 root가 고정한 stage 원 SHA를 확인해 새 프로세스에서 늦게 회수/ban용 계정과 baseline6을 발급한다. `bind_lifecycle_accounts`는 GET-only로 만료창을 확인하고 기존 lifecycle API가 요구하는 정확한 `auth-lifecycle-input-<scope>.json`을 만든다. 원 만료 토큰은 갱신하지 않으며 시간이 지나 창을 놓치면 실패한다.
+
+실제 GoTrue v2.196.0 [admin 생성](https://raw.githubusercontent.com/supabase/auth/v2.196.0/internal/api/admin.go)·[이메일 확인](https://raw.githubusercontent.com/supabase/auth/v2.196.0/internal/models/user.go) 계약을 확인해 metadata의 `email_verified:true`와 삭제 audit의 `user_email`을 맞췄다. 느린 검증 중 observer 실패는 POST 직전에 다시 확인하고, 비정상 응답·원 응답 검증/저장 실패는 UNKNOWN으로 보존한다. 실패 정리는 검토된 failure 원 SHA와 정확한 자기 UUID/email/metadata만 대상으로 하며 재전송이나 원 세션 복구를 하지 않는다. 이전 잘못된 후보와 검토 기록은 비공개로 보존한다.
+
+root 통합 Auth 오프라인 **98개 PASS**, 동의 core 모형 **18개 PASS**, 비공개 외부 정리 어댑터 모형 **32개 PASS**다. 세 결과는 실제 서버 실행 증거가 아니다. 기본 CLI 동의 경로는 JSON의 승인값과 무관하게 NOT_RUN이며, 공개 동의 철회 전 정상 ready-AI 대조군과 실제 original JWT/서비스 RPC/예산 보존 증거를 요구하는 core만 준비했다. 그 core의 typed root caller와 runtime 소스 캡처는 미구현이다. 모듈 의존성을 분석할 때 evaluate0인 사실은 runtime import까지 캡처됐다는 뜻이 아니다.
+
+비공개 root 정리 어댑터는 전용 자식 종료 확인 후 새 4개 컨테이너만 STOP30을 각각 한 번 시도하는 계약이다. STOP 후 같은 GET과 최종 inventory에서 전체 설정 hash·소유 ID·stopped/ExitCode0/OOMfalse를 확인하도록 보강했다. 실제 launch ABI는 None으로 닫혀 있고 producer 연결은 아직 하지 않았다. source HEAD/57개 hash도 최종 통합 버전에서 다시 고정해야 한다. 전체 **79%(22/28)**와 실회원 HOLD·키 전달 승인 대기·Storage39 원 바이트 미확보·운영 적용 미검증을 유지한다.

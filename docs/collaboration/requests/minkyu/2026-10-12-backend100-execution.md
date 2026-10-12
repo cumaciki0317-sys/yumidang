@@ -171,3 +171,17 @@ a3 생성기는 특정 과거 HEAD나 runner hash를 상수로 갖지 않고, �
 독립 검토에서 감사 행의 NULL 조건으로 비소유 행을 누락하는 결함을 발견했다. 소유 조건이 명확히 TRUE인 행만 제외하도록 수정하고 빈 필드·NULL·비소유 일곱 행과 정확한 소유 두 행 회귀를 추가했다. 이는 SQLite 모델의 SQL NULL 논리 증거이며 실제 PostgreSQL 연결 증거가 아니다. 최종 root **70개 PASS·실패 0·skip 0**, ResourceWarning 오류 모드와 cached Deno 검사도 통과했다. 수정 후 독립 읽기 검토에서 추가 확정 차단 결함은 발견하지 않았다.
 
 [실행 경로와 남은 발급 조건](2026-10-13-auth-lifecycle-execution.md): 실제 Auth·DB·자원 호출은 아직 0이다. 기본 JWT3600의 early 만료용 실제 발급→영속 준비→late 신규 회수·ban·baseline6 발급 producer가 필요하다. 기존 globally-empty/exact6 API는 보존하며 early 계정이 있는 상태를 빈 Auth로 위장해 재사용하지 않는다. A3의 익명 설정은 변경하지 않았고 전체 진행 수를 올리지 않는다.
+
+## 2026-10-13 외부 조건의 독립 재확인
+
+전체 **79%(22/28)**다. [Potens 공개 근거](2026-10-10-supplier-official-evidence-review.md)를 다시 읽었지만 실제 API 보관·학습·삭제·공동계정·모델·상한 조건의 새 적용 근거는 확보하지 못했다. 키·회원 원문·모델 API 호출은 0이며 공급사 활성화 보류를 유지한다.
+
+[서울 기본 시스템 TLS 후속 시험](2026-10-13-seoul-https-public-tls-proof.md): curlrc를 금지한 공개 호스트 HEAD 1회는 exit28/HTTP0/TLS app-connect0으로 5초 연결 한도에서 실패했다. 이 결과의 ssl_verify_result0을 TLS 성공으로 오인하지 않는다. sample GET은 0회이며 Python 실패와 별도 클라이언트 증거로 보존했다. 키·HTTP fallback·인증서 완화·재시도는 없다. 현재 환경의 시험 결과로만 판정하며 실제 행사 수집 완료로 올리지 않는다.
+
+## 2026-10-13 실제 발급 준비/재개와 동의 core 통합
+
+전체 **79%(22/28)**를 유지한다. staged producer를 기존 runner에 통합하고 root Auth 회귀 **98개 PASS·실패0·skip0**를 확인했다. 원 f66356b 함수·클래스·CLI와 기존70개 검사를 보존했다. 최초 발급→원 응답·영수증 고정→영속 재개→GET-only 만료창 확인을 구현했으며, profile/Auth/예산의 원 상태와 원 토큰·UUID·날짜를 유지한다. 실제 native119 확인은 첫 POST 전에 수행한다.
+
+독립 검토 및 공식 Auth source에서 metadata/삭제 audit/observer 실패 직전 POST/입력 파일 경로/비정상 응답 UNKNOWN의 다섯 문제를 확인해 corrected v2로 교정했다. 초기 후보92개 PASS를 실제 호환성 완료로 확대하지 않았고 실패 후보를 보존했다. 최종 v2 독립 읽기 검토에서 해당 문제의 해결을 확인했다.
+
+동의 core는 ready 정상 대조군 뒤 원 JWT 공개 철회1회와 consent-specific AI 거절을 검사하도록 구성했다. 전체 쓰기·정확한 readback 보강 후 private 모형18개 PASS이며 actual CLI는 항상 NOT_RUN이다. 비공개 외부 정리 어댑터 모형32개 PASS도 root에서 재확인했다. 전용 프로세스 종료·전용4개의 STOP 단일시도와 마지막 상태/설정검증 계약을 준비했으나 실제 launch ABI 연결은 닫혀 있다. 실제 Root caller·runtime captured source·추가3DB중지 승인·새 메모리 확인·실제Auth 생성/자연 만료/자정은 계속 남는다. [구체적인 연결 계약](2026-10-13-auth-lifecycle-execution.md)을 따른다.
