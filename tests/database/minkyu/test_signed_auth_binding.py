@@ -474,12 +474,201 @@ class BindingTests(unittest.TestCase):
         result=module.signed_negative_receipt(proof)
         self.assertEqual(result['fullLifecycleCoverage'],'NOT_RUN')
         for mutation in (lambda v:v.pop('expiredBearer'),lambda v:v.update(expiredBearer='PASS'),
-                lambda v:v.update(nativeExternalAttempts=1),lambda v:v.update(nativeExternalAttempts=False),
-                lambda v:v.update(nativeExternalAttempts=0.0),lambda v:v['cases'].append(copy.deepcopy(v['cases'][0])),
+                lambda v:v.update(nativeExternalAttempts=1),lambda v:v.update(nativeExternalAttempts=False),lambda v:v.update(nativeExternalAttempts=0.0),lambda v:v['cases'].append(copy.deepcopy(v['cases'][0])),
                 lambda v:v['cases'][1].update(case='missing'),lambda v:v['cases'][2].update(rpcCalls=1),
                 lambda v:v['cases'][2].update(providerCalls=True),lambda v:v['cases'][0].update(extra='raw-content')):
             value=copy.deepcopy(proof);mutation(value)
             with self.subTest(index=mutation),self.assertRaises(ValueError):module.signed_negative_receipt(value)
+
+    def lifecycle_value(self):
+        scope='1a'*16;accounts={}
+        for case in('expiredBearer','revokedSession','memberChanged'):
+            user,session=str(uuid.uuid4()),str(uuid.uuid4());email='synthetic-auth-lifecycle-'+scope+'-'+case.lower()+'@example.invalid'
+            claims={'sub':user,'session_id':session,'iss':self.value['jwtIssuer'],'role':'authenticated','is_anonymous':False,
+                    'email':email,'iat':1999999900,'exp':2000000000}
+            accounts[case]={'userId':user,'sessionId':session,'accessToken':jwt(claims),'expiresAt':2000000000,
+                'authEmail':email,'issuanceReceiptSha256':'8'*64}
+        accounts['anonymousBearer']=None
+        return {'version':1,'kind':module.LIFECYCLE_KIND,'scopeId':scope,'preparedRoot':str(self.root),
+            'signedBindingSha256':'9'*64,'sourcePins':{'fixed':'f'*64},'evidenceRoot':str(self.root/('auth-lifecycle-'+scope)),
+            'accounts':accounts,'foreign':None,'approvedByRoot':False,'dockerSlotReady':False}
+
+    def lifecycle_runner(self,value=None):
+        value=value or self.lifecycle_value()
+        with patch.object(module,'signed_prepared_target',return_value=self.target):
+            runner=module.SignedAuthLifecycleRunner(self.root,self.value,value)
+        runner.evidence.mkdir(mode=0o700,exist_ok=True)
+        return runner
+
+    def test_lifecycle_input_is_separate_and_never_authenticates_from_json(self):
+        value=self.lifecycle_value()
+        with patch.object(module,'signed_source_pins',return_value={'fixed':'f'*64}),patch.object(module.subprocess,'run',side_effect=AssertionError('resource')):
+            self.assertIs(module.validate_lifecycle_input(value,self.root,self.value,'9'*64),value)
+            for change in(lambda v:v['accounts']['revokedSession'].update(userId=self.value['accounts'][0]['userId']),
+                    lambda v:v['accounts']['memberChanged'].update(sessionId=self.value['accounts'][0]['sessionId']),
+                    lambda v:v['accounts'].update(expiredBearer=None),lambda v:v.update(extra=True),lambda v:v.update(approvedByRoot=1),
+                    lambda v:v.update(signedBindingSha256='0'*64),lambda v:v['accounts']['expiredBearer'].update(expiresAt=True)):
+                broken=copy.deepcopy(value);change(broken)
+                with self.subTest(change=change),self.assertRaises(ValueError):module.validate_lifecycle_input(broken,self.root,self.value,'9'*64)
+        Path(value['evidenceRoot']).mkdir(mode=0o700)
+        with patch.object(module,'signed_source_pins',return_value={'fixed':'f'*64}),self.assertRaisesRegex(ValueError,'LIFECYCLE_PREVIOUS_ATTEMPT'):
+            module.validate_lifecycle_input(value,self.root,self.value,'9'*64)
+
+    def test_lifecycle_issuance_requires_pinned_private_original_response(self):
+        value=self.lifecycle_value();case='revokedSession';account=value['accounts'][case]
+        directory=self.root/('auth-lifecycle-provision-'+value['scopeId']);directory.mkdir(mode=0o700)
+        response={'access_token':account['accessToken'],'token_type':'bearer','user':{'id':account['userId'],'is_anonymous':False}}
+        response_path=directory/(case+'-issued-response-private.json');self.write(response_path,json.dumps(response).encode())
+        response_sha=hashlib.sha256(response_path.read_bytes()).hexdigest()
+        receipt={'version':1,'kind':'GOTRUE_ORIGINAL_TOKEN_ISSUED','scopeId':value['scopeId'],'case':case,'userId':account['userId'],
+            'sessionId':account['sessionId'],'tokenSha256':hashlib.sha256(account['accessToken'].encode()).hexdigest(),
+            'origin':self.value['origin'],'authContainerId':self.value['containers']['auth']['id'],'authImage':self.value['containers']['auth']['image'],
+            'issuedAt':1999999900,'expiresAt':account['expiresAt'],'httpStatus':200,'responseSha256':response_sha,'wire':'POST /token?grant_type=password'}
+        path=directory/(case+'-issued.json');self.write(path,json.dumps(receipt).encode())
+        account['issuanceReceiptSha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+        reviewed=Mock(issuance_proofs={case:{'receiptSha256':account['issuanceReceiptSha256'],'responseSha256':response_sha}})
+        self.assertEqual(module.lifecycle_issuance(self.root,self.value,value,case,reviewed),receipt)
+        with patch.object(module.SignedRunner,'auth_user',side_effect=AssertionError('network')):
+            with response_path.open('ab')as stream:stream.write(b' ')
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_ISSUANCE_RESPONSE_CHANGED'):module.lifecycle_issuance(self.root,self.value,value,case,reviewed)
+        # 새로운 JSON 성공 플래그만 추가하거나 검토된 원 응답의 다른 토큰으로 바꾸어도 거절한다.
+        response_path.unlink();self.write(response_path,json.dumps({**response,'access_token':'replacement'}).encode())
+        reviewed.issuance_proofs[case]['responseSha256']=hashlib.sha256(response_path.read_bytes()).hexdigest()
+        with self.assertRaisesRegex(ValueError,'LIFECYCLE_ISSUANCE_ORIGINAL_RESPONSE'):module.lifecycle_issuance(self.root,self.value,value,case,reviewed)
+
+    def test_lifecycle_original_token_requires_actual_auth_and_database(self):
+        runner=self.lifecycle_runner();case='revokedSession';account=runner.lifecycle['accounts'][case]
+        user={'id':account['userId'],'role':'authenticated','is_anonymous':False,
+              'user_metadata':{'fixture_scope_id':runner.lifecycle['scopeId'],'fixture_case':case}}
+        with patch.object(runner,'http',return_value=(200,user))as http,patch.object(runner,'read_sql',return_value='t')as sql:
+            proof=runner.verify_token(case,account);self.assertTrue(proof['actualDatabaseSession'])
+            http.assert_called_once_with('GET','/user',account['accessToken']);self.assertIn(account['sessionId'],sql.call_args.args[0])
+        for status,body,db in((403,user,'t'),(200,{**user,'id':str(uuid.uuid4())},'t'),(200,{**user,'is_anonymous':True},'t'),
+                (200,{**user,'user_metadata':{}},'t'),(200,user,'f')):
+            with self.subTest(status=status,body=body),patch.object(runner,'http',return_value=(status,body)),patch.object(runner,'read_sql',return_value=db),self.assertRaises(ValueError):
+                runner.verify_token(case,account)
+
+    def test_lifecycle_http_no_general_mutation_paths(self):
+        runner=self.lifecycle_runner();token=runner.lifecycle['accounts']['revokedSession']['accessToken']
+        with patch.object(module.urllib.request,'build_opener',side_effect=AssertionError('network')):
+            for method,path,payload,credential in(('DELETE','/admin/users/'+runner.lifecycle['accounts']['memberChanged']['userId'],None,runner.binding['credentials']['service']),
+                    ('POST','/logout?scope=global',{},token),('POST','/logout?scope=local',{},runner.binding['accounts'][0]['accessToken']),
+                    ('PUT','/admin/users/'+str(uuid.uuid4()),{'ban_duration':'1h'},runner.binding['credentials']['service']),
+                    ('PUT','/admin/users/'+runner.lifecycle['accounts']['memberChanged']['userId'],{'role':'service_role'},runner.binding['credentials']['service'])):
+                with self.subTest(path=path),self.assertRaisesRegex(ValueError,'LIFECYCLE_HTTP_SCOPE'):runner.http(method,path,credential,payload)
+
+    def test_lifecycle_ambiguous_local_logout_has_durable_no_replay(self):
+        runner=self.lifecycle_runner()
+        with patch.object(runner,'live'),patch.object(runner,'verify_token'),patch.object(runner,'http',side_effect=ValueError('LIFECYCLE_HTTP_OUTCOME_UNKNOWN'))as http:
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_HTTP_OUTCOME_UNKNOWN'):runner.mutate_once('revokedSession')
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_MUTATION_REPLAY'):runner.mutate_once('revokedSession')
+            self.assertEqual(http.call_count,1)
+        outcome=json.loads((runner.evidence/'revokedsession-mutation-outcome.json').read_bytes())
+        self.assertEqual(outcome['status'],'UNKNOWN');self.assertFalse(outcome['retryAllowed'])
+        intent=(runner.evidence/'revokedsession-mutation-intent.json').read_bytes()
+        self.assertNotIn(runner.lifecycle['accounts']['revokedSession']['accessToken'].encode(),intent)
+        self.assertEqual((runner.evidence/'revokedsession-mutation-intent.json').stat().st_mode&0o777,0o600)
+
+    def test_lifecycle_natural_expiry_is_bounded_original_token(self):
+        account={'expiresAt':100.5,'accessToken':'unchanged-original'};clock=[100.0];waits=[]
+        def sleep(seconds):waits.append(seconds);clock[0]+=seconds
+        module.lifecycle_natural_expiry(account,now=lambda:clock[0],sleep=sleep)
+        self.assertEqual(account['accessToken'],'unchanged-original');self.assertEqual(sum(waits),.5)
+        for current in(101,0):
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_NATURAL_EXPIRY_WINDOW'):module.lifecycle_natural_expiry(account,now=lambda:current,sleep=sleep)
+
+    def test_lifecycle_reviewed_object_rereads_exact_private_files_before_calls(self):
+        value=self.lifecycle_value();value['approvedByRoot']=True;value['dockerSlotReady']=True
+        binding=copy.deepcopy(self.value);binding['approvedByRoot']=True;binding['dockerSlotReady']=True
+        binding_path=self.root/'signed-ai-binding-private.json';self.write(binding_path,json.dumps(binding).encode())
+        value['signedBindingSha256']=hashlib.sha256(binding_path.read_bytes()).hexdigest()
+        input_path=self.root/('auth-lifecycle-input-'+value['scopeId']+'.json');self.write(input_path,json.dumps(value).encode())
+        reviewed=module.ReviewedSignedAuthLifecycle('reviewed-fixture',self.root,binding_path,input_path,
+            value['signedBindingSha256'],hashlib.sha256(input_path.read_bytes()).hexdigest(),binding['sourcePins'],binding['containers'])
+        with patch.object(module,'provisioning_source_check',side_effect=AssertionError('source execution')):
+            with input_path.open('ab')as stream:stream.write(b' ')
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_REVIEWED_PRIVATE_BYTES_CHANGED'):
+                module.run_signed_auth_lifecycle(reviewed,binding,value,shutil.which('node'))
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_REVIEWED_CODE_REQUIRED'):
+                module.run_signed_auth_lifecycle({'approvedByRoot':True},binding,value,shutil.which('node'))
+
+    def test_lifecycle_missing_reviewed_issuance_refuses_before_resource(self):
+        value=self.lifecycle_value();value.update(approvedByRoot=True,dockerSlotReady=True)
+        binding=copy.deepcopy(self.value);binding.update(approvedByRoot=True,dockerSlotReady=True)
+        binding_path=self.root/'signed-ai-binding-private.json';self.write(binding_path,json.dumps(binding).encode())
+        value['signedBindingSha256']=hashlib.sha256(binding_path.read_bytes()).hexdigest()
+        path=self.root/('auth-lifecycle-input-'+value['scopeId']+'.json');self.write(path,json.dumps(value).encode())
+        reviewed=module.ReviewedSignedAuthLifecycle('reviewed-fixture',self.root,binding_path,path,value['signedBindingSha256'],hashlib.sha256(path.read_bytes()).hexdigest(),binding['sourcePins'],binding['containers'])
+        with patch.object(module,'signed_prepared_target',return_value=self.target),patch.object(module,'signed_source_pins',return_value=binding['sourcePins']),patch.object(module,'provisioning_source_check',side_effect=AssertionError('resource')):
+            with self.assertRaisesRegex(ValueError,'LIFECYCLE_REVIEWED_ACTUAL_ISSUANCE_REQUIRED'):module.run_signed_auth_lifecycle(reviewed,binding,value,shutil.which('node'))
+
+    def test_lifecycle_audit_nullable_fields_remain_in_preservation_bag(self):
+        # SQLite 모델로 같은 SQL NULL 논리를 검증한다. 실제 PostgreSQL 연결 증거는 아니다.
+        import sqlite3
+        from contextlib import closing
+        runner=self.lifecycle_runner();queries=[]
+        def read(query,timeout=5):
+            if 'from pg_tables' in query:return json.dumps([['auth','audit_log_entries']])
+            queries.append(query);return '{}'
+        with patch.object(runner,'read_sql',side_effect=read):runner.preservation_rows()
+        self.assertEqual(len(queries),1)
+        condition=queries[0].split(' r where ',1)[1].rsplit(' group by 1)',1)[0]
+        revoke=runner.lifecycle['accounts']['revokedSession']['userId']
+        ban=runner.lifecycle['accounts']['memberChanged']['userId']
+        unowned=[{}, {'action':None}, {'action':'logout'}, {'action':'user_modified'},
+                 {'action':'user_modified','traits':{}}, {'action':'logout','actor_id':'other'},
+                 {'action':'user_modified','traits':{'user_id':'other'}}]
+        owned=[{'action':'logout','actor_id':revoke},{'action':'user_modified','traits':{'user_id':ban}}]
+        payloads=[json.dumps(v,sort_keys=True)for v in unowned+owned]
+        with closing(sqlite3.connect(':memory:'))as db:
+            query='with samples(payload)as(values '+','.join('(?)'for _ in payloads)+')select payload from samples r where '+condition
+            retained=[row[0]for row in db.execute(query,payloads)]
+        self.assertEqual(retained,payloads[:len(unowned)])
+
+    def test_lifecycle_cascade_and_no_mutation_original_bags(self):
+        runner=self.lifecycle_runner();baseline={'authoritySha256':'a','constraintsSha256':'b'};rows={'auth.users':{'old':1},'private.ai_budget_reservations':{'unknown':1}}
+        state={'user':{'id':runner.lifecycle['accounts']['memberChanged']['userId'],'banned_until':None,'updated_at':1},'revokedSession':{'id':'owned'},
+               'revokedRefreshCount':1,'revokedAmrCount':1,'logoutAudit':0,'banAudit':0,'banActive':False}
+        dependent={'refresh_tokens':{'original-refresh':1},'mfa_amr_claims':{'original-amr':1}}
+        with patch.object(runner,'live'),patch.object(runner,'snapshot',return_value=baseline),patch.object(runner,'preservation_rows',return_value=rows),patch.object(runner,'mutation_state',return_value=state),patch.object(runner,'dependent_rows',return_value=dependent):
+            runner.verify_final(baseline,rows,state,dependent)
+            with patch.object(runner,'dependent_rows',return_value={'refresh_tokens':{},'mfa_amr_claims':{}}),self.assertRaisesRegex(ValueError,'LIFECYCLE_ORIGINAL_SESSION_CHANGED'):runner.verify_final(baseline,rows,state,dependent)
+        runner.mutations={'revokedSession'};after={**state,'revokedSession':None,'revokedRefreshCount':0,'revokedAmrCount':0,'logoutAudit':1};empty={'refresh_tokens':{},'mfa_amr_claims':{}}
+        with patch.object(runner,'live'),patch.object(runner,'snapshot',return_value=baseline),patch.object(runner,'preservation_rows',return_value=rows),patch.object(runner,'mutation_state',return_value=after),patch.object(runner,'dependent_rows',return_value=empty):
+            runner.verify_final(baseline,rows,state,dependent)
+            with patch.object(runner,'dependent_rows',return_value=dependent),self.assertRaisesRegex(ValueError,'LIFECYCLE_REVOCATION_CASCADE_UNPROVEN'):runner.verify_final(baseline,rows,state,dependent)
+            with patch.object(runner,'snapshot',return_value={**baseline,'constraintsSha256':'drift'}),self.assertRaisesRegex(ValueError,'LIFECYCLE_ORIGINAL_ROWS_AUTHORITY_CHANGED'):runner.verify_final(baseline,rows,state,dependent)
+            with patch.object(runner,'preservation_rows',return_value={**rows,'private.ai_budget_reservations':{}}),self.assertRaisesRegex(ValueError,'LIFECYCLE_ORIGINAL_ROWS_AUTHORITY_CHANGED'):runner.verify_final(baseline,rows,state,dependent)
+
+    def test_lifecycle_cli_is_never_mutation_authority(self):
+        with patch.object(module.sys,'argv',['runner','--signed-auth-lifecycle','--run']),patch.object(module,'signed_prepared_target',side_effect=AssertionError('resource')),patch.object(module,'run_signed_auth_lifecycle',side_effect=AssertionError('mutation')):
+            from contextlib import redirect_stdout
+            import io
+            output=io.StringIO()
+            with redirect_stdout(output):module.signed_auth_lifecycle_main()
+        value=json.loads(output.getvalue());self.assertEqual(value['status'],'NOT_RUN');self.assertEqual(value['actualCalls'],0)
+
+    def test_actual_lifecycle_factory_model_denies_only_real_auth_contract(self):
+        node=shutil.which('node')
+        if not node:self.skipTest('cached node absent')
+        a=self.lifecycle_value()['accounts']['expiredBearer'];factory=REPO/'tests/integration/jonghyun/isolated_ai_factory.ts'
+        fixture={'signedLocalAuth':True,'authLifecycleScenario':True,'codeRoot':str(REPO),'origin':self.value['origin'],
+            'productManifest':module.product_graph(),'anon':self.value['credentials']['anon'],'service':self.value['credentials']['service'],
+            'originalToken':a['accessToken'],'originalUserId':a['userId'],'aiLedgerId':'synthetic-lifecycle-never-reserved'}
+        for case in module.LIFECYCLE_CASES:
+            fixture['lifecycleCase']=case;path=self.root/(case+'-factory.json');self.write(path,json.dumps(fixture).encode())
+            user={'id':a['userId'],'role':'authenticated','is_anonymous':True}
+            preload="globalThis.fetch=async(input,init)=>{if(String(input)!==%s+'/auth/v1/user'||init.method!=='GET'||new Headers(init.headers).get('authorization')!==%s)throw Error('UNEXPECTED_TRANSPORT');return new Response(JSON.stringify(%s),{status:%s,headers:{'content-type':'application/json'}})};"%(json.dumps(fixture['origin']),json.dumps('Bearer '+a['accessToken']),json.dumps(user if case=='anonymousBearer'else{'code':'bad_jwt'}),'200'if case=='anonymousBearer'else'403')
+            uri='data:text/javascript;base64,'+base64.b64encode(preload.encode()).decode()
+            completed=subprocess.run([node,'--experimental-strip-types','--import',uri,str(factory),str(path),'--signed-auth-lifecycle-case'],capture_output=True,text=True,timeout=20)
+            self.assertEqual(completed.returncode,0,'offline lifecycle factory model failed: '+case)
+            proof=json.loads(completed.stdout);self.assertEqual(proof['case'],case);self.assertEqual(proof['rpcCalls'],0);self.assertEqual(proof['providerCalls'],0)
+        # 실제 만료·철회 대신 정상 Auth200을 주면 이 검사도 실패해야 한다.
+        fixture['lifecycleCase']='expiredBearer';path=self.root/'active-factory.json';self.write(path,json.dumps(fixture).encode())
+        preload="globalThis.fetch=async()=>new Response(JSON.stringify(%s),{status:200,headers:{'content-type':'application/json'}});"%json.dumps({**user,'is_anonymous':False})
+        uri='data:text/javascript;base64,'+base64.b64encode(preload.encode()).decode()
+        failed=subprocess.run([node,'--experimental-strip-types','--import',uri,str(factory),str(path),'--signed-auth-lifecycle-case'],capture_output=True,text=True,timeout=20)
+        self.assertNotEqual(failed.returncode,0)
 
     def test_real_factory_positive_original_bearer_model(self):
         node=shutil.which('node')

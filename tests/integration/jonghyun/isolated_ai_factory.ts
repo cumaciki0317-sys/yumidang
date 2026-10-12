@@ -19,7 +19,7 @@ try{
 }finally{closeSync(fixtureFd);}
 const fixture=JSON.parse(fixtureBytes!.toString('utf8')),origin=new URL(fixture.origin);
 assert.equal(origin.hostname,'127.0.0.1');assert.equal(origin.protocol,'http:');assert.equal(origin.origin,fixture.origin);
-assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--ai-midnight'].includes(mode));
+assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--ai-midnight'].includes(mode));
 if(mode==='--ai-midnight')assert.equal(fixture.signedLocalAuth,true);
 assert.ok(fixture.productManifest&&Object.keys(fixture.productManifest).length>0);
 for(const [relative,expected]of Object.entries(fixture.productManifest)){
@@ -33,7 +33,7 @@ if(fixture.signedLocalAuth===true)globalThis.fetch=async(input:any,init:RequestI
  assert.ok(url.pathname==='/auth/v1/user'||url.pathname.startsWith('/rest/v1/rpc/'));
  assert.ok(init.method!=='DELETE');return signedNative(input,{...init,redirect:'error'});
 };
-try { process.stdout.write(JSON.stringify(await (mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
+try { process.stdout.write(JSON.stringify(await (mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
 catch(error){const code=error instanceof Error&&/^AI_CHECK_[A-Z_]+$/.test(error.message)?error.message:'AI_ISOLATED_FACTORY_FAILED';process.stderr.write(code+'\n');process.exitCode=1;}
 finally{if(fixture.signedLocalAuth===true)globalThis.fetch=signedNative;}
 
@@ -64,6 +64,41 @@ async function signedAuthNegative(f:any){
  }
  return {status:'PASS',cases,nativeExternalAttempts,expiredBearer:'NOT_RUN',revokedSession:'NOT_RUN',anonymousBearer:'NOT_RUN',memberChanged:'NOT_RUN',differentOriginalContext:'NOT_RUN'};
 }
+
+/** 실제 원 토큰 거절 1회. 토큰 발급·logout·ban·수명주기 증명은 고정 Python 포트가 담당한다. */
+async function signedAuthLifecycleCase(f:any){
+ assert.equal(f.signedLocalAuth,true);assert.equal(f.authLifecycleScenario,true);
+ assert.ok(['expiredBearer','revokedSession','anonymousBearer','memberChanged','differentOriginalContext'].includes(f.lifecycleCase));
+ assert.equal(typeof f.originalToken,'string');assert.match(f.originalUserId,/^[a-f0-9-]{36}$/);
+ const {createAiChatRuntime}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/ai-chat/index.ts').href);
+ const native=globalThis.fetch;let authReads=0,rpcCalls=0,providerCalls=0,nativeExternalAttempts=0,authStatus:number|undefined;
+ const env:Record<string,string>={SUPABASE_URL:f.origin,SUPABASE_ANON_KEY:f.anon,SUPABASE_SERVICE_ROLE_KEY:f.service,
+  INTERNAL_WORKER_SECRET:'synthetic_ai_http_internal_secret_32_chars',ALLOWED_ORIGINS:'[]',MAX_REQUEST_BYTES:'65536',UPSTREAM_TIMEOUT_MS:'5000',
+  AI_RETENTION_DECISION_ID:'synthetic-fixture-only',AI_COST_EVIDENCE_ID:'synthetic-fixture-only',AI_PROCESSING_LEGAL_DECISION_ID:'synthetic-fixture-only',AI_MEMBER_TRANSMISSION_APPROVAL_ID:'synthetic-fixture-only',AI_BUDGET_LEDGER_ID:f.aiLedgerId,
+  POTENS_ACCOUNT_ORDER:'yumi,jonghyun,minkyu,sungho',POTENS_API_KEY_YUMI:'synthetic-ai-yumi',POTENS_API_KEY_JONGHYUN:'synthetic-ai-jonghyun',POTENS_API_KEY_MINKYU:'synthetic-ai-minkyu',POTENS_API_KEY_SUNGHO:'synthetic-ai-sungho',
+  POTENS_ACCOUNT_TOKEN_BUDGET:'3200000',POTENS_RESET_TIMEZONE:'Asia/Seoul',POTENS_MODEL:'claude-5-sonnet',POTENS_API_BASE_URL:'https://ai.potens.ai',POTENS_USAGE_INPUT_FIELD:'fixture_input',POTENS_USAGE_OUTPUT_FIELD:'fixture_output',
+  AI_CHAT_MAX_MESSAGES:'20',AI_CHAT_MAX_MESSAGE_CHARS:'500',AI_CHAT_MAX_TOTAL_CHARS:'4000',AI_CHAT_MAX_OUTPUT_TOKENS:'800',AI_CHAT_SEARCH_PAGE_SIZE:'10',AI_CHAT_MAX_SEARCH_PAGES:'3',AI_CHAT_RECHECK_MAX_PAGES:'3',AI_CHAT_MAX_RESULT_CARDS:'5',AI_CHAT_MATCH_BATCH_SIZE:'5',AI_CHAT_MAX_MATCH_CALLS:'3',AI_CHAT_MAX_MATCH_MAX_OUTPUT_TOKENS:'600',AI_CHAT_MATCH_MAX_OUTPUT_TOKENS:'600'};
+ const transport=async(input:any,init:RequestInit={})=>{
+  const url=new URL(input instanceof Request?input.url:String(input));
+  if(url.origin!==f.origin){providerCalls++;nativeExternalAttempts++;throw new Error('AI_CHECK_LIFECYCLE_EXTERNAL');}
+  if(url.pathname!=='/auth/v1/user'){rpcCalls++;throw new Error('AI_CHECK_LIFECYCLE_RPC');}
+  assert.equal(init.method,'GET');assert.equal(new Headers(init.headers).get('authorization'),'Bearer '+f.originalToken);
+  assert.equal(new Headers(init.headers).get('apikey'),f.anon);authReads++;
+  const response=await native(input,{...init,redirect:'error'});authStatus=response.status;
+  if(f.lifecycleCase==='anonymousBearer'){
+   const user=await response.clone().json();assert.equal(response.status,200);assert.equal(user.id,f.originalUserId);assert.equal(user.is_anonymous,true);
+  }else assert.ok([401,403].includes(response.status));
+  return response;
+ };
+ const handler=createAiChatRuntime((key:string)=>env[key],transport,{privacy:{decisionId:'synthetic-local-only',check:async()=>true},outputLimit:{decisionId:'synthetic-wire-only',apply:(body:any,limit:number)=>({...body,synthetic_max_output_tokens:limit})}});
+ const response=await handler(new Request(f.origin+'/functions/v1/ai-chat',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+f.originalToken},
+  body:JSON.stringify({clientRequestId:randomUUID(),messages:[{role:'user',content:'합성 인증 수명주기 검사'}],currentFilters:{target:'posts'}})}));
+ const result=await response.json();assert.equal(response.status,401);assert.equal(result.error.code,'AUTH_REQUIRED');
+ assert.equal(authReads,1);assert.equal(rpcCalls,0);assert.equal(providerCalls,0);assert.equal(nativeExternalAttempts,0);
+ return {status:'PASS',case:f.lifecycleCase,httpStatus:401,authHttpStatus:authStatus,actualAuthReads:1,rpcCalls:0,providerCalls:0,nativeExternalAttempts:0,
+  originalTokenSha256:createHash('sha256').update(f.originalToken).digest('hex'),actualNaver:'NOT_RUN',externalProvider:'NOT_RUN'};
+}
+
 async function aiMidnightHttpCase(f:any){
  const check=(value:unknown,code:string)=>{if(!value)throw new Error('AI_CHECK_'+code);};
  check(f.scenario==='ai-chat'&&f.aiMidnightScenario===true&&f.accounts.length===3,'MIDNIGHT_SCOPE');

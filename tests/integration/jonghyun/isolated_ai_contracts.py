@@ -1401,8 +1401,391 @@ def provision_signed_accounts(prepared_root, reviewed):
             observer.join(timeout=3)
             if observer.is_alive():raise ValueError('PROVISION_MONITOR_DID_NOT_CLOSE')
 
+LIFECYCLE_KIND='SIGNED_LOCAL_AUTH_LIFECYCLE'
+LIFECYCLE_CASES=('expiredBearer','revokedSession','anonymousBearer','memberChanged','differentOriginalContext')
+
+
+class ReviewedSignedAuthLifecycle:
+    """검토된 고정 코드 조립만 받는다. 입력 JSON은 이 실행 객체를 만들거나 포트를 선택하지 않는다."""
+    def __init__(self, decision_id, prepared_root, binding_path, input_path, binding_sha256, input_sha256, source_pins, containers, issuance_proofs=None, foreign_receipt_sha256=None):
+        self.decision_id=decision_id;self.prepared_root=Path(prepared_root)
+        self.binding_path=Path(binding_path);self.input_path=Path(input_path)
+        self.binding_sha256=binding_sha256;self.input_sha256=input_sha256
+        self.source_pins=source_pins;self.containers=containers
+        self.issuance_proofs=issuance_proofs
+        self.foreign_receipt_sha256=foreign_receipt_sha256
+
+
+def validate_lifecycle_input(value, root, binding, binding_sha):
+    """발급 원문은 private 입력에만 둔다. JSON 정보는 실제 Auth 읽기를 대신하지 않는다."""
+    fields={'version','kind','scopeId','preparedRoot','signedBindingSha256','sourcePins','evidenceRoot',
+            'accounts','foreign','approvedByRoot','dockerSlotReady'}
+    if not isinstance(value,dict)or set(value)!=fields or type(value['version'])is not int or value['version']!=1 or value['kind']!=LIFECYCLE_KIND:
+        raise ValueError('LIFECYCLE_INPUT_FIELDS')
+    scope=value['scopeId']
+    if not isinstance(scope,str)or not re.fullmatch(r'[a-f0-9]{32}',scope):raise ValueError('LIFECYCLE_SCOPE')
+    if value['preparedRoot']!=str(root)or value['signedBindingSha256']!=binding_sha or value['sourcePins']!=signed_source_pins():
+        raise ValueError('LIFECYCLE_SOURCE_BINDING')
+    if any(type(value[key])is not bool for key in ('approvedByRoot','dockerSlotReady')):raise ValueError('LIFECYCLE_APPROVAL_TYPE')
+    if value['evidenceRoot']!=str(root/('auth-lifecycle-'+scope)):raise ValueError('LIFECYCLE_EVIDENCE_SCOPE')
+    evidence=Path(value['evidenceRoot'])
+    if evidence.resolve()!=evidence or evidence.exists()or evidence.is_symlink():raise ValueError('LIFECYCLE_PREVIOUS_ATTEMPT')
+    accounts=value['accounts']
+    if not isinstance(accounts,dict)or set(accounts)!=set(LIFECYCLE_CASES)-{'differentOriginalContext'}:
+        raise ValueError('LIFECYCLE_ACCOUNT_SET')
+    users={a['userId']for a in binding['accounts']};sessions={a['sessionId']for a in binding['accounts']}
+    for case,a in accounts.items():
+        if a is None and case=='anonymousBearer':continue
+        if not isinstance(a,dict)or set(a)!={'userId','sessionId','accessToken','expiresAt','authEmail','issuanceReceiptSha256'}:
+            raise ValueError('LIFECYCLE_ACCOUNT_FIELDS')
+        for key in ('userId','sessionId'):
+            if not isinstance(a[key],str)or str(uuid.UUID(a[key]))!=a[key]:raise ValueError('LIFECYCLE_ACCOUNT_ID')
+        if a['userId']in users or a['sessionId']in sessions:raise ValueError('LIFECYCLE_ORIGINAL_ACCOUNT_SCOPE')
+        users.add(a['userId']);sessions.add(a['sessionId'])
+        claims=signed_claims(a['accessToken'])
+        anonymous=case=='anonymousBearer'
+        email=''if anonymous else'synthetic-auth-lifecycle-'+scope+'-'+case.lower()+'@example.invalid'
+        if (claims.get('sub')!=a['userId']or claims.get('session_id')!=a['sessionId']or claims.get('iss')!=binding['jwtIssuer']
+                or claims.get('role')!='authenticated' or claims.get('is_anonymous')is not anonymous or claims.get('email')!=email
+                or a['authEmail']!=email or type(a['expiresAt'])is not int or claims.get('exp')!=a['expiresAt']
+                or type(claims.get('exp'))is not int or type(claims.get('iat'))is not int or claims['iat']>=claims['exp']):
+            raise ValueError('LIFECYCLE_ORIGINAL_TOKEN_METADATA')
+        if not isinstance(a['issuanceReceiptSha256'],str)or not re.fullmatch(r'[a-f0-9]{64}',a['issuanceReceiptSha256']):
+            raise ValueError('LIFECYCLE_ISSUANCE_HASH')
+    foreign=value['foreign']
+    if foreign is not None:
+        if not isinstance(foreign,dict)or set(foreign)!={'preparedRoot','bindingPath','bindingSha256','userId'}:
+            raise ValueError('LIFECYCLE_FOREIGN_FIELDS')
+        if not isinstance(foreign['preparedRoot'],str)or not isinstance(foreign['bindingPath'],str):raise ValueError('LIFECYCLE_FOREIGN_PATH')
+        foreign_root=Path(foreign['preparedRoot']);foreign_path=Path(foreign['bindingPath'])
+        if foreign_root==root or foreign_root.resolve()!=foreign_root or foreign_path.parent!=foreign_root or foreign_path.resolve()!=foreign_path:
+            raise ValueError('LIFECYCLE_FOREIGN_PATH')
+        if foreign_path.name!='signed-ai-binding-private.json' or not re.fullmatch(r'[a-f0-9]{64}',foreign['bindingSha256']):
+            raise ValueError('LIFECYCLE_FOREIGN_BINDING')
+        if not isinstance(foreign['userId'],str)or str(uuid.UUID(foreign['userId']))!=foreign['userId']or foreign['userId']in users:
+            raise ValueError('LIFECYCLE_FOREIGN_USER')
+    return value
+
+
+def lifecycle_issuance(root, binding, value, case, reviewed):
+    a=value['accounts'][case]
+    path=root/('auth-lifecycle-provision-'+value['scopeId'])/(case+'-issued.json')
+    raw=signed_private_read(path)
+    if hashlib.sha256(raw).hexdigest()!=a['issuanceReceiptSha256']:raise ValueError('LIFECYCLE_ISSUANCE_CHANGED')
+    actual=signed_exact_json(raw)
+    approved=reviewed.issuance_proofs[case]
+    if a['issuanceReceiptSha256']!=approved['receiptSha256']:raise ValueError('LIFECYCLE_ISSUANCE_NOT_REVIEWED')
+    response_raw=signed_private_read(path.with_name(case+'-issued-response-private.json'))
+    if hashlib.sha256(response_raw).hexdigest()!=approved['responseSha256']:raise ValueError('LIFECYCLE_ISSUANCE_RESPONSE_CHANGED')
+    response=signed_exact_json(response_raw)
+    if (not isinstance(response,dict)or response.get('access_token')!=a['accessToken']
+            or response.get('token_type')!='bearer' or not isinstance(response.get('user'),dict)
+            or response['user'].get('id')!=a['userId']or response['user'].get('is_anonymous')is not(case=='anonymousBearer')):
+        raise ValueError('LIFECYCLE_ISSUANCE_ORIGINAL_RESPONSE')
+    expected={'version':1,'kind':'GOTRUE_ORIGINAL_TOKEN_ISSUED','scopeId':value['scopeId'],'case':case,
+              'userId':a['userId'],'sessionId':a['sessionId'],'tokenSha256':hashlib.sha256(a['accessToken'].encode()).hexdigest(),
+              'origin':binding['origin'],'authContainerId':binding['containers']['auth']['id'],
+              'authImage':binding['containers']['auth']['image'],'issuedAt':signed_claims(a['accessToken'])['iat'],
+              'expiresAt':a['expiresAt'],'httpStatus':200,'responseSha256':approved['responseSha256'],
+              'wire':'POST /signup'if case=='anonymousBearer'else'POST /token?grant_type=password'}
+    if actual!=expected or type(actual['version'])is not int or type(actual['httpStatus'])is not int:
+        raise ValueError('LIFECYCLE_ISSUANCE_PROVENANCE')
+    return expected
+
+
+class SignedAuthLifecycleRunner(SignedRunner):
+    """별도 preprovisioned 원 토큰만 사용한다. 생성·설정 변경·삭제·세션 복구는 하지 않는다."""
+    def __init__(self, root, binding, value=None):
+        super().__init__(root,binding);self.lifecycle=value;self.mutations=set();self.children=[]
+        if value is not None:self.evidence=Path(value['evidenceRoot'])
+    read_sql=SignedMidnightRunner.read_sql
+    original_rows=SignedMidnightRunner.original_rows
+    closed_controls=FixedSignedProvisioningPorts.closed_controls
+    memory_kib=FixedSignedProvisioningPorts.memory_kib
+
+    def snapshot(self):
+        value=FixedSignedProvisioningPorts.snapshot(self)
+        constraints=self.read_sql("select coalesce(jsonb_agg(to_jsonb(c)order by oid),'[]'::jsonb)from pg_constraint c;",timeout=5)
+        value['constraintsSha256']=hashlib.sha256(constraints.encode()).hexdigest()
+        return value
+
+    def live(self):
+        if self.binding['sourcePins']!=signed_source_pins():raise ValueError('LIFECYCLE_SOURCE_CHANGED')
+        if hasattr(self,'reviewed_head'):
+            current=subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],timeout=5,text=True).strip()
+            if current!=self.reviewed_head:raise ValueError('LIFECYCLE_SOURCE_HEAD_CHANGED')
+        self.signed_identity()
+        controls=self.closed_controls()
+        if set(controls)!=set(PROVISION_CLOSED_CONTROLS)|{'cronLaunchActiveJobs'}or controls['cronLaunchActiveJobs']!='off'or any(controls[k]is not False for k in PROVISION_CLOSED_CONTROLS):
+            raise ValueError('LIFECYCLE_CONTROLS_NOT_CLOSED')
+
+    def http(self, method, path, token, payload=None):
+        known={a['accessToken']for a in self.binding['accounts']}
+        if self.lifecycle is not None:known.update(a['accessToken']for a in self.lifecycle['accounts'].values()if a is not None)
+        credential=self.binding['credentials']['anon']
+        if method=='GET'and path=='/user':
+            if token not in known or payload is not None:raise ValueError('LIFECYCLE_HTTP_SCOPE')
+        elif method=='POST'and path=='/logout?scope=local'and self.lifecycle is not None:
+            if token!=self.lifecycle['accounts']['revokedSession']['accessToken']or payload!={}:raise ValueError('LIFECYCLE_HTTP_SCOPE')
+        elif method=='PUT'and self.lifecycle is not None and path=='/admin/users/'+self.lifecycle['accounts']['memberChanged']['userId']:
+            credential=self.binding['credentials']['service']
+            if token!=credential or payload!={'ban_duration':'1h'}:raise ValueError('LIFECYCLE_HTTP_SCOPE')
+        else:raise ValueError('LIFECYCLE_HTTP_SCOPE')
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self,*args):return None
+        request=urllib.request.Request(self.binding['origin']+'/auth/v1'+path,data=None if payload is None else json.dumps(payload).encode(),method=method,
+            headers={'authorization':'Bearer '+token,'apikey':credential,'content-type':'application/json'})
+        try:
+            opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
+            try:
+                with opener.open(request,timeout=5)as response:status=response.status;raw=response.read(65537)
+            except urllib.error.HTTPError as error:status=error.code;raw=error.read(65537)
+            if len(raw)>65536:raise ValueError()
+            body=signed_exact_json(raw)if raw else{}
+            if not isinstance(body,dict):raise ValueError()
+            return status,body
+        except Exception:raise ValueError('LIFECYCLE_HTTP_OUTCOME_UNKNOWN')from None
+
+    def verify_token(self, case, account, scoped=True):
+        status,user=self.http('GET','/user',account['accessToken'])
+        anonymous=case=='anonymousBearer'
+        if status!=200 or user.get('id')!=account['userId']or user.get('role')!='authenticated' or user.get('is_anonymous')is not anonymous:
+            raise ValueError('LIFECYCLE_ACTUAL_ORIGINAL_AUTH')
+        predicate=''
+        if scoped:
+            meta={'fixture_scope_id':self.lifecycle['scopeId'],'fixture_case':case}
+            if any(user.get('user_metadata',{}).get(k)!=v for k,v in meta.items()):raise ValueError('LIFECYCLE_USER_SCOPE')
+            predicate=' and u.raw_user_meta_data @> '+quote(json.dumps(meta))+'::jsonb'
+        if not anonymous:
+            predicate+=' and exists(select 1 from public.profiles p join private.member_episodes e on e.profile_id=p.id where p.id=u.id and e.ended_at is null and e.identity_id is null)'
+        email=('coalesce(u.email,\'\')'if anonymous else'u.email')+'='+quote(account['authEmail'])
+        query='select exists(select 1 from auth.users u join auth.sessions s on s.user_id=u.id where u.id='+quote(account['userId'])+'::uuid and s.id='+quote(account['sessionId'])+'::uuid and '+email+' and u.role='+quote('authenticated')+' and u.is_anonymous='+('true'if anonymous else'false')+predicate+');'
+        # 익명 사용자의 DB email은 빈 문자열 또는 NULL이다.
+        if self.read_sql(query,timeout=3)!='t':raise ValueError('LIFECYCLE_ACTUAL_DATABASE_SESSION')
+        return {'userId':account['userId'],'sessionId':account['sessionId'],'tokenSha256':hashlib.sha256(account['accessToken'].encode()).hexdigest(),'authHttpStatus':200,'actualDatabaseSession':True}
+
+    def preservation_rows(self):
+        """각 허용 행만 제외하고 모든 기존 행과 중복 수를 비교한다. 새 감사 행은 별도 1회 증명한다."""
+        v=self.lifecycle;revoke=v['accounts']['revokedSession'];ban=v['accounts']['memberChanged']
+        conditions={'auth.users':'r.id<>'+quote(ban['userId'])+'::uuid',
+            'auth.sessions':'r.id<>'+quote(revoke['sessionId'])+'::uuid',
+            'auth.refresh_tokens':'r.session_id is distinct from '+quote(revoke['sessionId'])+'::uuid',
+            'auth.mfa_amr_claims':'r.session_id is distinct from '+quote(revoke['sessionId'])+'::uuid',
+            'auth.audit_log_entries':"not (((r.payload->>'action'='logout'and r.payload->>'actor_id'="+quote(revoke['userId'])+")or(r.payload->>'action'='user_modified'and r.payload->'traits'->>'user_id'="+quote(ban['userId'])+')) is true)'}
+        tables=signed_exact_json(self.read_sql("select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage');",timeout=5));result={}
+        for schema,table in tables:
+            identifier=lambda name:'"'+name.replace('"','""')+'"'
+            key=schema+'.'+table
+            query="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r where '+conditions.get(key,'true')+' group by 1)s;'
+            result[key]=signed_exact_json(self.read_sql(query,timeout=5))
+        return result
+
+    def mutation_state(self):
+        v=self.lifecycle;revoke=v['accounts']['revokedSession'];ban=v['accounts']['memberChanged']
+        return signed_exact_json(self.read_sql("select jsonb_build_object('user',(select to_jsonb(u)from auth.users u where id="+quote(ban['userId'])+"::uuid),'revokedSession',(select to_jsonb(s)from auth.sessions s where id="+quote(revoke['sessionId'])+"::uuid),'revokedRefreshCount',(select count(*)from auth.refresh_tokens where session_id="+quote(revoke['sessionId'])+"::uuid),'revokedAmrCount',(select count(*)from auth.mfa_amr_claims where session_id="+quote(revoke['sessionId'])+"::uuid),'logoutAudit',(select count(*)from auth.audit_log_entries r where r.payload->>'action'='logout'and r.payload->>'actor_id'="+quote(revoke['userId'])+"),'banAudit',(select count(*)from auth.audit_log_entries r where r.payload->>'action'='user_modified'and r.payload->'traits'->>'user_id'="+quote(ban['userId'])+"),'banActive',(select coalesce(banned_until>clock_timestamp(),false)from auth.users where id="+quote(ban['userId'])+'::uuid));',timeout=3))
+
+    def mutate_once(self, case):
+        if case not in('revokedSession','memberChanged')or case in self.mutations:raise ValueError('LIFECYCLE_MUTATION_REPLAY')
+        self.live();a=self.lifecycle['accounts'][case];self.verify_token(case,a)
+        self.save_signed(case.lower()+'-mutation-intent.json',{'case':case,'scopeId':self.lifecycle['scopeId'],'userId':a['userId'],'sessionId':a['sessionId'],'tokenSha256':hashlib.sha256(a['accessToken'].encode()).hexdigest(),'singleAttempt':True,'retryAllowed':False})
+        self.mutations.add(case)
+        try:
+            status,body=self.http('POST','/logout?scope=local',a['accessToken'],{})if case=='revokedSession'else self.http('PUT','/admin/users/'+a['userId'],self.binding['credentials']['service'],{'ban_duration':'1h'})
+            if status!=(204 if case=='revokedSession'else 200)or(case=='memberChanged'and body.get('id')!=a['userId']):raise ValueError('LIFECYCLE_MUTATION_RESPONSE')
+        except BaseException:
+            self.save_signed(case.lower()+'-mutation-outcome.json',{'status':'UNKNOWN','retryAllowed':False,'readOnlyResolutionRequired':True})
+            raise
+        self.save_signed(case.lower()+'-mutation-outcome.json',{'status':'HTTP_OBSERVED','httpStatus':status,'retryAllowed':False})
+
+    def dependent_rows(self):
+        session=self.lifecycle['accounts']['revokedSession']['sessionId'];result={}
+        for table in('refresh_tokens','mfa_amr_claims'):
+            result[table]=signed_exact_json(self.read_sql("select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from auth."+table+' r where session_id='+quote(session)+'::uuid group by 1)s;',timeout=3))
+        return result
+
+    def verify_final(self, baseline, rows, state, dependent, foreign=None, foreign_baseline=None):
+        self.live();current=self.snapshot()
+        if any(current[key]!=baseline[key]for key in('authoritySha256','constraintsSha256'))or self.preservation_rows()!=rows:
+            raise ValueError('LIFECYCLE_ORIGINAL_ROWS_AUTHORITY_CHANGED')
+        actual=self.mutation_state();before=dict(state['user']);after=dict(actual['user'])if actual['user']is not None else{}
+        for column in('banned_until','updated_at'):before.pop(column,None);after.pop(column,None)
+        if before!=after or actual['logoutAudit']not in(0,1)or actual['banAudit']not in(0,1):raise ValueError('LIFECYCLE_MUTATION_OVERFLOW')
+        current_dependent=self.dependent_rows()
+        if 'revokedSession'not in self.mutations:
+            if actual['revokedSession']!=state['revokedSession']or current_dependent!=dependent:raise ValueError('LIFECYCLE_ORIGINAL_SESSION_CHANGED')
+        elif(actual['revokedSession']is not None or actual['revokedRefreshCount']!=0 or actual['revokedAmrCount']!=0 or any(current_dependent.values())):
+            raise ValueError('LIFECYCLE_REVOCATION_CASCADE_UNPROVEN')
+        if 'memberChanged'not in self.mutations and actual['user']!=state['user']:raise ValueError('LIFECYCLE_ORIGINAL_USER_CHANGED')
+        if foreign is not None and foreign.snapshot()!=foreign_baseline:raise ValueError('LIFECYCLE_FOREIGN_ROWS_CHANGED')
+
+    def invoke_case(self, case, account, node):
+        self.live();key=uuid.uuid4().hex
+        fixture={'codeRoot':str(REPO),'origin':self.binding['origin'],'anon':self.binding['credentials']['anon'],'service':self.binding['credentials']['service'],
+            'signedLocalAuth':True,'authLifecycleScenario':True,'lifecycleCase':case,'originalUserId':account['userId'],'originalToken':account['accessToken'],
+            'productManifest':product_graph(),'aiLedgerId':'synthetic-lifecycle-never-reserved'}
+        self.save_signed('factory-'+key+'.json',fixture)
+        argv=[node,'--experimental-strip-types',str(Path(__file__).with_name('isolated_ai_factory.ts')),str(self.evidence/('factory-'+key+'.json')),'--signed-auth-lifecycle-case']
+        self.save_signed('factory-'+key+'-intent.json',{'case':case,'singleAttempt':True,'argvSha256':hashlib.sha256(json.dumps(argv).encode()).hexdigest()})
+        child=None
+        try:
+            child=subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE);self.children.append(child)
+            raw,error=child.communicate(timeout=30)
+            self.save_signed('factory-'+key+'-outcome.json',{'exitCode':child.returncode,'stdoutSha256':hashlib.sha256(raw).hexdigest(),'stderrSha256':hashlib.sha256(error).hexdigest()})
+            if child.returncode or len(raw)>65536:raise ValueError('LIFECYCLE_FACTORY_FAILED')
+            result=signed_exact_json(raw)
+            if result!={'status':'PASS','case':case,'httpStatus':401,'authHttpStatus':200 if case=='anonymousBearer'else result.get('authHttpStatus'),'actualAuthReads':1,'rpcCalls':0,'providerCalls':0,'nativeExternalAttempts':0,
+                'originalTokenSha256':hashlib.sha256(account['accessToken'].encode()).hexdigest(),'actualNaver':'NOT_RUN','externalProvider':'NOT_RUN'}or result.get('authHttpStatus')not in([200]if case=='anonymousBearer'else[401,403]):
+                raise ValueError('LIFECYCLE_FACTORY_PROOF')
+            if any(type(result[k])is not int for k in('httpStatus','authHttpStatus','actualAuthReads','rpcCalls','providerCalls','nativeExternalAttempts')):raise ValueError('LIFECYCLE_FACTORY_PROOF')
+            return result
+        finally:
+            if child is not None and child.poll()is None:
+                child.terminate()
+                try:child.communicate(timeout=5)
+                except subprocess.TimeoutExpired:child.kill();child.communicate(timeout=5)
+            self.save_signed('factory-'+key+'-closed.json',{'exited':child is None or child.poll()is not None,'exactPopenOnly':True,'started':child is not None})
+
+
+def lifecycle_natural_expiry(account, now=time.time, sleep=time.sleep):
+    # 인증 성공 후 같은 원 서명 토큰의 자연 시간만 기다린다.
+    start=time.monotonic();remaining=account['expiresAt']-now()
+    if not 0<remaining<=60:raise ValueError('LIFECYCLE_NATURAL_EXPIRY_WINDOW')
+    while now()<account['expiresAt']:
+        if time.monotonic()-start>=60:raise ValueError('LIFECYCLE_NATURAL_EXPIRY_TIMEOUT')
+        sleep(min(.25,account['expiresAt']-now()))
+    if time.monotonic()-start>60:raise ValueError('LIFECYCLE_NATURAL_EXPIRY_TIMEOUT')
+
+
+def signed_auth_lifecycle_main():
+    parser=argparse.ArgumentParser();parser.add_argument('--signed-auth-lifecycle',action='store_true',required=True)
+    parser.add_argument('--signed-auth-binding',type=Path);parser.add_argument('--lifecycle-input',type=Path);parser.add_argument('--prepared-root',type=Path)
+    parser.add_argument('--node',default=shutil.which('node'));parser.add_argument('--run',action='store_true');options=parser.parse_args()
+    if not options.run or not options.signed_auth_binding or not options.lifecycle_input or not options.prepared_root:
+        print(json.dumps({'status':'NOT_RUN','scope':LIFECYCLE_KIND,'actualCalls':0,'privateInputRequired':True}));return
+    root=options.prepared_root;target=signed_prepared_target(root)
+    raw=signed_private_read(options.signed_auth_binding);binding=validate_signed_binding(signed_exact_json(raw),root,target)
+    input_raw=signed_private_read(options.lifecycle_input)
+    value=validate_lifecycle_input(signed_exact_json(input_raw),root,binding,hashlib.sha256(raw).hexdigest())
+    # --run이나 JSON flags는 고정 검토 코드 객체/실제 슬롯의 대체가 아니다.
+    print(json.dumps({'status':'NOT_RUN','scope':LIFECYCLE_KIND,'actualCalls':0,'privateInputsValidated':True,
+        'bindingSha256':hashlib.sha256(raw).hexdigest(),'inputSha256':hashlib.sha256(input_raw).hexdigest(),
+        'executionAllowed':False,'reason':'ROOT_REVIEWED_CODE_OBJECT_REQUIRED'}))
+
+
+def run_signed_auth_lifecycle(reviewed, binding, value, node):
+    if (type(reviewed)is not ReviewedSignedAuthLifecycle or not isinstance(reviewed.decision_id,str)
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',reviewed.decision_id)):
+        raise ValueError('LIFECYCLE_REVIEWED_CODE_REQUIRED')
+    root=reviewed.prepared_root
+    if reviewed.binding_path!=root/'signed-ai-binding-private.json' or reviewed.input_path!=root/('auth-lifecycle-input-'+value['scopeId']+'.json'):
+        raise ValueError('LIFECYCLE_REVIEWED_PRIVATE_PATH')
+    binding_bytes=signed_private_read(reviewed.binding_path);input_bytes=signed_private_read(reviewed.input_path)
+    if (hashlib.sha256(binding_bytes).hexdigest()!=reviewed.binding_sha256 or hashlib.sha256(input_bytes).hexdigest()!=reviewed.input_sha256
+            or signed_exact_json(binding_bytes)!=binding or signed_exact_json(input_bytes)!=value):
+        raise ValueError('LIFECYCLE_REVIEWED_PRIVATE_BYTES_CHANGED')
+    if reviewed.source_pins!=binding['sourcePins']or reviewed.containers!=binding['containers']:
+        raise ValueError('LIFECYCLE_REVIEWED_BINDING')
+    # CLI에서 안정적으로 읽은 원 바이트 SHA와 검토 객체를 묶는다. 실제 실행 전 HEAD 바이트도 검증한다.
+    for digest in(reviewed.binding_sha256,reviewed.input_sha256):
+        if not isinstance(digest,str)or not re.fullmatch(r'[a-f0-9]{64}',digest):raise ValueError('LIFECYCLE_REVIEWED_BINDING')
+    if value['signedBindingSha256']!=reviewed.binding_sha256:raise ValueError('LIFECYCLE_REVIEWED_BINDING')
+    validate_lifecycle_input(value,root,binding,reviewed.binding_sha256)
+    validate_signed_binding(binding,root,signed_prepared_target(root))
+    if not all(binding[k]and value[k]for k in('approvedByRoot','dockerSlotReady')):raise ValueError('LIFECYCLE_APPROVAL_SLOT_REQUIRED')
+    required={case for case,a in value['accounts'].items()if a is not None}
+    if not isinstance(reviewed.issuance_proofs,dict)or set(reviewed.issuance_proofs)!=required:
+        raise ValueError('LIFECYCLE_REVIEWED_ACTUAL_ISSUANCE_REQUIRED')
+    for proof in reviewed.issuance_proofs.values():
+        if (not isinstance(proof,dict)or set(proof)!={'receiptSha256','responseSha256'}
+                or any(not isinstance(d,str)or not re.fullmatch(r'[a-f0-9]{64}',d)for d in proof.values())):
+            raise ValueError('LIFECYCLE_REVIEWED_ACTUAL_ISSUANCE_REQUIRED')
+    if value['foreign']is not None and(not isinstance(reviewed.foreign_receipt_sha256,str)or not re.fullmatch(r'[a-f0-9]{64}',reviewed.foreign_receipt_sha256)):
+        raise ValueError('LIFECYCLE_REVIEWED_FOREIGN_ISSUANCE_REQUIRED')
+    source_head=provisioning_source_check(reviewed.source_pins)
+    if not node or not Path(node).is_file():raise ValueError('NODE_REQUIRED')
+    r=SignedAuthLifecycleRunner(root,binding,value);r.evidence.mkdir(mode=0o700,exist_ok=False)
+    r.reviewed_head=source_head
+    proofs={k:{'status':'NOT_RUN'}for k in LIFECYCLE_CASES};foreign=None;errors=[];done=threading.Event()
+    def interrupted(*args):raise RuntimeError('LIFECYCLE_OWN_PROCESS_TERMINATED')
+    signal.signal(signal.SIGTERM,interrupted)
+    def memory(minimum):
+        began=time.monotonic();kib=r.memory_kib()
+        if type(kib)is not int or kib<minimum or time.monotonic()-began>3:raise ValueError('LIFECYCLE_MEMORY_GUARD')
+        return kib
+    def monitor():
+        while not done.is_set():
+            began=time.monotonic()
+            try:memory(786432)
+            except BaseException:
+                errors.append('LIFECYCLE_MEMORY_MONITOR_FAILED');os.kill(os.getpid(),signal.SIGTERM);return
+            done.wait(max(0,began+3-time.monotonic()))
+    observer=threading.Thread(target=monitor,daemon=True);baseline=None;state=None
+    try:
+        memory(1048576);observer.start();r.live();signed_verify_history(r)
+        for account in binding['accounts']:r.verify_token('baseline',account,scoped=False)
+        for case,account in value['accounts'].items():
+            if account is not None:
+                lifecycle_issuance(root,binding,value,case,reviewed);r.verify_token(case,account)
+                if case!='expiredBearer'and account['expiresAt']<time.time()+180:raise ValueError('LIFECYCLE_VALID_TOKEN_HEADROOM')
+        baseline=r.snapshot();rows=r.preservation_rows();state=r.mutation_state();dependent=r.dependent_rows()
+        if state['user']is None or state['user'].get('banned_until')is not None or state['revokedSession']is None or state['logoutAudit']!=0 or state['banAudit']!=0 or state['banActive']is not False:
+            raise ValueError('LIFECYCLE_FRESH_MUTATION_BASELINE')
+        r.save_signed('baseline-private.json',{'snapshot':baseline,'preservationRows':rows,'mutationState':state,'dependentRows':dependent,'sourcePins':binding['sourcePins']})
+        spec=value['foreign']
+        if spec is not None:
+            other_root=Path(spec['preparedRoot']);other_raw=signed_private_read(Path(spec['bindingPath']))
+            if hashlib.sha256(other_raw).hexdigest()!=spec['bindingSha256']:raise ValueError('LIFECYCLE_FOREIGN_BINDING_CHANGED')
+            other_binding=validate_signed_binding(signed_exact_json(other_raw),other_root,signed_prepared_target(other_root))
+            scope=Path(other_binding['evidenceRoot']).name.removeprefix('signed-auth-')
+            if not re.fullmatch(r'[a-f0-9]{32}',scope):raise ValueError('LIFECYCLE_FOREIGN_PROVISION_SCOPE')
+            receipt_raw=signed_private_read(other_root/('auth-provision-'+scope)/'receipt.json')
+            if hashlib.sha256(receipt_raw).hexdigest()!=reviewed.foreign_receipt_sha256:raise ValueError('LIFECYCLE_FOREIGN_ISSUANCE_CHANGED')
+            receipt=signed_exact_json(receipt_raw)
+            if(receipt.get('status')!='PASS_LOCAL_AUTH6_PROVISION_ONLY'or receipt.get('scopeId')!=scope or receipt.get('accounts')!=6
+                    or receipt.get('bindingSha256')!=spec['bindingSha256']or receipt.get('actualGoTrueAndDatabaseSessions')is not True):
+                raise ValueError('LIFECYCLE_FOREIGN_ISSUANCE_PROVENANCE')
+            if other_binding['origin']==binding['origin']or any(other_binding['containers'][k]['id']==binding['containers'][k]['id']for k in('db','auth')):
+                raise ValueError('LIFECYCLE_FOREIGN_CONTEXT_NOT_DISTINCT')
+            foreign=SignedAuthLifecycleRunner(other_root,other_binding);foreign.live();signed_verify_history(foreign)
+            selected=[a for a in other_binding['accounts']if a['userId']==spec['userId']]
+            if len(selected)!=1:raise ValueError('LIFECYCLE_FOREIGN_ORIGINAL_ACCOUNT')
+            foreign.verify_token('foreign',selected[0],scoped=False);foreign_baseline=foreign.snapshot()
+            proofs['differentOriginalContext']=r.invoke_case('differentOriginalContext',selected[0],node)
+        expired=value['accounts']['expiredBearer'];r.verify_token('expiredBearer',expired)
+        lifecycle_natural_expiry(expired);proofs['expiredBearer']=r.invoke_case('expiredBearer',expired,node)
+        for case in('revokedSession','memberChanged'):
+            r.mutate_once(case);actual=r.mutation_state()
+            if (case=='revokedSession'and(actual['revokedSession']is not None or actual['revokedRefreshCount']!=0 or actual['revokedAmrCount']!=0 or actual['logoutAudit']!=1))or(case=='memberChanged'and(actual['banActive']is not True or actual['banAudit']!=1)):
+                raise ValueError('LIFECYCLE_MUTATION_ACTUAL_STATE')
+            proofs[case]=r.invoke_case(case,value['accounts'][case],node)
+        anonymous=value['accounts']['anonymousBearer']
+        if anonymous is not None:proofs['anonymousBearer']=r.invoke_case('anonymousBearer',anonymous,node)
+    except BaseException as error:
+        errors.append(str(error)if type(error)is ValueError and re.fullmatch(r'LIFECYCLE_[A-Z_]+',str(error))else'LIFECYCLE_EXECUTION_FAILED')
+        for case in r.mutations:
+            if proofs[case]['status']=='NOT_RUN':proofs[case]={'status':'UNKNOWN','retryAllowed':False}
+    finally:
+        done.set()
+        if observer.ident is not None:
+            observer.join(timeout=4)
+            if observer.is_alive():errors.append('LIFECYCLE_MONITOR_UNCLOSED')
+        # 원 세션을 복구하지 않고 실패 때도 독립적으로 저장 상태를 비교한다.
+        if baseline is not None:
+            try:
+                r.verify_final(baseline,rows,state,dependent,foreign,foreign_baseline if foreign is not None else None)
+            except BaseException:errors.append('LIFECYCLE_FINAL_PRESERVATION_UNPROVEN')
+        else:errors.append('LIFECYCLE_BASELINE_NOT_CAPTURED')
+        r.save_signed('receipt.json',{'status':'FAIL'if errors else'PASS_PARTIAL'if any(p['status']=='NOT_RUN'for p in proofs.values())else'PASS',
+            'scope':LIFECYCLE_KIND,'cases':proofs,'fixedFailures':errors,'fullLifecycleCoverage':'NOT_RUN'if errors or any(p['status']=='NOT_RUN'for p in proofs.values())else'PASS',
+            'authMutationsRetained':sorted(r.mutations),'noSessionResurrection':True,'noMutationReplay':True,'originalBaselineSixPreserved':baseline is not None and not errors,
+            'memberChangedMeaning':'AUTH_USER_BANNED_ONLY','serviceMemberRetirement':'NOT_RUN','consentRevocation':'NOT_RUN',
+            'containerLifecycle':'UNCHANGED_NOT_STOPPED_BY_RUNNER','sequence':'NOT_VERIFIED','physical':'NOT_VERIFIED','actualNaver':'NOT_RUN','externalProvider':'NOT_RUN','naturalMidnight':'NOT_RUN'})
+    result=signed_exact_json(signed_private_read(r.evidence/'receipt.json'));print(json.dumps(result))
+    if errors:raise ValueError('LIFECYCLE_FAILED_PRIVATE_EVIDENCE_PRESERVED')
+
+
 if __name__=='__main__':
-    try:signed_main() if any(k in sys.argv for k in ('--signed-local-auth','--signed-auth')) else main()
+    try:signed_auth_lifecycle_main() if '--signed-auth-lifecycle'in sys.argv else signed_main() if any(k in sys.argv for k in ('--signed-local-auth','--signed-auth')) else main()
     except Exception as error:
         code=str(error)if re.fullmatch(r'[A-Z0-9_,]+',str(error))else'ISOLATED_AI_FAILED'
         print(json.dumps({'status':'FAIL','code':code}));sys.exit(1)

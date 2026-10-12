@@ -4,7 +4,7 @@
   "actor": "minkyu",
   "branch": "minkyu/backend100-20261012",
   "policyHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
-  "sourceState": "141240a_FROZEN_BASE_WITH_REVIEWED_AUTH_NEGATIVE_RECEIPT_SUCCESSOR",
+  "sourceState": "REVIEWED_LIFECYCLE_SUCCESSOR_OF_3a0a42a_READY_TO_FREEZE",
   "overall": {
     "completed": 22,
     "total": 28,
@@ -93,6 +93,24 @@
       "skipped": 0,
       "scope": "OFFLINE_SIGNED_AUTH_SUITE_ONLY_NOT_NEW_170_TEST_FULL_RUN",
       "sourceProof": "2026-10-13-auth-lifecycle-coverage.json"
+    },
+    "currentSignedSourceFreeze": {
+      "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+      "sourceHead": "3a0a42a37ab7bc40bc25bd9cafc543329e58c649",
+      "fileCount": 57,
+      "sourcePinsSha256": "9298b1cc846eaa74869134f0512e6cc9e97da0b12ae09938fadfe92d5751faf5",
+      "receiptSha256": "b265413f4fe7b38613ea14987f09ca858bbad7f1f70ab15db01300275e18bb0b",
+      "actualResourceCalls": 0,
+      "mustRefreshAfterLifecycleIntegration": true
+    },
+    "signedAuthLifecycleSuccessor": {
+      "passed": 70,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_ONLY_ACTUAL_AUTH_NOT_RUN",
+      "nullableAuditSqlScope": "SQLITE_MODEL",
+      "independentReview": "PASS_AFTER_FIXED_NULL_PRESERVATION",
+      "proof": "2026-10-13-auth-lifecycle-coverage.json"
     }
   },
   "actual": {
@@ -181,7 +199,10 @@
       "anonymousBearer": "NOT_RUN",
       "memberChanged": "NOT_RUN",
       "differentOriginalContext": "NOT_RUN"
-    }
+    },
+    "signedAuthLifecycleProducer": "REQUIRED_NOT_IMPLEMENTED",
+    "serviceMemberRetirement": "NOT_RUN",
+    "consentRevocation": "NOT_RUN"
   },
   "limitations": [
     "Offline tests do not prove actual Auth/DB/product midnight success.",

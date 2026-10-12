@@ -7,20 +7,29 @@
     "displayPercent": 79
   },
   "sourceBase": "141240aa32fb13a3e82945c4187f3203e09603b7",
-  "status": "OFFLINE_RECEIPT_RETENTION_PASS_ACTUAL_LIFECYCLE_NOT_RUN",
+  "status": "OFFLINE_LIFECYCLE_EXECUTION_HARNESS_PASS_PRODUCER_REQUIRED",
   "files": {
-    "tests/integration/jonghyun/isolated_ai_contracts.py": "ccf58ac62e916cf6ad884d43934c590407595c5072c92cf954e3bc8bab977192",
-    "tests/integration/jonghyun/isolated_ai_factory.ts": "dcbd97ce441fed6d8abfd4128a05fcf82a50867d1f57244175766ba2d2f7a8c5",
-    "tests/database/minkyu/test_signed_auth_binding.py": "3ed64c481533189fedfa23333c418812b350b164ea526d9f896fb3e31eb6608e"
+    "tests/integration/jonghyun/isolated_ai_contracts.py": "bf10128688c740da792e31495462f706edd97d1803e1ff9a425d87517e4462f3",
+    "tests/integration/jonghyun/isolated_ai_factory.ts": "167f2b837a8eeb8c376ce1360ce8c326b81ea9978ed57ab77956d220de208edf",
+    "tests/database/minkyu/test_signed_auth_binding.py": "f5403596034e9d12479b1dc8e6aa0bf46c717b649b119e460dbda9babc978a2e"
   },
   "offlineChecks": {
-    "signedAuthTests": 58,
+    "signedAuthTests": 70,
     "failed": 0,
-    "skipped": 0
+    "skipped": 0,
+    "resourceWarningsAsErrors": "PASS",
+    "cachedDeno": "PASS"
   },
   "review": {
-    "independentReadOnlyReview": "PASS_WITH_EXACT_INTEGER_COUNTER_CORRECTION",
-    "corrected": "nativeExternalAttempts rejects bool and float"
+    "independentReadOnlyReview": "PASS_AFTER_NULLABLE_AUDIT_CORRECTION",
+    "fixedFindings": [
+      "CLI never grants mutation authority",
+      "Stable private input and binding SHA reread",
+      "Original issued response and receipt root pins required",
+      "Exact session dependent bags and constraints preserved",
+      "Nullable unowned audit rows preserved"
+    ],
+    "sqlModelScope": "SQLITE_NULL_SEMANTICS_NOT_ACTUAL_POSTGRESQL"
   },
   "existingNegativeCases": [
     "missing",
@@ -38,7 +47,24 @@
   "fullLifecycleCoverage": "NOT_RUN",
   "actualAuthUserCreations": 0,
   "actualLifecycleMutationCalls": 0,
-  "nextImplementation": "Dedicated preprovisioned lifecycle inputs and exact scoped one-shot mutations; original six baseline users preserved",
+  "nextImplementation": "Journaled combined lifecycle provisioning with natural JWT3600 staging and late fresh baseline6; original global-empty six-account producer unchanged",
   "activationAllowed": false,
-  "secretsIncluded": false
+  "secretsIncluded": false,
+  "receiptRetentionBaseline": {
+    "sourceBase": "141240aa32fb13a3e82945c4187f3203e09603b7",
+    "files": {
+      "tests/integration/jonghyun/isolated_ai_contracts.py": "ccf58ac62e916cf6ad884d43934c590407595c5072c92cf954e3bc8bab977192",
+      "tests/integration/jonghyun/isolated_ai_factory.ts": "dcbd97ce441fed6d8abfd4128a05fcf82a50867d1f57244175766ba2d2f7a8c5",
+      "tests/database/minkyu/test_signed_auth_binding.py": "3ed64c481533189fedfa23333c418812b350b164ea526d9f896fb3e31eb6608e"
+    },
+    "offlineChecks": {
+      "signedAuthTests": 58,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "producer": "REQUIRED_NOT_IMPLEMENTED_STAGED_FRESH_LIFECYCLE",
+  "memberChangedMeaning": "AUTH_USER_BANNED_ONLY",
+  "serviceMemberRetirement": "NOT_RUN",
+  "consentRevocation": "NOT_RUN"
 }
