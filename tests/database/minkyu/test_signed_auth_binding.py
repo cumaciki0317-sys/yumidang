@@ -512,7 +512,7 @@ class BindingTests(unittest.TestCase):
                 self.assertEqual(dump(ast.Module(body=shared.body,type_ignores=[])),dump(ast.Module(body=prefix+tail,type_ignores=[])))
                 candidate.body=copy.deepcopy(original.body)
         # native119 v1/v2와 불변 projection 재사용 후속의 정확한 함수 AST만 묶는다.
-        history_hashes={'fb5b103065382ffe8c759c57c0a3e30fe543866305071f28ba56632dca3e935e','31ec8172bb801ca0857fb4cc60a5ce4b97fb5a16e2135315806d31fe23d6c01c','9305e35cb87c8741c5ba05ed35c4d00b0725539c36d29dd64ae3cabb557199e1'}
+        history_hashes={'fb5b103065382ffe8c759c57c0a3e30fe543866305071f28ba56632dca3e935e','31ec8172bb801ca0857fb4cc60a5ce4b97fb5a16e2135315806d31fe23d6c01c','9305e35cb87c8741c5ba05ed35c4d00b0725539c36d29dd64ae3cabb557199e1','2e3ad004c551cafbbff35ed518009da85d3a1980139bc525eb325f8253c33d74'}
         old_history=next((n for n in before.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history'),None)
         if old_history is not None:
             new_history=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
@@ -1475,8 +1475,9 @@ class NativeSignedHistoryV2Tests(unittest.TestCase):
         elif "json_agg(rolname order by rolname)"in sql:value=self.permission_roles
         elif "to_jsonb(r)-'oid'"in sql:value=self.roles
         elif 'x.allowed'in sql:
-            match=__import__('re').search(r"decode\('([a-f0-9]+)','hex'\)",sql);self.assertIsNotNone(match)
-            role=bytes.fromhex(match[1]).decode();value=[row for row in self.current_effective if row[0]==role];self.calls.append('effective')
+            matches=__import__('re').findall(r"decode\('([a-f0-9]+)','hex'\)",sql);self.assertTrue(matches)
+            batch=[bytes.fromhex(encoded).decode()for encoded in matches];self.assertTrue(1<=len(batch)<=4)
+            value=[row for row in self.current_effective if row[0]in batch];self.calls.append('effective')
         else:
             value=copy.deepcopy(self.roles)
             for i,r in enumerate(value['roles']):r['oid']=12345+i
@@ -1608,6 +1609,105 @@ class NativeSignedHistoryCacheTests(unittest.TestCase):
         current=ast.parse(RUNNER.read_text());mutant=copy.deepcopy(current)
         next(n for n in mutant.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history').body.append(ast.Pass())
         with self.assertRaises(AssertionError):BindingTests().assert_original_python_preserved(current,mutant)
+
+
+class NativePermissionGroupTests(unittest.TestCase):
+    """실제 SQL 없이 독립 행렬과 원 고정 SQL의 묶음/완전성 경계를 검증한다."""
+    @classmethod
+    def setUpClass(cls):
+        source=REPO/'tests/integration/minkyu/product_connection_restore108_local.py';tree=ast.parse(source.read_bytes())
+        names={'platform_json','native_backup_permissions'};constants={'NATIVE_BACKUP_ACL_QUERY','NATIVE_BACKUP_PERMISSION_QUERY'}
+        selected=[n for n in tree.body if isinstance(n,ast.FunctionDef)and n.name in names
+            or isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id in constants for t in n.targets)]
+        cls.ns={'json':json};exec(compile(ast.Module(body=selected,type_ignores=[]),str(source),'exec'),cls.ns)
+    def setUp(self):
+        self.roles=["O'Brien",'back\\slash','public','z','역할'];self.calls=[];self.counts={};self.drift=None;self.bad=None;self.timeout=False
+        privileges={'database':['CONNECT','CREATE','TEMPORARY','CONNECT WITH GRANT OPTION','CREATE WITH GRANT OPTION','TEMPORARY WITH GRANT OPTION'],
+            'schema':['USAGE','CREATE','USAGE WITH GRANT OPTION','CREATE WITH GRANT OPTION'],
+            'table':['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER','MAINTAIN','SELECT WITH GRANT OPTION','INSERT WITH GRANT OPTION','UPDATE WITH GRANT OPTION','DELETE WITH GRANT OPTION','TRUNCATE WITH GRANT OPTION','REFERENCES WITH GRANT OPTION','TRIGGER WITH GRANT OPTION','MAINTAIN WITH GRANT OPTION'],
+            'column':['SELECT','INSERT','UPDATE','REFERENCES','SELECT WITH GRANT OPTION','INSERT WITH GRANT OPTION','UPDATE WITH GRANT OPTION','REFERENCES WITH GRANT OPTION'],
+            'sequence':['USAGE','SELECT','UPDATE','USAGE WITH GRANT OPTION','SELECT WITH GRANT OPTION','UPDATE WITH GRANT OPTION'],
+            'function':['EXECUTE','EXECUTE WITH GRANT OPTION']}
+        self.inventory=[['public',kind,'full.identity.'+kind+('x'*80 if kind=='function'else''),privilege,True]for kind,items in privileges.items()for privilege in items]
+        self.reference=[[role,*row[1:4],(i+index)%2==0]for index,role in enumerate(self.roles)for i,row in enumerate(self.inventory)]
+    def query(self,name,statement):
+        self.assertEqual(name,'exact-owned-db');self.assertTrue(statement.startswith("set local statement_timeout='5s';"));self.assertEqual(statement.count(';'),2)
+        self.calls.append(statement)
+        if 'json_agg(rolname order by rolname)'in statement:
+            kind='roster';value=list(self.roles)
+        elif "'database',(select"in statement:
+            kind='authority';value={k:[]for k in('database','schemas','relations','columns','functions','defaults','dbRoleSettings')}
+        elif "to_jsonb(r)-'oid'"in statement:
+            kind='roles';value={'roles':[{'rolname':r}for r in self.roles if r!='public'],'memberships':[]}
+        else:
+            encoded=re.findall(r"convert_from\(decode\('([a-f0-9]+)','hex'\),'UTF8'\)::name",statement);batch=[bytes.fromhex(v).decode()for v in encoded]
+            self.assertTrue(1<=len(batch)<=4)
+            if 'has_database_privilege'in statement:
+                kind='chunk'
+                if self.timeout:raise subprocess.TimeoutExpired('fixed-batch',5)
+                value=copy.deepcopy([row for row in self.reference if row[0]in batch]);value.reverse()
+                if self.bad:value=self.bad(value,batch)
+            else:
+                kind='inventory';self.assertEqual(batch,['public']);value=copy.deepcopy(self.inventory)
+        self.counts[kind]=self.counts.get(kind,0)+1
+        if self.drift==kind and self.counts[kind]==2:
+            if kind=='roster':value.append('foreign')
+            elif kind=='authority':value['columns'].append('unexpected-acl')
+            elif kind=='roles':value['memberships'].append(['foreign'])
+            else:value.pop()
+        return json.dumps(value).encode()
+    def collect(self,**kwargs):return self.ns['native_backup_permissions'](self.query,'exact-owned-db',**kwargs)
+    def test_default_one_and_four_have_exact_full_matrix_order_and_safe_sql_scope(self):
+        self.assertEqual(self.collect(),self.reference);one=list(self.calls);self.calls=[];self.counts={}
+        self.assertEqual(self.collect(role_batch_size=4),self.reference);self.assertEqual(len(one),13);self.assertEqual(len(self.calls),10)
+        grouped=[q for q in self.calls if 'has_database_privilege'in q];self.assertEqual(len(grouped),2)
+        self.assertIn('(values ',grouped[0]);self.assertNotIn('(values ',grouped[1])
+        original="(select rolname from pg_roles union select 'public')r"
+        for q in grouped:
+            roster=re.search(r'from(.*?) cross join lateral',q).group(1)
+            self.assertEqual(q.removeprefix("set local statement_timeout='5s';").replace(roster,original),self.ns['NATIVE_BACKUP_PERMISSION_QUERY'])
+        self.assertEqual({k:self.counts[k]for k in('roster','authority','roles','inventory')},{k:2 for k in('roster','authority','roles','inventory')})
+    def test_each_role_complete_foreign_duplicate_missing_and_nonboolean_refuse(self):
+        changes=[lambda rows,b:rows[:-1],lambda rows,b:[r for r in rows if r[0]!=b[0]],
+            lambda rows,b:rows+[rows[0]],lambda rows,b:[['foreign',*rows[0][1:]],*rows[1:]],
+            lambda rows,b:[[rows[0][0],*rows[0][1:4],1],*rows[1:]],lambda rows,b:{'rows':rows}]
+        for i,change in enumerate(changes):
+            with self.subTest(case=i):
+                self.setUp();self.bad=change
+                with self.assertRaises(AssertionError):self.collect(role_batch_size=4)
+                self.assertEqual(len(self.calls),5)
+    def test_batch_timeout_preserves_failure_without_following_batch_or_bookends(self):
+        self.timeout=True
+        with self.assertRaises(subprocess.TimeoutExpired):self.collect(role_batch_size=4)
+        self.assertEqual(len(self.calls),5)
+    def test_all_four_bookends_still_detect_fresh_role_catalog_or_inventory_drift(self):
+        for kind in('roster','authority','roles','inventory'):
+            with self.subTest(kind=kind):
+                self.setUp();self.drift=kind
+                with self.assertRaises(AssertionError):self.collect(role_batch_size=4)
+                self.assertEqual(self.counts['chunk'],2)
+    def test_only_exact_one_or_four_bound_accepted_before_any_read(self):
+        for value in(False,True,0,2,4.0,'4',None):
+            with self.subTest(value=value),self.assertRaisesRegex(AssertionError,'BATCH_SIZE'):self.collect(role_batch_size=value)
+        self.assertEqual(self.calls,[])
+    def test_signed_history_explicit_four_and_current_projection_not_cached(self):
+        case=NativeSignedHistoryCacheTests();case.setUp()
+        try:
+            case.prepare_proofs();batches=[];original=case.fake_process
+            def capture(command,**kwargs):
+                sql=kwargs.get('input',b'').decode()
+                if 'psql'in command and 'has_database_privilege'in sql:batches.append(len(re.findall(r"decode\('([a-f0-9]+)','hex'\)",sql)))
+                return original(command,**kwargs)
+            case.fake_process=capture;case.verify();before=list(case.commands);case.commands=[];case.current_effective[0][-1]=False
+            with self.assertRaisesRegex(ValueError,'CURRENT_AUTHORITY_CHANGED'):case.verify()
+            for commands in(before,case.commands):
+                self.assertTrue(any('psql'in c for c in commands));self.assertTrue(any('pg_dump'in c for c in commands))
+            expected=[min(4,len(case.permission_roles)-i)for i in range(0,len(case.permission_roles),4)]
+            self.assertEqual(batches,expected*2)
+            tree=ast.parse(RUNNER.read_bytes());fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
+            call=next(n for n in ast.walk(fn)if isinstance(n,ast.Call)and isinstance(n.func,ast.Subscript)and isinstance(n.func.slice,ast.Constant)and n.func.slice.value=='native_backup_permissions')
+            self.assertEqual([(k.arg,ast.literal_eval(k.value))for k in call.keywords],[('role_batch_size',4)])
+        finally:case.tearDown()
 
 
 class FakeLifecycleProvisioningPorts:

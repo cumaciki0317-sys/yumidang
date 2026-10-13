@@ -1899,8 +1899,9 @@ def native_backup_database_archive(toc,state):
  return {'database':'postgres','owner':owner,'tocEntries':entries,'tocSha256':final_digest(toc),'sourceAuthoritySha256':final_digest(final_canonical(state['rawAuthority'])),'metadataOrigin':'ORIGINAL_PG_DUMP_ARCHIVE','noSyntheticDatabaseMetadata':True}
 
 
-def native_backup_permissions(query,name):
- """원 실효 권한 행렬을 역할별로 읽고 모든 key의 완료를 확인한다."""
+def native_backup_permissions(query,name,*,role_batch_size=1):
+ """원 실효 권한 행렬을 최대 네 역할씩 읽고 모든 역할/key의 완료를 확인한다."""
+ assert type(role_batch_size)is int and role_batch_size in(1,4),'NATIVE_PERMISSION_BATCH_SIZE'
  def read(statement):return platform_json(query(name,"set local statement_timeout='5s';"+statement))
  roster_sql="select coalesce(json_agg(rolname order by rolname),'[]')from(select rolname from pg_roles union select 'public')r;"
  roles=read(roster_sql)
@@ -1918,6 +1919,10 @@ def native_backup_permissions(query,name):
   # UTF-8 hex는 따옴표·역슬래시·SQL 설정에 영향을 받지 않는다.
   literal="(select convert_from(decode('"+role.encode('utf8').hex()+"','hex'),'UTF8')::name rolname)r"
   return NATIVE_BACKUP_PERMISSION_QUERY.replace(original,literal)
+ def grouped(batch):
+  if len(batch)==1:return scoped(batch[0])
+  literal='(values '+','.join("(convert_from(decode('"+role.encode('utf8').hex()+"','hex'),'UTF8')::name)"for role in batch)+')r(rolname)'
+  return NATIVE_BACKUP_PERMISSION_QUERY.replace(original,literal)
  expected_sql=scoped('public')
  expressions=('has_database_privilege(r.rolname,current_database(),v)',
   'has_schema_privilege(r.rolname,oid,v)','has_table_privilege(r.rolname,c.oid,v)',
@@ -1933,14 +1938,15 @@ def native_backup_permissions(query,name):
   key=tuple(row[1:4]);assert key not in keys,'NATIVE_PERMISSION_INVENTORY_DUPLICATE';keys.add(key);ordered.append(key)
  assert len([key for key in keys if key[0]=='database'])==6,'NATIVE_PERMISSION_DATABASE_INVENTORY'
  result=[]
- for role in roles:
-  chunk=read(scoped(role));seen={}
+ for offset in range(0,len(roles),role_batch_size):
+  batch=roles[offset:offset+role_batch_size];chunk=read(grouped(batch));seen={role:{}for role in batch}
   assert isinstance(chunk,list),'NATIVE_PERMISSION_CHUNK_TYPE'
   for row in chunk:
-   assert isinstance(row,list)and len(row)==5 and row[0]==role and type(row[4])is bool and all(isinstance(x,str)and x for x in row[:4]),'NATIVE_PERMISSION_CHUNK_ROW'
-   key=tuple(row[1:4]);assert key in keys and key not in seen,'NATIVE_PERMISSION_CHUNK_EXTRA_OR_DUPLICATE';seen[key]=row
-  assert set(seen)==keys,'NATIVE_PERMISSION_CHUNK_INCOMPLETE'
-  result.extend(seen[key]for key in ordered)
+   assert isinstance(row,list)and len(row)==5 and type(row[4])is bool and all(isinstance(x,str)and x for x in row[:4])and row[0]in seen,'NATIVE_PERMISSION_CHUNK_ROW'
+   role=row[0];key=tuple(row[1:4]);assert key in keys and key not in seen[role],'NATIVE_PERMISSION_CHUNK_EXTRA_OR_DUPLICATE';seen[role][key]=row
+  for role in batch:
+   assert set(seen[role])==keys,'NATIVE_PERMISSION_CHUNK_INCOMPLETE'
+   result.extend(seen[role][key]for key in ordered)
  assert read(roster_sql)==roles,'NATIVE_PERMISSION_ROLE_ROSTER_CHANGED'
  assert read(expected_sql)==expected,'NATIVE_PERMISSION_OBJECT_INVENTORY_CHANGED'
  assert read(NATIVE_BACKUP_ACL_QUERY)==authority,'NATIVE_PERMISSION_CATALOG_AUTHORITY_CHANGED'

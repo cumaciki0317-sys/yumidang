@@ -579,7 +579,7 @@ def signed_verify_history(runner):
     else:
         permission=signed_native_permission_selected(pins)
         current_authority=permission['platform_json'](read_query(runner.target['id'],permission['NATIVE_BACKUP_ACL_QUERY']))
-        current_effective=permission['native_backup_permissions'](read_query,runner.target['id'])
+        current_effective=permission['native_backup_permissions'](read_query,runner.target['id'],role_batch_size=4)
         if canonical(current_authority)!=baseline_authority or canonical(current_effective)!=baseline_effective:
             raise ValueError('SIGNED_NATIVE_CURRENT_AUTHORITY_CHANGED')
         if canonical(current_roles)!=baseline_roles:raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
