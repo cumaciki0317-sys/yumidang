@@ -4,13 +4,664 @@
   "actor": "minkyu",
   "branch": "minkyu/backend100-20261012",
   "policyHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
-  "sourceState": "REVIEWED_STAGED_PRODUCER_AND_CLOSED_CONSENT_SUCCESSOR_OF_f66356b",
+  "sourceState": "COMMITTED_37863a6_WITH_SIGNED_AI24_PLAN_PREPARATION",
   "overall": {
     "completed": 22,
     "total": 28,
     "displayPercent": 79
   },
   "files": {
+    "tools/local/observe_isolated.py": {
+      "sha256": "4066e892fd4132bae080bd5997c9369ad552e4c04486a065d4e8878f813e1264",
+      "bytes": 12808
+    },
+    "tools/local/prepare_isolated_midnight.py": {
+      "sha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0",
+      "bytes": 86705
+    },
+    "tests/integration/jonghyun/isolated_ai_contracts.py": {
+      "sha256": "3e48b3ab433b8f516f600a9b9c65e7d6a4ff091d3f86d987a8b39271ebb6db8d",
+      "bytes": 211035
+    },
+    "tests/integration/jonghyun/isolated_ai_factory.ts": {
+      "sha256": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+      "bytes": 70269
+    },
+    "tests/database/jonghyun/test_isolated_observer.py": {
+      "sha256": "c787824c954daf82c32dd8180d58c2b21770b2d440477724743a15798185e3c8",
+      "bytes": 13801
+    },
+    "tests/database/jonghyun/test_isolated_midnight_preparation.py": {
+      "sha256": "5e19ce093dfa70539a220992716c66cf39e2a65c74429a257f53bd01b0aad35b",
+      "bytes": 8046
+    },
+    "tests/database/minkyu/test_signed_auth_binding.py": {
+      "sha256": "a8713744ff3af47720571ed6f75cf0df1b60923cb320b86d4603b984b60303db",
+      "bytes": 130264
+    },
+    "tests/database/minkyu/test_ai24_live_binding.py": {
+      "sha256": "6637e45ae4b5b77c7cc9f06dc68c76fd83aedd9ae47d55e0ba33784502f15549",
+      "bytes": 47170
+    },
+    "tests/integration/minkyu/product_connection_restore108_local.py": {
+      "sha256": "767b719798a6536ba1088deb8e8bd32bb38092ee202019b462c65e49a1c69956",
+      "bytes": 237962
+    },
+    "tests/database/minkyu/test_production_preparation.py": {
+      "sha256": "c8d737b81aa64a4e2f491f68a5c5f14e362211267ca67419e9a8f2114dd16755",
+      "bytes": 34518
+    }
+  },
+  "checks": {
+    "integratedOfflineUnittest": {
+      "passed": 169,
+      "failed": 0,
+      "skipped": 0,
+      "parts": {
+        "signedAuth": 57,
+        "ai24": 48,
+        "midnightPreparation": 13,
+        "observer": 18,
+        "productionPreparation": 33
+      },
+      "sourceHead": "141240aa32fb13a3e82945c4187f3203e09603b7",
+      "filesKey": "historical169Files"
+    },
+    "denoCachedCheck": "PASS",
+    "pythonCompile": "PASS",
+    "diffCheck": "PASS",
+    "independentReadOnlyRecoveryReview": {
+      "status": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND",
+      "ai24Sha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0"
+    },
+    "observerProfileSelection": "PASS_18_OFFLINE_CONTEXT_SOCKET_BINDING",
+    "productionPreparationOffline": {
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0
+    },
+    "successorIntegrationAttempt": {
+      "passed": 119,
+      "failed": 1,
+      "skipped": 0,
+      "failure": "HEAD-sensitive original AST guard rejected explicitly reviewed signed_source_pins extension",
+      "status": "FAILURE_PRESERVED_SUPERSEDED_BY_169_PASS_EXACT_APPROVED_CHANGE_GUARD"
+    },
+    "native119IndependentReview": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND_SCHEMA_ROLE_LINEAGE_ONLY",
+    "signedNegativeRetentionSuccessor": {
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_SIGNED_AUTH_SUITE_ONLY_NOT_NEW_170_TEST_FULL_RUN",
+      "sourceProof": "2026-10-13-auth-lifecycle-coverage.json"
+    },
+    "currentSignedSourceFreeze": {
+      "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "fileCount": 57,
+      "sourcePinsSha256": "93c8d4a642acb64b30f82df6f802653367e4d26773a3e19ecc5c5a0d8fc4ed82",
+      "receiptSha256": "2e5dba98543f4c46424b2d5c01861666f07f6033df1da279fe3e20766ba04951",
+      "actualResourceCalls": 0,
+      "mustRefreshAfterHeadChange": true
+    },
+    "signedAuthLifecycleSuccessor": {
+      "passed": 70,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_ONLY_ACTUAL_AUTH_NOT_RUN",
+      "nullableAuditSqlScope": "SQLITE_MODEL",
+      "independentReview": "PASS_AFTER_FIXED_NULL_PRESERVATION",
+      "proof": "2026-10-13-auth-lifecycle-coverage.json"
+    },
+    "stagedProducerIntegration": {
+      "passed": 98,
+      "retained": 70,
+      "new": 28,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_ONLY",
+      "independentReview": "FIVE_FINDINGS_FIXED_V2_READ_ONLY_PASS",
+      "producerSha256": "7fc60f96b7f2967f1ca0044523d318f811c365ddf880efb202826bc590bd3865"
+    },
+    "consentPrivateCoreModels": {
+      "passed": 18,
+      "failed": 0,
+      "actualCalls": 0,
+      "cli": "ALWAYS_NOT_RUN",
+      "runtimeCapture": "NOT_PROVEN",
+      "caller": "NOT_IMPLEMENTED",
+      "factorySha256": "2c754c795cf236694a9de8276e4db2be3aa5a5d92884040eb28ba3edea446e4d",
+      "historical": true,
+      "supersededBy": "consentCapturedCallerModels"
+    },
+    "cleanupPrivateAdapterModels": {
+      "passed": 32,
+      "failed": 0,
+      "actualCalls": 0,
+      "actualLaunchAbi": null,
+      "adapterSha256": "9286affa199c0455842e1195053e8f12d1254ad2129b1dfc005b9f27de259359",
+      "historical": true,
+      "version": "PRIVATE_V2_ACTUAL_ABI_NONE"
+    },
+    "historicalSignedSourceFreezeAt3a0a42a": {
+      "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+      "sourceHead": "3a0a42a37ab7bc40bc25bd9cafc543329e58c649",
+      "fileCount": 57,
+      "sourcePinsSha256": "9298b1cc846eaa74869134f0512e6cc9e97da0b12ae09938fadfe92d5751faf5",
+      "receiptSha256": "b265413f4fe7b38613ea14987f09ca858bbad7f1f70ab15db01300275e18bb0b",
+      "actualResourceCalls": 0,
+      "mustRefreshAfterLifecycleIntegration": true
+    },
+    "precommitSourceCustodyRefusal": {
+      "status": "PRECOMMIT_SOURCE_CUSTODY_REFUSAL_PRESERVED",
+      "sourceHead": "3894f0e916fcd09e410b5514d067c4957f6fe283",
+      "signedTests": 114,
+      "signedErrors": 8,
+      "consentModels": 27,
+      "consentFailures": 7,
+      "actualCalls": 0,
+      "receiptSha256": "962e0bf097d4513af69f1d627560fcd0fa5a60513f038bddd3274f558862b9df",
+      "reason": "CURRENT_FACTORY_BYTES_DIFFER_FROM_COMMITTED_HEAD",
+      "sameTestsAfterFreeze": "PASS_NO_ASSERTION_RELAXATION"
+    },
+    "typedCapturedIntegration": {
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "signedPassed": 114,
+      "relatedAi24Passed": 48,
+      "relatedMidnightPassed": 13,
+      "total": 175,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "OFFLINE_ONLY",
+      "independentDispatchPeer": "PASS_SOURCE_MODE_SUCCESSOR",
+      "independentFactoryPeer": "NO_ADDITIONAL_DEFINITE_BLOCKER",
+      "files": {
+        "tests/integration/jonghyun/isolated_ai_contracts.py": "3e48b3ab433b8f516f600a9b9c65e7d6a4ff091d3f86d987a8b39271ebb6db8d",
+        "tests/integration/jonghyun/isolated_ai_factory.ts": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+        "tests/database/minkyu/test_signed_auth_binding.py": "a8713744ff3af47720571ed6f75cf0df1b60923cb320b86d4603b984b60303db"
+      }
+    },
+    "consentCapturedCallerModels": {
+      "passed": 27,
+      "failed": 0,
+      "actualCalls": 0,
+      "factorySha256": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+      "runtimeSource": "PRIVATE_CAPTURED_UNION91_PLUS_FACTORY92",
+      "custody": "PRE_POST_PIN_VERIFICATION_NOT_OS_IMMUTABILITY",
+      "actualProvisioningReadyBaselineCleanup": "NOT_RUN",
+      "existingClientIdPrivacyDecision": "1A_RETAINED",
+      "initialTwoPrivacyRefusals": "PRESERVED_AND_CAUSE_CONFIRMED"
+    },
+    "privateCoordinatorV4RootModels": {
+      "status": "IMPLEMENTED_FIXED_ABI_OFFLINE_UNBOUND_ACTUAL_NOT_RUN",
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "passed": 59,
+      "failed": 0,
+      "retainedCleanupModels": 32,
+      "newModels": 27,
+      "actualCalls": 0,
+      "adapterSha256": "32ae825824a9b1ad714973bf36dcbc87c713399ea869c7f057e452f920e8d9e8",
+      "coordinatorSha256": "6676a6ccd746500dd1065115beb8f53935519f4947c4a124279e7a95b2cedb7f",
+      "handoffSha256": "b4bc5bc4565119a0fdc35bf5cac5c2b7980138c3ba1bb3a0f03832a19566a16e",
+      "runtimeFiles": 51,
+      "sourceFileMode": "400",
+      "sourceDirectoryMode": "500",
+      "privateFileMode": "600",
+      "privateDirectoryMode": "700",
+      "actualFourIdProof": "MISSING",
+      "actualMemorySlot": "NOT_APPROVED",
+      "independentPeer": "PASS_READ_ONLY_NO_NEW_CONFIRMED_BLOCKER",
+      "naturalExpiryLatency": "NOT_RUN",
+      "timeoutScope": "5400 seconds applies to the owned child stage-to-dispatch; initial reads and emergency cleanup/final preservation have separate bounded calls, not a total-parent deadline"
+    },
+    "nodeExecutableIdentity": {
+      "status": "PASS_READ_ONLY_EXECUTABLE_IDENTITY",
+      "version": "v25.9.0",
+      "sha256": "a4ba681fe33d60e49e535d7f700697967c5b8bf81a8200baa06a5d3f316bbb3c",
+      "receiptSha256": "81a1cc619521227b93cdb8b484768259628d69fa41c42de5eab933e3af7fcafe",
+      "actualAuthApiCalls": 0
+    },
+    "privateCAssemblyRootModels": {
+      "status": "FROZEN_CANDIDATE_ROOT_MODELS_PASS_ACTUAL_NOT_RUN",
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "agentReportedPythonModels": 26,
+      "agentReportedNodeModels": 10,
+      "rootRerun": "26_PYTHON_AND_10_NODE_PASS",
+      "independentPeer": "PASS_READ_ONLY_NO_NEW_CONFIRMED_BLOCKER",
+      "implemented": [
+        "one original Auth issuance and synthetic profile link",
+        "typed readiness callback with source fixture identity and whole baseline verification",
+        "one public exploration withdrawal and same-token denial",
+        "full rows budgets UNKNOWN fixture source identity verification after independent control restoration",
+        "first failure and cleanup failure retained separately"
+      ],
+      "remainingImplementation": [
+        "bounded actual own-child supervisor and real readiness IPC"
+      ],
+      "actualCalls": 0,
+      "actualTargetFourIdProof": "MISSING",
+      "actualAuthExecution": "NOT_RUN",
+      "serviceRetirement": "SEPARATE_PRIVATE_PREPARATION_IN_PROGRESS",
+      "handoffSha256": "d7f5606a624ca51cd409b74db3365a2ee4b9fea54a3651113ad8b1cae93798b5",
+      "assemblySha256": "1037371cd3354671a21cb3ac0feb50c898cb0716af9e3c0788458727dbe0d39a",
+      "fixedPortsSha256": "f9169d0bfcc847d1030b088afc2642a4a58ec38be6ff6d145870c6f8d3a611c1",
+      "nodeCallableSha256": "a371848690dbb372d7d4b85e6791bfdf7785dc16f865a8ac238e92936abf1485",
+      "preservedInitialFailureReceipts": 3,
+      "rootModelReceiptSha256": "497c8554d4fc9caf3a274e710db69410140a88821b1a6347a9e52afdb1fb46ee",
+      "verifiedBoundFiles": 11,
+      "fileCountReportingCorrectionSha256": "da8878024921c2ddab1e6b44e797a573dca5eecc59373f128a34c9c93b53ba00"
+    },
+    "latestVmRead": {
+      "status": "Running",
+      "sandboxBrokenWasAccessRestriction": true,
+      "memoryAvailableKiB": 1077968,
+      "startupFloorKiB": 1048576,
+      "marginKiB": 29392,
+      "receiptSha256": "ec5279a5a878cf22b96cffb939ff0e22e9c3698bea111157fbef68d4c61b9a09",
+      "restartCalls": 0,
+      "containerMutationCalls": 0,
+      "creator": "NOT_RUN_CONSERVATIVE_MARGIN"
+    },
+    "ai24CapturedRuntimeAudit": {
+      "status": "CONFIRMED_INTEGRATION_GAP_IMPLEMENTATION_ASSIGNED",
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "toolSha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0",
+      "runnerSha256": "3e48b3ab433b8f516f600a9b9c65e7d6a4ff091d3f86d987a8b39271ebb6db8d",
+      "factorySha256": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+      "gap": [
+        "Midnight fixture codeRoot remains live REPO",
+        "Node path is selected from PATH and factory argv is the live sibling path",
+        "held warm lstat and HEAD checks do not bind native runtime imports to the sealed capsule"
+      ],
+      "requiredBinding": [
+        "all prepare-limits prepare-recovery held new-day phases",
+        "same source-only capsule and factory pins",
+        "stable reviewed Node executable",
+        "resume custody fields and SHA",
+        "minimal environment and owned child closure in typed mode"
+      ],
+      "assignedActor": "minkyu",
+      "agent": "restore_review",
+      "repositoryIntegration": "NOT_YET",
+      "actualMidnight": "NOT_RUN",
+      "actualCalls": 0
+    },
+    "privateServiceRetirementRootModels": {
+      "status": "FROZEN_V2_ROOT_MODELS_PASS_ACTUAL_NOT_RUN",
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "kernelSha256": "b8b2a4889de3555b6c87d3f4c7780557d803328315ffec061dea5d1bf93d7787",
+      "handoffSha256": "286b84ce20f7a544f99011b6be79c0e5de7bd73a4a26885edc00746ec21ac819",
+      "rootModelReceiptSha256": "0f5a9ef7f1ef1e3bd1716063cfd866314e2c306522f70b567a4f3741dbd92a99",
+      "passed": 15,
+      "failed": 0,
+      "retainedOriginalModels": 12,
+      "newBoundaryModels": 3,
+      "actualCalls": 0,
+      "boundFiles": 6,
+      "graphAndHandoffMd": "PASS",
+      "initialOldModelFailures": "TWO_EXPECTED_FAILURES_PRESERVED",
+      "terminalAuthority": "CURRENT_CALLER_PRIVATE_SUCCESS_STATE_ONLY_AFTER_DURABLE_COMMIT",
+      "actualTargetAndOriginalIssuance": "MISSING",
+      "outerParentBeforeAfterMemoryChildClosure": "NOT_BOUND",
+      "cleanupDeleteAckRecovery": "NOT_RUN_SEPARATE_RETAINED_SCOPE"
+    },
+    "privateServiceRetirementV1Historical": {
+      "status": "FROZEN_V1_ROOT_12_MODELS_PASS_FOLLOWUP_INSPECTOR_REVIEW",
+      "handoffSha256": "29d6df64527a95dd3a41de9189f32b9bb95cfac35e8f2bc05173041fc464fdff",
+      "kernelSha256": "359aede065603a3cfd64f66e0eb2ee9e8088dd1b20f9e8aba4c7a5c0a4cd9b98",
+      "rootModelReceiptSha256": "08bbead375ce822e8daef19aa5a8ac992318506bcc05f7c43d4a5f594f033f09",
+      "passed": 12,
+      "failed": 0,
+      "actualCalls": 0,
+      "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "boundFiles": 9,
+      "corrected": "Final custody/state failures block successful receipt; first failure and final failures retained separately",
+      "followup": "Reject current failed caller proof inspection even if private success files are self-rehashed or stale",
+      "actualTargetAndOriginalIssuance": "MISSING",
+      "outerParentBeforeAfterMemoryChildClosure": "NOT_BOUND",
+      "cleanupDeleteAckRecovery": "NOT_RUN_SEPARATE_RETAINED_SCOPE"
+    },
+    "ai24CapturedRuntimeImplementation": {
+      "status": "COMMITTED_ROOT_195_MODELS_PASS_ACTUAL_NOT_RUN",
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "priorHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+      "handoffSha256": "b1b4077123b023c48ef272c3ac145f3f20bc21655dbcca63e3ebc99210b7197c",
+      "rootReceiptSha256": "99dd373abaf41b26c13f6aec7cadc632f701e902196730385f3ceb2b00b0530c",
+      "passed": 195,
+      "failed": 0,
+      "postCommitFidelityPassed": 2,
+      "independentPeer": "PASS_READ_ONLY",
+      "actualCalls": 0,
+      "actualMidnight": "NOT_RUN",
+      "boundPhases": [
+        "prepare-limits",
+        "prepare-recovery",
+        "held",
+        "new-day"
+      ],
+      "files": {
+        "tests/database/jonghyun/test_isolated_midnight_preparation.py": "1a64f59c8774c6e7054bf46e0972d3ad020754d7721989f8221cf70e2ecaae48",
+        "tests/database/minkyu/test_signed_auth_binding.py": "67e3bac75477625032cfd4781c57951fbe3fec6288528219b8328c8fa8838e22",
+        "tests/integration/jonghyun/isolated_ai_contracts.py": "787001434c270fe499d134a8762535233bd6ad8ae634b72383aa8aec61b83c80",
+        "tools/local/prepare_isolated_midnight.py": "4fb1be4e8a17bd82b49520e9a2efdb28e64e6bcbcd9e609264aadc3370949b3f"
+      },
+      "oldPrivateFedGraphs": "STALE_FOR_ACTUAL_UNTIL_REVIEWED_REBIND",
+      "actualTargetSessionWindowSlot": "UNBOUND"
+    },
+    "currentSourceFreezeAafb7bb": {
+      "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "fileCount": 57,
+      "sourcePinsSha256": "ee21f31bcd1da8291614fe2f7387dffcf7e969b17c0d3578ec1fe80ba0da4797",
+      "receiptSha256": "2bd5752d7124c4157686a045940eb6a1ed144c1c80e3278ce395aaacebc8b697",
+      "actualResourceCalls": 0,
+      "mustRefreshAfterHeadChange": true
+    },
+    "ai24ExtendedSourceFreeze": {
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "fileCount": 62,
+      "sourcePinsSha256": "17da5b83820cdf39566e3dc0ddbdb0e126f501bf529bc083b7c68638583b4900",
+      "receiptSha256": "a5d32268c29798c5fddee3d30baf7de86105f69fef710b716a55c707cb2ff6ee",
+      "status": "SOURCE_ONLY_NOT_AUTHORITY"
+    },
+    "privateCSupervisorV3Observation": {
+      "status": "PARTIAL_PHYSICAL_IPC_PIPE_CLOSURE_NEEDS_FIX",
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "handoffSha256": "c7fb2a4eb6ac7a1e1bcbd667857fdd1c640c06234d44e13a3b05f973ed3c7357",
+      "rootModelsPassed": 28,
+      "independentPeerSha256": "01d45a35bc7a8838c69fe6c80931750952ea6941ae003ce504b33e40617740ce",
+      "physicalCase": "good",
+      "physicalCommandExitCode": 0,
+      "parentPid": 79330,
+      "nodePid": 79334,
+      "ackWritten": true,
+      "nodeGroupClosed": true,
+      "initialPhysicalReceiptSha256": "184b9ab1602a5ed26369af6ae89d59f2fed2828b2ef0d66d23f19b0d6882486d",
+      "resourceWarnings": [
+        "stdout fd5 unclosed",
+        "stderr fd7 unclosed"
+      ],
+      "cleanSupervisionPass": false,
+      "wrongMemberPhysicalCase": "NOT_RUN_PENDING_PIPE_FIX",
+      "actualAuthDatabaseVmContainerProvider": 0,
+      "actualMemberReadiness": "NOT_RUN",
+      "memoryFloor": "MODELED_NOT_OBSERVED",
+      "observationReceiptSha256": "ee4bb5ea9a591ce23763273382ce591a7fca761bca2908a06eafee51f27eb0df"
+    },
+    "privateCSupervisorV4": {
+      "status": "PASS_PHYSICAL_IPC_ONLY_NOT_C_READINESS",
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "handoffSha256": "d7410e0d9d50850595c894df18814dda889e97604fac71b3743fb78ec576ef36",
+      "independentPeerSha256": "2f444e45a97d39ed43967368c301925efc657d3f99ca1d7da1fbe894c2e899ad",
+      "rootModelsPassed": 36,
+      "physicalCases": {
+        "good": {
+          "receiptSha256": "45c9154a072506b4ac582f3eef8c3ae1d71a85bf76098444fc154032bdc4d70f",
+          "finalSha256": "b6945f91a0fbb0293dc8ebb3d082dfeda9f302c33abce586903577babd55404d",
+          "parentPid": 79574,
+          "nodePid": 79578,
+          "ackWritten": true,
+          "nodeGroupClosed": true,
+          "allStdioClosed": true,
+          "outputReadersClosed": true
+        },
+        "wrong-member": {
+          "receiptSha256": "1967ce49ccd112269539e38edcbf5d48973e91778223bedfc7a56e2a00d34a90",
+          "finalSha256": "d195907fdf2e3b2f673a167366a73f03b60b72b8d3ed220d6d2e14c5892efc73",
+          "parentPid": 79581,
+          "nodePid": 79585,
+          "ackWritten": false,
+          "nodeGroupClosed": true,
+          "allStdioClosed": true,
+          "outputReadersClosed": true
+        }
+      },
+      "resourceWarnings": 0,
+      "actualAuthDatabaseVmContainerProvider": 0,
+      "actualMemberReadiness": "NOT_RUN",
+      "memoryFloor": "MODELED_NOT_OBSERVED",
+      "previousWarningRetained": true,
+      "actualCBindingTarget4Credentials": "MISSING",
+      "outerExactFourStop": "NOT_BOUND",
+      "rootProofReceiptSha256": "dffeb783abc37edab53f6ab97294e4ef1e0ee25fd165069d5c92d78ee0c2c9ab"
+    },
+    "privateRetirementParentCallbacks": {
+      "status": "FROZEN_ROOT_28_MODELS_AND_READ_ONLY_PEER_PASS_ACTUAL_NOT_RUN",
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "handoffSha256": "831e346e69fe2e960334f107432cd145587cdff31f95785128a7444280a75d9b",
+      "assemblySha256": "feabdeb254c335dd080acc2c85affec43bb3400a7d649bd4d680c24012570cde",
+      "passed": 28,
+      "failed": 0,
+      "actualCalls": 0,
+      "boundFilesVerified": 3,
+      "peerSha256": "318fc5c3a70e63eb5f5a1791ca1b7a14ff6b5afb993a77c414a4e34ef7747773",
+      "implemented": "Original JWT/context/input and once provenance validation; actual read-port before/after full178 original/owned/authority/budget/UNKNOWN preservation; terminal SHA only after durable proof",
+      "missing": [
+        "captured original producer once-journal adaptation",
+        "two-frame same-child IPC",
+        "same-child kernel inspector and outer4 closure",
+        "actual target4/credentials/session/source binding/resource slot",
+        "upstream SQL117 original control restoration"
+      ]
+    }
+  },
+  "actual": {
+    "signedAuth": "PARTIAL_PASS_REAL_LOCAL_AUTH_C21_CONSENT_ONE_MEMBER_AI22_23_24_AND_LIFECYCLE_REMAIN",
+    "naturalMidnight": "NOT_RUN",
+    "externalProvider": "NOT_RUN",
+    "realMembers": "HOLD",
+    "fullRestore": "NOT_RUN",
+    "productionActivation": "NOT_RUN",
+    "storage39MissingBytes": "UNRESOLVED",
+    "ownedChildGroupClosureSmoke": "PASS_PROCESS_ONLY",
+    "syntheticCanonicalWholeRead": "PASS_REPEATABLE_METADATA_ROWS_AUTHORITY_SEQUENCE",
+    "syntheticDbRedactedRoleArchive": "PASS_NOT_RESTORED_NOT_PHYSICAL_STORAGE",
+    "nativeFourServiceCreation": {
+      "status": "FAIL_UNKNOWN_FIRST_NETWORK_CREATE",
+      "creatorSha256": "4746bcfa51b6180caac0d3db4f6a9e84002454b0ed0d9fea161953dadb3adbd2",
+      "sourceCommit": "141240aa32fb13a3e82945c4187f3203e09603b7",
+      "newContainers": 0,
+      "authUsers": 0,
+      "priorExact": true,
+      "unknown": [
+        "LOST_NETWORK_UNKNOWN"
+      ],
+      "finalReceiptSha256": "02422a44170b2a3557bb4bd2d40988c08eb90629a7d0b535d53101543f68934f",
+      "sameRequestRetried": false,
+      "oldResourcesRemoved": false
+    },
+    "nativeFourServiceCreationA2": {
+      "status": "FAIL_FRESH_DB_STARTUP_MEMORY_FLOOR",
+      "creatorSha256": "7dbf371cba6ffd50a389d6c1ebf824fb5978b9b88c460907617a11210a1402eb",
+      "networkCreation": "PASS_TWO_EXPLICIT_SUBNETS",
+      "dbCreated": 1,
+      "dbStarted": false,
+      "authUsers": 0,
+      "minimumKiB": 1048576,
+      "availableKiB": 1040736,
+      "priorExact": true,
+      "ownStopped": {
+        "fedf8fd8b806bc7f2f0ba42c0800ad48fbb70e0b56c2c7bd58667a8ed8b73308": {
+          "oomKilled": false,
+          "stopped": true
+        }
+      },
+      "unknown": [],
+      "finalReceiptSha256": "540130acfc70dd679c1d843bc467865c4b00d057ba32550c3e252f13ffb27799",
+      "sameRequestRetried": false,
+      "oldResourcesRemoved": false
+    },
+    "additionalOldDbMemoryStop": "PREVIOUS_THREE_AND_CANCEL_RACE78_FULFILLED_NO_STOP_APPROVAL_PENDING",
+    "a3Preparation": {
+      "status": "READY_STATIC_ONLY_WAITING_MEMORY_STOP_APPROVAL",
+      "project": "jonghyun-backend100-7e14bf02",
+      "databaseManifestSha256": "2b6190e6dc7f9a1e568f872574894629a69aabdb7c764ca0bb9b73bbe2ad6dd0",
+      "creatorSha256": "ca2f10dac54c4c833d7d0a910c2a32e035c26949b106357671f92d3c26b4a992",
+      "affectedOfflineChecksPassed": 5,
+      "sourceLogic": "EXACT_A2_LOGIC_CONSTANT_ONLY_SUCCESSOR",
+      "sqlExecuted": false,
+      "runtimeExecuted": false,
+      "preparedDirectoryMode": "700",
+      "preparedFileMode": "600"
+    },
+    "seoulHttpsPublicProbe": {
+      "status": "NOT_VERIFIED_TWO_ACTUAL_TLS_FAILURES",
+      "port443": "TIMEOUT",
+      "port8088": "TLS_WRONG_VERSION_NUMBER",
+      "tlsValidationRelaxed": false,
+      "sampleGetCalls": 0,
+      "memberTextSent": false,
+      "fallbackHttpCalls": 0,
+      "receiptSha256": "a333de8621a113b3a243511e605a2432601e90e5e24ca1753ede3d675be42c8f"
+    },
+    "knownLocalProviderConfigurationPresence": {
+      "scope": "ONE_KNOWN_LOCAL_ENV_KEY_PRESENCE_ONLY",
+      "kopisKeyConfigured": true,
+      "potensKeyConfigured": true,
+      "potensBaseUrlConfigured": true,
+      "aiRetentionDecisionConfigured": false,
+      "secretValuesLogged": false,
+      "modelCalls": 0
+    },
+    "kopisOfficialSevenDays": "NOT_RUN_USER_KEY_TRANSMISSION_APPROVAL_PENDING",
+    "kopisPublicSystemTls": "PASS_HOST_ROOT_HEAD_ONLY_NOT_RANK_API",
+    "signedAuthLifecycleCoverage": {
+      "expiredBearer": "NOT_RUN",
+      "revokedSession": "NOT_RUN",
+      "anonymousBearer": "NOT_RUN",
+      "memberChanged": "NOT_RUN",
+      "differentOriginalContext": "NOT_RUN"
+    },
+    "signedAuthLifecycleProducer": "ACTUAL_PARTIAL_CURRENT_C17_CREATE_LOGIN_THEN_PRELAUNCH_MEMORY_REFUSAL",
+    "serviceMemberRetirement": "NOT_RUN",
+    "consentRevocation": "NOT_RUN",
+    "seoulPublicSystemTlsProbe": {
+      "status": "FAIL_CONNECT_TIMEOUT_NO_TLS_ESTABLISHED",
+      "method": "HEAD_HOST_ROOT_ONLY",
+      "curlExitCode": 28,
+      "httpStatus": 0,
+      "sslVerifyResult": 0,
+      "tlsAppConnectSeconds": 0,
+      "tlsConfirmed": false,
+      "elapsedMs": 5043,
+      "receiptSha256": "deb817371ac741fd5383c527fbb130d0b6119fd997cef3cf990d8572e72abc3b",
+      "sampleGetCalls": 0,
+      "keyUsed": false,
+      "validationRelaxed": false
+    },
+    "publicConsentWithdrawal": "PASS_ACTUAL_C21_PUBLIC_WITHDRAWAL_ONLY",
+    "rootReviewedLaunchAssembly": "ACTUAL_BOUND_CURRENT_C17_NO_READY_NO_AI",
+    "typedLifecycleDispatch": "IMPLEMENTED_OFFLINE_ONLY_NOT_RUN",
+    "consentMemberProvisioningAndReady": "ACTUAL_MEMBER_PROVISIONING_PASS_READY_NOT_RUN",
+    "currentC15Scope": {
+      "AuthCreateLogin": "PASS_ONE_SYNTHETIC_MEMBER",
+      "AIReadyResponseWithdrawal": "NOT_RUN",
+      "firstFailure": "PRELAUNCH_MEMORY_1019872_LT_1048576_KIB",
+      "ownFour": "EXACT_OWN4_CLOSED",
+      "fullOriginalCPreservation": "UNPROVEN",
+      "overall": "22/28_UNCHANGED"
+    },
+    "currentC17Scope": {
+      "AuthCreateLogin": "PASS_ONE_SYNTHETIC_MEMBER",
+      "AIReadyResponseWithdrawal": "NOT_RUN",
+      "firstFailure": "PRELAUNCH_MEMORY_1027304_LT_1048576_KIB_253MS",
+      "ownFour": "EXACT_OWN4_CLOSED",
+      "fullOriginalCPreservation": "UNKNOWN_NOT_PROMOTED",
+      "overall": "22/28_UNCHANGED"
+    },
+    "currentSql120Scope": {
+      "status": "PASS_DATABASE_CONCURRENCY_AND_FULL_NATIVE119_FIXTURE_PRESERVATION",
+      "actualAuthRESTUI": "NOT_RUN",
+      "source": "SYNTHETIC_NATIVE119_STORAGE0_NOT_OPERATING_FULL_BACKUP",
+      "evidence": "actualSql120C20 in 2026-10-13-auth-lifecycle-coverage.json"
+    },
+    "currentC21Scope": {
+      "status": "PASS_C_SIGNED_CONSENT_ONLY",
+      "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+      "scope": "ACTUAL_LOCAL_AUTH_HTTP_RPC_PRODUCT_FACTORY_SYNTHETIC_MODEL_ONE_MEMBER_PUBLIC_AI_CONSENT_ONLY",
+      "actualNewAuthAccounts": 1,
+      "positiveAiSyntheticProviderCalls": 1,
+      "positiveResult": "no_results",
+      "positiveReservationDispatchedAndSettled": true,
+      "publicWithdrawalCalls": 1,
+      "afterWithdrawal": "consent_revoked",
+      "afterWithdrawalReservations": 0,
+      "afterWithdrawalModelCalls": 0,
+      "originalTokenAndRowsUnknownPreserved": true,
+      "newOwn4StoppedOnceExit0OOMFalse": true,
+      "priorInventoryPreserved": true,
+      "memoryGuardUnchanged": true,
+      "AI22": "NOT_RUN",
+      "AI23": "NOT_RUN",
+      "AI24": "NOT_RUN",
+      "physicalResponseLoss": "NOT_RUN",
+      "serviceRetirement": "NOT_RUN",
+      "realMembersProviderLegalBilling": "NOT_RUN",
+      "evidence": {
+        "root-final.json": {
+          "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/root-final.json",
+          "sha256": "b60f79f1117af8d0718a42d2e37cde889176a46aa497b0198ecfc599d582bfa9"
+        },
+        "receipt.json": {
+          "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/receipt.json",
+          "sha256": "4c0972e853d88447b718b8957269f44222402a1b8a736aa7334e72f7496efa37"
+        },
+        "own-four-final.json": {
+          "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/own-four-final.json",
+          "sha256": "1d0cf2257cb0fafc209a54abccd92276590a7b140be57b846c8f6f2d34fbadcc"
+        },
+        "c-supervisor-final-private.json": {
+          "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/c-supervisor-final-private.json",
+          "sha256": "b34fdd0157f55d1e704d5776bd80f8be7d1a666d97a7240297a244517ea816c2"
+        },
+        "c-node-result-private.json": {
+          "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/c-node-result-private.json",
+          "sha256": "f462f4e5e5d7e4267f87b286351165c41f200928d20ea0e5aae7896f8ab6c1ed"
+        }
+      },
+      "independentReview": {
+        "status": "PASS_C_SIGNED_CONSENT_ONLY",
+        "reviewer": "ack_recovery_review",
+        "actualAuthCallsAcrossPhases": 3,
+        "syntheticModelCalls": 1,
+        "publicWithdrawal": 1,
+        "deniedReservations": 0,
+        "deniedModelCalls": 0,
+        "sameOriginalToken": true,
+        "ownedStops": 4,
+        "memorySamples": 46,
+        "childGroupAndStreamsClosed": true,
+        "limitation": "Original/full178 rows and post-effect budget/UNKNOWN preservation are proved by exact successful parent checks+terminal; separate full after-effects and after-restoration datasets not retained for independent full comparison",
+        "notRun": [
+          "AI22",
+          "AI23",
+          "AI24",
+          "Naver real members",
+          "actual provider billing",
+          "service retirement",
+          "physical response loss",
+          "UI",
+          "physical full restore"
+        ],
+        "sequencesAndPhysicalBytes": "NOT_VERIFIED"
+      },
+      "overallCompletionAdded": 0
+    },
+    "currentCancelRace78Stop": {
+      "status": "FULFILLED_APPROVED_EXACT_ONE_NORMAL_STOP",
+      "receiptSha256": "1d4f499de4ff1fa96606cee841fc194f1c4e988ae1fc332f1bf4cd8ee8ace49c",
+      "containerDataVolumesRetained": true
+    }
+  },
+  "limitations": [
+    "Offline tests do not prove actual Auth/DB/product midnight success.",
+    "Source graph must be frozen to reviewed HEAD before live execution.",
+    "Sequence current values and physical Storage bytes not verified by AI24.",
+    "Full ordinary dependency imports not proven immutable captured execution."
+  ],
+  "activationAllowed": false,
+  "secretsIncluded": false,
+  "historical169Files": {
     "tools/local/observe_isolated.py": {
       "sha256": "4066e892fd4132bae080bd5997c9369ad552e4c04486a065d4e8878f813e1264",
       "bytes": 12808
@@ -52,94 +703,31 @@
       "bytes": 34518
     }
   },
-  "checks": {
-    "integratedOfflineUnittest": {
-      "passed": 169,
-      "failed": 0,
-      "skipped": 0,
-      "parts": {
-        "signedAuth": 57,
-        "ai24": 48,
-        "midnightPreparation": 13,
-        "observer": 18,
-        "productionPreparation": 33
-      },
-      "sourceHead": "141240aa32fb13a3e82945c4187f3203e09603b7"
-    },
-    "denoCachedCheck": "PASS",
-    "pythonCompile": "PASS",
-    "diffCheck": "PASS",
-    "independentReadOnlyRecoveryReview": {
-      "status": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND",
-      "ai24Sha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0"
-    },
-    "observerProfileSelection": "PASS_18_OFFLINE_CONTEXT_SOCKET_BINDING",
-    "productionPreparationOffline": {
-      "passed": 33,
-      "failed": 0,
-      "skipped": 0
-    },
-    "successorIntegrationAttempt": {
-      "passed": 119,
-      "failed": 1,
-      "skipped": 0,
-      "failure": "HEAD-sensitive original AST guard rejected explicitly reviewed signed_source_pins extension",
-      "status": "FAILURE_PRESERVED_SUPERSEDED_BY_169_PASS_EXACT_APPROVED_CHANGE_GUARD"
-    },
-    "native119IndependentReview": "NO_ADDITIONAL_DEFINITE_BLOCKER_FOUND_SCHEMA_ROLE_LINEAGE_ONLY",
-    "signedNegativeRetentionSuccessor": {
-      "passed": 58,
-      "failed": 0,
-      "skipped": 0,
-      "scope": "OFFLINE_SIGNED_AUTH_SUITE_ONLY_NOT_NEW_170_TEST_FULL_RUN",
-      "sourceProof": "2026-10-13-auth-lifecycle-coverage.json"
-    },
-    "currentSignedSourceFreeze": {
-      "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
-      "sourceHead": "3a0a42a37ab7bc40bc25bd9cafc543329e58c649",
-      "fileCount": 57,
-      "sourcePinsSha256": "9298b1cc846eaa74869134f0512e6cc9e97da0b12ae09938fadfe92d5751faf5",
-      "receiptSha256": "b265413f4fe7b38613ea14987f09ca858bbad7f1f70ab15db01300275e18bb0b",
-      "actualResourceCalls": 0,
-      "mustRefreshAfterLifecycleIntegration": true
-    },
-    "signedAuthLifecycleSuccessor": {
-      "passed": 70,
-      "failed": 0,
-      "skipped": 0,
-      "scope": "OFFLINE_ONLY_ACTUAL_AUTH_NOT_RUN",
-      "nullableAuditSqlScope": "SQLITE_MODEL",
-      "independentReview": "PASS_AFTER_FIXED_NULL_PRESERVATION",
-      "proof": "2026-10-13-auth-lifecycle-coverage.json"
-    },
-    "stagedProducerIntegration": {
-      "passed": 98,
-      "retained": 70,
-      "new": 28,
-      "failed": 0,
-      "skipped": 0,
-      "scope": "OFFLINE_ONLY",
-      "independentReview": "FIVE_FINDINGS_FIXED_V2_READ_ONLY_PASS",
-      "producerSha256": "7fc60f96b7f2967f1ca0044523d318f811c365ddf880efb202826bc590bd3865"
-    },
-    "consentPrivateCoreModels": {
-      "passed": 18,
-      "failed": 0,
-      "actualCalls": 0,
-      "cli": "ALWAYS_NOT_RUN",
-      "runtimeCapture": "NOT_PROVEN",
-      "caller": "NOT_IMPLEMENTED",
-      "factorySha256": "2c754c795cf236694a9de8276e4db2be3aa5a5d92884040eb28ba3edea446e4d"
-    },
-    "cleanupPrivateAdapterModels": {
-      "passed": 32,
-      "failed": 0,
-      "actualCalls": 0,
-      "actualLaunchAbi": null,
-      "adapterSha256": "9286affa199c0455842e1195053e8f12d1254ad2129b1dfc005b9f27de259359"
-    }
+  "sourceStateHistorical": "COMMITTED_TYPED_DISPATCH_AND_CAPTURED_CONSENT_CALLER_fed9581",
+  "currentSourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+  "currentSourceRegression": {
+    "testCount": 162,
+    "status": "PASS",
+    "scope": "SOURCE_REGRESSION_ONLY"
   },
-  "actual": {
+  "currentIndependentWork": "C21_ACTUAL_PASS_REVIEW_AND_NEXT_SIGNED_AI22_AI23_AI24_PREPARATION",
+  "signedAi24PlanImplementation": {
+    "status": "COMMITTED_OFFLINE_TESTED_NOT_ACTUAL",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "toolSha256": "608d421af98abdfe7c03eaf8dba8a9c054afb16c8fccc6088d1a0356842cdf65",
+    "testSha256": "c26b411391b922ddbca3c9e142ac84715f740ffe820887e3e2cecc9b0b240b6f",
+    "totalTests": 54,
+    "newTests": 6,
+    "rootElapsedSeconds": 0.349,
+    "independentPeer": "PASS_READ_ONLY",
+    "handoffSha256": "82b42906867365d03e764eac064f72e106ee780b8c028029b1afbc7010d565aa",
+    "contractSourceFiles": 58,
+    "currentContractSourceReceiptSha256": "0f0cf87ed35416412264430eec239640c5ff46ce7c88a554bfdabcb6d49e82a3",
+    "actualAuthAndMidnight": "NOT_RUN",
+    "inputChangedBeforePersistence": "REJECTED",
+    "executionAllowed": false
+  },
+  "actualHistoricalBeforeCurrentAuthAndSql120": {
     "signedAuth": "NOT_RUN",
     "naturalMidnight": "NOT_RUN",
     "externalProvider": "NOT_RUN",
@@ -244,14 +832,16 @@
       "validationRelaxed": false
     },
     "publicConsentWithdrawal": "NOT_RUN",
-    "rootReviewedLaunchAssembly": "NOT_IMPLEMENTED"
-  },
-  "limitations": [
-    "Offline tests do not prove actual Auth/DB/product midnight success.",
-    "Source graph must be frozen to reviewed HEAD before live execution.",
-    "Sequence current values and physical Storage bytes not verified by AI24.",
-    "Full ordinary dependency imports not proven immutable captured execution."
-  ],
-  "activationAllowed": false,
-  "secretsIncluded": false
+    "rootReviewedLaunchAssembly": "IMPLEMENTED_FIXED_ABI_OFFLINE_UNBOUND_ACTUAL_NOT_RUN",
+    "typedLifecycleDispatch": "IMPLEMENTED_OFFLINE_ONLY_NOT_RUN",
+    "consentMemberProvisioningAndReady": "FROZEN_CANDIDATE_36_ROOT_MODELS_PASS_ACTUAL_NOT_RUN_SUPERVISOR_UNIMPLEMENTED",
+    "currentC15Scope": {
+      "AuthCreateLogin": "PASS_ONE_SYNTHETIC_MEMBER",
+      "AIReadyResponseWithdrawal": "NOT_RUN",
+      "firstFailure": "PRELAUNCH_MEMORY_1019872_LT_1048576_KIB",
+      "ownFour": "EXACT_OWN4_CLOSED",
+      "fullOriginalCPreservation": "UNPROVEN",
+      "overall": "22/28_UNCHANGED"
+    }
+  }
 }

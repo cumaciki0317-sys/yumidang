@@ -2,6 +2,24 @@
 
 전체 **79%(22/28)**, 핵심9/10·추가5/6·독립5/5·운영3/7. 관리 분모28을 유지한다. 코드·모형·격리 SQL·실제Auth·자정·공급사·실회원·운영 증거를 구분한다. 새 준비 파일만으로 완료 수를 올리지 않는다.
 
+**최신 세부 진척:** 소스 `37863a66e50467f707961a7036a6efae604cb6dc`. AI24 서명 계정 선택/영속 준비 연결 구현과 54개 회귀가 완료됐고, SQL120 실제 DB의 같은/겹친 메시지 동시 읽음·숨김 거절·최초 읽음 시간·원본178개/권한 보존·정상 종료가 C20에서 최종 PASS했다. C21에서 실제 로컬 Auth·제품 AI 결과 없음·공개 동의 철회·철회 후 예약/모델0·원 행/UNKNOWN 보존·새4개 정상 종료도 통과했다. 전체 완료22/28은 아직 그대로이며 아래 여섯 완료 단위의 남은 조건을 제외하지 않는다.
+
+| 미완료 단위 | 현재 남은 주요 조건 |
+|---|---|
+| 핵심10 | 실회원 두 계정 전 과정, 현재 HOLD |
+| 추가6 | 현재 HTTP·실제 화면 소비·외부 활성화 조건 등 전체 연결 |
+| 운영4 | 실제 Auth/AI·자연 자정·주기 파기 및 외부 조건의 실제 연결 |
+| 운영5 | 실제 회원 운영 전 과정, 현재 HOLD |
+| 운영6 | Storage39 실제 원본 바이트·전체 복원·지원/백업 담당 조건 |
+| 운영7 | 선행 조건 충족 후 별도 승인된 운영 적용·복구 검증 |
+
+검증 증거와 세부 범위는 [현재 coverage](2026-10-13-auth-lifecycle-coverage.json)의 actualSql120C20, [실행 기록](2026-10-13-auth-lifecycle-execution.md)을 따른다.
+
+
+## 최신 사용자 병렬 배정
+
+사용자는 성호 신규 작업 배정을 금지하고 종현 백엔드 잔여를 넓게 배정하도록 요청했다. [종현 J01~J09 병렬 인계](2026-10-13-jonghyun-parallel-backend.md)를 따르며 민규12개·Auth/AI22/23/24·복원은 민규가 유지한다. 기존 성호 소유권/변경을 보존하고 실제 화면 검증 조건도 분모에서 제외하지 않는다. 기존 성호 관련 기록은 과거 상태이며 이번 배정으로 새 화면 작업을 요청하지 않는다.
+
 ## 승인·소유권·하네스
 
 사용자가 백엔드100 실행 계획 구현을 요청했고, 실제 로컬 Auth 포함 AI24를 선택했다. 현재 작업자는 minkyu다. 추가 답변 “필요한 경로만 민규로 재배정”으로 정책 단독 커밋 `eac8562`의11개와 `ffce766`의 observer회귀1개, 총12개 경로만 민규에게 이관했다. 나머지 종현 영역과 성호 화면·UI/UX는 유지한다. 본 작업은 새 `minkyu/backend100-20261012` 브랜치/worktree에서 진행하며 Auth·자정·복원 검토는 서로 다른 worktree의 같은 actor로 수행한다.
@@ -185,3 +203,28 @@ a3 생성기는 특정 과거 HEAD나 runner hash를 상수로 갖지 않고, �
 독립 검토 및 공식 Auth source에서 metadata/삭제 audit/observer 실패 직전 POST/입력 파일 경로/비정상 응답 UNKNOWN의 다섯 문제를 확인해 corrected v2로 교정했다. 초기 후보92개 PASS를 실제 호환성 완료로 확대하지 않았고 실패 후보를 보존했다. 최종 v2 독립 읽기 검토에서 해당 문제의 해결을 확인했다.
 
 동의 core는 ready 정상 대조군 뒤 원 JWT 공개 철회1회와 consent-specific AI 거절을 검사하도록 구성했다. 전체 쓰기·정확한 readback 보강 후 private 모형18개 PASS이며 actual CLI는 항상 NOT_RUN이다. 비공개 외부 정리 어댑터 모형32개 PASS도 root에서 재확인했다. 전용 프로세스 종료·전용4개의 STOP 단일시도와 마지막 상태/설정검증 계약을 준비했으나 실제 launch ABI 연결은 닫혀 있다. 실제 Root caller·runtime captured source·추가3DB중지 승인·새 메모리 확인·실제Auth 생성/자연 만료/자정은 계속 남는다. [구체적인 연결 계약](2026-10-13-auth-lifecycle-execution.md)을 따른다.
+
+
+## 2026-10-13 typed dispatch와 실제 소스 캡처 연결
+
+전체 **79%(22/28)**다. `fed9581aa69ae85d9a5dad17c6c5a2ecb551329e`에 실제 호출 연결 후보3개를 로컬 고정했다. 원 producer binding/input을 보존하고 별도 approved 복사본·단일 durable intent로 기존 lifecycle kernel을 호출한다. Node의 제품 codeRoot와 factory 경로는 검토 객체가 지정한 private source tree로 연결하며 원 REPO는 버전·native 이력 검증에 유지한다. 원 토큰·원 발급 응답·baseline6·UNKNOWN을 바꾸지 않는다. partial 영수증은 정확한 필드·정수 횟수·원 토큰 hash·세션 복구 없음과 보존 성공을 요구하며 익명/다른 문맥/서비스 탈퇴/동의/공급사/자정/물리 복원을 NOT_RUN 또는 NOT_VERIFIED로 유지한다.
+
+source 파일400·디렉터리500 읽기와 token/state600·private 부모700 읽기를 구분해 실제 캡처 tree의 모드 불일치를 수정했다. 동의 typed caller는 committed union91개와 factory1개를 복사하고 native import를 그 tree에서 수행한다. pre/post pin 검증은 OS 불변성이나 실제 DB 검증을 뜻하지 않는다. CLI 동의는 계속 NOT_RUN이다. 실제 C 회원 발급·원 세션/동의·headroom·전체 baseline·정리는 고정 root 조립이 별도로 제공해야 하며 아직 실제 실행하지 않았다.
+
+root 통합 시험은 처음 소스가 기존 HEAD와 달라 Auth114개 중8오류·동의 모형27개 중7실패로 거절됐다. 당시 실제 호출0이고 영수증SHA `962e0bf097d4513af69f1d627560fcd0fa5a60513f038bddd3274f558862b9df`로 보존했다. 로컬 소스 고정 후 같은 시험을 약화 없이 재실행해 Auth114·관련61 **175개 PASS**, 동의 모형27개 PASS와 cached Deno PASS를 확인했다. 초기 두 연락처형 clientRequestId 거절은 기존 사용자1A 기준에 맞는 개인정보 거절로 원인을 확인했으며 정상 입력 성공이나 운영 탐지 품질로 확대하지 않는다. 제품 privacy/handler 변경은 없다.
+
+현재57개 source freeze는 HEAD fed9581, mapSHA `93c8d4a642acb64b30f82df6f802653367e4d26773a3e19ecc5c5a0d8fc4ed82`, 영수증SHA `2e5dba98543f4c46424b2d5c01861666f07f6033df1da279fe3e20766ba04951`다. 올바른 private700/600 경로에서 원 HEAD 바이트와 대조했으며 자원/Auth/DB 호출0이다. HEAD가 바뀌면 실행 전에 새로 고정한다. private 단일 자식 coordinator는 자연 발급/대기/재개/dispatch/정리와 연속 메모리 감시를 연결해 검토 중이다. 익명·별도 문맥·서비스 탈퇴·자연 자정·실회원 HOLD·Storage39·공급사·운영 조건은 여전히 남는다. 푸시·운영 적용은 하지 않았다.
+
+
+private coordinator v4를 root에서 재실행해 **59개 모형 PASS**를 확인했다. 기존32개 정리 모형과 새27개 조립 모형이며 actual0이다. 코드 ABI는 구현됐지만 새4개 ID/creator 성공 영수증·메모리 슬롯이 없어 실제 미배정 상태다. source 모드400/500과 private 입력600/700을 맞췄으며 준비 읽기부터 마지막 source/capsule 검사까지 감시 후 종료한다. 실제 자연3600초 경과와 exp-60 창의 SQL/Auth 지연은 검증하지 않았다. Root는 Node25.9.0 실행 파일의 단일 링크·권한·안정 FD·SHA를 읽기로 확인했고 영수증SHA `81a1cc619521227b93cdb8b484768259628d69fa41c42de5eab933e3af7fcafe`를 보존했다. 전체 **79%(22/28)**를 유지하며 peer 검토와 C 회원/준비 조립은 계속한다.
+
+## 2026-10-13 실제 Auth 환경 연결
+
+전체 **79%(22/28)**를 유지한다. 승인된 기존 격리3개 정상 중지 뒤 새 A9 환경을 실행했다. source `4e28789`의 ACL 복원·현재 Auth 이력 검증 보완을 적용해 원119 전체행/권한/sequence 복원과 현재 history 읽기가 통과했다. Auth와 REST의 DB TLSv1.3/256bit를 각각 실제 관측했다. Auth 사용자 발급·AI24 자연 자정·서비스 탈퇴 복구는 아직 완료로 집계하지 않는다. 세부 실제 성공/실패와 원 영수증 해시는 [Auth 실행 기록](2026-10-13-auth-lifecycle-execution.md), [검증 범위](2026-10-13-auth-lifecycle-coverage.json)에 기록했다. 새4대상에 동일 원 인증 문맥·탈퇴 ID/ACK 보존을 검증하는 기존 typed 실행 경로를 연결하고 있다. 운영 변경·푸시·실회원 HOLD 변경은 없다.
+
+
+## 실제 C15 결과와 승인 대기 중 독립 작업 재개
+
+전체79%(22/28). 현재 소스 기준은 `7a47bc41c4803f324327bd8cbaa746171312fa59`이며 최신 상세 증거는 [Auth 실행 기록](2026-10-13-auth-lifecycle-execution.md)과 [coverage](2026-10-13-auth-lifecycle-coverage.json)을 따른다. 회귀162개, 실제 native119 복원/TLS 및 C15 합성 회원 생성·로그인은 PASS다. AI 실행 직전 여유 메모리1,019,872KiB가 시작 기준1,048,576KiB보다 낮아 거절됐고 AI 요청/READY/철회는 NOT_RUN이다. 신규4개 정상 중지와 기존 inventory 보존은 확인했으며 전체 C 원 행 보존 최종 조건은 UNPROVEN이다.
+
+추가 격리 DB 정상 중지 승인은 아직 대기 중이다. 이 승인 대기 때문에 독립 작업까지 중단하지 않는다. AI24에서 실제 서명 회원6명 중 검증할3명을 명시적으로 지정해 영속 계약에 연결하는 준비 helper를 기존 파일에 구현하며, 원 window·원 인증 문맥·UNKNOWN·메모리 기준·실제 실행 승인 경계는 유지한다. 기존 offline CLI의 임의 합성 ID 생성은 실제 signed 계정 선택의 근거로 사용하지 않는다. 실회원 HOLD·원 Storage39 바이트·공급사·운영 적용 조건은 유지한다.

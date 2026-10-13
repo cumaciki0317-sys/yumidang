@@ -5,7 +5,7 @@
     "total": 28,
     "displayPercent": 79
   },
-  "status": "WAITING_USER_APPROVAL_NO_STOP_PERFORMED",
+  "status": "APPROVED_THREE_NORMAL_STOP_CONFIRMED",
   "reason": "ACTUAL_FRESH_START_MEMORY_1040736_KIB_BELOW_1048576_KIB",
   "scope": "THREE_EXACT_OLD_ISOLATED_DATABASES_NORMAL_STOP_ONLY",
   "candidates": [
@@ -65,5 +65,26 @@
   "sqlMutation": false,
   "recheckIdentityAndClientCountsBeforeStop": true,
   "approvalBoundary": "User plan requires exact stopped/runtime target approval; prior approvals cover different targets",
-  "readOnlyReceiptSha256": "417afef4baa67def44609f55fbfdc014500bbdb3e280233dc54781d4038beb0d"
+  "readOnlyReceiptSha256": "417afef4baa67def44609f55fbfdc014500bbdb3e280233dc54781d4038beb0d",
+  "approval": "USER_EXACT_THREE_STOP_APPROVED",
+  "stopReceiptSha256": "c9b679cc11b9eb36e6b70fc653bb9bb91d50e05b2081cac5d271d6dc69af2bf2",
+  "memoryAvailableKiB": 1300788,
+  "nextCandidateAfterC15": {
+    "name": "supabase_db_yumidang-minkyu-cancel-race78",
+    "id": "3b12ee326a548794a1aeb125703b162d1cf699f9f3a7cd72d45cd64dfc0091f0",
+    "image": "sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518",
+    "otherClientsObserved": 0,
+    "approval": "USER_APPROVED_EXACT_ONE",
+    "stopExecuted": true,
+    "containersDataRetained": true,
+    "beforeStopRecheckRequired": true,
+    "stopReceipt": {
+      "path": "/private/tmp/yumidang-cancel-race78-approved-stop-zssswo4b/receipt.json",
+      "sha256": "1d4f499de4ff1fa96606cee841fc194f1c4e988ae1fc332f1bf4cd8ee8ace49c",
+      "status": "PASS_APPROVED_EXACT_ONE_NORMAL_STOP",
+      "otherClients": 0,
+      "stopCalls": 1,
+      "containerDataVolumesRetained": true
+    }
+  }
 }

@@ -6,29 +6,34 @@
     "total": 28,
     "displayPercent": 79
   },
-  "sourceBase": "f66356b9425ed8263f8464c5753d1a46cfd764aa",
-  "status": "STAGED_PRODUCER_AND_CLOSED_CONSENT_CORE_OFFLINE_PASS_ACTUAL_NOT_RUN",
+  "sourceBase": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+  "status": "PARTIAL_ACTUAL_LOCAL_AUTH_PASS_RETIREMENT_READY_PREREQUISITES_MISSING",
   "files": {
-    "tests/integration/jonghyun/isolated_ai_contracts.py": "7fc60f96b7f2967f1ca0044523d318f811c365ddf880efb202826bc590bd3865",
-    "tests/integration/jonghyun/isolated_ai_factory.ts": "2c754c795cf236694a9de8276e4db2be3aa5a5d92884040eb28ba3edea446e4d",
-    "tests/database/minkyu/test_signed_auth_binding.py": "d5c23b4976b1d40c9c380bb1aaa77c2436b6d2d17e7d8ebb504c5841414f6ad0"
+    "tests/integration/jonghyun/isolated_ai_contracts.py": "3e48b3ab433b8f516f600a9b9c65e7d6a4ff091d3f86d987a8b39271ebb6db8d",
+    "tests/integration/jonghyun/isolated_ai_factory.ts": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+    "tests/database/minkyu/test_signed_auth_binding.py": "a8713744ff3af47720571ed6f75cf0df1b60923cb320b86d4603b984b60303db"
   },
   "offlineChecks": {
-    "signedAuthTests": 98,
-    "retained": 70,
-    "producerNew": 28,
+    "signedAuthTests": 114,
+    "retained": 98,
+    "newTypedCapsule": 16,
+    "relatedAi24": 48,
+    "relatedMidnight": 13,
+    "totalRelated": 175,
     "failed": 0,
     "skipped": 0,
     "resourceWarningsAsErrors": "PASS",
     "cachedDeno": "PASS",
-    "consentPrivateModeled": 18,
-    "cleanupPrivateModeled": 32
+    "consentPrivateModeled": 27,
+    "cleanupPrivateModeledPreviously": 32
   },
   "review": {
     "producerV1": "FIVE_FINDINGS_PRESERVED_CORRECTED_V2",
     "producerV2": "READ_ONLY_PASS",
     "consentCore": "SHORT_WRITE_FIXED_CLI_ALWAYS_NOT_RUN",
-    "cleanupAdapter": "POST_STOP_AND_FINAL_OWNED_STATE_FIXED_ACTUAL_ABI_NONE"
+    "cleanupAdapter": "POST_STOP_AND_FINAL_OWNED_STATE_FIXED_ACTUAL_ABI_NONE",
+    "typedDispatch": "STRICT_PARTIAL_PROOF_AND_SOURCE400_500_PEER_PASS",
+    "capturedConsentCaller": "READ_ONLY_PEER_NO_ADDITIONAL_DEFINITE_BLOCKER"
   },
   "existingNegativeCases": [
     "missing",
@@ -44,9 +49,9 @@
     "differentOriginalContext": "NOT_RUN"
   },
   "fullLifecycleCoverage": "NOT_RUN",
-  "actualAuthUserCreations": 0,
-  "actualLifecycleMutationCalls": 0,
-  "nextImplementation": "Reviewed fixed root launch assembly and source custody; actual container/native119 proof and memory boundary remain required",
+  "actualAuthUserCreations": 6,
+  "actualLifecycleMutationCalls": 1,
+  "nextImplementation": "새 격리 owned 대상의 명시적 readiness/복원 연결, 매번 현재 역할4개 단일읽기 batching, 별도 fresh C 실제 AI no_results/동의철회 연결",
   "activationAllowed": false,
   "secretsIncluded": false,
   "receiptRetentionBaseline": {
@@ -95,9 +100,1678 @@
     "stage_lifecycle_accounts",
     "resume_lifecycle_accounts",
     "bind_lifecycle_accounts",
-    "cleanup_lifecycle_accounts"
+    "cleanup_lifecycle_accounts",
+    "dispatch_lifecycle_accounts",
+    "inspect_lifecycle_dispatch"
   ],
   "actualConsentEndpoint": "NOT_RUN",
-  "runtimeCapturedExecution": "NOT_PROVEN",
-  "rootLaunchAbi": "NOT_IMPLEMENTED"
+  "runtimeCapturedExecution": "IMPLEMENTED_OFFLINE_MODELED_ONLY_ACTUAL_NOT_RUN",
+  "rootLaunchAbi": "IMPLEMENTED_FIXED_ABI_OFFLINE_UNBOUND_ACTUAL_NOT_RUN",
+  "previousProducerIntegration": {
+    "sourceBase": "f66356b9425ed8263f8464c5753d1a46cfd764aa",
+    "status": "STAGED_PRODUCER_AND_CLOSED_CONSENT_CORE_OFFLINE_PASS_ACTUAL_NOT_RUN",
+    "files": {
+      "tests/integration/jonghyun/isolated_ai_contracts.py": "7fc60f96b7f2967f1ca0044523d318f811c365ddf880efb202826bc590bd3865",
+      "tests/integration/jonghyun/isolated_ai_factory.ts": "2c754c795cf236694a9de8276e4db2be3aa5a5d92884040eb28ba3edea446e4d",
+      "tests/database/minkyu/test_signed_auth_binding.py": "d5c23b4976b1d40c9c380bb1aaa77c2436b6d2d17e7d8ebb504c5841414f6ad0"
+    },
+    "offlineChecks": {
+      "signedAuthTests": 98,
+      "retained": 70,
+      "producerNew": 28,
+      "failed": 0,
+      "skipped": 0,
+      "resourceWarningsAsErrors": "PASS",
+      "cachedDeno": "PASS",
+      "consentPrivateModeled": 18,
+      "cleanupPrivateModeled": 32
+    },
+    "review": {
+      "producerV1": "FIVE_FINDINGS_PRESERVED_CORRECTED_V2",
+      "producerV2": "READ_ONLY_PASS",
+      "consentCore": "SHORT_WRITE_FIXED_CLI_ALWAYS_NOT_RUN",
+      "cleanupAdapter": "POST_STOP_AND_FINAL_OWNED_STATE_FIXED_ACTUAL_ABI_NONE"
+    }
+  },
+  "precommitSourceCustodyRefusal": {
+    "status": "PRECOMMIT_SOURCE_CUSTODY_REFUSAL_PRESERVED",
+    "sourceHead": "3894f0e916fcd09e410b5514d067c4957f6fe283",
+    "signedTests": 114,
+    "signedErrors": 8,
+    "consentModels": 27,
+    "consentFailures": 7,
+    "actualCalls": 0,
+    "receiptSha256": "962e0bf097d4513af69f1d627560fcd0fa5a60513f038bddd3274f558862b9df",
+    "reason": "CURRENT_FACTORY_BYTES_DIFFER_FROM_COMMITTED_HEAD",
+    "sameTestsAfterFreeze": "PASS_NO_ASSERTION_RELAXATION"
+  },
+  "currentSourceFreeze": {
+    "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "fileCount": 57,
+    "sourcePinsSha256": "4f03f0f184e7f9c521b782dae7405a8df6174586ba75748bfb8d1997f2e4bd38",
+    "receiptSha256": "9f1ecfe2aca67420c68d4e94dcbfbdcb7f70b5af7e69de1cd18c1b20ddcfaa7e",
+    "actualResourceCalls": 0,
+    "mustRefreshAfterHeadChange": true
+  },
+  "privateCoordinatorV4RootModels": {
+    "status": "IMPLEMENTED_FIXED_ABI_OFFLINE_UNBOUND_ACTUAL_NOT_RUN",
+    "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "passed": 59,
+    "failed": 0,
+    "retainedCleanupModels": 32,
+    "newModels": 27,
+    "actualCalls": 0,
+    "adapterSha256": "32ae825824a9b1ad714973bf36dcbc87c713399ea869c7f057e452f920e8d9e8",
+    "coordinatorSha256": "6676a6ccd746500dd1065115beb8f53935519f4947c4a124279e7a95b2cedb7f",
+    "handoffSha256": "b4bc5bc4565119a0fdc35bf5cac5c2b7980138c3ba1bb3a0f03832a19566a16e",
+    "runtimeFiles": 51,
+    "sourceFileMode": "400",
+    "sourceDirectoryMode": "500",
+    "privateFileMode": "600",
+    "privateDirectoryMode": "700",
+    "actualFourIdProof": "MISSING",
+    "actualMemorySlot": "NOT_APPROVED",
+    "independentPeer": "PASS_READ_ONLY_NO_NEW_CONFIRMED_BLOCKER",
+    "naturalExpiryLatency": "NOT_RUN",
+    "timeoutScope": "5400 seconds applies to the owned child stage-to-dispatch; initial reads and emergency cleanup/final preservation have separate bounded calls, not a total-parent deadline"
+  },
+  "nodeExecutableIdentity": {
+    "status": "PASS_READ_ONLY_EXECUTABLE_IDENTITY",
+    "version": "v25.9.0",
+    "sha256": "a4ba681fe33d60e49e535d7f700697967c5b8bf81a8200baa06a5d3f316bbb3c",
+    "receiptSha256": "81a1cc619521227b93cdb8b484768259628d69fa41c42de5eab933e3af7fcafe",
+    "actualAuthApiCalls": 0
+  },
+  "latestVmRead": {
+    "receiptSha256": "3fc5ab06aa2cb5da61ca346067754e86d23e9481ae2333658b8d8677d46639ae",
+    "availableKiB": 1081272,
+    "startupFloorKiB": 1048576,
+    "historicalPreparationConsumptionKiB": 27628,
+    "remainingMarginAfterPreparationKiB": 5068,
+    "changes": 0,
+    "actualA3": "NOT_LAUNCHED"
+  },
+  "privateCAssemblyReview": {
+    "status": "FROZEN_CANDIDATE_ROOT_MODELS_PASS_ACTUAL_NOT_RUN",
+    "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "agentReportedPythonModels": 26,
+    "agentReportedNodeModels": 10,
+    "rootRerun": "26_PYTHON_AND_10_NODE_PASS",
+    "independentPeer": "PASS_READ_ONLY_NO_NEW_CONFIRMED_BLOCKER",
+    "implemented": [
+      "one original Auth issuance and synthetic profile link",
+      "typed readiness callback with source fixture identity and whole baseline verification",
+      "one public exploration withdrawal and same-token denial",
+      "full rows budgets UNKNOWN fixture source identity verification after independent control restoration",
+      "first failure and cleanup failure retained separately"
+    ],
+    "remainingImplementation": [
+      "bounded actual own-child supervisor and real readiness IPC"
+    ],
+    "actualCalls": 0,
+    "actualTargetFourIdProof": "MISSING",
+    "actualAuthExecution": "NOT_RUN",
+    "serviceRetirement": "SEPARATE_PRIVATE_PREPARATION_IN_PROGRESS",
+    "handoffSha256": "d7f5606a624ca51cd409b74db3365a2ee4b9fea54a3651113ad8b1cae93798b5",
+    "assemblySha256": "1037371cd3354671a21cb3ac0feb50c898cb0716af9e3c0788458727dbe0d39a",
+    "fixedPortsSha256": "f9169d0bfcc847d1030b088afc2642a4a58ec38be6ff6d145870c6f8d3a611c1",
+    "nodeCallableSha256": "a371848690dbb372d7d4b85e6791bfdf7785dc16f865a8ac238e92936abf1485",
+    "preservedInitialFailureReceipts": 3,
+    "rootModelReceiptSha256": "497c8554d4fc9caf3a274e710db69410140a88821b1a6347a9e52afdb1fb46ee",
+    "verifiedBoundFiles": 11,
+    "fileCountReportingCorrectionSha256": "da8878024921c2ddab1e6b44e797a573dca5eecc59373f128a34c9c93b53ba00"
+  },
+  "ai24CapturedRuntimeAudit": {
+    "status": "CONFIRMED_INTEGRATION_GAP_IMPLEMENTATION_ASSIGNED",
+    "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "toolSha256": "a5c512330cd1924e1aa5a6044b451305c9ef7504574fdcbd0bc4bde15cf8f1f0",
+    "runnerSha256": "3e48b3ab433b8f516f600a9b9c65e7d6a4ff091d3f86d987a8b39271ebb6db8d",
+    "factorySha256": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+    "gap": [
+      "Midnight fixture codeRoot remains live REPO",
+      "Node path is selected from PATH and factory argv is the live sibling path",
+      "held warm lstat and HEAD checks do not bind native runtime imports to the sealed capsule"
+    ],
+    "requiredBinding": [
+      "all prepare-limits prepare-recovery held new-day phases",
+      "same source-only capsule and factory pins",
+      "stable reviewed Node executable",
+      "resume custody fields and SHA",
+      "minimal environment and owned child closure in typed mode"
+    ],
+    "assignedActor": "minkyu",
+    "agent": "restore_review",
+    "repositoryIntegration": "NOT_YET",
+    "actualMidnight": "NOT_RUN",
+    "actualCalls": 0
+  },
+  "privateServiceRetirement": {
+    "status": "FROZEN_V2_ROOT_MODELS_PASS_ACTUAL_NOT_RUN",
+    "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "kernelSha256": "b8b2a4889de3555b6c87d3f4c7780557d803328315ffec061dea5d1bf93d7787",
+    "handoffSha256": "286b84ce20f7a544f99011b6be79c0e5de7bd73a4a26885edc00746ec21ac819",
+    "rootModelReceiptSha256": "0f5a9ef7f1ef1e3bd1716063cfd866314e2c306522f70b567a4f3741dbd92a99",
+    "passed": 15,
+    "failed": 0,
+    "retainedOriginalModels": 12,
+    "newBoundaryModels": 3,
+    "actualCalls": 0,
+    "boundFiles": 6,
+    "graphAndHandoffMd": "PASS",
+    "initialOldModelFailures": "TWO_EXPECTED_FAILURES_PRESERVED",
+    "terminalAuthority": "CURRENT_CALLER_PRIVATE_SUCCESS_STATE_ONLY_AFTER_DURABLE_COMMIT",
+    "actualTargetAndOriginalIssuance": "MISSING",
+    "outerParentBeforeAfterMemoryChildClosure": "NOT_BOUND",
+    "cleanupDeleteAckRecovery": "NOT_RUN_SEPARATE_RETAINED_SCOPE"
+  },
+  "privateServiceRetirementV1Historical": {
+    "status": "FROZEN_V1_ROOT_12_MODELS_PASS_FOLLOWUP_INSPECTOR_REVIEW",
+    "handoffSha256": "29d6df64527a95dd3a41de9189f32b9bb95cfac35e8f2bc05173041fc464fdff",
+    "kernelSha256": "359aede065603a3cfd64f66e0eb2ee9e8088dd1b20f9e8aba4c7a5c0a4cd9b98",
+    "rootModelReceiptSha256": "08bbead375ce822e8daef19aa5a8ac992318506bcc05f7c43d4a5f594f033f09",
+    "passed": 12,
+    "failed": 0,
+    "actualCalls": 0,
+    "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "boundFiles": 9,
+    "corrected": "Final custody/state failures block successful receipt; first failure and final failures retained separately",
+    "followup": "Reject current failed caller proof inspection even if private success files are self-rehashed or stale",
+    "actualTargetAndOriginalIssuance": "MISSING",
+    "outerParentBeforeAfterMemoryChildClosure": "NOT_BOUND",
+    "cleanupDeleteAckRecovery": "NOT_RUN_SEPARATE_RETAINED_SCOPE"
+  },
+  "currentSourceFreezeFed9581Historical": {
+    "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+    "sourceHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "fileCount": 57,
+    "sourcePinsSha256": "93c8d4a642acb64b30f82df6f802653367e4d26773a3e19ecc5c5a0d8fc4ed82",
+    "receiptSha256": "2e5dba98543f4c46424b2d5c01861666f07f6033df1da279fe3e20766ba04951",
+    "actualResourceCalls": 0,
+    "mustRefreshAfterHeadChange": true
+  },
+  "ai24ExtendedSourceFreeze": {
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "fileCount": 62,
+    "sourcePinsSha256": "17da5b83820cdf39566e3dc0ddbdb0e126f501bf529bc083b7c68638583b4900",
+    "receiptSha256": "a5d32268c29798c5fddee3d30baf7de86105f69fef710b716a55c707cb2ff6ee",
+    "status": "SOURCE_ONLY_NOT_AUTHORITY"
+  },
+  "ai24CapturedRuntimeImplementation": {
+    "status": "COMMITTED_ROOT_195_MODELS_PASS_ACTUAL_NOT_RUN",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "priorHead": "fed9581aa69ae85d9a5dad17c6c5a2ecb551329e",
+    "handoffSha256": "b1b4077123b023c48ef272c3ac145f3f20bc21655dbcca63e3ebc99210b7197c",
+    "rootReceiptSha256": "99dd373abaf41b26c13f6aec7cadc632f701e902196730385f3ceb2b00b0530c",
+    "passed": 195,
+    "failed": 0,
+    "postCommitFidelityPassed": 2,
+    "independentPeer": "PASS_READ_ONLY",
+    "actualCalls": 0,
+    "actualMidnight": "NOT_RUN",
+    "boundPhases": [
+      "prepare-limits",
+      "prepare-recovery",
+      "held",
+      "new-day"
+    ],
+    "files": {
+      "tests/database/jonghyun/test_isolated_midnight_preparation.py": "1a64f59c8774c6e7054bf46e0972d3ad020754d7721989f8221cf70e2ecaae48",
+      "tests/database/minkyu/test_signed_auth_binding.py": "67e3bac75477625032cfd4781c57951fbe3fec6288528219b8328c8fa8838e22",
+      "tests/integration/jonghyun/isolated_ai_contracts.py": "787001434c270fe499d134a8762535233bd6ad8ae634b72383aa8aec61b83c80",
+      "tools/local/prepare_isolated_midnight.py": "4fb1be4e8a17bd82b49520e9a2efdb28e64e6bcbcd9e609264aadc3370949b3f"
+    },
+    "oldPrivateFedGraphs": "STALE_FOR_ACTUAL_UNTIL_REVIEWED_REBIND",
+    "actualTargetSessionWindowSlot": "UNBOUND"
+  },
+  "privateCSupervisorV3": {
+    "status": "PARTIAL_PHYSICAL_IPC_PIPE_CLOSURE_NEEDS_FIX",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "handoffSha256": "c7fb2a4eb6ac7a1e1bcbd667857fdd1c640c06234d44e13a3b05f973ed3c7357",
+    "rootModelsPassed": 28,
+    "independentPeerSha256": "01d45a35bc7a8838c69fe6c80931750952ea6941ae003ce504b33e40617740ce",
+    "physicalCase": "good",
+    "physicalCommandExitCode": 0,
+    "parentPid": 79330,
+    "nodePid": 79334,
+    "ackWritten": true,
+    "nodeGroupClosed": true,
+    "initialPhysicalReceiptSha256": "184b9ab1602a5ed26369af6ae89d59f2fed2828b2ef0d66d23f19b0d6882486d",
+    "resourceWarnings": [
+      "stdout fd5 unclosed",
+      "stderr fd7 unclosed"
+    ],
+    "cleanSupervisionPass": false,
+    "wrongMemberPhysicalCase": "NOT_RUN_PENDING_PIPE_FIX",
+    "actualAuthDatabaseVmContainerProvider": 0,
+    "actualMemberReadiness": "NOT_RUN",
+    "memoryFloor": "MODELED_NOT_OBSERVED",
+    "observationReceiptSha256": "ee4bb5ea9a591ce23763273382ce591a7fca761bca2908a06eafee51f27eb0df",
+    "implementationStatus": "FIXED_ENV_AND_REAL_CAPSULE_DELEGATE_IMPLEMENTED_28_ROOT_MODELS_PASS",
+    "actualRootBinding": "MISSING",
+    "actualTarget4Credentials": "MISSING",
+    "outerExactFourStop": "NOT_BOUND",
+    "followup": "Explicit idempotent owned stdio closure after bounded readers joined"
+  },
+  "privateCSupervisorV4": {
+    "status": "PASS_PHYSICAL_IPC_ONLY_NOT_C_READINESS",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "handoffSha256": "d7410e0d9d50850595c894df18814dda889e97604fac71b3743fb78ec576ef36",
+    "independentPeerSha256": "2f444e45a97d39ed43967368c301925efc657d3f99ca1d7da1fbe894c2e899ad",
+    "rootModelsPassed": 36,
+    "physicalCases": {
+      "good": {
+        "receiptSha256": "45c9154a072506b4ac582f3eef8c3ae1d71a85bf76098444fc154032bdc4d70f",
+        "finalSha256": "b6945f91a0fbb0293dc8ebb3d082dfeda9f302c33abce586903577babd55404d",
+        "parentPid": 79574,
+        "nodePid": 79578,
+        "ackWritten": true,
+        "nodeGroupClosed": true,
+        "allStdioClosed": true,
+        "outputReadersClosed": true
+      },
+      "wrong-member": {
+        "receiptSha256": "1967ce49ccd112269539e38edcbf5d48973e91778223bedfc7a56e2a00d34a90",
+        "finalSha256": "d195907fdf2e3b2f673a167366a73f03b60b72b8d3ed220d6d2e14c5892efc73",
+        "parentPid": 79581,
+        "nodePid": 79585,
+        "ackWritten": false,
+        "nodeGroupClosed": true,
+        "allStdioClosed": true,
+        "outputReadersClosed": true
+      }
+    },
+    "resourceWarnings": 0,
+    "actualAuthDatabaseVmContainerProvider": 0,
+    "actualMemberReadiness": "NOT_RUN",
+    "memoryFloor": "MODELED_NOT_OBSERVED",
+    "previousWarningRetained": true,
+    "actualCBindingTarget4Credentials": "MISSING",
+    "outerExactFourStop": "NOT_BOUND",
+    "rootProofReceiptSha256": "dffeb783abc37edab53f6ab97294e4ef1e0ee25fd165069d5c92d78ee0c2c9ab"
+  },
+  "privateRetirementParentCallbacks": {
+    "status": "FROZEN_ROOT_28_MODELS_AND_READ_ONLY_PEER_PASS_ACTUAL_NOT_RUN",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "handoffSha256": "831e346e69fe2e960334f107432cd145587cdff31f95785128a7444280a75d9b",
+    "assemblySha256": "feabdeb254c335dd080acc2c85affec43bb3400a7d649bd4d680c24012570cde",
+    "passed": 28,
+    "failed": 0,
+    "actualCalls": 0,
+    "boundFilesVerified": 3,
+    "peerSha256": "318fc5c3a70e63eb5f5a1791ca1b7a14ff6b5afb993a77c414a4e34ef7747773",
+    "implemented": "Original JWT/context/input and once provenance validation; actual read-port before/after full178 original/owned/authority/budget/UNKNOWN preservation; terminal SHA only after durable proof",
+    "missing": [
+      "captured original producer once-journal adaptation",
+      "two-frame same-child IPC",
+      "same-child kernel inspector and outer4 closure",
+      "actual target4/credentials/session/source binding/resource slot",
+      "upstream SQL117 original control restoration"
+    ]
+  },
+  "privateCCurrentHeadSourceReview": {
+    "version": 1,
+    "checkedAt": "2026-10-12T22:31:16.925566+00:00",
+    "scope": "SOURCE_ONLY_C_CURRENT_HEAD_REVIEW",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "handoffPath": "/private/tmp/yumidang-consent-C-source-aafb-static-xk2lu0ie/handoff.json",
+    "handoffSha256": "41ac74835efe7c1a0e7e4facd6faaa0c5df6372166e79ff909d8af52e2ae5f37",
+    "boundFileHashCount": 17,
+    "sourceBindingTests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "supervisorAstOnlySourceHeadChanged": true,
+    "fixedPortsByteExact": true,
+    "actualCalls": 0,
+    "actualRootBinding": null,
+    "actualTargetFour": null,
+    "actualSlot": "NOT_ASSIGNED",
+    "priorPhysicalIpc": "SEPARATE_V4_PROOF_NOT_REPEATED_OR_PROMOTED",
+    "status": "PASS_SOURCE_ONLY_ACTUAL_NOT_RUN",
+    "rootReceiptSha256": "e95c1d1e4aa8d4fc5d762adb77e562679b95dfe006436929673becf3feddc30b",
+    "additionalPreservationReview": {
+      "receiptSha256": "64e8d432d5ac14a98db21992c115d72df9bf6178fb503eb1b87bd3f403b3b43e",
+      "assemblyCallableOnlyHeadChange": true,
+      "pythonKernelModelsByteExact": true,
+      "nodeModelsChanges": [
+        "HEAD literal",
+        "one stale-head rejection test"
+      ],
+      "initialBroadAssertionFailedAndRetained": true,
+      "currentLiveSourcePins": 57,
+      "artifactBroadClaimCorrectionRequested": true,
+      "actualCalls": 0,
+      "independentClaimCorrectionSha256": "31f9edf7dc023b61ddb39bc303a16593572024f16d03e4a505d103cc8df22b53"
+    }
+  },
+  "privateRetirementTwoPhaseController": {
+    "scope": "RETIREMENT_TWO_PHASE_SOURCE_AND_OFFLINE_MODELS",
+    "handoffSha256": "c73839a6e1fb4fe3cc53e3fa18713fa9dbdfcd37b08fd2e2f113f42671dd6765",
+    "boundFiles": 8,
+    "dependencies": 3,
+    "passed": 24,
+    "failed": 0,
+    "controllerSha256": "4ceedcd15e3f7858d9def935f82c271de23652ed7e82d3be3ba284ef9ddd65fe",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "adoptedWatch": "ORIGINAL_OWNER_ACTIVE_AFTER_SUCCESS_AND_FAILURE",
+    "actualAuthDatabaseVmContainerProvider": 0,
+    "actualIpc": "PASS_PHYSICAL_IPC_ONLY",
+    "actualBinding": null,
+    "target4": null,
+    "outerControlRestoreAndCleanup": "NOT_WIRED",
+    "rootReceiptSha256": "2247ad08a125253a94dba8365e7390beeaff167db26e3f3e856c4b7f22c1b6a6",
+    "physicalProof": {
+      "status": "PASS_PHYSICAL_IPC_ONLY_NOT_ACTUAL_RETIREMENT",
+      "handoffSha256": "c73839a6e1fb4fe3cc53e3fa18713fa9dbdfcd37b08fd2e2f113f42671dd6765",
+      "peerSha256": "5a2bee78cebc692a75f982ddc2f5b81f10837dc28e74e15f5d6d032f68abd615",
+      "cases": {
+        "good": {
+          "physicalReceiptSha256": "7ed690b4a72d10e8380083c3c19c8ac4a9ba34d247d28c19ddd041bdedf58ed1",
+          "supervisorFinalSha256": "316d775012f320bf9e7dc7b1f76baf67e865ead12163327b1725f208e075b15d",
+          "parentPid": 80700,
+          "nodePid": 80703,
+          "ackCount": 2,
+          "groupClosed": true,
+          "allStdioClosed": true,
+          "readersAndCloseWorkersClosed": true,
+          "exitCode": 0,
+          "resourceWarnings": 0
+        },
+        "wrong-member": {
+          "physicalReceiptSha256": "af810f9b3b38badb78e62fc247f067f269a878bdeb08ad38837ab20e468bb6ef",
+          "supervisorFinalSha256": "405665dbdf633888870807236551ff7090ec0f2710b96f3adea74bbde29dad47",
+          "parentPid": 80706,
+          "nodePid": 80709,
+          "ackCount": 0,
+          "groupClosed": true,
+          "allStdioClosed": true,
+          "readersAndCloseWorkersClosed": true,
+          "exitCode": 0,
+          "resourceWarnings": 0
+        }
+      },
+      "physicalCalls": 2,
+      "actualAuthDatabaseVmContainerProvider": 0,
+      "parentSemanticChecks": "MODELED",
+      "kernelSameChildInspector": "MODELED_NOT_RUN",
+      "memoryFloor": "MODELED_NOT_OBSERVED",
+      "actualTargetFour": null,
+      "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+      "outerControlRestoreAndCleanup": "NOT_WIRED",
+      "rootReceiptSha256": "4cd8815950858ed7beca76ebc83bf154f564444f0d7d7c6731141164828a2ca5"
+    }
+  },
+  "retirementCompositeRemainingSeams": {
+    "reviewReceiptSha256": "35ad39c151a69025fa2f2fbe6a00a72e41d49d8cac6c49d6fc23b0022ac7bc4f",
+    "singleWatchPreProducerOneTimeCallbackBinding": "SOURCE_MODELS_AND_PEER_PASS_ACTUAL_UNBOUND",
+    "postGateRestoreFull178BudgetUnknownVerifier": "REQUIRED",
+    "nestedNodeAndOuterPythonClosureBeforeOwn4Stop": "IMPLEMENTING_TYPED_INTERNAL_AND_NEVER_LAUNCHED_WITNESS",
+    "oldLifecycleAuthDeletingCleanup": "FORBIDDEN_FOR_THIS_SCOPE",
+    "oldCoordinatorSourceAndResult": "NOT_CURRENT_RETIREMENT_COMPOSITE",
+    "actualCalls": 0
+  },
+  "retirementOriginalFixtureProducer": {
+    "scope": "ORIGINAL_FIXTURE_PRODUCER_SOURCE_AND_MODELS",
+    "handoffSha256": "411553bcf3d622010f7f3a4aed9f08c9a31eea68128abf0ffadb7b3162d3e84f",
+    "filesVerified": 10,
+    "originalSourceFunctionRequestCapturesPreserved": 3,
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "rootPassed": 26,
+    "failed": 0,
+    "actualCalls": 0,
+    "rawBeforeDecoder": "IMPLEMENTED_SAME_CAPTURED_METHOD",
+    "unknownNoResend": true,
+    "constructionAuthority": "PRIVATE_CONSTRUCTION_WITNESS_AND_EXACT_CURRENT_FIXED_BINDING",
+    "priorModeledFlagPromotionFindingPreserved": true,
+    "actualRootBinding": "NOT_BOUND",
+    "peer": {
+      "status": "PASS_READ_ONLY_SOURCE_ONLY",
+      "sha256": "1a74eac43b27015fbb170e2ba767b97a9638028bf9aa40b54db8fb770fb3140e"
+    },
+    "rootReceiptSha256": "f2683947ae4bad153f272edc11abe63babef6b45fa7f64d11afec5cc95714d9c"
+  },
+  "retirementPostGateValuesComparator": {
+    "handoffSha256": "5684d048ff1dbab0a25e538b38d26137c2e1e911eb4552b3fa32663e91001a2e",
+    "passed": 11,
+    "failed": 0,
+    "initialNumberBooleanCoercionFailurePreserved": true,
+    "whole178AndSevenBudgetTables": "PURE_VALUE_COMPARISON_IMPLEMENTED",
+    "actualCalls": 0,
+    "executionAuthority": false,
+    "actualRootIntegration": "NOT_BOUND",
+    "peer": {
+      "status": "PASS_READ_ONLY_VALUES_ONLY",
+      "sha256": "e04ed6845afcfb00947a95dce0af10f3c27677a9f4816badacd278e53ab2b40d"
+    }
+  },
+  "retirementInitializationSeam": {
+    "handoffSha256": "8a31c48c38d18dafb7c69096cd61f4b174f44e32c1401901a3ccf8ec29dab1bd",
+    "hashFilesVerified": 9,
+    "dependenciesVerified": 3,
+    "rootNewModelsPassed": 14,
+    "existingOld24ModelsAndNodeExact": true,
+    "status": "CANDIDATE_HELD_INHERITED_MODELED_LABEL_PROMOTION",
+    "peerFindingSha256": "6e09b7bb016b618b99a4ef4dbbc4055d71f7c426ec15c65dad069a4971f15c94",
+    "actualCalls": 0,
+    "initializerAndRetirementBinding": null,
+    "followup": "PRIVATE_CONSTRUCTION_AUTHORITY_WITNESS_AND_PRELAUNCH_REFUSAL",
+    "oldCandidateStatus": "HELD_FINDING_RETAINED",
+    "successor": {
+      "scope": "RETIREMENT_CONSTRUCTION_ORIGIN_GUARD_SOURCE_MODELS",
+      "handoffSha256": "167d0eba664626031d03c855ae2c34bcf88c952b1aed8a8ce11fae201dc00724",
+      "controllerSha256": "0c67af8a208ddfab2bede12734452ce30a11c8c4dccd71948ff272aa46620c91",
+      "filesVerified": 9,
+      "dependenciesVerified": 3,
+      "unchangedInitializerResourceClasses": 4,
+      "oldTestAndSmokeBytesPreserved": 3,
+      "rootOriginTestsPassed": 2,
+      "rootAffectedProtocolTestsPassed": 24,
+      "priorInitializerTestsPassed": 14,
+      "priorInitializerCodePreserved": true,
+      "peerSha256": "7d6d578dca8858c182143398cf5a5fe6a751b64e48db6a6aad5a69cae68544cb",
+      "oldFindingRetained": true,
+      "status": "PASS_SOURCE_MODELS_NOT_ACTUAL",
+      "actualCalls": 0,
+      "actualRootAndTargetFour": null,
+      "own4FinalizerAndComposite": "IN_PROGRESS",
+      "rootReceiptSha256": "8d532df7f2d46cfb8e7015793b50f7cf1bf19a68c36f98c3b2ce803f8b1c80f7"
+    }
+  },
+  "retirementOwnFourFinalizer": {
+    "status": "PASS_OFFLINE_MODELS_NOT_ACTUAL",
+    "handoffSha256": "017445d3730258e71cb69d6866829a7fd9a7f4a2c04c79a6612ddf636a8a8b15",
+    "controllerSha256": "338244c471a05a520e78624d16788b6a8c94eb4fd59a639b33adf3ee4fb923d4",
+    "cleanupSha256": "156862b88d496991eab4826f5bea3d4491db06303de051a19950272e2d9c20d9",
+    "rootReceiptSha256": "794679dc29f390d4918ff97bb8d663ba660c29e5c66952508248bfcb351719a5",
+    "offlineTestsPassed": 58,
+    "actualCalls": 0,
+    "outerLaunchWitness": "REQUIRED_NOT_ASSEMBLED",
+    "actualBinding": null,
+    "peerReview": "PASS_SOURCE_ONLY",
+    "composite": "FROZEN_OFFLINE15_ACTUAL_NOT_RUN",
+    "peerSha256": "e3e94c001c0416ab42f3ab8615c79460e78e11282dccad20ab5942da80fee6ce",
+    "neverLaunchLimitation": "PRE_RENDER_ONLY; RENDERED_PRE_POPEN_FAILURE_UNKNOWN_STOP0"
+  },
+  "executionPrerequisitesAudit": {
+    "status": "C21_ACTUAL_SCOPED_PASS_WITH_PEER_NEXT_SIGNED_AI_CASES",
+    "overall": "22/28",
+    "percent": 79,
+    "actualCompleted": false,
+    "conditions": [
+      {
+        "requirement": "Actual signed Auth/AI product connection",
+        "state": "PARTIAL_PASS_C21_SIGNED_CONSENT_ONLY_AI22_AI23_AND_LIFECYCLE_REMAIN",
+        "memory": "Latest read passes initial startup predicate; producer startup predicate must also pass after full environment creation",
+        "pendingStop": "cancel-race78 fulfilled; no stop approval pending"
+      },
+      {
+        "requirement": "Natural AI24",
+        "state": "NOT_RUN",
+        "requires": "Actual six signed sessions/current evidence, explicit3 selection, original naturalKST windows and durable UNKNOWN preservation"
+      },
+      {
+        "requirement": "Additional6/operations4 current consumer and external activation",
+        "state": "INCOMPLETE",
+        "requires": "Sungho screen consumer, current HTTP scope, supplier/official integration and policy conditions"
+      },
+      {
+        "requirement": "Core10/operations5 real two members",
+        "state": "HOLD_USER",
+        "requires": "User resumes team direct eligible Naver account verification"
+      },
+      {
+        "requirement": "Operations6 full source restore",
+        "state": "INCOMPLETE",
+        "requires": "Original39 Storage bytes plus production full DB/role/Storage proof and actual support/backup roles"
+      },
+      {
+        "requirement": "Operations7 production",
+        "state": "NOT_APPLIED",
+        "requires": "All prerequisites plus exact final bundle and production approval"
+      }
+    ],
+    "priorApprovalsFulfilled": [
+      "native-v7 restart/read and returned stopped",
+      "exact three old isolated DB normal stop"
+    ],
+    "memoryApproval": "FULFILLED_EXACT_THREE_STOP",
+    "stopReceiptSha256": "c9b679cc11b9eb36e6b70fc653bb9bb91d50e05b2081cac5d271d6dc69af2bf2",
+    "doNotRepeatFulfilledApproval": true,
+    "pendingSpecificApproval": {
+      "name": "supabase_db_yumidang-minkyu-cancel-race78",
+      "id": "3b12ee326a548794a1aeb125703b162d1cf699f9f3a7cd72d45cd64dfc0091f0",
+      "state": "FULFILLED_NORMAL_STOP",
+      "receipt": {
+        "path": "/private/tmp/yumidang-cancel-race78-approved-stop-zssswo4b/receipt.json",
+        "sha256": "1d4f499de4ff1fa96606cee841fc194f1c4e988ae1fc332f1bf4cd8ee8ace49c",
+        "status": "PASS_APPROVED_EXACT_ONE_NORMAL_STOP",
+        "otherClients": 0,
+        "stopCalls": 1,
+        "containerDataVolumesRetained": true
+      }
+    },
+    "latestMemoryRead": {
+      "path": "/private/tmp/yumidang-auth-memory-after-cancel78-ls8ztpv3/receipt.json",
+      "sha256": "546fa4e8610e6e366589519fafe75bd7594c529f0978177e58a836d4cbd80881",
+      "availableKiB": 1375428,
+      "startupMinimumKiB": 1048576,
+      "runtimeMinimumKiB": 786432,
+      "swapKiB": 0,
+      "resourceChanges": 0
+    },
+    "completedSubcheck": "actualSql120C20 PASS_DATABASE_ONLY; actualConsentC21 PASS_C_SIGNED_CONSENT_ONLY; no aggregation increase",
+    "latestActualProducerMemory": {
+      "scope": "C21_SUCCESSFUL_ROOT_PRODUCER_CHILD_SCOPE",
+      "status": "PASS_C_SIGNED_CONSENT_ONLY",
+      "startupSamples": [
+        {
+          "availableKiB": 1124792,
+          "elapsedMs": 499,
+          "minimumKiB": 1048576
+        },
+        {
+          "availableKiB": 1126164,
+          "elapsedMs": 292,
+          "minimumKiB": 1048576
+        },
+        {
+          "availableKiB": 1125660,
+          "elapsedMs": 183,
+          "minimumKiB": 1048576
+        },
+        {
+          "availableKiB": 1078108,
+          "elapsedMs": 305,
+          "minimumKiB": 1048576
+        }
+      ],
+      "allRecordedFloorsPassed": true,
+      "receiptSha256": "b60f79f1117af8d0718a42d2e37cde889176a46aa497b0198ecfc599d582bfa9"
+    },
+    "historicalC17ActualProducerMemory": {
+      "availableKiB": 1027304,
+      "minimumKiB": 1048576,
+      "elapsedMs": 253,
+      "phase": "PRELAUNCH_STARTUP_MEMORY",
+      "aiRequests": 0,
+      "scope": "HISTORICAL_C17_PRELAUNCH_REFUSAL_NOT_CURRENT_C21"
+    }
+  },
+  "retirementFiniteComposite": {
+    "status": "PASS15_OFFLINE_NOT_ACTUAL",
+    "handoffSha256": "2c64cc498ffacc78cdf0f7f606ee259a1b6960a1f36b28a807c99f5a30a49ec4",
+    "rootReceiptSha256": "ae949dfda60577c88f5886e9eaaea48a10b74ca2470ff2fea6e82117c2acab85",
+    "offlineTestsPassed": 15,
+    "actualCalls": 0,
+    "actualRootContext": null,
+    "actualTarget4": null,
+    "peerReview": "PASS_SOURCE_ONLY",
+    "logicalProof": "FRESH_PRESTOP_POSTRESTORE178_NOT_POSTSTOP_SQL",
+    "sequencePhysicalStorage": "NOT_VERIFIED",
+    "peerSha256": "d4070fd890663f6ac6f4d65e4c0213ebbecf00e45da932f1d6cbe8fe43aae66a"
+  },
+  "actualA3Creator": {
+    "status": "FAIL_NATIVE119_RESTORE_MISMATCH_NO_REPAIR",
+    "newDatabaseOnly": true,
+    "authAccountsCreated": 0,
+    "priorExact": true,
+    "newDatabaseStoppedRetained": true,
+    "restoredCandidateMissing": "DIAGNOSTIC_GAP_TO_FIX_BEFORE_NEXT_NEW_SCOPE",
+    "comparisonWeakened": false
+  },
+  "nativeRestoreCorrection": {
+    "sourceHead": "4e28789d2337ba0944e4362827708626dcb38eee",
+    "helperSha256": "bec93b1a7ef168f9b33852e811076f2c4c23cead08103a358f5e6ff0e4ea1fd3",
+    "runnerSha256": "5ef334fe5d4b9acc7cfd57a8b6f18c5e07491b888c49945528b087311f363d2e",
+    "offlineRegressionPassed": 220,
+    "ownershipHook": "PASS3_SOURCE_ONLY_LOCAL_COMMIT",
+    "actualA5Restore": "PASS_ALL_ROWS_ROLES_RAW_ACL_EFFECTIVE_SEQUENCES_WITH_NARROW_CATALOG_PRESENTATION",
+    "actualA5Tls": "FAIL_TLS_CONFIGURATION_REQUIRED",
+    "authAccountsCreated": 0,
+    "actualOperating": "NOT_RUN",
+    "storage39": "NOT_VERIFIED",
+    "next": "FIX_STARTUP_TLS_OVERRIDE_FRESH_A6"
+  },
+  "actualA6Creator": {
+    "status": "FAIL_PUBLIC_CA_COPY_REST_TMP_DIRECTORY_ABSENT",
+    "tlsConfiguration": "PASS_ACTUAL_CURRENT_CONFIGURATION_FILE_ON_CERT_KEY_PENDING_FALSE",
+    "actualServiceTls": "NOT_VERIFIED",
+    "authAccountsCreated": 0,
+    "newThreeStoppedRetained": true,
+    "priorExact": true
+  },
+  "actualA7Creator": {
+    "status": "FAIL_ACTUAL_TWO_DB_SERVICE_ROLES_REQUIRED",
+    "httpReadiness": "PASS_HEALTH_REST200_SIGNED_SERVICE_MISSING_USER404",
+    "actualServiceTls": "NOT_VERIFIED",
+    "authAccountsCreated": 0,
+    "newFourStoppedRetained": true,
+    "priorExact": true
+  },
+  "actualA8Creator": {
+    "status": "FAIL_ACTUAL_TWO_DB_SERVICE_ROLES_REQUIRED",
+    "authUsersCreated": 0,
+    "newOwnedFourStoppedRetained": true,
+    "actualObservedRoles": [
+      "authenticator"
+    ],
+    "tls": "TLSv1.3/256bit",
+    "scope": "REST_CONNECTION_ONLY_NOT_AUTH_OR_SIGNED_USER"
+  },
+  "actualA9Creator": {
+    "status": "PASS_NEW_CLOSED_NATIVE119_FOUR_SERVICES_ONLY",
+    "sourceHead": "4e28789d2337ba0944e4362827708626dcb38eee",
+    "creatorSha256": "58b0989c18ab00b83e616104381a6a97a00555dc8b93c00d8db01d6ef59dc201",
+    "proofPath": "/private/tmp/yumidang-native-auth6-created-20261013-a9/created-proof.json",
+    "proofSha256": "79eeb3ee916ecf7f830f585f6f2166fd940e064ea57d18399d366b480d560b4f",
+    "tlsSha256": "f7766cffd8d4f80b80818815e633bfe9f455e830334a40d318c98e697d4f6e70",
+    "roles": [
+      "authenticator",
+      "supabase_auth_admin"
+    ],
+    "ssl": true,
+    "tls": "TLSv1.3/256bit",
+    "verifyFullUris": true,
+    "native119Rows": 178,
+    "effectivePermissions": 484096,
+    "sequenceCount": 4,
+    "wholeLogicalBaselineComparison": "PASS",
+    "currentHistoryRead": "PASS",
+    "currentHistoryReceiptSha256": "e7e7f45164421295f33f83eb52dcdbb723d044ab458984720d5b5c417f231644",
+    "authUsersCreated": 0,
+    "signedUserVerified": false,
+    "ai24Executed": false,
+    "storageRestored": false,
+    "productionReady": false,
+    "priorPreservationScope": "CREATOR_ACTUAL_COMPARISON_RECORDED_ASSERTION_NOT_INDEPENDENT_RAW_AFTER_INVENTORY_PEER_COMPARE"
+  },
+  "actualA9Retirement": {
+    "status": "FAIL_BEFORE_AUTH_OR_ORIGINAL_REQUEST_MUTATION",
+    "sourceHead": "4e28789d2337ba0944e4362827708626dcb38eee",
+    "rootCallerSha256": "5d226af6184be78f93a627c9fc8a5b6dcfb2bf5792fcb42ab8b5775eb4fd174e",
+    "sourceOnlyCapturedProducts": 91,
+    "sourceOnlyCapturedFiles": 92,
+    "authUsersCreated": 0,
+    "sent": [],
+    "newFourNormalStoppedRetained": true,
+    "ownFourStatus": "EXACT_OWN4_CLOSED",
+    "gateRestored": true,
+    "rootEvidence": "/private/tmp/yumidang-retirement-a9-root-reviewed-20261013-v1",
+    "evidenceSha256": {
+      "producer-failure.json": "531fce3c7ca89128a1d91c5ad818e5b3ccd7cbfb35e9e338e6fdde540b51bddf",
+      "composite-final.json": "5afc79ae4fd145c8f4d596a2ba5cd4303073a54e3d5f0ed655a0b1b7347421f6",
+      "own-four-final.json": "88fa960ae02927da468dff6e90b8e3236a092ac32c020969c1159dd0c6d1f665",
+      "gate-restore-receipt.json": "88164222e8af674f02959b80345ab7a6c547a34d43c87941c9c595b7f335d438",
+      "source-only-factory-result.json": "7eed5ae6dd88ced72566a11f576924d73fdb332fd084cb30a13137cb0708ad3c"
+    },
+    "confirmedCodeDefect": "FOUR_SCHEMA_ROWS175_VS_REQUIRED_NATIVE178_MISSING_CRON2_VAULT1",
+    "causalScope": "MATCHES_OBSERVED_PHASE_NOT_DIRECT_ORIGINAL_ERROR_TOKEN",
+    "completionCountRaised": false
+  },
+  "actualA10Creator": {
+    "status": "REJECTED_PREPARED_ALREADY_CONSUMED_BEFORE_RESOURCES",
+    "sourceHead": "7dd774c74cebaaba58c50ebc8532144ab436dce7",
+    "creatorSha256": "0aaf9bdca7d13389b50947a233b581f47825214c14e1b9885eb222f0f0d9c2b8",
+    "newOwnedResources": 0,
+    "authAccountsCreated": 0,
+    "creatorRootExists": false,
+    "executionIntentSha256": "843a2a128bd52330e65562d56a3a60b36e57d84dfce9892b2bdfe546423910ea",
+    "rootCause": "STATIC_BUILDER_COPIED_EXECUTION_INTENT_INSTEAD_OF_MIGRATION_MANIFEST",
+    "preparedMarkerPreserved": true,
+    "guardWeakened": false,
+    "sameTargetReplayed": false
+  },
+  "actualA11Retirement": {
+    "status": "FAIL_BEFORE_MUTATION_SQLSTATE_42601",
+    "causeType": "RuntimeError",
+    "causeCode": "SQLSTATE_42601",
+    "sent": [],
+    "sourceHead": "7dd774c74cebaaba58c50ebc8532144ab436dce7",
+    "sourceOnlyFactoryFiles": 92,
+    "authUsersCreated": 0,
+    "gateRestored": true,
+    "ownFourStatus": "EXACT_OWN4_CLOSED",
+    "newFourNormalStoppedRetained": true,
+    "failureSha256": {
+      "producer-failure.json": "e97a9cd0cd759cb8c5bbb6601919f15457b70d22ec5c4ed0654874bda6525025",
+      "composite-final.json": "85c39f5e92c073a9afe4be598efaa4a6c467c7e61e4aac2cadf12ad21215a036",
+      "own-four-final.json": "caf51076dadca08618ab0ea9d7530d93eca90feeafb09c9659fa4730d5bea09e"
+    },
+    "confirmedCodeDefect": "CLOSED_CONTROLS_MISSING_SPACE_COLUMN_FROM",
+    "a9OriginalCauseRecovered": false,
+    "completionCountRaised": false
+  },
+  "actualA12Retirement": {
+    "status": "FAIL_BEFORE_RETIREMENT_REQUEST_CAUSE_UNKNOWN",
+    "sourceHead": "53df35d93f1bcd4e21dce6365d90a48e4ead664e",
+    "actualLocalAuthAdminCreates": 1,
+    "actualLocalAuthPasswordLogins": 1,
+    "authHttpStatuses": [
+      200,
+      200
+    ],
+    "fixtureMemberSqlTemplates": 3,
+    "fullSnapshotTables": 178,
+    "actualNaver": "NOT_RUN",
+    "retirementApiCalls": 0,
+    "ackCalls": 0,
+    "originalSessionRetained": true,
+    "gateRestored": true,
+    "perContainerNormalStopKnown": 4,
+    "ownFourFinal": "FAIL_UNKNOWN",
+    "finalInventory": "UNKNOWN_AFTER_ORIGINAL_300S_BOUND",
+    "beforeFailureElapsedSeconds": 281.953,
+    "confirmedStaticDefect": "FOUR_MISSING_SQL_KEYWORD_SEPARATORS",
+    "directCauseRecovered": false,
+    "sameTargetReplayed": false,
+    "completionCountRaised": false,
+    "evidenceRoot": "/private/tmp/yumidang-retirement-a12-root-reviewed-20261013-v1",
+    "evidenceSha256": {
+      "producer-receipt.json": "d0e90a317f64f46b8b7eaab0051a904dd8ff73b42091df18b0048012f5a7e05f",
+      "callback-first-failure.json": "dd6bc910900f3b84faf5548f3f45e3d952ffa7a9daf750f68f6fee920c18758d",
+      "own-four-final.json": "4c7bb5babad01897bd4ccf712302fbeba62a8fc98edc1c3315cadcc98d157d1a",
+      "composite-final.json": "0b496bd2320b842595cdef3bd8c6be96edc37c22553a9acbfb0f11b49c6d2fe3"
+    },
+    "laterReadOnlyCurrentStop": {
+      "status": "ALL_FOUR_CURRENTLY_NORMAL_STOPPED",
+      "mutationCalls": 0,
+      "originalFailureRetained": true,
+      "receiptSha256": "cd3cf4341e4a05cb48ec15b0219500395962e8a71a733f5de7d4129cc0353a6c"
+    }
+  },
+  "retirementParentSqlSuccessor": {
+    "status": "PRIVATE_STATIC_MODELS6_PASS_ACTUAL_NOT_RUN",
+    "handoffSha256": "32f6e3a96fc4fcb97452cabbe96f2a6942f6358426c7e6448c68d46e2ee23cfa",
+    "actualCalls": 0,
+    "sqlWhitespaceFixes": 4,
+    "originalGuardLimitsUnchanged": true
+  },
+  "historicalInitialCoverageStatus": "TYPED_CAPTURED_DISPATCH_OFFLINE_PASS_ACTUAL_NOT_RUN",
+  "currentSourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+  "immutableHistoryOptimization": {
+    "status": "LOCAL_COMMITTED_OFFLINE151_AND_PEER_PASS_ACTUAL_FLOW_PENDING",
+    "sourceHead": "ed3bde1e606efe38e01fdf1577fe10a94d0cfb18",
+    "runnerSha256": "2675ebe9fb917248fc7bf326bc954d5b4be6a4ae4cc70283a49b7f8d4e5fdd78",
+    "testSha256": "07903b8d825a82925582f811731e2334afcba29e2662d51fe303ec4691ed9c01",
+    "currentDbChecksCached": false,
+    "maxCacheEntries": 1,
+    "returnTypes": [
+      "tuple",
+      "bytes",
+      "str",
+      "int"
+    ],
+    "hostCacheApproxBytes": 149000000,
+    "guardsUnchanged": true,
+    "source57FreezeSha256": "b99d465a3379f5be64008e89751d64167e48efcd92981327f15ab833c3b6ea0b",
+    "sourcePinsSha256": "88e42f83f97238b8acecd163cacb2a14171adbb02d11d91b7957551b20b64422",
+    "completionCountRaised": false
+  },
+  "actualA13Creator": {
+    "status": "PASS_NEW_CLOSED_NATIVE119_FOUR_SERVICES_ONLY",
+    "sourceHead": "ed3bde1e606efe38e01fdf1577fe10a94d0cfb18",
+    "creatorSha256": "f8f13dba26a27e378b3996b0c0d34bb826f36609c30bcc37420cc346e87e362b",
+    "proofPath": "/private/tmp/yumidang-native-auth6-created-20261013-a13/created-proof.json",
+    "proofSha256": "3eea446af8ba164d9bf25ec7718d00e98220537aaf0e1425ba0b5e1765a47ade",
+    "tlsSha256": "4be7c0bdc2be82a578d78114bd3cc903dc3d81b9d3251ff21e68ea8b4c5b9eb5",
+    "roles": [
+      "authenticator",
+      "supabase_auth_admin"
+    ],
+    "tls": "TLSv1.3/256bit",
+    "verifyFullUris": true,
+    "sourceSqlExecuted": false,
+    "authUsersCreated": 0,
+    "native119Tables": 178,
+    "effectivePermissions": 484096,
+    "sequences": 4,
+    "wholeLogicalComparison": "PASS",
+    "storageRestored": false,
+    "ai24Executed": false,
+    "productionReady": false,
+    "completionCountRaised": false
+  },
+  "actualA13Retirement": {
+    "status": "FAIL_AFTER_ORIGINAL_REQUEST_PUBLIC_PROCESSING_UNCONFIRMED",
+    "sourceHead": "ed3bde1e606efe38e01fdf1577fe10a94d0cfb18",
+    "authCreates": 1,
+    "authLogins": 1,
+    "producerElapsedSeconds": 148.792,
+    "beforeFull178": "PASS",
+    "beforeElapsedSeconds": 235.813,
+    "retirementRpcIntentCount": 1,
+    "successfulOriginalResponseObserved": false,
+    "afterProof": "NOT_PROVEN",
+    "actualHttpStatus": "UNKNOWN_NOT_RETAINED",
+    "actualSqlState": "UNKNOWN_NOT_RETAINED",
+    "confirmedSetupDefect": {
+      "cleanupGuard": false,
+      "requiredServiceRoleExecute5": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "retainedFull178EqualsFixtureBaseline": true,
+    "originalBudgetsUnknownRetained": true,
+    "receiptGateRestored": true,
+    "authDelete": 0,
+    "deleteAck": 0,
+    "workerClaim": 0,
+    "sessionResurrection": false,
+    "sameRequestReplayed": false,
+    "perContainerNormalStopKnown": 4,
+    "ownFourFinal": "FAIL_UNKNOWN",
+    "finalPriorInventory": "UNKNOWN_AFTER_300S",
+    "evidenceRoot": "/private/tmp/yumidang-retirement-a13-root-reviewed-20261013-v1",
+    "evidenceSha256": {
+      "producer-receipt.json": "d09bda2988768cb8deba2a301d5b1e8d66aac3506797111ab2459d46a67a960b",
+      "callback-before-proof.json": "33882b713ba36f7e64db18f9082cb3c89b8cf60879d0974255de43b08974ee5f",
+      "retirement-first-failure.json": "ecea918953e8e00378d550830c364214378bedc6dad2612e9306fe85bcc99e89",
+      "own-four-final.json": "10054e34cc4f50c356beffe3787bb76da1e4bfe00ad92b2803397c18491a54dc",
+      "composite-final.json": "54db6f56f5622a5f653555e3172c9c9e5db2a76b9b811eb63e9db84214890178",
+      "gate-restore-receipt.json": "c65c6981cd0d67c72b936c6f26b63765d745ff4552cf2eea598cf953daf06a4c"
+    },
+    "completionCountRaised": false
+  },
+  "actualLifecycleMutationCallScope": "A13 ORIGINAL_RETIRE_RPC_ATTEMPT1_CONFIRMED_SUCCESS0_NO_REPLAY",
+  "actualC14": {
+    "status": "FAIL_UNKNOWN",
+    "actualAuthCreate": 1,
+    "actualLogin": 1,
+    "READY": "NOT_RUN",
+    "positiveConsent": "NOT_RUN",
+    "withdrawal": "NOT_RUN",
+    "ownFour": "EXACT_OWN4_CLOSED",
+    "originalFullPreservation": "UNPROVEN",
+    "replayAllowed": false,
+    "rootFinalSha256": "790d33d57731353ce77fa35d365b8e8ab91003f627fe87a3dd24fe4a482f086e"
+  },
+  "lifecycleRowBulk": {
+    "status": "PASS_SOURCE_AND_READ_ONLY_EQUIVALENCE",
+    "rootRegression": 162,
+    "sourceHead": "7a47bc41c4803f324327bd8cbaa746171312fa59",
+    "tables": 178,
+    "oldSeconds": 8.943213,
+    "newSeconds": 0.196675,
+    "receiptSha256": "80360c271dc64071c641ca77885ee95a0590101f683caa5134ccb7a0ec0326ad",
+    "total300Success": false
+  },
+  "nextActualC15": {
+    "status": "FAIL_PRELAUNCH_MEMORY",
+    "sourceHead": "7a47bc41c4803f324327bd8cbaa746171312fa59",
+    "creatorHandoffSha256": "bc9c665a1ea6e40a8fdaa3d151c44121acb451bda8b8bb566739782c89f3847e",
+    "creatorSha256": "ab5517e64298783d18445d080aacff699a8c4a48bfe8589d0b6b39ceab2b6b00",
+    "actualMemberAI": "NOT_RUN",
+    "newProject": "jonghyun-backend100-c15c0d01",
+    "startupAvailableKiB": 1295212,
+    "createdProofSha256": "d7726f411198da2ca9de8336c0bdbe1e812621f9e55b93e1a2085f979f5e4630",
+    "callerHandoffSha256": "7fb585c3a89dc8905410ac0bf8ece3d71f30072749b07ed154bf27fe41006e51",
+    "actualAuthCreate": 1,
+    "actualLogin": 1,
+    "READY": "NOT_RUN",
+    "positiveConsent": "NOT_RUN",
+    "withdrawal": "NOT_RUN",
+    "firstCause": "C_MEMORY_FLOOR_OR_DEADLINE",
+    "phase": "PRELAUNCH_STARTUP_MEMORY",
+    "memoryAvailableKiB": 1019872,
+    "memoryMinimumKiB": 1048576,
+    "ownFour": "EXACT_OWN4_CLOSED",
+    "originalFullPreservation": "UNPROVEN",
+    "replayAllowed": false,
+    "rootFinalSha256": "18e49799dbf6bbd2d7f982ef152054c3921a50b069e83013c02ae603b9a47521",
+    "ownFourSha256": "5ddb35039ca1309498eb6af1dcad7928115bcc75715289240c6f39408ffcf5e5"
+  },
+  "nextFreshPreparations": {
+    "status": "A16_C17_CONSUMED_FAILED_AND_OWN4_CLOSED_RETAINED",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "actualResourcesCreatedInA16C17": 8,
+    "A16": {
+      "authCreations": 0,
+      "actualReadiness": "NOT_RUN",
+      "result": "actualA16Retirement",
+      "creatorResult": "actualA16Creator",
+      "own4": "EXACT_OWN4_CLOSED",
+      "replayOrRestartAllowed": false
+    },
+    "C17": {
+      "authCreations": 1,
+      "actualLogin": 1,
+      "actualAI": "NOT_RUN",
+      "result": "actualC17",
+      "own4": "EXACT_OWN4_CLOSED",
+      "replayOrRestartAllowed": false
+    },
+    "nextAuthCondition": "Changed actual resource conditions before another fresh attempt; original later1GiB startup predicate maintained",
+    "pendingOldDBStop": "cancel-race78 only; earlier3 fulfilled",
+    "nextIndependentWork": "OriginalSQL108 Storage45 metadata export without database connection; original39 physicalbytes still required"
+  },
+  "ai24CurrentSourceFiniteAudit": {
+    "sourceHead": "7a47bc41c4803f324327bd8cbaa746171312fa59",
+    "status": "READ_ONLY_STATIC_NOT_RUN",
+    "actualSignedAuthPath": "PRESENT_NOT_EXECUTED",
+    "snapshotSchemas": [
+      "auth",
+      "public",
+      "private",
+      "storage"
+    ],
+    "native119SnapshotTables": 175,
+    "native119Whole178RowsPreservation": "NOT_PROVEN_BY_AI24_BASE_PATH",
+    "LCP178Optimization": "SEPARATE_PATH",
+    "initialPrepareKst": "23:00-23:40",
+    "fixturePrepareKst": "23:00-23:50",
+    "fixtureFinishByKst": "23:55",
+    "resumeKst": "23:58 inclusive;23:59:55 exclusive",
+    "prepareOrResumeAt2357": "OUTSIDE_ALLOWED_WINDOWS",
+    "remaining": "Fresh six signed original sessions/current committed pins/explicit three selected IDs/clean same-day budget rows/typed captured runtime/durable UNKNOWN/cleanup required"
+  },
+  "currentSourceFreezeAafbHistorical": {
+    "status": "PASS_SOURCE_ONLY_NOT_EXECUTION",
+    "sourceHead": "aafb7bb2b4a8847ea9788aa289e43be6c54ccc25",
+    "fileCount": 57,
+    "sourcePinsSha256": "ee21f31bcd1da8291614fe2f7387dffcf7e969b17c0d3578ec1fe80ba0da4797",
+    "receiptSha256": "2bd5752d7124c4157686a045940eb6a1ed144c1c80e3278ce395aaacebc8b697",
+    "actualResourceCalls": 0,
+    "mustRefreshAfterHeadChange": true
+  },
+  "signedAi24PlanImplementation": {
+    "status": "COMMITTED_OFFLINE_TESTED_NOT_ACTUAL",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "toolSha256": "608d421af98abdfe7c03eaf8dba8a9c054afb16c8fccc6088d1a0356842cdf65",
+    "testSha256": "c26b411391b922ddbca3c9e142ac84715f740ffe820887e3e2cecc9b0b240b6f",
+    "totalTests": 54,
+    "newTests": 6,
+    "rootElapsedSeconds": 0.349,
+    "independentPeer": "PASS_READ_ONLY",
+    "handoffSha256": "82b42906867365d03e764eac064f72e106ee780b8c028029b1afbc7010d565aa",
+    "contractSourceFiles": 58,
+    "currentContractSourceReceiptSha256": "0f0cf87ed35416412264430eec239640c5ff46ce7c88a554bfdabcb6d49e82a3",
+    "actualAuthAndMidnight": "NOT_RUN",
+    "inputChangedBeforePersistence": "REJECTED",
+    "executionAllowed": false
+  },
+  "actualA16Creator": {
+    "status": "PASS_NEW_CLOSED_NATIVE119_FOUR_SERVICES_ONLY",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "createdProofSha256": "ddda9ab216d501a3e1bd7de3b87a7bba547eaf45990067dd7a1de0f086d5790c",
+    "currentInitialAvailableKiB": 1276096,
+    "startupMinimumKiB": 1048576,
+    "sourceSqlExecuted": false,
+    "authAccountsCreated": 0,
+    "signedAuthExecuted": false,
+    "additionalOldDbStopExecuted": false,
+    "next": "BIND_GENUINE_CREATOR_PINS_AND_RUN_ORIGINAL_RETIREMENT_SCOPE_ONCE"
+  },
+  "actualA16Retirement": {
+    "status": "FAIL_OR_UNKNOWN_RETAINED",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "producerCauseCode": "ORIGINAL_START_MEMORY",
+    "failedPredicate": "Integer availableKiB>=1048576 and elapsed<=3 seconds",
+    "failedMemoryValueAndElapsed": "NOT_RECORDED_DO_NOT_INFER",
+    "producerSent": [],
+    "authAccountsCreated": 0,
+    "readinessActivation": "NOT_RUN",
+    "retirementApi": "NOT_RUN",
+    "ownFour": "EXACT_OWN4_CLOSED",
+    "unknown": [],
+    "originalGateNotCaptured": true,
+    "cleanupFailuresRetained": [
+      "GATE_RESTORE",
+      "POST_RESTORE_COMPARE"
+    ],
+    "fullPreservation": "NOT_PROMOTED",
+    "physicalSequence": "NOT_VERIFIED",
+    "rootReplayAllowed": false,
+    "producerFailureSha256": "d22e915217d19b4d1071366203829515aaef5d57f065b3c4a8e9d8d4c403907f",
+    "compositeFinalSha256": "f0c5d8d4c7aadb8c04a1bd03a5ec099f140ac7e257dfbca00c0564785516c729",
+    "ownFourFinalSha256": "9cc6e3d27a591f265897c74fe35057266e61ee8023b1cb4d6e6321f2a612f116"
+  },
+  "currentSql120Audit": {
+    "status": "READ_ONLY_AUDIT_WITH_RETAINED_ACTUAL_EVIDENCE",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "currentRegularMigrations": 119,
+    "preparedMigrations": 119,
+    "exactVersionPathShaBytesSetEqual": true,
+    "SQL120AlreadyApplied": "RETAINED_CANONICAL_RECEIPT_VERIFIED",
+    "receiptSha256": "26018fb01021e967de4f68dd15076c0ce1e5364fac64978e36ad9e8b4e09c111",
+    "retainedHiddenAndSequentialConsumerCases": "PASS_21_OLD_SCOPE_NOT_CURRENT_UI",
+    "freshParallelReads": "NOT_RUN_PREPARING_DB_ONLY_SCOPE",
+    "legacyBadgeSource": "USES_unread_count_EXPECTED_INDIVIDUAL_unread_message_count",
+    "SRequestWritten": true,
+    "actualResourceCallsThisAudit": 0
+  },
+  "sql120ConcurrentPreparation": {
+    "status": "FROZEN_ACTUAL_NOT_RUN",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "creatorHandoff": {
+      "path": "/private/tmp/yumidang-sql120-c18-creator-static-7830292a-5a5e-4dd1-a73f-bf0cde9c2590/handoff.json",
+      "sha256": "16a637fc1e9fe9ad77b5b655874924390f477b9d356708bb0d605f6600d5dbe1"
+    },
+    "driverHandoff": {
+      "path": "/private/tmp/yumidang-sql120-concurrency-static-yw1o_gh7/handoff.json",
+      "sha256": "0ec157de6e27a38c3fa601095d44bf3760c96cf61dadd6b4ea1ab2bd0a5ca3b5"
+    },
+    "modeledChecks": {
+      "creator": 12,
+      "driver": 3,
+      "scope": "MODELED_ONLY"
+    },
+    "actualResources": 0,
+    "migrationReplay": 0,
+    "scope": "SIMULATED_SQL_JWT_DB_ONLY",
+    "actualAuthRESTNaverUI": "NOT_RUN",
+    "startupAvailableKiB": 1048576,
+    "runtimeAvailableKiB": 786432,
+    "continuousDeadlineSeconds": 300,
+    "originalSourceLifecycleChanges": 0
+  },
+  "actualSql120C18": {
+    "status": "FAILED_BEFORE_RESOURCE_CREATION",
+    "actualCreatedDatabases": 0,
+    "actualAuthCreations": 0,
+    "migrationReplay": 0,
+    "driver": "NOT_RUN",
+    "failureCause": "captured selected_helpers globals missing ast",
+    "receipts": {
+      "prepare-first-failure.json": {
+        "path": "/private/tmp/yumidang-sql120-c18-runtime-v1/prepare-first-failure.json",
+        "sha256": "59d0bce16f6047b2ec96032b8dc470665b799742539a7d857ef17adf6dc2b4e7",
+        "receipt": {
+          "code": "C18_FIXED_FAILURE_UNKNOWN",
+          "failedMemoryAttempts": [],
+          "noRetry": true,
+          "stage": "ORIGINAL_INPUTS",
+          "type": "OTHER"
+        }
+      },
+      "final-owned-db.json": {
+        "path": "/private/tmp/yumidang-sql120-c18-runtime-v1/final-owned-db.json",
+        "sha256": "5de76893f7061ef5bbd88febdfea93d73078292a93f8164a3cf07d14bebd9f4d",
+        "receipt": {
+          "actualAuthTLSUI": "NOT_RUN",
+          "dbId": null,
+          "failedMemoryAttempts": [],
+          "failures": [],
+          "memorySamples": [
+            {
+              "availableKiB": 1290800,
+              "elapsedMs": 1105,
+              "minimumKiB": 1048576
+            },
+            {
+              "availableKiB": 1290800,
+              "elapsedMs": 448,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1263540,
+              "elapsedMs": 342,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1291828,
+              "elapsedMs": 249,
+              "minimumKiB": 786432
+            }
+          ],
+          "noRemove": true,
+          "noRetry": true,
+          "sourceWrites": 0,
+          "status": "FAIL_UNKNOWN",
+          "stopAttempted": false,
+          "stopped": false,
+          "unknown": [
+            "C18_FINAL_INVENTORY_SOURCE_UNKNOWN"
+          ]
+        }
+      }
+    },
+    "predecessorUnknownPreserved": true
+  },
+  "actualSql120C18V2": {
+    "status": "FAILED_BEFORE_RESTORE_SQL",
+    "createdDatabases": 1,
+    "authCreations": 0,
+    "driver": "NOT_RUN",
+    "originalFailure": "FULL_CONFIG_DRIFT",
+    "exactObservedHostConfigTransition": {
+      "field": "OomKillDisable",
+      "created": false,
+      "afterStart": null,
+      "proof": "Reconstructing only this field restores exact original SHA256; Config and Mounts hashes unchanged"
+    },
+    "ownStopped": true,
+    "exitCode": 0,
+    "OOMKilled": false,
+    "overallClosure": "FAIL_UNKNOWN_PRESERVED",
+    "receipts": {
+      "prepare-first-failure.json": {
+        "path": "/private/tmp/yumidang-sql120-c18-runtime-v2/prepare-first-failure.json",
+        "sha256": "6bbdf111462a75675a172593b10118e4c1ce49d77cf9c33532ba88acb6ccf9e9",
+        "value": {
+          "code": "FULL_CONFIG_DRIFT",
+          "failedMemoryAttempts": [],
+          "noRetry": true,
+          "stage": "RESTORE_ONCE",
+          "type": "ValueError"
+        }
+      },
+      "final-owned-db.json": {
+        "path": "/private/tmp/yumidang-sql120-c18-runtime-v2/final-owned-db.json",
+        "sha256": "62217d05f1b66569476c34246a060d3272426d1f9a2c40811efcbaa6ede6d22b",
+        "value": {
+          "actualAuthTLSUI": "NOT_RUN",
+          "dbId": "a5dbc902400edf6d27cc7f98b3148e24dee63264f4174ef51cf9e474cfc11ac4",
+          "failedMemoryAttempts": [],
+          "failures": [
+            "C18_OWNED_INVARIANT_DRIFT"
+          ],
+          "memorySamples": [
+            {
+              "availableKiB": 1284740,
+              "elapsedMs": 620,
+              "minimumKiB": 1048576
+            },
+            {
+              "availableKiB": 1284740,
+              "elapsedMs": 374,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1284680,
+              "elapsedMs": 304,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1274228,
+              "elapsedMs": 294,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1282264,
+              "elapsedMs": 195,
+              "minimumKiB": 1048576
+            },
+            {
+              "availableKiB": 1284432,
+              "elapsedMs": 320,
+              "minimumKiB": 1048576
+            },
+            {
+              "availableKiB": 1278668,
+              "elapsedMs": 230,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1269796,
+              "elapsedMs": 351,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1253188,
+              "elapsedMs": 458,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1285104,
+              "elapsedMs": 656,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1285104,
+              "elapsedMs": 233,
+              "minimumKiB": 786432
+            },
+            {
+              "availableKiB": 1288292,
+              "elapsedMs": 298,
+              "minimumKiB": 786432
+            }
+          ],
+          "noRemove": true,
+          "noRetry": true,
+          "sourceWrites": 0,
+          "status": "FAIL_UNKNOWN",
+          "stopAttempted": true,
+          "stopped": true,
+          "unknown": [
+            "C18_FINAL_INVENTORY_SOURCE_UNKNOWN"
+          ]
+        }
+      },
+      "created-db.json": {
+        "path": "/private/tmp/yumidang-sql120-c18-runtime-v2/created-db.json",
+        "sha256": "ee1972a02fe4cb7673c1605ad0ee27744ba23a083428807d242e1c2fc99e9bbb",
+        "value": {
+          "configSha256": "8ea72054da6b35aae7ef0b061d2e7b5be66f38f3cae94787399eeb576a65ee76",
+          "hostConfigSha256": "650988d3deff3a16f12d1ae90eaae5655a27b3387b715be95a00ffc11e2dbf7c",
+          "id": "a5dbc902400edf6d27cc7f98b3148e24dee63264f4174ef51cf9e474cfc11ac4",
+          "image": "sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518",
+          "mountsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "name": "yumidang-minkyu-sql120-c18"
+        }
+      }
+    },
+    "noRestartOrReplay": true
+  },
+  "actualSql120C19": {
+    "status": "FAIL_UNKNOWN_NO_REPLAY",
+    "wholeFunctional": false,
+    "scope": "SIMULATED_SQL_JWT_DATABASE_ONLY",
+    "passedSubscopes": [
+      "strict-native119-full-restore",
+      "same-overlapping-transactions",
+      "partially-overlapping-transactions",
+      "hidden-PT404-no-effect",
+      "original-first-read-time-subscope",
+      "exact-remote-backend-closure",
+      "exact-owned-db-normal-stop"
+    ],
+    "firstFailure": {
+      "code": "SQL120_ORIGINAL_NONFIXTURE_ROW_CHANGED_DURING_SEED",
+      "type": "ValueError"
+    },
+    "missingFixtureTriggerTables": {
+      "private.conversation_message_generations": {
+        "original": 0,
+        "seed": 6
+      },
+      "private.conversation_retention_generations": {
+        "original": 0,
+        "seed": 1
+      },
+      "public.notifications": {
+        "original": 0,
+        "seed": 1
+      }
+    },
+    "finalNativeStateWitness": "NOT_SAVED_BEFORE_VERIFICATION_FAILURE",
+    "ownedFinalStatus": "EXACT_OWN_DB_CLOSED",
+    "dbId": "fa22f4aaffd44fbb2f1b7e512108f2abf89d4a5984dbef1cd7ce1dc8bdc76b42",
+    "actualAuthCreations": 0,
+    "migrationReplay": 0,
+    "receipts": {
+      "strict-native119-comparison.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/strict-native119-comparison.json",
+        "sha256": "369023956b1a02afd0ba7c0da85abbda8804d6878e7b085799b96df175408639"
+      },
+      "same-receipt.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/same-receipt.json",
+        "sha256": "d15f7c1cb5b1b5d3915b1a24236f3b8309995260a51b79c3f1e84fadd9250ed7"
+      },
+      "overlap-receipt.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/overlap-receipt.json",
+        "sha256": "356a9918b16adad03bb1f642d042fc33082cf8cf68a83f864fd92d7013b4b09a"
+      },
+      "sql120-first-failure.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/sql120-first-failure.json",
+        "sha256": "757cec86fb577dd86f711d5ae8f35e3ddb8314e40f1eb59685c5cb652455bb2a"
+      },
+      "remote-child-closure.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/remote-child-closure.json",
+        "sha256": "ce9f76d8fa2924ed1457bfa784f54e1a81d3f7682cc7976023201bcd209e46b5"
+      },
+      "final-owned-db.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/final-owned-db.json",
+        "sha256": "196c9fe01ab00185a4bb1182aaa4e68d4fee9cec31bdf6d28637658beb5d825e"
+      },
+      "sql120-driver-final.json": {
+        "path": "/private/tmp/yumidang-sql120-c19-runtime-v1/sql120-driver-final.json",
+        "sha256": "181b6dbdd085bf3446fba6dcda54925a29890f7edb945a1455c3ff4eb6745b26"
+      }
+    },
+    "noRestart": true,
+    "coreOrOperationalCompletionAdded": 0
+  },
+  "actualSql120C20": {
+    "status": "PASS_SQL120_DATABASE_CONCURRENCY_ONLY",
+    "scope": "SIMULATED_SQL_JWT_DATABASE_ONLY",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "functional": true,
+    "firstFailure": null,
+    "cleanupFailures": [],
+    "ownedFinalStatus": "EXACT_OWN_DB_CLOSED",
+    "dbId": "b3a67e3cee2cd77d857a3e1a79adaf305a98843f2f177e58a048b8173a6b0147",
+    "memorySampleCount": 26,
+    "actualAuthCreations": 0,
+    "migrationReplay": 0,
+    "verified": [
+      "native119 rows178 roles31 effectivePrivileges484096 sequences4 restore",
+      "distinct backend same and overlap original RPC concurrency",
+      "first read_at immutable",
+      "hidden message PT404 no effect",
+      "full178 preservation outside exact18 fixture scope",
+      "all original nonowned rows and rawACL/effective/catalog/roles/sequences preserved",
+      "closed guards cron and no worker/model/external deletion",
+      "all bound PostgreSQL backends absent",
+      "owned DB one normal STOP and prior inventory exact"
+    ],
+    "actualAuthRESTNaverUI": "NOT_RUN",
+    "storageActualBytes": "NOT_VERIFIED",
+    "overallCompletionAdded": 0,
+    "receipts": {
+      "strict-native119-comparison.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/strict-native119-comparison.json",
+        "sha256": "369023956b1a02afd0ba7c0da85abbda8804d6878e7b085799b96df175408639",
+        "bytes": 460
+      },
+      "same-receipt.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/same-receipt.json",
+        "sha256": "855773d0935c4b4c92b2fbae5651a96232b77243dcdf564c4e9b08b93b9a4e7f",
+        "bytes": 707
+      },
+      "overlap-receipt.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/overlap-receipt.json",
+        "sha256": "66f343e9f33cb3853e91d174d2796165c18e1326065a4506f20f5b7a2643efbd",
+        "bytes": 710
+      },
+      "sql120-final-fresh-proof-private.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/sql120-final-fresh-proof-private.json",
+        "sha256": "299b098bf4e545c4c202cb6d506d663946fe18f5db01a500f528bb3fa59bfa63",
+        "bytes": 50076087
+      },
+      "sql120-functional-proof.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/sql120-functional-proof.json",
+        "sha256": "4bddcfba3085f32b5fbd2597c00bd5aa24837db6f297a5b0aa726e98b639a66e",
+        "bytes": 389
+      },
+      "remote-child-closure.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/remote-child-closure.json",
+        "sha256": "ce9f76d8fa2924ed1457bfa784f54e1a81d3f7682cc7976023201bcd209e46b5",
+        "bytes": 124
+      },
+      "final-owned-db.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/final-owned-db.json",
+        "sha256": "caf1620affa815e6c6d99c71d4362b881a8f689015666d08c99e00bf9ac5505a",
+        "bytes": 1878
+      },
+      "sql120-driver-final.json": {
+        "path": "/private/tmp/yumidang-sql120-c20-runtime-v1/sql120-driver-final.json",
+        "sha256": "5a85ec1201353d4bc8ad7efc7b2e970a560d59225f9590220fcfceb160f04edf",
+        "bytes": 2101
+      }
+    },
+    "noRestart": true,
+    "independentEvidenceReview": {
+      "status": "PASS_DB_ONLY",
+      "actualResourceCalls": 0,
+      "verified": "retained finalnative178, outside160 exact, nonread177 bags, nonowned18/owned17, read5, roles31/effective484096/sequence4, original blocker/session times, original firstread times, owned/remote closure",
+      "limits": [
+        "Raw per-step preseed nonowned bags and immediate hidden no-effect state not separately saved; successful pinned code enforces comparison",
+        "Host group/stdio and final prior inventory comparison enforced by successful pinned code; closure summary retained",
+        "No actual GoTrue Auth/REST/UI/Naver/Storage byte proof"
+      ]
+    }
+  },
+  "executionPrerequisitesAuditHistoricalA8": {
+    "overall": "22/28",
+    "percent": 79,
+    "actualCompleted": false,
+    "conditions": [
+      "Exact three isolated DB STOP approval pending; insufficient preparation margin prevents A3 launch",
+      "39 original Storage bytes absent",
+      "Supplier conditions and official API HTTPS evidence unresolved",
+      "Real two-member validation explicitly HOLD",
+      "Production change requires final verified bundle and approval"
+    ],
+    "priorApprovalsFulfilled": [
+      "native-v7 restart/read, returned stopped"
+    ],
+    "doNotRepeatFulfilledApproval": true,
+    "status": "ACTIVE_A8_READ_ONLY_SERVICE_POOL_AND_TLS_OBSERVATION",
+    "memoryApproval": "FULFILLED_EXACT_THREE_STOP",
+    "stopReceiptSha256": "c9b679cc11b9eb36e6b70fc653bb9bb91d50e05b2081cac5d271d6dc69af2bf2"
+  },
+  "storageOriginalByteAudit": {
+    "status": "PARTIAL_ORIGINAL6_BYTES_MISSING39",
+    "archive": "/private/tmp/yumidang-full108-20261009-v3/storage.tar",
+    "archiveSha256": "ef75231d2f6b52e40c2f827a797e7faf2ee46cf63a179e70543e64f9421833cc",
+    "files": 6,
+    "matchesProtectedStorage103Six": "YES_NORMALIZED_FULL_PATH_AND_HASH_MAP",
+    "beforeDeletionArchiveExtraFile": "KNOWN_SYNTHETIC_NOT_MISSING39",
+    "historicalSource": "SQL108 metadata45 exported and exact Storage103 OCI packaged locator maps all original6; remaining39 manifest pinned separately",
+    "native119Source": "SEPARATE_SYNTHETIC_SOURCE_STORAGE0; not original45 metadata or actual bytes",
+    "currentOperatingStorage2": "SEPARATE_SCOPE_NOT_ACTUAL_BYTE_PROOF",
+    "requiredInput": "Original39 authoritative byte export/backup and exact bucket/name/version source identity",
+    "overallCompletionAdded": 0
+  },
+  "actualC17": {
+    "status": "FAIL_UNKNOWN",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "actualAuthNewMemberCreation": 1,
+    "actualOriginalLogin": 1,
+    "aiRequests": 0,
+    "READY": "NOT_RUN",
+    "consentWithdrawal": "NOT_RUN",
+    "directFailure": [
+      {
+        "attemptedStep": "VALUE_FLOOR_OR_ELAPSED",
+        "availableKiB": 1027304,
+        "code": "C_MEMORY_FLOOR_OR_DEADLINE",
+        "elapsedMs": 253,
+        "minimumKiB": 1048576,
+        "stage": "PRELAUNCH_STARTUP_MEMORY",
+        "type": "ValueError"
+      }
+    ],
+    "originalAuthAndRowsRetained": "UNKNOWN_NOT_PROMOTED",
+    "ownedFinalization": "EXACT_OWN4_CLOSED",
+    "ownedStopped": 4,
+    "ownedUnknown": [],
+    "replayOrRestart": false,
+    "receipts": {
+      "root-final.json": {
+        "path": "/private/tmp/yumidang-consent-C17-root-reviewed-20261013-v1/root-final.json",
+        "sha256": "ab92612ed7076c5815f1dc6a0663a95b6d59f8aba5d0fa9f4768ec9b8848bd9c"
+      },
+      "c-node-prelaunch-failure-private.json": {
+        "path": "/private/tmp/yumidang-consent-C17-root-reviewed-20261013-v1/c-node-prelaunch-failure-private.json",
+        "sha256": "0a5d79a8bbe30e4da474fa59b8acddb66fdc81518a2a34adb209061d79a96200"
+      },
+      "c-final-failure-private.json": {
+        "path": "/private/tmp/yumidang-consent-C17-root-reviewed-20261013-v1/c-final-failure-private.json",
+        "sha256": "42bb7220fc842e5c3540bb0e19c8d4cda637df04daa62c385b8ccbafcbdc432b"
+      },
+      "own-four-final.json": {
+        "path": "/private/tmp/yumidang-consent-C17-root-reviewed-20261013-v1/own-four-final.json",
+        "sha256": "07ab21a0abf8385adec142a4c0179c0dfd18ef1099d8d36a6a883a52c48e432e"
+      }
+    }
+  },
+  "nextFreshPreparationsHistoricalStatic": {
+    "status": "SOURCE_BOUND_STATIC_ONLY_MEMORY_STOP_APPROVAL_PENDING",
+    "A16CreatorHandoff": "a5de7d81f49cd390652203bfff713b1d7a16df31c830fd0bccdc065e8b5ff6a9",
+    "C17CreatorHandoff": "9510037dabab245024412cf62790ba017926534c9aea62d639d3b84c8d03a620",
+    "C17CallerHandoff": "735d9c92af4b895eb159e5bc3f98263c33874a4b30be6762d743c9447de211ba",
+    "actualResourcesCreated": 0,
+    "oldC15ReplayAllowed": false,
+    "A16CallerHandoff": "5907325fb25844c89e3df496d2a67c04a9797e9bdf8e8c1243603332959df2e3",
+    "readinessModels": "8 Python +6 Node retained;1 new late-done model PASS",
+    "readinessActual": "NOT_RUN",
+    "A16FinalIndependentPeer": "PASS_STATIC_ONLY_ALL13_PINS_DEADLINE_FIX_REVIEWED",
+    "currentSourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "currentCreatorAndConsentSourceRefreshBundleSha256": "60e579090c4833d189b77009d7548ba07bec4d40059b3d39e0a634a9071fa45a",
+    "currentA16CallerHandoffSha256": "701eb7e5ef11833a00764319b24d58263d691dd6efbf2ad3db21c63bd495eca6"
+  },
+  "actualStorage45MetadataExport": {
+    "status": "PASS_METADATA_EXPORT_AND_PROJECTED45_PARSE_ONLY_READER_OVERALL_UNKNOWN_RETAINED",
+    "wholeReaderStatus": "FAIL_UNKNOWN",
+    "wholeReaderUnknown": [
+      "D_FINAL_PRIOR_SOURCE_OR_MEMORY_UNKNOWN"
+    ],
+    "firstFailure": null,
+    "metadataRows": 45,
+    "databaseConnection": false,
+    "physicalFileBytesRecovered": 0,
+    "sourceArchiveSha256": "6f0b17cff33ad754abfc786f90227830ab2f7aa565ab95bb6149e0ae71a53995",
+    "exportSha256": "c2aad9022fb337c02342b4317fd4b32b53a883c872fec4c12dc121baafeaadf8",
+    "readerReceipt": {
+      "path": "/private/tmp/yumidang-original-storage45-export-v3-static-a9d186ba-c1fd-460f-8bd8-bc20a66a7e9e/evidence/receipt.json",
+      "sha256": "6972fa34b241f977f6fbf14ebfe118494c564cfdd2ff0c144315235fd5991c00"
+    },
+    "readerFinal": {
+      "OOMKilled": false,
+      "exitCode": 0,
+      "id": "e581bc69abc1352160452b96eb29d49e7e0a89daf9cab3b1fc01b1c199504fb2",
+      "retained": true,
+      "running": false,
+      "stoppedOnce": false
+    },
+    "actualManifest": {
+      "path": "/private/tmp/yumidang-original-storage45-manifest-8ce407a72405198066135e1a/objects-private.json",
+      "sha256": "bfb87008e8259fbaaca6c6007d1ad8757d08539011b7c25fbda69f8d32f1271f"
+    },
+    "priorDiagnostic": "/private/tmp/yumidang-storage45-prior-diagnostic-973d7756b6ef1f74e1faf12e/receipt.json",
+    "mountHashOrderProof": "/private/tmp/yumidang-storage45-mount-order-proof-25070610f61a56a942ca3cd4/receipt.json",
+    "eightMountDifferences": "EXACT_FULL_ELEMENTS_MATCH_ORIGINAL_HASH_WHEN_ORDER_PERMUTED",
+    "sourceChanges": 0,
+    "overallCompletionAdded": 0,
+    "physical39StillRequired": true
+  },
+  "actualStorage45OriginalFileMapping": {
+    "status": "PASS_OFFLINE_MAPPING_ONLY",
+    "scope": "OFFLINE_ORIGINAL_SQL108_STORAGE_METADATA_TO_RETAINED_BYTES_MAPPING_ONLY",
+    "metadataCount": 45,
+    "matchedOriginalByteFiles": 6,
+    "metadataWithoutRetainedBytes": 39,
+    "actualOriginal39ByteFiles": 0,
+    "fullRestore": "NOT_PROVEN",
+    "receipt": {
+      "path": "/private/tmp/yumidang-original-storage45-mapping-final-qmrwc92x/receipt.json",
+      "sha256": "348824ecfc55daed238f8c3e322c9b50b2f30f526e79e5f4d0f0869beec5fa0e"
+    },
+    "missing39ManifestSha256": "8c822c58f65426f1b724d86165e249f0f7aff50e3ed4197de4b5682cfa03ef5a",
+    "matched6ManifestSha256": "c3429858f072b9f95c8b3cbc4e12cfa1201c9f8bb6086730eac27db854a78e8f",
+    "distributionProofSha256": "54ac1657292933c45ab4edf6deffadb756c9d47f4fc7c9aecaf1ca92456de434",
+    "readerWholeFAIL_UNKNOWN": true,
+    "overallCompletionAdded": 0,
+    "independentReview": {
+      "status": "PASS_OFFLINE_MAPPING_ONLY",
+      "reviewer": "ack_recovery_review",
+      "handoffPins": 17,
+      "ociCompressedLayersAndDiffIds": 14,
+      "whiteouts": 40,
+      "packagedSources": 10,
+      "objects": 45,
+      "matchedRetainedObjects": 6,
+      "missingInRetainedArchiveOnly": 39,
+      "physicalRecovery": 0,
+      "remoteOrGlobalAbsence": "NOT_PROVEN",
+      "wholeReaderUnknownPreserved": true
+    },
+    "handoff": {
+      "path": "/private/tmp/yumidang-original-storage45-mapping-final-qmrwc92x/handoff.json",
+      "sha256": "255cf5fcbe693cf7433021c0e307a5084369c4fb4fbfa74bd7910ae1a8d11df6"
+    }
+  },
+  "storage39LastNamedCandidateAudit": {
+    "scope": "OFFLINE_V2_BEFORE_DELETE_ARCHIVE_ONLY",
+    "candidate": "/private/tmp/yumidang-full108-20261009-v2/before-delete-storage.tar",
+    "archiveSha256": "00e468c6b9b34fe0f338c9aad0fa4a58a3da0da78269a6d680cc34e022a32c88",
+    "regularFiles": 7,
+    "exactOriginal6PathAndByteHashMatches": 6,
+    "exactMissing39PathMatches": 0,
+    "additionalFilePromotedToOriginal": false,
+    "bytesRecoveredForMissing39": 0,
+    "receipt": {
+      "path": "/private/tmp/yumidang-storage39-v2-candidate-62fyp3a7/receipt.json",
+      "sha256": "110d8fb4ffc4c5ab92d5bf860f033095488b3d235b87fb15156b931522e85e2d"
+    },
+    "remoteOrGlobalAbsence": "NOT_PROVEN",
+    "resourcesChanged": 0,
+    "overallCompletionAdded": 0
+  },
+  "goalContinuationAudit": {
+    "previousTurn": "NO_PROGRESS_SAME_REQUIRED_INPUTS_PENDING",
+    "currentTurn": "PROGRESS_APPROVED_STOP_AND_ACTUAL_C21_PASS",
+    "consecutiveNoProgressTurns": 0,
+    "liveExternalProcessOrAgent": false,
+    "remainingConditions": [
+      "actual signed AI22/AI23/AI24 and authentication lifecycle remaining",
+      "original39 byte source location pending",
+      "real-member HOLD",
+      "supplier/consumer/support conditions",
+      "production prerequisites and approval"
+    ],
+    "goalStatus": "WORK_RESUMED_BY_USER_APPROVAL",
+    "overallCompletionAdded": 0,
+    "sourceUnchanged": true,
+    "completionClaim": false
+  },
+  "actualConsentC21": {
+    "status": "PASS_C_SIGNED_CONSENT_ONLY",
+    "sourceHead": "37863a66e50467f707961a7036a6efae604cb6dc",
+    "scope": "ACTUAL_LOCAL_AUTH_HTTP_RPC_PRODUCT_FACTORY_SYNTHETIC_MODEL_ONE_MEMBER_PUBLIC_AI_CONSENT_ONLY",
+    "actualNewAuthAccounts": 1,
+    "positiveAiSyntheticProviderCalls": 1,
+    "positiveResult": "no_results",
+    "positiveReservationDispatchedAndSettled": true,
+    "publicWithdrawalCalls": 1,
+    "afterWithdrawal": "consent_revoked",
+    "afterWithdrawalReservations": 0,
+    "afterWithdrawalModelCalls": 0,
+    "originalTokenAndRowsUnknownPreserved": true,
+    "newOwn4StoppedOnceExit0OOMFalse": true,
+    "priorInventoryPreserved": true,
+    "memoryGuardUnchanged": true,
+    "AI22": "NOT_RUN",
+    "AI23": "NOT_RUN",
+    "AI24": "NOT_RUN",
+    "physicalResponseLoss": "NOT_RUN",
+    "serviceRetirement": "NOT_RUN",
+    "realMembersProviderLegalBilling": "NOT_RUN",
+    "evidence": {
+      "root-final.json": {
+        "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/root-final.json",
+        "sha256": "b60f79f1117af8d0718a42d2e37cde889176a46aa497b0198ecfc599d582bfa9"
+      },
+      "receipt.json": {
+        "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/receipt.json",
+        "sha256": "4c0972e853d88447b718b8957269f44222402a1b8a736aa7334e72f7496efa37"
+      },
+      "own-four-final.json": {
+        "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/own-four-final.json",
+        "sha256": "1d0cf2257cb0fafc209a54abccd92276590a7b140be57b846c8f6f2d34fbadcc"
+      },
+      "c-supervisor-final-private.json": {
+        "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/c-supervisor-final-private.json",
+        "sha256": "b34fdd0157f55d1e704d5776bd80f8be7d1a666d97a7240297a244517ea816c2"
+      },
+      "c-node-result-private.json": {
+        "path": "/private/tmp/yumidang-consent-C21-root-reviewed-20261013-v1/c-node-result-private.json",
+        "sha256": "f462f4e5e5d7e4267f87b286351165c41f200928d20ea0e5aae7896f8ab6c1ed"
+      }
+    },
+    "independentReview": {
+      "status": "PASS_C_SIGNED_CONSENT_ONLY",
+      "reviewer": "ack_recovery_review",
+      "actualAuthCallsAcrossPhases": 3,
+      "syntheticModelCalls": 1,
+      "publicWithdrawal": 1,
+      "deniedReservations": 0,
+      "deniedModelCalls": 0,
+      "sameOriginalToken": true,
+      "ownedStops": 4,
+      "memorySamples": 46,
+      "childGroupAndStreamsClosed": true,
+      "limitation": "Original/full178 rows and post-effect budget/UNKNOWN preservation are proved by exact successful parent checks+terminal; separate full after-effects and after-restoration datasets not retained for independent full comparison",
+      "notRun": [
+        "AI22",
+        "AI23",
+        "AI24",
+        "Naver real members",
+        "actual provider billing",
+        "service retirement",
+        "physical response loss",
+        "UI",
+        "physical full restore"
+      ],
+      "sequencesAndPhysicalBytes": "NOT_VERIFIED"
+    },
+    "overallCompletionAdded": 0
+  }
 }
