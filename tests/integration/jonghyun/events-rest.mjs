@@ -152,11 +152,11 @@ do $$declare base jsonb;s private.source_events;stamp timestamptz:=clock_timesta
   ids:=ids||jsonb_build_object(i::text,s.id);
  end loop;
  if(select count(*)from private.source_events where provider='kopis'and source_id like ${q(source + '%')})<>17 then raise exception 'j01_fixture_count';end if;
- insert into pg_temp.j01_result select jsonb_build_object('tag',${q(tag)},'sourcePrefix',${q(source)},'ids',ids,'today',day::text,'periodEnd',(day+8)::text);
+ perform set_config('j01.fixture_result',jsonb_build_object('tag',${q(tag)},'sourcePrefix',${q(source)},'ids',ids,'today',day::text,'periodEnd',(day+8)::text)::text,true);
 end;$$;
-select value from pg_temp.j01_result;
+select current_setting('j01.fixture_result')::jsonb;
 commit;`;
-  return { sql: 'create temp table j01_result(value jsonb);\n' + sql, tag, sourcePrefix: source, count: 17 };
+  return { sql, tag, sourcePrefix: source, count: 17 };
 }
 
 /** 전체 범위라는 callback 주장만으로 완료로 계산하지 않는다. table 집합은 별도 SQL catalog와 대조한다. */

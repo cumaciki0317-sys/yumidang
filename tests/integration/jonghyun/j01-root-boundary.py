@@ -49,13 +49,13 @@ def require(value, code):
 def safe_code(error):
     # args 전체·traceback·SQL·URL·키는 기록하지 않는다. 고정 코드 한 개만 허용한다.
     value = error.args[0] if len(error.args) == 1 and type(error.args[0]) is str else ''
-    if re.fullmatch(r'J01_ROOT_[A-Z_]+|SQLSTATE_[0-9A-Z]{5}', value):
+    if re.fullmatch(r'J01_ROOT_[A-Z0-9_]+|SQLSTATE_[0-9A-Z]{5}', value):
         return value
-    if re.fullmatch(r'(SIGNED|PROVISION)_[A-Z_]+', value):
+    if re.fullmatch(r'(SIGNED|PROVISION)_[A-Z0-9_]+', value):
         try:
             tree = ast.parse(CALLER.with_name('isolated_ai_contracts.py').read_text())
             known = {node.value for node in ast.walk(tree) if isinstance(node, ast.Constant)
-                     and type(node.value) is str and re.fullmatch(r'(SIGNED|PROVISION)_[A-Z_]+', node.value)}
+                     and type(node.value) is str and re.fullmatch(r'(SIGNED|PROVISION)_[A-Z0-9_]+', node.value)}
             if value in known:
                 return value
         except Exception:
@@ -157,6 +157,8 @@ class RootJ01Boundary:
         self.child = None
         self.committed_hashes = {}
         self.capsule_paths = None
+        self.last_native_snapshot = None
+        self.last_completed_source_check = None
         self.source_check()
 
     def source_check(self):
@@ -202,6 +204,8 @@ class RootJ01Boundary:
         require(actual_migrations == set(self.input['migrationFiles']), 'EXACT_MIGRATION_FILE_SET')
         for path, expected in ((self.packet_path, sha(self.packet_raw)), (Path(p['bindingPath']), p['bindingSha256']), (Path(p['inputPath']), p['inputSha256'])):
             require(sha(self.h.signed_private_read(path)) == expected, 'REVIEWED_INPUT_CHANGED')
+        self.last_completed_source_check = {'head': p['head'], 'sourceManifestSha256': digest(self.input['sourceFiles']),
+            'migrationManifestSha256': digest(self.input['migrationFiles']), 'observedAtUnixSeconds': int(time.time())}
 
     def live(self):
         self.source_check()
@@ -245,7 +249,7 @@ class RootJ01Boundary:
             'bindingSha256': self.packet['bindingSha256'], 'originalProvisionReceiptSha256': self.packet['provisionReceiptSha256'],
             'nodeSha256': self.packet['nodeSha256'], 'callerSha256': self.packet['callerSha256'], 'originalAuthSixRetained': True,
             'bridgeProgramSha256': sha(NODE_PROGRAM.encode()), 'actualNaver': 'NOT_RUN'})
-        self.outer_baseline = self.ports.snapshot()
+        self.outer_baseline = self.native_snapshot()
         self.save('outer-baseline-private.json', self.outer_baseline)
         for index, account in enumerate(self.binding['accounts'][:2]):
             self.live()
@@ -268,7 +272,8 @@ class RootJ01Boundary:
             self.identity_created[index] = dict(attached)
             self.save('identity-' + str(index) + '-created.json', {**intent, **attached, 'syntheticIdentity': True, 'naverQualified': False})
             self.members.append({'userId': u, 'token': account['accessToken'], 'identityId': attached['identityId']})
-        self.j01_baseline = self.ports.snapshot()
+        self.j01_baseline = self.native_snapshot()
+        self.save('j01-baseline-private.json', self.j01_baseline)
         contract = self.sql_contract()
         self.allowed_sql = {sha(contract['seed']['sql'].encode()): ('seed', contract['seed']['sql']), sha(contract['inventory'].encode()): ('inventory', contract['inventory'])}
         self.source_prefix = contract['seed']['sourcePrefix']
@@ -281,9 +286,17 @@ class RootJ01Boundary:
         require(len(value) <= 1, 'IDENTITY_RESOLUTION')
         return value[0] if value else None
 
+    def native_snapshot(self):
+        native = self.ports.snapshot()
+        # 사적 실패 기록에는 행 원문 대신 마지막 관측의 범위/건수/해시만 남긴다.
+        self.last_native_snapshot = {'observedAtUnixSeconds': int(time.time()), 'snapshotSha256': digest(native),
+            'tables': {name: {'rowCount': sum(bag.values()), 'sha256': digest(bag)} for name, bag in native['rows'].items()},
+            **{key: native[key] for key in ('authoritySha256', 'catalogSha256', 'constraintsSha256')}}
+        return native
+
     def snapshot(self):
         self.live()
-        native = self.ports.snapshot()
+        native = self.native_snapshot()
         # Node 목록 계약은 네 schema만 읽는다. 외곽/정리 비교는 native 전체를 유지한다.
         rows = {name: bag for name, bag in native['rows'].items()
                 if name.partition('.')[0] in ('auth', 'private', 'public', 'storage')}
@@ -340,7 +353,7 @@ class RootJ01Boundary:
         self.live()
         rows = self.source_rows()
         if not rows:
-            require(not hasattr(self, 'j01_baseline') or self.ports.snapshot() == self.j01_baseline, 'EMPTY_EVENT_SCOPE_BASELINE_CHANGED')
+            require(not hasattr(self, 'j01_baseline') or self.native_snapshot() == self.j01_baseline, 'EMPTY_EVENT_SCOPE_BASELINE_CHANGED')
             return {'eventsAbsent': True}
         require(self.seed_attempted and self.event_rows is not None and rows == self.event_rows, 'EVENT_OWNERSHIP_UNKNOWN_PRESERVED')
         ids = [fixed_uuid(x['id']) for x in rows]
@@ -361,7 +374,7 @@ class RootJ01Boundary:
         statement = "begin;lock table private.source_events,private.event_source_details,private.member_hidden_targets in share row exclusive mode;do $$declare observed jsonb;n integer;begin " + identity_cas + "select coalesce(jsonb_agg(jsonb_build_object('id',s.id,'sourceId',s.source_id,'rowSha256',encode(sha256(convert_to(to_jsonb(s)::text,'UTF8')),'hex'),'detailSha256',(select encode(sha256(convert_to(to_jsonb(d)::text,'UTF8')),'hex')from private.event_source_details d where d.source_event_id=s.id))order by s.source_id),'[]'::jsonb)into observed from private.source_events s where s.provider='kopis'and s.source_id like " + q(self.source_prefix + '%') + ";if observed is distinct from " + expected_rows + " then raise exception 'j01_event_cleanup_cas';end if;select coalesce(jsonb_agg(jsonb_build_object('id',h.id,'rowSha256',encode(sha256(convert_to(to_jsonb(h)::text,'UTF8')),'hex'))),'[]'::jsonb)into observed from private.member_hidden_targets h where identity_id=" + q(identity) + "::uuid and target_type='event'and target_id=" + q(event_id) + "::uuid;if observed is distinct from " + hidden_json + " then raise exception 'j01_hidden_cleanup_cas';end if;delete from private.member_hidden_targets where identity_id=" + q(identity) + "::uuid and target_type='event'and target_id=" + q(event_id) + "::uuid;get diagnostics n=row_count;if n<>" + str(len(expected_hidden)) + " then raise exception 'j01_hidden_cleanup_count';end if;delete from private.source_events where id=any(array[" + id_sql + "])and provider='kopis'and source_id like " + q(self.source_prefix + '%') + ";get diagnostics n=row_count;if n<>17 then raise exception 'j01_event_cleanup_count';end if;end;$$;commit;"
         self.ports.sql(statement)
         require(not self.source_rows(), 'EVENT_DELETE_NOT_PROVEN')
-        require(self.ports.snapshot() == self.j01_baseline, 'J01_BASELINE_NOT_RESTORED')
+        require(self.native_snapshot() == self.j01_baseline, 'J01_BASELINE_NOT_RESTORED')
         self.save('event-cleanup-closed.json', {'runId': self.run_id, 'eventsAbsent': True, 'j01BaselineRestored': True, 'authSixDeleted': False})
         return {'eventsAbsent': True}
 
@@ -379,7 +392,7 @@ class RootJ01Boundary:
             self.ports.sql(statement)
             require(self.identity_state(intent) is None, 'IDENTITY_ABSENCE_NOT_PROVEN')
             self.save('identity-' + str(index) + '-restore-closed.json', {'runId': self.run_id, 'episodeId': intent['episodeId'], 'originalNullRestored': True, 'syntheticIdentityAbsent': True})
-        require(self.ports.snapshot() == self.outer_baseline, 'OUTER_BASELINE_NOT_RESTORED')
+        require(self.native_snapshot() == self.outer_baseline, 'OUTER_BASELINE_NOT_RESTORED')
 
     def read_tls(self):
         if not getattr(self, 'tls_created', False):
@@ -480,6 +493,8 @@ class RootJ01Boundary:
                     failed = 'J01_ROOT_OWNED_STATE_UNKNOWN_PRESERVED'
                 self.save('finalization.json', {'runId': self.run_id, 'failed': failed, 'originalAuthSixRetained': True,
                     'executionFailureCode': execution_failure, 'cleanupFailureCode': cleanup_failure,
+                    'lastCompletedSourceCheck': self.last_completed_source_check,
+                    'lastObservedNativeSnapshot': self.last_native_snapshot,
                     'observedCalls': self.observations, 'sourceHead': self.packet['head'], 'noNewAuthIssue': True})
         require(failed is None and proof is not None, 'PRIVATE_EVIDENCE_PRESERVED')
         self.save('receipt.json', {'status': 'J01_ROOT_CALL_OBSERVATIONS_CLOSED', 'executionEvidence': 'ROOT_ATTESTATION_REQUIRED',
