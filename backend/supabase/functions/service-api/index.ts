@@ -85,7 +85,7 @@ export function createRuntimeHandler(
           sessionRejected=response.status===401||response.status===403;
           return response;
         });
-        return {kind:"active" as const,db:createUserClient(config,principal)};
+        return {kind:"active" as const,db:createUserClient(config,principal),receipt:createRetirementReceiptClient(config,request)};
       }catch(error){
         if(!sessionRejected||toPublicError(error).error.code!=="AUTH_REQUIRED")throw error;
         return {kind:"revoked" as const,receipt:createRetirementReceiptClient(config,request)};

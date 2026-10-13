@@ -168,6 +168,13 @@ export function validateJ01Snapshot(snapshot,observedTables) {
   return {scope:'BOUNDARY_INVENTORY_CHECK_ONLY',wholeBaselineRestored:false,sha256:sha(stable(snapshot))};
 }
 
+/** Root broker가 현재 소스에서 정확한 세 SQL만 산출해 허용 목록으로 고정한다. */
+export const J01_INVENTORY_SQL = "begin read only;select coalesce(jsonb_agg(n.nspname||'.'||c.relname order by n.nspname,c.relname),'[]'::jsonb)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','private','public','storage')and c.relkind in('r','p','m');rollback;";
+export function j01HideSql(identityId,eventId) {
+  requireJ01(isUuid(identityId)&&isUuid(eventId),'HIDE_UUID');
+  return `begin;insert into private.member_hidden_targets(identity_id,target_type,target_id)values('${identityId}','event','${eventId}');commit;`;
+}
+
 /** root는 VM 승인·대상 관측·자격증명·Auth 생성·전체 fingerprint·정리의 custody를 갖는다.
  * 기존 발급기는 Auth6명을 생성한다. root가 그 중2명의 합성 identity를 미리 준비한 뒤
  * readSyntheticMembers로 원 JWT/identity를 읽기만 한다. J01은 생성/로그인/갱신하지 않는다.
@@ -191,7 +198,7 @@ export async function runJ01EventRoundtrip(input, boundary) {
   await verify();
   const snapshot=async()=>{
     const data=deepFreeze(structuredClone(await boundary.snapshot(input.target)));
-    const inventory=await boundary.sql(input.target,"begin read only;select coalesce(jsonb_agg(n.nspname||'.'||c.relname order by n.nspname,c.relname),'[]'::jsonb)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','private','public','storage')and c.relkind in('r','p','m');rollback;");
+    const inventory=await boundary.sql(input.target,J01_INVENTORY_SQL);
     validateJ01Snapshot(data,Array.isArray(inventory)?inventory:JSON.parse(inventory));return stable(data);
   };
   const before = await snapshot();
@@ -275,7 +282,7 @@ export async function runJ01EventRoundtrip(input, boundary) {
     const n=counts.rpc, rejectedAuth=await direct('/events?limit=10','invalid.header.signature');requireJ01(rejectedAuth.status===401 && counts.rpc===n,'INVALID_JWT_NO_ANON_RETRY');
     requireJ01(await snapshot()===fixtureBaseline,'READ_CASE_MUTATED_DB');
     await verify();
-    await boundary.sql(input.target, `begin;insert into private.member_hidden_targets(identity_id,target_type,target_id)values('${auth[0].identityId}','event','${data.ids['15']}');commit;`);
+    await boundary.sql(input.target,j01HideSql(auth[0].identityId,data.ids['15']));
     await verify();
     const hiddenBaseline=await snapshot(),ongoingQuery={mode:'new_this_week',query:data.tag,performanceGenre:'play',includeOngoing:true};
     requireJ01((await viewer.listEvents(ongoingQuery)).events.length===0 && (await other.listEvents(ongoingQuery)).events.length===1 && (await anon.listEvents(ongoingQuery)).events.length===1,'PER_MEMBER_HIDING');

@@ -37,7 +37,7 @@ export interface ServiceApiDependencies {
   memberCleanupReconcile?: { execute(request: Request, context: RequestContext): Promise<Response>; finalize?(request: Request, context: RequestContext): Promise<Response> };
   authenticateUser(request: Request): Promise<RpcClient>;
   /** 실제 Auth 세션 거절만 분리한다. receipt 포트는 일반 사용자 client가 아니다. */
-  authenticateRetirement?(request:Request):Promise<{kind:"active";db:RpcClient}|{kind:"revoked";receipt:RetirementReceiptClient}>;
+  authenticateRetirement?(request:Request):Promise<{kind:"active";db:RpcClient;receipt?:RetirementReceiptClient}|{kind:"revoked";receipt:RetirementReceiptClient}>;
   authenticateInternal(request: Request): Promise<RpcClient>;
   maintenance?: MaintenanceConfig;
   /** 검증된 삭제 pipeline을 준비한 서버 조립에서만 켠다. HTTP 입력으로 활성화하지 않는다. */
@@ -137,13 +137,24 @@ export function createServiceApi(dependencies: ServiceApiDependencies) {
       if (["/service-api/me/retirement", "/functions/v1/service-api/me/retirement"].includes(url.pathname)) {
         // 기본 runtime에서는 경로를 열지 않는다. DB의 삭제 승인 guard도 별도로 유지한다.
         if (dependencies.memberRetirement !== true) throw new HttpError("RESOURCE_NOT_FOUND");
-        if (request.method !== "POST") throw new HttpError("METHOD_NOT_ALLOWED");
+        if (request.method !== "POST" && request.method !== "GET") throw new HttpError("METHOD_NOT_ALLOWED");
+        if (request.signal.aborted) throw new HttpError("INVALID_REQUEST");
+        let queryId: string | undefined;
+        if (request.method === "GET") {
+          if (request.body !== null || [...url.searchParams.keys()].length !== 1 ||
+              url.searchParams.getAll("withdrawalId").length !== 1) throw new HttpError("INVALID_REQUEST");
+          queryId = parseRetirementRequest({ withdrawalId: url.searchParams.get("withdrawalId") });
+        }
         const caller=dependencies.authenticateRetirement?await dependencies.authenticateRetirement(request):
           {kind:"active" as const,db:await dependencies.authenticateUser(request)};
-        if (url.search || request.signal.aborted) throw new HttpError("INVALID_REQUEST");
-        const body = await readJson(request, { maxBytes: dependencies.maxBodyBytes });
-        const id = parseRetirementRequest(body);
-        const data = caller.kind==="active"?await retireMyAccount(caller.db,id):await getOwnRetirementReceipt(caller.receipt,id);
+        if (request.method === "POST" && url.search) throw new HttpError("INVALID_REQUEST");
+        const id = queryId ?? parseRetirementRequest(await readJson(request, { maxBytes: dependencies.maxBodyBytes }));
+        let data;
+        if (request.method === "GET") {
+          // 같은 원 bearer의 영수증 조회만 실행한다. active라도 retire_my_account는 호출하지 않는다.
+          if (!("receipt" in caller) || !caller.receipt) throw new HttpError("EXTERNAL_UNAVAILABLE");
+          data = await getOwnRetirementReceipt(caller.receipt, id);
+        } else data = caller.kind==="active"?await retireMyAccount(caller.db,id):await getOwnRetirementReceipt(caller.receipt,id);
         // processing은 접근 회수와 후속 작업 접수이며 외부 자료 삭제 완료가 아니다.
         return cors.apply(jsonSuccess({ withdrawalId: data.withdrawalId, status: data.status,
           memberAccessRevoked: data.memberAccessRevoked }, context), request);

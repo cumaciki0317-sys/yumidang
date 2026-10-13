@@ -43,7 +43,7 @@ export function createWebMemberSessionPort(options: WebSessionOptions): MemberSe
   const client = new ServiceApiClient(options.signupUrl, async () => getAccessToken(), fetcher);
   const temporaryKey = "yumidang.naver.pending";
   type Receipt = ReturnType<typeof retirementResult>;
-  type Retirement = { id: string; userId: string; token: string; expiresAt: number; generation: number; busy: boolean; receipt: Receipt | null };
+  type Retirement = { id: string; userId: string; token: string; expiresAt: number; generation: number; busy: boolean; postDispatched: boolean; receipt: Receipt | null };
   let retirement: Retirement | null = null;
   // 폐기된 요청을 새 로그인 회원의 최초 요청으로 바꾸지 않는다. 토큰·영수증은 남기지 않는다.
   const discardedIds = new Set<string>();
@@ -69,7 +69,7 @@ export function createWebMemberSessionPort(options: WebSessionOptions): MemberSe
     if (!retirement) {
       if (!active || active.status !== "ready" || refreshing || now() >= expiresAt) throw new ApiError(401, "AUTH_REQUIRED");
       const token = active.accessToken, userId = active.userId;
-      retirement = { id, userId, token, expiresAt: originalTokenExpiry(token, userId), generation, busy: false, receipt: null };
+      retirement = { id, userId, token, expiresAt: originalTokenExpiry(token, userId), generation, busy: false, postDispatched: false, receipt: null };
     }
     const scope = retirement;
     if (scope.id !== id) throw new ApiError(409, "RETIREMENT_REQUEST_CHANGED");
@@ -78,8 +78,15 @@ export function createWebMemberSessionPort(options: WebSessionOptions): MemberSe
     scope.busy = true;
     try {
       // 최초 전송 전에 원 JWT+ID를 잡고 모든 수동 재조회에도 같은 값만 쓴다. refresh/익명/자동 재전송 없음.
-      const receiptClient = new ServiceApiClient(project.origin + "/functions/v1/service-api", async () => { checkRetirement(scope); return scope.token; }, async (url, init) => { checkRetirement(scope); return fetcher(url, init); });
-      const result = retirementResult(await receiptClient.request("/me/retirement", { method: "POST", body: { withdrawalId: id }, signal }), id);
+      const receiptClient = new ServiceApiClient(project.origin + "/functions/v1/service-api", async () => { checkRetirement(scope); return scope.token; }, async (url, init) => {
+        checkRetirement(scope);
+        // fetcher 진입부터 서버 처리 여부가 미확인일 수 있다. 응답 유실도 다음 요청을 GET으로 고정한다.
+        if (init?.method === "POST") scope.postDispatched = true;
+        return fetcher(url, init);
+      });
+      const result = retirementResult(await (scope.postDispatched
+        ? receiptClient.request(`/me/retirement?withdrawalId=${encodeURIComponent(id)}`, { method: "GET", signal })
+        : receiptClient.request("/me/retirement", { method: "POST", body: { withdrawalId: id }, signal })), id);
       checkRetirement(scope);
       if (scope.receipt?.status === "completed" && result.status !== "completed") throw new ApiError(502, "INVALID_SERVICE_RESPONSE");
       scope.receipt = Object.freeze(result);

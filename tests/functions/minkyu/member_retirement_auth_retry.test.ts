@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { createServiceApi } from "../../../backend/supabase/functions/service-api/handler.ts";
 import { createRuntimeHandler } from "../../../backend/supabase/functions/service-api/index.ts";
 const id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",withdrawal="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const token="header.payload.signature";
@@ -76,4 +77,35 @@ test("Auth 거절 뒤 잘못된 본문은 조회·새 탈퇴를 실행하지 않
 test("기본 비활성 retirement는 Auth와 receipt 전에 닫힌다",async()=>{
  const original=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;assert.fail("기본 활성화 금지");};
  try{assert.equal((await createRuntimeHandler(k=>values[k])(request())).status,404);assert.equal(calls,0);}finally{globalThis.fetch=original;}
+});
+
+const getRequest=(query="withdrawalId="+withdrawal)=>new Request(values.SUPABASE_URL+"/service-api/me/retirement?"+query,{headers:{authorization:"Bearer "+token}});
+test("active와 revoked 공개 GET은 원 bearer 영수증 GET만 사용하고 새 탈퇴를 호출하지 않는다",async()=>{
+ const original=globalThis.fetch;
+ try{for(const authStatus of [200,401,403]){let auth=0,receipt=0;globalThis.fetch=async(url,init={})=>{
+  if(String(url).endsWith('/auth/v1/user')){auth++;return Response.json(authStatus===200?{id,role:'authenticated',is_anonymous:false}:{},{status:authStatus});}
+  assertReceipt(String(url),init);receipt++;return Response.json(result);
+ };const response=await handler()(getRequest());assert.equal(response.status,200);assert.deepEqual((await response.json()).data,result);assert.equal(auth,1);assert.equal(receipt,1);}}
+ finally{globalThis.fetch=original;}
+});
+test("GET의 누락·중복·다른 query·잘못된 UUID는 Auth/RPC 전에 거절한다",async()=>{
+ const original=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;assert.fail();};
+ try{for(const query of ['', 'withdrawalId=bad', 'withdrawalId='+withdrawal+'&withdrawalId='+withdrawal, 'withdrawalId='+withdrawal+'&other=1','other='+withdrawal])assert.equal((await handler()(getRequest(query))).status,400);assert.equal(calls,0);}
+ finally{globalThis.fetch=original;}
+});
+test("GET Auth장애는 영수증이나 새 탈퇴로 우회하지 않는다",async()=>{
+ const original=globalThis.fetch;try{for(const status of [500,503]){let calls=0;globalThis.fetch=async()=>{calls++;return Response.json({},{status});};assert.equal((await handler()(getRequest())).status,503);assert.equal(calls,1);}}finally{globalThis.fetch=original;}
+});
+
+test("초기 POST의 RPC응답 유실 뒤 공개 GET은 Auth가 아직 active여도 재쓰기0",async()=>{
+ const original=globalThis.fetch;let retired=0,receipts=0;
+ globalThis.fetch=async(url,init={})=>{if(String(url).endsWith('/auth/v1/user'))return Response.json({id,role:'authenticated'});if(init.method==='POST'){retired++;throw Error('synthetic response loss');}assertReceipt(String(url),init);receipts++;return Response.json(result);};
+ try{const h=handler();assert.equal((await h(request())).status,503);const recovery=await h(getRequest());assert.equal(recovery.status,200);assert.equal(retired,1);assert.equal(receipts,1);}finally{globalThis.fetch=original;}
+});
+test("GET body와 active receipt port 누락은 새 탈퇴로 대체하지 않는다",async()=>{
+ const original=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;assert.fail();};
+ try{const req=getRequest();Object.defineProperty(req,'body',{value:new ReadableStream()});assert.equal((await handler()(req)).status,400);assert.equal(calls,0);
+  const api=createServiceApi({allowedOrigins:[],maxBodyBytes:65536,memberRetirement:true,authenticateRetirement:async()=>({kind:'active',db:{rpc:async()=>assert.fail('GET의 새 탈퇴 RPC 금지')}}),authenticateUser:async()=>({rpc:async()=>assert.fail()}),authenticateInternal:async()=>({rpc:async()=>assert.fail()})});
+  assert.equal((await api(getRequest())).status,503);
+ }finally{globalThis.fetch=original;}
 });

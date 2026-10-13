@@ -16,7 +16,7 @@ export function setupRetirement(options: { enabled?: boolean; token?: string; cl
   const fetcher: typeof fetch = async (url, init) => {
     const path = String(url), body = init?.body ? JSON.parse(String(init.body)) : null;
     calls.push({ url: path, method: init?.method ?? "GET", body, headers: new Headers(init?.headers), signal: init?.signal });
-    if (path.endsWith("/me/retirement")) return retirement(body);
+    if (new URL(path).pathname.endsWith("/me/retirement")) return retirement(init?.method === "GET" ? { withdrawalId: new URL(path).searchParams.get("withdrawalId")! } : body);
     if (path.endsWith("/naver/start")) return Response.json({ data: { authorizationUrl: `https://nid.naver.com/oauth2.0/authorize?state=${state}&redirect_uri=${encodeURIComponent("https://app.example/auth-callback")}`, expiresAt: new Date(now + 600_000).toISOString() } });
     if (path.endsWith("/naver/callback")) { originalToken = token(); return Response.json({ data: { status: "ready", userId, returnTo: "/account", session: { accessToken: originalToken, refreshToken: "synthetic_refresh", expiresIn: options.expiresIn ?? 3600, tokenType: "bearer" } } }); }
     if (path.includes("/logout?")) return new Response(null, { status: 204 });
@@ -26,7 +26,7 @@ export function setupRetirement(options: { enabled?: boolean; token?: string; cl
   const configuration: WebSessionOptions = { signupUrl: "https://project.example/functions/v1/signup", supabaseUrl: "https://project.example", publicApiKey: "sb_publishable_synthetic", callbackUrl: "https://app.example/auth-callback", browser, fetcher, now: () => now, ...(options.enabled === false ? {} : { retirementContract: "2026-10-09-retirement-receipt" }) };
   const port = createWebMemberSessionPort(configuration);
   return { port, configuration, calls, data, originalToken: () => originalToken,
-    retirementCalls: () => calls.filter(c => c.url.endsWith("/me/retirement")),
+    retirementCalls: () => calls.filter(c => new URL(c.url).pathname.endsWith("/me/retirement")),
     setRetirement: (run: typeof retirement) => { retirement = run; }, setRefresh: (run: typeof refresh) => { refresh = run; }, advance: (ms = 3_600_001) => { now += ms; },
     login: async (nextUser = userId) => { userId = nextUser; await port.login("/account", signal()); return port.callback!(`https://app.example/auth-callback?code=synthetic&state=${state}`, signal()); } };
 }
