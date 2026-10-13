@@ -147,6 +147,17 @@
         "tools/local/run_database_tests.py",
         "tests/integration/jonghyun/isolated_ai_contracts.py"
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 한시 재배정 후 종현 진행 승인에 따른 검증·새 자원 정리·도구 원복 후 민규 담당 복귀",
+      "scope": "새 합성 격리 검증 자원 정리와 두 도구의 원본 바이트 복구 커밋 2f3d69026fb24eed1edc8dc4b7485ed4ce25566b 확인 후 아래 두 개별 경로만 minkyu 담당으로 복귀한다. 임시 도구로 수행한 실제 검증 증거는 해당 임시 소스 버전의 기록이며 복구 도구 검증으로 바꾸지 않는다. 다른 규칙·보호 경로·hook·원본 공유 clone은 유지한다.",
+      "paths": [
+        "tools/local/run_database_tests.py",
+        "tests/integration/jonghyun/isolated_ai_contracts.py"
+      ]
     }
   ],
   "rules": [
@@ -472,7 +483,7 @@
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_contracts.py",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_factory.ts",
@@ -488,7 +499,7 @@
     },
     {
       "path": "tools/local/run_database_tests.py",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/database/jonghyun/test_isolated_midnight_preparation.py",
