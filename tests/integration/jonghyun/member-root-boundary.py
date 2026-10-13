@@ -284,10 +284,12 @@ class RootMemberBoundary:
             return False
         return self.h.signed_exact_json(raw)
 
-    def mutate(self, name, statement):
+    def mutate(self, name, statement, dispatch_state=None):
         self.live()
         self.save(name + '-intent.json', {'runId': self.run_id, 'sqlSha256': sha(statement.encode()), 'singleAttempt': True})
         # 실패 응답을 새 실행 허가로 바꾸지 않는다. 정확한 read/cleanup evidence만 후속 처리한다.
+        if dispatch_state is not None:
+            dispatch_state['dispatchState'] = 'SQL_ENTRY_UNKNOWN'
         self.ports.sql(statement)
         self.live()
 
@@ -345,9 +347,10 @@ class RootMemberBoundary:
         object_id = str(uuid.uuid4())
         path = user + '/' + object_id + '.jpg'
         state = {'index': index, 'userId': user, 'subject': subject, 'identityId': None,
-                 'episode': episodes[0], 'profile': profile, 'objectId': object_id, 'objectPath': path, 'photo': photo}
+                 'episode': episodes[0], 'profile': profile, 'objectId': object_id, 'objectPath': path, 'photo': photo,
+                 'dispatchState': 'NOT_SENT'}
         self.qualifications[index] = state
-        self.save('qualification-' + str(index) + '-intent.json', state)
+        self.save('qualification-' + str(index) + '-state-intent.json', state)
         statement = 'begin;'
         if photo:
             statement += "insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)values('profile-images','profile-images',false,2097152,array['image/jpeg'])on conflict(id)do nothing;"
@@ -356,7 +359,7 @@ class RootMemberBoundary:
         statement += "insert into private.naver_sessions(session_id,user_id,subject)values(" + q(account['sessionId']) + '::uuid,' + q(user) + '::uuid,' + q(subject) + ');'
         if photo:
             statement += "insert into storage.objects(id,bucket_id,name,owner_id,metadata)values(" + q(object_id) + "::uuid,'profile-images'," + q(path) + ',' + q(user) + ",'" + '{"mimetype":"image/jpeg","size":128}' + "'::jsonb);update public.profiles set avatar_url=" + q(path) + ' where id=' + q(user) + '::uuid;'
-        self.mutate('qualification-' + str(index), statement + 'commit;')
+        self.mutate('qualification-' + str(index), statement + 'commit;', state)
         current = self.read("select jsonb_build_object('identityId',k.id,'keySha256'," + row_sha_sql('k') + ",'accountSha256'," + row_sha_sql('a') + ",'profileSha256'," + row_sha_sql('p') + ",'episodeSha256'," + row_sha_sql('e') + ",'sessionSha256',(select " + row_sha_sql('s') + ' from private.naver_sessions s where session_id=' + q(account['sessionId']) + "::uuid and user_id=p.id and subject=a.subject),'objectSha256',(select " + row_sha_sql('o') + ' from storage.objects o where id=' + q(object_id) + '::uuid))from private.naver_accounts a join private.naver_identity_keys k on k.subject=a.subject join public.profiles p on p.id=a.user_id join private.member_episodes e on e.profile_id=p.id and e.ended_at is null where a.subject=' + q(subject) + ';')
         require(current and uid(current['identityId']) == current['identityId'], 'QUALIFICATION_LINK')
         state.update(current)
@@ -495,6 +498,22 @@ class RootMemberBoundary:
             return {'alreadyClosed': True, 'baselineRestored': True}
         require(self.retirement is None, 'CLEANUP_BEFORE_RETIREMENT')
         self.connection_closure = 'UNVERIFIED'
+        pending = [s for s in self.qualifications.values() if not (all(is_sha(s.get(k)) for k in
+            ('accountSha256', 'profileSha256', 'episodeSha256', 'keySha256', 'sessionSha256'))
+            and (not s.get('photo') or is_sha(s.get('objectSha256'))))]
+        if pending:
+            # 메모리의 호출 진입 경계와 실제 전체 snapshot을 함께 확인한다. 파일 부재는 근거가 아니다.
+            require(self.fixture is None and self.maintenance is None
+                and all(s.get('dispatchState') == 'NOT_SENT' for s in pending), 'QUALIFICATION_UNKNOWN_PRESERVED')
+            self.live()
+            require(self.ports.snapshot() == self.outer_baseline, 'QUALIFICATION_BASELINE_CHANGED_PRESERVED')
+            self.save('connections-closed-no-dispatch.json', {'runId': self.run_id,
+                'qualificationSqlEntry': 'NOT_SENT', 'completeSnapshotEqualsOuterBaseline': True,
+                'wholeLogicalBaselineRestored': True, 'fileAbsenceUsedAsEvidence': False,
+                'pendingStateIntentsRetained': True, 'authSixRetained': True})
+            self.connection_closed = True
+            self.connection_closure = 'VERIFIED_NO_DISPATCH'
+            return {'baselineRestored': True, 'authSixRetained': True}
         # 최초 purge의 응답이 유실됐을 수 있다. ABSENT/UNKNOWN을 미전송으로 해석하지 않는다.
         if self.maintenance:
             self.inspect_maintenance(self.maintenance['maintenanceRequest'])

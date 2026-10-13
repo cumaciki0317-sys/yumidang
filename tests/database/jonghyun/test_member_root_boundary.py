@@ -35,6 +35,7 @@ class MemberRootBoundaryTests(unittest.TestCase):
         b.live = lambda: b.live_calls.append(True) or {'target': None, 'bindingSha256': H, 'sourceFiles': {}, 'migrationFiles': {}}
         b.seed_attempted = False
         b.fixture = None
+        b.qualifications = {}
         b.maintenance = None
         b.maintenance_completion = None
         b.maintenance_completion_receipt_sha = None
@@ -83,6 +84,35 @@ class MemberRootBoundaryTests(unittest.TestCase):
             b.saved[name] = copy.deepcopy(value)
             return result
         b.save = save
+        return b
+
+    def qualification_boundary(self):
+        b = self.real_private_boundary(None)
+        b.maintenance = None
+        b.control_overrides = {}
+        b.binding['accounts'][0]['sessionId'] = OTHER
+        b.outer_baseline = self.snapshot()
+        b.snapshot_calls = []
+        b.ports.snapshot = lambda: b.snapshot_calls.append(True) or copy.deepcopy(b.outer_baseline)
+        responses = iter([
+            {'id': USER, 'avatar_url': None},
+            [{'id': OTHER, 'profile_id': USER, 'ended_at': None, 'identity_id': None}],
+            True,
+            {'identityId': RUN, 'accountSha256': H, 'profileSha256': H, 'episodeSha256': H,
+             'keySha256': H, 'sessionSha256': H, 'objectSha256': H},
+        ])
+        b.read = lambda _: next(responses)
+        return b
+
+    def qualification_with_old_filename_collision(self):
+        b = self.qualification_boundary()
+        save = b.save
+        def old_collision(name, value):
+            # 원 결함과 같은 O_EXCL 순서: 상태 intent를 먼저 저장한 뒤 SQL intent가 충돌한다.
+            return save('qualification-0-state-intent.json' if name == 'qualification-0-intent.json' else name, value)
+        b.save = old_collision
+        with self.assertRaises(FileExistsError):
+            b.qualify(0, True)
         return b
 
     def completed_maintenance(self):
@@ -439,6 +469,57 @@ process.exitCode=0;
         self.assertTrue(b.child.stdin.closed)
         self.assertEqual(b.child.returncode, 0)
         b.child.stdout.close()
+
+    def test_qualification_state_and_sql_intents_use_distinct_exclusive_files(self):
+        b = self.qualification_boundary()
+        state = b.qualify(0, True)
+        self.assertEqual(len(b.sql_calls), 1)
+        self.assertEqual(b.artifact_writes, ['qualification-0-state-intent.json',
+                                          'qualification-0-intent.json', 'qualification-0-owned.json'])
+        original = b.h.signed_exact_json(b.h.signed_private_read(b.evidence / 'qualification-0-state-intent.json'))
+        self.assertEqual(original['dispatchState'], 'NOT_SENT')
+        self.assertEqual(state['dispatchState'], 'SQL_ENTRY_UNKNOWN')
+        self.assertEqual(state['accountSha256'], H)
+
+    def test_pre_sql_collision_closes_only_with_independent_complete_snapshot_equality(self):
+        b = self.qualification_with_old_filename_collision()
+        original = (b.evidence / 'qualification-0-state-intent.json').read_bytes()
+        self.assertEqual(b.sql_calls, [])
+        result = b.cleanup_connections([USER, OTHER])
+        self.assertTrue(result['baselineRestored'])
+        self.assertEqual(b.snapshot_calls, [True])
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.connection_closure, 'VERIFIED_NO_DISPATCH')
+        self.assertEqual((b.evidence / 'qualification-0-state-intent.json').read_bytes(), original)
+        self.assertFalse(b.saved['connections-closed-no-dispatch.json']['fileAbsenceUsedAsEvidence'])
+
+    def test_pre_sql_collision_with_changed_snapshot_preserves_unverified_scope(self):
+        b = self.qualification_with_old_filename_collision()
+        changed = self.snapshot()
+        changed['authoritySha256'] = F
+        b.ports.snapshot = lambda: changed
+        with self.assertRaisesRegex(ValueError, 'BASELINE_CHANGED_PRESERVED'):
+            b.cleanup_connections([USER, OTHER])
+        self.assertFalse(b.connection_closed)
+        self.assertEqual(b.connection_closure, 'UNVERIFIED')
+        self.assertEqual(b.sql_calls, [])
+        self.assertNotIn('connections-closed-no-dispatch.json', b.saved)
+
+    def test_failure_after_sql_entry_never_infers_not_sent_from_missing_owned_file(self):
+        b = self.qualification_boundary()
+        def sent_failure(sql):
+            b.sql_calls.append(sql)
+            raise ValueError('SQLSTATE_08006')
+        b.ports.sql = sent_failure
+        with self.assertRaisesRegex(ValueError, 'SQLSTATE_08006'):
+            b.qualify(0, True)
+        self.assertEqual(b.qualifications[0]['dispatchState'], 'SQL_ENTRY_UNKNOWN')
+        self.assertFalse((b.evidence / 'qualification-0-owned.json').exists())
+        with self.assertRaisesRegex(ValueError, 'QUALIFICATION_UNKNOWN_PRESERVED'):
+            b.cleanup_connections([USER, OTHER])
+        self.assertEqual(len(b.sql_calls), 1)
+        self.assertEqual(b.snapshot_calls, [])
+        self.assertFalse(b.connection_closed)
 
 
 if __name__ == '__main__':
