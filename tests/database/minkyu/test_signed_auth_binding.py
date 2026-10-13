@@ -518,6 +518,24 @@ class BindingTests(unittest.TestCase):
             new_history=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
             for n in(old_history,new_history):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),history_hashes)
             new_history.body=copy.deepcopy(old_history.body)
+        # 승인된 lifecycle 여섯 schema만 정규화한다. 다른 class/method 본문은 전체 비교를 유지한다.
+        for candidate in(before,after):
+            cls=next((n for n in candidate.body if isinstance(n,ast.ClassDef)and n.name=='FixedLifecycleProvisioningPorts'),None)
+            if cls is None:continue
+            rows=next((n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows'),None)
+            if rows is not None:
+                self.assertEqual(hashlib.sha256(dump(rows).encode()).hexdigest(),'d9505cbc7edc45675471681e7516a6b36f11bd47c35991d937cdde64726c5847');cls.body.remove(rows)
+            snapshot=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='snapshot')
+            fields=[n for n in ast.walk(snapshot)if isinstance(n,ast.Constant)and type(n.value)is str and "n.nspname in('auth','public','private','storage','cron','vault')"in n.value]
+            if fields:
+                self.assertEqual(len(fields),1);self.assertEqual(fields[0].value.count("n.nspname in('auth','public','private','storage','cron','vault')"),3)
+                fields[0].value=fields[0].value.replace("n.nspname in('auth','public','private','storage','cron','vault')","n.nspname in('auth','public','private','storage')")
+        # 기존 네 schema와 정확한 native 추가 세 relation만 허용하는 함수 전체 AST를 고정한다.
+        old_scope=next((n for n in before.body if isinstance(n,ast.FunctionDef)and n.name=='lcp_snapshot'),None)
+        if old_scope is not None:
+            new_scope=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='lcp_snapshot')
+            for n in(old_scope,new_scope):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),{'de9faecc2f05339d2835ecebaa9177656e123755c4fcf41129be0f55bc506fa9','de8249d9d415f73d0565636462eb456817c44bd57cac86c691011e2adb32b6fc'})
+            new_scope.body=copy.deepcopy(old_scope.body)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -1147,6 +1165,55 @@ def native_restore_test_fixture():
     for x in b['effectivePrivileges']:
         x[-1] = False
     return (a, b)
+
+class NativeLifecycleFullInventoryTests(unittest.TestCase):
+    """원 source178의 namespace 개수만 모형화한다. 실제 DB 읽기 증거는 아니다."""
+    def setUp(self):
+        self.tables=[[schema,'fixture_'+str(i)]for schema,count in(('auth',23),('public',10),('private',132),('storage',10),('cron',2),('vault',1))for i in range(count)]
+        self.queries=[];self.bag={'a'*64:1}
+    def read(self,query,timeout=5):
+        self.queries.append(query)
+        if 'from pg_tables'in query:return json.dumps(self.tables if "'cron','vault'"in query else[r for r in self.tables if r[0]not in('cron','vault')])
+        if 'jsonb_object_agg(h,n)'in query:return json.dumps(self.bag)
+        if "'roles',(select"in query:return 'b'*64
+        return '{}'
+    def test_native_lifecycle178_keeps_cron_vault_and_original_midnight175(self):
+        p=object.__new__(module.FixedLifecycleProvisioningPorts);p.read_sql=self.read
+        result=p.original_rows();self.assertEqual(len(result),178)
+        self.assertEqual(result['cron.fixture_0'],self.bag);self.assertEqual(result['vault.fixture_0'],self.bag)
+        old=object.__new__(module.SignedMidnightRunner);old.read_sql=self.read
+        baseline=old.original_rows();self.assertEqual(len(baseline),175)
+        self.assertFalse(any(k.startswith(('cron.','vault.'))for k in baseline))
+        self.assertFalse(any(word in q.lower()for q in self.queries for word in('insert ','update ','delete ','alter ','truncate ')))
+    def test_lifecycle_snapshot_catalog_filters_same_six_schemas(self):
+        p=object.__new__(module.FixedLifecycleProvisioningPorts);p.read_sql=self.read
+        value=p.snapshot();self.assertEqual(len(value['rows']),178)
+        self.assertEqual(set(value),{'rows','authoritySha256','constraintsSha256','catalogSha256'})
+        catalog=next(q for q in self.queries if "jsonb_build_object('relations'"in q)
+        self.assertEqual(catalog.count("n.nspname in('auth','public','private','storage','cron','vault')"),3)
+    def test_exact_native_extra_bags_preserved_and_other_schema_relations_rejected(self):
+        rows={k:{}for k in set(module.LCP_TABLES)|{'private.'+name for name in module.PROTECTED_BUDGET}}
+        rows.update({'cron.job':{'a'*64:1},'cron.job_run_details':{'b'*64:2},'vault.secrets':{'c'*64:1}})
+        baseline={'rows':rows,'authoritySha256':'d'*64,'constraintsSha256':'e'*64,'catalogSha256':'f'*64}
+        added={k:{}for k in module.LCP_TABLES};module.lcp_added_scope(baseline,copy.deepcopy(baseline),added,[])
+        for table in('cron.job','cron.job_run_details','vault.secrets'):
+            changed=copy.deepcopy(baseline);changed['rows'][table]={}
+            with self.subTest(table=table),self.assertRaisesRegex(ValueError,'LCP_ROWS_CHANGED'):module.lcp_added_scope(baseline,changed,added,[])
+        for table in('cron.other','vault.other','other.secrets'):
+            changed=copy.deepcopy(baseline);changed['rows'][table]={}
+            with self.subTest(table=table),self.assertRaisesRegex(ValueError,'LCP_OWNED_SCOPE'):module.lcp_snapshot(changed)
+        current=ast.parse(RUNNER.read_text());changed=copy.deepcopy(current)
+        fn=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name=='lcp_snapshot');fn.body.append(ast.Pass())
+        helper=BindingTests();helper.assert_original_python_preserved(current,current)
+        with self.assertRaises(AssertionError):helper.assert_original_python_preserved(current,changed)
+
+    def test_invalid_or_duplicate_table_roster_refused_before_row_reads(self):
+        p=object.__new__(module.FixedLifecycleProvisioningPorts)
+        for roster in([['cron','job'],['cron','job']],[['other','job']],[['vault','bad;name']],[[['vault'],'secret']],None):
+            calls=[];p.read_sql=lambda q,timeout:(calls.append(q)or json.dumps(roster))
+            with self.subTest(roster=roster),self.assertRaises(ValueError):p.original_rows()
+            self.assertEqual(len(calls),1)
+
 
 class NativeRestoreAclValueTests(unittest.TestCase):
 

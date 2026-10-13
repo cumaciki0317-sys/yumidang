@@ -1930,7 +1930,7 @@ def lcp_snapshot(value):
     required=set(LCP_TABLES)|{'private.'+t for t in PROTECTED_BUDGET}
     if not isinstance(rows,dict)or not required.issubset(rows):raise ValueError('LCP_OWNED_SCOPE')
     for table,bag in rows.items():
-        if not re.fullmatch(r'(auth|public|private|storage)\.[a-z_][a-z_0-9]*',table)or not isinstance(bag,dict):raise ValueError('LCP_OWNED_SCOPE')
+        if (table not in('cron.job','cron.job_run_details','vault.secrets')and not re.fullmatch(r'(auth|public|private|storage)\.[a-z_][a-z_0-9]*',table))or not isinstance(bag,dict):raise ValueError('LCP_OWNED_SCOPE')
         if any(not re.fullmatch(r'[a-f0-9]{64}',h)or type(n)is not int or n<1 for h,n in bag.items()):raise ValueError('LCP_OWNED_SCOPE')
     return value
 
@@ -1962,6 +1962,19 @@ class FixedLifecycleProvisioningPorts(FixedSignedProvisioningPorts):
     """같은 고정 서비스에만 실제 원 HTTP bytes/SQL을 전달한다. 시간·서비스 설정은 변경하지 않는다."""
     def __init__(self,reviewed):
         super().__init__(reviewed);self.runner.binding['sourcePins']=reviewed.source_pins
+    def original_rows(self):
+        """native119 전체178: 기존 네 schema에 cron/vault를 포함하며 원문 없이 행 해시 bag만 읽는다."""
+        tables=json.loads(self.read_sql("select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage','cron','vault');",timeout=5))
+        schemas={'auth','public','private','storage','cron','vault'}
+        if (not isinstance(tables,list)or any(type(row)is not list or len(row)!=2
+                or any(type(v)is not str or not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*',v)for v in row)or row[0]not in schemas for row in tables)
+                or len({tuple(row)for row in tables})!=len(tables)):raise ValueError('LCP_FULL_TABLE_INVENTORY')
+        result={}
+        for schema,table in tables:
+            identifier=lambda v:'"'+v.replace('"','""')+'"'
+            query="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r group by 1)s;'
+            result[schema+'.'+table]=json.loads(self.read_sql(query,timeout=5))
+        return result
     def history(self):return signed_verify_history(self.runner)
     def settings(self):
         result=subprocess.run(self.base+['inspect',self.reviewed.containers['auth']['id']],capture_output=True,timeout=3)
@@ -1981,7 +1994,7 @@ class FixedLifecycleProvisioningPorts(FixedSignedProvisioningPorts):
         constraints=self.read_sql("select coalesce(jsonb_agg(to_jsonb(c)order by oid),'[]'::jsonb)from pg_constraint c;",timeout=5)
         value['constraintsSha256']=hashlib.sha256(constraints.encode()).hexdigest()
         # relpages/reltuples 같은 실행 통계는 제외하되 빈 테이블의 컬럼/타입/기본값 변경도 거절한다.
-        catalog=self.read_sql("select jsonb_build_object('relations',(select jsonb_agg(jsonb_build_array(c.oid,c.relname,c.relnamespace,c.relkind,c.relowner,c.relam,c.reltablespace,c.relpersistence,c.relreplident,c.relrowsecurity,c.relforcerowsecurity,c.reloptions)order by c.oid)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage')),'columns',(select jsonb_agg(jsonb_build_array(a.attrelid,a.attnum,a.attname,a.atttypid,a.atttypmod,a.attnotnull,a.attidentity,a.attgenerated,a.attcollation,a.attisdropped,a.attstorage,a.attcompression)order by a.attrelid,a.attnum)from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage')),'defaults',(select jsonb_agg(to_jsonb(d)order by d.oid)from pg_attrdef d join pg_class c on c.oid=d.adrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage')));",timeout=5)
+        catalog=self.read_sql("select jsonb_build_object('relations',(select jsonb_agg(jsonb_build_array(c.oid,c.relname,c.relnamespace,c.relkind,c.relowner,c.relam,c.reltablespace,c.relpersistence,c.relreplident,c.relrowsecurity,c.relforcerowsecurity,c.reloptions)order by c.oid)from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage','cron','vault')),'columns',(select jsonb_agg(jsonb_build_array(a.attrelid,a.attnum,a.attname,a.atttypid,a.atttypmod,a.attnotnull,a.attidentity,a.attgenerated,a.attcollation,a.attisdropped,a.attstorage,a.attcompression)order by a.attrelid,a.attnum)from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage','cron','vault')),'defaults',(select jsonb_agg(to_jsonb(d)order by d.oid)from pg_attrdef d join pg_class c on c.oid=d.adrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in('auth','public','private','storage','cron','vault')));",timeout=5)
         value['catalogSha256']=hashlib.sha256(catalog.encode()).hexdigest();return value
     def added_rows(self,baseline,accounts):
         rows=super().added_rows(baseline,accounts)
