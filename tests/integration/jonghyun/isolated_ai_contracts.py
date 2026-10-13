@@ -1262,7 +1262,7 @@ class FixedSignedProvisioningPorts:
         expressions=[]
         for table in PROVISION_CLOSED_CONTROLS:
             column='external_processing_allowed'if table=='ai_processing_guard'else'external_deletion_approved'if table=='member_cleanup_guard'else'enabled'
-            expressions.extend((quote(table),"(select "+column+"from private."+table+" where singleton)"))
+            expressions.extend((quote(table),"(select "+column+" from private."+table+" where singleton)"))
         expressions.extend(("'cronLaunchActiveJobs'","to_jsonb(current_setting('cron.launch_active_jobs'))"))
         return json.loads(self.read_sql('select jsonb_build_object('+','.join(expressions)+');',timeout=3))
 

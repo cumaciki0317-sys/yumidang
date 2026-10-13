@@ -518,6 +518,14 @@ class BindingTests(unittest.TestCase):
             new_history=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
             for n in(old_history,new_history):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),history_hashes)
             new_history.body=copy.deepcopy(old_history.body)
+        # 승인된 closed_controls FROM 앞 공백 한 글자 수정만 전체 함수 AST pin으로 허용한다.
+        before_ports=next((n for n in before.body if isinstance(n,ast.ClassDef)and n.name=='FixedSignedProvisioningPorts'),None)
+        if before_ports is not None:
+            after_ports=next(n for n in after.body if isinstance(n,ast.ClassDef)and n.name=='FixedSignedProvisioningPorts')
+            old_controls=next(n for n in before_ports.body if isinstance(n,ast.FunctionDef)and n.name=='closed_controls')
+            new_controls=next(n for n in after_ports.body if isinstance(n,ast.FunctionDef)and n.name=='closed_controls')
+            for n in(old_controls,new_controls):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),{'24dfe64a5fefeaf0cae3511d9cd6f29127854b90261daf4d9096521e94c52b56', 'b1f8ce7ba910bc76976be63ec2fd3666a0fedfcb4884e3c9d97c6da18d0fd9db'})
+            new_controls.body=copy.deepcopy(old_controls.body)
         # 승인된 lifecycle 여섯 schema만 정규화한다. 다른 class/method 본문은 전체 비교를 유지한다.
         for candidate in(before,after):
             cls=next((n for n in candidate.body if isinstance(n,ast.ClassDef)and n.name=='FixedLifecycleProvisioningPorts'),None)
@@ -1177,6 +1185,33 @@ class NativeLifecycleFullInventoryTests(unittest.TestCase):
         if 'jsonb_object_agg(h,n)'in query:return json.dumps(self.bag)
         if "'roles',(select"in query:return 'b'*64
         return '{}'
+    def test_original_closed_control_query_sql_parser_and_exact_scope(self):
+        import sqlite3
+        from contextlib import closing
+        p=object.__new__(module.FixedLifecycleProvisioningPorts);queries=[]
+        with closing(sqlite3.connect(':memory:'))as db:
+            db.execute("attach database ':memory:' as private")
+            for table in module.PROVISION_CLOSED_CONTROLS:
+                column='external_processing_allowed'if table=='ai_processing_guard'else'external_deletion_approved'if table=='member_cleanup_guard'else'enabled'
+                db.execute('create table private.'+table+'('+column+' integer,singleton integer)')
+                db.execute('insert into private.'+table+' values(0,1)')
+            db.create_function('current_setting',1,lambda name:'off'if name=='cron.launch_active_jobs'else None)
+            db.create_function('to_jsonb',1,lambda value:value)
+            db.create_function('jsonb_build_object',-1,lambda *args:json.dumps({args[i]:bool(args[i+1])if args[i]!='cronLaunchActiveJobs'else args[i+1]for i in range(0,len(args),2)}))
+            def read(query,timeout):
+                queries.append(query);return db.execute(query).fetchone()[0]
+            p.read_sql=read;result=p.closed_controls()
+            self.assertEqual(result,{**{name:False for name in module.PROVISION_CLOSED_CONTROLS},'cronLaunchActiveJobs':'off'})
+            self.assertEqual(len(queries),1);query=queries[0]
+            self.assertEqual(query.count(' from private.'),len(module.PROVISION_CLOSED_CONTROLS))
+            self.assertEqual(query.count(' where singleton)'),len(module.PROVISION_CLOSED_CONTROLS))
+            # 원 bytes의 누락된 공백을 복원하면 같은 SQL parser가 문법 오류를 거절한다.
+            with self.assertRaises(sqlite3.OperationalError):db.execute(query.replace(' from private.','from private.'))
+        current=ast.parse(RUNNER.read_text());helper=BindingTests();helper.assert_original_python_preserved(current,current)
+        changed=copy.deepcopy(current);cls=next(n for n in changed.body if isinstance(n,ast.ClassDef)and n.name=='FixedSignedProvisioningPorts')
+        next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='closed_controls').body.append(ast.Pass())
+        with self.assertRaises(AssertionError):helper.assert_original_python_preserved(current,changed)
+
     def test_native_lifecycle178_keeps_cron_vault_and_original_midnight175(self):
         p=object.__new__(module.FixedLifecycleProvisioningPorts);p.read_sql=self.read
         result=p.original_rows();self.assertEqual(len(result),178)
