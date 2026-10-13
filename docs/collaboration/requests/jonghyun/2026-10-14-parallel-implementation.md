@@ -100,3 +100,17 @@ J04/J05의 내부 `ModelError`는 안전한 오류 코드·불변 비열거 전�
 ROOT 최신 통합21파일 **248/248 PASS**, fail0·skip0·cancelled0, 검사 전후 소스 SHA 일치. 기존241개와 중복이므로 합산하지 않는다. 원문 없는 영수증은 `/private/tmp/yumidang-jonghyun-20261014-j01-preparation-verification.json`, stdout SHA는 `f38ce5cf7f99b46fbe0a23c31592f1cd7e0fb40e7b987f80f43e50f5ee970416`이다. driver syntax·소유권·diff 검사도 통과했다. 초기 SQL 문자열의 from을 import로 오인한 준비 검사 실패는 native module parser(평가0)와 type-only import 보완으로 교정했다.
 
 후속2개 검증 파일과 이 기록은 같은 종현 업무의 승인된 로컬 커밋 범위에서 고정한다. 실행 시에는 최신 커밋으로 source manifest를 다시 발급한다. VM 재시작·정확한 새 합성 검증 대상/fixture 쓰기·정리는 별도2번 승인이 필요하며, 로컬 준비 코드·사본 존재를 그 승인으로 해석하지 않는다. 전체79%(22/28) 유지.
+
+## 실제 실행 전 J01 준비 계약 호환 보완
+
+첫 후속 준비 커밋은 `f4ff817132e90dba7907208e76ba211e5e46ab15`다. 승인 대기 중 기존 실행 도구와 입력 계약을 읽기로 대조해 두 불일치를 발견했다. 추가 제품 정책을 확정하거나 실제 자원을 실행하지 않고 준비 계약을 교정했다.
+
+- 컨테이너 `image`는 기존 `isolated_prepared_target`·`ReviewedSignedProvisioning`·`SignedRunner`가 실제 Docker에서 관측하는 `.Image` ID인 `sha256:64hex`로 통일했다. registry `repository@sha256`·tag를 실제 Image ID로 대신하지 않는다. 이전 J01 준비 코드의 RepoDigest 요구는 이 교정으로 대체한다.
+- 기존 `provision_signed_accounts`는 합성 Auth6명을 발급하며 profile의 active episode identity는 NULL이다. J01의 `createSyntheticAuth(target,2)`는 이 발급 계약과 맞지 않아 `readSyntheticMembers(target,2)`로 바꿨다. 이 callback은 root가 미리 준비한2명의 원 userId/JWT/합성 identityId를 읽기만 하며 생성·로그인·갱신·삭제를 수행하지 않는다.
+- 향후 root 실행 순서는 원 영수증을 보존하는 Auth6명 발급 → 선택2명 합성 identity 준비 → J01 baseline/읽기/행사17행 검증 → J01 자기 행사·숨김 행 정리 → root identity2 원복 및 Auth6 정리 → outer baseline 대조다. J01은 전체6명 정리 범위를 소유하지 않으며 `wholeBaselineRestored:false`를 유지한다.
+- 합성 identity 준비는 기존 `tests/database/minkyu/event_detail_projection.sql` 방식을 읽기로 확인했다. 자기 고유 subject의 naver_accounts는 user_id=NULL·verification_status=information_required로 두고 trigger가 만든 identity UUID만 사용한다. 선택2명의 원 active episode ID·NULL 상태·행 해시를 확인한 뒤 연결하고 원복한다. qualified·가입 완료·네이버 세션·실제 네이버 검증 증거를 만들지 않는다. 실제 SQL/callback 조립·CAS·생성/정리 영수증은 승인된 새 대상에서 다음 단계로 남는다.
+- identity 원복과 자기 참조 정리가 끝난 뒤에만 기존 `unlink_profile` 경로를 사용한다. 알 수 없는 변경이나 타 참조는 임의 삭제하지 않는다. 민규 helper·SQL·성호 파일은 편집하지 않았다.
+
+영향 범위인 event-sync 책임 검사 **21/21 PASS**(fail0·skip0·cancelled0), driver syntax·diff 검사 PASS다. RepoDigest/tag 거절과 기존 Auth 생성 callback을 실행0으로 거절하는 회귀를 기존 책임 시험에 보완했다. 검사 전후 두 파일 SHA는 동일하다. 영수증은 `/private/tmp/yumidang-jonghyun-20261014-j01-abi-verification.json`이다. 앞선248개 통합 검사는 당시 소스의 검증 이력으로 보존하며 이번21개와 합산하지 않는다.
+
+동일한 사용자1번 로컬 커밋 승인 범위에서 이 준비 보완을 고정한다. 이후 최신 HEAD·source manifest를 새로 대조하며 오래된65개 source pin을 실행에 재사용하지 않는다. 대상 Colima profile은 다시 읽기로 확인해 Stopped다. VM② 승인 질문은 그대로 유지하며 실제 Auth·DB·공급사·VM 실행은0, 전체 **79%(22/28)** 유지다.

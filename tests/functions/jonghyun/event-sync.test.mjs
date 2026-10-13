@@ -330,12 +330,16 @@ test('J01 준비 모형 입력은 target 없음을 보존하고 실제 실행/re
   for(const bad of [{...plan,target:{approved:true}},{...plan,approval:true},{...plan,sourceFiles:{...plan.sourceFiles,'../outside.ts':modelSha}},{...plan,migrationFiles:{}}])assert.throws(()=>validateJ01Input(bad),/^Error: J01_/);
 });
 
-test('J01 대상 입력은 기존 격리 준비 ABI의 고유프로젝트만 받으며 target 관측으로 승격하지 않는다', () => {
-  const plan=modelJ01(),container={id:modelSha,image:'public.ecr.aws/supabase/postgres@sha256:'+modelSha};
+test('J01 대상 입력은 기존 격리 준비 ABI의 고유프로젝트만 받고 Auth를 재발급하지 않는다', async () => {
+  const plan=modelJ01(),container={id:modelSha,image:'sha256:'+modelSha};
   const target={dockerSocket:'/private/tmp/mock/docker.sock',project:'jonghyun-backend100-1234abcd',runId:'55555555-5555-4555-8555-555555555555',containers:{db:container,auth:{...container,id:'c'.repeat(64)},rest:{...container,id:'d'.repeat(64)}},origin:'http://127.0.0.1:65421',authIssuer:'http://127.0.0.1:65421/auth/v1',authAudience:'authenticated'};
   const report=validateJ01Input({...plan,target});assert.equal(report.ready,false);assert.equal(report.actualTargetVerified,false);
   assert.throws(()=>validateJ01Input({...plan,target:{...target,containers:{...target.containers,auth:container}}}),/J01_TARGET_ROLE_ID_DUPLICATE/);
+  for(const image of ['public.ecr.aws/supabase/postgres@sha256:'+modelSha,'supabase/postgres:latest',modelSha])assert.throws(()=>validateJ01Input({...plan,target:{...target,containers:{...target.containers,db:{...container,image}}}}),/J01_TARGET_CONTAINER_ID_IMAGE/);
   for(const project of ['jonghyun-backend100','yumidang-minkyu-gateway','yumidang-jonghyun-j01-test','jonghyun-backend100-123456789'])assert.throws(()=>validateJ01Input({...plan,target:{...target,project}}),/J01_TARGET_IDENTITY/);
+  let calls=0;const oldBoundary=Object.fromEntries(['verifyTarget','readCredentials','createSyntheticAuth','sql','snapshot','cleanupScope','readTls'].map(name=>[name,()=>{calls++;}]));
+  await assert.rejects(()=>runJ01EventRoundtrip({...plan,target},oldBoundary),/J01_ROOT_TYPED_BOUNDARY_REQUIRED/);
+  assert.equal(calls,0);
 });
 
 test('J01 기존 legacy REST는 DB host/scheme을 고정하고 비밀 URL을 오류에 넣지 않는다', () => {

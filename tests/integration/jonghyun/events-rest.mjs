@@ -52,7 +52,9 @@ export function validateJ01Input(input) {
     requireJ01(typeof t.dockerSocket === 'string' && isAbsolute(t.dockerSocket) && t.dockerSocket.endsWith('/docker.sock') && typeof t.project === 'string' && /^jonghyun-backend100-[0-9a-f]{8}$/.test(t.project) && isUuid(t.runId), 'TARGET_IDENTITY');
     requireJ01(exact(t.containers, ['db', 'auth', 'rest']), 'TARGET_CONTAINERS');
     requireJ01(new Set(Object.values(t.containers).map(c=>c?.id)).size===3,'TARGET_ROLE_ID_DUPLICATE');
-    for (const c of Object.values(t.containers)) requireJ01(exact(c, ['id', 'image']) && isSha(c.id) && typeof c.image === 'string' && /^[a-z0-9./:_-]+@sha256:[0-9a-f]{64}$/.test(c.image), 'TARGET_CONTAINER_ID_IMAGE');
+    // 기존 isolated_prepared_target/SignedRunner가 관측하는 Docker .Image ID다.
+    // registry RepoDigest나 tag를 컨테이너의 실제 Image ID로 대신하지 않는다.
+    for (const c of Object.values(t.containers)) requireJ01(exact(c, ['id', 'image']) && isSha(c.id) && typeof c.image === 'string' && /^sha256:[0-9a-f]{64}$/.test(c.image), 'TARGET_CONTAINER_ID_IMAGE');
     let origin; try { origin = new URL(t.origin); } catch { requireJ01(false, 'TARGET_ORIGIN'); }
     requireJ01(origin.hostname === '127.0.0.1' && origin.protocol === 'http:' && !!origin.port && origin.origin === t.origin && !origin.username && !origin.password && t.authIssuer === t.origin + '/auth/v1' && t.authAudience === 'authenticated', 'TARGET_ORIGIN');
   }
@@ -167,15 +169,19 @@ export function validateJ01Snapshot(snapshot,observedTables) {
 }
 
 /** root는 VM 승인·대상 관측·자격증명·Auth 생성·전체 fingerprint·정리의 custody를 갖는다.
+ * 기존 발급기는 Auth6명을 생성한다. root가 그 중2명의 합성 identity를 미리 준비한 뒤
+ * readSyntheticMembers로 원 JWT/identity를 읽기만 한다. J01은 생성/로그인/갱신하지 않는다.
+ * J01 baseline은 이 준비 뒤에 잡는다. cleanupScope는 자기 행사17개·숨김 행만 정리한다.
+ * identity2 원복과 Auth6 정리·outer baseline 증명은 root가 원 생성 영수증으로 별도 수행한다.
  * JSON config는 아래 callback을 만들지 못한다. 실제 실행 CLI와 자동 VM 시작은 제공하지 않는다.
  * @param {object} input
- * @param {{verifyTarget:Function,readCredentials:Function,createSyntheticAuth:Function,sql:Function,snapshot:Function,cleanupScope:Function,readTls:Function}} boundary
+ * @param {{verifyTarget:Function,readCredentials:Function,readSyntheticMembers:Function,sql:Function,snapshot:Function,cleanupScope:Function,readTls:Function}} boundary
  */
 export async function runJ01EventRoundtrip(input, boundary) {
   input=deepFreeze(structuredClone(input));
   validateJ01Input(input);
   requireJ01(input.target !== null, 'EXACT_TARGET_REQUIRED');
-  for (const name of ['verifyTarget','readCredentials','createSyntheticAuth','sql','snapshot','cleanupScope','readTls']) requireJ01(typeof boundary?.[name] === 'function', 'ROOT_TYPED_BOUNDARY_REQUIRED');
+  for (const name of ['verifyTarget','readCredentials','readSyntheticMembers','sql','snapshot','cleanupScope','readTls']) requireJ01(typeof boundary?.[name] === 'function', 'ROOT_TYPED_BOUNDARY_REQUIRED');
   checkJ01Source(input);
   const verifyIdentity = async () => {
     const observed = await boundary.verifyTarget(input.target);
@@ -191,13 +197,13 @@ export async function runJ01EventRoundtrip(input, boundary) {
   const before = await snapshot();
   let scopeOpened = false, server, restoreFetch, proof, failure, auth;
   try {
-    // Auth의 부분 성공 전부터 같은 runId로 정리를 보장한다.
+    // 행사 fixture의 부분 성공 전부터 같은 runId로 정리를 보장한다.
     scopeOpened = true;
     await verify();
     const credentials = await boundary.readCredentials(input.target);
     requireJ01(exact(credentials, ['anon','service']) && Object.values(credentials).every(v => typeof v === 'string' && v.length >= 20 && !/[\s\u0000-\u001f]/.test(v)) && credentials.anon !== credentials.service, 'CREDENTIALS');
     await verify();
-    auth = deepFreeze(structuredClone(await boundary.createSyntheticAuth(input.target, 2)));
+    auth = deepFreeze(structuredClone(await boundary.readSyntheticMembers(input.target, 2)));
     await verify();
     requireJ01(Array.isArray(auth) && auth.length === 2 && auth.every(a => isUuid(a.userId) && isUuid(a.identityId) && typeof a.token === 'string' && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(a.token)), 'SYNTHETIC_AUTH_REQUIRED');
     await verify();
