@@ -1957,6 +1957,161 @@ def native_backup_state(query,helper,name):
  return value
 
 
+def native_restore_json(value):
+ """순수 값 비교. bool/int·NaN 혼동 없이 원 관측 bytes는 별도 보존한다."""
+ return json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()
+
+
+def native_restore_source(source,source_sha):
+ assert type(source_sha)is str and re.fullmatch('[a-f0-9]{64}',source_sha)and hashlib.sha256(native_restore_json(source)).hexdigest()==source_sha,'NATIVE_RESTORE_ORIGINAL_SOURCE_SHA'
+ assert type(source)is dict and set(source)=={'snapshot','rawAuthority','effectivePrivileges','sequences'},'NATIVE_RESTORE_SOURCE_FIELDS'
+ assert type(source['snapshot'])is dict and set(source['snapshot'])=={'rows','catalog','roles'},'NATIVE_RESTORE_SNAPSHOT_FIELDS'
+ assert type(source['rawAuthority'])is dict and set(source['rawAuthority'])=={'database','schemas','relations','columns','functions','defaults','dbRoleSettings'},'NATIVE_RESTORE_AUTHORITY_FIELDS'
+ roles=source['snapshot']['roles'];assert type(roles)is dict and set(roles)=={'roles','memberships'}and type(roles['roles'])is list,'NATIVE_RESTORE_ROLE_ROSTER'
+ names=[r['rolname']for r in roles['roles']];assert len(names)==len(set(names))and all(type(n)is str and re.fullmatch('[A-Za-z_][A-Za-z0-9_$]{0,62}',n)for n in names),'NATIVE_RESTORE_SAFE_ROLE_ROSTER'
+ return set(names)
+
+
+def native_restore_ident(name):
+ assert type(name)is str and re.fullmatch('[A-Za-z_][A-Za-z0-9_$]{0,62}',name),'NATIVE_RESTORE_SAFE_IDENTIFIER'
+ return '"'+name+'"'
+
+
+def native_restore_acl_entries(acl,owner,kind,roles):
+ # PG17 aclitem: grantee=privilege[*].../grantor. No SQL or quoted-role parser fallback.
+ codes={'SCHEMA':{'U':'USAGE','C':'CREATE'},'TABLE':{'a':'INSERT','r':'SELECT','w':'UPDATE','d':'DELETE','D':'TRUNCATE','x':'REFERENCES','t':'TRIGGER','m':'MAINTAIN'},'SEQUENCE':{'r':'SELECT','w':'UPDATE','U':'USAGE'}}[kind]
+ assert type(acl)is list and acl and owner in roles,'NATIVE_RESTORE_EXPLICIT_ACL_REQUIRED'
+ entries=[];seen=set()
+ for item in acl:
+  assert type(item)is str,'NATIVE_RESTORE_ACL_TYPE';match=re.fullmatch('([A-Za-z_][A-Za-z0-9_$]{0,62}|)=([A-Za-z*]+)/([A-Za-z_][A-Za-z0-9_$]{0,62})',item)
+  assert match is not None,'NATIVE_RESTORE_ACL_FORMAT';grantee,letters,grantor=match.groups()
+  assert(grantee==''or grantee in roles)and grantor==owner and grantor in roles and(grantee,grantor)not in seen,'NATIVE_RESTORE_RECORDED_OWNER_GRANTOR';seen.add((grantee,grantor))
+  privileges=[];used=set();i=0
+  while i<len(letters):
+   code=letters[i];assert code in codes and code not in used,'NATIVE_RESTORE_ACL_PRIVILEGE';used.add(code);i+=1;option=i<len(letters)and letters[i]=='*'
+   if option:i+=1
+   assert not(option and grantee==''),'NATIVE_RESTORE_PUBLIC_GRANT_OPTION';privileges.append((codes[code],option))
+  entries.append((grantee,grantor,privileges))
+ owner_entry=[v for v in entries if v[0]==owner]
+ assert len(owner_entry)==1 and {p for p,option in owner_entry[0][2]}==set(codes.values())and not any(option for p,option in owner_entry[0][2]),'NATIVE_RESTORE_DEFAULT_OWNER_ACL'
+ return entries
+
+
+def native_restore_catalog(catalog,schema_grants=()):
+ """확인된 두 CHECK·두 TO list·연속 누적 DEFAULT GRANT 표시만 정규화한다.
+ quoted/dollar 함수 본문에는 적용하지 않는다. schema_grants는 전체 ACL/실효 일치 후만 전달한다.
+ """
+ assert type(catalog)is str and len(catalog.encode())<=16*1024**2,'NATIVE_RESTORE_CATALOG_BOUND'
+ allowed=set(schema_grants);assert all(type(v)is str and v.startswith('GRANT ')and '\n'not in v for v in allowed),'NATIVE_RESTORE_SCHEMA_GRANT_LINES'
+ reason="    CONSTRAINT general_sanction_appeal_receipts_reason_check CHECK ((((length(reason) >= 1) AND (length(reason) <= 4000)) AND (reason = btrim(reason)) AND (reason !~ '[[:cntrl:]]'::text)))"
+ dedupe="    CONSTRAINT worker_jobs_dedupe_key_check CHECK ((((length(dedupe_key) >= 1) AND (length(dedupe_key) <= 512)) AND (dedupe_key ~ '^[A-Za-z0-9_.:-]+$'::text))),"
+ transforms={reason:reason.replace('(((length(reason) >= 1) AND (length(reason) <= 4000))','((length(reason) >= 1) AND (length(reason) <= 4000)'),dedupe:dedupe.replace('(((length(dedupe_key) >= 1) AND (length(dedupe_key) <= 512))','((length(dedupe_key) >= 1) AND (length(dedupe_key) <= 512)')}
+ for policy,tail in(('posts_select_not_deleted',"FOR SELECT TO authenticated, anon USING ((status <> 'deleted'::text));"),('retired_author_public_visibility','AS RESTRICTIVE FOR SELECT TO authenticated, anon USING ((NOT private.profile_retired(author_id)));')):
+  line='CREATE POLICY '+policy+' ON public.posts '+tail;transforms[line]=line.replace('TO authenticated, anon','TO anon, authenticated')
+ default=r'ALTER DEFAULT PRIVILEGES FOR ROLE [A-Za-z_][A-Za-z0-9_$]* IN SCHEMA [A-Za-z_][A-Za-z0-9_$]* GRANT (?:ALL|[A-Z]+(?:, [A-Z]+)*) ON (?:TABLES|SEQUENCES|FUNCTIONS) TO [A-Za-z_][A-Za-z0-9_$]*(?: WITH GRANT OPTION)?;'
+ out=[];pending=[];quote=None;escaped_string=False;last_e_literal=False;dollar=None;block=0;depth=0;between=True
+ def flush():
+  out.extend(sorted(pending));pending.clear()
+ for original in catalog.split('\n'):
+  outside=quote is None and dollar is None and not block;top=outside and depth==0 and between
+  if top and original.startswith('SET standard_conforming_strings'):
+   assert original=='SET standard_conforming_strings = on;','NATIVE_RESTORE_STANDARD_STRING_MODE'
+  if outside:assert re.search(r'\bBEGIN\s+ATOMIC\b',original)is None,'NATIVE_RESTORE_UNSUPPORTED_ATOMIC_BODY'
+  line=transforms.get(original,original)if outside and(not original.startswith('CREATE POLICY ')or top)else original
+  if top and line in allowed:flush()
+  elif top and re.fullmatch(default,line):pending.append(line)
+  else:flush();out.append(line)
+  i=0
+  while i<len(original):
+   if dollar:
+    if original.startswith(dollar,i):i+=len(dollar);dollar=None
+    else:i+=1
+   elif block:
+    if original.startswith('/*',i):block+=1;i+=2
+    elif original.startswith('*/',i):block-=1;i+=2
+    else:i+=1
+   elif quote:
+    if original[i]==quote:
+     if i+1<len(original)and original[i+1]==quote:i+=2
+     else:last_e_literal=quote=="'"and escaped_string;quote=None;i+=1
+    elif original[i]=='\\'and quote=="'"and escaped_string:i+=2
+    else:i+=1
+   elif original.startswith('--',i):break
+   elif original.startswith('/*',i):block+=1;i+=2
+   elif original[i]in("'",'"'):
+    quote=original[i];escaped_string=quote=="'"and i>0 and original[i-1]in'Ee'and(i<2 or not(original[i-2].isalnum()or original[i-2]in'_$'));assert not(last_e_literal and quote=="'"and not escaped_string),'NATIVE_RESTORE_UNSUPPORTED_ESCAPED_CONTINUATION';last_e_literal=False;between=False;i+=1
+   elif original[i]=='$':
+    match=re.match(r'\$[A-Za-z_][A-Za-z0-9_]*\$|\$\$',original[i:])
+    if match:dollar=match.group();between=False;i+=len(dollar)
+    else:between=False;i+=1
+   elif original[i]=='(':depth+=1;between=False;i+=1
+   elif original[i]==')':depth-=1;assert depth>=0,'NATIVE_RESTORE_CATALOG_PARENS';i+=1
+   elif original[i]==';'and depth==0:between=True;i+=1
+   else:
+    if not original[i].isspace():between=False;last_e_literal=False
+    i+=1
+ flush();assert depth==0 and quote is None and dollar is None and not block,'NATIVE_RESTORE_CATALOG_UNTERMINATED_QUOTE';return '\n'.join(out)
+
+
+def native_restore_acl_plan(source,restored,source_sha):
+ """새 archive target의 NULL로 빠진 ACL만 원 grantor로 보충. 원/기존 DB repair 권한은 없다."""
+ roles=native_restore_source(source,source_sha);native_restore_source(restored,hashlib.sha256(native_restore_json(restored)).hexdigest())
+ assert native_restore_json(source['snapshot']['rows'])==native_restore_json(restored['snapshot']['rows'])and native_restore_json(source['snapshot']['roles'])==native_restore_json(restored['snapshot']['roles'])and native_restore_json(source['sequences'])==native_restore_json(restored['sequences']),'NATIVE_RESTORE_NON_ACL_DATA_CHANGED'
+ assert native_restore_catalog(source['snapshot']['catalog'])==native_restore_catalog(restored['snapshot']['catalog']),'NATIVE_RESTORE_STRUCTURAL_CATALOG_CHANGED'
+ for key in('database','columns','functions','defaults','dbRoleSettings'):assert native_restore_json(source['rawAuthority'][key])==native_restore_json(restored['rawAuthority'][key]),'NATIVE_RESTORE_UNSUPPORTED_AUTHORITY_DRIFT'
+ statements=[];affected=set();objects=0
+ for field in('schemas','relations'):
+  before=source['rawAuthority'][field];after=restored['rawAuthority'][field];assert type(before)is list and type(after)is list and len(before)==len(after),'NATIVE_RESTORE_ACL_INVENTORY'
+  for a,b in zip(before,after):
+   assert type(a)is list and type(b)is list and len(a)==len(b)==(3 if field=='schemas'else 7)and native_restore_json(a[:-1])==native_restore_json(b[:-1]),'NATIVE_RESTORE_OBJECT_METADATA_CHANGED'
+   if native_restore_json(a[-1])==native_restore_json(b[-1]):continue
+   assert b[-1]is None and type(a[-1])is list and a[-1],'NATIVE_RESTORE_ONLY_MISSING_NULL_ACL'
+   if field=='schemas':kind='SCHEMA';name=native_restore_ident(a[0]);owner=a[1];effective_kind='schema';effective_name=a[0]
+   else:
+    assert a[2]in('r','p','v','m','f','S'),'NATIVE_RESTORE_RELATION_KIND';kind='SEQUENCE'if a[2]=='S'else'TABLE';name=native_restore_ident(a[0])+'.'+native_restore_ident(a[1]);owner=a[3];effective_kind='sequence'if kind=='SEQUENCE'else'table';effective_name=a[0]+'.'+a[1]
+   entries=native_restore_acl_entries(a[-1],owner,kind,roles)
+   if field=='relations':assert len(entries)==1 and entries[0][0]==owner,'NATIVE_RESTORE_ONLY_OWNER_RELATION_SUPPLEMENT'
+   statements.extend(['SET LOCAL ROLE '+native_restore_ident(owner)+';','REVOKE ALL ON '+kind+' '+name+' FROM PUBLIC;'])
+   for grantee,grantor,privileges in entries:
+    if grantee==owner:continue
+    statements.append('SET LOCAL ROLE '+native_restore_ident(grantor)+';')
+    for option in(False,True):
+     group=[p for p,o in privileges if o is option]
+     if group:statements.append('GRANT '+', '.join(group)+' ON '+kind+' '+name+' TO '+(native_restore_ident(grantee)if grantee else'PUBLIC')+(' WITH GRANT OPTION'if option else'')+';')
+   statements.append('RESET ROLE;');affected.add((effective_kind,effective_name));objects+=1
+ before=source['effectivePrivileges'];after=restored['effectivePrivileges'];assert type(before)is list and type(after)is list and len(before)==len(after),'NATIVE_RESTORE_EFFECTIVE_INVENTORY'
+ for a,b in zip(before,after):
+  assert type(a)is list and type(b)is list and len(a)==len(b)==5 and a[:4]==b[:4]and type(a[-1])is bool and type(b[-1])is bool,'NATIVE_RESTORE_EFFECTIVE_KEYS'
+  if a[-1]is not b[-1]:assert a[-1]is True and b[-1]is False and tuple(a[1:3])in affected,'NATIVE_RESTORE_UNSUPPORTED_EFFECTIVE_DRIFT'
+ return {'sourceSha256':source_sha,'candidateSha256':hashlib.sha256(native_restore_json(restored)).hexdigest(),'objects':objects,'sql':'BEGIN;\n'+'\n'.join(statements)+'\nCOMMIT;'if statements else'','authority':'VALUE_PLAN_NOT_EXECUTION_AUTHORITY','sourceOrOldTargetRepair':False}
+
+
+def native_restore_schema_grant_lines(source):
+ # Only known extension-owned schemas can add pg_dump ACL lines after source ACL replay.
+ roles={r['rolname']for r in source['snapshot']['roles']['roles']};lines=[]
+ for row in source['rawAuthority']['schemas']:
+  if row[0]not in('graphql','graphql_public')or row[-1]is None:continue
+  for grantee,grantor,privileges in native_restore_acl_entries(row[-1],row[1],'SCHEMA',roles):
+   if grantee==row[1]:continue
+   for option in(False,True):
+    ps=[p for p,o in privileges if o is option]
+    if not ps:continue
+    for schema in(row[0],native_restore_ident(row[0])):
+     for role in((grantee,native_restore_ident(grantee))if grantee else('PUBLIC',)):
+      lines.append('GRANT '+', '.join(ps)+' ON SCHEMA '+schema+' TO '+role+(' WITH GRANT OPTION'if option else'')+';')
+ return tuple(lines)
+
+
+def native_restore_compare(source,restored,source_sha):
+ """모든 rows/role/raw ACL/실효/sequence 엄격 비교 후 표시 차이만 허용한다."""
+ native_restore_source(source,source_sha);native_restore_source(restored,hashlib.sha256(native_restore_json(restored)).hexdigest())
+ for key in('rawAuthority','effectivePrivileges','sequences'):assert native_restore_json(source[key])==native_restore_json(restored[key]),'NATIVE_RESTORE_FULL_STATE_MISMATCH'
+ for key in('rows','roles'):assert native_restore_json(source['snapshot'][key])==native_restore_json(restored['snapshot'][key]),'NATIVE_RESTORE_SNAPSHOT_MISMATCH'
+ allowed=native_restore_schema_grant_lines(source)
+ assert native_restore_catalog(source['snapshot']['catalog'],allowed)==native_restore_catalog(restored['snapshot']['catalog'],allowed),'NATIVE_RESTORE_CATALOG_MISMATCH'
+ return {'status':'EXACT_NATIVE_STATE_WITH_NARROW_PRESENTATION','sourceSha256':source_sha,'restoredRawSha256':hashlib.sha256(native_restore_json(restored)).hexdigest(),'allRowsRolesRawAclEffectiveSequencesExact':True,'catalogPresentation':'TWO_KNOWN_CHECK_AND_GROUPINGS_TWO_POLICY_TO_LISTS_CONTIGUOUS_DEFAULT_GRANTS_RECORDED_GRAPHQL_SCHEMA_GRANTS','authority':'VALUE_COMPARISON_NOT_EXECUTION_AUTHORITY'}
+
+
 def native_backup_reserve(source_id,phase,record):
  from pathlib import Path
  assert source_id==NATIVE_BACKUP_SOURCE_ID and phase in('source','target','known_delete','known_reapply'),'NATIVE_BACKUP_PHASE_REQUIRED'
@@ -2171,7 +2326,11 @@ def run_native_final_backup(args):
   save('database-restore-intent.json',{'dumpSha256':final_digest(dump),'databaseArchiveMetadataSha256':final_digest(final_canonical(archive_database)),'singleTransaction':False,'recreatedFromOriginalArchive':True,'freshTargetOnlyForceDrop':True,'targetId':target,'attempt':1,'partialUnknownNoReplay':True})
   docker('exec',target,'dropdb','-h','/var/run/postgresql','-U','supabase_admin','--force','--maintenance-db=template1','postgres')
   docker('exec','-i',target,'pg_restore','-h','/var/run/postgresql','-U','supabase_admin','-d','template1','--create','--exit-on-error',data=dump)
-  save('target-final-server-proof.json',server_proof(target,False));restored=checkpoint(target);assert restored=={k:v for k,v in prebackup.items()if k!='files'},'NATIVE_BACKUP_FULL_ROWS_ROLES_RAW_ACL_EFFECTIVE_SEQUENCE_RESTORE_MISMATCH';save('target-before-storage-full-private.json',restored)
+  save('target-final-server-proof.json',server_proof(target,False));restored=checkpoint(target);save('target-archive-candidate-private.json',restored)
+  original_db={k:v for k,v in prebackup.items()if k!='files'};original_db_sha=final_digest(native_restore_json(original_db));acl_plan=native_restore_acl_plan(original_db,restored,original_db_sha)
+  save('target-source-acl-once-intent-private.json',acl_plan)
+  if acl_plan['sql']:query(target,acl_plan['sql'],write=True)
+  restored=checkpoint(target);save('target-source-acl-candidate-private.json',restored);save('target-source-acl-comparison.json',native_restore_compare(original_db,restored,original_db_sha));save('target-before-storage-full-private.json',restored)
   # New target TLS/credential only. The original canonical source role/config/secret is untouched.
   stage='target_storage';password=secrets.token_hex(32);query(target,"alter role supabase_storage_admin password '"+password+"';",write=True)
   for filename in('target-ca.key','target-ca.crt','target-server.key','target-server.csr','target-server.crt'):assert not(root/filename).exists(),'NATIVE_BACKUP_TLS_NO_OVERWRITE'
@@ -2193,11 +2352,11 @@ def run_native_final_backup(args):
   assert source_own()['State']['Running']is False,'NATIVE_BACKUP_TWO_TEST_DBS_REFUSED'
   for path in(known_path,unknown_path):
    previous=checkpoint(target,target_api);r=request(target_api,'GET',path.replace('/object/','/object/authenticated/',1),jwt);assert r['status']==200 and r['sha256']==pngsha and get_headers(r)==headers[path],'NATIVE_BACKUP_REVIVED_FULL_BYTES_HEADERS_REQUIRED';assert checkpoint(target,target_api)==previous,'NATIVE_BACKUP_TARGET_GET_CHANGED_STATE'
-  assert checkpoint(target,target_api)==prebackup,'NATIVE_BACKUP_API_STARTUP_CHANGED_RESTORE';save('target-api-tls.json',tls(target))
+  target_started=checkpoint(target,target_api);assert target_started['files']==prebackup['files'],'NATIVE_BACKUP_API_STARTUP_CHANGED_FILES';native_restore_compare(original_db,{k:v for k,v in target_started.items()if k!='files'},original_db_sha);save('target-api-tls.json',tls(target))
   stage='known_reapply';assert platform_json(final_regular(root/'known-delete-success.json',private=True))==known and known['status']==200 and known['allAssociatedVersionsBytesAbsent']is True and known['metadataAbsent']is True,'NATIVE_BACKUP_IMMUTABLE_KNOWN_SUCCESS_REQUIRED'
   reapply_reservation=native_backup_reserve(source,'known_reapply',{'revision':args.revision,'graphSha256':gsha,'knownSuccessSha256':final_digest(final_canonical(known))});save('known-reapply-intent.json',{'reservationSha256':reapply_reservation,'knownSuccessSha256':final_digest(final_canonical(known)),'targetId':target,'attempt':1,'unknownDeleteOrAck':'NOT_RUN'})
   assert request(target_api,'DELETE',known_path,jwt)['status']==200,'NATIVE_BACKUP_REAPPLY_UNKNOWN_NO_RETRY';assert request(target_api,'GET',known_path.replace('/object/','/object/authenticated/',1),jwt)['missing'],'NATIVE_BACKUP_REAPPLY_NOT_ABSENT';final_target=checkpoint(target,target_api)
-  assert not object_files(final_target['files'],bucket,known_name)and final_target==source_final,'NATIVE_BACKUP_REAPPLY_NOT_EXACT_OR_UNKNOWN_CHANGED';save('target-after-reapply-full-private.json',final_target);stop(target_api);assert checkpoint(target)=={k:v for k,v in final_target.items()if k!='files'},'NATIVE_BACKUP_TARGET_STOP_CHANGED_DB'
+  assert not object_files(final_target['files'],bucket,known_name)and final_target['files']==source_final['files'],'NATIVE_BACKUP_REAPPLY_FILES_NOT_EXACT';expected_reapplied={k:v for k,v in source_final.items()if k!='files'};native_restore_compare(expected_reapplied,{k:v for k,v in final_target.items()if k!='files'},final_digest(native_restore_json(expected_reapplied)));save('target-after-reapply-full-private.json',final_target);stop(target_api);assert checkpoint(target)=={k:v for k,v in final_target.items()if k!='files'},'NATIVE_BACKUP_TARGET_STOP_CHANGED_DB'
   target_final_meta=create('target-final-metadata',platform['images']['storage']['imageId'],['-e',inventory_js],mounts=['type=volume,src='+target_volume+',dst=/mnt,readonly'],memory_mib=128,entrypoint='node',stdin=True);assert native_backup_inventory(platform_json(attached(target_final_meta,b'{}')))==final_target['files'],'NATIVE_BACKUP_TARGET_STOP_CHANGED_FILES';stop(target_final_meta);closed(target)
   assert native_backup_graph(args.graph_manifest)[1]==gsha,'NATIVE_BACKUP_INPUTS_CHANGED_AFTER_PHASES';passed=True
   receipt={'status':'PASS_CANONICAL119_SYNTHETIC_BACKUP_RESTORE','scope':NATIVE_BACKUP_SCOPE,'graphSha256':gsha,'canonicalReceiptSha256':NATIVE_BACKUP_CANONICAL_PROOFS['receipt.json'],'tableCount':178,'fullRoleAttrsMembershipGrantorsRawAclEffectivePrivilegesExact':True,'sequenceInventorySha256':final_digest(final_canonical(prebackup['sequences'])),'sequenceCount':len(prebackup['sequences']),'dumpSha256':final_digest(dump),'rolesNoPasswordsSha256':final_digest(roles),'archiveSha256':final_digest(archive),'fileXattrsInventorySha256':final_digest(final_canonical(prebackup['files'])),'knownDeleteSuccessSha256':final_digest(final_canonical(known)),'allVolumeFilesAndAssociatedVersionsRestored':True,'knownConfirmedStorageHttp200ReappliedOnce':True,'syntheticUnknownRowsAndBytesPreserved':True,'actualPhysicalUnknownDelete':'NOT_RUN_SYNTHETIC_DB_ROWS','productAckDeleteDispatch':'NOT_RUN','publicAuthSignup':'NOT_RUN_SYNTHETIC_AUTH_SQL','nativeSource39MissingStorageBytes':'UNRESOLVED_NOT_REPAIRED','liveOperatingDataStorageBackup':'NOT_RUN','stage6Complete':False,'activationAllowed':False,'rolePasswordsExcluded':True,'databaseRecreatedFromOriginalArchive':True,'restoreSingleTransaction':False,'nativeApplicationSqlReplay':0,'sourceCanonicalSyntheticDataChanged':True,'protectedSourceStopRestartWrite':0,'protectedStorage103Access':0,'serializedMaxActiveTestDbs':1,'storageHttpScope':'ISOLATED_LOOPBACK_HTTP_NOT_OPERATING_HTTPS','fileProofScope':'SHA_BYTES_MODE_UID_GID_NLINK_XATTRS_CONTENTTYPE_CACHECONTROL_ETAG_EQUALITY_CONFIGURED_MD5_NOT_MTIME_ATIME_CTIME_INODE_PHYSICAL_SNAPSHOT'}

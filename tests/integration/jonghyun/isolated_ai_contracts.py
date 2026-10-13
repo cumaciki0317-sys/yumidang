@@ -433,6 +433,27 @@ def signed_native_selected(relative, names, pins, namespace):
     exec(compile(ast.Module(body=nodes,type_ignores=[]),str(path),'exec'),namespace)
     return namespace
 
+def signed_native_permission_selected(pins):
+    """고정 helper의 두 SQL 상수와 읽기 전용 함수만 커밋 원본에서 선택한다."""
+    import ast
+    relative='tests/integration/minkyu/product_connection_restore108_local.py'
+    path=REPO/relative;raw=path.read_bytes()
+    if hashlib.sha256(raw).hexdigest()!=pins.get(relative):raise ValueError('SIGNED_NATIVE_HELPER_PIN_CHANGED')
+    committed=subprocess.run(['git','-C',str(REPO),'show','HEAD:'+relative],capture_output=True,timeout=5)
+    if committed.returncode or committed.stdout!=raw:raise ValueError('SIGNED_NATIVE_HELPER_UNCOMMITTED')
+    names={'NATIVE_BACKUP_ACL_QUERY','NATIVE_BACKUP_PERMISSION_QUERY'};values={}
+    for node in ast.parse(raw).body:
+        if isinstance(node,ast.Assign) and len(node.targets)==1 and isinstance(node.targets[0],ast.Name) and node.targets[0].id in names:
+            name=node.targets[0].id
+            if name in values:raise ValueError('SIGNED_NATIVE_SQL_CONSTANTS')
+            value=ast.literal_eval(node.value)
+            if type(value)is not str or not value or len(value.encode())>1024*1024:raise ValueError('SIGNED_NATIVE_SQL_CONSTANTS')
+            values[name]=value
+    if set(values)!=names:raise ValueError('SIGNED_NATIVE_SQL_CONSTANTS')
+    return signed_native_selected(relative,{'platform_json','native_backup_permissions'},pins,
+        {'json':json,**values})
+
+
 def signed_verify_history(runner):
     """일반 DB 이력과 고정 native119 원 영수증을 별도 증거로 검증한다."""
     path=runner.root/'native119-runtime-provenance.json'
@@ -444,13 +465,15 @@ def signed_verify_history(runner):
     fields={'version','kind','preparedRoot','preparedManifestSha256','sourceStatePath','sourceStateSha256',
         'canonicalRoot','canonicalReceiptSha256','canonicalAppliedInventorySha256','canonicalAppliedFileMapSha256',
         'sourceCatalogSha256','sourcePortableRolesSha256','cloneBaselineStateSha256','database','creatorCodeSha256'}
-    if (not isinstance(provenance,dict)or set(provenance)!=fields or type(provenance['version'])is not int
-            or provenance['version']!=1 or provenance['kind']!='NATIVE119_RUNTIME_PROVENANCE'
+    version=provenance.get('version')if type(provenance)is dict else None
+    expected_fields=fields|({'cloneBaselineStatePath'}if type(version)is int and version==2 else set())
+    if (not isinstance(provenance,dict)or set(provenance)!=expected_fields or type(version)is not int
+            or version not in(1,2) or provenance['kind']!='NATIVE119_RUNTIME_PROVENANCE'
             or provenance['preparedRoot']!=str(runner.root)):raise ValueError('SIGNED_NATIVE_PROVENANCE_FIELDS')
     fixed={'sourceStatePath':str(NATIVE_SIGNED_SOURCE_STATE),'sourceStateSha256':NATIVE_SIGNED_SOURCE_STATE_SHA,
         'canonicalRoot':str(NATIVE_SIGNED_CANONICAL_ROOT),'canonicalReceiptSha256':NATIVE_SIGNED_CANONICAL_RECEIPT_SHA,
         'canonicalAppliedInventorySha256':NATIVE_SIGNED_APPLIED_INVENTORY_SHA,'canonicalAppliedFileMapSha256':NATIVE_SIGNED_APPLIED_FILE_MAP_SHA,
-        'cloneBaselineStateSha256':NATIVE_SIGNED_SOURCE_STATE_SHA}
+        **({'cloneBaselineStateSha256':NATIVE_SIGNED_SOURCE_STATE_SHA}if version==1 else {})}
     if any(provenance[k]!=v for k,v in fixed.items()):raise ValueError('SIGNED_NATIVE_FIXED_PROOF')
     if provenance['database']!=runner.binding['containers']['db']:raise ValueError('SIGNED_NATIVE_DATABASE_BINDING')
     if not isinstance(provenance['creatorCodeSha256'],str)or not re.fullmatch('[a-f0-9]{64}',provenance['creatorCodeSha256']):raise ValueError('SIGNED_NATIVE_CREATOR_METADATA')
@@ -485,6 +508,21 @@ def signed_verify_history(runner):
     state=signed_exact_json(raw);snapshot=state['snapshot'];schema=snapshot['catalog'];roles=snapshot['roles']
     if (len(snapshot['rows'])!=178 or provenance['sourceCatalogSha256']!=hashlib.sha256(schema.encode()).hexdigest()
             or provenance['sourcePortableRolesSha256']!=digest(roles)):raise ValueError('SIGNED_NATIVE_SOURCE_METADATA')
+    baseline=state;comparison=None
+    if version==2:
+        baseline_path=runner.root/'native119-clone-baseline-private.json'
+        if provenance['cloneBaselineStatePath']!=str(baseline_path)or not isinstance(provenance['cloneBaselineStateSha256'],str)or not re.fullmatch('[a-f0-9]{64}',provenance['cloneBaselineStateSha256']):
+            raise ValueError('SIGNED_NATIVE_BASELINE_BINDING')
+        # token/state reader의 600/700 규칙을 유지하며 64MiB 전체 상태만 별도 허용한다.
+        with namespace['platform_open'](baseline_path)as stream:
+            before=os.fstat(stream.fileno());baseline_raw=stream.read(64*1024*1024+1);after=os.fstat(stream.fileno());current=baseline_path.lstat()
+            if (len(baseline_raw)>64*1024*1024 or len(baseline_raw)!=before.st_size or identity(before)!=identity(after)or identity(after)!=identity(current)
+                    or hashlib.sha256(baseline_raw).hexdigest()!=provenance['cloneBaselineStateSha256']):raise ValueError('SIGNED_NATIVE_BASELINE_CHANGED')
+        baseline=signed_exact_json(baseline_raw)
+        comparison=signed_native_selected('tests/integration/minkyu/product_connection_restore108_local.py',
+            {'native_restore_json','native_restore_source','native_restore_ident','native_restore_acl_entries','native_restore_catalog',
+             'native_restore_acl_plan','native_restore_schema_grant_lines','native_restore_compare'},pins,{'json':json,'hashlib':hashlib,'re':re})
+        comparison['native_restore_compare'](state,baseline,NATIVE_SIGNED_SOURCE_STATE_SHA)
     from types import SimpleNamespace
     def read_query(name,statement):
         if name!=runner.target['id']:raise ValueError('SIGNED_NATIVE_QUERY_TARGET')
@@ -504,8 +542,23 @@ def signed_verify_history(runner):
         {'json':json,'tls':SimpleNamespace(DOCKER=runner.base),'recovery':SimpleNamespace(BOOT='supabase_admin'),'query':read_query,'call':read_dump})
     current_schema=namespace['catalog'](runner.target['id']);current_roles=namespace['roles'](runner.target['id'])
     for role in current_roles['roles']:role.pop('oid',None)
-    if current_schema!=schema or current_roles!=roles:raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
+    if version==1:
+        if current_schema!=schema or current_roles!=roles:raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
+    else:
+        permission=signed_native_permission_selected(pins)
+        current_authority=permission['platform_json'](read_query(runner.target['id'],permission['NATIVE_BACKUP_ACL_QUERY']))
+        current_effective=permission['native_backup_permissions'](read_query,runner.target['id'])
+        if canonical(current_authority)!=canonical(baseline['rawAuthority'])or canonical(current_effective)!=canonical(baseline['effectivePrivileges']):
+            raise ValueError('SIGNED_NATIVE_CURRENT_AUTHORITY_CHANGED')
+        if canonical(current_roles)!=canonical(baseline['snapshot']['roles']):raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
+        allowed=comparison['native_restore_schema_grant_lines'](baseline)
+        if comparison['native_restore_catalog'](current_schema,allowed)!=comparison['native_restore_catalog'](baseline['snapshot']['catalog'],allowed):
+            raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
     runner.signed_identity()
+    if version==2:
+        return {'method':'PINNED_NATIVE119_V2_BASELINE_AND_CURRENT_AUTHORITY','scope':'NATIVE119_SCHEMA_ROLE_RAW_ACL_EFFECTIVE_MATCH_LINEAGE',
+            'baselineRowsSequences':'VERIFIED_SOURCE_EQUIVALENCE','currentAuthRowsSequences':'PROVISIONING_JOURNAL_SEPARATE',
+            'migrationReplay':'NOT_RUN','actualNaver':'NOT_RUN','creatorAuthorization':'NOT_GRANTED'}
     return {'method':'PINNED_NATIVE119_RECEIPTS_AND_CURRENT_SCHEMA_ROLES','scope':'NATIVE119_SCHEMA_ROLE_MATCH_LINEAGE',
         'migrationReplay':'NOT_RUN','authRows':'PROVISIONING_JOURNAL_SEPARATE','actualNaver':'NOT_RUN'}
 

@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -510,6 +511,13 @@ class BindingTests(unittest.TestCase):
                 prefix=ast.parse('"""Lifecycle와 AI24가 같은 source-only reader와 inventory 검사를 사용한다."""\nfactory = \'tests/integration/jonghyun/isolated_ai_factory.ts\'\nif not root.is_absolute() or root.resolve() != root or root == REPO or (not isinstance(pins, dict)) or (not 1 <= len(pins) <= 256) or any((pins.get(k) != v for k, v in expected.items())):\n    raise ValueError(\'MIDNIGHT_CUSTODY_CAPSULE\')').body
                 self.assertEqual(dump(ast.Module(body=shared.body,type_ignores=[])),dump(ast.Module(body=prefix+tail,type_ignores=[])))
                 candidate.body=copy.deepcopy(original.body)
+        # 승인된 native119 v1/v2 전체 함수 AST만 예외로 묶는다. 다른 변경은 허용하지 않는다.
+        history_hashes={'fb5b103065382ffe8c759c57c0a3e30fe543866305071f28ba56632dca3e935e','31ec8172bb801ca0857fb4cc60a5ce4b97fb5a16e2135315806d31fe23d6c01c'}
+        old_history=next((n for n in before.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history'),None)
+        if old_history is not None:
+            new_history=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
+            for n in(old_history,new_history):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),history_hashes)
+            new_history.body=copy.deepcopy(old_history.body)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -540,6 +548,12 @@ class BindingTests(unittest.TestCase):
         runner=next(n for n in altered.body if isinstance(n,ast.ClassDef)and n.name=='SignedRunner')
         next(n for n in runner.body if isinstance(n,ast.FunctionDef)and n.name=='clean').body.append(ast.Pass())
         with self.assertRaises(AssertionError):self.assert_original_python_preserved(before,altered)
+
+    def test_native_v2_preservation_exception_refuses_other_history_mutation(self):
+        current=ast.parse(RUNNER.read_text());changed=copy.deepcopy(current)
+        fn=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
+        fn.body.append(ast.Pass())
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(current,changed)
 
     def test_original_ts_units_byte_exact(self):
         path='tests/integration/jonghyun/isolated_ai_factory.ts'
@@ -1118,6 +1132,305 @@ class NativeSignedHistoryTests(unittest.TestCase):
         self.prepare_proofs();self.helper_drift=True
         with self.assertRaisesRegex(ValueError,'HELPER_UNCOMMITTED'):self.verify()
         self.assertFalse(any(cmd[0]=='docker'for cmd in self.commands))
+
+
+def native_restore_test_pin(v):
+    return hashlib.sha256(json.dumps(v, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+
+def native_restore_test_fixture():
+    roles = {'roles': [{'rolname': r} for r in ('owner', 'anon', 'postgres')], 'memberships': []}
+    a = {'snapshot': {'rows': {'private.item': '0:d41d8cd98f00b204e9800998ecf8427e'}, 'roles': roles, 'catalog': 'CREATE TABLE private.item (id integer);'}, 'rawAuthority': {'database': ['postgres', 'owner'], 'schemas': [['graphql', 'owner', ['anon=U/owner', 'owner=UC/owner', 'postgres=U*/owner']]], 'relations': [['private', 'item', 'r', 'owner', True, False, ['owner=arwdDxtm/owner']], ['private', 'seq', 'S', 'owner', False, False, ['owner=rwU/owner']]], 'columns': [], 'functions': [], 'defaults': [], 'dbRoleSettings': []}, 'effectivePrivileges': [['anon', 'schema', 'graphql', 'USAGE', True], ['postgres', 'schema', 'graphql', 'USAGE WITH GRANT OPTION', True]], 'sequences': {'private.seq': [1, False]}}
+    b = copy.deepcopy(a)
+    b['rawAuthority']['schemas'][0][-1] = None
+    for x in b['rawAuthority']['relations']:
+        x[-1] = None
+    for x in b['effectivePrivileges']:
+        x[-1] = False
+    return (a, b)
+
+class NativeRestoreAclValueTests(unittest.TestCase):
+
+    def setUp(self):
+        self.native_restore_source = REPO / 'tests/integration/minkyu/product_connection_restore108_local.py'
+        self.native_restore_tree = ast.parse(self.native_restore_source.read_bytes())
+        names = {'native_restore_json', 'native_restore_source', 'native_restore_ident', 'native_restore_acl_entries', 'native_restore_catalog', 'native_restore_acl_plan', 'native_restore_schema_grant_lines', 'native_restore_compare'}
+        nodes = [n for n in self.native_restore_tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
+        self.assertEqual({n.name for n in nodes}, names)
+        self.assertEqual(len(nodes), len(names))
+        self.native_restore_ns = {'json': json, 'hashlib': hashlib, 're': re}
+        exec(compile(ast.Module(body=nodes, type_ignores=[]), str(self.native_restore_source), 'exec'), self.native_restore_ns)
+
+    def test_missing_acl_plan_preserves_grantor_and_grant_options_and_sequence(self):
+        a, b = native_restore_test_fixture()
+        p = self.native_restore_ns['native_restore_acl_plan'](a, b, native_restore_test_pin(a))
+        sql = p['sql']
+        self.assertEqual(p['objects'], 3)
+        self.assertIn('SET LOCAL ROLE "owner";', sql)
+        self.assertIn('GRANT USAGE ON SCHEMA "graphql" TO "postgres" WITH GRANT OPTION;', sql)
+        self.assertIn('GRANT USAGE ON SCHEMA "graphql" TO "anon";', sql)
+        self.assertIn('REVOKE ALL ON TABLE "private"."item" FROM PUBLIC;', sql)
+        self.assertIn('REVOKE ALL ON SEQUENCE "private"."seq" FROM PUBLIC;', sql)
+        self.assertNotIn('pg_class', sql)
+        self.assertEqual(sql.count('BEGIN;'), 1)
+
+    def test_wrong_source_pin_refuses(self):
+        a, b = native_restore_test_fixture()
+        with self.assertRaises(AssertionError):
+            self.native_restore_ns['native_restore_acl_plan'](a, b, '0' * 64)
+
+    def test_unsafe_identifier_refuses_before_sql(self):
+        a, b = native_restore_test_fixture()
+        a['rawAuthority']['schemas'][0][0] = 'graphql;DROP ROLE owner'
+        b['rawAuthority']['schemas'][0][0] = a['rawAuthority']['schemas'][0][0]
+        with self.assertRaises(AssertionError):
+            self.native_restore_ns['native_restore_acl_plan'](a, b, native_restore_test_pin(a))
+
+    def test_invalid_or_duplicate_privileges_refuse(self):
+        for acl in ('anon=Z/owner', 'anon=UU/owner', 'anon=*U/owner', 'anon=U**/owner', 'anon=U/absent'):
+            a, b = native_restore_test_fixture()
+            a['rawAuthority']['schemas'][0][-1][0] = acl
+            with self.subTest(acl=acl), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_acl_plan'](a, b, native_restore_test_pin(a))
+
+    def test_unknown_grantor_and_owneronly_relation_mutant_refuse(self):
+        for acl in ('owner=arwdDxtm/anon', 'anon=r/owner', 'owner=arwdDxt/owner'):
+            a, b = native_restore_test_fixture()
+            a['rawAuthority']['relations'][0][-1] = [acl]
+            with self.subTest(acl=acl), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_acl_plan'](a, b, native_restore_test_pin(a))
+
+    def test_non_acl_drift_and_privilege_escalation_refuse(self):
+        for kind in ('row', 'role', 'sequence', 'constraint', 'effective'):
+            a, b = native_restore_test_fixture()
+            if kind == 'row':
+                b['snapshot']['rows']['private.item'] = '1:mutant'
+            elif kind == 'role':
+                b['snapshot']['roles']['roles'][0]['rolsuper'] = True
+            elif kind == 'sequence':
+                b['sequences']['private.seq'][0] = 2
+            elif kind == 'constraint':
+                b['snapshot']['catalog'] = 'CREATE TABLE private.item (id bigint);'
+            else:
+                a['effectivePrivileges'][0][-1] = False
+                b['effectivePrivileges'][0][-1] = True
+            with self.subTest(kind=kind), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_acl_plan'](a, b, native_restore_test_pin(a))
+
+    def test_existing_acl_mutation_cannot_be_repaired(self):
+        a, b = native_restore_test_fixture()
+        b['rawAuthority']['schemas'][0][-1] = ['owner=UC/owner']
+        with self.assertRaises(AssertionError):
+            self.native_restore_ns['native_restore_acl_plan'](a, b, native_restore_test_pin(a))
+
+    def test_no_delta_has_no_statement_or_repair(self):
+        a, _ = native_restore_test_fixture()
+        p = self.native_restore_ns['native_restore_acl_plan'](a, copy.deepcopy(a), native_restore_test_pin(a))
+        self.assertEqual(p['objects'], 0)
+        self.assertEqual(p['sql'], '')
+
+    def test_known_two_check_regroupings_and_policy_order_compare_equal(self):
+        source = "CREATE TABLE private.general_sanction_appeal_receipts (\n    CONSTRAINT general_sanction_appeal_receipts_reason_check CHECK ((((length(reason) >= 1) AND (length(reason) <= 4000)) AND (reason = btrim(reason)) AND (reason !~ '[[:cntrl:]]'::text)))\n);\nCREATE TABLE private.worker_jobs (\n    CONSTRAINT worker_jobs_dedupe_key_check CHECK ((((length(dedupe_key) >= 1) AND (length(dedupe_key) <= 512)) AND (dedupe_key ~ '^[A-Za-z0-9_.:-]+$'::text))),\n    id integer\n);\nCREATE POLICY posts_select_not_deleted ON public.posts FOR SELECT TO authenticated, anon USING ((status <> 'deleted'::text));"
+        restored = source.replace('(((length(reason) >= 1) AND (length(reason) <= 4000))', '((length(reason) >= 1) AND (length(reason) <= 4000)').replace('(((length(dedupe_key) >= 1) AND (length(dedupe_key) <= 512))', '((length(dedupe_key) >= 1) AND (length(dedupe_key) <= 512)').replace('TO authenticated, anon', 'TO anon, authenticated')
+        self.assertEqual(self.native_restore_ns['native_restore_catalog'](source), self.native_restore_ns['native_restore_catalog'](restored))
+        for mutant in (restored.replace('<= 4000', '<= 3999'), restored.replace('AND', 'OR', 1), restored.replace("'deleted'", "'closed'"), restored.replace('TO anon, authenticated', 'TO anon, postgres')):
+            self.assertNotEqual(self.native_restore_ns['native_restore_catalog'](source), self.native_restore_ns['native_restore_catalog'](mutant))
+
+    def test_cumulative_default_grants_order_only_no_revoke_or_cross_block(self):
+        one = 'ALTER DEFAULT PRIVILEGES FOR ROLE owner IN SCHEMA graphql GRANT ALL ON TABLES TO anon;'
+        two = 'ALTER DEFAULT PRIVILEGES FOR ROLE owner IN SCHEMA graphql GRANT ALL ON TABLES TO postgres WITH GRANT OPTION;'
+        self.assertEqual(self.native_restore_ns['native_restore_catalog'](one + '\n' + two), self.native_restore_ns['native_restore_catalog'](two + '\n' + one))
+        self.assertNotEqual(self.native_restore_ns['native_restore_catalog'](one + '\n' + two), self.native_restore_ns['native_restore_catalog'](one + '\n' + two.replace(' WITH GRANT OPTION', '')))
+        self.assertNotEqual(self.native_restore_ns['native_restore_catalog'](one + '\nREVOKE ALL ON TABLE private.item FROM PUBLIC;\n' + two), self.native_restore_ns['native_restore_catalog'](two + '\nREVOKE ALL ON TABLE private.item FROM PUBLIC;\n' + one))
+
+    def test_final_comparison_strict_raw_acl_privileges_and_bool_int(self):
+        a, _ = native_restore_test_fixture()
+        self.assertEqual(self.native_restore_ns['native_restore_compare'](a, copy.deepcopy(a), native_restore_test_pin(a))['status'], 'EXACT_NATIVE_STATE_WITH_NARROW_PRESENTATION')
+        for field in ('rawAuthority', 'effectivePrivileges', 'sequences'):
+            b = copy.deepcopy(a)
+            if field == 'rawAuthority':
+                b[field]['schemas'][0][-1] = None
+            elif field == 'effectivePrivileges':
+                b[field][1][-1] = False
+            else:
+                b[field]['private.seq'][1] = 0
+            with self.subTest(field=field), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_compare'](a, b, native_restore_test_pin(a))
+
+    def test_recorded_graphql_extra_grant_only_after_complete_authority_equal(self):
+        a, _ = native_restore_test_fixture()
+        b = copy.deepcopy(a)
+        b['snapshot']['catalog'] += '\nGRANT USAGE ON SCHEMA graphql TO anon;\nGRANT USAGE ON SCHEMA graphql TO postgres WITH GRANT OPTION;'
+        self.assertEqual(self.native_restore_ns['native_restore_compare'](a, b, native_restore_test_pin(a))['status'], 'EXACT_NATIVE_STATE_WITH_NARROW_PRESENTATION')
+        for line in ('GRANT CREATE ON SCHEMA graphql TO anon;', 'GRANT USAGE ON SCHEMA private TO anon;', 'GRANT USAGE ON SCHEMA graphql TO postgres;'):
+            bad = copy.deepcopy(a)
+            bad['snapshot']['catalog'] += '\n' + line
+            with self.subTest(line=line), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_compare'](a, bad, native_restore_test_pin(a))
+        b['rawAuthority']['schemas'][0][-1] = None
+        with self.assertRaises(AssertionError):
+            self.native_restore_ns['native_restore_compare'](a, b, native_restore_test_pin(a))
+
+    def test_schema_grant_text_inside_dollar_or_single_quoted_body_is_not_filtered(self):
+        grant = 'GRANT USAGE ON SCHEMA graphql TO anon;'
+        for start, end in (('CREATE FUNCTION private.f() RETURNS void LANGUAGE plpgsql AS $body$', '$body$;'), ("CREATE FUNCTION private.f() RETURNS void LANGUAGE plpgsql AS '", "';")):
+            a, _ = native_restore_test_fixture()
+            a['snapshot']['catalog'] = start + '\n' + grant + '\n' + end
+            b = copy.deepcopy(a)
+            b['snapshot']['catalog'] = b['snapshot']['catalog'].replace(grant, '')
+            with self.subTest(start=start), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_compare'](a, b, native_restore_test_pin(a))
+
+    def test_nested_comment_and_parenthesis_grant_text_is_not_filtered(self):
+        grant = 'GRANT USAGE ON SCHEMA graphql TO anon;'
+        for start, end in (('/* outer /* inner */', '*/'), ('CREATE TABLE private.x (', ');')):
+            a, _ = native_restore_test_fixture()
+            a['snapshot']['catalog'] = start + '\n' + grant + '\n' + end
+            b = copy.deepcopy(a)
+            b['snapshot']['catalog'] = b['snapshot']['catalog'].replace(grant, '')
+            with self.subTest(start=start), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_compare'](a, b, native_restore_test_pin(a))
+
+    def test_default_grant_body_order_and_unknown_check_grouping_remain_strict(self):
+        one = 'ALTER DEFAULT PRIVILEGES FOR ROLE owner IN SCHEMA graphql GRANT ALL ON TABLES TO anon;'
+        two = one.replace('TO anon', 'TO postgres')
+        a = 'CREATE FUNCTION private.f() RETURNS void LANGUAGE plpgsql AS $$\n' + one + '\n' + two + '\n$$;'
+        b = a.replace(one + '\n' + two, two + '\n' + one)
+        self.assertNotEqual(self.native_restore_ns['native_restore_catalog'](a), self.native_restore_ns['native_restore_catalog'](b))
+        self.assertNotEqual(self.native_restore_ns['native_restore_catalog']('CHECK (((x AND y) AND z))'), self.native_restore_ns['native_restore_catalog']('CHECK ((x AND y AND z))'))
+
+    def test_plain_string_and_identifier_backslash_do_not_escape_closing_quote(self):
+        grant = 'GRANT USAGE ON SCHEMA graphql TO anon;'
+        for prefix in ("SELECT 'x\\';", 'SELECT "x\\";'):
+            with self.subTest(prefix=prefix):
+                self.assertEqual(self.native_restore_ns['native_restore_catalog'](prefix + '\n' + grant, (grant,)), self.native_restore_ns['native_restore_catalog'](prefix, (grant,)))
+        prefix = "SELECT E'x\\'\n"
+        suffix = "\n';"
+        self.assertNotEqual(self.native_restore_ns['native_restore_catalog'](prefix + grant + suffix, (grant,)), self.native_restore_ns['native_restore_catalog'](prefix + suffix, (grant,)))
+
+    def test_final_grant_option_and_grantor_mutants_refused_even_same_effective(self):
+        a, _ = native_restore_test_fixture()
+        for bad_acl in ('postgres=U/owner', 'postgres=U*/anon'):
+            b = copy.deepcopy(a)
+            b['rawAuthority']['schemas'][0][-1][-1] = bad_acl
+            with self.subTest(acl=bad_acl), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_compare'](a, b, native_restore_test_pin(a))
+
+    def test_unsupported_off_mode_and_escape_continuation_refuse(self):
+        for text in ("SET standard_conforming_strings = off;\nSELECT 'x';", "SELECT E'foo'\n'bar\\baz';", 'CREATE FUNCTION private.f() RETURNS void LANGUAGE SQL BEGIN ATOMIC\nSELECT 1;\nEND;'):
+            with self.subTest(text=text), self.assertRaises(AssertionError):
+                self.native_restore_ns['native_restore_catalog'](text)
+
+    def test_original_runner_fresh_restore_wired_once_and_not_source(self):
+        fn = next((n for n in self.native_restore_tree.body if isinstance(n, ast.FunctionDef) and n.name == 'run_native_final_backup'))
+        text = ast.get_source_segment(self.native_restore_source.read_text(), fn)
+        self.assertIn('native_restore_acl_plan(', text)
+        self.assertIn('native_restore_compare(', text)
+        self.assertIn("query(target,acl_plan['sql'],write=True)", text)
+        self.assertNotIn('query(source,acl_plan', text)
+
+class NativeSignedHistoryV2Tests(unittest.TestCase):
+    """실제 호출 없는 v2 모형. 현재 ACL/권한 읽기는 원 선택 helper를 실행한다."""
+    setUp=BindingTests.setUp
+    tearDown=BindingTests.tearDown
+    write=BindingTests.write
+    verify=NativeSignedHistoryTests.verify
+    def prepare_proofs(self):
+        NativeSignedHistoryTests.prepare_proofs(self)
+        self.roles['roles'].extend({'rolname':r,'rolsuper':False,'rolconfig':None}for r in('anon','authenticated','service_role'))
+        self.roles['roles'].sort(key=lambda r:r['rolname'])
+        grants=['=U/postgres','anon=U/postgres','authenticated=U/postgres','postgres=UC/postgres','service_role=U/postgres']
+        authority={'database':['postgres','postgres'],
+            'schemas':[[n,'postgres',grants.copy()]for n in('graphql','graphql_public')],
+            'relations':[],'columns':[],'functions':[],'defaults':[],'dbRoleSettings':[]}
+        keys=[('database','postgres',p)for p in('CONNECT','CREATE','TEMPORARY','CONNECT WITH GRANT OPTION','CREATE WITH GRANT OPTION','TEMPORARY WITH GRANT OPTION')]
+        keys.extend(('schema',n,'USAGE')for n in('graphql','graphql_public'))
+        self.permission_keys=keys;self.permission_roles=sorted([r['rolname']for r in self.roles['roles']]+['public'])
+        effective=[[r,*key,True]for r in self.permission_roles for key in keys]
+        self.state.update(rawAuthority=authority,effectivePrivileges=effective,sequences={'public.fixture_seq':[4,True]})
+        self.state['snapshot']['roles']=copy.deepcopy(self.roles)
+        self.source.write_bytes(module.json.dumps(self.state,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode())
+        sha=hashlib.sha256(self.source.read_bytes()).hexdigest();self.constants['NATIVE_SIGNED_SOURCE_STATE_SHA']=sha
+        self.provenance.update(version=2,sourceStateSha256=sha,sourcePortableRolesSha256=hashlib.sha256(module.json.dumps(self.roles,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest())
+        self.baseline=copy.deepcopy(self.state)
+        lines=['GRANT USAGE ON SCHEMA '+n+' TO '+r+';'for n in('graphql','graphql_public')for r in('PUBLIC','anon','authenticated','service_role')]
+        self.baseline['snapshot']['catalog']=self.schema+'\n'+'\n'.join(lines)
+        self.baseline_path=self.root/'native119-clone-baseline-private.json';self.write(self.baseline_path,b'{}')
+        self.current_authority=copy.deepcopy(authority);self.current_effective=copy.deepcopy(effective)
+        self.live_schema=self.baseline['snapshot']['catalog'];self.calls=[]
+        self.persist_baseline();self.persist_provenance()
+    def persist_baseline(self):
+        raw=json.dumps(self.baseline,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode();self.baseline_path.write_bytes(raw)
+        self.provenance.update(cloneBaselineStatePath=str(self.baseline_path),cloneBaselineStateSha256=hashlib.sha256(raw).hexdigest())
+    def persist_provenance(self):self.provenance_path.write_text(json.dumps(self.provenance))
+    def fake_process(self,command,**kwargs):
+        if command[0]=='git':return NativeSignedHistoryTests.fake_process(self,command,**kwargs)
+        self.commands.append(command);self.assertEqual(kwargs['timeout'],5);self.assertEqual(command[:3],self.runner.base)
+        if 'pg_dump'in command:
+            return subprocess.CompletedProcess(command,0,(self.live_schema+('\nCREATE TABLE public.drift (id uuid);'if self.schema_drift else'')).encode(),b'')
+        sql=kwargs['input'].decode();self.assertTrue(sql.startswith('begin read only;'));self.assertIn('/var/run/postgresql',command)
+        if "'database',(select"in sql:
+            value=self.current_authority;self.calls.append('raw')
+        elif "json_agg(rolname order by rolname)"in sql:value=self.permission_roles
+        elif "to_jsonb(r)-'oid'"in sql:value=self.roles
+        elif 'x.allowed'in sql:
+            match=__import__('re').search(r"decode\('([a-f0-9]+)','hex'\)",sql);self.assertIsNotNone(match)
+            role=bytes.fromhex(match[1]).decode();value=[row for row in self.current_effective if row[0]==role];self.calls.append('effective')
+        else:
+            value=copy.deepcopy(self.roles)
+            for i,r in enumerate(value['roles']):r['oid']=12345+i
+            if self.role_drift:value['memberships'][0][-1]=False
+        return subprocess.CompletedProcess(command,0,json.dumps(value).encode(),b'')
+    def test_v2_verified_baseline_and_live_authority_accept_known_eight_grant_lines(self):
+        self.prepare_proofs();result=self.verify()
+        self.assertEqual(result['scope'],'NATIVE119_SCHEMA_ROLE_RAW_ACL_EFFECTIVE_MATCH_LINEAGE')
+        self.assertEqual(result['creatorAuthorization'],'NOT_GRANTED');self.assertIn('raw',self.calls);self.assertIn('effective',self.calls)
+        self.runner.sql.assert_not_called();self.runner.signed_identity.assert_called_once()
+    def test_v2_missing_eight_acl_grantor_option_or_effective_change_refused_before_dump_normalization(self):
+        self.prepare_proofs()
+        for case in('missing8','grantor','option','effective'):
+            with self.subTest(case=case):
+                self.current_authority=copy.deepcopy(self.state['rawAuthority']);self.current_effective=copy.deepcopy(self.state['effectivePrivileges'])
+                if case=='missing8':
+                    for row in self.current_authority['schemas']:row[-1]=['postgres=UC/postgres']
+                elif case=='grantor':self.current_authority['schemas'][0][-1][1]='anon=U/supabase_admin'
+                elif case=='option':self.current_authority['schemas'][0][-1][1]='anon=U*/postgres'
+                else:self.current_effective[0][-1]=False
+                with self.assertRaisesRegex(ValueError,'CURRENT_AUTHORITY_CHANGED'):self.verify()
+    def test_v2_baseline_full_rows_roles_sequences_acl_and_hash_refused(self):
+        self.prepare_proofs();original=copy.deepcopy(self.baseline)
+        for case in('row','role','sequence','acl','effective','hash'):
+            with self.subTest(case=case):
+                self.baseline=copy.deepcopy(original)
+                if case=='row':self.baseline['snapshot']['rows']['private.fixture_0']='1:changed'
+                elif case=='role':self.baseline['snapshot']['roles']['memberships'][0][-1]=False
+                elif case=='sequence':self.baseline['sequences']['public.fixture_seq'][0]+=1
+                elif case=='acl':self.baseline['rawAuthority']['schemas'][0][-1][1]='anon=U*/postgres'
+                elif case=='effective':self.baseline['effectivePrivileges'][0][-1]=False
+                self.persist_baseline()
+                if case=='hash':self.provenance['cloneBaselineStateSha256']='0'*64
+                self.persist_provenance();self.commands=[]
+                with self.assertRaises((ValueError,AssertionError)):self.verify()
+                self.assertFalse(any(c[0]=='docker'for c in self.commands))
+    def test_v2_baseline_path_link_mode_size_and_schema_drift_refused(self):
+        self.prepare_proofs()
+        original=dict(self.provenance)
+        for path in(str(self.source),str(self.root/'other.json'),str(self.root/'sub/../native119-clone-baseline-private.json')):
+            self.provenance={**original,'cloneBaselineStatePath':path};self.persist_provenance();self.commands=[]
+            with self.assertRaisesRegex(ValueError,'BASELINE_BINDING'):self.verify()
+            self.assertFalse(any(c[0]=='docker'for c in self.commands))
+        self.provenance=original;self.persist_provenance();raw=self.baseline_path.read_bytes();self.baseline_path.unlink();self.baseline_path.symlink_to(self.source)
+        with self.assertRaises((ValueError,AssertionError,OSError)):self.verify()
+        self.baseline_path.unlink();self.write(self.baseline_path,raw);self.baseline_path.chmod(0o644)
+        with self.assertRaises((ValueError,AssertionError)):self.verify()
+        self.baseline_path.chmod(0o600);self.schema_drift=True
+        with self.assertRaisesRegex(ValueError,'CURRENT_SCHEMA_ROLES_CHANGED'):self.verify()
+    def test_v2_live_role_and_current_helper_drift_refused(self):
+        self.prepare_proofs();self.role_drift=True
+        with self.assertRaisesRegex(ValueError,'CURRENT_SCHEMA_ROLES_CHANGED'):self.verify()
+        self.role_drift=False;self.helper_drift=True;self.commands=[]
+        with self.assertRaisesRegex(ValueError,'HELPER_UNCOMMITTED'):self.verify()
+        self.assertFalse(any(c[0]=='docker'for c in self.commands))
+
 
 class FakeLifecycleProvisioningPorts:
     """독립 행 모형. 실제 GoTrue/DB/clock 변경은 없다."""
