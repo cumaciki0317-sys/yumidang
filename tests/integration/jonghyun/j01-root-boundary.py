@@ -131,6 +131,7 @@ class RootJ01Boundary:
         self.event_rows = None
         self.seed_attempted = False
         self.hide_attempted = False
+        self.hidden_row = None
         self.seed_data = None
         self.allowed_sql = {}
         self.child = None
@@ -276,6 +277,12 @@ class RootJ01Boundary:
         statement = "select coalesce(jsonb_agg(jsonb_build_object('id',s.id,'sourceId',s.source_id,'rowSha256',encode(sha256(convert_to(to_jsonb(s)::text,'UTF8')),'hex'),'detailSha256',(select encode(sha256(convert_to(to_jsonb(d)::text,'UTF8')),'hex')from private.event_source_details d where d.source_event_id=s.id))order by s.source_id),'[]'::jsonb)from private.source_events s where s.provider='kopis'and s.source_id like " + quoted(prefix + '%') + ';'
         return json.loads(self.ports.read_sql(statement, timeout=5))
 
+    def hidden_rows(self):
+        identity = fixed_uuid(self.members[0]['identityId'])
+        event_id = fixed_uuid(self.seed_data['ids']['15'])
+        statement = "select coalesce(jsonb_agg(jsonb_build_object('id',h.id,'rowSha256',encode(sha256(convert_to(to_jsonb(h)::text,'UTF8')),'hex'))),'[]'::jsonb)from private.member_hidden_targets h where identity_id=" + quoted(identity) + "::uuid and target_type='event'and target_id=" + quoted(event_id) + '::uuid;'
+        return json.loads(self.ports.read_sql(statement, timeout=5))
+
     def sql(self, statement):
         self.live()
         require(isinstance(statement, str) and len(statement.encode()) <= MAX_FRAME, 'SQL_ARGUMENT')
@@ -297,9 +304,14 @@ class RootJ01Boundary:
             self.allowed_sql[sha(hide.encode())] = ('hide', hide)
             return result
         require(kind == 'hide' and self.seed_data is not None and not self.hide_attempted, 'NO_HIDE_REPLAY')
+        require(not self.hidden_rows(), 'HIDDEN_SCOPE_ALREADY_PRESENT')
         self.hide_attempted = True
         self.save('hide-intent.json', {'runId': self.run_id, 'identityId': self.members[0]['identityId'], 'eventId': self.seed_data['ids']['15'], 'singleSend': True})
         self.ports.sql(statement)
+        hidden = self.hidden_rows()
+        require(len(hidden) == 1 and is_sha(hidden[0]['rowSha256']), 'HIDDEN_OWNERSHIP_NOT_PROVEN')
+        self.hidden_row = {'id': fixed_uuid(hidden[0]['id']), 'rowSha256': hidden[0]['rowSha256']}
+        self.save('hide-owned.json', {'runId': self.run_id, **self.hidden_row})
         return None
 
     def cleanup_events(self):
@@ -313,8 +325,19 @@ class RootJ01Boundary:
         id_sql = ','.join(quoted(x) + '::uuid' for x in ids)
         identity = fixed_uuid(self.members[0]['identityId'])
         event_id = fixed_uuid(self.seed_data['ids']['15'])
-        self.save('event-cleanup-intent.json', {'runId': self.run_id, 'eventIds': ids, 'hiddenIdentityId': identity, 'hiddenEventId': event_id})
-        self.ports.sql("begin;delete from private.member_hidden_targets where identity_id=" + quoted(identity) + "::uuid and target_type='event'and target_id=" + quoted(event_id) + "::uuid;delete from private.source_events where id=any(array[" + id_sql + "])and provider='kopis'and source_id like " + quoted(self.source_prefix + '%') + ';commit;')
+        hidden = self.hidden_rows()
+        expected_hidden = [self.hidden_row] if self.hidden_row is not None else []
+        require(hidden == expected_hidden, 'HIDDEN_CHANGED_UNKNOWN_PRESERVED')
+        self.save('event-cleanup-intent.json', {'runId': self.run_id, 'eventIds': ids, 'hiddenIdentityId': identity, 'hiddenEventId': event_id, 'rows': self.event_rows, 'hiddenRows': expected_hidden})
+        q = quoted
+        expected_rows = q(canonical(self.event_rows).decode()) + '::jsonb'
+        hidden_json = q(canonical(expected_hidden).decode()) + '::jsonb'
+        identity_cas = ''
+        for index, intent in enumerate(self.identity_intents):
+            attached = self.identity_created[index]
+            identity_cas += "perform 1 from private.naver_accounts a join private.naver_identity_keys k on k.subject=a.subject join private.member_episodes e on e.identity_id=k.id where a.subject=" + q(intent['subject']) + " and a.user_id is null and a.verification_status='information_required'and a.completed_at is null and encode(sha256(convert_to(to_jsonb(a)::text,'UTF8')),'hex')=" + q(attached['accountSha256']) + " and k.id=" + q(fixed_uuid(attached['identityId'])) + "::uuid and e.id=" + q(intent['episodeId']) + "::uuid and e.profile_id=" + q(intent['userId']) + "::uuid and e.ended_at is null and encode(sha256(convert_to((to_jsonb(e)-'identity_id')::text,'UTF8')),'hex')=" + q(intent['otherSha256']) + " for update of a,k,e;if not found then raise exception 'j01_cleanup_identity_cas';end if;"
+        statement = "begin;lock table private.source_events,private.event_source_details,private.member_hidden_targets in share row exclusive mode;do $$declare observed jsonb;n integer;begin " + identity_cas + "select coalesce(jsonb_agg(jsonb_build_object('id',s.id,'sourceId',s.source_id,'rowSha256',encode(sha256(convert_to(to_jsonb(s)::text,'UTF8')),'hex'),'detailSha256',(select encode(sha256(convert_to(to_jsonb(d)::text,'UTF8')),'hex')from private.event_source_details d where d.source_event_id=s.id))order by s.source_id),'[]'::jsonb)into observed from private.source_events s where s.provider='kopis'and s.source_id like " + q(self.source_prefix + '%') + ";if observed is distinct from " + expected_rows + " then raise exception 'j01_event_cleanup_cas';end if;select coalesce(jsonb_agg(jsonb_build_object('id',h.id,'rowSha256',encode(sha256(convert_to(to_jsonb(h)::text,'UTF8')),'hex'))),'[]'::jsonb)into observed from private.member_hidden_targets h where identity_id=" + q(identity) + "::uuid and target_type='event'and target_id=" + q(event_id) + "::uuid;if observed is distinct from " + hidden_json + " then raise exception 'j01_hidden_cleanup_cas';end if;delete from private.member_hidden_targets where identity_id=" + q(identity) + "::uuid and target_type='event'and target_id=" + q(event_id) + "::uuid;get diagnostics n=row_count;if n<>" + str(len(expected_hidden)) + " then raise exception 'j01_hidden_cleanup_count';end if;delete from private.source_events where id=any(array[" + id_sql + "])and provider='kopis'and source_id like " + q(self.source_prefix + '%') + ";get diagnostics n=row_count;if n<>17 then raise exception 'j01_event_cleanup_count';end if;end;$$;commit;"
+        self.ports.sql(statement)
         require(not self.source_rows(), 'EVENT_DELETE_NOT_PROVEN')
         require(self.ports.snapshot() == self.j01_baseline, 'J01_BASELINE_NOT_RESTORED')
         self.save('event-cleanup-closed.json', {'runId': self.run_id, 'eventsAbsent': True, 'j01BaselineRestored': True, 'authSixDeleted': False})
@@ -330,7 +353,7 @@ class RootJ01Boundary:
             require(index in self.identity_created and observed == self.identity_created[index] and observed['episodeIdentityId'] == k, 'IDENTITY_CHANGED_UNKNOWN_PRESERVED')
             q = quoted
             self.save('identity-' + str(index) + '-restore-intent.json', {**intent, 'identityId': k})
-            statement = "begin;do $$declare n integer;begin update private.member_episodes e set identity_id=null where e.id=" + q(intent['episodeId']) + "::uuid and e.profile_id=" + q(intent['userId']) + "::uuid and e.identity_id=" + q(k) + "::uuid and e.ended_at is null and encode(sha256(convert_to((to_jsonb(e)-'identity_id')::text,'UTF8')),'hex')=" + q(intent['otherSha256']) + ";get diagnostics n=row_count;if n<>1 then raise exception 'j01_restore_cas';end if;delete from private.naver_identity_keys where id=" + q(k) + "::uuid and subject=" + q(intent['subject']) + ";get diagnostics n=row_count;if n<>1 then raise exception 'j01_restore_key';end if;delete from private.naver_accounts a where a.subject=" + q(intent['subject']) + " and a.user_id is null and a.verification_status='information_required'and a.completed_at is null and encode(sha256(convert_to(to_jsonb(a)::text,'UTF8')),'hex')=" + q(observed['accountSha256']) + ";get diagnostics n=row_count;if n<>1 then raise exception 'j01_restore_account';end if;end;$$;commit;"
+            statement = "begin;lock table private.member_hidden_targets in share row exclusive mode;do $$declare n integer;begin perform 1 from private.naver_accounts a where a.subject=" + q(intent['subject']) + " and a.user_id is null and a.verification_status='information_required'and a.completed_at is null and encode(sha256(convert_to(to_jsonb(a)::text,'UTF8')),'hex')=" + q(self.identity_created[index]['accountSha256']) + " for update;if not found then raise exception 'j01_restore_account_cas';end if;if exists(select 1 from private.member_hidden_targets where identity_id=" + q(k) + "::uuid)then raise exception 'j01_restore_hidden_unknown';end if;update private.member_episodes e set identity_id=null where e.id=" + q(intent['episodeId']) + "::uuid and e.profile_id=" + q(intent['userId']) + "::uuid and e.identity_id=" + q(k) + "::uuid and e.ended_at is null and encode(sha256(convert_to((to_jsonb(e)-'identity_id')::text,'UTF8')),'hex')=" + q(intent['otherSha256']) + ";get diagnostics n=row_count;if n<>1 then raise exception 'j01_restore_cas';end if;delete from private.naver_identity_keys where id=" + q(k) + "::uuid and subject=" + q(intent['subject']) + ";get diagnostics n=row_count;if n<>1 then raise exception 'j01_restore_key';end if;delete from private.naver_accounts a where a.subject=" + q(intent['subject']) + " and a.user_id is null and a.verification_status='information_required'and a.completed_at is null and encode(sha256(convert_to(to_jsonb(a)::text,'UTF8')),'hex')=" + q(self.identity_created[index]['accountSha256']) + ";get diagnostics n=row_count;if n<>1 then raise exception 'j01_restore_account';end if;end;$$;commit;"
             self.ports.sql(statement)
             require(self.identity_state(intent) is None, 'IDENTITY_ABSENCE_NOT_PROVEN')
             self.save('identity-' + str(index) + '-restore-closed.json', {'runId': self.run_id, 'episodeId': intent['episodeId'], 'originalNullRestored': True, 'syntheticIdentityAbsent': True})
