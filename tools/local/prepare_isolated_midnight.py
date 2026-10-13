@@ -207,6 +207,32 @@ def build_plan(target, evidence, pins, now):
     }
 
 
+def build_signed_plan(target, evidence, pins, now, signed_input, prepared_root, selected_user_ids):
+    """검토 호출자가 명시한 원 signed 계정 3명으로 비실행 계획만 조립한다."""
+    auth = signed_input_binding(signed_input, prepared_root)
+    require(type(selected_user_ids) is list and len(selected_user_ids) == 3
+            and all(type(value) is str and str(uuid.UUID(value)) == value
+                    for value in selected_user_ids)
+            and len(set(selected_user_ids)) == 3, 'EXACT_OWNED_MEMBERS_REQUIRED')
+    require(set(selected_user_ids).issubset({x['userId'] for x in auth['accounts']}),
+            'EXPLICIT_AI24_SIGNED_MEMBER_SELECTION_REQUIRED')
+    require(target['id'] == auth['containers']['db']['id']
+            and target['image'] == auth['containers']['db']['image'], 'SIGNED_TARGET_CHANGED')
+    require(all(pins.get(key) == value for key, value in auth['sourcePins'].items()),
+            'SIGNED_SOURCE_PINS_CHANGED')
+    boundary = boundary_time(natural_windows(now)['nextKstMidnight'])
+    require(all(account['expiresAt'] >= boundary.timestamp() + 300
+                for account in auth['accounts']), 'DECLARED_EXPIRY_DOES_NOT_COVER_BOUNDARY')
+    plan = build_plan(target, evidence, pins, now)
+    plan['ownedIntent']['memberIds'] = list(selected_user_ids)
+    plan['signedPlanBinding'] = {
+        'path': auth['path'], 'sha256': auth['sha256'], 'preparedRoot': auth['preparedRoot'],
+        'databaseManifestSha256': auth['databaseManifestSha256'],
+        'selectedUserIds': list(selected_user_ids), 'actualSignedVerification': 'NOT_OBSERVED',
+    }
+    return plan
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode()
 
@@ -390,6 +416,13 @@ def persist_live_contract(root, plan, signed_input, prepared_root, now):
                 'RELATIVE_SOURCE_PIN_REQUIRED')
         digest_required(digest)
     auth = signed_input_binding(signed_input, prepared_root)
+    if 'signedPlanBinding' in plan:
+        require(plan['signedPlanBinding'] == {
+            'path': auth['path'], 'sha256': auth['sha256'], 'preparedRoot': auth['preparedRoot'],
+            'databaseManifestSha256': auth['databaseManifestSha256'],
+            'selectedUserIds': list(plan['ownedIntent']['memberIds']),
+            'actualSignedVerification': 'NOT_OBSERVED',
+        }, 'SIGNED_PLAN_BINDING_CHANGED')
     require(all(plan['sourcePins'].get(k) == v for k, v in auth['sourcePins'].items()),
             'SIGNED_SOURCE_PINS_CHANGED')
     require(all(x['expiresAt'] >= boundary.timestamp() + 300 for x in auth['accounts']),

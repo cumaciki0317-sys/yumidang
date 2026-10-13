@@ -233,6 +233,90 @@ class LiveBindingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'EXPLICIT_AI24_SIGNED_MEMBER_SELECTION_REQUIRED'):
             self.persist()
 
+    def signed_plan(self, members=None, pins=None, target=None):
+        return m.build_signed_plan(
+            target or {'project': 'own-project', 'id': '1' * 64, 'image': 'sha256:' + 'c' * 64},
+            {'aiRunnerSha256': 'a' * 64}, self.pins if pins is None else pins, self.now,
+            self.input, self.prepared,
+            [x['userId'] for x in self.signed['accounts'][:3]] if members is None else members)
+
+    def test_signed_plan_preserves_explicit_original_order_and_can_persist(self):
+        selected = [self.signed['accounts'][index]['userId'] for index in (5, 1, 3)]
+        self.plan = self.signed_plan(selected)
+        self.assertEqual(self.plan['ownedIntent']['memberIds'], selected)
+        self.assertEqual(self.plan['baselineContract']['memberStartedRequestsRequiredBeforeBoundary'], [3, 20, 3])
+        selected.reverse()
+        self.assertNotEqual(self.plan['ownedIntent']['memberIds'], selected)
+        digest = self.persist()
+        contract = m.load_live_contract(self.root, digest, self.pins)
+        self.assertEqual(contract['signedSelectedUserIds'], self.plan['ownedIntent']['memberIds'])
+        self.assertFalse(contract['executionAllowed'])
+        self.assertFalse(contract['executorAllowed'])
+
+    def test_signed_plan_never_selects_foreign_duplicate_or_noncanonical_members(self):
+        ids = [x['userId'] for x in self.signed['accounts'][:3]]
+        for selected in ([], ids[:2], [ids[0], ids[0], ids[1]], [str(uuid.uuid4()), *ids[1:]],
+                         [ids[0].replace('-', ''), *ids[1:]], [None, *ids[1:]], 'choose-three'):
+            with self.subTest(selected=selected), self.assertRaises(ValueError):
+                self.signed_plan(selected)
+        self.assertFalse((self.root / 'ai24-live-contract.json').exists())
+
+    def test_signed_plan_rejects_target_image_and_signed_source_pin_drift(self):
+        for target in ({'project': 'own-project', 'id': '9' * 64, 'image': 'sha256:' + 'c' * 64},
+                       {'project': 'own-project', 'id': '1' * 64, 'image': 'sha256:' + '9' * 64}):
+            with self.assertRaisesRegex(ValueError, 'SIGNED_TARGET_CHANGED'):
+                self.signed_plan(target=target)
+        with self.assertRaisesRegex(ValueError, 'SIGNED_SOURCE_PINS_CHANGED'):
+            self.signed_plan(pins={'tests/integration/jonghyun/isolated_ai_contracts.py': '9' * 64})
+        with self.assertRaisesRegex(ValueError, 'AI_EVIDENCE_SOURCE_CHANGED'):
+            m.build_signed_plan({'project': 'own-project', 'id': '1' * 64, 'image': 'sha256:' + 'c' * 64},
+                                {'aiRunnerSha256': '9' * 64}, self.pins, self.now, self.input,
+                                self.prepared, [x['userId'] for x in self.signed['accounts'][:3]])
+
+    def test_signed_plan_keeps_all_six_declared_boundary_expiries(self):
+        boundary = m.boundary_time(m.natural_windows(self.now)['nextKstMidnight'])
+        self.signed['accounts'][5]['expiresAt'] = int(boundary.timestamp()) + 299
+        self.write_input()
+        with self.assertRaisesRegex(ValueError, 'DECLARED_EXPIRY_DOES_NOT_COVER_BOUNDARY'):
+            self.signed_plan()
+        self.signed['accounts'][5]['expiresAt'] += 1
+        self.write_input()
+        self.assertEqual(len(self.signed_plan()['ownedIntent']['memberIds']), 3)
+        self.signed['accounts'][5]['expiresAt'] = True
+        self.write_input()
+        with self.assertRaisesRegex(ValueError, 'DECLARED_TOKEN_EXPIRY_REQUIRED'):
+            self.signed_plan()
+
+    def test_signed_plan_is_private_sanitized_metadata_without_approval_promotion(self):
+        self.signed['approvedByRoot'] = self.signed['dockerSlotReady'] = True
+        self.write_input()
+        plan = self.signed_plan()
+        self.assertFalse(plan['executionAllowed'])
+        self.assertEqual(plan['actualMidnight'], 'NOT_RUN')
+        self.assertEqual(plan['signedPlanBinding']['actualSignedVerification'], 'NOT_OBSERVED')
+        self.assertEqual(plan['signedPlanBinding']['sha256'], hashlib.sha256(self.input.read_bytes()).hexdigest())
+        serialized = json.dumps(plan)
+        for forbidden in ('RAW_PRIVATE', 'accessToken', 'authEmail', 'credentials', 'approvedByRoot', 'dockerSlotReady'):
+            self.assertNotIn(forbidden, serialized)
+        self.assertEqual(m.build_plan({'project': 'own-project', 'id': '1' * 64,
+                                      'image': 'sha256:' + 'c' * 64}, {'aiRunnerSha256': 'a' * 64},
+                                     self.pins, self.now)['scope'], 'CURRENT_SOURCE_SYNTHETIC_AI24_PLANNING_ONLY')
+
+    def test_signed_plan_custody_rejects_changed_original_input_and_present_invalid_binding(self):
+        self.plan = self.signed_plan()
+        original_binding = self.plan['signedPlanBinding']
+        self.signed['accounts'][0]['accessToken'] = 'CHANGED_ORIGINAL_TOKEN'
+        self.write_input()
+        with self.assertRaisesRegex(ValueError, 'SIGNED_PLAN_BINDING_CHANGED'):
+            self.persist()
+        self.assertFalse((self.root / 'ai24-live-contract.json').exists())
+        self.plan = self.signed_plan()
+        for invalid in (None, {}, original_binding):
+            self.plan['signedPlanBinding'] = invalid
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, 'SIGNED_PLAN_BINDING_CHANGED'):
+                self.persist()
+        self.assertFalse((self.root / 'ai24-live-contract.json').exists())
+
 
 class FakeMidnightPorts:
     """현재 인증/DB/모델 성공을 주장하지 않는 함수 시험용 포트다."""
