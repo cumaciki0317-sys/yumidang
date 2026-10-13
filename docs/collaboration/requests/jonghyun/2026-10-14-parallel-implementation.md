@@ -114,3 +114,16 @@ ROOT 최신 통합21파일 **248/248 PASS**, fail0·skip0·cancelled0, 검사 �
 영향 범위인 event-sync 책임 검사 **21/21 PASS**(fail0·skip0·cancelled0), driver syntax·diff 검사 PASS다. RepoDigest/tag 거절과 기존 Auth 생성 callback을 실행0으로 거절하는 회귀를 기존 책임 시험에 보완했다. 검사 전후 두 파일 SHA는 동일하다. 영수증은 `/private/tmp/yumidang-jonghyun-20261014-j01-abi-verification.json`이다. 앞선248개 통합 검사는 당시 소스의 검증 이력으로 보존하며 이번21개와 합산하지 않는다.
 
 동일한 사용자1번 로컬 커밋 승인 범위에서 이 준비 보완을 고정한다. 이후 최신 HEAD·source manifest를 새로 대조하며 오래된65개 source pin을 실행에 재사용하지 않는다. 대상 Colima profile은 다시 읽기로 확인해 Stopped다. VM② 승인 질문은 그대로 유지하며 실제 Auth·DB·공급사·VM 실행은0, 전체 **79%(22/28)** 유지다.
+
+## VM② 승인 수신과 실제 사전검사
+
+사용자가 **② VM 재시작과 새 합성 격리 검증을 승인**했다. 대상은 jonghyun-backend100·2CPU·4GiB·20GiB이며 다른 VM·기존 컨테이너 변경·실회원·실제 공급사·운영·푸시는 제외한다. 이 승인과 별개로 기존 소유권을 유지한다.
+
+- `colima start --profile jonghyun-backend100 --cpus 2 --memory 4 --disk 20 --runtime docker --activate=false`가 실제 완료됐다. 해당 VM만 Running이고 default·yumidang-minkyu는 Stopped다. Docker 활성 문맥을 바꾸지 않았다.
+- 정확한 종현 Docker 소켓·문맥 일치를 확인했다. 실제 VM 여유 메모리는 관찰 시점3,218,924KiB였다. 시작 뒤 기존 프로젝트077eabaa의6개 컨테이너가 실행 중이고 사용자 정의 네트워크1개·볼륨2개가 존재했다. 기존 자원에 별도 시작·중지·삭제·SQL·Storage 명령을 실행하지 않았다. 시작 전 VM 내부 상태는 미관측이며 VM 시작 이전과 동일하다고 주장하지 않는다.
+- 기준 자료는 `/private/tmp/yumidang-jonghyun-20261014-vm-baseline.json`에 보존했다. 뒤의 두 번째 메타데이터 읽기에서도 같은6개 ID를 확인했고 실제 Image ID·설정/호스트 설정/저장소 연결·네트워크/볼륨 해시를 새 비공개 준비 폴더의 `protected-resource-baseline.json`에 기록했다. 설정 원문·키를 출력하지 않았다. 이 메타데이터 확인은 기존 저장 바이트 전체 검증이 아니다.
+- 새 후보 프로젝트ccad00b8의 정식 SQL119개·이름/포트만 바꾼 설정을 운영체제 임시 폴더에 준비했다. loopback 포트 묶음60021의 당시 사용 가능 여부를 확인했으나 예약하지 않았다. 첫 sandbox 포트 확인은 실행 권한 제한으로 실패해 대상을 만들지 않았고, 승인 범위의 실제 확인에서 다시 확인했다. 경로와 결과는 `/private/tmp/yumidang-jonghyun-20261014-live-preflight-receipt.json`에 있다.
+- 실제 기존 목록6/1을 그대로 넣은 일반 준비 검사는 `ISOLATED_INTENT_INVALID`로 거절했다. 인증 준비 검사는 운영체제 임시 경로와 `/private/tmp`만 허용하는 비공개 경로 계약이 달라 `SIGNED_PRIVATE_DIRECTORY`로 먼저 거절했다. 코드에는 그 뒤에서도 기존 목록을 거절하는 `SIGNED_PREPARED_AUTHORITY` 조건이 있다. 도달하지 않은 오류를 실제 실행 결과로 기록하지 않는다.
+- `tools/local/run_database_tests.py`와 `tests/integration/jonghyun/isolated_ai_contracts.py` 수정 권한은 민규여서 종현 검사가 거절됐다. 빈 목록 허위 기록·기존 자원 중지/삭제·검사 우회·actor 변경은 하지 않았다. 신규 컨테이너·새 Auth·실제 SQL/Storage·공급사 실행은0이다.
+
+위 두 도구에 필요한 기존 자원 보존 계약과 비공개 경로 호환안을 [민규 지원 요청](2026-10-14-live-validation-guard-conflict.md)에 정리했다. 민규의 직접 지원 또는 정식 소유권 재배정 경로는 사용자의 마지막 일괄 확인으로 남긴다. VM② 승인을 다시 요청하지 않는다. 새 실제 검증은 해당 지원 후 이미 받은② 범위에서 이어간다. 전체 **79%(22/28)** 유지다.
