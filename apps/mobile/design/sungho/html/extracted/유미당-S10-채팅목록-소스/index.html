@@ -1,0 +1,111 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>유미당 · 채팅 목록</title>
+<link rel="stylesheet" href="../preview-panel.css"><script defer src="../preview-panel.js"></script>
+<style>
+@font-face{font-family:Pretendard;src:url('../유미당-S06-가입프로필-소스/yumidang-S06/assets/Pretendard-Regular.woff2');font-weight:400}@font-face{font-family:Pretendard;src:url('../유미당-S06-가입프로필-소스/yumidang-S06/assets/Pretendard-Bold.woff2');font-weight:700}
+*{box-sizing:border-box}body{margin:0;background:#f4f3f7;color:#252c40;font:14px/1.5 Pretendard,sans-serif}button,select{font:inherit}button{cursor:pointer}button:active{transform:scale(.96)}button:focus-visible{outline:2px solid #852cff;outline-offset:2px}button{transition:transform .1s}button:disabled{opacity:.43}svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.phone{width:100%;max-width:430px;height:100dvh;min-height:480px;background:#fcfbfe;position:relative;display:flex;flex-direction:column;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;background:#fff}.top h1{font-size:20px;margin:0}.icon{display:grid;place-items:center;width:44px;height:44px;border:0;background:none;color:#252c40}.filters{display:flex;gap:8px;padding:4px 16px 16px;background:#fff}.filter{padding:7px 14px;border:1px solid #e3dfeb;border-radius:20px;background:#fff;color:#6b7280;font-size:13px;min-height:36px}.filter[aria-pressed=true]{color:#852cff;background:#f2e9ff;border-color:#d8b9f5}.content{overflow:auto;flex:1;padding:0 16px 84px}.chat-row{width:100%;display:flex;gap:12px;text-align:left;padding:20px 0;border:0;border-bottom:1px solid #eeebf3;background:transparent;color:inherit}.avatar{width:48px;height:48px;object-fit:cover;border-radius:50%;flex:none;background:#eeeaf3}.copy{min-width:0;flex:1}.row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.name{font-size:14px;font-weight:700}.badge{font-size:11px;line-height:18px;padding:2px 8px;border-radius:8px;background:#eeedf2;color:#777b86;white-space:nowrap}.badge.active{background:#f2e9ff;color:#852cff}.badge.confirmed{background:#eaf4ee;color:#47745d}.post{font-size:13px;color:#737580;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 0 4px}.message{font-size:14px;color:#626879;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0}.note{font-size:12px;line-height:19px;color:#9295a0;margin:20px 2px}.empty{text-align:center;padding:92px 20px 40px}.empty svg{width:40px;height:40px;color:#b7adc9;margin-bottom:12px}.empty h2{font-size:16px;margin:0 0 8px}.empty p{font-size:13px;color:#737580;line-height:21px;margin:0 0 20px}.cta{min-height:44px;border:1px solid #ded6ec;background:#fff;color:#852cff;border-radius:12px;padding:10px 20px}.nav{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:10.285714px;right:9.904762px;height:48px;border:1px solid #e3dfeb;border-radius:25.142857px;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.8);backdrop-filter:blur(8px);box-shadow:0 2px 5px #30204014}.nav button{background:none;border:0;display:grid;place-items:center;color:#6b7280}.nav button.active{color:#852cff}.nav svg{width:24.380952px;height:24.761905px}.loading{height:86px;border-bottom:1px solid #eeebf3;display:flex;align-items:center;gap:12px}.loading i{width:48px;height:48px;border-radius:50%;background:#eeecf3}.loading span{height:40px;width:65%;border-radius:8px;background:#eeecf3}[hidden]{display:none!important}@media(prefers-reduced-motion:reduce){button{transition:none}}
+
+/* Approved home/browse material, scoped to the product preview. */
+.phone{background:#FAF8FE}
+.phone .top,.phone .filters{background:transparent}
+.phone .filter{border-color:transparent;box-shadow:0 2px 7px rgba(76,47,125,.06)}
+.phone .filter[aria-pressed=true]{background:#F2E9FF;border-color:transparent;color:#852CFF}
+.phone .content{padding-top:12px;padding-bottom:100px}
+.phone .chat-row .post{font-size:15px;font-weight:700;line-height:21px;color:#252c40;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:0 0 8px}
+.phone .chat-row .name{font-size:13px;font-weight:400;color:#626879}
+.phone .chat-row .post-heading{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+.phone .chat-row .post-heading .post{flex:1;min-width:0;margin:0}
+.phone .chat-row .post-heading .badge{flex:none;font-size:12px}
+.phone .chat-row .row-top{justify-content:flex-start;flex-wrap:wrap;gap:4px;margin-bottom:10px;font-size:12px}
+.phone .chat-row .age{color:#737580}
+.phone .chat-row .sweetness{margin-left:4px;color:#852cff}
+.phone .chat-row .message-line{display:flex;align-items:flex-start;gap:10px;min-width:0}
+.phone .chat-row{position:relative}
+.phone .generated-avatar{background-image:url("../검토시안-아이콘/generated-profiles.png");background-size:200% 200%;background-position:0 100%}
+.phone .top .icon{position:relative}
+.phone .top .icon svg{width:20.190476px;height:20.190476px;stroke-width:3.5}
+.phone .top .icon.has-unread::after{content:"";position:absolute;right:9px;top:8px;width:6px;height:6px;border-radius:50%;background:#852cff;box-shadow:0 0 0 2px #FAF8FE}
+.phone .chat-row .message-meta{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.phone .chat-row .message-time{font-size:11px;line-height:16px;color:#9295a0;white-space:nowrap}
+.phone .chat-row .unread-count{position:absolute;left:23px;top:23px;transform:translate(-50%,-50%);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center}
+.phone .chat-row .message{flex:1;min-width:0;font-size:14px;color:#737580}
+.phone .chat-row{padding:16px;margin:0 0 18px;border:0;border-radius:20px;background:#fff;box-shadow:0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)}
+.phone .nav{background:#fff;border-color:transparent;box-shadow:0 5px 20px rgba(76,47,125,.10);backdrop-filter:none}
+.phone .cta{border-color:transparent;background:#fff;box-shadow:0 3px 10px rgba(76,47,125,.07)}
+.phone .loading{border:0;border-radius:20px;background:#fff;padding:16px;margin-bottom:12px;box-shadow:0 5px 14px rgba(76,47,125,.045)}
+</style><main class="phone"><header class="top"><h1>채팅</h1><button class="icon" aria-label="알림"><svg class="line-icon" viewBox="0 0 55 55" aria-hidden="true"><path d="M12 37c5-5 3-11 4-18a14 14 0 0 1 28 0c1 7-1 13 4 18 2 4 0 6-4 6H16c-5 0-7-2-4-6Z" transform="translate(-3 0)"/><path d="M23 45c0 7 10 7 10 0"/></svg></button></header><div class="filters" aria-label="대화 상태 필터"></div><div class="content" id="content"></div><nav class="nav" aria-label="하단 메뉴"></nav></main>
+<aside class="review-panel"><h2>채팅 목록</h2><p>Expo S10의 기존 정보와 상태를 표현하는 디자인 시안입니다.</p><label>화면 예시<select id="scene"><option value="default">기본 목록</option><option value="unread">안 읽은 메시지 100개 초과 · 99+</option><option value="read">모든 메시지 확인 · 읽지 않은 대화 없음</option><option value="empty">대화 없음</option><option value="guest">비로그인</option><option value="error">조회 실패</option><option value="loading">불러오는 중</option><option value="missing">탈퇴 회원 · 삭제된 공고</option><option value="long">긴 제목 · 메시지</option></select></label><p>필터는 고정 예시 목록의 표시만 바꿉니다. 대화·알림·로그인·하단 탭 이동은 실제 Expo에서 연결합니다.</p><p>메시지 시간과 안 읽은 개수는 표시 예시이며 실제 수신·읽음 처리는 연결하지 않았습니다. 사진·이름·메시지는 합성 예시입니다.</p></aside>
+<script>
+const icons={home:'<path d="m3 10 9-7 9 7v10h-6v-6H9v6H3z"/>',search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',chat:'<path d="M11 39 8 48l12-3a20 20 0 1 0-9-6Z"/><circle cx="19" cy="27" r="1"/><circle cx="27" cy="27" r="1"/><circle cx="35" cy="27" r="1"/>',me:'<circle cx="12" cy="7" r="4"/><path d="M4 21v-3c0-6 16-6 16 0v3z"/>'};const svg=k=>'<svg viewBox="'+(k==='chat'?'0 0 54 54':'0 0 24 24')+'" aria-hidden="true"'+(k==='chat'?' style="stroke-width:3.5"':'')+'>'+icons[k]+'</svg>';
+document.querySelector('.nav').innerHTML=['홈','둘러보기','채팅','나'].map((v,i)=>'<button aria-label="'+v+'" '+(i===2?'class="active" aria-current="page"':'')+'>'+(i===2?'<svg viewBox="0 0 54 54" aria-hidden="true" style="stroke-width:3.5"><path d="M11 39 8 48l12-3a20 20 0 1 0-9-6Z"/><circle cx="19" cy="27" r="1"/><circle cx="27" cy="27" r="1"/><circle cx="35" cy="27" r="1"/></svg>':svg(['home','search','chat','me'][i]))+'</button>').join('');
+let filter='전체';const rows=[{name:'김*미',age:27,sweetness:17,unread:1,timeLabel:"오후 2:30",state:'대화 중',kind:'active',post:'삼청동 미술관 천천히 같이 볼 분',message:'네, 토요일 오후 2시에 만나요!',photo:'companion-profile.webp'},{name:'이민정',age:31,sweetness:19,unread:12,timeLabel:"어제",state:'확정',kind:'confirmed',post:'가을 전시 보고 차 한 잔 함께해요',message:'미술관 입구에서 뵐게요.',photo:'provided-profile-display.webp'},{generatedPhoto:true,name:'박*연',age:25,sweetness:15,unread:0,timeLabel:"10월 11일",state:'종료',kind:'',post:'주말에 한강 산책 함께하실 분',message:'함께해서 즐거웠어요. 감사합니다!',photo:'companion-profile.webp'}];
+function unreadCount(r,scene){if(scene==='read')return 0;return scene==='unread'&&r.unread>1?108:r.unread;}
+function render(){const scene=document.querySelector('#scene').value;const bell=document.querySelector('.top .icon');const hasUnread=['default','unread','missing','long'].includes(scene)&&rows.some(r=>r.unread>0);bell.classList.toggle('has-unread',hasUnread);bell.setAttribute('aria-label',hasUnread?'알림, 새 알림 있음':'알림');document.querySelector('.filters').hidden=scene==='guest';document.querySelector('.top .icon').hidden=scene==='guest';document.querySelector('.filters').innerHTML=['전체','대화 중','확정','종료'].map(v=>'<button class="filter" aria-pressed="'+(filter===v)+'">'+v+'</button>').join('');let content='';if(['guest','empty','error'].includes(scene)){const texts={guest:['로그인 후 대화를 확인해요','동행과의 대화를 이어가 보세요.','로그인'],empty:['아직 대화가 없어요','마음에 드는 공고에 첫 메시지를 보내면 대화가 시작돼요.','동행 둘러보기'],error:['대화를 불러오지 못했어요','잠시 후 다시 시도해 주세요.','다시 시도']}[scene];content='<section class="empty">'+svg('chat')+'<h2>'+texts[0]+'</h2><p>'+texts[1]+'</p><button class="cta">'+texts[2]+'</button></section>';}else if(scene==='loading'){content='<div role="status" aria-label="대화를 불러오는 중">'+Array(4).fill('<div class="loading" aria-hidden="true"><i></i><span></span></div>').join('')+'</div>';}else{content=rows.filter(r=>filter==='전체'||r.state===filter).map((r,i)=>'<button class="chat-row" aria-label="'+(scene==='missing'?'탈퇴한 사용자':r.name)+' 대화방'+(unreadCount(r,scene)?', 안 읽은 메시지 '+unreadCount(r,scene)+'개':'')+'">'+(r.generatedPhoto?'<span class="avatar generated-avatar" role="img" aria-label="상대 프로필 사진" '+(scene==='missing'?'hidden':'')+'></span>':'<img class="avatar" src="../유미당-홈-소스/yumidang-home/assets/'+r.photo+'" alt="상대 프로필 사진" '+(scene==='missing'?'hidden':'')+'>')+'<span class="copy"><span class="post-heading"><p class="post">'+(scene==='missing'?'삭제된 공고':scene==='long'?'삼청동 국립현대미술관 기획전을 천천히 둘러보고 근처 카페에서 이야기 나눠요':r.post)+'</p><span class="badge '+r.kind+'">'+({confirmed:'동행 확정',active:'대화 중'}[r.kind]||'모집 종료')+'</span></span><span class="row-top"><span class="name">'+(scene==='missing'?'탈퇴한 사용자입니다.':r.name)+'</span>'+(scene==='missing'?'':'<span class="age">(만 '+r.age+'세)</span><span class="sweetness">당도 '+r.sweetness+'</span>')+'</span><span class="message-line"><p class="message">'+(scene==='long'?'전시를 모두 둘러본 뒤에 근처 카페에서 만나서 이야기 나누면 좋겠어요. 토요일에 뵙겠습니다.':r.message)+'</p><span class="message-meta"><span class="message-time">'+r.timeLabel+'</span>'+(unreadCount(r,scene)?'<span class="unread-count" aria-hidden="true">'+(unreadCount(r,scene)>99?'99+':unreadCount(r,scene))+'</span>':'')+'</span>'+'</span></span></button>').join('');}document.querySelector('#content').innerHTML=content;}
+document.querySelector('#scene').addEventListener('change',render);document.querySelector('.filters').addEventListener('click',e=>{if(e.target.matches('button')){filter=e.target.textContent;render();}});render();
+</script>
+<style>
+.chat-row{touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#room-actions{position:fixed;inset:auto;margin:0;transform:translate(-50%,-50%);width:300px;max-width:calc(100vw - 48px);padding:16px;border:0;border-radius:12px;background:#fff;box-shadow:0 5px 20px rgba(76,47,125,.10);color:#172033}
+#room-actions::backdrop{background:#17203318}
+#room-actions button{display:block;width:100%;min-height:44px;text-align:left;padding:10px 12px;border:0;border-radius:8px;background:none;color:#172033;font-size:14px}
+#room-actions button:hover{background:#f5f5f7}
+#room-actions h2{margin:4px 12px 14px;font-size:20px;line-height:1.4;font-weight:700;overflow-wrap:anywhere}
+#room-actions button:focus-visible{outline:2px solid #9195a0;outline-offset:-2px}
+#room-confirm{position:fixed;inset:auto;margin:0;transform:translate(-50%,-50%);width:340px;max-width:calc(100vw - 32px);border:0;border-radius:16px;padding:22px;background:white;color:#172033;box-shadow:0 8px 28px rgba(76,47,125,.12)}
+#room-confirm::backdrop{background:#17203355}#room-confirm h2{font-size:18px;margin:0 0 10px}#room-confirm p{font-size:14px;color:#6b7280}.room-confirm-actions{display:flex;gap:8px;margin-top:18px}.room-confirm-actions button{flex:1;min-height:44px;border:1px solid #e3dfeb;border-radius:12px;background:#fff;color:#626574}.room-confirm-actions button:last-child{background:#852cff;border-color:#852cff;color:white}
+</style>
+<dialog id="room-actions" aria-labelledby="room-actions-name"><h2 id="room-actions-name"></h2><button data-room-action="알림 끄기" aria-pressed="false">대화방 알림끄기</button><button data-room-action="차단">차단</button><button data-room-action="신고">신고</button><button data-room-action="대화방 나가기">나가기</button></dialog>
+<dialog id="room-confirm" aria-labelledby="room-confirm-title"><h2 id="room-confirm-title"></h2><p></p><div class="room-confirm-actions"><button data-room-close>닫기</button><button data-room-confirm>확인</button></div></dialog>
+<script>
+(()=>{
+const list=document.querySelector('#content'),menu=document.querySelector('#room-actions'),confirm=document.querySelector('#room-confirm');let timer=null,press=null,selected=null,suppress=false;
+const status=document.createElement('p');status.className='note';status.setAttribute('role','status');document.querySelector('.review-panel').append(status);
+const clear=()=>{clearTimeout(timer);timer=null;press=null;};
+function open(row){selected=row;suppress=true;menu.querySelector('h2').textContent=row.querySelector('.name').textContent;menu.showModal();const p=document.querySelector('.phone').getBoundingClientRect();menu.style.left=(p.left+p.width/2)+'px';menu.style.top=((Math.max(0,p.top)+Math.min(innerHeight,p.bottom))/2)+'px';}
+list.addEventListener('pointerdown',e=>{const row=e.target.closest('.chat-row');if(!row||e.button!==0)return;clear();suppress=false;press={x:e.clientX,y:e.clientY};timer=setTimeout(()=>{clear();open(row);},500);});
+list.addEventListener('pointermove',e=>{if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)>10)clear();});
+for(const type of ['pointerup','pointercancel'])document.addEventListener(type,clear);
+list.addEventListener('scroll',clear,{passive:true});window.addEventListener('blur',clear);
+list.addEventListener('click',e=>{if(suppress){e.preventDefault();e.stopImmediatePropagation();suppress=false;}},true);
+list.addEventListener('contextmenu',e=>{const row=e.target.closest('.chat-row');if(row){e.preventDefault();clear();if(!menu.open)open(row);}});
+list.addEventListener('keydown',e=>{if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10')){const row=e.target.closest('.chat-row');if(row){e.preventDefault();open(row);}}});
+menu.addEventListener('click',e=>{const b=e.target.closest('[data-room-action]');if(!b){if(e.target===menu)menu.close();return;}const action=b.dataset.roomAction;if(action==='알림 끄기'){const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(on));b.textContent=on?'대화방 알림켜기':'대화방 알림끄기';status.textContent=selected.getAttribute('aria-label')+' · '+b.textContent+' 전환 예시입니다. 실제 알림 설정은 변경하지 않습니다.';return;}menu.close();const texts={'신고':'상황 설명과 제출 가능한 캡처를 준비해 주세요. 신고 접수 후 내용을 검토해요.','차단':'차단은 접촉을 막고 확정 약속 취소와 별개입니다. 해제해도 종료된 신청은 자동 복원되지 않습니다.','대화방 나가기':'내 목록만 숨기며 상대 목록과 대화 기록은 유지합니다.'};confirm.querySelector('h2').textContent=action;confirm.querySelector('p').textContent=texts[action];confirm.querySelector('[data-room-close]').textContent=action==='대화방 나가기'?'대화방 유지':'닫기';confirm.querySelector('[data-room-confirm]').textContent=action==='대화방 나가기'?'나가기':action;confirm.showModal();const r=document.querySelector('.phone').getBoundingClientRect();confirm.style.left=(r.left+r.width/2)+'px';confirm.style.top=((Math.max(0,r.top)+Math.min(innerHeight,r.bottom))/2)+'px';});
+confirm.querySelector('[data-room-close]').onclick=()=>confirm.close();confirm.querySelector('[data-room-confirm]').onclick=()=>{status.textContent=selected.getAttribute('aria-label')+' · '+confirm.querySelector('h2').textContent+' 이벤트 연결 예시입니다. 실제 처리하지 않습니다.';confirm.close();};
+for(const d of [menu,confirm])d.addEventListener('close',()=>{if(!menu.open&&!confirm.open)selected?.focus();});
+})();
+</script>
+<style id="chat-icon-optical-alignment">
+.nav button[aria-label="채팅"] svg{transform:translateY(-1px)}
+</style>
+<style id="bell-size-state">
+/* Shared bell visual size; notification dots and hit areas stay unchanged. */
+.phone .top .icon svg{width:18px;height:18px}
+.phone .top .icon.has-unread{color:#852CFF}
+
+/* Shared unread indicator: 6px red dot on the bell. */
+.phone .top .icon.has-unread::after{width:6px;height:6px;border-radius:50%;background:#EF4444;box-shadow:none;top:calc(50% - 11px);right:calc(50% - 11px)}
+</style>
+<style id="nav-unread-indicator">
+.nav button[aria-label="채팅"]{position:relative}
+.nav button[aria-label="채팅"].has-unread::after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:#EF4444;left:calc(50% + 7px);top:calc(50% - 12px);pointer-events:none}
+</style>
+<script id="nav-unread-preview">
+(()=>{
+const chat=document.querySelector('.nav button[aria-label="채팅"]');
+const panel=document.querySelector('.review-panel');
+if(!chat||!panel)return;
+const label=document.createElement('label');label.style.display='block';label.style.marginTop='12px';
+const control=document.createElement('input');control.type='checkbox';control.checked=true;
+label.append(control,document.createTextNode(' 읽지 않은 채팅 메시지 있음'));panel.append(label);
+const hint=document.createElement('p');hint.textContent='바텀바 알림 점의 표시 예시입니다. 실제 메시지 수신·읽음 상태는 Expo에서 연결합니다.';panel.append(hint);
+function update(){
+const guest=document.querySelector('#scene')?.value==='guest';
+const allRead=document.querySelector('#scene')?.value==='read';
+control.disabled=guest||allRead;
+const visible=control.checked&&!guest&&!allRead;
+chat.classList.toggle('has-unread',visible);
+chat.setAttribute('aria-description',visible?'읽지 않은 메시지 있음':'');
+}
+control.addEventListener('change',update);document.addEventListener('change',update);update();
+})();
+</script>
+</html>

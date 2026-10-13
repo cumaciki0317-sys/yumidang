@@ -1,0 +1,26 @@
+{
+  "sourceChecks": {
+    "components.css unchanged": true,
+    "tokens.css unchanged": true,
+    "design-tokens.json unchanged": true,
+    "common-navigation.css unchanged": true,
+    "press-feedback.css unchanged": true,
+    "press-feedback.js unchanged": true,
+    "reference-home.css unchanged": true,
+    "reference-browse.css unchanged": true,
+    "native-examples.html unchanged": true,
+    "native-examples.js unchanged": true,
+    "home snapshot exact": true,
+    "browse snapshot exact": true,
+    "embedded tokens CSS press unchanged": true,
+    "22 gallery examples retained": true,
+    "scope addendum present all guides": true
+  },
+  "browserVisualQA": "NOT_RUN",
+  "backendTests": "NOT_RUN",
+  "scope": "Documentation, source snapshot refresh, and current policy-visible static gallery fixtures only",
+  "inlineJavaScriptSyntax": "PASS",
+  "sourceManifestHashes": "PASS",
+  "historicalReport": true,
+  "currentValidation": "home41-sync-validation.json"
+}

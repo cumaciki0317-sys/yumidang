@@ -1,0 +1,12 @@
+{
+  "basis": "Native CSS arithmetic at default text size, not browser measurements",
+  "baselineToolsHeight": 209.94285699999998,
+  "listViewportAt360x800": 590.057143,
+  "lastCardBottomClearance": 140,
+  "searchToFilters": 9.142857,
+  "filtersToSort": 9.142857,
+  "sortToCount": 9.142857,
+  "countToCards": 9.142857,
+  "safeAreaAdditional": true,
+  "browserQA": false
+}

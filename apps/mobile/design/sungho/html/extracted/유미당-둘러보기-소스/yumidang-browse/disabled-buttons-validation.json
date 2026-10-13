@@ -1,0 +1,14 @@
+{
+  "existingDistinctAssertions": 213,
+  "disabledSourceAssertions": 18,
+  "disabledOpacity": 0.43,
+  "originalPaintPreserved": true,
+  "newDisabledConditions": false,
+  "nativeDisabledActivationPreserved": true,
+  "pressCloneOpacity": 1,
+  "ageSliderDisabledOpacity": 0.45,
+  "galleryGroups": 22,
+  "galleryAddedDisabledExamples": 8,
+  "browserVisualQA": false,
+  "supplementalDisabledLifecycleAssertions": 11
+}

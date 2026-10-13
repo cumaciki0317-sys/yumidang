@@ -1,0 +1,38 @@
+{
+  "css_only": true,
+  "image_box_px": 20.19047619,
+  "radius_px": 4,
+  "font_size_px": 19.285714288,
+  "wordmark_line_height": 1,
+  "alignment": "flex center; no translation",
+  "font_metric_ink_center_delta_px": 0.03766741071875,
+  "original_asset_bytes_unchanged": true,
+  "browser_rendering": "NOT_RUN",
+  "source_hash_checks": [
+    {
+      "file": "adaptive.css",
+      "sha256": "5ea0acbc7fa5d44fb02b6d8f912974a475d4a5bf66ac5152bb78bf4d708f65f0",
+      "marker": "\n/* Header BI and wordmark"
+    },
+    {
+      "file": "adaptive.js",
+      "sha256": "cdc3c54461d13b53f4bba421fad56bdd8c12a894dd9b118b4097eda299cf316b",
+      "marker": null
+    },
+    {
+      "file": "home-state.js",
+      "sha256": "2a351b9c74c605292047481de186c08db107d44a3a04761e396d347ad622568b",
+      "marker": null
+    },
+    {
+      "file": "index.html",
+      "sha256": "42f2b9aa37f26656fde880c53cd30cda577682113f662f7bbed3308ed70636ee",
+      "marker": null
+    },
+    {
+      "file": "assets/brand-mark-64.png",
+      "sha256": "854fe722bbcf0fcc478a89548525cc5bd1e839db1dc51c070b72155c92f39ecc",
+      "marker": null
+    }
+  ]
+}

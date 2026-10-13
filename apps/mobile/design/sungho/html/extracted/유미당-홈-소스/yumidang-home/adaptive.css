@@ -1,0 +1,110 @@
+/* Native CSS-pixel adaptive layout. Reference preview width is 390px; tested small width 320px; cap 430px.
+   Widths flow; typography uses rem for text preferences; artwork/icons retain px. */
+:root{--app-reference-width:390px;--app-tested-min-width:320px;--app-max-width:430px;--page-inset-start:16px;--page-inset-end:15.619047619px;--home-row-gap:8.304761905px;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--home-footer-space:67.215238095px;--title-content-gap:8.284761905px}
+html{font-size:100%;height:auto;min-height:100%;overflow:auto}
+body{display:block;height:auto;min-height:100%;overflow:auto;background:#f2f2f6}
+.demo-layout{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:24px;padding:0;width:100%}
+.demo-phone{flex:none;width:100%;max-width:var(--app-max-width);border-radius:0;overflow:hidden}
+.demo-panel{width:min(100%,480px);padding:20px;flex:none}
+#viewport{position:relative;width:100%;height:100vh;height:100dvh;max-height:none;overflow:hidden;isolation:isolate}
+.app-scroll{position:absolute;inset:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.content-space{position:relative;min-height:100%;width:100%;overflow:visible}
+.screen{position:relative;inset:auto;width:100%;height:auto;min-height:100%;transform:none;padding:var(--safe-top) calc(var(--page-inset-end) + env(safe-area-inset-right,0px)) calc(var(--home-footer-space) + var(--safe-bottom)) calc(var(--page-inset-start) + env(safe-area-inset-left,0px));overflow:visible}
+.screen>header{position:relative;min-height:3.047619048rem}
+.brand{left:.761904762px;top:11.047619048px;white-space:nowrap}
+.login{left:auto;right:.761904762px}
+.bell{left:auto;right:.761904762px}
+.account-profile{right:29.047619048px;max-width:calc(100% - 115px)}
+.account-name{max-width:4.214285714rem}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-left:1.142857143px;margin-right:.761904762px;margin-bottom:var(--title-content-gap);min-width:0}
+.section-heading h2{position:static;inset:auto;min-width:0;line-height:1.3;overflow-wrap:anywhere}
+.section-heading .all-events{position:relative;inset:auto;flex:none;display:inline-flex;align-items:center;gap:3.428571429px;white-space:nowrap}
+.section-heading .chevron{margin:0;flex:none}
+.hero.event-carousel{position:relative;inset:auto;width:auto;margin:0 .761904762px 0 .380952381px;height:auto;min-height:10.119047619rem}
+.event-track{height:auto;min-height:10.119047619rem;align-items:stretch}
+.event-card{height:auto;min-height:10.119047619rem}
+.event-image{min-height:10.119047619rem;height:100%}
+.event-image .festival-art{position:absolute;inset:0}
+.event-art img{flex:none}
+.event-copy strong{overflow-wrap:anywhere}
+.home-appointments{margin-top:8.228214286px}
+#appointment-placeholder,.appointment-hit{position:relative;inset:auto;display:block;width:100%;height:auto;min-height:136.6875px}
+#appointment-placeholder{display:grid;place-items:center;padding:15.238095238px 11.428571429px}
+.appointment .placeholder-copy{position:static;inset:auto;width:100%}
+.appointment .placeholder-copy h3{white-space:pre-wrap;padding:0;overflow-wrap:anywhere}
+#private-slot:empty{display:none}
+.appointment-hit>.appointment{position:relative;inset:auto;width:100%;height:auto;min-height:136.6875px}
+.appointment-action{display:grid;grid-template-columns:minmax(0,1fr);gap:10.571428571px;padding:16.380952381px 12.952380952px 11.428571429px}
+.appointment-main{display:grid;grid-template-columns:41.904761905px 6.857142857px 53.714285714px 11.809523809px minmax(0,1fr);align-items:start;margin-left:4.952380953px;min-width:0}
+.appointment .countdown{position:relative;inset:auto;grid-column:1;margin-top:.380952381px}
+.appointment .museum-disc{position:relative;inset:auto;grid-column:3;margin-top:.761904762px}
+.appointment .appointment-text{position:relative;inset:auto;grid-column:5;min-width:0}
+.appointment-text h3{white-space:normal;overflow-wrap:anywhere;line-height:1.55}
+.detail-line{line-height:1.451612903;align-items:center;min-width:0}
+.detail-line svg{flex:none}
+.detail-line span{overflow-wrap:anywhere}
+.appointment .companion{position:relative;inset:auto;width:100%;height:auto;min-height:35.047619048px;display:flex;align-items:center}
+.avatars{height:24.380952381px}
+.companion-text{min-width:0;flex:1;white-space:normal;overflow-wrap:anywhere}
+.appointment-more{flex:none;white-space:normal;max-width:6.5em;padding-right:9.142857143px;padding-left:14.095238095px;line-height:1.230769231}
+.home-categories{margin-top:8.439226190px}
+.home-categories .section-heading{margin-bottom:8.439226190px}
+.categories{position:relative;inset:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(53.333333333px,auto);gap:var(--home-row-gap) 9.142857143px;margin:0 .761904762px 0 1.523809524px}
+.category{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2.285714286px;padding:9.142857143px 2px 6.323809523px}
+.category img{position:static;inset:auto;transform:none;display:block;flex:none;height:23.238095238px;max-width:27.428571429px}
+.category span{position:static;inset:auto;display:block;width:100%;font-size:0.705357143rem;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+.home-banner{margin-top:var(--home-row-gap);margin-left:1.523809524px}
+.women{position:relative;inset:auto;width:calc(100% - 108.190476190px);min-height:53.333333333px;height:auto;min-width:0;padding:0;align-items:center}
+.women-disc{flex:none}.women-text{min-width:0;margin-right:14px;padding:5px 0}
+.women-text strong,.women-text p{overflow-wrap:anywhere}
+.women .chevron{top:50%;right:14.857142857px;margin-top:-3.047619048px}
+.app-dock{position:absolute;left:0;bottom:0;width:100%;height:calc(130px + var(--safe-bottom));transform:none;z-index:10;pointer-events:none}
+.app-dock .nav{left:calc(10.285714286px + env(safe-area-inset-left,0px));right:calc(9.904761905px + env(safe-area-inset-right,0px));width:auto;bottom:calc(12px + var(--safe-bottom));height:48px}
+.app-dock .robot{left:auto;right:calc(65.523809524px + env(safe-area-inset-right,0px));bottom:calc(72.761904762px + var(--safe-bottom))}
+.app-dock .add{left:auto;right:calc(14.476190476px + env(safe-area-inset-right,0px));bottom:calc(72.571428572px + var(--safe-bottom))}
+@media(min-width:900px){.demo-layout{flex-direction:row;align-items:flex-start;justify-content:center}.demo-panel{width:330px}}
+@media(max-width:340px){.women-text{margin-left:6px}.women-disc{margin-left:7px}.women .chevron{right:7px}.women-text{margin-right:9px}}
+/* Text growth may add lines; badges and detail text are never vertically clipped. */
+.appointment-more{white-space:nowrap;max-width:none}
+.event-badges{line-height:1.230769231}
+.sample-tag{line-height:1.454545455}
+/* Include converted border widths in the baseline's 131.05/53.33px box budgets. */
+.appointment-action{gap:9.809523809px}
+.category{padding-bottom:5.561904762px}
+/* Keep baseline boxes while allowing larger text to enlarge controls safely. */
+.brand{height:auto;min-height:28.190476190px}
+.login{width:auto;min-width:60.190476190px;height:auto;min-height:28.952380952px;padding:6.095238095px 12px;line-height:1.4}
+.account-profile{height:auto;min-height:28.952380952px;max-width:calc(100% - 6.5rem - 30px)}
+.appointment-main{grid-template-columns:max-content 6.857142857px 53.714285714px 11.809523809px minmax(0,1fr)}
+.appointment .countdown{width:auto;min-width:41.904761905px;height:auto;min-height:24.380952381px;padding:3px 6px}
+.women{width:calc(100% - 106.666666666px)}
+.login{white-space:nowrap}
+.women-text{font-size:0.800595238rem;line-height:normal}
+.women-text{margin-right:25px}
+.appointment .companion{flex-wrap:wrap;row-gap:6px}
+.companion-text{flex:1 1 6em}
+
+/* Height growth has one budget. Natural sizes and section gaps remain the minimum.
+   The appointment card itself keeps its pre-growth natural geometry. */
+.categories{grid-template-rows:var(--home-category-rows,none)}
+.category{padding-top:calc(9.142857143px + var(--home-row-pad,0px));padding-bottom:calc(5.561904762px + var(--home-row-pad,0px))}
+.home-appointments{margin-top:calc(8.228214286px + var(--home-section-growth,0px))}
+.home-categories{margin-top:calc(8.439226190px + var(--home-section-growth,0px))}
+/* Same column widths as the existing card: icon / text / unchanged D-day badge.
+   Only placement changes; no transform, text scaling or viewport-height sizing. */
+.appointment-main{grid-template-columns:53.714285714px 11.809523809px minmax(0,1fr) 6.857142857px max-content}
+.appointment .museum-disc{grid-column:1;grid-row:1}
+.appointment .appointment-text{grid-column:3;grid-row:1}
+.appointment .countdown{grid-column:5;grid-row:1;justify-self:end}
+
+/* Provided BI, optimized at 3x display resolution; unchanged header image box. */
+.brand img{object-fit:contain}
+
+/* Header BI and wordmark share one centered line box; original sizes stay fixed. */
+.brand{align-items:center;line-height:1}
+.brand img{display:block;flex:none;border-radius:4px}
+
+/* Keep keyboard-focused content clear of the fixed dock in short viewports. */
+.app-scroll{scroll-padding-top:12px;scroll-padding-bottom:calc(130px + var(--safe-bottom))}
+.app-scroll button{scroll-margin-block:8px}
+.home-event-placeholder button{min-height:44px}

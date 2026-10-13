@@ -1,0 +1,7 @@
+/* Current native responsive navigation, on the existing glass/dock base. */
+:root{--app-reference-width:390px;--app-tested-min-width:320px;--app-max-width:430px;--home-row-gap:8.304761905px;--safe-bottom:env(safe-area-inset-bottom,0px)}
+.app-dock .nav{left:calc(10.285714286px + env(safe-area-inset-left,0px));right:calc(9.904761905px + env(safe-area-inset-right,0px));width:auto;bottom:calc(12px + var(--safe-bottom));height:48px;border-radius:25.142857143px;background:rgba(255,255,255,.8);opacity:1}
+.app-dock .nav button{color:#6B7280;padding:0;gap:0;flex-direction:row;align-items:center;justify-content:center}
+.app-dock .nav img,.app-dock .nav svg{width:24.380952381px;height:24.761904762px;flex:none}
+.app-dock .nav button.active{color:#852CFF}
+/* Existing .96/100ms feedback, unchanged hit area/color. No artwork scaling. */

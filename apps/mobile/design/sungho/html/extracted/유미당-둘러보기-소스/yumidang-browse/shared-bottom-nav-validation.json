@@ -1,0 +1,37 @@
+{
+  "source_baseline_versions": {
+    "html": 11,
+    "zip": 10
+  },
+  "shared_variable": "--home-row-gap:21.8px",
+  "nav_bottom_before_display_px": 8,
+  "nav_bottom_after_display_px": 8.304761904761905,
+  "artwork_dimensions": {
+    "left": 27,
+    "width": 892,
+    "height": 118,
+    "border_radius": 66,
+    "icon_width": 64,
+    "icon_height": 65
+  },
+  "display_dimensions": {
+    "left": 10.285714285714286,
+    "width": 339.8095238095238,
+    "height": 44.95238095238095,
+    "icon_width": 24.38095238095238,
+    "icon_height": 24.761904761904763
+  },
+  "background": "rgba(255,255,255,.8)",
+  "overall_opacity": 1,
+  "columns": 4,
+  "visible_text_labels": false,
+  "selected_item": "둘러보기",
+  "active_color": "#852CFF",
+  "inactive_color": "#6B7280",
+  "press_scale": 0.96,
+  "press_duration_ms": 100,
+  "scroll_under_dock_preserved": true,
+  "filter_sheet_source_unchanged": true,
+  "safe_area_note": "Fixed 360x800 preview base spacing only; no new device safe-area rule. Existing filter footer safe-area padding preserved.",
+  "browser_visual_qa": false
+}

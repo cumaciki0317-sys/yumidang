@@ -1,0 +1,12 @@
+{
+  "name": "이민정",
+  "display_font_px": 12.428571428571429,
+  "weight": 700,
+  "color": "#852CFF",
+  "name_advance_display_px": 32.22446986607143,
+  "name_ink_to_bell_hitarea_display_px": 9.163318452380953,
+  "profile_and_bell_center_artwork_px": 69.5,
+  "verification": "Source geometry and Bold font glyph metrics, not browser QA",
+  "profile_group_right_artwork_px": 117.25,
+  "group_shift_left_display_px": 2
+}

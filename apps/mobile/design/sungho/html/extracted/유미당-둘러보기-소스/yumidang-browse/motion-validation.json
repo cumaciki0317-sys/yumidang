@@ -1,0 +1,20 @@
+{
+  "enter_ms": 280,
+  "exit_ms": 200,
+  "backdrop_fade": true,
+  "frame_bottom_clipped": true,
+  "reduced_motion": "immediate",
+  "mock_lifecycle_assertions": 27,
+  "paths": [
+    "X",
+    "backdrop",
+    "Escape cancel",
+    "Apply",
+    "external native close",
+    "rapid close/reopen",
+    "queued old close",
+    "reduced motion"
+  ],
+  "modal_and_scroll_lock_until_exit": true,
+  "browser_visual_qa": false
+}

@@ -1,0 +1,152 @@
+{
+  "scope": "design-only fixed fixtures; no business engine",
+  "baseline_versions": {
+    "homeHtml": 38,
+    "homeZip": 42,
+    "browseHtml": 31,
+    "browseZip": 31
+  },
+  "browser_qa": "NOT_RUN",
+  "tests": [
+    {
+      "test": "test-card-alignment.js",
+      "exit": 0,
+      "stdout": "Fixed natural card/D-day right/section gaps/optimized BI source contracts passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-card-press.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n470 combined press checks passed; persistent card paint identity and fixed hit area verified in mock DOM, not visual pixel comparison.",
+      "stderr": ""
+    },
+    {
+      "test": "test-current-design-contract.js",
+      "exit": 0,
+      "stdout": "Current approved CSS/fonts/glass/icons/nav/press source preservation passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-design-states.js",
+      "exit": 0,
+      "stdout": "Ongoing / event empty / retry design checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-disabled-buttons.js",
+      "exit": 0,
+      "stdout": "54 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n11 supplemental disabled lifecycle assertions passed (mock DOM only)",
+      "stderr": ""
+    },
+    {
+      "test": "test-event-data.js",
+      "exit": 0,
+      "stdout": "Five fixed event examples; no clock or polling checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-events.js",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/home/test-events.js:3:21)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/home/test-events.js:24:53)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:int"
+    },
+    {
+      "test": "test-header-brand.js",
+      "exit": 0,
+      "stdout": "Header-only alignment/radius; exact assets/layout/state/height-rule preservation passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-height-fit.js",
+      "exit": 0,
+      "stdout": "29012 height-budget checks and resize/state feedback harness passed; 40 matrix cases, NOT browser measurements.",
+      "stderr": ""
+    },
+    {
+      "test": "test-home-state.js",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(v)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/home/test-home-state.js:1:154)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/home/test-home-state.js:12:302)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js"
+    },
+    {
+      "test": "test-press-feedback.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)",
+      "stderr": ""
+    },
+    {
+      "test": "test-press-renderer.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\nNative visual identity and 6 source-style geometry variants passed; this is not browser layout verification.",
+      "stderr": ""
+    },
+    {
+      "test": "test-section-spacing.js",
+      "exit": 0,
+      "stdout": "7 adaptive baseline spacing checks passed; source/font arithmetic only.",
+      "stderr": ""
+    }
+  ],
+  "historical_baseline_failures": [
+    {
+      "test": "test-events.js",
+      "baseline_exit": 1,
+      "baseline_error": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-홈-소스/yumidang-home/test-events.js:3:21)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-홈-소스/yumidang-home/test-events.js:24:53)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+    },
+    {
+      "test": "test-home-state.js",
+      "baseline_exit": 1,
+      "baseline_error": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(v)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-홈-소스/yumidang-home/test-home-state.js:1:154)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-홈-소스/yumidang-home/test-home-state.js:12:302)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+    }
+  ],
+  "source_preservation": [
+    {
+      "file": "home-state.css",
+      "marker": "\n/* Additional review states",
+      "sha256": "3934420ba65ecf26a07f8a8465f9e782b11d8d43c2939809be1b795acf49d0db"
+    },
+    {
+      "file": "adaptive.css",
+      "marker": "\n/* Height growth has one budget.",
+      "sha256": "ed96bd3012d7332d80cb9c1b1ec7e0da51b65ab839de8af549a4e4600e0896cb"
+    },
+    {
+      "file": "press-feedback.css",
+      "marker": null,
+      "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198"
+    },
+    {
+      "file": "press-feedback.js",
+      "marker": null,
+      "sha256": "9fc4be4cfe2a36c6ab734e7fbaf75c0b42a88ca6d455a9a238da19125b8a490e"
+    }
+  ],
+  "retry_semantics": "press-only; success selected explicitly outside app; empty reset clears input only",
+  "home_gap_correction": {
+    "baseline_versions": {
+      "html": 40,
+      "zip": 44
+    },
+    "backup": "home-gap-backup-20261012T144135Z",
+    "card_geometry_restored": "Home39 natural height/padding; never grows by viewport height",
+    "max_row_growth": 12,
+    "max_section_gap_growth": 16,
+    "max_total_growth": 80,
+    "dday": "grid column5,row1,right; original font/centering",
+    "actual_browser": "NOT_RUN; Chromium socket permission blocked in prior same-session attempt",
+    "matrix": "height-fit-validation.json; synthetic geometry, not actual measurements",
+    "logo": "provided BI whole-art downsampled64x64PNG4419B; original1254x1254/1239336B unchanged"
+  },
+  "header_brand_update": {
+    "baseline_versions": {
+      "html": 41,
+      "zip": 45
+    },
+    "backup": "home-brand-backup-20261012T145340Z",
+    "changes": [
+      "brand line-height1 / flex center",
+      "BI block nonshrinking, radius4px"
+    ],
+    "preserved": "index,asset bytes,font sizes,card and height logic unchanged"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "sourceChecks": {
+    "home snapshot byte-identical": true,
+    "browse snapshot unchanged": true,
+    "components.css unchanged": true,
+    "tokens.css unchanged": true,
+    "design-tokens.json unchanged": true,
+    "common-navigation.css unchanged": true,
+    "press-feedback.css unchanged": true,
+    "press-feedback.js unchanged": true,
+    "reference-browse.css unchanged": true,
+    "native-examples.html unchanged": true,
+    "native-examples.js unchanged": true,
+    "manifest hashes": true,
+    "BI optimized bytes and hash": true,
+    "superseded card growth removed": true,
+    "Home gallery CSS only appends exact four canonical placement rules": true,
+    "all remaining gallery data unchanged": true,
+    "canonical right-aligned D-day in live sample": true
+  },
+  "sourceVersions": {
+    "homeHtml": 41,
+    "homeZip": 45,
+    "browseHtml": 32,
+    "browseZip": 32,
+    "buttonGalleryBase": 6
+  },
+  "browserVisualQA": "NOT_RUN",
+  "backendTests": "NOT_RUN",
+  "historicalReport": true,
+  "currentValidation": "home42-sync-validation.json"
+}

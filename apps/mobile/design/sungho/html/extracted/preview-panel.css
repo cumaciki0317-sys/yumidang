@@ -1,0 +1,17 @@
+/* Review tooling only. Do not import into Expo or service components. */
+.yd-preview-layout{display:grid!important;grid-template-columns:minmax(0,430px) 330px!important;gap:24px!important;align-items:start!important;justify-content:center!important;box-sizing:border-box;width:100%;max-width:none!important;margin:0!important;padding:0!important;overflow:visible!important;height:auto!important;min-height:100vh}
+.yd-preview-panel:not([hidden]){display:block!important;order:2;grid-column:2;grid-row:1;position:static!important;box-sizing:border-box;width:330px!important;max-width:100%!important;margin:0!important;padding:28px 20px!important;border:0!important;border-radius:0!important;background:#f5f4f8!important;color:#697080!important;font:14px/1.65 Pretendard,system-ui,sans-serif!important;overflow-wrap:anywhere;text-align:left!important}
+.yd-preview-panel .yd-preview-heading{margin:0 0 20px!important;padding:0!important;border:0!important;background:none!important}
+.yd-preview-panel .yd-preview-heading p{font-size:12px!important;color:#852cff!important;margin:0 0 4px!important}
+.yd-preview-panel .yd-preview-heading h2{font-size:24px!important;font-weight:700!important;color:#202033!important;line-height:1.4!important;margin:0!important}
+.yd-preview-panel .yd-preview-old-heading{display:none!important}
+.yd-preview-panel :is(section,fieldset){min-width:0;margin:20px 0 0!important;padding:16px 0 0!important;border:0!important;border-top:1px solid #dedce6!important;border-radius:0!important;background:transparent!important}
+.yd-preview-panel :is(h3,legend){font-size:14px!important;line-height:1.5!important;font-weight:600!important;color:#30303d!important;margin:0 0 10px!important;padding:0!important}
+.yd-preview-panel p{font-size:13px!important;line-height:1.65!important;margin:8px 0!important;color:#697080}
+.yd-preview-panel label{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px!important;padding:0!important;margin:12px 0!important;font-size:13px!important;color:#626574!important}
+.yd-preview-panel label:has(input:is([type=radio],[type=checkbox])){flex-direction:row!important;align-items:center!important;gap:8px!important;min-height:36px}
+.yd-preview-panel :is(select,input:not([type=radio]):not([type=checkbox]),button){box-sizing:border-box;width:100%!important;max-width:100%!important;min-height:44px!important;height:auto!important;padding:9px 12px!important;border:1px solid #d9d5e2!important;border-radius:10px!important;background:#fff!important;color:#30303d!important;font:14px/1.5 Pretendard,system-ui,sans-serif!important}
+.yd-preview-panel input:is([type=radio],[type=checkbox]){width:18px!important;height:18px!important;min-height:0!important;flex:none;accent-color:#852cff}
+.yd-preview-panel button{margin:6px 0!important;cursor:pointer}.yd-preview-panel button:disabled{opacity:.43}.yd-preview-panel :is(button,select,input):focus-visible{outline:2px solid #852cff;outline-offset:2px}
+.yd-preview-panel :is([role=status],.review-status){padding-top:12px;border-top:1px solid #dedce6}.yd-preview-panel [role=status]:empty{display:none}
+@media(max-width:799px){.yd-preview-layout{grid-template-columns:minmax(0,430px)!important;gap:0!important}.yd-preview-panel:not([hidden]){grid-column:1;grid-row:auto;width:100%!important;padding:24px 20px!important}}

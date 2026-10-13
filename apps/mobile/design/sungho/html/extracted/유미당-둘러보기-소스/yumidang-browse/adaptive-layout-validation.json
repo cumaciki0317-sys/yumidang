@@ -1,0 +1,266 @@
+{
+  "referenceWidth": 390,
+  "testedSmallWidth": 320,
+  "maxWidth": 430,
+  "hardMinWidth": false,
+  "checks": 127,
+  "textMatrix": [
+    {
+      "rootPx": 16,
+      "chipFontPx": 13,
+      "chipVisualPx": 32,
+      "hitPx": 38,
+      "hitGapPx": 1
+    },
+    {
+      "rootPx": 20,
+      "chipFontPx": 16.25,
+      "chipVisualPx": 32.75,
+      "hitPx": 38.75,
+      "hitGapPx": 1
+    },
+    {
+      "rootPx": 24,
+      "chipFontPx": 19.5,
+      "chipVisualPx": 37.3,
+      "hitPx": 43.3,
+      "hitGapPx": 1
+    },
+    {
+      "rootPx": 32,
+      "chipFontPx": 26,
+      "chipVisualPx": 46.4,
+      "hitPx": 52.4,
+      "hitGapPx": 1
+    }
+  ],
+  "extremeHeightBudget": {
+    "viewportHeightPx": 320,
+    "conservativeHeaderBudgetPx": 90,
+    "listReservePx": 120,
+    "remainingToolsPx": 110,
+    "basis": "Illustrative flex budget with a conservative header allocation; actual header and overflow were not browser measured."
+  },
+  "browserQA": false,
+  "browserBlocker": "Browser process launch was blocked by the execution environment; no retry or bypass attempted.",
+  "coverage": "Source contracts, CSS arithmetic and separately executed mock DOM. Matrix and 200% root-font values are not browser measurements. Root-font resizing is explicit; actual browser text-only zoom and OS font-setting behavior are not verified.",
+  "matrix": [
+    {
+      "viewport": [
+        320,
+        568
+      ],
+      "arithmeticFrame": [
+        320,
+        568
+      ],
+      "navWidth": 299.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        340,
+        740
+      ],
+      "arithmeticFrame": [
+        340,
+        740
+      ],
+      "navWidth": 319.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        360,
+        640
+      ],
+      "arithmeticFrame": [
+        360,
+        640
+      ],
+      "navWidth": 339.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "arithmeticFrame": [
+        360,
+        800
+      ],
+      "navWidth": 339.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        375,
+        812
+      ],
+      "arithmeticFrame": [
+        375,
+        812
+      ],
+      "navWidth": 354.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "arithmeticFrame": [
+        390,
+        844
+      ],
+      "navWidth": 369.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        412,
+        915
+      ],
+      "arithmeticFrame": [
+        412,
+        915
+      ],
+      "navWidth": 391.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "arithmeticFrame": [
+        430,
+        932
+      ],
+      "navWidth": 409.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        568,
+        320
+      ],
+      "arithmeticFrame": [
+        430,
+        320
+      ],
+      "navWidth": 409.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        430,
+        1200
+      ],
+      "arithmeticFrame": [
+        430,
+        1200
+      ],
+      "navWidth": 409.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        1024,
+        900
+      ],
+      "arithmeticFrame": [
+        430,
+        900
+      ],
+      "navWidth": 409.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    },
+    {
+      "viewport": [
+        1200,
+        900
+      ],
+      "arithmeticFrame": [
+        430,
+        900
+      ],
+      "navWidth": 409.809524,
+      "navHeight": 44.952381,
+      "navBottomGap": 8.304762
+    }
+  ],
+  "fontValues": {
+    ".browse-header h1": {
+      "defaultPx": 18.66666704,
+      "largeText200PercentPx": 37.33333408
+    },
+    ".search input": {
+      "defaultPx": 12.190476,
+      "largeText200PercentPx": 24.380952
+    },
+    ".chip": {
+      "defaultPx": 11.04761904,
+      "largeText200PercentPx": 22.09523808
+    },
+    ".card-title": {
+      "defaultPx": 14.09523808,
+      "largeText200PercentPx": 28.19047616
+    },
+    ".profile-name": {
+      "defaultPx": 10.66666704,
+      "largeText200PercentPx": 21.33333408
+    },
+    ".sheet-body h3": {
+      "defaultPx": 13,
+      "largeText200PercentPx": 26
+    },
+    ".options button": {
+      "defaultPx": 13,
+      "largeText200PercentPx": 26
+    },
+    ".age-box strong": {
+      "defaultPx": 14,
+      "largeText200PercentPx": 28
+    },
+    ".custom-dates label": {
+      "defaultPx": 12,
+      "largeText200PercentPx": 24
+    },
+    ".custom-dates input": {
+      "defaultPx": 13,
+      "largeText200PercentPx": 26
+    },
+    ".sheet-footer button": {
+      "defaultPx": 15,
+      "largeText200PercentPx": 30
+    }
+  },
+  "nativeSheet": {
+    "rootBaselinePx": 16,
+    "fontRem": 0.8125,
+    "defaultFontPx": 13,
+    "defaultVisualChipPx": 32,
+    "defaultHitRegionPx": 38,
+    "largeTextGrowth": true
+  },
+  "navigation": {
+    "backgroundAlpha": 0.8,
+    "bottomGapPx": 8.304762,
+    "safeAreaAdditional": true
+  },
+  "listEndClearancePx": 140,
+  "remaining": "Actual device/browser visual alignment, overflow, touch targets, scroll and landscape/large-text rendering remain unverified."
+}

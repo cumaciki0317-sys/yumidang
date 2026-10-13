@@ -1,0 +1,11 @@
+{
+  "category_labels": 16,
+  "color": "#6B7280",
+  "white_surface_contrast_ratio": 4.83,
+  "only_source_change": ".category span color",
+  "icon_assets_unchanged": true,
+  "font_sizes_weights_unchanged": true,
+  "layout_geometry_unchanged": true,
+  "browse_unchanged": true,
+  "browser_visual_qa": false
+}

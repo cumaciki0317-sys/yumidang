@@ -1,0 +1,16 @@
+/* Approved momentary press: shrink only; the native button retains its hit area. */
+button.press-rendering{background:transparent!important;border-color:transparent!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;outline-color:transparent!important;color:transparent!important;text-shadow:none!important}
+button.press-rendering:focus-visible{outline-color:var(--brand-primary)!important}
+button.press-rendering::before,button.press-rendering::after,button.press-rendering>:not(.press-visual){visibility:hidden!important}
+button>.press-visual{pointer-events:none!important;visibility:visible!important;transform-origin:center!important;transition:transform 100ms ease-out!important}
+button>.press-visual *{pointer-events:none!important}
+@media(prefers-reduced-motion:reduce){button>.press-visual{transition:none!important}}
+
+/* Approved disabled option 1: retain original paint and fade the native button once.
+   Native disabled blocks activation; the press lifecycle already excludes disabled buttons. */
+button:disabled{opacity:.43;cursor:not-allowed}
+
+/* No browser touch tint: the approved feedback changes geometry only. */
+button{-webkit-tap-highlight-color:transparent}
+.press-surface{pointer-events:none;transform-origin:center;transition:transform 100ms ease-out}
+@media(prefers-reduced-motion:reduce){.press-surface{transition:none}}

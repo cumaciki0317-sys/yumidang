@@ -1,0 +1,28 @@
+/* Shared values plus explicitly scoped screen tokens. See guide.md. */
+:root{
+ --yd-primary:#852CFF;--brand-primary:var(--yd-primary);--yd-text-secondary:#6B7280;--yd-error:#BD4465;
+ --yd-applied-bg:#F2E9FF;--yd-applied-border:#D8B9F5;
+ --yd-draft-bg:#F2EAFF;--yd-draft-border:#A16CFF;
+ --yd-top-filter-weight:400;--yd-filter-option-weight:400;--yd-filter-option-selected-weight:700;
+ --yd-font:Pretendard,sans-serif;--yd-disabled-opacity:.43;
+ --yd-press-scale:.96;--yd-press-duration:100ms;
+ --yd-focus-width:2px;--yd-focus-offset:0px;
+ --yd-input-height:44px;--yd-input-radius:12px;--yd-input-font:14px;--yd-input-padding-x:12px;
+ --yd-tab-min-height:44px;--yd-tab-font:14px;--yd-tab-indicator:2px;
+ --yd-sheet-enter:280ms;--yd-sheet-exit:200ms;
+ --yd-app-reference-width:390px;--yd-app-tested-min-width:320px;--yd-app-max-width:430px;--yd-safe-bottom:env(safe-area-inset-bottom,0px);
+ --yd-category-nav-gap:8.304761905px;--yd-nav-bottom:calc(12px + var(--yd-safe-bottom));
+ --yd-nav-height:48px;--yd-nav-left:10.285714286px;--yd-nav-right:9.904761905px;--yd-nav-radius:25.142857143px;
+ --yd-nav-icon-width:24.380952381px;--yd-nav-icon-height:24.761904762px;
+ --yd-nav-background:rgba(255,255,255,.8);--yd-nav-selected:var(--yd-primary);
+ /* Following values are preserved component observations, not new global tokens. */
+ --yd-observed-option-min-height:32px;--yd-observed-option-hit-inset-y:3px;--yd-observed-option-gap:7px;--yd-observed-option-radius:22px;
+ --yd-observed-footer-height:49px;--yd-observed-footer-radius:15px;
+ --yd-observed-solid-border:#E7E3ED;--yd-observed-field-border:#E0E2ED;
+
+}
+
+:root{--yd-chat-panel-radius:24px;--yd-chat-panel-shadow:0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025);--yd-chat-profile-font:13px;--yd-chat-notice-font:13px;--yd-chat-notice-line-height:20px;--yd-browse-filter-font:12px;--yd-event-filter-font:13px;--yd-event-title-font:16px;--yd-event-meta-font:14px;--yd-event-footer-height:48px;--yd-home-appointment-min-height:136.6875px}
+
+/* 승인 세 화면 및 기존 화면 확장 잠정 검토용; 의미별 상태 스타일을 대체하지 않는다. */
+:root{--yd-floating-canvas:#FAF8FE;--yd-floating-surface:#FFFFFF;--yd-floating-shadow:0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025);--yd-floating-nav-shadow:0 5px 20px rgba(76,47,125,.10);--yd-ticket-radius:20px;--yd-ticket-padding-x:24px;--yd-ticket-divider:#DCD2EB}

@@ -1,0 +1,11 @@
+{
+  "top_filter_labels_weight": 400,
+  "top_filter_applied_labels_weight": 400,
+  "filter_title_and_section_headings_weight": 400,
+  "unselected_options_weight": 400,
+  "selected_options_weight": 700,
+  "cta_weights_unchanged": true,
+  "selection_classes_and_aria_pressed_preserved": true,
+  "toggle_reset_apply_reopen_checks": 23,
+  "browser_visual_qa": false
+}

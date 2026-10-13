@@ -1,0 +1,582 @@
+{
+  "method": "pure budget arithmetic and synthetic DOM geometry; not browser layout",
+  "caps": {
+    "total": 80,
+    "each_category_row": 12,
+    "each_section_gap": 16,
+    "appointment": 0
+  },
+  "matrix": [
+    {
+      "width": 320,
+      "height": 568,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 846.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 904.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 667,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 846.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 667,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 904.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 800,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 846.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 800,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 904.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 846.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 844,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 904.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 320,
+      "height": 932,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 846.7,
+      "budget": 80,
+      "row": 12,
+      "sectionGap": 16,
+      "used": 80,
+      "mode": "expanded"
+    },
+    {
+      "width": 320,
+      "height": 932,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 904.7,
+      "budget": 26.29,
+      "row": 3.94,
+      "sectionGap": 5.25,
+      "used": 26.259999999999998,
+      "mode": "expanded"
+    },
+    {
+      "width": 360,
+      "height": 568,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 820.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 568,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 878.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 667,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 820.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 667,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 878.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 820.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 878.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 844,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 820.7,
+      "budget": 22.29,
+      "row": 3.34,
+      "sectionGap": 4.45,
+      "used": 22.259999999999998,
+      "mode": "expanded"
+    },
+    {
+      "width": 360,
+      "height": 844,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 878.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 360,
+      "height": 932,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 820.7,
+      "budget": 80,
+      "row": 12,
+      "sectionGap": 16,
+      "used": 80,
+      "mode": "expanded"
+    },
+    {
+      "width": 360,
+      "height": 932,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 878.7,
+      "budget": 52.29,
+      "row": 7.84,
+      "sectionGap": 10.45,
+      "used": 52.26,
+      "mode": "expanded"
+    },
+    {
+      "width": 390,
+      "height": 568,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 568,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 667,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 667,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 800,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 800,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 34.29,
+      "row": 5.14,
+      "sectionGap": 6.85,
+      "used": 34.26,
+      "mode": "expanded"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 390,
+      "height": 932,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 80,
+      "row": 12,
+      "sectionGap": 16,
+      "used": 80,
+      "mode": "expanded"
+    },
+    {
+      "width": 390,
+      "height": 932,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 64.29,
+      "row": 9.64,
+      "sectionGap": 12.85,
+      "used": 64.26,
+      "mode": "expanded"
+    },
+    {
+      "width": 430,
+      "height": 568,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 568,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 667,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 667,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 800,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 800,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 844,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 34.29,
+      "row": 5.14,
+      "sectionGap": 6.85,
+      "used": 34.26,
+      "mode": "expanded"
+    },
+    {
+      "width": 430,
+      "height": 844,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 0,
+      "row": 0,
+      "sectionGap": 0,
+      "used": 0,
+      "mode": "scroll"
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "safe": [
+        0,
+        0
+      ],
+      "natural_synthetic_input": 808.7,
+      "budget": 80,
+      "row": 12,
+      "sectionGap": 16,
+      "used": 80,
+      "mode": "expanded"
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "safe": [
+        24,
+        34
+      ],
+      "natural_synthetic_input": 866.7,
+      "budget": 64.29,
+      "row": 9.64,
+      "sectionGap": 12.85,
+      "used": 64.26,
+      "mode": "expanded"
+    }
+  ],
+  "checks": 29012,
+  "browser_qa": false,
+  "browser_blocker": "Chromium socket() Operation not permitted; no bypass attempted",
+  "invariants": [
+    "minimum is measured after clearing growth per width/state",
+    "single allocation, no repeated ResizeObserver growth",
+    "short viewport scrolls",
+    "fonts and icon dimensions unchanged",
+    "existing gaps/footer/safe areas included once",
+    "appointment height and padding never receive viewport growth"
+  ]
+}

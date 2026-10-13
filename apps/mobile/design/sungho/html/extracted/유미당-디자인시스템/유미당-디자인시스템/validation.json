@@ -1,0 +1,38 @@
+{
+  "baseline": "DS6",
+  "fontOnlyIncrementRem": 0.0625,
+  "sourceHashesMatch": true,
+  "packagedScreensByteIdentical": true,
+  "buttonExamples": 22,
+  "browserVisualQA": false,
+  "cancelledRulesAbsent": true,
+  "lastCategoryChipFlexVerified": {
+    "selector": ".filter-row .chip:last-child",
+    "flex": "0 0 auto",
+    "meaning": "natural content width; no remaining-space stretch",
+    "fontHeightPaddingColorChanged": false
+  },
+  "historicalBaselineVersions": {
+    "homeHtml": 38,
+    "homeZip": 42,
+    "browseHtml": 31,
+    "browseZip": 31,
+    "buttonGalleryBase": 6
+  },
+  "versions": {
+    "homeHtml": 42,
+    "homeZip": 46,
+    "browseHtml": 32,
+    "browseZip": 32,
+    "buttonGalleryBase": 6
+  },
+  "currentScope": "See design-cleanup-validation.json; earlier font-only fields describe preserved baseline",
+  "sourceVersions": {
+    "homeHtml": 42,
+    "homeZip": 46,
+    "browseHtml": 32,
+    "browseZip": 32,
+    "buttonGalleryBase": 6
+  },
+  "currentValidation": "home42-sync-validation.json"
+}

@@ -1,0 +1,568 @@
+{
+  "version": "3.0-current-design-2026-10-13",
+  "confirmed": {
+    "colors": {
+      "primary": "#852CFF",
+      "textSecondary": "#6B7280",
+      "error": "#BD4465",
+      "appliedChip": {
+        "background": "#F2E9FF",
+        "border": "#D8B9F5"
+      },
+      "draftOption": {
+        "background": "#F2EAFF",
+        "border": "#A16CFF"
+      }
+    },
+    "font": {
+      "family": "Pretendard",
+      "weights": [
+        400,
+        600,
+        700
+      ],
+      "note": "선언된 굵기. 실제 Expo font asset 매핑은 적용 시 확인"
+    },
+    "filterTypography": {
+      "topChipsWeight": 400,
+      "menuUnselectedWeight": 400,
+      "menuSelectedWeight": 700,
+      "currentSectionTitleWeight": 400,
+      "currentAgeValueWeight": 400,
+      "scope": "top filter chips and filter menu options; sizes and colors unchanged"
+    },
+    "pressed": {
+      "visualScale": 0.96,
+      "durationMs": 100,
+      "hitArea": "unchanged",
+      "reducedMotion": "no transition"
+    },
+    "disabledButtons": {
+      "opacity": 0.43,
+      "originalColors": true
+    },
+    "inputFocus": {
+      "widthPx": 2,
+      "color": "#852CFF",
+      "offsetPx": 0,
+      "legacySearch": "current native search container uses 2px directly; no scale correction"
+    },
+    "inputError": {
+      "borderWidthPx": 1,
+      "color": "#BD4465",
+      "messagePlacement": "near invalid field",
+      "requiredSemantics": [
+        "role=alert",
+        "aria-invalid",
+        "aria-describedby"
+      ]
+    },
+    "newGeneralInput": {
+      "heightPx": 44,
+      "radiusPx": 12,
+      "fontPx": 14,
+      "fontWeight": 400,
+      "paddingXPx": 12,
+      "scope": "new general forms only, never resize existing search/date/buttons"
+    },
+    "newStandaloneTabs": {
+      "minHeightPx": 44,
+      "fontPx": 14,
+      "fontWeight": 700,
+      "selectedUnderlinePx": 2,
+      "activeColor": "#852CFF",
+      "inactiveColor": "#6B7280",
+      "scope": "not bottom navigation"
+    },
+    "sheetMotion": {
+      "sheetEnterMs": 280,
+      "sheetExitMs": 200,
+      "sheetEnterCurve": "cubic-bezier(.22,1,.36,1)",
+      "sheetExitCurve": "cubic-bezier(.4,0,1,1)",
+      "reducedMotion": "immediate; no transition"
+    },
+    "baselineViewport": {
+      "historical": [
+        360,
+        800
+      ],
+      "currentReferenceWidthPx": 390,
+      "height": "viewport dependent"
+    },
+    "navigationBackground": "rgba(255,255,255,.8)",
+    "commonBottomNavigation": {
+      "scope": "기본 치수는 내비게이션 화면; 홈/둘러보기 재질은 floatingWhite 우선, 채팅 입력바 제외",
+      "bottomPx": 12,
+      "safeBottomAdded": true,
+      "heightPx": 48,
+      "leftPx": 10.285714286,
+      "rightPx": 9.904761905,
+      "safeSideInsetsAdded": true,
+      "width": "fluid",
+      "radiusPx": 25.142857143,
+      "iconPx": [
+        24.380952381,
+        24.761904762
+      ],
+      "background": "rgba(255,255,255,.8)",
+      "selectedColor": "#852CFF",
+      "pressScale": 0.96,
+      "pressMs": 100,
+      "pressChangesColor": false,
+      "chatIconTranslateYPx": -1,
+      "chatIconTransformScope": "SVG/icon wrapper only; active and inactive; hit area unchanged"
+    },
+    "adaptiveLayout": {
+      "referenceWidthPx": 390,
+      "testedMinWidthPx": 320,
+      "hardMinWidthPx": null,
+      "maxWidthPx": 430,
+      "height": "100dvh; 100vh fallback",
+      "fontUnit": "rem",
+      "rootReferencePx": 16,
+      "iconsUnit": "px",
+      "scaleWithViewportWidth": false,
+      "safeAreaInsets": true,
+      "homeOverflow": "vertical scroll when needed",
+      "browseOverflow": "list; tools also scroll in extreme height/text combinations",
+      "browseListReserve": "min(120px,40dvh)",
+      "shortHeightBreakpointPx": 420,
+      "platformVisualQA": false,
+      "scope": "홈/둘러보기의 기존 HTML 관찰값, 다른 화면·RN에 일괄 적용하지 않음"
+    },
+    "chatS11": {
+      "scope": "S11 전용, Expo 적용 별도",
+      "confirmedDate": "2026-10-13",
+      "surface": {
+        "background": "#FFFFFF",
+        "border": "transparent",
+        "radiusPx": 24,
+        "horizontalMarginPx": 12,
+        "headerShadow": "0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)",
+        "composerShadow": "0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)",
+        "composerBottomGapPx": 16
+      },
+      "typography": {
+        "postTitlePx": 15,
+        "profilePx": 13,
+        "noticePx": 13,
+        "noticeLineHeightPx": 20,
+        "actionPx": 14,
+        "messagePx": 15,
+        "messageLineHeightPx": 22
+      },
+      "actions": {
+        "minHeightPx": 44,
+        "gapPx": 8,
+        "radiusPx": 12,
+        "columns": 2,
+        "primary": "#852CFF",
+        "negativePosition": "left",
+        "positiveOrKeepPosition": "right",
+        "emphasis": "사용자 실행 의도에 따라 결정; 위치와 독립"
+      },
+      "retry": {
+        "iconPx": 14,
+        "outlinePx": 24,
+        "radiusPx": 6,
+        "hitAreaPx": 44,
+        "color": "#B32632",
+        "borderColor": "#DF9AA3",
+        "background": "transparent",
+        "alignment": "bubble-bottom"
+      },
+      "reviewStatus": "표면만 확장 잠정 검토, 역할·메시지·버튼 상태 유지"
+    },
+    "appointmentGlass": {
+      "source": "유미당-둘러보기-소스/yumidang-browse/browse.css .browse-card.appointment",
+      "cssDeclarations": "background:\n  radial-gradient(ellipse at 100% 100%,rgba(201,187,249,.14),transparent 65%),\n  linear-gradient(118deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,.06) 31%,rgba(255,255,255,.015) 49%,rgba(255,255,255,.16) 72%,rgba(241,238,255,.08) 100%);\n  background-clip:padding-box;\n  border:0.761905px solid rgba(179,185,212,.30);\n  outline:0.380952px solid rgba(255,255,255,.87);outline-offset:-2.285714px;\n  box-shadow:inset 0 0 0 0.761905px rgba(255,255,255,.78),inset 0.761905px 1.142857px 1.904762px rgba(255,255,255,.68),inset -0.761905px -1.142857px 1.904762px rgba(218,207,249,.25),inset 0 -0.761905px 0.761905px rgba(255,255,255,.72),0 0.761905px 0.761905px rgba(106,108,139,.06),0 2.285714px 3.809524px -1.52381px rgba(90,91,119,.13);\n  -webkit-backdrop-filter:blur(3.047619px) saturate(106%);backdrop-filter:blur(3.047619px) saturate(106%)",
+      "appliesTo": [],
+      "status": "이전 재질 참조 전용; 현재 확장 검토 화면에 적용하지 않음"
+    },
+    "floatingWhite": {
+      "scope": [
+        "home",
+        "browse",
+        "postDetail",
+        "connected",
+        "events",
+        "eventDetail",
+        "chat",
+        "chatList",
+        "me",
+        "login",
+        "signup"
+      ],
+      "background": "#FAF8FE",
+      "surface": "#FFFFFF",
+      "border": "transparent",
+      "outline": "none",
+      "blurPx": 0,
+      "surfaceShadow": "0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)",
+      "dock": {
+        "scope": [
+          "home",
+          "browse",
+          "me",
+          "chatList"
+        ],
+        "background": "#FFFFFF",
+        "shadow": "0 5px 20px rgba(76,47,125,.10)",
+        "robotShadow": "0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)",
+        "addBackground": "#852CFF",
+        "addShadow": "0 5px 12px rgba(133,44,255,.2)",
+        "fadeHeight": "100px + safe-bottom",
+        "fade": "transparent → rgba(250,248,254,.9) at 45% → #FAF8FE at 76%"
+      },
+      "status": "홈·둘러보기·공고 상세 승인 디자인을 나머지 기존 화면으로 확장한 잠정 검토; Expo 미적용"
+    }
+  },
+  "validation": "소스 기준 디자인 명세. 일부 브라우저 확인 완료; Expo 적용·전 상태 실기기 검증은 별도.",
+  "currentScreenValues": {
+    "home": {
+      "appointmentMinHeightPx": 136.6875,
+      "categoryBannerGapPx": 8.304761905,
+      "footerReservePx": 67.215238095,
+      "robotBottomPx": 72.761904762,
+      "addBottomPx": 72.571428572,
+      "material": "floatingWhite",
+      "appointmentIconDisc": "transparent; no border, outline or shadow",
+      "countdown": {
+        "background": "#F2E9FF",
+        "border": "transparent",
+        "shadow": "0 3px 8px rgba(104,65,164,.14)"
+      }
+    },
+    "browse": {
+      "searchPx": 14,
+      "filterPx": 12,
+      "sortPx": 13,
+      "sortArrowPx": 12,
+      "sortArrowGapPx": 5,
+      "titlePx": 15.09523808,
+      "badgePx": 11,
+      "timePx": 12,
+      "metaPx": 14,
+      "profilePx": 12,
+      "avatarPx": 32,
+      "sugarTrackPx": [
+        42,
+        3
+      ],
+      "profileMinHeightPx": 44,
+      "material": "floatingWhite",
+      "blurPx": 0,
+      "saturatePercent": 100,
+      "radiusPx": 20,
+      "cardPaddingXPx": 24,
+      "profileDivider": "1px dashed #DCD2EB",
+      "bottomReserve": "140px + safe-bottom",
+      "ticketNotches": {
+        "center": "50% card height",
+        "decorationHeightPx": 38,
+        "edgeOffsetPx": -5,
+        "fillRadiusPx": 14.5,
+        "shadowStopsPx": [
+          15,
+          16,
+          18,
+          19
+        ],
+        "shadowOpacities": [
+          0.18,
+          0.08,
+          0.025,
+          0
+        ],
+        "pointerEvents": "none"
+      },
+      "profileFixture": "generated-profiles.png; 검토용 합성 인물, 실제 회원 기본 이미지로 사용 금지"
+    },
+    "postDetail": {
+      "titlePx": 20,
+      "badgePx": 11,
+      "profilePx": 12,
+      "sectionTitlePx": 15,
+      "labelPx": 13,
+      "mainValuePx": 16,
+      "smallValuePx": 14,
+      "bodyPx": 14,
+      "bodyLineHeight": 1.75,
+      "noticePx": 13,
+      "sectionRadiusPx": 20,
+      "sectionPaddingPx": 16,
+      "sectionMarginTopPx": 20,
+      "buttonMinHeightPx": 44,
+      "primaryHeightPx": 49,
+      "primaryFontPx": 16,
+      "primaryRadiusPx": 18,
+      "handleHitPx": [
+        72,
+        36
+      ],
+      "handleBarPx": [
+        42,
+        4
+      ],
+      "material": "floatingWhite",
+      "conditionRowRadiusPx": 14
+    },
+    "events": {
+      "cardPaddingPx": 16,
+      "narrowCardPaddingPx": 14,
+      "radiusPx": 20,
+      "shadow": "0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)",
+      "thumbnailPx": [
+        80,
+        96
+      ],
+      "narrowThumbnailWidthPx": 72,
+      "thumbnailRadiusPx": 12,
+      "titlePx": 16,
+      "metaPx": 14,
+      "badgePx": 12,
+      "filterPx": 13,
+      "filterMinHeightPx": 36,
+      "footerMinHeightPx": 48,
+      "footerFontPx": 14,
+      "footerPaddingPx": [
+        12,
+        16
+      ],
+      "footerBackground": "#FAF8FE",
+      "emptyFooterBackground": "#FAF8FE",
+      "material": "floatingWhite; 확장 잠정 검토"
+    },
+    "eventDetail": {
+      "titleRem": 1.22916669,
+      "valueRem": 0.82440475,
+      "bodyRem": 0.75297619,
+      "posterPx": [
+        116,
+        174
+      ],
+      "narrowPosterPx": [
+        100,
+        155
+      ],
+      "panelRadiusPx": 20,
+      "ctaMinHeightPx": 48,
+      "ctaRadiusPx": 14,
+      "status": "현재 소스 관찰값; 목록 타이포 통일 미실시",
+      "relatedCardMaterial": "floatingWhite + browse ticketNotches; 확장 잠정 검토"
+    },
+    "me": {
+      "menuFontPx": 14,
+      "requestTitlePx": 14,
+      "requestMetaPx": 12,
+      "scheduleTitleRem": 0.94345238,
+      "scheduleMetaPx": 14,
+      "scheduleBadgeDatePx": 12,
+      "menuMinHeightPx": 60,
+      "menuRadiusPx": 16,
+      "avatarPx": 48,
+      "namePx": 17,
+      "scorePx": 32,
+      "scoreUnitPx": 12,
+      "infoIconPx": 16,
+      "infoTargetPx": [
+        28,
+        32
+      ],
+      "accountHeadingPx": 13,
+      "accountMarginTopPx": 28,
+      "accountPaddingTopPx": 22,
+      "material": "floatingWhite; 확장 잠정 검토"
+    },
+    "login": {
+      "mainPaddingPx": 20,
+      "logoPx": 88,
+      "logoRadiusPx": 22,
+      "brandPx": 24,
+      "taglinePx": 15,
+      "infoPx": 13,
+      "caveatPx": 12,
+      "naverColor": "#03A94D",
+      "buttonHeightPx": 49,
+      "buttonRadiusPx": 15,
+      "buttonFontPx": 16,
+      "dialogMaxWidthPx": 350,
+      "dialogRadiusPx": 22,
+      "dialogTitlePx": 21,
+      "dialogBodyPx": 14,
+      "naverLogoAsset": "assets/naver-login-official.png",
+      "naverLogoRenderedPx": 18,
+      "naverLogoLeftPx": 20,
+      "naverLabelAlignment": "로고 영역 제외 나머지 중앙",
+      "naverGuide": "https://developers.naver.com/docs/login/bi/bi.md",
+      "background": "#FAF8FE",
+      "material": "floatingWhite 안내 카드; 네이버 버튼 유지"
+    },
+    "signup": {
+      "mainPaddingPx": [
+        20,
+        16,
+        24
+      ],
+      "headerPx": 18,
+      "sectionTitlePx": 15,
+      "sectionRadiusPx": 18,
+      "sectionPaddingPx": [
+        18,
+        16
+      ],
+      "sectionGapPx": 16,
+      "sectionBorder": "transparent",
+      "sectionShadow": "0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)",
+      "background": "#FAF8FE",
+      "photoPx": 88,
+      "photoButtonMinWidthPx": 104,
+      "photoButtonMinHeightPx": 40,
+      "photoButtonRadiusPx": 12,
+      "photoButtonFontPx": 13,
+      "labelPx": 12,
+      "hintLineHeightPx": 19,
+      "inputHeightPx": 44,
+      "inputRadiusPx": 12,
+      "inputFontPx": 14,
+      "chipFontPx": 13,
+      "chipMinHeightPx": 34,
+      "chipRadiusPx": 22,
+      "chipSelectedWeight": 400,
+      "chipSelectedBackground": "#F2E9FF",
+      "chipSelectedBorder": "#CDB3F3",
+      "mbtiColumns": 4,
+      "mbtiGapPx": 8,
+      "mbtiMinHeightPx": 40,
+      "footerPrimaryHeightPx": 48,
+      "footerPrimaryRadiusPx": 14,
+      "footerPrimaryFontPx": 14,
+      "footerBottomPx": 16,
+      "safeBottomAdded": true
+    },
+    "chatList": {
+      "material": "floatingWhite; S10 사용자 확정, Expo 미적용",
+      "background": "#FAF8FE",
+      "behavior": "고정 표시 예시; 실제 수신/읽음/알림/업무 처리는 Expo props와 콜백 연결",
+      "titleFontPx": 15,
+      "titleWeight": 700,
+      "titleMaxLines": 2,
+      "titleToIdentityGapPx": 4,
+      "identityToMessageGapPx": 10,
+      "identity": [
+        "name",
+        "age",
+        "sweetness"
+      ],
+      "statusPosition": "top-right",
+      "unreadIndicator": {
+        "kind": "count",
+        "anchor": "profile-upper-left",
+        "leftPx": 23,
+        "topPx": 23,
+        "translatePercent": [
+          -50,
+          -50
+        ],
+        "minWidthPx": 16,
+        "heightPx": 16,
+        "fontPx": 10,
+        "fontWeight": 700,
+        "color": "#EF4444",
+        "textColor": "#FFFFFF",
+        "maximumLabel": "99+",
+        "hideAtZero": true
+      },
+      "longPressMenu": {
+        "delayMs": 500,
+        "cancelMovementPx": 10,
+        "position": "app-frame-center",
+        "titleFontPx": 20,
+        "titleWeight": 700,
+        "items": [
+          "대화방 알림끄기",
+          "차단",
+          "신고",
+          "나가기"
+        ],
+        "separator": false,
+        "accent": false
+      },
+      "messageFontPx": 14,
+      "statusFontPx": 12,
+      "cardGapPx": 18,
+      "listTopPaddingPx": 12,
+      "messageTimeFontPx": 11,
+      "bell": {
+        "sizePx": 18,
+        "unreadColor": "#852CFF",
+        "dotPx": 6,
+        "dotColor": "#EF4444"
+      },
+      "navChatUnread": {
+        "dotPx": 6,
+        "color": "#EF4444",
+        "previewToggle": true,
+        "guestHidden": true
+      },
+      "generatedAvatar": "박*연 고정 예시: generated-profiles.png 2x2 sprite bottom-left; actual member default excluded"
+    },
+    "notifications": {
+      "status": "현재 검토 디자인; 사용자 최종 확정 전, Expo 미적용",
+      "titlePx": 15,
+      "titleWeight": 700,
+      "statusBadgePx": 12,
+      "descriptionPx": 13,
+      "descriptionLineHeightPx": 20,
+      "descriptionGapPx": 10,
+      "schedulePx": 12,
+      "scheduleLineHeightPx": 18,
+      "scheduleGapPx": 4,
+      "arrivalPx": 11,
+      "arrivalLineHeightPx": 16,
+      "arrivalGapPx": 12,
+      "arrivalAlign": "right",
+      "cardRadiusPx": 20,
+      "cardPaddingPx": [
+        18,
+        16
+      ],
+      "cardGapPx": 12,
+      "avatarPx": 40,
+      "unreadDotPx": 6,
+      "readAllMinHeightPx": 40,
+      "readAllPx": 13,
+      "readAllWeight": 700,
+      "readAllColor": "#852CFF",
+      "readAllBackground": "#F2E9FF",
+      "readAllDisabledBackground": "#EEEDF2",
+      "readAllDisabledColor": "#A2A0AB",
+      "material": "floatingWhite"
+    }
+  },
+  "sourceOfTruth": {
+    "design": "source-manifest.json entries의 현재 HTML 및 이 명세",
+    "function": "기존 Expo와 정책.md; 디자인 토큰은 정책을 정의하지 않음",
+    "precedence": "최신 사용자 결정 → 현재 화면의 최종 스타일 → 화면별 토큰 → 공통 토큰",
+    "units": "Px/Rem은 웹 관찰 단위. RN 숫자로 일괄 복사하거나 화면 폭 비율로 확대하지 않음",
+    "excluded": "미리보기 패널, 고정 합성 데이터, 안내용 이벤트, 과거 복사본"
+  },
+  "publicProfile": {
+    "status": "HTML 사용자 확정 · Expo 미적용",
+    "avatarPx": 80,
+    "gaugePx": 4,
+    "gaugeColor": "#852CFF",
+    "gaugeTrack": "transparent",
+    "heartPx": 15,
+    "heartColor": "#ED7185",
+    "namePx": 20,
+    "metaPx": 12,
+    "sweetnessPx": 18,
+    "traitsGapPx": 12,
+    "reviewBodyPx": 14,
+    "reviewLineHeight": 1.5,
+    "reviewParagraphMarginPx": 8,
+    "summaryDefaultCollapsed": true,
+    "reviewPageSize": 5
+  }
+}

@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');
+const {environment}=require('./test-ui');
+const e=environment(),n=e.node;
+const scenario=value=>n('#review-scenario').onchange({target:{value}});
+const click=selector=>n('#cards').dispatch('click',{target:{closest:s=>s===selector?{}:null}});
+scenario('loading');assert.equal(n('#cards').attributes['aria-busy'],'true');assert.match(n('#cards').innerHTML,/불러오고 있어요/);assert.equal(n('.result-heading').hidden,true);
+scenario('missingData');assert.doesNotMatch(n('#cards').innerHTML,/undefined|null|NaN/);assert.match(n('#cards').innerHTML,/일정 확인 중/);assert.match(n('#cards').innerHTML,/지역 확인 중/);
+scenario('longText');assert.match(n('#cards').innerHTML,/긴 전시 제목/);
+scenario('moreError');assert.equal(n('#count').textContent,4);assert.match(n('#cards').innerHTML,/다음 공고/);n('#search').value='유지';click('[data-review-retry]');assert.equal(n('#search').value,'유지');assert.match(n('#review-description').textContent,/고정 예시/);assert.doesNotMatch(n('#cards').innerHTML,/다음 공고/);
+scenario('empty');click('[data-review-reset]');assert.equal(n('#count').textContent,4);
+scenario('invalid');n('#apply-filters').onclick();assert.equal(n('#filters').open,true);assert.equal(n('#date-to').attributes['aria-invalid'],'true');
+n('#date-to').onchange({target:{value:'2026-10-12'}});n('#apply-filters').onclick();assert.equal(n('#filters').open,false);
+scenario('guest');assert.doesNotMatch(n('#cards').innerHTML,/김유미|김\*미|당도|profile-info/);assert.match(n('#cards').innerHTML,/동행인은 로그인 후/);
+console.log('Edge-state rendering, retry/reset preservation, invalid-date and guest privacy checks passed.');

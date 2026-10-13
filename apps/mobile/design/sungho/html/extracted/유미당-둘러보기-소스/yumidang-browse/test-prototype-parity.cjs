@@ -1,0 +1,5 @@
+// UI scene coverage only; intentionally no prototype runtime parity claim.
+const assert=require('node:assert/strict');const {SCENARIOS,fixtureRows}=require('./browse');const {environment}=require('./test-ui');
+for(const key of Object.keys(SCENARIOS)){const e=environment();e.node('#review-scenario').onchange({target:{value:key}});assert.equal(e.node('#count').textContent,fixtureRows(key).length);}
+const e=environment();e.node('#search').value='없는검색어';e.node('.search').onsubmit({preventDefault(){}});assert.equal(e.node('#count').textContent,4);e.node('#search').onfocus();assert.ok(e.node('#recent-searches').innerHTML.includes('없는검색어'));
+e.node('#review-scenario').onchange({target:{value:'pagination'}});assert.equal(e.node('#count').textContent,10);e.node('#cards').dispatch('click',{target:{closest:s=>s==='[data-load-more]'?{}:null}});assert.equal(e.node('#count').textContent,10);e.node('#review-scenario').onchange({target:{value:'paginationExpanded'}});assert.equal(e.node('#count').textContent,12);console.log('Fixed scene coverage and nonmutating control checks passed');

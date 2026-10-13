@@ -1,0 +1,21 @@
+{
+  "chip_artwork_size": [
+    110,
+    64
+  ],
+  "display_font_px": 11.19047619047619,
+  "weight": 700,
+  "layout": "grid place-items:center",
+  "padding": 0,
+  "line_height": 1,
+  "letter_spacing": 0,
+  "font_em": 2048,
+  "hhea_ascent": 1950,
+  "hhea_descent": -494,
+  "dday_ink_y_bounds": [
+    -20,
+    1468
+  ],
+  "calculated_ink_center_offset_display_px": 0.021856398809523808,
+  "browser_visual_qa": false
+}

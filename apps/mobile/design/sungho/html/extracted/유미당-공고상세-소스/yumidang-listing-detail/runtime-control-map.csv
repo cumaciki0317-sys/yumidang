@@ -1,0 +1,23 @@
+control_family,generated_location,render_enabled_condition,runtime_source,offline_behavior
+close via native handle; downward drag; backdrop; Escape,index.html:3; shared/bottom-sheet.js; detail.js:closeSheet,"Existing detail dismissal; gesture requires open phase, no confirmation, downward >=80px from handle or noninteractive content starting at scrollTop=0",BrowseScreens.tsx:1277-1281; ui.tsx:659-669; approved browse v31 browse.js:65-123,Existing close action presented using latest user-approved sheet interaction; no new product action
+author profile / guest login,detail.js:13-16,Preview member exists; guest routes S05; member routes S14,BrowseScreens.tsx:1297; ui.tsx:472-533,Press-only S05/S14
+linked event,"detail.js:17,33",Preview event exists,BrowseScreens.tsx:1345-1378,Press-only S09-3
+applicant profile,detail.js:23,"Owner, conversation has messages and active/confirmed status","BrowseScreens.tsx:1177-1183,1391-1401; ui.tsx:496-533",Press-only S14
+applicant chat,detail.js:23,"Same visible applicant set, including confirmed",BrowseScreens.tsx:1411-1419,Press-only S11
+select applicant,detail.js:23,Visible applicants; disabled when appointment exists or startsAt <= now; pending request does NOT disable,BrowseScreens.tsx:1420-1427,"Direct confirmation, no picker"
+reject applicant,detail.js:applicants,"Owner applicant and no appointment, including pending consent",BrowseScreens.tsx:1429-1437,"Approved upper-right sibling X, aria-label/title 신청 거절; same reject confirmation"
+delete post,detail.js:titleRow,Owner and no appointment,BrowseScreens.tsx:1448-1451,User-approved title disclosure entry; original condition and delete confirmation; footer entry removed
+edit footer,detail.js:39,Owner; disabled when appointment exists,BrowseScreens.tsx:1229-1236,Opens edit confirmation
+reopen footer,detail.js:39,Owner and post.status closed,BrowseScreens.tsx:1237-1245; state.tsx:638-663,Static design scene. Button/confirmation visual only; no domain mutation. Result examples selected externally.
+close recruitment footer,detail.js:39,Owner and post.status not closed; disabled when appointment exists,BrowseScreens.tsx:1246-1255,Opens close confirmation
+appointment footer,detail.js:40,Nonowner participant and appointment confirmed/completed/disputed,"BrowseScreens.tsx:1169-1175,1257-1260",Press-only S16
+apply / login / existing chat footer,detail.js:40; detail-model.js:getView,Neither owner nor participant CTA; disabled iff member && unavailable && !existingChat; label precedence source exact,"BrowseScreens.tsx:1185-1227,1262-1272",Press-only S11/S05
+missing post browse,detail.js:28,Post missing or deleted; no preview footer,BrowseScreens.tsx:1157-1166,Press-only S01
+delete confirm + cancel,detail.js:57,Delete confirmation open,BrowseScreens.tsx:1453-1491; 171-210; state.tsx:686-704,Static design scene. Button/confirmation visual only; no domain mutation. Result examples selected externally.
+edit confirm + cancel,detail.js:58,Edit confirmation open,BrowseScreens.tsx:1453-1491; 171-210,"Closes confirmation, S03 press-only"
+close confirm + cancel,detail.js:59,Close confirmation open,BrowseScreens.tsx:1453-1491; 171-210; state.tsx:664-684,Static design scene. Button/confirmation visual only; no domain mutation. Result examples selected externally.
+reject confirm + cancel,detail.js:60,Rejecting applicant set,BrowseScreens.tsx:1493-1505; state.tsx:619-637,Reject conversation only; preserves post status
+request confirm + cancel,detail.js:61,Selected applicant set,BrowseScreens.tsx:1506-1526; state.tsx:500-535,Pending request retry returns one-at-a-time error; successful sample request awaiting_consent; S11 press-only
+remote retry,detail.js:30,Remote page.error set,RemoteScreens.tsx:551-555,Retains failure example; external review feedback only. No service call or fabricated success.
+scenario / reset / reopen review,index.html:3; detail.js:78,Outside application preview,Not product controls: external review harness,Select/reset/reopen offline sample
+owner management disclosure,detail.js:titleRow/togglePostMenu,Owner and no appointment,Explicit user-approved UI relocation of BrowseScreens.tsx:1448-1451 delete entry,Opens/closes one existing delete entry; no added domain action

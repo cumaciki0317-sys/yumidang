@@ -1,0 +1,79 @@
+{
+  "restored_from": "card-deliverable/recovered-v0.html",
+  "baseline_sha256": "1fb49a8b3a47e30e123291cd18e892ae3dd290dbe9490cf57f4e20adca944dbe",
+  "restored_roles": [
+    "D-3 chip: original bevel, gradient and blur",
+    "Museum icon well: original radial highlight, inset edge and depth shadow",
+    "Companion strip: original translucent gradient, inset highlight and blur",
+    "Museum icon: pre-removal drop shadows"
+  ],
+  "retained": [
+    "Outer card three-layer rim unchanged",
+    "Transparent details action and divider unchanged",
+    "All DOM, scripts, text, font sizes and assets unchanged",
+    "Other controls remain plain",
+    "Category and footer spacing unchanged"
+  ],
+  "artwork_scale": 0.38095238095238093,
+  "old_to_new_artwork_units": {
+    "card_height": [
+      324,
+      344
+    ],
+    "card_top": [
+      726,
+      716
+    ],
+    "heading_top": [
+      654,
+      644
+    ],
+    "badge_top": [
+      38,
+      44
+    ],
+    "badge_left": [
+      39,
+      47
+    ],
+    "museum_top": [
+      39,
+      45
+    ],
+    "museum_left": [
+      167,
+      175
+    ],
+    "text_top": [
+      37,
+      43
+    ],
+    "text_left": [
+      339,
+      347
+    ],
+    "strip_left": [
+      25,
+      34
+    ],
+    "strip_right": [
+      23,
+      34
+    ],
+    "strip_bottom": [
+      22,
+      30
+    ]
+  },
+  "browser_visual_qa": false,
+  "checks": {
+    "DOM_and_scripts_byte_identical": true,
+    "font_sizes_unchanged": true,
+    "outer_rim_byte_identical": true,
+    "title_fits_by_font_advances": true,
+    "internal_controls_no_overlap_by_source_geometry": true,
+    "details_to_strip_gap_artwork_units": 25.75,
+    "strip_remaining_flex_space_artwork_units": 178.88222656250002,
+    "screen_still_800px": true
+  }
+}

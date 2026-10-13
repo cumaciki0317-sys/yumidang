@@ -1,0 +1,50 @@
+{
+  "baseline_library_versions": {
+    "html": 19,
+    "source_zip": 22
+  },
+  "home_state_source_checks": 873,
+  "persistent_card_press_combined_checks": 470,
+  "review_controls_outside_app_frame": true,
+  "provided_photo_bytes_unchanged": false,
+  "visual_browser_qa": false,
+  "viewport": {
+    "width": 360,
+    "height": 800
+  },
+  "preserved_ui": [
+    "five event cards",
+    "category SVGs",
+    "bottom navigation",
+    "12px regular gray notices",
+    "24px provided avatar",
+    "12.428571px bold purple example name",
+    "9.163318px name ink to bell hit-area gap",
+    "guest bell hidden",
+    "4px unread dot",
+    "single-surface card press scale .96 / 100ms"
+  ],
+  "backup_source_index_sha256": "808a115d5d36d0a5fab82b69572d84d89b1844cacb09d07a4244dcfb0ab79baf",
+  "dday_display_field": "demoAppointment.dDayLabel",
+  "dday_sample": "D-3",
+  "guest_login_right_edge_artwork_px": 902,
+  "bell_right_edge_artwork_px": 902,
+  "appointment_all_visibility": "booked only",
+  "event_cards": "5 native buttons with persistent press surface",
+  "drag_threshold_css_px": 8,
+  "original_event_data_and_assets_unchanged": true,
+  "app_frame_height_arithmetic_px": 800.0,
+  "last_event_card": {
+    "first_four_width_percent": 95,
+    "last_width_percent": 100,
+    "last_trailing_margin": 0,
+    "track_artwork_px": 859,
+    "last_card_artwork_px": 859,
+    "max_scroll_artwork_px": 3360.2,
+    "last_start_artwork_px": 3360.2
+  },
+  "provided_photo_original_preserved": true,
+  "provided_photo_display_encoding": "same-dimension high-quality WebP",
+  "home_section_gap_display_px": 11.219583333333334,
+  "home_section_gap_measurement": "final CSS cascade (38px/top128 event title) and Pretendard Bold glyph ink bounds"
+}

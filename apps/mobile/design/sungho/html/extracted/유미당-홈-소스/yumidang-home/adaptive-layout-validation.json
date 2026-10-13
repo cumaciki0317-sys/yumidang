@@ -1,0 +1,459 @@
+{
+  "method": "static final CSS/font source plus declared normal-flow geometry; not rendered browser measurements",
+  "baseline_positions_px": {
+    "events_title": 48.76190476190476,
+    "event_card": 75.86571428595238,
+    "appointment_title": 245.99869047671427,
+    "appointment_card": 273.1025000007619,
+    "categories_title": 412.58934523838093,
+    "categories_grid": 438.85714285695235,
+    "banner": 685.4095238089523,
+    "content_end": 799.9999999989523
+  },
+  "heading_font_px": {
+    "events-title": 14.47619048,
+    "appointment-heading": 14.47619048,
+    "categories-title": 13.714285712
+  },
+  "five_ink_gaps_px": [
+    11.21958332939137,
+    11.219583334406252,
+    11.219583329391355,
+    11.219583332393768,
+    11.2195833353652
+  ],
+  "reference_width": 390,
+  "tested_min_width": 320,
+  "mobile_max_width": 430,
+  "matrix": [
+    {
+      "viewport": [
+        320,
+        568
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 320,
+      "frame_height": 568,
+      "category_width": 64.6666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        320,
+        568
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 320,
+      "frame_height": 568,
+      "category_width": 64.6666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        320,
+        640
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 320,
+      "frame_height": 640,
+      "category_width": 64.6666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        320,
+        640
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 320,
+      "frame_height": 640,
+      "category_width": 64.6666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        340,
+        640
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 340,
+      "frame_height": 640,
+      "category_width": 69.6666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        340,
+        640
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 340,
+      "frame_height": 640,
+      "category_width": 69.6666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        360,
+        640
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 360,
+      "frame_height": 640,
+      "category_width": 74.6666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        360,
+        640
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 360,
+      "frame_height": 640,
+      "category_width": 74.6666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 360,
+      "frame_height": 800,
+      "category_width": 74.6666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 360,
+      "frame_height": 800,
+      "category_width": 74.6666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        375,
+        812
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 375,
+      "frame_height": 812,
+      "category_width": 78.4166666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        375,
+        812
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 375,
+      "frame_height": 812,
+      "category_width": 78.4166666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 390,
+      "frame_height": 844,
+      "category_width": 82.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 390,
+      "frame_height": 844,
+      "category_width": 82.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        412,
+        915
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 412,
+      "frame_height": 915,
+      "category_width": 87.6666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        412,
+        915
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 412,
+      "frame_height": 915,
+      "category_width": 87.6666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 430,
+      "frame_height": 932,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 430,
+      "frame_height": 932,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        480,
+        1200
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 430,
+      "frame_height": 1200,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        480,
+        1200
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 430,
+      "frame_height": 1200,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        844,
+        390
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 430,
+      "frame_height": 390,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        844,
+        390
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 430,
+      "frame_height": 390,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        932,
+        320
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 430,
+      "frame_height": 320,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        932,
+        320
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 430,
+      "frame_height": 320,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        1024,
+        800
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 430,
+      "frame_height": 800,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        1024,
+        800
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 430,
+      "frame_height": 800,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": true
+    },
+    {
+      "viewport": [
+        1440,
+        1200
+      ],
+      "safe": [
+        0,
+        0
+      ],
+      "frame_width": 430,
+      "frame_height": 1200,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 799.9999999989523,
+      "baseline_text_scroll_needed": false
+    },
+    {
+      "viewport": [
+        1440,
+        1200
+      ],
+      "safe": [
+        24,
+        34
+      ],
+      "frame_width": 430,
+      "frame_height": 1200,
+      "category_width": 92.1666666665,
+      "minimum_content_height": 857.9999999989523,
+      "baseline_text_scroll_needed": false
+    }
+  ],
+  "text_roots_checked": [
+    16,
+    20,
+    24,
+    32
+  ],
+  "browser_qa": false,
+  "touch_qa": false,
+  "limit": "Large-text wrapping/paint and browser safe-area behavior still require real-device/browser review."
+}

@@ -1,0 +1,103 @@
+@font-face{font-family:Pretendard;src:url("../유미당-홈-소스/yumidang-home/assets/Pretendard-Regular.woff2") format("woff2");font-weight:400;font-display:swap}*{box-sizing:border-box}html{background:#f2f2f6}body{margin:0;display:flex;justify-content:center;align-items:flex-start;gap:24px;font-family:Pretendard,sans-serif;color:#172033;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}button,input,a{-webkit-tap-highlight-color:transparent}button,input{font:inherit}button{cursor:pointer}button,a{transition:background .1s,transform .1s}button:active,a:active{transform:scale(.96)}button:focus-visible,a:focus-visible,input:focus-visible,.messages:focus-visible{outline:2px solid #852cff;outline-offset:2px}svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}p,h1,h2,h3{margin:0}.phone{width:100%;max-width:430px;height:100vh;height:100dvh;min-height:600px;display:flex;flex-direction:column;background:#fcfbfe;box-shadow:0 0 0 1px #e7e3ed;overflow:hidden}.topbar{display:flex;align-items:center;gap:4px;min-height:68px;padding:8px 12px;background:#fff;flex:none}.icon-button{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:12px;background:transparent;color:#687082;flex:none;padding:0}.topbar>.icon-button{color:#172033}.partner{flex:1;min-width:0}.partner-name{font-size:13px}.age{font-size:12px;color:#6b7280;margin-left:6px}.sugar{font-size:12px;color:#852cff}.header-actions{display:flex}.post-summary{margin:0 16px 12px;padding:14px;border:1px solid #e7e0f0;border-radius:16px;background:linear-gradient(135deg,#fff,#f8f5fc);flex:none}.post-top{display:flex;align-items:center;justify-content:space-between;gap:4px}.chips{display:flex;gap:5px;flex-wrap:wrap}.chip{font-size:11px;line-height:1.6;padding:3px 7px;border-radius:7px;background:#eef0f4;color:#6b7280}.chip.primary{color:#852cff;background:#f2e9ff}.post-link{font-size:12px;color:#852cff;display:flex;align-items:center;text-decoration:none;white-space:nowrap;min-height:32px}.post-link svg{width:14px;height:14px}h1{font-size:15px;line-height:1.55;font-weight:700;margin:8px 0 9px;word-break:keep-all;overflow-wrap:anywhere}.post-meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:#6b7280}.post-meta span{display:flex;gap:5px;align-items:center}.post-meta svg{width:14px;height:14px;color:#852cff}.free{font-size:12px;color:#852cff;margin-top:7px}.safety{padding:10px 18px;display:flex;gap:8px;background:#f4f0fa;color:#6b7280;flex:none;font-size:12px;line-height:1.65}.safety svg{width:17px;height:17px;margin-top:2px;color:#852cff}.safety strong{font-weight:400;color:#852cff}.messages{min-height:0;flex:1;overflow-y:auto;padding:18px 16px 22px;scrollbar-width:thin;scrollbar-color:#e0d9ed transparent;overscroll-behavior:contain}.date{text-align:center;color:#7b8190;font-size:12px;margin-bottom:22px}.message{display:flex;gap:8px;margin-bottom:22px}.avatar{width:30px;height:30px;background:#f2eafa;border:1px solid #e6dff0;border-radius:50%;color:#a279ce;display:flex;align-items:center;justify-content:center;flex:none}.avatar svg{width:17px;height:17px}.message-content{flex:1;min-width:0}.sender{font-size:13px;margin:0 0 5px 2px;font-weight:400}.sender span{font-size:12px;color:#7b8190;margin-left:4px}.message-row{display:flex;align-items:flex-end;gap:6px;min-width:0}.bubble{font-size:15px;line-height:1.6;padding:11px 13px;border:1px solid #e7e3ed;border-radius:3px 16px 16px;background:#fff;overflow-wrap:anywhere;word-break:keep-all}.message time{font-size:12px;color:#7b8190;white-space:nowrap;flex:none;margin-bottom:2px}.outgoing{justify-content:flex-end;padding-left:24px}.outgoing .message-row{flex-direction:row-reverse}.outgoing .bubble{background:#852cff;color:white;border-color:#852cff;border-radius:16px 3px 16px 16px}.composer{background:#fff;border-top:1px solid #e7e3ed;padding-bottom:env(safe-area-inset-bottom,0px);flex:none}.quick-actions{display:flex;gap:7px;overflow-x:auto;padding:11px 16px 5px;scrollbar-width:none}.quick-actions button{white-space:nowrap;flex:none;border:1px solid #e7e3ed;border-radius:18px;background:#fcfbfe;color:#5f6574;font-size:12px;min-height:32px;padding:5px 11px}.input-row{padding:6px 12px 10px;display:flex;align-items:center;gap:6px}.attach{color:#852cff;width:36px}.input-wrap{position:relative;flex:1;min-width:0}.input-wrap input{width:100%;height:44px;border:1px solid #e7e3ed;border-radius:14px;background:#faf9fc;padding:0 38px 0 12px;color:#172033;font-size:14px;min-width:0}.input-wrap .icon-button{position:absolute;right:2px;top:2px;width:36px}.send{width:42px;height:42px;border-radius:14px;background:#852cff;color:#fff}.send svg{width:19px;height:19px}.footer-notice{font-size:12px;color:#7b8190;line-height:1.6;background:#faf9fc;padding:8px 20px;text-align:center}.review-panel{max-width:330px;padding:28px 20px;font-size:14px;line-height:1.75;color:#697080}.eyebrow{font-size:12px;color:#852cff}.review-panel h2{font-size:26px;color:#202033;margin:6px 0 12px}.review-panel section{border-top:1px solid #dfe0e8;margin-top:22px;padding-top:18px}.review-panel h3{font-size:14px;color:#202033;margin-bottom:8px}.review-panel section p+p{margin-top:10px}@media(max-width:799px){body{flex-direction:column;align-items:center;gap:0}.review-panel{width:100%;max-width:430px;padding:24px 20px}}@media(max-width:359px){.post-summary{margin-left:12px;margin-right:12px;padding:12px}.post-top{align-items:flex-start}.chips{max-width:175px}.messages{padding-left:12px;padding-right:12px}.bubble{padding:10px 11px}.message-row{gap:4px}.message time{font-size:12px}.outgoing{padding-left:8px}.header-actions .icon-button{width:36px}}@media(prefers-reduced-motion:reduce){button,a{transition:none}}
+
+[hidden]{display:none!important}.header-actions{position:relative}.chat-menu{position:absolute;right:0;top:44px;z-index:20;width:180px;padding:5px;background:#fff;border:1px solid #e7e3ed;border-radius:12px;box-shadow:0 4px 16px #17203318}.chat-menu button{display:block;text-align:left;width:100%;min-height:44px;padding:10px 12px;border:0;background:none;border-radius:8px;color:#172033;font-size:14px}.chat-menu button:hover{background:#f5f5f7}.chat-menu .leave-action{border-top:1px solid #e7e3ed;border-radius:0;margin-top:4px;color:#BD4465}.chat-menu button[aria-pressed=true]{color:#852cff}
+#menu-preview{width:calc(100% - 32px);max-width:340px;border:1px solid #e7e3ed;border-radius:16px;padding:22px;color:#172033}#menu-preview::backdrop{background:#17203355}#menu-preview h2{font-size:18px;margin-bottom:10px}#menu-preview p{font-size:14px;color:#6b7280}#close-preview{margin-top:18px;min-height:44px;width:100%;border:0;border-radius:10px;background:#f2e9ff;color:#852cff}.preview-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* Browse-style partner identity and disclosure for the linked post. */
+.partner-photo{width:36px;height:36px;flex:none;border-radius:50%;object-fit:cover;object-position:50% 20%;margin-right:6px}.partner-name{font-size:12px;font-weight:400}.sugar{display:flex;align-items:center;gap:3px;font-size:12px;line-height:1.5;color:#6b7280}.sugar strong{font-size:12px;font-weight:400;color:#852cff}.sweetness-track{width:42px;height:3px;border-radius:3px;background:#e7ddf5;overflow:hidden;margin-left:3px}.sweetness-track>span{display:block;width:99%;height:100%;background:#852cff;border-radius:inherit}.post-toggle{display:flex;align-items:center;gap:12px;flex:none;width:100%;min-height:48px;padding:12px 18px;background:#fff;border:0;border-bottom:1px solid #e7e3ed;text-align:left;color:#172033;font-size:14px}.post-toggle>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.post-toggle svg{width:16px;height:16px;color:#6b7280}.post-toggle[aria-expanded=true] svg{transform:rotate(180deg)}.post-toggle[aria-expanded=true]{border-bottom:0}.post-summary{max-height:40dvh;overflow:auto}
+
+/* Match the collapsed post title to the card heading; keep collapse secondary. */
+.post-toggle{font-size:15px;line-height:1.55;font-weight:700;color:#172033}
+.post-toggle[aria-expanded="true"]{font-size:12px;line-height:1.55;font-weight:400;color:#6b7280}
+
+/* One stationary heading controls the details below it. */
+.post-toggle[aria-expanded="true"]{font-size:15px;line-height:1.55;font-weight:700;color:#172033;border-bottom:1px solid #e7e3ed}
+.post-summary{margin:0;padding:12px 18px 14px;border:0;border-bottom:1px solid #e7e3ed;border-radius:0;background:#fff}
+.post-summary .post-meta{margin-top:8px}
+
+/* Text-only composer: attachment and emoji controls removed. */
+.input-wrap input{padding-right:12px}
+
+/* Prototype audit: status feedback remains next to its control. */
+.chat-state-notice{font-size:12px;line-height:1.5;color:#667085;margin:6px 0 0}.send:disabled{opacity:.4;cursor:default}.message[hidden],.flow-card[hidden],.quick-actions[hidden]{display:none!important}#menu-preview button{min-height:44px;margin:4px}#chat-state{display:block;max-width:100%;padding:8px;margin-top:6px}
+
+/* Align status feedback with the composer, keeping errors distinct. */
+.chat-state-notice{margin:0;padding:0 12px 10px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.chat-state-notice:empty{display:none}
+.chat-state-notice.is-error{color:#B32632}
+
+/* Sender identity determines alignment for either viewing role. */
+.message .avatar{object-fit:cover}.outgoing .message-content{flex:0 1 auto;min-width:0;max-width:100%}
+
+/* Reserve strong purple for primary actions rather than conversation content. */
+.outgoing .bubble{background:#f0e7fc;border-color:#f0e7fc;color:#30283e}
+.safety{background:#f5f5f7;color:#737580}
+.safety svg,.safety strong{color:#737580}
+
+.quick-actions{padding:8px 12px 6px;gap:8px}.quick-actions button{min-height:36px;padding:7px 12px;font-size:13px;color:#626574;background:#fff;border-color:#e7e3ed}
+
+/* Separate quick replies from both the conversation and the message field. */
+.quick-actions{padding:10px 12px;background:#f7f6fa;border-bottom:1px solid #e3dfeb}
+.quick-actions button{background:#fff;border:1px solid #d4cede;border-radius:10px;color:#54505f;box-shadow:0 1px 2px #241b3510}
+.quick-actions button:active{background:#ede7f6;border-color:#b6a6ce}
+.input-row{padding-top:10px}
+
+/* Floating composer remains in flex flow so messages never sit behind it. */
+.composer{border:0;background:transparent;padding:0 12px calc(16px + env(safe-area-inset-bottom,0px))}
+.quick-actions{padding:8px 0;background:transparent;border:0}
+.input-row{padding:8px;gap:8px;border:1px solid #e3dfeb;border-radius:24px;background:#fff;box-shadow:0 4px 14px #30204012,0 1px 3px #3020400a}
+.input-wrap input{height:44px;border:0;border-radius:16px;background:transparent;padding:0 10px;font-size:14px}
+.input-row .send{width:44px;height:44px;border-radius:50%}
+.composer .chat-state-notice:not(:empty){padding:0 8px 8px}
+
+.composer .chat-state-notice:empty{display:none}
+
+/* Compact retry glyph with a 44px touch target beside the failed bubble. */
+.retry-message{display:inline-flex;align-items:flex-end;justify-content:flex-end;flex:none;position:relative;isolation:isolate;align-self:flex-end;width:44px;min-width:44px;height:44px;padding:0 5px 5px 0;border:0;border-radius:0;background:transparent;color:#b32632;font-size:12px;font-weight:400;white-space:nowrap}
+.retry-message svg{width:14px;height:14px;stroke-width:1.8}
+.retry-message::before{content:"";display:block;position:absolute;inset:auto 0 0 auto;width:24px;height:24px;box-sizing:border-box;border:1px solid #df9aa3;border-radius:6px;background:transparent;z-index:-1}
+.retry-message:active{background:transparent}
+.retry-message:active::before{border-color:#d9838e}
+.message-row:has(>.retry-message){gap:4px}
+
+/* Compact message bubbles while retaining readable body text. */
+.message .bubble{font-size:15px;line-height:22px;padding-top:9px;padding-bottom:9px}
+
+/* Center the modal on the phone preview rather than the page including review tools. */
+#menu-preview{position:fixed;inset:auto;margin:0;transform:translate(-50%,-50%);overflow:auto}
+
+/* Dismiss left, confirm right; equal sizes across the shared menu dialog. */
+#menu-preview[open]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}
+#menu-preview h2,#menu-preview>p{grid-column:1/-1}
+#menu-preview>button{width:100%;min-width:0;min-height:44px;margin:18px 0 0;padding:10px 8px;border:1px solid #e3dfeb;border-radius:12px;font:inherit;font-size:14px;background:#fff;color:#626574}
+#menu-preview>[data-confirm-preview]{background:#852cff;border-color:#852cff;color:#fff;font-weight:600}
+
+#menu-preview.leave-dialog>[data-confirm-preview]{background:#852cff;border-color:#852cff;color:#fff;font-weight:600}
+#menu-preview.leave-dialog>#close-preview{background:#fff;border-color:#e3dfeb;color:#626574;font-weight:400}
+
+/* One fixed context panel shares the floating composer's surface. */
+.chat-context{flex:0 1 auto;min-height:0;max-height:48dvh;margin:8px 12px 0;border:1px solid #e3dfeb;border-radius:24px;background:#fff;box-shadow:0 2px 6px rgba(48,32,64,.06);overflow:auto;scrollbar-width:thin}
+.chat-context .post-toggle,.chat-context .post-toggle[aria-expanded="true"]{padding:14px 16px 10px;border:0;background:transparent}
+.chat-context .post-toggle:active{transform:none;background:#faf8fd}
+.chat-context .post-summary{margin:0;padding:0 16px 12px;max-height:none;overflow:visible;border:0;border-radius:0;background:transparent}
+.chat-context .safety{padding:4px 16px 12px;background:transparent;gap:7px}
+.chat-context .safety svg{width:15px;height:15px}
+.chat-context>.flow-card{margin:0;padding:0 12px 12px;border:0;border-radius:0;background:transparent;font-size:14px;line-height:1.6}
+.chat-context .flow-summary{padding:0 4px}
+.chat-context .flow-status{padding:0 4px}
+
+/* Readable supporting text in the chat header and context panel. */
+.topbar .partner-name,.topbar .age,.topbar .sugar,.topbar .sugar strong{font-size:13px}
+.chat-context .safety{font-size:13px;line-height:20px}
+
+/* Approved home/browse surfaces; chat roles and semantic action colors stay intact. */
+.phone{background:#FAF8FE}
+.phone .topbar{background:transparent}
+.phone .chat-context{border-color:transparent;background:#fff;box-shadow:0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)}
+.phone .input-row{border-color:transparent;background:#fff;box-shadow:0 5px 14px rgba(76,47,125,.075),0 1px 3px rgba(76,47,125,.025)}
+.phone .quick-actions button{border-color:transparent;background:#fff;box-shadow:0 3px 8px rgba(76,47,125,.075)}
+.phone .message:not(.outgoing) .bubble{border-color:transparent;background:#fff;box-shadow:0 2px 6px rgba(76,47,125,.04)}
+.phone .outgoing .bubble{border-color:transparent;background:#F0E7FC;color:#30283e}
+
+.phone .chat-menu{border-color:transparent;box-shadow:0 5px 20px rgba(76,47,125,.10)}
+#menu-preview{border-color:transparent;background:#fff;box-shadow:0 8px 28px rgba(76,47,125,.12)}

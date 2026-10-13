@@ -1,0 +1,81 @@
+{
+  "labels_visible": false,
+  "accessible_names": [
+    "홈",
+    "둘러보기",
+    "채팅",
+    "나"
+  ],
+  "active_page": "둘러보기",
+  "source_icon_size": [
+    64,
+    65
+  ],
+  "prior_icon_size": [
+    51,
+    52
+  ],
+  "icons_centered": true,
+  "all_changes_scoped_to_nav": true,
+  "prior_actions_preserved": true,
+  "button_targets_unchanged": true,
+  "geometry": [
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "button_target_px": [
+        84.57142857142857,
+        43.42857142857142
+      ],
+      "icon_px": [
+        24.38095238095238,
+        24.76190476190476
+      ]
+    },
+    {
+      "viewport": [
+        320,
+        568
+      ],
+      "button_target_px": [
+        75.17460317460316,
+        38.6031746031746
+      ],
+      "icon_px": [
+        21.67195767195767,
+        22.01058201058201
+      ]
+    },
+    {
+      "viewport": [
+        280,
+        480
+      ],
+      "button_target_px": [
+        65.77777777777777,
+        33.77777777777778
+      ],
+      "icon_px": [
+        18.962962962962962,
+        19.25925925925926
+      ]
+    },
+    {
+      "viewport": [
+        360,
+        640
+      ],
+      "button_target_px": [
+        84.57142857142857,
+        43.42857142857142
+      ],
+      "icon_px": [
+        24.38095238095238,
+        24.76190476190476
+      ]
+    }
+  ],
+  "browser_visual_qa": false
+}

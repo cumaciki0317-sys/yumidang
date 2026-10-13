@@ -1,0 +1,26 @@
+{
+  "result": "pass",
+  "checks": [
+    "Header caption removed; original composition and provided logo preserved",
+    "Guest browse moved to the former signup shortcut with its color; popup Close retained",
+    "Login and guest actions only describe Expo events",
+    "All three existing exception states open state-specific popup without inline alerts",
+    "Explicit failure opens accessible popup and disables background",
+    "Popup keyboard focus trap, Escape dismissal and source focus restoration",
+    "Popup reopens; Close dismisses; Retry resets state and focuses Naver without authentication",
+    "Repeated open and state switches reuse one popup and restore original focus",
+    "Default and busy never show popup; switching away removes background inert state",
+    "Busy state disabled; canonical focus; no network API or persistence",
+    "Cancellation and existing-member restrictions remain review-only popups"
+  ],
+  "logo": {
+    "library_file_id": "libfile_c247d6fdacc88191b05684d54dbd65fe",
+    "resolution": [
+      1254,
+      1254
+    ],
+    "originalBytesPreserved": true
+  },
+  "visualQA": "Browser visual rendering not performed in this pass; approved CSS/layout and original 1254×1254 logo bytes preserved.",
+  "sourceExecution": "Read-only archived source inspection; only newly authored scripts executed."
+}

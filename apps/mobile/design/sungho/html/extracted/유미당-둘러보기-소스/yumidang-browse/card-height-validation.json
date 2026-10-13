@@ -1,0 +1,71 @@
+{
+  "source_padding_before": [
+    26,
+    39,
+    19
+  ],
+  "source_padding_after": [
+    32,
+    39,
+    25
+  ],
+  "source_min_height_before": 386,
+  "source_min_height_after": 398,
+  "source_gap_before": 36,
+  "source_gap_after": 30,
+  "responsive_geometry": [
+    {
+      "viewport_width": 360,
+      "padding_before_px": [
+        9.904761904761905,
+        7.238095238095237
+      ],
+      "padding_after_px": [
+        12.19047619047619,
+        9.523809523809524
+      ],
+      "padding_increase_each_px": 2.2857142857142856,
+      "minimum_height_before_px": 147.04761904761904,
+      "minimum_height_after_px": 151.61904761904762,
+      "gap_before_px": 13.714285714285714,
+      "gap_after_px": 11.428571428571427
+    },
+    {
+      "viewport_width": 320,
+      "padding_before_px": [
+        8.804232804232804,
+        6.4338624338624335
+      ],
+      "padding_after_px": [
+        10.835978835978835,
+        8.465608465608465
+      ],
+      "padding_increase_each_px": 2.0317460317460316,
+      "minimum_height_before_px": 130.7089947089947,
+      "minimum_height_after_px": 134.77248677248676,
+      "gap_before_px": 12.19047619047619,
+      "gap_after_px": 10.158730158730158
+    },
+    {
+      "viewport_width": 280,
+      "padding_before_px": [
+        7.703703703703703,
+        5.62962962962963
+      ],
+      "padding_after_px": [
+        9.481481481481481,
+        7.4074074074074066
+      ],
+      "padding_increase_each_px": 1.7777777777777777,
+      "minimum_height_before_px": 114.37037037037037,
+      "minimum_height_after_px": 117.92592592592592,
+      "gap_before_px": 10.666666666666666,
+      "gap_after_px": 8.88888888888889
+    }
+  ],
+  "fonts_icons_internal_spacing_width_glass_preserved": true,
+  "auto_height_prevents_new_height_clipping": true,
+  "only_card_padding_min_height_and_list_gap_css_changed": false,
+  "browser_visual_qa": false,
+  "additional_change": "Dedicated filter label/centered decorative SVG chevron alignment"
+}

@@ -1,0 +1,18 @@
+{
+  "source_library_id": "libfile_c247d6fdacc88191b05684d54dbd65fe",
+  "source_dimensions": [
+    1254,
+    1254
+  ],
+  "source_bytes": 1239336,
+  "source_sha256": "fad05095e3d79e7089c1e07b612563f20e792da204f8fd6ccf4bdd18eb989c43",
+  "output_dimensions": [
+    64,
+    64
+  ],
+  "output_bytes": 4419,
+  "output_sha256": "854fe722bbcf0fcc478a89548525cc5bd1e839db1dc51c070b72155c92f39ecc",
+  "display_css_pixels": 20.19047619,
+  "method": "whole-artwork Lanczos downsampling, optimized PNG; no crop/recolor/transparency change",
+  "original_unchanged": true
+}

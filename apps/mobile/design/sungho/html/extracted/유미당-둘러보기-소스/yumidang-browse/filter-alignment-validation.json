@@ -1,0 +1,25 @@
+{
+  "four_filter_labels_verified": true,
+  "button_flex_alignment": "center",
+  "label_font_size_source_px": 29,
+  "label_font_weight": 700,
+  "label_chevron_gap_source_px": 13,
+  "chevron_box_source_px": [
+    30,
+    30
+  ],
+  "chevron_path_bounds": [
+    6,
+    9,
+    18,
+    15
+  ],
+  "chevron_center": [
+    12,
+    12
+  ],
+  "decorative_accessibility": true,
+  "all_other_html_unchanged": true,
+  "only_requested_css_changes": true,
+  "browser_visual_qa": false
+}

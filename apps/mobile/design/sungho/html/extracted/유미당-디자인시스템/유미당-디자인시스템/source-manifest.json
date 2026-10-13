@@ -1,0 +1,530 @@
+{
+  "version": 2,
+  "updated": "2026-10-13",
+  "scope": "12개 HTML 화면의 단일 참조 경로; S01 둘러보기 안에서 S02 상세 시트를 직접 참조, Expo 미적용",
+  "entries": [
+    {
+      "id": "home",
+      "name": "홈",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/유미당-홈.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/BrowseScreens.tsx"
+      ],
+      "scenes": "guest / empty / booked / ongoing; 행사 normal / empty / error",
+      "note": "현재 원본 HTML이 유일한 디자인 기준. 구버전 진입점과 중복 연결 화면은 제거. Expo 미적용."
+    },
+    {
+      "id": "browse",
+      "name": "둘러보기",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/유미당-둘러보기.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/BrowseScreens.tsx"
+      ],
+      "scenes": "default / guest / applied / awaiting / confirmed / completed / empty / error / invalid / loading / moreError / longText / missingData / pagination / paginationExpanded",
+      "note": "현재 원본 HTML이 유일한 디자인 기준. 구버전 진입점과 중복 연결 화면은 제거. Expo 미적용. 공고 선택 시 S02 원본 상세 시트를 열고 닫으면 목록 위치·포커스를 유지한다."
+    },
+    {
+      "id": "postDetail",
+      "name": "공고 상세",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-공고상세-소스/유미당-공고상세.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/BrowseScreens.tsx",
+        "apps/mobile/src/screens/RemoteScreens.tsx"
+      ],
+      "scenes": "design-scene-contract.json의 31장면",
+      "note": "현재 원본 HTML이 유일한 디자인 기준. 구버전 진입점과 중복 연결 화면은 제거. Expo 미적용."
+    },
+    {
+      "id": "events",
+      "name": "행사 목록",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/BrowseScreens.tsx",
+        "apps/mobile/src/screens/RemoteScreens.tsx"
+      ],
+      "scenes": "로그인 전·동의 누락·로딩·빈 목록·오류·카테고리 오류·긴 글·이미지 없음/실패·부분/만료 기간 등 기존 선택 장면",
+      "note": "list/events.css와 events.js. 서비스 합성 데이터 시안이 기준이며 별도 Expo 미리보기 디자인으로 분기하지 않는다. 흰 플로팅 재질 확장 잠정 검토; 기존 상태·기능 유지, Expo 미적용."
+    },
+    {
+      "id": "eventDetail",
+      "name": "행사 상세",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/BrowseScreens.tsx",
+        "apps/mobile/src/screens/RemoteScreens.tsx"
+      ],
+      "scenes": "현재 상세의 고정 장면 선택기",
+      "note": "목록과 글자 크기가 아직 다름. 이번 문서화로 화면까지 변경하거나 최종 통일됐다고 간주하지 않는다. 흰 플로팅 재질 확장 잠정 검토; 기존 상태·기능 유지, Expo 미적용."
+    },
+    {
+      "id": "chat",
+      "name": "1:1 채팅",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S11-채팅-소스/index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/CommunityScreens.tsx",
+        "apps/mobile/src/screens/RemoteMemberScreens.tsx"
+      ],
+      "scenes": "대화 12·약속 9장면, 작성자/신청자; 입력 오류",
+      "note": "변경 제안자는 작성자/신청자 역할과 별개로 내가 제안/상대가 제안 값을 받는다. 본인 제안은 철회, 상대 제안은 거절/수락을 표시한다. 차단은 입력을 막되 확정 약속의 상세·취소와 시작 후 중단/신고 접근을 유지한다. 첫 메시지 전·첫 전송 성공·신청 거절·모집 종료·철회·재신청·삭제·완료 고정 장면은 마스킹 이름을 사용한다. 차단된 확정 약속의 이름 공개는 기존 확정 상태를 유지한다. 전송 실패 이탈 안내는 신청자의 첫 전송 실패에만 신청 미생성을 설명하며 작성자에게 적용하지 않는다. 작성자가 보는 상대 철회 장면에는 상대의 철회 상태를 표시한다. Expo 미적용."
+    },
+    {
+      "id": "me",
+      "name": "나",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/유미당-나-S13.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/CommunityScreens.tsx",
+        "apps/mobile/src/screens/RemoteMemberScreens.tsx"
+      ],
+      "scenes": "현재 app.js의 12개 고정 장면과 내 동행/내 공고/프로필 탭",
+      "note": "현재 독립 HTML의 최종 스타일·마크업과 연결된 app.js가 디자인 기준. nav.html은 조각이며 독립 화면이 아니다. Expo 미적용."
+    },
+    {
+      "id": "login",
+      "name": "로그인",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S05-로그인-소스/yumidang-S05/S05-index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/AuthAiScreens.tsx"
+      ],
+      "scenes": "기존 로그인 오류/로딩/완료 검토 선택",
+      "note": "s05.css. 네이버 브랜드 버튼 색 보존. 흰 플로팅 재질 확장 잠정 검토; 기존 상태·기능 유지, Expo 미적용."
+    },
+    {
+      "id": "signup",
+      "name": "가입 프로필",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S06-가입프로필-소스/yumidang-S06/S06-index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/AuthAiScreens.tsx"
+      ],
+      "scenes": "사진/성향 선택·입력 오류/로딩/완료 고정 표시",
+      "note": "auth.css. 로컬 사진 표시와 입력 피드백은 UI 검토; 실제 가입 처리 아님. 흰 플로팅 재질 확장 잠정 검토; 기존 상태·기능 유지, Expo 미적용."
+    },
+    {
+      "id": "chatList",
+      "name": "채팅 목록",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S10-채팅목록-소스/index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/CommunityScreens.tsx"
+      ],
+      "scenes": "default / unread / read / guest / empty / error / loading / long / missing",
+      "note": "사용자 확정 목록 디자인. 모든 메시지 확인은 방 유지·배지와 채팅 점 숨김. 목록 하단 나가기 안내 제거. Expo 미적용."
+    },
+    {
+      "id": "notifications",
+      "name": "알림",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S12-알림-소스/index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/CommunityScreens.tsx",
+        "apps/mobile/src/screens/RemoteMemberScreens.tsx"
+      ],
+      "scenes": "default / unread / read / empty / guest / loading / error / updates / missing / permission / expired / cancelled / read-error",
+      "note": "공고 제목 우선·상태 오른쪽 배지·도착 시각 우측 하단. 현재 검토 디자인, Expo 미적용."
+    },
+    {
+      "id": "publicProfile",
+      "name": "S14 공개 프로필",
+      "entry": "apps/mobile/design/sungho/html/extracted/유미당-S14-상대프로필-소스/index.html",
+      "expoFiles": [
+        "apps/mobile/src/screens/CommunityScreens.tsx",
+        "apps/mobile/src/screens/RemoteScreens.tsx"
+      ],
+      "scenes": "profile.js의18개 프로필 장면 / 요약6상태 / 차단3상태",
+      "note": "2026-10-13 사용자 시안 확정. Expo 미적용."
+    }
+  ],
+  "sourceFiles": {
+    "apps/mobile/design/sungho/html/extracted/유미당-S05-로그인-소스/yumidang-S05/S05-index.html": {
+      "sha256": "e3111145c180467c5044d135ea8e5a6c3abdb8b667382a0d2d550893c0b38be4",
+      "bytes": 2051
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S05-로그인-소스/yumidang-S05/s05.css": {
+      "sha256": "7aac95e1cf12771d70842eaee29b0b26594918d4335851b42ee9ed173432d147",
+      "bytes": 7887
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S05-로그인-소스/yumidang-S05/s05.js": {
+      "sha256": "b2538c0e8c4e2594ebcf93584308a7adefaa04b52ef8dd4d1220fa5f64df8167",
+      "bytes": 5737
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S06-가입프로필-소스/yumidang-S06/auth.css": {
+      "sha256": "3e1f8c5edbcc4ca52e9e4cfaca161192f916297e5c32c41352d49444d2d11c9b",
+      "bytes": 18181
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S06-가입프로필-소스/yumidang-S06/auth.js": {
+      "sha256": "7b6a6fc7d611d8fae3cd32f004da959107e7ebfbd3dae2ef2aec89bfc94421ba",
+      "bytes": 11769
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S06-가입프로필-소스/yumidang-S06/photo-button-press.js": {
+      "sha256": "d3dad82e7b1886887359534e5d7287015fc0391922d6e3bc800a5d781f145eff",
+      "bytes": 5632
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S06-가입프로필-소스/yumidang-S06/S06-index.html": {
+      "sha256": "bb0b5764aa578bb81c787964feba55fea5ac7727641cbeac74c320bbffb9d5f9",
+      "bytes": 1284
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/browse.css": {
+      "sha256": "6d9b3e99710a8eae3b130166cbd7fd21d427c387d2c2e3b0f9892e2b592fd141",
+      "bytes": 22662
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/events-sheet.js": {
+      "sha256": "b95d04ddc667d43102f2ba1a47fa76d37099964cbc266429080087100ef04fd1",
+      "bytes": 11209
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/events.css": {
+      "sha256": "403f29bf4526166c45e20f2bcec4265a73abf20b2a432117b160f7c1409459e7",
+      "bytes": 33111
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/events.js": {
+      "sha256": "0f745603e5eb08decbb6ab44e908fce89ef043419167394a30b53ce6656f5ac6",
+      "bytes": 8156
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/fixtures.js": {
+      "sha256": "cc2eb76b5fe6e7c97f837f635726762225461de0f45cef6a26e0afe8978416e7",
+      "bytes": 14505
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/home-material.css": {
+      "sha256": "7345ace8ac33cd0b06a493bb53cc9eb0c43ba0857cf628b9807942f1c33b3704",
+      "bytes": 14528
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/index.html": {
+      "sha256": "45791cd3fe10dc9df2729d12e7b2937aa75e200c3f43dd11f064b055b191710b",
+      "bytes": 8528
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/press-feedback.css": {
+      "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198",
+      "bytes": 1403
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-2-행사목록-소스/list/press-feedback.js": {
+      "sha256": "8da3e908f80defb7abcd0127ee3357a0cca7cc18e08cf8683c441bf1cab6b439",
+      "bytes": 5612
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/browse.css": {
+      "sha256": "6d9b3e99710a8eae3b130166cbd7fd21d427c387d2c2e3b0f9892e2b592fd141",
+      "bytes": 22662
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/detail.css": {
+      "sha256": "f9672456bbc98521ec62d68a7b064dd44e1e7dfbbb117733a3d7797842f76335",
+      "bytes": 9701
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/detail.js": {
+      "sha256": "3c77eea937fb831269c6c50bbd2b76f4f7f13740365ff5c646b545b30c44e101",
+      "bytes": 7785
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/events.css": {
+      "sha256": "cf64236b48f90fb11dcdf188f7a034c905df56928a43fbae6ef307f9e1ad1406",
+      "bytes": 5139
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/home-material.css": {
+      "sha256": "7345ace8ac33cd0b06a493bb53cc9eb0c43ba0857cf628b9807942f1c33b3704",
+      "bytes": 14528
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/index.html": {
+      "sha256": "9405dbdf9c80203e8331c86ed2425ccb10a76c0237eba923537e558c2d1a482f",
+      "bytes": 2140
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/press-feedback.css": {
+      "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198",
+      "bytes": 1403
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S09-3-행사상세-소스/detail/press-feedback.js": {
+      "sha256": "8da3e908f80defb7abcd0127ee3357a0cca7cc18e08cf8683c441bf1cab6b439",
+      "bytes": 5612
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S11-채팅-소스/chat.css": {
+      "sha256": "5e6b7bedb668d3bfcd949b460a9c18a42bdc40268ef1366ac1b3d474f8cf909b",
+      "bytes": 15115
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S11-채팅-소스/chat.js": {
+      "sha256": "2cd4518f20e6ddd0db321343d0c9460ddac71fa49559cea3a703962c2db0b1c7",
+      "bytes": 11179
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S11-채팅-소스/flow.css": {
+      "sha256": "ad54e49a0b28aa1402aacc62aa0cec56c8ff0461c6c93dc367a04b98feaf5436",
+      "bytes": 3721
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S11-채팅-소스/flow.js": {
+      "sha256": "fb2ae83227420c3f5fd9e6dd6945884d092f53abeb16e95322963e59d4c46b6c",
+      "bytes": 8594
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S11-채팅-소스/index.html": {
+      "sha256": "716ac27caef181045585a103294a51aca58217db094eb7996a3e5e3a2d671730",
+      "bytes": 6017
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-공고상세-소스/유미당-공고상세.html": {
+      "sha256": "48df3377b2f8f1a964039d4777c03c273ad07a78f637e00c931082b324aceb19",
+      "bytes": 2688734
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-공고상세-소스/yumidang-listing-detail/test-bottom-sheet.js": {
+      "sha256": "e10895cccd0591b7d17a70df381c3595d8a2b1699c7199761d6763be6ca5c1b2",
+      "bytes": 11391
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-공고상세-소스/yumidang-listing-detail/test-detail.js": {
+      "sha256": "5184c9767e5a1683b3fbed2a5ae1dfa0dd9ffba0dfc5a6042d66c84935972ac2",
+      "bytes": 4158
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/app.js": {
+      "sha256": "24877dbe7e53e1af32aa9e24de63233aab585e7746b7ad23fd8c09dbaccb8a52",
+      "bytes": 1736
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/canonical.css": {
+      "sha256": "19cc5b626d73ca723ae89d00a4838affe3495a3b532a728b5705793f3ca6d05d",
+      "bytes": 2993986
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/nav.html": {
+      "sha256": "20e74465779c93a24f78e559f046fbbb928465c91a893931e85dc9c4af488dc6",
+      "bytes": 6521
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/press-feedback.css": {
+      "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198",
+      "bytes": 1403
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/press-feedback.js": {
+      "sha256": "8da3e908f80defb7abcd0127ee3357a0cca7cc18e08cf8683c441bf1cab6b439",
+      "bytes": 5612
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/screen.css": {
+      "sha256": "b58ab1346b92f86ade697bfa63819da55c6f0a89774abff1c4df21a86adffee7",
+      "bytes": 17775
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-나-S13-소스/유미당-나-S13.html": {
+      "sha256": "5b39920f0d80a87add7d109886d3374a749d14cf9143c3b5b20138d8d08dd78c",
+      "bytes": 3182531
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/유미당-둘러보기.html": {
+      "sha256": "3936253d2503b5a84281e3685314ceb6c7167636b1e3c9bff11797b86a8a01b6",
+      "bytes": 3097114
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-adaptive-layout.js": {
+      "sha256": "e88125853556b7292907bfd516dcb04a19190b7655bd6d9cf2cb9689be280987",
+      "bytes": 5821
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-age-range.js": {
+      "sha256": "d4df567e36ee20c8327c7a92afca4719f6b25ed6a396d5ca480334cbd76931c0",
+      "bytes": 4137
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-card-hitareas.js": {
+      "sha256": "a360008c75298b4b2a5df0a2532ec6caba580a663d336906b91a23454047065d",
+      "bytes": 1870
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-card-press.js": {
+      "sha256": "58163ea8cf70111d786745275b49d4b6aadc6d8e0f044130f59afc478428e86d",
+      "bytes": 3388
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-category-all.js": {
+      "sha256": "5c1564f3dca474bc01583c701db626fb4d9c6fa3745caf962a8e06e7f9ba5e98",
+      "bytes": 2048
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-chip-hit-press.js": {
+      "sha256": "3213c16125b0f46cf7949343a679d9f3e65ff7c0bd3b9c874f115fee228a5b10",
+      "bytes": 649
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-chip-size.js": {
+      "sha256": "d5d6360709639fa19dc278e626e6558770979f111de6d51e02e3f5c431737e26",
+      "bytes": 1345
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-current-design-contract.js": {
+      "sha256": "00705fed7a3c7d06295413adfc3ff65b550b83c8754352564613e1e170681e12",
+      "bytes": 927
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-design-states.js": {
+      "sha256": "d9fc0d8fb6f3724c9ca54c1b47491ed7917bce1737a0da5d2836d60b94dd5f0f",
+      "bytes": 2086
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-disabled-buttons.js": {
+      "sha256": "ed9813c80bb77d692ac7db4a63b7ad5a8d78a427d47aec45a85fe595576498ef",
+      "bytes": 5981
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-edge-states.js": {
+      "sha256": "7a79e83e0d814ab81addcaee8bc7820c34765c03d20b7c204ec1db65345d2224",
+      "bytes": 1746
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-filter-weight.js": {
+      "sha256": "5d89394c59545c49399a0cac025f4639872779f0bef91779c34ac1ce0782b052",
+      "bytes": 2586
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-fixed-tools.js": {
+      "sha256": "52f33bf8b58932a492c9d7601325f9a843f12279f4feba09d45d01d10391c6bf",
+      "bytes": 2933
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-grip-age-activation.js": {
+      "sha256": "537937a5347bd2ff9e79b02e65e33ffdf9b5a6013c8e6c210cbfadbea96d3619",
+      "bytes": 1904
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-input-states.js": {
+      "sha256": "d0def4a90289a39046122cff4629c2790824c37856a95e5cbc2336947bbf4c07",
+      "bytes": 958
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-motion.js": {
+      "sha256": "ba1a9e6aa0599d94dab7bd2423ec67a1129184227fed7d5909b1107b29c3c74c",
+      "bytes": 4727
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-name-mask.js": {
+      "sha256": "172cac17970355d91a73b606d7413e8c144947fe3dc7c12d4f3872804a374f6f",
+      "bytes": 1096
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-press-feedback.js": {
+      "sha256": "70459876c4e8c4a360db3500ddabeff62c3903d1349f9350c156b6539a5927df",
+      "bytes": 5102
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-region-order.js": {
+      "sha256": "ae7a59111d9b8c0a79c761ad6c396abf39b1dffe8171b8db323933b7398ff410",
+      "bytes": 1731
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-shared-nav.js": {
+      "sha256": "ea88d2a1876274e88dcb5a99e48a0596adfce2421770cb634f047f572b93ed66",
+      "bytes": 1791
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-sheet-density.js": {
+      "sha256": "25a3ba17ae0c9184be449759293087a75b600f9337f65cb1657522fc4bcc64e7",
+      "bytes": 2458
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-sheet-drag.js": {
+      "sha256": "8ef9688596f1fb6876b5e174e80294f3b2d5e218c15152cc43db13eb021ae760",
+      "bytes": 2665
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-sort-toggle.js": {
+      "sha256": "8717d12701d54b6cf62a2d5bfce9ed39dc68d9117b34a79142e1a28700ac1ebd",
+      "bytes": 1611
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-tools-focus-gutter.js": {
+      "sha256": "4c3c91bea6dd1a25f6a3d7ab7c6d6d7aa78718297b96d70d7ec3fbfe4e8a2539",
+      "bytes": 831
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test-ui.js": {
+      "sha256": "645e4562d57f41a7eb8dc0344417d9468ccc96b9140320c3c0e131977cce9d56",
+      "bytes": 2838
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-둘러보기-소스/yumidang-browse/test.js": {
+      "sha256": "5eabc4e40bd07198ce757c32f2d9187490715f341a754300bc04e7669bce0de8",
+      "bytes": 914
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/유미당-홈.html": {
+      "sha256": "aa550f81e940e72f3546ee78ef837f627a2190e3ef21652f2dddd9eb5a68393b",
+      "bytes": 4438294
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/adaptive.css": {
+      "sha256": "803ef6052cb206216b56ad023623924107d085f0c8a678ccba92e4d2954cf942",
+      "bytes": 9504
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/adaptive.js": {
+      "sha256": "cdc3c54461d13b53f4bba421fad56bdd8c12a894dd9b118b4097eda299cf316b",
+      "bytes": 2747
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/event-data.js": {
+      "sha256": "b080ac0c06d246b77d5f86036d5e882a9f0b1ef99cb07c3f8346740ee12b7fee",
+      "bytes": 2199
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/events.css": {
+      "sha256": "77b0d9d4189e74cf7129f524eb195fe49e2f903b551a6aa762746df0ebc9c9f9",
+      "bytes": 4268
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/events.js": {
+      "sha256": "fdb277687ccbd395f3f027abba2d79fb9110a6f6a07d1d3c97907a5c33c821f5",
+      "bytes": 2488
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/home-state.css": {
+      "sha256": "17720299c52606f7848681edda78c48beb23399307f58c6b1260fb1aa5f6ca59",
+      "bytes": 7006
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/home-state.js": {
+      "sha256": "d0d070202dbc8a436bafe0f5829d18daf67ea761a43bc3cff05e4bd72b6a2279",
+      "bytes": 5484
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/press-feedback.css": {
+      "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198",
+      "bytes": 1403
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/press-feedback.js": {
+      "sha256": "9fc4be4cfe2a36c6ab734e7fbaf75c0b42a88ca6d455a9a238da19125b8a490e",
+      "bytes": 5500
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-card-alignment.js": {
+      "sha256": "e126509971a4a30799060b920053607dfec68d3dbd1cf41512ca9d2522c415d3",
+      "bytes": 2085
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-card-press.js": {
+      "sha256": "004da9b9dd0944a1d5412085b45997d4c9d673cd7ff422eea870897989cbb8d2",
+      "bytes": 3885
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-current-design-contract.js": {
+      "sha256": "ea6d87e6d0275252d3facc1582637d7622d4c1c81e69b64a49d883bf5971a5b6",
+      "bytes": 967
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-design-states.js": {
+      "sha256": "e94fa6bf244163846f7760c26c2ab856631ffa8f0ef14e78d0662696bd51dc93",
+      "bytes": 4162
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-disabled-buttons.js": {
+      "sha256": "b1b253ad6b01443cd2906a4bc6e09084519d3ae25d8d02f593fe55012607b9a7",
+      "bytes": 5985
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-event-data.js": {
+      "sha256": "b927febaa20d1a9469e10799dc8c6c4465c27472f1da3e8e98ab1e089684d226",
+      "bytes": 607
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-events.js": {
+      "sha256": "021a505d948645675febc6a07d0fc97c98fd66eb15ff40f109b8c6452faad826",
+      "bytes": 5653
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-header-brand.js": {
+      "sha256": "0b0a0ead1f0a6c580db7315091884e5a20ccbcb3432fe388b22679f02448d44a",
+      "bytes": 1268
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-height-fit.js": {
+      "sha256": "024b831bf7479e61a861cabb7665a5c27341bfded55b63ea6e5e7443ddb634e9",
+      "bytes": 5103
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-home-state.js": {
+      "sha256": "7155636d5393441d63749ba67dd837a3f1665f942bdf6d097154eaa4af136052",
+      "bytes": 4544
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-press-feedback.js": {
+      "sha256": "70459876c4e8c4a360db3500ddabeff62c3903d1349f9350c156b6539a5927df",
+      "bytes": 5102
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-press-renderer.js": {
+      "sha256": "7e26bf0bb213ee86ebde0a899bef2dccb8b623812fcaa4f3893ed5003e59a0db",
+      "bytes": 2345
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-홈-소스/yumidang-home/test-section-spacing.js": {
+      "sha256": "e23bb0bf9dc96ac57ce6cae5f180825ec368be4bf200deee8ae1ba8b437c15af",
+      "bytes": 404
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S05-로그인-소스/yumidang-S05/assets/naver-login-official.png": {
+      "sha256": "00028bfdb32d84e817aecf0ebe5d14251234930efc4f23f6a7969b647db9f5dd",
+      "bytes": 3687
+    },
+    "apps/mobile/design/sungho/html/extracted/preview-panel.css": {
+      "sha256": "700eb38929600c1b774bf8074eb97fcc795d3d9f5ef37cce05cdc748886c715f",
+      "bytes": 3367
+    },
+    "apps/mobile/design/sungho/html/extracted/preview-panel.js": {
+      "sha256": "f8e8f7a7492895e204b9043041fe73a256565e9a8cd366c99c66e308fc7d0e2d",
+      "bytes": 1160
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S10-채팅목록-소스/index.html": {
+      "sha256": "576c5a7969079f98fe61e7247868d8b1c2faf226c7755a05dd24abb81e39b256",
+      "bytes": 20875
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S12-알림-소스/index.html": {
+      "sha256": "397234042ecd9ec6e9c40e8d0f5c4e7a2ab3a41bde68b2b386da8f2406d7c0dd",
+      "bytes": 15773
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S14-상대프로필-소스/index.html": {
+      "sha256": "f087c97ec93666a4b298fcfa16590ba7a9e069bbd378c758d34fa8e60a8f73cd",
+      "bytes": 5631
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S14-상대프로필-소스/profile.css": {
+      "sha256": "5fd2a65d890b94ae167b50520f11eab1abe5fec5be795ab95f9d6f6ad7c61c62",
+      "bytes": 15688
+    },
+    "apps/mobile/design/sungho/html/extracted/유미당-S14-상대프로필-소스/profile.js": {
+      "sha256": "5f92ac284a7e88a454e86aee531c39b71e377784fab657ef26dc123df9c84232",
+      "bytes": 12054
+    }
+  },
+  "legacyCopies": "중복 screens 화면 코드는 제거했다. screens/home/assets는 행사 목록에서 사용하는 공통 이미지 자산이며 화면 복사본이 아니다. 과거 검증 JSON은 현재 검증 완료 근거가 아니다.",
+  "naverAssetProvenance": {
+    "url": "https://developers.naver.com/inc/devcenter/downloads/bi/NAVER_login_KR.zip",
+    "member": "NAVER_login_KR/NAVER_login_Light_KR_green_icon_H48.png",
+    "modified": false
+  }
+}

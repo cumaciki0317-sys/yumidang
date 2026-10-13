@@ -1,0 +1,157 @@
+{
+  "html_sha256_before": "4764d97ce45d8db668380b83b09ff63e4baa6f312fa08832820f64402cbc36ca",
+  "zip_bytes_before": 12658891,
+  "removed_count": 16,
+  "removed_bytes": 3103085,
+  "removed": [
+    {
+      "file": "icon-comparison.png",
+      "size_bytes": 92161,
+      "sha256": "b0e135614da7554d929d7bc34cde756f6b11834659c905c7a40c9545bc3491ee",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/festival.png",
+      "size_bytes": 584236,
+      "sha256": "a00b0c531e37d519c7b60ebb4646e79f06a1327c4d76eaedf67d6ff94fd728f0",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/meal.png",
+      "size_bytes": 4995,
+      "sha256": "8342f80e94009e9280304670e86cae1bed8d4537791be98a4acb8516190d2e2a",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/exhibit.png",
+      "size_bytes": 6259,
+      "sha256": "889ef804b94fcea18edea8454ccfbc355b08fb1161f5a63aca91e1dc22e91527",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/shop.png",
+      "size_bytes": 6197,
+      "sha256": "d7d6b299a315c7f0308dd29d3292a638fbf8939dbf033a648a644870aa924e44",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/exercise.png",
+      "size_bytes": 6687,
+      "sha256": "51a49f3e381632caf0b2efd8a4c31f4ef9b863637a6800c67972cd30b13fa129",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/walk.png",
+      "size_bytes": 7802,
+      "sha256": "4b240db44616fa478b04467433ffeca604d4a3d101689e1ae2d2e5a5c570794d",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/museum.png",
+      "size_bytes": 8760,
+      "sha256": "15fb00119c43720a0a8f10163c1298696e723a6760d51e3eab07521bff53f46e",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/festival-icon.png",
+      "size_bytes": 7287,
+      "sha256": "403fbcd82dd15c7b3e353883c6142a506a1cc03aefccc96ee536e90bfd32a36d",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/festival-background.png",
+      "size_bytes": 2338236,
+      "sha256": "90ad88f77cfc7b81f8aefb0c6233b2417f289872771c419923cb883438acfa8e",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/class.png",
+      "size_bytes": 7626,
+      "sha256": "3e7472b2f6b3860c699b6c647e8e56e41066fb16ce21acffb7c2c00baed0544e",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/travel.png",
+      "size_bytes": 8285,
+      "sha256": "c9d816938328962f634a713104f62d179a9c085581a4fbd5ef58e19a1ab923cd",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/show.png",
+      "size_bytes": 5744,
+      "sha256": "41c8a30df42f80582857e1790ea2ee62bd770b5d864a27a43dcc07de6d1f31f2",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/clock.png",
+      "size_bytes": 6592,
+      "sha256": "279828d8ddd58766d31f33f08403b643ee91b51edcca40101a658b5f033a980c",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/study.png",
+      "size_bytes": 5985,
+      "sha256": "37ac3a8c562eecdbfc09f721ec381187340af899bf387ee936d4e5449b4cd78e",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    },
+    {
+      "file": "assets/all.png",
+      "size_bytes": 6233,
+      "sha256": "b89eeee180eaf293aa04fe0b066a5ace59a6415b2fe658195589b0a29faacad9",
+      "reason": "Superseded PNG or historical comparison; no current HTML/CSS/JS/SVG/build/runtime mapping reference"
+    }
+  ],
+  "retained": [
+    {
+      "file": "assets/orb.png",
+      "size_bytes": 4866,
+      "sha256": "0596aa43c0cb5620588eae6828318eeb5ba0c81843832468cac6987ecb0dce8a",
+      "references": [
+        "yumidang-home/index.html",
+        "yumidang-home/index.html"
+      ]
+    },
+    {
+      "file": "assets/home.png",
+      "size_bytes": 4199,
+      "sha256": "639d10b3f1055736727305a21c79241a2f1acda2d94358478a8bbd9fb985f193",
+      "references": [
+        "yumidang-home/index.html"
+      ]
+    },
+    {
+      "file": "assets/companions.png",
+      "size_bytes": 14563,
+      "sha256": "34ff84d6bd740864a86641bc544c5041dae5324d9901d598d0b0a0c7ebf49851",
+      "references": [
+        "yumidang-home/index.html"
+      ]
+    },
+    {
+      "file": "assets/women.png",
+      "size_bytes": 7143,
+      "sha256": "af38d8fa3e0dc5a51a06edf8e14393346b7fa8fcc0af178bfa482b921e32d6ae",
+      "references": [
+        "yumidang-home/index.html"
+      ]
+    },
+    {
+      "file": "assets/robot.png",
+      "size_bytes": 8737,
+      "sha256": "432d15d70a1955733889add58e0a2745a2eb17bc77e3306148c7275909adaaba",
+      "references": [
+        "yumidang-home/index.html"
+      ]
+    }
+  ],
+  "runtime_asset_reference_count": 26,
+  "checked_dynamic_asset_data": "home-state.js uses explicit provided-profile.jpg; event-data.js maps text/status only; no dynamic PNG filename assembly",
+  "current_packaging_script_changes": false,
+  "backup_verified": true,
+  "html_sha256_after": "4764d97ce45d8db668380b83b09ff63e4baa6f312fa08832820f64402cbc36ca",
+  "html_byte_identical": true,
+  "source_index_unchanged": true,
+  "all_current_asset_references_resolve": true,
+  "maintenance_script_adjustment": "Historical carousel asset-preservation validator resolves archived PNGs from the backup when absent from deployment sources",
+  "later_avatar_update": "companions.png subsequently moved to a recoverable backup after replacement by individual photos; current runtime PNGs: orb, home, women, robot"
+}

@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "assertions": 670,
+  "scenarios": 31,
+  "scope": "Pure render/model, mocked DOM actions, source contracts. Not a real browser or touch test.",
+  "browserVisualQA": "NOT_RUN: Chromium socket() Operation not permitted. No bypass."
+}

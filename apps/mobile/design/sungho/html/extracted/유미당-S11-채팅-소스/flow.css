@@ -1,0 +1,31 @@
+.flow-card{border:1px solid #e5e2eb;border-radius:14px;background:#fff;padding:14px;margin:12px 0;color:#30303d;font-size:14px;line-height:1.6}.flow-card h3{margin:0 0 6px;font-size:14px;font-weight:600}.flow-card p{margin:5px 0}.flow-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.flow-actions button{min-height:44px;padding:9px 12px;border:1px solid #ddd8e8;border-radius:10px;background:#fff;color:#454051;font:inherit;font-size:13px;cursor:pointer}.flow-actions .flow-primary{background:#943cff;border-color:#943cff;color:white}.flow-proposal{margin-top:10px;padding:10px;background:#f6f3fa;border-radius:8px}.flow-review label,.flow-dialog label{display:grid;gap:5px;margin:12px 0;font-size:13px}.flow-review select,.flow-dialog input,.flow-dialog select,.flow-dialog textarea{box-sizing:border-box;width:100%;min-height:42px;padding:8px;border:1px solid #d9d5e2;border-radius:8px;background:white;font:inherit;color:#30303d}.flow-dialog{width:min(360px,calc(100vw - 40px));box-sizing:border-box;max-height:85dvh;overflow:auto;border:1px solid #e3ddec;border-radius:18px;padding:20px;color:#30303d;font:14px/1.6 Pretendard,sans-serif}.flow-dialog::backdrop{background:rgba(24,18,35,.35)}.flow-dialog h2{font-size:18px;margin:0 0 12px}.flow-error{color:#b32632;font-size:12px}.flow-card button:focus-visible,.flow-review button:focus-visible,.flow-dialog button:focus-visible{outline:2px solid #943cff;outline-offset:3px}
+
+
+/* Appointment actions shared by author and applicant. */
+
+
+.flow-card[data-scene="conversation"]>h3,.flow-card[data-scene="conversation"]>p{display:none}
+.flow-card[data-scene="conversation"] .flow-actions{margin:0}
+.flow-card .flow-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.flow-card .flow-actions button{min-width:0;height:44px;min-height:44px;padding:0 10px;border:1px solid #e3dfeb;border-radius:12px;background:#fff;color:#626574;font-size:14px;font-weight:400}
+.flow-card .flow-actions button:only-child{grid-column:1/-1}
+.flow-card .flow-actions:has([data-flow="acceptChange"]) [data-flow="appointment"]{grid-column:1/-1}
+.flow-card .flow-actions button:is([data-flow="request"],[data-flow="accept"],[data-flow="acceptChange"]){background:#852cff;border-color:#852cff;color:#fff;font-weight:600}
+.flow-card .flow-actions button:active{background:#eeeaf4}
+.flow-card .flow-actions button:is([data-flow="request"],[data-flow="accept"],[data-flow="acceptChange"]):active{background:#7022df;border-color:#7022df}
+
+/* Every scene uses the same fixed action strip; passive scenes replace actions with status copy. */
+
+.flow-card .flow-actions{margin-top:0}
+.flow-summary{margin-bottom:12px;font-size:13px;line-height:1.6;color:#737184}
+.flow-summary h3{font-size:14px;color:#30303d;margin:0 0 4px}
+.flow-status{min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:3px;color:#737184;font-size:13px;line-height:1.6}
+.flow-status strong{font-size:14px;font-weight:500;color:#454051}
+.flow-card .flow-actions:has(>:nth-child(3)) [data-flow="appointment"]{grid-column:1/-1}
+.flow-card .flow-actions [data-flow="propose"]{background:#852cff;border-color:#852cff;color:#fff;font-weight:600}
+
+.flow-dialog.flow-confirm{position:fixed;inset:auto;margin:0;transform:translate(-50%,-50%)}
+.flow-confirm>p{color:#737184;font-size:14px;line-height:1.6;margin:0}
+.flow-confirm .flow-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:20px}
+.flow-confirm .flow-actions button{min-width:0;min-height:44px;border-radius:12px;font-size:14px;padding:10px 8px}
+.flow-confirm .flow-actions .flow-primary{background:#852cff;border-color:#852cff;color:#fff;font-weight:600}

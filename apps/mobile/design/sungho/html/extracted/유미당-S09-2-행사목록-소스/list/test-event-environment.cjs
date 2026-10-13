@@ -1,0 +1,17 @@
+const fs=require('fs'),vm=require('vm');
+function environment(reduced=false){
+ const nodes={},listeners={},timers=new Map(),frames=[],native=[],winListeners={};let timerId=0,now=0,doc;
+ function node(sel){if(nodes[sel])return nodes[sel];const classes=new Set(),attrs={},events={};const n={selector:sel,id:sel.startsWith('#')?sel.slice(1):'',value:'',checked:false,disabled:false,hidden:false,open:false,inert:false,innerHTML:'',textContent:'',scrollTop:0,offsetTop:80,dataset:{},style:{overflowY:'',overflow:'',setProperty(k,v){this[k]=v}},classList:{toggle(k,on){const v=on===undefined?!classes.has(k):on;v?classes.add(k):classes.delete(k);return v},contains:k=>classes.has(k)},setAttribute(k,v){attrs[k]=String(v)},getAttribute:k=>attrs[k]??null,attributes:attrs,addEventListener(k,f){(events[k]??=[]).push(f)},dispatch(k,e={}){for(const f of events[k]||[])f({target:n,preventDefault(){this.defaultPrevented=true},...e})},focus(){doc.activeElement=n},showModal(){n.open=true},close(){n.open=false;native.push(()=>n.dispatch('close'))},getBoundingClientRect(){return sel==='#viewport'?{left:0,top:74,right:390,bottom:844,width:390,height:770}:{left:0,top:120,right:390,bottom:844,width:390,height:724}},setPointerCapture(){},closest(q){return q==='button'||q==='[data-event-group]'?n:null}};nodes[sel]=n;return n;}
+ const filters=[['filter-all','event-types'],['filter-region','event-regions'],['filter-type','event-types'],['filter-dates','event-dates'],['filter-admission','event-admission']].map(([id,section])=>{const n=node('#'+id);n.dataset.eventFilter=section;return n});
+ const options=['default','guest','rankError','rankLoading','empty','error','taxonomyError','loading','picker','past','invalidPeriod','pickerPast','more','moreError'].map(value=>({value,hidden:false}));
+ doc={activeElement:node('#filter-type'),body:node('body'),documentElement:node('html'),querySelector:node,querySelectorAll(sel){return sel==='[data-event-filter]'?filters:sel==='#mode option'?options:sel==='[data-rank]'?['all','musical'].map(v=>{const n=node('[data-rank="'+v+'"]');n.dataset.rank=v;return n}):[]},addEventListener(k,f){(listeners[k]??=[]).push(f)}};
+ const context={URLSearchParams,location:{search:"",href:""},sessionStorage:{setItem(){}},alert(){},document:doc,console,structuredClone,innerWidth:390,innerHeight:844,matchMedia:()=>({matches:reduced}),requestAnimationFrame:f=>frames.push(f),setTimeout(f,ms){const id=++timerId;timers.set(id,{f,at:now+ms});return id},clearTimeout:id=>timers.delete(id),addEventListener(k,f){winListeners[k]=f},window:{}};
+ const c=vm.createContext(context),run=s=>vm.runInContext(s,c);for(const f of ['fixtures.js','events.js','events-sheet.js'])run(fs.readFileSync(__dirname+'/'+f,'utf8'));
+ function tick(ms=0){now+=ms;for(const [id,t] of [...timers])if(t.at<=now){timers.delete(id);t.f()}while(native.length)native.shift()();}
+ function raf(){const batch=frames.splice(0);for(const f of batch)f();}
+ function button(dataset={},id=''){return {id,dataset,disabled:false,closest:q=>q==='button'||q==='[data-event-group]'?b:null};var b;}
+ function clickMain(id='',dataset={}){const b={id,dataset,disabled:false,classList:{contains:()=>false}};for(const f of listeners.click||[])f({target:{closest:()=>b}})}
+ function choose(group,value){const b={disabled:false,dataset:{eventGroup:group,value}};node('#event-filters').dispatch('click',{target:{closest:()=>b}});}
+ return {node,run,tick,raf,choose,clickMain,doc,context,filters,options,flush(){raf();raf();tick(0)}};
+}
+module.exports={environment};

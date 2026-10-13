@@ -1,0 +1,133 @@
+{
+  "all_16_same_displayed_stroke": true,
+  "baseline_at_61px_height": 2.859375,
+  "original_pngs_unchanged": true,
+  "all_16_actual_vectors_without_embedded_raster": true,
+  "visual_qa": "Historical icon comparison PNG moved to recoverable backup outside the source package; current source icon checks remain unchanged",
+  "browser_qa": false,
+  "fidelity_limits": [
+    "PNG centerlines reconstructed manually from low-resolution originals; subpixel curves are approximations",
+    "Original raster highlight texture replaced with existing SVG system purple gradient",
+    "Runner torso narrowed as stroke while filled head retained; isolated sun/confetti dots retained"
+  ],
+  "assets": [
+    {
+      "asset": "now.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "a445e7488f615fe20d328b6c70f32b2918fea11ff41eec347df2bd1231b94945",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "exhibit.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "4378055f326130449a9c86fa862bc5f6ee0417dfa9f7af31e0a470b1e0e4e94f",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "festival-icon.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "555d8ebfa6c4ccdffe1456c179536f79b01c146fc19644ecc7df56b826cb2564",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "popup.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "2decc92142172481dad404f5d14acfa815e18d9737c4a9a87abe978e1abdf412",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "show.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "b6f83c9a43853c544ecd7337f0973c6c8865723ed3608e0b80a5704812921dff",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "movie.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "b8046559f87b73bfa76ed5205877e9615185667be511a743471560f44caf43a1",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "meal.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "5718cb48f839847e899f096d1251d6ac882e2d85a04d40f92d29b30c2ed08a44",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "cafe.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "baa7e5c253febabeaea29cb01a9b4117ac659244d2b79d8bae3db54e84728f77",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "shop.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "5296b04e27733da828aa1bdbd931e73125af20c6f76e7ef0d8daacaace4b669c",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "travel.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "0a792013b249fc8b39c1d1f2238a52f40e307c8c0860c81fddb3402f14a63836",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "exercise.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "4a948555015450108130dd6939d150f21ec343ded8f47c2f1ce97016849beda0",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "walk.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "c7ffbca1a067e50deafa208ce38e1af23c34f387da48313d545b8c166c8e2ebb",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "game.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "6d3f9ecb96603c7a6de036cb396ecccb8d6f892605c89dbb5aa928814eb8a4c2",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "pet.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "13f37ae47125898767c95e01563ca6c6ce8ced09f01a3a1de86232cc5d7f2f13",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "study.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "1245853bf11a608bf42ed58bd30b9c6894c85b9b5963a74f78ae2662ec2a2f57",
+      "normalized_stroke_at_64px": 3.0
+    },
+    {
+      "asset": "all.svg",
+      "editable_vector": true,
+      "stroke_at_61px": 2.859375,
+      "sha256": "b8d82e58f84911e558656ac216f65e10e073da5ffb5bdc3db38c8350fa756a86",
+      "normalized_stroke_at_64px": 3.0
+    }
+  ],
+  "normalized_stroke_at_64px": 3.0,
+  "previous_normalized_stroke_at_64px": 2.5,
+  "stroke_increase_percent": 20,
+  "all_16_stroke_only_diff": true,
+  "six_original_svg_shapes_unchanged": true,
+  "original_png_storage": "recoverable backup outside the source package"
+}

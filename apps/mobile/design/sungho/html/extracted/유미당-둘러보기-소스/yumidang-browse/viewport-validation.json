@@ -1,0 +1,28 @@
+{
+  "baseline": [
+    360,
+    800
+  ],
+  "nav_background_alpha": 0.8,
+  "content_under_nav": true,
+  "separate_fixed_overlay": true,
+  "sizes_checked": [
+    [
+      360,
+      800
+    ],
+    [
+      320,
+      568
+    ],
+    [
+      280,
+      480
+    ],
+    [
+      360,
+      640
+    ]
+  ],
+  "browser_visual_qa": false
+}

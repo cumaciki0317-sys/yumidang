@@ -1,0 +1,14 @@
+{
+  "heading_offset_css_px": 4,
+  "headings": [
+    "카테고리",
+    "지역",
+    "날짜",
+    "나이"
+  ],
+  "heading_text_only": true,
+  "sheet_is_unscaled_native_dialog": true,
+  "unrelated_css_unchanged": true,
+  "browser_visual_qa": false,
+  "increment_from_previous_css_px": 2
+}

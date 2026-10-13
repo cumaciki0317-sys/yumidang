@@ -1,0 +1,12 @@
+{
+  "assertions": 76,
+  "one_visible_track": true,
+  "two_semantic_inputs": true,
+  "age_bounds": [
+    19,
+    99
+  ],
+  "browser_visual_qa": false,
+  "native_touch_qa": false,
+  "assistive_technology_qa": false
+}

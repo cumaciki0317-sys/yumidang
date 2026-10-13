@@ -1,0 +1,18 @@
+{
+  "measurement": "source border-box gaps, excluding diffuse shadows",
+  "category_gap_artwork_px": 21.8,
+  "nav_bottom_before_artwork_px": 21,
+  "nav_bottom_after_artwork_px": 21.8,
+  "category_gap_display_px": 8.304761904761905,
+  "nav_bottom_before_display_px": 8.0,
+  "nav_bottom_after_display_px": 8.304761904761905,
+  "nav_shift_up_display_px": 0.3047619047619048,
+  "shared_css_variable": "--home-row-gap",
+  "nav_size_unchanged": [
+    892,
+    118
+  ],
+  "robot_bottom_unchanged": 173.3,
+  "add_bottom_unchanged": 172.8,
+  "browser_visual_qa": false
+}

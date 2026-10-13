@@ -1,0 +1,28 @@
+{
+  "approvedEffect": "scale(.96)",
+  "durationMs": 100,
+  "easing": "ease-out",
+  "nativeHitGeometryUnchanged": true,
+  "nativeActivationUnmodified": true,
+  "originalMarkupAndScriptsPreservedExceptTwoResourceIncludes": true,
+  "existingDistinctAssertions": 158,
+  "newPressAssertions": 55,
+  "browserVisualQA": false,
+  "testedResets": [
+    "pointerup",
+    "pointercancel",
+    "lostpointercapture",
+    "focusout",
+    "window blur",
+    "document hidden",
+    "dynamic content replacement",
+    "disabled transition"
+  ],
+  "excluded": [
+    "native input controls",
+    "disabled buttons",
+    "aria-disabled buttons",
+    "inert regions"
+  ],
+  "galleryInteractiveWithoutNavigation": true
+}

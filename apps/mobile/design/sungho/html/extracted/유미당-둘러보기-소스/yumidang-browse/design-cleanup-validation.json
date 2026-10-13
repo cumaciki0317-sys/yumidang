@@ -1,0 +1,201 @@
+{
+  "scope": "design-only fixed fixtures; no business engine",
+  "baseline_versions": {
+    "homeHtml": 38,
+    "homeZip": 42,
+    "browseHtml": 31,
+    "browseZip": 31
+  },
+  "browser_qa": "NOT_RUN",
+  "tests": [
+    {
+      "test": "test-adaptive-layout.js",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-adaptive-layout.js:4:34)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-adaptive-layout.js:22:185)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    "
+    },
+    {
+      "test": "test-age-range.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n76 dual-range assertions passed (mock pointer/keyboard, bounds, equal handles, draft lifecycle, guest and accessibility contracts; no browser QA)",
+      "stderr": ""
+    },
+    {
+      "test": "test-card-hitareas.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n61 independent card hit-area / UI-only button source checks passed; no browser paint QA.",
+      "stderr": ""
+    },
+    {
+      "test": "test-card-press.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n466 combined press checks passed; persistent card paint identity and fixed hit area verified in mock DOM, not visual pixel comparison.",
+      "stderr": ""
+    },
+    {
+      "test": "test-category-all.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n43 category-all and sheet UI checks passed; mock DOM/source only.",
+      "stderr": ""
+    },
+    {
+      "test": "test-chip-hit-press.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n64 press checks including expanded hit bounds passed in mock DOM.",
+      "stderr": ""
+    },
+    {
+      "test": "test-chip-size.js",
+      "exit": 1,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-chip-size.js:1:127)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-chip-size.js:2:73)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js"
+    },
+    {
+      "test": "test-current-design-contract.js",
+      "exit": 0,
+      "stdout": "Current approved CSS/fonts/glass/icons/nav/press source preservation passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-design-states.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\nMember/guest/applied/status/empty/error display and embedding event contract passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-disabled-buttons.js",
+      "exit": 0,
+      "stdout": "54 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n11 supplemental disabled lifecycle assertions passed (mock DOM only)",
+      "stderr": ""
+    },
+    {
+      "test": "test-filter-weight.js",
+      "exit": 1,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-filter-weight.js:1:171)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-filter-weight.js:10:349)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at "
+    },
+    {
+      "test": "test-fixed-tools.js",
+      "exit": 1,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-fixed-tools.js:2:127)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-fixed-tools.js:4:458)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Objec"
+    },
+    {
+      "test": "test-grip-age-activation.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n22 fixed grip / age box activation checks passed; source/mock only.",
+      "stderr": ""
+    },
+    {
+      "test": "test-input-states.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\nExplicit invalid-input / text-entry presentation checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-motion.js",
+      "exit": 0,
+      "stdout": "27 motion lifecycle assertions passed (mock timers/DOM; no browser paint)",
+      "stderr": ""
+    },
+    {
+      "test": "test-name-mask.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n30 name-mask and guest-display checks passed (synthetic fixtures, source/mock DOM only).",
+      "stderr": ""
+    },
+    {
+      "test": "test-press-feedback.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)",
+      "stderr": ""
+    },
+    {
+      "test": "test-shared-nav.js",
+      "exit": 0,
+      "stdout": "19 native shared-bottom-nav source checks passed; browser QA not performed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-sheet-density.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n33 compact sheet / age disabled UI checks passed; source/mock only.",
+      "stderr": ""
+    },
+    {
+      "test": "test-sheet-drag.js",
+      "exit": 0,
+      "stdout": "27 motion lifecycle assertions passed (mock timers/DOM; no browser paint)\n27 sheet pull-dismiss source/mock checks passed; real touch/browser QA not performed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-sort-toggle.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n96 sort-toggle UI checks passed (native button semantics and mock activation; no browser paint/keyboard QA).",
+      "stderr": ""
+    },
+    {
+      "test": "test-tools-focus-gutter.js",
+      "exit": 0,
+      "stdout": "12 tools focus-gutter source/geometry checks passed; no browser paint measurement.",
+      "stderr": ""
+    },
+    {
+      "test": "test-ui.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test.js",
+      "exit": 0,
+      "stdout": "15 static fixture and no-query-engine checks passed.",
+      "stderr": ""
+    }
+  ],
+  "historical_baseline_failures": [
+    {
+      "test": "test-adaptive-layout.js",
+      "baseline_exit": 1,
+      "baseline_error": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-adaptive-layout.js:4:34)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-adaptive-layout.js:22:185)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+    },
+    {
+      "test": "test-chip-size.js",
+      "baseline_exit": 1,
+      "baseline_error": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-chip-size.js:1:127)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-chip-size.js:2:73)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+    },
+    {
+      "test": "test-filter-weight.js",
+      "baseline_exit": 1,
+      "baseline_error": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-filter-weight.js:1:171)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-filter-weight.js:10:349)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+    },
+    {
+      "test": "test-fixed-tools.js",
+      "baseline_exit": 1,
+      "baseline_error": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-fixed-tools.js:2:127)\n    at Object.<anonymous> (/workspace/scratch/99ea48a5a41e/yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse/test-fixed-tools.js:4:458)\n    at Module._compile (node:internal/modules/cjs/loader:1872:14)\n    at Object..js (node:internal/modules/cjs/loader:2003:10)\n    at Module.load (node:internal/modules/cjs/loader:1594:32)\n    at Module._load (node:internal/modules/cjs/loader:1396:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+    }
+  ],
+  "source_preservation": [
+    {
+      "file": "browse.css",
+      "marker": "\n/* Review controls",
+      "sha256": "104feab0f57cd4d806a840c5650e7f1aab12055d907747b578738255338de0a5"
+    },
+    {
+      "file": "home-material.css",
+      "marker": null,
+      "sha256": "c5e47187058391520ce9a669459fb5222a625a961b4b5b45d34a0f6c797d56e2"
+    },
+    {
+      "file": "press-feedback.css",
+      "marker": null,
+      "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198"
+    },
+    {
+      "file": "press-feedback.js",
+      "marker": null,
+      "sha256": "8da3e908f80defb7abcd0127ee3357a0cca7cc18e08cf8683c441bf1cab6b439"
+    }
+  ],
+  "retry_semantics": "press-only; success selected explicitly outside app; empty reset clears input only"
+}

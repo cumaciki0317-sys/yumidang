@@ -1,0 +1,285 @@
+{
+  "source_zip_sha256": "ac0885cc7baa06e902735bf4bc907dda371e2de147941d13b53015e786fa87de",
+  "source_files": {
+    "docs/planning/design/유미당 와이어프레임.html": "7caa451348b9237b4d79e74e24ce4f11a5d8f9efed9eff232c2a8b10b8ca2b8c",
+    "apps/mobile/src/screens/BrowseScreens.tsx": "73f29d70b545cbd4e5c0125ef39f525bfe5c643e889de8a157828ca0d0a7c117",
+    "apps/mobile/src/screens/RemoteScreens.tsx": "e413fb253df16c859ee59f09c01330e0047b8f9f5ac9c259124bdc5a47a55eb4",
+    "apps/mobile/src/ui.tsx": "c197ad65c39f367652b252e08b0f3addba281a7b523e2ebc4a47a49b3682a9f3",
+    "docs/planning/design/IA.md": "a6e36af40ebdbe6d9f4bfc5a13b20f63676e2e1517f05d719eaeee574bc16a2c",
+    "docs/planning/design/USERFLOW.md": "ed1a3aa9e1f6b0250f58bcb7bbd2944590da5d8c21d3c64f70b3bc4d77175264",
+    "정책.md": "77382781eaffd92d7d4f079486939f3a7d55219f7d9a292f8268e45f8e287bbd",
+    "AGENTS.md": "8ca9b39dca7400c6b338df0f592686e751ea90537372800b3c1678deb76ed4fd",
+    "apps/mobile/src/data.ts": "bfe4f8aff6a879033f8b2c58d3a8e32e0eb1a2cc3034ef120f1d5c3874046090",
+    "apps/mobile/src/state.tsx": "2886ae8161d213cb3de56c596049d1be797e8d42a1b8ac3c345089d6114e6957"
+  },
+  "design_versions": {
+    "homeHtml": 38,
+    "homeZip": 42,
+    "browseHtml": 31,
+    "browseZip": 31,
+    "designSystem": 12
+  },
+  "ui_only": true,
+  "original_sources_modified": false,
+  "browser_visual_qa": "NOT_RUN",
+  "layout_reference": {
+    "path": "figma/S02 공고 상세 (옵션 B · 모듈 카드형).png",
+    "sha256": "9e88f43d98e9fd49bc72199d945e1192dc3622e4151217e2b1093619baa6fc31",
+    "actual_pixels_inspected": true,
+    "authority": "Layout only; features from existing prototype; style from canonical DS12/Home38/Browse31"
+  },
+  "runtime_authority": [
+    "apps/mobile/src/screens/BrowseScreens.tsx:1145-1529",
+    "apps/mobile/src/screens/RemoteScreens.tsx:543-602",
+    "apps/mobile/src/ui.tsx:472-533",
+    "apps/mobile/src/state.tsx:500-535,619-704"
+  ],
+  "original_hash_checks": {
+    "docs/planning/design/유미당 와이어프레임.html": true,
+    "apps/mobile/src/screens/BrowseScreens.tsx": true,
+    "apps/mobile/src/screens/RemoteScreens.tsx": true,
+    "apps/mobile/src/ui.tsx": true,
+    "docs/planning/design/IA.md": true,
+    "docs/planning/design/USERFLOW.md": true,
+    "정책.md": true,
+    "AGENTS.md": true
+  },
+  "runtime_parity_revision": "2026-10-12",
+  "scenarios": 31,
+  "wireframe_is_feature_authority": false,
+  "bottom_sheet_reference": {
+    "source": "yumidang-detail-prep/sources/유미당-둘러보기-소스/yumidang-browse",
+    "version": 31,
+    "enter_ms": 280,
+    "exit_ms": 200,
+    "grip_width_px": 72,
+    "grip_height_px": 36,
+    "bar_width_px": 42,
+    "bar_height_px": 4,
+    "geometric_gutter_px": 16,
+    "drag_activation_px": 10,
+    "drag_dismiss_px": 80,
+    "drag_max_px": 240,
+    "visual_measurement": "NOT_RUN",
+    "domain_changes": false
+  },
+  "desktop_drag_scroll": {
+    "module": "shared/drag-scroll.js",
+    "activation_px": 10,
+    "pointer_type": "primary mouse",
+    "blank_area_only": true,
+    "native_touch_wheel_keyboard": true,
+    "top_downward_delegates_to_sheet": true,
+    "below_top_stays_scroll": true,
+    "scrollbar_hidden_only": true,
+    "domain_changes": false,
+    "browser_qa": "NOT_RUN"
+  },
+  "guest_blur_presentation": {
+    "scope": "synthetic preview only",
+    "blur_px": 5,
+    "preserve_sample_profile_layout": true,
+    "remote_null_data_unchanged": true,
+    "guest_action": "S05",
+    "backend_changes": false,
+    "client_blur_is_security": false,
+    "browser_qa": "NOT_RUN"
+  },
+  "removed_review_scenarios": [
+    "remote",
+    "remoteGuest",
+    "remotePrivate",
+    "remoteNoevent",
+    "loading"
+  ],
+  "service_review_scope": "Only error remains; actual runtime and backend unchanged",
+  "failure_decoration_removed": true,
+  "latest_layout_references": [
+    {
+      "path": "review-inputs/image(20261012-114529).png",
+      "sha256": "a3c1344126bf2f2ed4f7f0d404efc32cc3da3b7c0b41add472f9665726548bf0",
+      "pixels_inspected": true
+    },
+    {
+      "path": "review-inputs/image(20261012-114530).png",
+      "sha256": "77b5ae2f7720f2174a5bc2efbc29c9e59ef7fa681c5cbef761fd476556e2d046",
+      "pixels_inspected": true
+    }
+  ],
+  "category_icon_provenance": "category-icon-provenance.json",
+  "model_sha256": "9337d98fbf1adde868b39931e1cad9fb13ab034038746ee5340edba058a3a642",
+  "tone_reference_images": [
+    {
+      "path": "review-inputs/image(20261012-115437).png",
+      "sha256": "d7401e13906fa1428cda0723711f162ea44b74cf4391e6b15b8662595134738b",
+      "pixels_inspected": true
+    },
+    {
+      "path": "review-inputs/image(20261012-115438).png",
+      "sha256": "cb6d21fee415c9cf34f14fe8b3782f7e9ae0f207f06056e6f864cbb0143bdb6c",
+      "pixels_inspected": true
+    },
+    {
+      "path": "review-inputs/image(20261012-115439).png",
+      "sha256": "e0db526de17932e45ba0b969b5b2b5160d3969270bc2c77fb01d33df58afc080",
+      "pixels_inspected": true
+    }
+  ],
+  "tone_change_scope": "CSS-only open sections/light information rows; renderer/model/HTML/tokens/gestures preserved",
+  "tone_preservation": "tone-preservation.json",
+  "section_boundary_refinement": {
+    "scope": "CSS-only outer-boundary compromise",
+    "selectors": [
+      ".condition-module",
+      ".event-module",
+      ".introduction-module"
+    ],
+    "border": "1px solid #E7E3ED",
+    "radius_px": 16,
+    "padding_px": 16,
+    "narrow_padding_px": 14,
+    "margin_top_px": 20,
+    "date_region_inner_border": "none",
+    "date_region_inner_background": "#fcfbfe",
+    "previous_top_only_divider_removed": true,
+    "visual_qa": "NOT_RUN"
+  },
+  "latest_desaturated_reference": {
+    "path": "review-inputs/image(20261012-121349).png",
+    "sha256": "850dcfb85a31a2c68ce43c5731782f9118f15caa9c6c5d2431ead7d3609fe677",
+    "pixels_inspected": true,
+    "change_scope": "CSS only",
+    "neutral_border": "#E5E7EB",
+    "inner_background": "#F9FAFB",
+    "icon_tile_background": "#F3F4F6",
+    "lower_cells": [
+      "qualification",
+      "deadline"
+    ],
+    "new_fields_added": false,
+    "browser_qa": "NOT_RUN"
+  },
+  "location_and_owner_actions": {
+    "references": [
+      {
+        "path": "review-inputs/image(20261012-122544).png",
+        "sha256": "34a8fd54909318750e2f66bea0ab4fdbba0183eb2db8f0dd1c8b7deeec23fa0c",
+        "pixels_inspected": true
+      },
+      {
+        "path": "review-inputs/image(20261012-122545).png",
+        "sha256": "b7aa1bee75f66ddd832ca79a2172ed949cb787f60c0a223046b11d8c5dc1a4c8",
+        "pixels_inspected": true
+      }
+    ],
+    "private_condition_unchanged": true,
+    "meeting_divider_only_if_present": true,
+    "reject": "44px sibling X; original action and confirmation",
+    "delete": "approved separate footer outline row; original condition and confirmation",
+    "general_button_min_px": 44,
+    "footer_button_min_px": 49,
+    "footer_font_rem": 1,
+    "footer_padding_px": [
+      8,
+      6
+    ],
+    "backend_changes": false,
+    "browser_qa": "NOT_RUN"
+  },
+  "floating_reject_position": {
+    "reference": "review-inputs/image(20261012-130912).png",
+    "sha256": "30b440378cee688abbb9864aa765b8298044d65b3178be5da4ce53f5c3b507a9",
+    "pixels_inspected": true,
+    "top_px": -22,
+    "right_px": -14,
+    "card_margin_top_px": 28,
+    "hit_size_px": 44,
+    "visible_circle_px": 24,
+    "delete_position_unchanged": false,
+    "browser_qa": "NOT_RUN",
+    "card_padding_top_px": 22,
+    "svg_px": 14,
+    "profile_right_reserve_px": 0,
+    "svg_color": "#BD4465",
+    "visible_circle_left_px": 18,
+    "svg_translate_x_px": 0,
+    "visible_center_from_right_px": 0,
+    "svg_left_px": 23,
+    "svg_top_px": 15,
+    "svg_position": "absolute",
+    "center_in_hit_px": [
+      30,
+      22
+    ]
+  },
+  "delete_disclosure": {
+    "user_approved": true,
+    "condition": "owner && !appointment",
+    "location": "title right",
+    "footer_entry_removed": true,
+    "same_confirmation": true,
+    "cleanup_hook": "YumidangDetailRender.closePostMenu(false)",
+    "browser_qa": "NOT_RUN"
+  },
+  "latest_x_and_label_references": [
+    {
+      "path": "review-inputs/image(20261012-125236).png",
+      "sha256": "0b2cd91ad5de30525448f3c12755d9bfb177933abd38357af25d2b18a39490b8",
+      "pixels_inspected": true
+    },
+    {
+      "path": "review-inputs/image(20261012-125237).png",
+      "sha256": "919b8b3227c01fd29a11527e498cf3dfd6a7206583084a626540240af5f8e285",
+      "pixels_inspected": true
+    }
+  ],
+  "confirmed_other_label": {
+    "text": "이미 마감된 동행이에요",
+    "disabled_unchanged": true,
+    "participant_cta_unchanged": true
+  },
+  "application_notice": {
+    "lines": [
+      "신청 버튼을 누르면 채팅방으로 이동돼요.",
+      "첫 메세지 보내면 신청이 완료돼요."
+    ],
+    "explicit_br": true,
+    "alignment": "center",
+    "condition": "!owner && !existingChat (existing render early returns retained)",
+    "new_chat_connection": false,
+    "reference": "review-inputs/image(20261012-125619).png",
+    "pixels_inspected": true
+  },
+  "author_waiting_compact_gap": {
+    "condition": "key in ['author','authorWaiting']",
+    "card_margin_top_before_px": 28,
+    "card_margin_top_after_px": 10,
+    "heading_right_reserve_px": 44,
+    "other_states_unchanged": true,
+    "reference": "review-inputs/image(20261012-133739).png",
+    "pixels_inspected": true,
+    "reference_sha256": "21f0ee8fb3c43738396afd2880d8d1dde267953e34548fe7d45a599f14b750b9"
+  },
+  "latest_cta_copy": {
+    "existing_chat": "채팅방으로 이동하기",
+    "closed_no_chat": "이미 마감된 동행이에요",
+    "existing_chat_priority_unchanged": true,
+    "participant_override_unchanged": true
+  },
+  "design_only_cleanup": {
+    "domain_mutation": false,
+    "background_business_timer": false,
+    "scene_count": 31,
+    "deadline": "startsAt",
+    "request_expiry": "min(reviewClock+6h,startsAt)",
+    "blocked_public_content_hidden": true,
+    "original_sources_modified": false,
+    "browser_visual_qa": "NOT_RUN"
+  },
+  "public_scene_additions": {
+    "waitingOther": "BrowseScreens.tsx:1210-1225 post not recruiting and no existing conversation",
+    "completedOther": "BrowseScreens.tsx:1170-1183 completed appointment, participant separately determined",
+    "same_layout": true,
+    "new_business_function": false
+  }
+}

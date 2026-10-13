@@ -1,0 +1,12 @@
+{
+  "data_model": "20 assertions passed",
+  "event_state": "24 mock-DOM assertions passed; native browser behavior not tested",
+  "javascript_syntax": "passed",
+  "offline_assets": 5,
+  "embedded_html_bytes": 156146,
+  "forbidden_claims": "absent",
+  "font_coverage": "passed",
+  "browser_render": "not run; browser unavailable",
+  "visual_overlap": "not browser-verified; flow layout used",
+  "guest_mode": "synthetic-only placeholder; no real auth or data integration"
+}

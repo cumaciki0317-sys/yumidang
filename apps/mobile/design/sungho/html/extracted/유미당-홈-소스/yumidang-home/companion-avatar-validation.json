@@ -1,0 +1,20 @@
+{
+  "avatar_diameter_at_360px": 24.38095238095238,
+  "overlap_at_360px": 3.0476190476190474,
+  "self_z_index": 1,
+  "companion_z_index": 2,
+  "companion_name": "유지민",
+  "header_name_unchanged": "이민정",
+  "dday_weight": 700,
+  "self_original_preserved": true,
+  "self_dimensions_unchanged": [
+    1152,
+    2048
+  ],
+  "self_encoding": "WebP quality 94; no resizing or retouching",
+  "companion_encoding": "lossless WebP; RGBA pixels identical",
+  "source_photo_fields_embedded_once_each": true,
+  "companion_row_artwork_width_used": 663.3447265625,
+  "companion_row_artwork_width_available": 794,
+  "browser_visual_qa": false
+}

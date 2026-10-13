@@ -1,0 +1,68 @@
+{
+  "validation": "Source declarations and mocked DOM only; no rendered-browser or native touch QA",
+  "baseline": [
+    360,
+    800
+  ],
+  "verticalScrollRange": 0,
+  "cardHeightAt360WidthPx": 161.9047619047619,
+  "dotCount": 0,
+  "visiblePolicy": false,
+  "eventCount": 5,
+  "keyboardNavigation": true,
+  "offscreenNonfocusablePositionAnnouncement": true,
+  "headingSourcePx": [
+    38,
+    38,
+    36
+  ],
+  "loginWeight": 400,
+  "bandsAt360WidthPx": {
+    "event_heading": [
+      48.7619,
+      67.581
+    ],
+    "event_card": [
+      79.2381,
+      241.1429
+    ],
+    "appointment_heading": [
+      251.4286,
+      270.2476
+    ],
+    "appointment": [
+      277.3333,
+      408.381
+    ],
+    "categories_heading": [
+      415.2381,
+      433.0667
+    ],
+    "categories": [
+      438.8571,
+      677.1048
+    ],
+    "banner": [
+      685.4095,
+      738.7429
+    ]
+  },
+  "beforeGapsAt360WidthPx": {
+    "event_heading_to_policy": 4.0381,
+    "policy_to_event_card": 0.7619,
+    "event_card_to_dots": 0.0,
+    "dots_to_appointment_heading": 3.4286,
+    "appointment_heading_to_card": 4.0381,
+    "appointment_card_to_categories_heading": 4.5714,
+    "categories_heading_to_grid": 3.5048
+  },
+  "afterGapsAt360WidthPx": {
+    "event_heading_to_event_card": 11.6571,
+    "event_card_to_appointment_heading": 10.2857,
+    "appointment_heading_to_appointment": 7.0857,
+    "appointment_to_categories_heading": 6.8571,
+    "categories_heading_to_categories": 5.7905
+  },
+  "reclaimedAt360WidthPx": 21.333333333333332,
+  "browserVisualQA": false
+}

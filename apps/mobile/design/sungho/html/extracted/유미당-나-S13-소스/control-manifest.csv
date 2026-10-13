@@ -1,0 +1,25 @@
+id,context,condition,visible_control,runtime_action,source
+S13-01,guest,!member,네이버로 로그인,navigate S05,CommunityScreens.tsx LoginGuard
+S13-02,header,member,계정 상태 상단 중복 제거 승인,S21 kept in safety account,approved design; CommunityScreens.tsx MeScreen
+S13-03,profile header,member,내 공개 프로필 보기,navigate S14 viewerId,CommunityScreens.tsx MeScreen
+S13-04,tabs,member,내 동행,setTab 내 동행,CommunityScreens.tsx MeScreen
+S13-05,tabs,member,내 공고,setTab 내 공고,CommunityScreens.tsx MeScreen
+S13-06,tabs,member,프로필,setTab 프로필,CommunityScreens.tsx MeScreen
+S13-07,내 동행,participant appointment each,일정 카드 전체,navigate S16 appointmentId,CommunityScreens.tsx MeScreen
+S13-08,내 동행,canWriteReview AND no own review,후기 작성하기,navigate S17 appointmentId,CommunityScreens.tsx MeScreen + domain.ts
+S13-09,내 동행,applicantId equals viewerId each,보낸 신청 행,navigate S11 postId,CommunityScreens.tsx MeScreen
+S13-10,내 동행,conversation postId in own nondeleted posts each,받은 신청 행,navigate S11 postId,CommunityScreens.tsx MeScreen
+S13-11,내 공고,member,새 동행 모집,navigate S03,CommunityScreens.tsx MeScreen
+S13-12,내 공고,own nondeleted post each,공고 본문,navigate S02 postId,ui.tsx PostCard
+S13-13,내 공고,own post author exists each,작성자 정보,navigate S14 authorId,ui.tsx MemberBox
+S13-14,프로필,member,내 공개 프로필·받은 후기,navigate S14 viewerId,CommunityScreens.tsx MeScreen
+S13-15,프로필,member,프로필 사진,navigate S15,CommunityScreens.tsx MeScreen
+S13-16,프로필,member,취향·성향 편집,navigate S15-2,CommunityScreens.tsx MeScreen
+S13-17,안전·계정,all member tabs,안심 동행 수칙,navigate S19,CommunityScreens.tsx MeScreen
+S13-18,안전·계정,all member tabs,계정 상태·AI 동의·탈퇴,navigate S21,CommunityScreens.tsx MeScreen
+S13-19,안전·계정,all member tabs,로그아웃,logout then successful route S00 press-only,CommunityScreens.tsx MeScreen + state.tsx logout
+NAV-01,bottom,all,홈,navigate index S00,src/app/(tabs)/_layout.tsx
+NAV-02,bottom,all,둘러보기,navigate explore S01,src/app/(tabs)/_layout.tsx
+NAV-03,bottom,all,채팅,navigate chats S10,src/app/(tabs)/_layout.tsx
+NAV-04,bottom,all,나,focused tab no route change,src/app/(tabs)/_layout.tsx
+PREVIEW-01,outside app,always,회원 미리보기,render existing fixture viewer only,external review tool excluded from product controls

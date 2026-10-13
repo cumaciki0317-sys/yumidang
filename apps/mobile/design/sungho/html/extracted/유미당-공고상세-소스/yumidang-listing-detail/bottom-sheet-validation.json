@@ -1,0 +1,5 @@
+{
+  "status": "passed",
+  "assertions": 73,
+  "scope": "mock DOM/timers/gestures and static CSS; real browser/touch QA NOT RUN"
+}

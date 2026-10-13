@@ -1,0 +1,186 @@
+{
+  "baseline_version": 32,
+  "runtime_change": "REGIONS declaration only",
+  "all_sentinel": "all / 전체 unchanged",
+  "order": [
+    "전체",
+    "서울",
+    "경기",
+    "인천",
+    "부산",
+    "대구",
+    "광주",
+    "대전",
+    "울산",
+    "세종",
+    "강원",
+    "충북",
+    "충남",
+    "전북",
+    "전남",
+    "경북",
+    "경남",
+    "제주"
+  ],
+  "home_untouched": true,
+  "browser_render": "NOT_RUN; no CSS/layout changes",
+  "tests": [
+    {
+      "test": "test-adaptive-layout.js",
+      "exit": 1,
+      "stdout": "",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-adaptive-layout.js:4:34)\n    at Object.<anonymous> (/workspace/scratch/9"
+    },
+    {
+      "test": "test-age-range.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n76 dual-range assertions passed (mock pointer/keyboard, bounds, equal handles, draft lifecycle, guest and accessibility contracts; no browser QA)",
+      "stderr": ""
+    },
+    {
+      "test": "test-card-hitareas.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n61 independent card hit-area / UI-only button source checks passed; no browser paint QA.",
+      "stderr": ""
+    },
+    {
+      "test": "test-card-press.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n466 combined press checks passed; persistent card paint identity and fixed hit area verified in mock DOM, not visual pixel comparison.",
+      "stderr": ""
+    },
+    {
+      "test": "test-category-all.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n43 category-all and sheet UI checks passed; mock DOM/source only.",
+      "stderr": ""
+    },
+    {
+      "test": "test-chip-hit-press.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n64 press checks including expanded hit bounds passed in mock DOM.",
+      "stderr": ""
+    },
+    {
+      "test": "test-chip-size.js",
+      "exit": 1,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-chip-size.js:1:127)\n    at Object.<anonymous> (/workspace/scratch/99ea48"
+    },
+    {
+      "test": "test-current-design-contract.js",
+      "exit": 0,
+      "stdout": "Current approved CSS/fonts/glass/icons/nav/press source preservation passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-design-states.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\nMember/guest/applied/status/empty/error display and embedding event contract passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-disabled-buttons.js",
+      "exit": 0,
+      "stdout": "54 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)\n11 supplemental disabled lifecycle assertions passed (mock DOM only)",
+      "stderr": ""
+    },
+    {
+      "test": "test-filter-weight.js",
+      "exit": 1,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-filter-weight.js:1:171)\n    at Object.<anonymous> (/workspace/scratch/99"
+    },
+    {
+      "test": "test-fixed-tools.js",
+      "exit": 1,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": "node:internal/assert/utils:77\n    throw err;\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(x)\n\n    at ok (/workspace/scratch/99ea48a5a41e/yumidang-home-browse-cleanup/browse/test-fixed-tools.js:2:127)\n    at Object.<anonymous> (/workspace/scratch/99ea"
+    },
+    {
+      "test": "test-grip-age-activation.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n22 fixed grip / age box activation checks passed; source/mock only.",
+      "stderr": ""
+    },
+    {
+      "test": "test-input-states.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\nExplicit invalid-input / text-entry presentation checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-motion.js",
+      "exit": 0,
+      "stdout": "27 motion lifecycle assertions passed (mock timers/DOM; no browser paint)",
+      "stderr": ""
+    },
+    {
+      "test": "test-name-mask.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n30 name-mask and guest-display checks passed (synthetic fixtures, source/mock DOM only).",
+      "stderr": ""
+    },
+    {
+      "test": "test-press-feedback.js",
+      "exit": 0,
+      "stdout": "56 press feedback assertions passed (mock lifecycle and geometry contracts; no browser QA)",
+      "stderr": ""
+    },
+    {
+      "test": "test-region-order.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\nRegion order/sentinel/membership/guest-member multi-selection/reset/apply checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-shared-nav.js",
+      "exit": 0,
+      "stdout": "19 native shared-bottom-nav source checks passed; browser QA not performed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-sheet-density.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n33 compact sheet / age disabled UI checks passed; source/mock only.",
+      "stderr": ""
+    },
+    {
+      "test": "test-sheet-drag.js",
+      "exit": 0,
+      "stdout": "27 motion lifecycle assertions passed (mock timers/DOM; no browser paint)\n27 sheet pull-dismiss source/mock checks passed; real touch/browser QA not performed.",
+      "stderr": ""
+    },
+    {
+      "test": "test-sort-toggle.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.\n96 sort-toggle UI checks passed (native button semantics and mock activation; no browser paint/keyboard QA).",
+      "stderr": ""
+    },
+    {
+      "test": "test-tools-focus-gutter.js",
+      "exit": 0,
+      "stdout": "12 tools focus-gutter source/geometry checks passed; no browser paint measurement.",
+      "stderr": ""
+    },
+    {
+      "test": "test-ui.js",
+      "exit": 0,
+      "stdout": "Design fixture / filter draft / guest mock checks passed.",
+      "stderr": ""
+    },
+    {
+      "test": "test.js",
+      "exit": 0,
+      "stdout": "15 static fixture and no-query-engine checks passed.",
+      "stderr": ""
+    }
+  ],
+  "legacy_failures": [
+    "test-adaptive-layout.js",
+    "test-chip-size.js",
+    "test-filter-weight.js",
+    "test-fixed-tools.js"
+  ],
+  "approval_status": "requested region ordering change; no new whole-design final approval implied"
+}

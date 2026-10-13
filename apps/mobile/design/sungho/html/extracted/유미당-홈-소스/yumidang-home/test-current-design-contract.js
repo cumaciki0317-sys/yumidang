@@ -1,0 +1,4 @@
+const fs=require('fs'),crypto=require('crypto'),assert=require('node:assert/strict');
+const checks=[{"file": "home-state.css", "marker": "\n/* Additional review states", "sha256": "3934420ba65ecf26a07f8a8465f9e782b11d8d43c2939809be1b795acf49d0db"}, {"file": "adaptive.css", "marker": "\n/* Height growth has one budget.", "sha256": "ed96bd3012d7332d80cb9c1b1ec7e0da51b65ab839de8af549a4e4600e0896cb"}, {"file": "press-feedback.css", "marker": null, "sha256": "afac4f715bb258e69b892e54af9b4b3683bea193364de57833986557c38ac198"}, {"file": "press-feedback.js", "marker": null, "sha256": "9fc4be4cfe2a36c6ab734e7fbaf75c0b42a88ca6d455a9a238da19125b8a490e"}];
+for(const c of checks){let data=fs.readFileSync(__dirname+'/'+c.file);if(c.marker)data=Buffer.from(data.toString().split(c.marker)[0]);assert.equal(crypto.createHash('sha256').update(data).digest('hex'),c.sha256,c.file)}
+console.log('Current approved CSS/fonts/glass/icons/nav/press source preservation passed.');

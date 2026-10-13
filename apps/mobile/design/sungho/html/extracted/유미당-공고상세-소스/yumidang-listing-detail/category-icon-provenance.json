@@ -1,0 +1,39 @@
+{
+  "source": "yumidang-detail-prep/sources/유미당-홈-소스/yumidang-home/index.html:134-149",
+  "mapping": {
+    "지금이당": "assets/now.svg",
+    "전시": "assets/exhibit.svg",
+    "축제": "assets/festival-icon.svg",
+    "팝업": "assets/popup.svg",
+    "공연": "assets/show.svg",
+    "영화": "assets/movie.svg",
+    "맛집": "assets/meal.svg",
+    "카페": "assets/cafe.svg",
+    "쇼핑": "assets/shop.svg",
+    "여행": "assets/travel.svg",
+    "운동": "assets/exercise.svg",
+    "산책": "assets/walk.svg",
+    "게임": "assets/game.svg",
+    "반려동물": "assets/pet.svg",
+    "스터디": "assets/study.svg",
+    "기타": "assets/all.svg"
+  },
+  "sha256": {
+    "assets/now.svg": "a445e7488f615fe20d328b6c70f32b2918fea11ff41eec347df2bd1231b94945",
+    "assets/exhibit.svg": "4378055f326130449a9c86fa862bc5f6ee0417dfa9f7af31e0a470b1e0e4e94f",
+    "assets/festival-icon.svg": "555d8ebfa6c4ccdffe1456c179536f79b01c146fc19644ecc7df56b826cb2564",
+    "assets/popup.svg": "2decc92142172481dad404f5d14acfa815e18d9737c4a9a87abe978e1abdf412",
+    "assets/show.svg": "b6f83c9a43853c544ecd7337f0973c6c8865723ed3608e0b80a5704812921dff",
+    "assets/movie.svg": "b8046559f87b73bfa76ed5205877e9615185667be511a743471560f44caf43a1",
+    "assets/meal.svg": "5718cb48f839847e899f096d1251d6ac882e2d85a04d40f92d29b30c2ed08a44",
+    "assets/cafe.svg": "baa7e5c253febabeaea29cb01a9b4117ac659244d2b79d8bae3db54e84728f77",
+    "assets/shop.svg": "5296b04e27733da828aa1bdbd931e73125af20c6f76e7ef0d8daacaace4b669c",
+    "assets/travel.svg": "0a792013b249fc8b39c1d1f2238a52f40e307c8c0860c81fddb3402f14a63836",
+    "assets/exercise.svg": "4a948555015450108130dd6939d150f21ec343ded8f47c2f1ce97016849beda0",
+    "assets/walk.svg": "c7ffbca1a067e50deafa208ce38e1af23c34f387da48313d545b8c166c8e2ebb",
+    "assets/game.svg": "6d3f9ecb96603c7a6de036cb396ecccb8d6f892605c89dbb5aa928814eb8a4c2",
+    "assets/pet.svg": "13f37ae47125898767c95e01563ca6c6ce8ced09f01a3a1de86232cc5d7f2f13",
+    "assets/study.svg": "1245853bf11a608bf42ed58bd30b9c6894c85b9b5963a74f78ae2662ec2a2f57",
+    "assets/all.svg": "b8d82e58f84911e558656ac216f65e10e073da5ffb5bdc3db38c8350fa756a86"
+  }
+}

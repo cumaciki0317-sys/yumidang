@@ -1,0 +1,56 @@
+/* 유미당: 확정 규칙 + 명시적으로 보존한 기존 컴포넌트 치수.
+   새 전역 크기 체계를 만들지 않는다. 원본 앱의 .screen에 이 파일을 직접 붙이지 않는다. */
+@font-face{font-family:Pretendard;src:url('assets/Pretendard-Regular.woff2');font-weight:400}
+@font-face{font-family:Pretendard;src:url('assets/Pretendard-Bold.woff2');font-weight:700}
+:root{
+ --yd-primary:#852CFF;--brand-primary:var(--yd-primary);--yd-text-secondary:#6B7280;--yd-error:#BD4465;
+ --yd-applied-bg:#F2E9FF;--yd-applied-border:#D8B9F5;
+ --yd-draft-bg:#F2EAFF;--yd-draft-border:#A16CFF;
+ --yd-top-filter-weight:400;--yd-filter-option-weight:400;--yd-filter-option-selected-weight:700;
+ --yd-font:Pretendard,sans-serif;--yd-disabled-opacity:.43;
+ --yd-press-scale:.96;--yd-press-duration:100ms;
+ --yd-focus-width:2px;--yd-focus-offset:0px;
+ --yd-input-height:44px;--yd-input-radius:12px;--yd-input-font:14px;--yd-input-padding-x:12px;
+ --yd-tab-min-height:44px;--yd-tab-font:14px;--yd-tab-indicator:2px;
+ --yd-sheet-enter:280ms;--yd-sheet-exit:200ms;
+ --yd-app-reference-width:390px;--yd-app-tested-min-width:320px;--yd-app-max-width:430px;--yd-safe-bottom:env(safe-area-inset-bottom,0px);
+ --yd-category-nav-gap:8.304761905px;--yd-nav-bottom:calc(12px + var(--yd-safe-bottom));
+ --yd-nav-height:48px;--yd-nav-left:10.285714286px;--yd-nav-right:9.904761905px;--yd-nav-radius:25.142857143px;
+ --yd-nav-icon-width:24.380952381px;--yd-nav-icon-height:24.761904762px;
+ --yd-nav-background:rgba(255,255,255,.8);--yd-nav-selected:var(--yd-primary);
+ /* Following values are preserved component observations, not new global tokens. */
+ --yd-observed-option-min-height:32px;--yd-observed-option-hit-inset-y:3px;--yd-observed-option-gap:7px;--yd-observed-option-radius:22px;
+ --yd-observed-footer-height:49px;--yd-observed-footer-radius:15px;
+ --yd-observed-solid-border:#E7E3ED;--yd-observed-field-border:#E0E2ED;
+}
+.yd-component{box-sizing:border-box;font-family:var(--yd-font);color:#11182C}
+.yd-component *, .yd-component *::before,.yd-component *::after{box-sizing:border-box}
+.yd-component button,.yd-component input{font-family:inherit}
+.yd-component button{cursor:pointer}
+.yd-component button:disabled{opacity:var(--yd-disabled-opacity);cursor:not-allowed}
+.yd-option{position:relative;display:inline-flex;align-items:center;justify-content:center;height:auto;min-height:var(--yd-observed-option-min-height);padding:7px 12px;border:1px solid #DFE2EC;border-radius:var(--yd-observed-option-radius);background:#FFF;color:#293B59;font-size:.875rem;font-weight:var(--yd-filter-option-weight);line-height:1.4}
+.yd-option[aria-pressed=true]{font-weight:var(--yd-filter-option-selected-weight);color:var(--yd-primary);background:var(--yd-draft-bg);border-color:var(--yd-draft-border)}
+.yd-apply,.yd-reset{height:var(--yd-observed-footer-height);border:0;border-radius:var(--yd-observed-footer-radius);font-size:1rem;font-weight:700}
+.yd-footer{display:flex;gap:10px;padding:14px 16px;border-top:1px solid #EDEDF4;background:#FFF}.yd-footer .yd-reset{width:36%}.yd-footer .yd-apply{flex:1}
+.yd-apply{background:var(--yd-primary);color:#FFF}.yd-reset{background:#F0F2F6;color:var(--yd-text-secondary)}
+/* Above button dimensions are the existing native filter controls. Not a global button size taxonomy. */
+.yd-field{display:grid;gap:7px;max-width:360px}
+.yd-field-label{font-size:13px;color:var(--yd-text-secondary)}
+.yd-input{width:100%;height:var(--yd-input-height);border:1px solid var(--yd-observed-field-border);border-radius:var(--yd-input-radius);padding:0 var(--yd-input-padding-x);font-size:var(--yd-input-font);font-weight:400;color:#11182C;background:#FFF}
+.yd-input::placeholder{color:var(--yd-text-secondary)}
+/* This 44px input is for NEW general forms only. Do not resize existing search or filter date fields. */
+.yd-input:focus-visible,.yd-native-input:focus-visible{outline:var(--yd-focus-width) solid var(--yd-primary);outline-offset:var(--yd-focus-offset)}
+.yd-input[aria-invalid=true],.yd-native-input[aria-invalid=true]{border:1px solid var(--yd-error)}
+.yd-error{margin:0;color:var(--yd-error);font-size:13px;line-height:1.7}
+.yd-tabs{display:flex;gap:4px;border-bottom:1px solid var(--yd-observed-solid-border)}
+.yd-tabs [role=tab]{flex:1;min-height:var(--yd-tab-min-height);padding:8px 12px;border:0;border-bottom:var(--yd-tab-indicator) solid transparent;color:var(--yd-text-secondary);background:transparent;font-size:var(--yd-tab-font);font-weight:700}
+.yd-tabs [role=tab][aria-selected=true]{color:var(--yd-primary);border-bottom-color:var(--yd-primary)}
+.yd-component button:focus-visible{outline:4px solid var(--yd-primary);outline-offset:4px}
+/* Button keyboard rings retain the existing native button observation: 4px / offset 4px.
+   The newly approved 2px / offset 0 rule applies to inputs, not every button. */
+.yd-panel{padding:16px 0;font-size:14px;line-height:1.7}
+.yd-component [hidden]{display:none!important}
+
+.yd-option::after{content:"";position:absolute;inset:calc(-1 * var(--yd-observed-option-hit-inset-y)) 0;background:transparent}
+.yd-option.press-rendering::after{visibility:visible!important}
+.yd-component .demo-row{gap:var(--yd-observed-option-gap)}

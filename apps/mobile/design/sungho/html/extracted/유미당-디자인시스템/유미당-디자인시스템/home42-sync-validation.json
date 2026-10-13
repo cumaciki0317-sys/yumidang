@@ -1,0 +1,28 @@
+{
+  "sourceChecks": {
+    "home snapshot byte-identical": true,
+    "browse snapshot unchanged": true,
+    "components.css unchanged": true,
+    "tokens.css unchanged": true,
+    "design-tokens.json unchanged": true,
+    "common-navigation.css unchanged": true,
+    "press-feedback.css unchanged": true,
+    "press-feedback.js unchanged": true,
+    "reference-home.css unchanged": true,
+    "reference-browse.css unchanged": true,
+    "native-examples.html unchanged": true,
+    "native-examples.js unchanged": true,
+    "entire embedded gallery unchanged": true,
+    "no rendered header-brand gallery to change": true,
+    "manifest hashes": true,
+    "canonical header rules": true
+  },
+  "sourceVersions": {
+    "homeHtml": 42,
+    "homeZip": 46,
+    "browseHtml": 32,
+    "browseZip": 32,
+    "buttonGalleryBase": 6
+  },
+  "browserVisualQA": "NOT_RUN"
+}

@@ -1,0 +1,31 @@
+{
+  "output": "/workspace/scratch/99ea48a5a41e/html-display-diagnosis/유미당-배경복원-열기확인.html",
+  "size": 4469618,
+  "source_sha256": "eb86b43bc393b1f42d9f590f1c5aa4ffed8b7254db81ee3710f70a44f15c098c",
+  "metrics": [
+    {
+      "type": "font",
+      "old": 1115060,
+      "new": 764504,
+      "glyphs": 14716,
+      "identical_glyphs": true
+    },
+    {
+      "type": "font",
+      "old": 1129620,
+      "new": 791160,
+      "glyphs": 14716,
+      "identical_glyphs": true
+    },
+    {
+      "type": "festival image",
+      "old": 2338236,
+      "new": 1698106,
+      "dimensions": [
+        1737,
+        906
+      ],
+      "identical_pixels": true
+    }
+  ]
+}

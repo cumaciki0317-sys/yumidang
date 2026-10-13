@@ -1,0 +1,16 @@
+{
+  "close_x_retained": true,
+  "header_divider_removed": true,
+  "general_instruction_box_removed": true,
+  "date_error_message_retained": true,
+  "category_all_first_and_default": true,
+  "all_value_means": "no category restriction",
+  "individual_selection_clears_all": true,
+  "last_deselection_restores_all": true,
+  "all_clears_individuals": true,
+  "draft_apply_cancel_reset_preserved": true,
+  "selected_weight": 700,
+  "unselected_weight": 400,
+  "category_all_sheet_checks": 43,
+  "browser_visual_qa": false
+}

@@ -1,0 +1,11 @@
+{
+  "material_scope": "Only cards, bottom nav, + and AI use glass",
+  "approved_material_rules": "All 13 relevant selectors byte-identical in declarations",
+  "home_structure_and_script": "unchanged except glass class removal",
+  "browse_structure_and_script": "unchanged except glass class removal",
+  "data_model": "20 passed",
+  "event_state": "24 mock-DOM assertions passed",
+  "offline_html": "both embed all referenced files",
+  "zip_integrity": "both passed",
+  "browser_render": "not run; known browser environment blocker"
+}
