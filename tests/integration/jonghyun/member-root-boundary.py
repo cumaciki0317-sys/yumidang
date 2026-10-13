@@ -200,6 +200,7 @@ class RootMemberBoundary:
         self.seed_attempted = False
         self.maintenance_attempted = False
         self.retirement_attempted = False
+        self.retirement_preparation_closed = False
         self.retirement_closed = False
         self.retirement_receipt_retained = False
         self.retirement_observation = None
@@ -562,20 +563,22 @@ class RootMemberBoundary:
         return {'baselineRestored': True, 'authSixRetained': True}
 
     def prepare_retirement(self, user):
-        require(user == self.binding['accounts'][5]['userId'] and self.retirement is None, 'RETIREMENT_OWNED_USER')
+        require(user == self.binding['accounts'][5]['userId'] and self.retirement is None
+            and not self.retirement_attempted, 'RETIREMENT_OWNED_USER')
+        self.retirement_attempted = True
         if not self.connection_closed:
             self.cleanup_connections([a['userId'] for a in self.binding['accounts'][:2]])
         self.live()
         self.retirement_baseline = self.ports.snapshot()
         self.save('retirement-before-private.json', self.retirement_baseline)
         withdrawal = str(uuid.uuid4())
-        self.retirement = {'userId': user, 'withdrawalId': withdrawal, 'status': 'preparing'}
-        self.retirement_attempted = True
         episode = self.read("select coalesce(jsonb_agg(to_jsonb(e)),'[]'::jsonb)from private.member_episodes e where profile_id=" + q(user) + '::uuid;')
         require(len(episode) == 1 and episode[0]['ended_at'] is None and episode[0]['identity_id'] is None, 'RETIREMENT_FRESH_EPISODE')
         self.retirement_episode_id = uid(episode[0]['id'])
         self.retirement_before_owned = self.retirement_owned_rows(user, withdrawal)
         self.retirement_functions = self.retirement_function_rows()
+        # 모든 읽기 준비가 끝난 뒤, 첫 qualification/grant/POST보다 앞에서 효과 가능 scope를 연다.
+        self.retirement = {'userId': user, 'withdrawalId': withdrawal, 'status': 'preparing'}
         self.save('retirement-native-closed-precondition.json', {'productionReady': False,
             'reason': 'NATIVE_CLEANUP_GATE_AND_RPC_CLOSED', 'originalControls': self.original_controls,
             'functions': self.retirement_functions, 'fixtureOnly': True, 'externalWorkerStarted': False})
@@ -604,7 +607,7 @@ class RootMemberBoundary:
         return self.retirement
 
     def retirement_function_rows(self):
-        terms = [q(s) + ", (select jsonb_build_object('oid',p.oid,'owner',p.proowner,'proacl',to_jsonb(p.proacl),'rowSha256',"
+        terms = [q(s) + ", (select jsonb_build_object('oid',p.oid::bigint,'owner',p.proowner::bigint,'proacl',to_jsonb(p.proacl),'rowSha256',"
             + row_sha_sql('p') + ",'serviceExecute',has_function_privilege('service_role',p.oid,'EXECUTE'))from pg_proc p where p.oid="
             + q(s) + '::regprocedure)' for s in RETIREMENT_SIGNATURES]
         value = self.read('select jsonb_build_object(' + ','.join(terms) + ');')
@@ -612,6 +615,18 @@ class RootMemberBoundary:
             and all(type(v) is dict and is_sha(v['rowSha256']) and type(v['oid']) is int
                 and type(v['owner']) is int and type(v['serviceExecute']) is bool for v in value.values()), 'RETIREMENT_RPC_METADATA')
         return value
+
+    def close_retirement_preparation_not_dispatched(self):
+        # retirement 객체는 첫 변경 전에 반드시 설정된다. 파일 존재/부재로 이 경계를 추정하지 않는다.
+        require(self.retirement_attempted and self.retirement is None and self.connection_closed
+            and hasattr(self, 'retirement_baseline'), 'RETIREMENT_PREPARATION_UNKNOWN_PRESERVED')
+        self.live()
+        require(self.ports.snapshot() == self.retirement_baseline, 'RETIREMENT_PREPARATION_BASELINE_CHANGED')
+        self.save('retirement-preparation-not-dispatched-closed.json', {'runId': self.run_id,
+            'status': 'NOT_DISPATCHED_CLOSED', 'completeSnapshotEqualsRetirementBaseline': True,
+            'qualificationGrantPostNotEntered': True, 'fileAbsenceUsedAsEvidence': False,
+            'originalExecutionFailurePreserved': True, 'actualRetirement': 'NOT_RUN'})
+        self.retirement_preparation_closed = True
 
     def function_rows_cas(self, values):
         require(set(values) == set(RETIREMENT_SIGNATURES), 'FIXED_FUNCTION_SCOPE')
@@ -815,6 +830,8 @@ class RootMemberBoundary:
                 try:
                     if self.retirement:
                         self.cleanup_retirement(self.retirement['userId'], self.retirement['withdrawalId'])
+                    elif self.retirement_attempted:
+                        self.close_retirement_preparation_not_dispatched()
                     elif self.seed_attempted:
                         self.cleanup_connections([a['userId'] for a in self.binding['accounts'][:2]])
                 except Exception as error:
@@ -823,7 +840,8 @@ class RootMemberBoundary:
                 self.save('finalization.json', {'runId': self.run_id, 'failure': failure, 'observedCalls': self.observations,
                     'executionFailureCode': execution_failure, 'cleanupFailureCode': cleanup_failure,
                     'connectionsClosure': self.connection_closure,
-                    'wholeOriginalSixRestored': False if self.retirement else self.connection_closed,
+                    'wholeOriginalSixRestored': False if self.retirement else (self.connection_closed
+                        and (not self.retirement_attempted or self.retirement_preparation_closed)),
                     'retirementReceiptRetained': self.retirement_receipt_retained, 'actualProvider': 'NOT_RUN'})
         require(failure is None and proof is not None, 'PRIVATE_EVIDENCE_PRESERVED')
         self.save('receipt.json', {'status': 'MEMBER_ROOT_CALL_OBSERVATIONS_CLOSED', 'executionEvidence': 'ROOT_ATTESTATION_REQUIRED',

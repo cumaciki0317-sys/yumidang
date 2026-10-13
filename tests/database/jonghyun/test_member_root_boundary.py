@@ -42,6 +42,9 @@ class MemberRootBoundaryTests(unittest.TestCase):
         b.maintenance_unclosed_observations = 0
         b.ai_request = None
         b.retirement = None
+        b.retirement_attempted = False
+        b.retirement_preparation_closed = False
+        b.retirement_functions = None
         b.retirement_observation = None
         b.retirement_observation_receipt_sha = None
         b.connection_closed = False
@@ -520,6 +523,51 @@ process.exitCode=0;
         self.assertEqual(len(b.sql_calls), 1)
         self.assertEqual(b.snapshot_calls, [])
         self.assertFalse(b.connection_closed)
+
+    def test_rpc_metadata_sql_casts_preserve_strict_integer_identity(self):
+        b = self.boundary()
+        values = {s: {'oid': 1000 + i, 'owner': 10, 'proacl': None, 'rowSha256': H, 'serviceExecute': False}
+                  for i, s in enumerate(m.RETIREMENT_SIGNATURES)}
+        statements = []
+        b.read = lambda sql: statements.append(sql) or copy.deepcopy(values)
+        self.assertEqual(b.retirement_function_rows(), values)
+        self.assertIn("'oid',p.oid::bigint,'owner',p.proowner::bigint", statements[0])
+        self.assertIn(m.row_sha_sql('p'), statements[0])
+        bad = {s: {**v, 'oid': str(v['oid']), 'owner': str(v['owner'])} for s, v in values.items()}
+        b.read = lambda _: bad
+        with self.assertRaisesRegex(ValueError, 'RETIREMENT_RPC_METADATA'):
+            b.retirement_function_rows()
+
+    def test_retirement_metadata_failure_closes_only_unchanged_pre_mutation_scope(self):
+        b = self.real_private_boundary(None)
+        b.maintenance = None
+        b.control_overrides = {}
+        b.connection_closed = True
+        b.binding['accounts'].extend([{'userId': RUN, 'sessionId': OTHER}] * 4)
+        baseline = self.snapshot()
+        snapshots = []
+        b.ports.snapshot = lambda: snapshots.append(True) or copy.deepcopy(baseline)
+        bad = {s: {'oid': '1000', 'owner': '10', 'proacl': None, 'rowSha256': H, 'serviceExecute': False}
+               for s in m.RETIREMENT_SIGNATURES}
+        reads = iter([[{'id': OTHER, 'ended_at': None, 'identity_id': None}], {}, bad])
+        b.read = lambda _: next(reads)
+        with self.assertRaisesRegex(ValueError, 'RETIREMENT_RPC_METADATA'):
+            b.prepare_retirement(RUN)
+        self.assertTrue(b.retirement_attempted)
+        self.assertIsNone(b.retirement)
+        self.assertEqual(b.qualifications, {})
+        self.assertEqual(b.sql_calls, [])
+        b.close_retirement_preparation_not_dispatched()
+        self.assertTrue(b.retirement_preparation_closed)
+        self.assertEqual(len(snapshots), 2)
+        receipt = b.saved['retirement-preparation-not-dispatched-closed.json']
+        self.assertTrue(receipt['originalExecutionFailurePreserved'])
+        self.assertFalse(receipt['fileAbsenceUsedAsEvidence'])
+        self.assertEqual(receipt['actualRetirement'], 'NOT_RUN')
+        with self.assertRaisesRegex(ValueError, 'RETIREMENT_OWNED_USER'):
+            b.prepare_retirement(RUN)
+        self.assertEqual(len(snapshots), 2)
+        self.assertEqual(b.sql_calls, [])
 
 
 if __name__ == '__main__':
