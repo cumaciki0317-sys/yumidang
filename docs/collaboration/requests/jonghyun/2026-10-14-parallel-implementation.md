@@ -77,3 +77,26 @@ J04/J05의 내부 `ModelError`는 안전한 오류 코드·불변 비열거 전�
 사용자가 “추천안은1번이지? 그럼1번ㄱ. 작업할 수 있는 부분은 최대한 작업 해”라고 답했다. 번호1은 로컬 커밋으로 적용한다. 이미 안내한 검증 보강 파일을 포함해 현재15개 변경의 정확한 목록·소유권·기존241개 검증 소스 일치를 확인한 뒤 종현 브랜치에 고정한다. 현재 origin은 민규 로컬 원본이며 푸시하지 않는다.
 
 번호2인 VM 재시작·실제 합성 격리 검증은 이번 답변으로 승인됐다고 해석하지 않는다. source/SQL manifests·기존 실행 helper의 연결 준비 등 VM 없이 가능한 후속 작업을 진행한다. 원본 민규 clone·다른 VM·기존 컨테이너를 변경하지 않는다. 커밋 hash와 후속 manifest는 별도 원문 없는 로컬 영수증에 실제 Git 결과로 기록한다.
+
+## 로컬 커밋 이후 허용된 준비 보완
+
+- 승인받은15개 변경을 `7940643d0cfe893669ba964d6da7012693801bb0`으로 고정했다. staged 소유권과 hook이 통과했고 검사 당시234개+별도7개 파일 SHA가 커밋 바이트와 일치한다. 원본 민규 HEAD는831ead2이며 변경하지 않았다. 푸시하지 않았다.
+- 커밋 기준 AI product50·signed helper 포함57·summary45·observer193개 source pins를 만들었다. `/private/tmp/yumidang-jonghyun-20261014-committed-source-pins.json`은 소스 고정 증거이며 실행 권한·실제 대상 READY를 뜻하지 않는다.
+- 기존 `prepare_database.py`로 정식 SQL119개와 이름/포트만 바꾼 설정 사본을 실제 시스템 임시 폴더에 준비했다. 첫 `/private/tmp` 출력은 도구의 시스템 임시 경로 검사에서 거절돼 SQL/기동0이었다. 제한을 완화하지 않고 OS 임시 폴더를 사용했다. 위치는 `/private/tmp/yumidang-jonghyun-20261014-prepared-location.json`에 기록했다. 실제 port availability·inventory·VM·DB·Auth는 NOT_VERIFIED/NOT_RUN이며 owned ID 영수증을 가상 생성하지 않았다.
+- Docker context metadata 읽기는 exit1이었다. daemon 연락 없이 metadata만 시도했으며 `expectedHostMatches:false`를 READY로 바꾸지 않았다. 실제 VM 재시작 후 context/socket과 전체 기존 inventory 확인이 필요하다.
+- 현재 signed helper는 새 Supabase 정식 적용 이력 경로를 사용할 수 있어 민규12개 수정 없이 재사용 가능하다. native 원본 lineage가 있는 경우 별도의 고정 원본/영수증 검사를 요구한다. 해당 민규 native 원본 경로는 이 컴퓨터에 없어 새 빈 DB로 대체하지 않는다. 실제 Auth 발급은 새4대상 identity·현재 소스 pins·private 검토 객체·생성/정리 범위를 갖춘 원 발급 증거와 연결해야 한다.
+
+### J01 실제 연결 검증 준비 코드
+
+기존 `tests/integration/jonghyun/events-rest.mjs`와 책임 `event-sync.test.mjs`를 보완했다. 과거 민규 driver의 source/socket/private 경로를 종현 대상으로 임의 교체하지 않았다. 실제 callback을 제공하는 ROOT의 검토·관측 책임은 남는다.
+
+- 기본 CLI와 `--check-j01`은 VM/대상/자격증명을 생성하지 않고 실행 NOT_RUN·ready:false다. 실제 실행 CLI `--run-j01`은 제공하지 않는다. 기존 55421/55422 REST 시험은 `--legacy-rest` 명시 선택으로 보존하며 DB host도 정확한 loopback으로 제한한다.
+- 새 입력은 canonical root·HEAD·현재 source 전체 import closure와 HEAD blob SHA·migration 전체 set/SHA를 대조한다. code/target/Auth 입력은 복사·동결하며 변경 전후와 정리 직전에 대상 identity를 다시 확인한다.
+- 대상은 기존 준비 ABI의 새 `jonghyun-backend100-8자리hex` project와 서로 다른 DB/Auth/REST ID를 요구한다. 실제 존재 여부는 root의 관측 경계가 확인하며, 입력 형식 통과만으로 실제 확인을 주장하지 않는다.
+- 준비한 검증 흐름은 합성17행·원 Auth subject·모바일 서비스→로컬 TLS bridge→runtime→Auth/REST/DB의 세 필터/limit10/커서/10000자 가격/숨김/잘못된JWT 사례다. fixture SQL은 아직 실행하지 않았다. 공급사·모델·실회원·화면 검증을 포함하지 않는다.
+- JWT metadata 검사를 서명 증거와 분리하고 실제 GoTrue subject 응답을 대조한다. table 집합을 SQL catalog와 비교하며 행 수·해시·catalog·roles·기존 UNKNOWN을 확인한다. 같은 runId의 정리 및 기준과의 일치를 요구한다.
+- callback 검사 결과는 `ROOT_TYPED_BOUNDARY_CHECKS_ONLY`·`ROOT_ATTESTATION_REQUIRED`이며 actualAuth/Db는 `NOT_VERIFIED_BY_HARNESS`, wholeBaselineRestored는false다. 현재 실제 custody callback·대상 발급·live 실행은 남는다. 이 결과를 실제 기능 완료로 계산하지 않는다.
+
+ROOT 최신 통합21파일 **248/248 PASS**, fail0·skip0·cancelled0, 검사 전후 소스 SHA 일치. 기존241개와 중복이므로 합산하지 않는다. 원문 없는 영수증은 `/private/tmp/yumidang-jonghyun-20261014-j01-preparation-verification.json`, stdout SHA는 `f38ce5cf7f99b46fbe0a23c31592f1cd7e0fb40e7b987f80f43e50f5ee970416`이다. driver syntax·소유권·diff 검사도 통과했다. 초기 SQL 문자열의 from을 import로 오인한 준비 검사 실패는 native module parser(평가0)와 type-only import 보완으로 교정했다.
+
+후속2개 검증 파일과 이 기록은 같은 종현 업무의 승인된 로컬 커밋 범위에서 고정한다. 실행 시에는 최신 커밋으로 source manifest를 다시 발급한다. VM 재시작·정확한 새 합성 검증 대상/fixture 쓰기·정리는 별도2번 승인이 필요하며, 로컬 준비 코드·사본 존재를 그 승인으로 해석하지 않는다. 전체79%(22/28) 유지.

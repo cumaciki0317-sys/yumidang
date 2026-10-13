@@ -308,3 +308,77 @@ test('무료 필터는 DB 페이징 이전 전달하고 unknown/described를 무
  await assert.rejects(unknown.listPage({mode:'overlapping',freeOnly:true},undefined,10),/INVALID_EVENT_REPOSITORY_RESPONSE/);
  await assert.rejects(repo.listPage({mode:'overlapping',freeOnly:'yes'},undefined,10),/INVALID_EVENT_FILTER/);
 });
+
+// J01 준비 입력/SQL 생성의 로컬 모형 계약이다. VM·DB·Auth·TLS 서버를 실행하지 않는다.
+import {
+  validateJ01Input, collectJ01SourceFiles, j01FixtureSql, validateJ01Auth,
+  validateJ01Snapshot, validateLegacyEventRestEndpoints, runJ01EventRoundtrip,
+} from '../../integration/jonghyun/events-rest.mjs';
+import { fileURLToPath } from 'node:url';
+const modelSha = 'a'.repeat(64);
+const modelUser = ['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222'];
+const modelIdentity = ['33333333-3333-4333-8333-333333333333','44444444-4444-4444-8444-444444444444'];
+const modelJ01 = () => ({version:1,scenario:'J01_EVENTS_ROUNDTRIP',repositoryRoot:'/private/tmp/mock-repo',codeRoot:'/private/tmp/mock-capsule',head:'b'.repeat(40),sourceFiles:{
+ 'backend/supabase/functions/service-api/index.ts':modelSha,'apps/mobile/src/service.ts':modelSha,'tests/integration/jonghyun/events-rest.mjs':modelSha,
+},migrationFiles:{'backend/supabase/migrations/20261009031628_event_detail_projection.sql':modelSha},target:null});
+
+test('J01 준비 모형 입력은 target 없음을 보존하고 실제 실행/ready를 선언하지 않는다', async () => {
+  const plan=modelJ01(),report=validateJ01Input(plan);
+  assert.equal(report.execution,'NOT_RUN');assert.equal(report.ready,false);assert.equal(report.actualTargetVerified,false);
+  assert.ok(report.missing.includes('EXACT_APPROVED_TARGET'));
+  let calls=0;await assert.rejects(()=>runJ01EventRoundtrip(plan,{verifyTarget:()=>{calls++;}}),/J01_EXACT_TARGET_REQUIRED/);assert.equal(calls,0);
+  for(const bad of [{...plan,target:{approved:true}},{...plan,approval:true},{...plan,sourceFiles:{...plan.sourceFiles,'../outside.ts':modelSha}},{...plan,migrationFiles:{}}])assert.throws(()=>validateJ01Input(bad),/^Error: J01_/);
+});
+
+test('J01 대상 입력은 기존 격리 준비 ABI의 고유프로젝트만 받으며 target 관측으로 승격하지 않는다', () => {
+  const plan=modelJ01(),container={id:modelSha,image:'public.ecr.aws/supabase/postgres@sha256:'+modelSha};
+  const target={dockerSocket:'/private/tmp/mock/docker.sock',project:'jonghyun-backend100-1234abcd',runId:'55555555-5555-4555-8555-555555555555',containers:{db:container,auth:{...container,id:'c'.repeat(64)},rest:{...container,id:'d'.repeat(64)}},origin:'http://127.0.0.1:65421',authIssuer:'http://127.0.0.1:65421/auth/v1',authAudience:'authenticated'};
+  const report=validateJ01Input({...plan,target});assert.equal(report.ready,false);assert.equal(report.actualTargetVerified,false);
+  assert.throws(()=>validateJ01Input({...plan,target:{...target,containers:{...target.containers,auth:container}}}),/J01_TARGET_ROLE_ID_DUPLICATE/);
+  for(const project of ['jonghyun-backend100','yumidang-minkyu-gateway','yumidang-jonghyun-j01-test','jonghyun-backend100-123456789'])assert.throws(()=>validateJ01Input({...plan,target:{...target,project}}),/J01_TARGET_IDENTITY/);
+});
+
+test('J01 기존 legacy REST는 DB host/scheme을 고정하고 비밀 URL을 오류에 넣지 않는다', () => {
+  assert.deepEqual(validateLegacyEventRestEndpoints('http://127.0.0.1:55421','postgresql://fixture:synthetic-password@127.0.0.1:55422/postgres'),{apiOrigin:'http://127.0.0.1:55421'});
+  for(const database of ['postgresql://fixture:PRIVATE_SENTINEL@evil.invalid:55422/postgres','https://127.0.0.1:55422/postgres','postgresql://127.0.0.1:5432/postgres']){
+    assert.throws(()=>validateLegacyEventRestEndpoints('http://127.0.0.1:55421',database),error=>error.message==='J01_LEGACY_DEDICATED_LOCAL_ONLY'&&!String(error).includes('PRIVATE_SENTINEL'));
+  }
+  assert.throws(()=>validateLegacyEventRestEndpoints('http://fixture:PRIVATE_SENTINEL@127.0.0.1:55421','postgresql://127.0.0.1:55422/postgres'),/J01_LEGACY_DEDICATED_LOCAL_ONLY/);
+});
+
+test('J01 source closure는 모바일 서비스와 runtime 및 시험기 자신의 실제 파일을 포함한다', () => {
+  const root=fileURLToPath(new URL('../../../',import.meta.url)).replace(/\/$/,'');
+  const graph=collectJ01SourceFiles(root);
+  for(const path of ['apps/mobile/src/service.ts','apps/mobile/src/api.ts','apps/mobile/src/domain.ts','apps/mobile/src/types.ts','backend/supabase/functions/service-api/events-http.ts','backend/supabase/functions/_shared/auth/principal.ts','tests/integration/jonghyun/events-rest.mjs'])assert.match(graph[path],/^[a-f0-9]{64}$/);
+  assert.deepEqual(graph,collectJ01SourceFiles(root));
+});
+
+test('J01 fixture SQL은 새 runId의17행과 실제 Auth/identity 확인·10000자 가격만 준비한다', () => {
+  const accounts=modelUser.map((userId,i)=>({userId,identityId:modelIdentity[i]}));
+  const seed=j01FixtureSql('55555555-5555-4555-8555-555555555555',accounts);
+  assert.equal(seed.count,17);assert.match(seed.sql,/for i in 1\.\.17 loop/);assert.match(seed.sql,/repeat\('가격안내',2500\)/);
+  assert.match(seed.sql,/auth\.users/);assert.match(seed.sql,/private\.member_episodes/);assert.match(seed.sql,/j01_scope_existing/);
+  assert.doesNotMatch(seed.sql,/\btruncate\b|grant |disable trigger|delete from/i);
+  assert.throws(()=>j01FixtureSql('bad;PRIVATE_SENTINEL',accounts),error=>error.message==='J01_FIXTURE_IDENTITY'&&!String(error).includes('PRIVATE_SENTINEL'));
+  assert.throws(()=>j01FixtureSql('55555555-5555-4555-8555-555555555555',[accounts[0],accounts[0]]),/J01_FIXTURE_IDENTITY/);
+});
+
+test('J01 JWT 모형 metadata는 signature 증명과 분리하고 subject/issuer/audience/만료를 검사한다', () => {
+  const now=1900000000000,target={authIssuer:'http://127.0.0.1:65421/auth/v1',authAudience:'authenticated'};
+  const token=claims=>'synthetic.'+Buffer.from(JSON.stringify(claims)).toString('base64url')+'.signature';
+  const claims=i=>({sub:modelUser[i],iss:target.authIssuer,aud:target.authAudience,role:'authenticated',exp:1900000600});
+  const accounts=modelUser.map((userId,i)=>({userId,identityId:modelIdentity[i],token:token(claims(i))}));
+  assert.deepEqual(validateJ01Auth(accounts,target,now),{scope:'JWT_METADATA_ONLY',signatureVerified:false});
+  for(const change of [{sub:modelUser[1]},{iss:'https://external.invalid/auth/v1'},{aud:'wrong'},{exp:1899999999},{nbf:1900000600},{role:'anon'}]){
+    assert.throws(()=>validateJ01Auth([{...accounts[0],token:token({...claims(0),...change})},accounts[1]],target,now),error=>error.message==='J01_AUTH_TOKEN_SCOPE_EXPIRY'&&!String(error).includes(accounts[0].token));
+  }
+});
+
+test('J01 모형 snapshot의 일부 table 또는 digest 문자열을 전체 복원 증거로 받지 않는다', () => {
+  const snapshot={scope:'FULL_TARGET_LOGICAL_BASELINE',schemas:['auth','private','public','storage'],tables:{'private.source_events':{rowCount:17,sha256:modelSha},'auth.users':{rowCount:2,sha256:modelSha}},catalogSha256:modelSha,rolesSha256:modelSha,existingUnknownSha256:modelSha};
+  const tables=['auth.users','private.source_events'];
+  const report=validateJ01Snapshot(snapshot,tables);assert.equal(report.wholeBaselineRestored,false);assert.equal(report.scope,'BOUNDARY_INVENTORY_CHECK_ONLY');
+  assert.throws(()=>validateJ01Snapshot(modelSha,tables),/J01_SNAPSHOT_COVERAGE/);
+  assert.throws(()=>validateJ01Snapshot(snapshot,[...tables,'storage.objects']),/J01_SNAPSHOT_TABLE_INVENTORY/);
+  assert.throws(()=>validateJ01Snapshot({...snapshot,existingUnknownSha256:null},tables),/J01_SNAPSHOT_CATALOG_ROLES_UNKNOWN/);
+});
