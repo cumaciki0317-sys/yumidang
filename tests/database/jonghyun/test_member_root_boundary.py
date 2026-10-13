@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import stat
+import shutil
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -381,6 +382,36 @@ class MemberRootBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'RETIREMENT_OBSERVATION_BYTES'):
             b.record_retirement_observation(value)
         self.assertEqual(b.artifact_writes, ['retirement-observed.json'])
+
+    def test_local_node_terminal_requires_parent_stdin_eof_and_exits_zero(self):
+        node = shutil.which('node')
+        self.assertIsNotNone(node, 'local Node is required for the stdio responsibility test')
+        temporary = tempfile.TemporaryDirectory(prefix='member-node-eof-', dir='/private/tmp')
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name).resolve()
+        driver = root / m.DRIVER
+        driver.parent.mkdir(parents=True)
+        # 이 로컬 child는 stdin/stdout만 사용한다. VM/HTTP/DB/provider 호출은 없다.
+        driver.write_text("""import {createInterface} from 'node:readline';
+const reader=createInterface({input:process.stdin});
+reader.once('line',line=>{
+ const initial=JSON.parse(line);
+ process.stdout.write(JSON.stringify({type:'result',requestId:initial.requestId,sequence:0,
+   proof:{status:'ROOT_ATTESTATION_REQUIRED',localStdioOnly:true}})+'\\n');
+});
+await new Promise(resolve=>reader.once('close',resolve));
+process.exitCode=0;
+""")
+        b = self.boundary()
+        b.node = Path(node)
+        b.input = {'codeRoot': str(root)}
+        b.j01 = SimpleNamespace(RootJ01Boundary=SimpleNamespace(node_env=lambda _: {}))
+        b.h = SimpleNamespace(signed_exact_json=json.loads)
+        proof = b.invoke_node()
+        self.assertEqual(proof, {'status': 'ROOT_ATTESTATION_REQUIRED', 'localStdioOnly': True})
+        self.assertTrue(b.child.stdin.closed)
+        self.assertEqual(b.child.returncode, 0)
+        b.child.stdout.close()
 
 
 if __name__ == '__main__':

@@ -460,6 +460,8 @@ class RootJ01Boundary:
                     response = {'requestId': self.run_id, 'sequence': self.sequence, 'ok': False, 'error': 'J01_ROOT_FIXED_METHOD_REJECTED'}
                 self.child.stdin.write(json.dumps(response) + '\n')
                 self.child.stdin.flush()
+            # 검토된 terminal result 이후 추가 callback은 없다. readline에 EOF를 전달한다.
+            self.child.stdin.close()
             require(self.child.wait(timeout=10) == 0, 'NODE_EXIT')
         finally:
             selector.close()
@@ -470,6 +472,8 @@ class RootJ01Boundary:
                 except subprocess.TimeoutExpired:
                     self.child.kill()
                     self.child.wait(timeout=5)
+            self.child.stdin.close()
+            self.child.stdout.close()
         return proof
 
     def run(self):

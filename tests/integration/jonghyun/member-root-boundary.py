@@ -763,6 +763,8 @@ class RootMemberBoundary:
                     reply = {'requestId': self.run_id, 'sequence': self.sequence, 'ok': False, 'error': 'MEMBER_ROOT_FIXED_METHOD_REJECTED'}
                 self.child.stdin.write(json.dumps(reply) + '\n')
                 self.child.stdin.flush()
+            # 검증된 terminal 뒤에 EOF를 전달해야 Node readline이 입력 대기를 끝낸다.
+            self.child.stdin.close()
             require(self.child.wait(timeout=10) == 0, 'NODE_EXIT')
         finally:
             selector.close()
