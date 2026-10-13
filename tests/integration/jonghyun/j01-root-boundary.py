@@ -5,6 +5,7 @@
 실제 --run은 Root의 원 binding/발급 영수증·현재 커밋·Node/capsule SHA·owned 대상이 필요하다.
 """
 import argparse
+import ast
 import hashlib
 import importlib.util
 import json
@@ -43,6 +44,23 @@ process.stdout.write(JSON.stringify(data));
 def require(value, code):
     if not value:
         raise ValueError('J01_ROOT_' + code)
+
+
+def safe_code(error):
+    # args 전체·traceback·SQL·URL·키는 기록하지 않는다. 고정 코드 한 개만 허용한다.
+    value = error.args[0] if len(error.args) == 1 and type(error.args[0]) is str else ''
+    if re.fullmatch(r'J01_ROOT_[A-Z_]+|SQLSTATE_[0-9A-Z]{5}', value):
+        return value
+    if re.fullmatch(r'(SIGNED|PROVISION)_[A-Z_]+', value):
+        try:
+            tree = ast.parse(CALLER.with_name('isolated_ai_contracts.py').read_text())
+            known = {node.value for node in ast.walk(tree) if isinstance(node, ast.Constant)
+                     and type(node.value) is str and re.fullmatch(r'(SIGNED|PROVISION)_[A-Z_]+', node.value)}
+            if value in known:
+                return value
+        except Exception:
+            pass
+    return 'J01_ROOT_UNCLASSIFIED_FAILURE'
 
 
 def canonical(value):
@@ -120,7 +138,9 @@ class RootJ01Boundary:
                 and sha(self.node.read_bytes()) == p['nodeSha256'], 'NODE_BINARY')
         self.reviewed = self.h.ReviewedSignedProvisioning(p['decisionId'], self.root, self.binding['sourcePins'],
             self.binding['containers'], self.binding['credentials'], int(time.time()) + 300)
-        self.ports = self.h.FixedSignedProvisioningPorts(self.reviewed)
+        # 원 Auth6 발급 뒤의 J01만 사용한다. 발급/added_rows는 호출하지 않는다.
+        # 외곽 baseline은 처음부터 cron/vault까지 포함한 여섯 schema를 보존한다.
+        self.ports = self.h.FixedLifecycleProvisioningPorts(self.reviewed)
         self.ports.origin = self.binding['origin']
         self.ports.runner.binding['sourcePins'] = self.binding['sourcePins']
         self.sequence = 0
@@ -263,14 +283,16 @@ class RootJ01Boundary:
 
     def snapshot(self):
         self.live()
-        rows = self.ports.original_rows()
         native = self.ports.snapshot()
-        require(rows == native['rows'], 'SNAPSHOT_CONCURRENT_CHANGE')
+        # Node 목록 계약은 네 schema만 읽는다. 외곽/정리 비교는 native 전체를 유지한다.
+        rows = {name: bag for name, bag in native['rows'].items()
+                if name.partition('.')[0] in ('auth', 'private', 'public', 'storage')}
         unknown = {k: rows[k] for k in ('private.ai_budget_reservations', 'private.ai_account_budget_reservations')}
         authority = native['authoritySha256']
         return {'scope': 'FULL_TARGET_LOGICAL_BASELINE', 'schemas': ['auth', 'private', 'public', 'storage'],
                 'tables': {name: {'rowCount': sum(bag.values()), 'sha256': digest(bag)} for name, bag in rows.items()},
-                'catalogSha256': authority, 'rolesSha256': authority, 'existingUnknownSha256': digest(unknown)}
+                'catalogSha256': digest({key: native[key] for key in ('catalogSha256', 'constraintsSha256')}),
+                'rolesSha256': authority, 'existingUnknownSha256': digest(unknown)}
 
     def source_rows(self):
         prefix = 'PFJ01' + self.run_id.replace('-', '')
@@ -419,8 +441,9 @@ class RootJ01Boundary:
                     break
                 try:
                     response = self.dispatch(frame)
-                except Exception:
-                    self.observations.append({'sequence': self.sequence, 'method': frame.get('method', 'invalid'), 'outcome': 'REJECTED_NO_RETRY'})
+                except Exception as error:
+                    method = frame.get('method')
+                    self.observations.append({'sequence': self.sequence, 'method': method if type(method) is str and method in METHODS else 'invalid', 'outcome': 'REJECTED_NO_RETRY', 'failureCode': safe_code(error)})
                     response = {'requestId': self.run_id, 'sequence': self.sequence, 'ok': False, 'error': 'J01_ROOT_FIXED_METHOD_REJECTED'}
                 self.child.stdin.write(json.dumps(response) + '\n')
                 self.child.stdin.flush()
@@ -438,10 +461,12 @@ class RootJ01Boundary:
 
     def run(self):
         proof, failed = None, None
+        execution_failure, cleanup_failure = None, None
         try:
             self.prepare()
             proof = self.invoke_node()
-        except Exception:
+        except Exception as error:
+            execution_failure = safe_code(error)
             failed = 'J01_ROOT_EXECUTION_NOT_CLOSED'
         finally:
             if self.evidence.exists():
@@ -450,9 +475,11 @@ class RootJ01Boundary:
                         self.cleanup_events()
                     if self.identity_intents:
                         self.restore_identities()
-                except Exception:
+                except Exception as error:
+                    cleanup_failure = safe_code(error)
                     failed = 'J01_ROOT_OWNED_STATE_UNKNOWN_PRESERVED'
                 self.save('finalization.json', {'runId': self.run_id, 'failed': failed, 'originalAuthSixRetained': True,
+                    'executionFailureCode': execution_failure, 'cleanupFailureCode': cleanup_failure,
                     'observedCalls': self.observations, 'sourceHead': self.packet['head'], 'noNewAuthIssue': True})
         require(failed is None and proof is not None, 'PRIVATE_EVIDENCE_PRESERVED')
         self.save('receipt.json', {'status': 'J01_ROOT_CALL_OBSERVATIONS_CLOSED', 'executionEvidence': 'ROOT_ATTESTATION_REQUIRED',

@@ -8,6 +8,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import sqlite3
+import uuid
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -176,6 +178,64 @@ class PreservedGuardTest(unittest.TestCase):
     def test_signed_reader_supports_os_temp_and_rejects_outside(self):
         self.assertEqual(ai.signed_private_read(self.root/'execution-intent.json'),(self.root/'execution-intent.json').read_bytes())
         with self.assertRaises(ValueError):ai.signed_private_read(Path('/etc/hosts'))
+
+    def test_provision_amr_requires_exact_six_owners_and_keeps_unknown_table(self):
+        accounts=[{'userId':str(uuid.uuid4())}for _ in range(6)]
+        baseline={table:{}for table in ai.PROVISION_OWNED_TABLES};baseline['storage.objects']={}
+        added={table:{}for table in ai.PROVISION_OWNED_TABLES}
+        for table in added:
+            for account in accounts:
+                for operation in (('login','user_signedup')if table=='auth.audit_log_entries'else('row',)):
+                    h=sha([table,account['userId'],operation])
+                    added[table][h]={'rowSha256':h,'ownerUserId':account['userId'],'operation':operation}
+        current={table:{row['rowSha256']:1 for row in added.get(table,{}).values()}for table in baseline}
+        ai.provisioning_added_scope(baseline,current,added,accounts)
+        self.assertEqual(len(ai.LCP_TABLES),len(set(ai.LCP_TABLES)))
+        wrong=copy.deepcopy(added);next(iter(wrong['auth.mfa_amr_claims'].values()))['ownerUserId']=str(uuid.uuid4())
+        with self.assertRaisesRegex(ValueError,'PROVISION_ADDED_ROW'):
+            ai.provisioning_added_scope(baseline,current,wrong,accounts)
+        missing=copy.deepcopy(added);missing['auth.mfa_amr_claims'].pop(next(iter(missing['auth.mfa_amr_claims'])))
+        with self.assertRaisesRegex(ValueError,'PROVISION_ADDED_ROW_COUNT'):
+            ai.provisioning_added_scope(baseline,current,missing,accounts)
+        foreign=copy.deepcopy(current);foreign['storage.objects']['f'*64]=1
+        with self.assertRaisesRegex(ValueError,'PROVISION_UNOWNED_ROW_CHANGED'):
+            ai.provisioning_added_scope(baseline,foreign,added,accounts)
+
+    def test_amr_owner_query_rejects_other_session_other_user_and_other_method(self):
+        account={'userId':str(uuid.uuid4()),'sessionId':str(uuid.uuid4()),'authEmail':'synthetic@example.invalid'}
+        ports=object.__new__(ai.FixedSignedProvisioningPorts);queries=[]
+        ports.read_sql=lambda query,timeout=3:(queries.append(query)or'{}')
+        ports.added_rows({},[account])
+        query=next(q for q in queries if 'from auth.mfa_amr_claims'in q)
+        condition=query.rsplit(' on ',1)[1].removesuffix(';').replace('::text','')
+        with sqlite3.connect(':memory:')as db:
+            db.execute("attach database ':memory:' as auth")
+            db.execute('create table auth.sessions(id text,user_id text)')
+            db.execute('create table auth.mfa_amr_claims(id text,session_id text,authentication_method text)')
+            db.execute('create table owners(user_id text,session_id text)')
+            db.execute('insert into owners values(?,?)',(account['userId'],account['sessionId']))
+            db.execute('insert into auth.sessions values(?,?)',(account['sessionId'],account['userId']))
+            db.executemany('insert into auth.mfa_amr_claims values(?,?,?)',[
+                ('owned',account['sessionId'],'password'),('other-method',account['sessionId'],'totp'),('other-session','foreign-session','password')])
+            sql='select r.id from auth.mfa_amr_claims r join owners a on '+condition
+            self.assertEqual(db.execute(sql).fetchall(),[('owned',)])
+            db.execute('update auth.sessions set user_id=?',(str(uuid.uuid4()),))
+            self.assertEqual(db.execute(sql).fetchall(),[])
+
+    def test_bulk_provision_snapshot_keeps_original_four_schemas_and_duplicate_counts(self):
+        ports=object.__new__(ai.FixedSignedProvisioningPorts);calls=[]
+        schemas=['auth','public','private','storage','cron','vault']
+        bags={schema+'.fixture':{'a'*64:2,'b'*64:1}for schema in schemas}
+        def read(query,timeout=5):
+            calls.append(query)
+            return json.dumps([[schema,'fixture']for schema in schemas]) if 'from pg_tables'in query else json.dumps(bags)
+        ports.read_sql=read
+        result=ports.original_rows()
+        self.assertEqual(result,{k:v for k,v in bags.items()if k.split('.')[0]in ('auth','public','private','storage')})
+        self.assertEqual(len(calls),2)
+        self.assertEqual(result['auth.fixture']['a'*64],2)
+        bags['auth.fixture']['a'*64]=0
+        with self.assertRaises(ValueError):ports.original_rows()
 
 
 if __name__=='__main__':unittest.main()

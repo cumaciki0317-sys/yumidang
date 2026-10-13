@@ -1184,7 +1184,7 @@ class SignedMidnightRunner(SignedRunner):
 PROVISION_FAILURE_CODES = ('PROVISION_AUTHORITY_HASH_REQUIRED', 'PROVISION_ADDED_ROW_SCOPE','PROVISION_ADDED_ROW_COUNT','PROVISION_ADDED_ROW_OWNER','PROVISION_UNOWNED_ROW_CHANGED','PROVISION_DATABASE_CONTROLS_OPEN', 'PROVISION_PREVIOUS_ATTEMPT_PRESERVED', 'PROVISION_CLEANUP_CREATED_ID_CHANGED', 'PROVISION_ACTUAL_AUTH_SESSION_FAILED', 'PROVISION_ARTIFACT_NAME', 'PROVISION_CLEANUP_SCOPE_UNKNOWN', 'PROVISION_CONTAINER_BINDING', 'PROVISION_CONTAINER_FIELDS', 'PROVISION_CREATE_FAILED', 'PROVISION_CREDENTIAL_FIELDS', 'PROVISION_CREDENTIAL_ROLE', 'PROVISION_DATABASE_BINDING', 'PROVISION_DELETE_UNKNOWN', 'PROVISION_EMAIL_ALREADY_PRESENT', 'PROVISION_EMAIL_SCOPE_UNKNOWN', 'PROVISION_EXACT_SIX_POPULATION_FAILED', 'PROVISION_EXPIRY_REQUIREMENT', 'PROVISION_FAILED', 'PROVISION_FAILED_PRIVATE_EVIDENCE_PRESERVED', 'PROVISION_FIXED_HTTP_PATH', 'PROVISION_FRESH_EMPTY_TARGET_REQUIRED', 'PROVISION_HEAD_CHANGED', 'PROVISION_HTTP_OUTCOME_UNKNOWN', 'PROVISION_IDENTITY_CHANGED', 'PROVISION_LOGIN_FAILED', 'PROVISION_LOOPBACK_REQUIRED', 'PROVISION_MEMORY_PARSE', 'PROVISION_MEMORY_READ', 'PROVISION_MONITOR_DID_NOT_CLOSE', 'PROVISION_ORIGINAL_JWT_METADATA', 'PROVISION_ORIGINAL_ROWS_OR_AUTHORITY_CHANGED', 'PROVISION_PROFILE_EPISODE_FAILED', 'PROVISION_RESOURCE_GUARD', 'PROVISION_RESOURCE_MONITOR_FAILED', 'PROVISION_REVIEWED_CODE_REQUIRED', 'PROVISION_SOURCE_CHANGED', 'PROVISION_SOURCE_NOT_COMMITTED', 'PROVISION_SOURCE_PATH')
 
 PROVISION_OWNED_TABLES = ('auth.users','auth.sessions','auth.identities','auth.refresh_tokens',
-    'auth.audit_log_entries','public.profiles','private.member_episodes')
+    'auth.audit_log_entries','public.profiles','private.member_episodes','auth.mfa_amr_claims')
 PROVISION_CLOSED_CONTROLS = ('ai_processing_guard','member_cleanup_guard','worker_runtime_journal_control',
     'worker_runtime_atomic_control','worker_invocation_control','worker_intent_confirmation_control',
     'report_purge_control','ai_report_handling_control','ai_feedback_maintenance_control',
@@ -1300,7 +1300,10 @@ class FixedSignedProvisioningPorts:
         return self.runner.sql(query)
 
     def original_rows(self):
-        return SignedMidnightRunner.original_rows(self)
+        # 기존 검증된 단일 조회의 행 해시·중복 개수 검사를 재사용한다.
+        # 일반 생성기의 원래 네 schema 범위는 초기·종료 모두 유지한다.
+        rows=FixedLifecycleProvisioningPorts.original_rows(self)
+        return {table:bag for table,bag in rows.items() if table.split('.')[0] in ('auth','public','private','storage')}
 
     def snapshot(self):
         rows=self.original_rows()
@@ -1326,6 +1329,7 @@ class FixedSignedProvisioningPorts:
         conditions={'auth.users':'r.id::text=a.user_id','auth.sessions':'r.user_id::text=a.user_id and r.id::text=a.session_id',
             'auth.identities':"r.user_id::text=a.user_id and r.provider='email'",
             'auth.refresh_tokens':'r.user_id::text=a.user_id and r.session_id::text=a.session_id',
+            'auth.mfa_amr_claims':"r.session_id::text=a.session_id and r.authentication_method='password' and exists(select 1 from auth.sessions s where s.id=r.session_id and s.user_id::text=a.user_id)",
             'public.profiles':'r.id::text=a.user_id','private.member_episodes':'r.profile_id::text=a.user_id and r.identity_id is null and r.ended_at is null',
             'auth.audit_log_entries':"((r.payload->>'action'='user_signedup'and r.payload->'traits'->>'user_id'=a.user_id and r.payload->'traits'->>'user_email'=a.email)or(r.payload->>'action'='login'and r.payload->>'actor_id'=a.user_id and r.payload->>'actor_username'=a.email))"}
         result={}
@@ -1479,6 +1483,7 @@ def provision_signed_accounts(prepared_root, reviewed):
         if any(a['expiresAt']<max(reviewed.minimum_expiry,time.time()+300)for a in accounts):raise ValueError('PROVISION_ORIGINAL_JWT_METADATA')
         if not ports.verify_population(accounts):raise ValueError('PROVISION_EXACT_SIX_POPULATION_FAILED')
         final=ports.snapshot()
+        save('final-private.json',final)
         if final['authoritySha256']!=baseline['authoritySha256']:raise ValueError('PROVISION_ORIGINAL_ROWS_OR_AUTHORITY_CHANGED')
         added=ports.added_rows(baseline['rows'],accounts)
         provisioning_added_scope(baseline['rows'],final['rows'],added,accounts)
@@ -1920,7 +1925,7 @@ def run_signed_auth_lifecycle(reviewed, binding, value, node):
     if errors:raise ValueError('LIFECYCLE_FAILED_PRIVATE_EVIDENCE_PRESERVED')
 
 
-LCP_TABLES=PROVISION_OWNED_TABLES+('auth.mfa_amr_claims',)
+LCP_TABLES=PROVISION_OWNED_TABLES
 LCP_CODES=('LCP_REVIEWED_CODE_REQUIRED','LCP_PREVIOUS_ATTEMPT','LCP_PRIVATE_SCOPE','LCP_STATE_BINDING',
     'LCP_FRESH_EMPTY_REQUIRED','LCP_SETTINGS_REQUIRED','LCP_CLOSED_REQUIRED','LCP_RESOURCE_GUARD',
     'LCP_MONITOR_FAILED','LCP_MONITOR_UNCLOSED','LCP_HTTP_UNKNOWN','LCP_CREATE_PROOF','LCP_LOGIN_PROOF',
