@@ -49,7 +49,7 @@ AI 예산은 등록 계정별 한국시간 하루 320만 토큰 상한, 전체�
 
 ## 회원 요청과 예산의 필수 DB 계약
 
-현재 내부 클라이언트는 아래 3개 RPC를 허용하고 최신 버전 SQL도 소스에 존재한다. 실제 DB 적용·원자성 검증, 개인정보 검사기·공급사 출력 상한·보관/비용/법적 근거의 준비는 별도다. 준비되지 않은 운영 요청은 모델 전에 중단한다. 종현은 공통 클라이언트나 마이그레이션을 수정하지 않는다.
+현재 내부 클라이언트는 아래 회원 점유·예산3개 RPC와 결과 증거·평가·파기 RPC를 허용하며 해당 SQL도 소스에 존재한다. 실제 DB 적용·원자성 검증, 개인정보 검사기·공급사 출력 상한·보관/비용/법적 근거의 준비는 별도다. 준비되지 않은 운영 요청은 모델 전에 중단한다. 파일별 수정 담당은 최신 [소유권 정책](../ownership.json)의 구체 경로를 따른다.
 
 - `acquire_ai_chat_request(p_user_id,p_request_id,p_client_request_id,p_output_retry_of,p_contract_version:"2026-10-05")`: 인증 서버가 전달한 회원만 인정한다. 회원 활성 상태·탐색 동의·동시 요청 1개·DB 한국시간 하루 20회·출력 재시도 소유자와 1회 사용을 확인한다. 점유 자체에는 횟수를 차감하지 않는다. 성공 `{status:"acquired",leaseToken,expiresAt}`, 거부는 `{status:"concurrent"|"daily_limit"|"consent_revoked"|"retry_exhausted"}`다. finite lease는 DB 서버 시각으로 관리하고 오래된 요청은 새 점유를 해제하지 못한다.
 - `reserve_ai_chat_model(p_user_id,p_request_id,p_lease_token,p_contract_version,p_ledger_id,p_provider_id,p_task,p_units)`: 모델 처리 시작 직전에 점유·동의·회원 자격을 재확인한다. **전체 예산 예약과 해당 요청의 첫 개인 1회 차감을 하나의 트랜잭션**으로 수행한다. 예산 거부에는 개인 차감이 없으며, 내부 추가 호출·자동 재시도는 같은 requestId의 차감 표식을 유지한다. 한국시간 날짜는 첫 모델 처리 시작의 DB 시각이며 클라이언트 날짜를 받지 않는다. 응답 `{reservationId:UUID|null}`이며 null은 전체 예산 거부다. 개인 한도·철회·점유 손실은 각각 `{status:"daily_limit"|"consent_revoked"|"lease_lost"}`로 구분해 자동 재시도하지 않는다. 원문·모델 입력은 전달하지 않는다.
@@ -77,16 +77,16 @@ AI 예산은 등록 계정별 한국시간 하루 320만 토큰 상한, 전체�
 
 성공은 정확히 `{status:'accepted',feedbackId:UUID,hideAnswer:boolean}`이며 helpful은 false, report는 true다. 클라이언트는 accepted를 확인한 뒤에만 본인 메모리 화면의 해당 requestId 답변을 숨긴다. 다른 회원 답변이나 일반 공고·공개 후기를 숨기지 않는다. `{status:'request_not_owned'|'asset_not_owned'}`는403, `{status:'idempotency_conflict'}`는409이며 기타 변형 성공/잘못된 UUID/잘못된 hideAnswer는503이다. RPC 미지원·내부 허용 목록 미연결·응답 유실은 `{status:'not_enabled',reason:'AI_FEEDBACK_STORAGE_NOT_CONNECTED'}`이며 성공·숨김을 반환하지 않는다. 유실 후에는 같은 clientRequestId로 재접수해 DB의 멱등 결과를 확인한다.
 
-report의 `reportEvidenceHandling:ReportEvidenceHandlingPort`는 기존 정책13의 **첨부 소유권·배정 담당자/승인 책임자 ACL·접근 기록·이의 포함 최종 종결+90일 정리**가 실제 연결됐는지만 확인한다. 새 법률 승인·새 동의·새 보관 선택을 추가하지 않는다. actual runtime 기본 포트는 미주입이며 `{status:'not_enabled',reason:'AI_REPORT_EVIDENCE_HANDLING_NOT_CONNECTED'}`로 DB 저장 전 중단한다. helpful은 원문이 없으므로 이 준비 포트 없이 RPC만 연결한다. 합성 isReady:true는 실제 운영 준비 증거가 아니다. 포트 확인 이후 DB 접수 트랜잭션에서도 같은 조건을 검사해 중간 자격 변경을 허용하지 않는다.
+report의 `reportEvidenceHandling:ReportEvidenceHandlingPort`는 기존 정책13의 **첨부 소유권·배정 담당자/승인 책임자 ACL·접근 기록·이의 포함 최종 종결+90일 정리**가 실제 연결됐는지만 확인한다. 새 법률 승인·새 동의·새 보관 선택을 추가하지 않는다. 현재 runtime은 별도 주입이 없으면 DB readiness를 읽는 `createAiReportEvidenceHandling`을 연결한다. 이 포트가 false·오류를 반환하면 `{status:'not_enabled',reason:'AI_REPORT_EVIDENCE_HANDLING_NOT_CONNECTED'}`로 DB 저장 전 중단한다. helpful은 원문이 없으므로 이 준비 포트 없이 RPC만 연결한다. 합성 isReady:true는 실제 운영 준비 증거가 아니다. 포트 확인 이후 DB 접수 트랜잭션에서도 같은 조건을 검사해 중간 자격 변경을 허용하지 않는다.
 
-현재 일반 신고 서비스·SQL은 존재하지만 AI 전용 `submit_ai_feedback` SQL과 내부 RPC 허용 목록은 없다. AI 신고의 Storage 첨부 연결·ACL/접근기록/정리 capability와 `reportEvidenceHandling` 운영 주입도 확인해야 한다. 로컬 HTTP/RPC 합성 검증은 실제 접수·보관·삭제·외부 전송·운영 권한의 검증이 아니다. 회원 AI 답변 원문 전체를 영구 저장하거나 모델/공급사로 신고를 보내는 기능을 추가하지 않는다. 상세 연결 과제는 [AI 피드백 인계](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md)를 따른다.
+현재 일반 신고 서비스와 AI 전용 `submit_ai_feedback`·결과 기록·readiness·파기 SQL 및 내부 RPC 허용 목록은 존재한다. 소스 존재를 실제 신고 준비로 대신하지 않으며, AI 신고의 Storage 첨부 연결·ACL/접근기록/정리 capability와 DB readiness 제어의 실제 상태를 확인해야 한다. 로컬 HTTP/RPC 합성 검증은 실제 접수·보관·삭제·외부 전송·운영 권한의 검증이 아니다. 회원 AI 답변 원문 전체를 영구 저장하거나 모델/공급사로 신고를 보내는 기능을 추가하지 않는다. 상세 연결 과제는 [AI 피드백 인계](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md)를 따른다.
 
 현재 소스·합성 검증과 민규 연결 요청은 [AI·검색 구현 결과](../../docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md)를 따른다. 운영 미주입 검사기를 합성 통과 함수로 대체하지 않는다.
 
 
 ## 2026-10-07 현재 런타임·검사·관측 연결
 
-- `createConfiguredModel`은 민규 `loadPotensAccountPoolConfig`와 `createRpcAccountBudget`을 연결한다. 다중 계정 설정 오류는 단일 키로 fallback하지 않는다. pool이 설정된 경우 단일 예산 router로 다시 감싸지 않으며, 전송 전 계정 예산 거절만 다음 계정 선택을 허용한다. 전송 이후 응답 유실·403/429·정산 유실은 계정을 바꾸거나 재전송하지 않는다. 위의 단일 router 자동 재시도 설명은 기존 단일 설정 경로에만 해당한다.
+- `createConfiguredModel`은 민규 `loadPotensAccountPoolConfig`와 `createRpcAccountBudget`을 연결한다. 다중 계정 설정 오류는 단일 키로 fallback하지 않는다. pool이 설정된 경우 단일 예산 router로 다시 감싸지 않으며, 전송 전 계정 예산 거절만 다음 계정 선택을 허용한다. 전송 이후 응답 유실·403/429·정산 유실은 계정을 바꾸거나 재전송하지 않는다. 단일 router와 다중 계정 pool 모두 위의 미전송 확인·회원 요청 전체 자동1회 원칙을 따른다.
 - A안 `conservativeExplanationCheck`는 현재 카드의 공개 필드 하나와 정확히 일치하는 설명만 통과시킨다. 문장을 덧붙인 평가·안전 보장·다른 카드 근거·여분 DTO 필드는 거절한다. 의미가 비슷하다는 추정으로 승인하지 않는다.
 - `createConservativePrivacyCheck`는 서버 검토 목록의 문자열과 객체 키만 정확 일치로 허용한다. getter·숨은 속성·toJSON·비정상 배열·순환 입력·검사기 예외는 차단한다. 실제 회원 원문을 목록에 자동 등록하지 않는다. 고정 합성 목록은 로컬 검토용이며 운영 개인정보 적합성·외부 전송 승인으로 사용하지 않는다.
 - `AiChatRuntimeOptions.metrics`는 서버에서 준비한 `MetricsRecorder`를 선택 주입한다. HTTP 탐색 요청당 결과·시간·설정 모델 버전·확인된 사용량만 기록한다. 내부 모델 응답의 사용량이 모두 확인되고 모델 버전이 같을 때만 사용량을 합산하며, 한 호출이라도 불명이면 합계 필드를 생략한다. 내부 재시도 사용량의 완전성을 확인하지 못하는 기존 단일 router에서는 최종 응답에 usage가 있어도 요청 합계를 기록하지 않는다. 회원 ID·원문·임의 metadata·오류 객체는 전달하지 않는다. sink 실패·무응답은 제품 응답을 기다리게 하지 않는다. `retryCount=0`은 HTTP wrapper의 직접 재전송 0회이며 공급사 내부 재시도 횟수의 측정값이 아니다.
@@ -99,7 +99,7 @@ report의 `reportEvidenceHandling:ReportEvidenceHandlingPort`는 기존 정책13
 4. 관측 recorder/sink의 배포 연결·보관·삭제는 실제 운영 조건을 확인한다. 선택 주입과 합성 테스트만으로 실제 저장·알림 완료를 주장하지 않는다.
 5. 로컬 규칙 평가는 `node --experimental-strip-types tests/ai/jonghyun/synthetic-eval.mjs --checks`로 실행한다. 고정 합성 개인정보·근거·부정·조건 사례만 평가하며 공급사 호출은 0회다. `--live`는 이 인계에서 실행하지 않았다.
 
-AI 피드백 `submit_ai_feedback`의 공통 SQL/내부 RPC 허용 목록과 신고자료 handling 주입은 별도 연결 조건이다. 현재 이 체크리스트는 배포 준비 산출물이며 실제 네이버·DB·공급사·운영 배포 증거가 아니다.
+AI 피드백 SQL/내부 RPC 허용 목록과 기본 DB readiness 포트는 구현돼 있다. 실제 신고자료·ACL/접근 기록·파기 readiness와 운영 적용은 별도 확인 조건이다. 현재 이 체크리스트는 배포 준비 산출물이며 실제 네이버·공급사·운영 배포 증거가 아니다. 실제 로컬 DB 연결 범위는 해당 실행 영수증을 따른다.
 
 ## 2026-10-08 정상 응답과 평가 증거 연결
 
