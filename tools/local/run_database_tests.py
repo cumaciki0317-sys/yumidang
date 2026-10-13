@@ -12,6 +12,7 @@ import subprocess
 import select
 import time
 import uuid
+import stat
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTEXT = "colima-yumidang-minkyu"
@@ -20,6 +21,193 @@ CONTAINER = "supabase_db_" + PROJECT
 TESTS = ("worker_jobs.sql", "public_post_search.sql", "review_summary_storage.sql",
          "bilateral_completion.sql", "review_automation.sql", "core_service_api.sql", "public_search_v2.sql")
 CURRENT_AI_FILES = ("ai_atomic_requests.sql", "ai_account_budget.sql", "ai_account_scopes.sql", "current_summary_fences.sql", "current_summary_invocation.sql")
+
+
+def preserved_private_bytes(root, relative):
+    """보존 자료는 소유한 비공개 임시 폴더의 단일 파일만 읽는다."""
+    root = Path(root)
+    boundaries = {Path('/private/tmp').resolve(), Path(tempfile.gettempdir()).resolve()}
+    if root != root.resolve() or not any(root != p and root.is_relative_to(p) for p in boundaries):
+        raise ValueError('PRESERVED_ROOT')
+    for parent in (root, *root.parents):
+        if parent in boundaries:
+            break
+        s = parent.lstat()
+        if not stat.S_ISDIR(s.st_mode) or s.st_uid != os.getuid() or stat.S_IMODE(s.st_mode) != 0o700:
+            raise ValueError('PRESERVED_DIRECTORY')
+    path = root / relative
+    if path.parent != root or path.resolve() != path:
+        raise ValueError('PRESERVED_PATH')
+    before = path.lstat()
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        current = os.fstat(fd)
+        identity = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns, s.st_nlink)
+        if (not stat.S_ISREG(current.st_mode) or current.st_uid != os.getuid() or current.st_nlink != 1
+                or stat.S_IMODE(current.st_mode) != 0o600 or current.st_size > 4*1024*1024
+                or identity(before) != identity(current)):
+            raise ValueError('PRESERVED_FILE')
+        with os.fdopen(os.dup(fd), 'rb') as stream:
+            data = stream.read(4*1024*1024+1)
+        if len(data) != current.st_size or identity(current) != identity(os.fstat(fd)) or identity(current) != identity(path.lstat()):
+            raise ValueError('PRESERVED_FILE_CHANGED')
+        return data
+    finally:
+        os.close(fd)
+
+
+def preserved_contract(root, intent, owned, host, project):
+    """파일 계약만 검사한다. 실제 관찰·생성·실행 허가는 수행하지 않는다."""
+    version = intent.get('version', 1)
+    if type(version) is not int:
+        raise ValueError('PRESERVED_VERSION')
+    if version == 1:
+        if intent.get('existingContainers') != [] or intent.get('existingNetworks') != []:
+            raise ValueError('PRESERVED_EMPTY_INTENT_REQUIRED')
+        return None
+    if version != 2 or set(intent) != {'version', 'context', 'dockerHost', 'project', 'scope',
+            'existingContainers', 'existingNetworks', 'preservedBaselineSha256'}:
+        raise ValueError('PRESERVED_INTENT_FIELDS')
+    if (intent['context'] != 'colima-jonghyun-backend100' or intent['dockerHost'] != host
+            or host != 'unix://'+str(Path.home()/'.colima/jonghyun-backend100/docker.sock')
+            or intent['project'] != project or not re.fullmatch('jonghyun-backend100-[a-f0-9]{8}',project)
+            or intent['scope'] != 'new-synthetic-only'):
+        raise ValueError('PRESERVED_AUTHORITY')
+    raw = preserved_private_bytes(root, 'protected-resource-baseline.json')
+    if json.loads(preserved_private_bytes(root, 'owned-containers.json')) != owned:
+        raise ValueError('PRESERVED_OWNED_FILE_CHANGED')
+    if not re.fullmatch('[a-f0-9]{64}', str(intent['preservedBaselineSha256'])) or hashlib.sha256(raw).hexdigest() != intent['preservedBaselineSha256']:
+        raise ValueError('PRESERVED_BASELINE_HASH')
+    baseline = json.loads(raw)
+    fields = {'version','scope','profile','dockerHost','containers','customNetworks','volumes',
+              'existingDatabaseOrStorageRead','existingMutationCommands','wholeStoredBytesPreserved','baselineMetadataSha256'}
+    if (set(baseline) != fields or type(baseline['version']) is not int or baseline['version'] != 1
+            or baseline['scope'] != 'OBSERVED_EXISTING_RESOURCES_METADATA_ONLY'
+            or baseline['profile'] != 'jonghyun-backend100' or baseline['dockerHost'] != host
+            or baseline['existingDatabaseOrStorageRead'] != 'NOT_RUN' or baseline['existingMutationCommands'] != 'NOT_RUN'
+            or baseline['wholeStoredBytesPreserved'] != 'NOT_VERIFIED'
+            or not re.fullmatch('[a-f0-9]{64}', str(baseline['baselineMetadataSha256']))):
+        raise ValueError('PRESERVED_BASELINE_FIELDS')
+    def entries(value, keys, kind):
+        if not isinstance(value, list): raise ValueError('PRESERVED_LIST')
+        names=set(); ids=set()
+        for item in value:
+            if not isinstance(item, dict) or set(item) != keys or not isinstance(item.get('name'),str) or not re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.-]{0,127}',item['name']):
+                raise ValueError('PRESERVED_ENTRY')
+            if item['name'] in names or item['name'].endswith(project): raise ValueError('PRESERVED_PROJECT_COLLISION')
+            names.add(item['name'])
+            if 'id' in keys:
+                if not re.fullmatch('[a-f0-9]{64}',str(item['id'])) or item['id'] in ids: raise ValueError('PRESERVED_ID')
+                ids.add(item['id'])
+            for key in keys:
+                if key.endswith('Sha256') and not re.fullmatch('[a-f0-9]{64}',str(item[key])): raise ValueError('PRESERVED_HASH')
+            if kind == 'container':
+                state=item['state']
+                if (not re.fullmatch('sha256:[a-f0-9]{64}',str(item['image'])) or not isinstance(state,dict)
+                        or set(state)!={'running','status','oomKilled'} or type(state['running'])is not bool
+                        or type(state['oomKilled'])is not bool or not isinstance(state['status'],str)):
+                    raise ValueError('PRESERVED_CONTAINER_STATE')
+        return names,ids
+    container_keys={'id','name','image','labelsSha256','configSha256','hostConfigSha256','mountsSha256','state'}
+    old_names, old_ids=entries(baseline['containers'],container_keys,'container')
+    net_names, net_ids=entries(baseline['customNetworks'],{'id','name','inspectionSha256'},'network')
+    volume_names,_=entries(baseline['volumes'],{'name','inspectionSha256'},'volume')
+    def pairs(items):
+        if not isinstance(items,list) or any(not isinstance(x,dict) or set(x)!={'id','name'} for x in items): raise ValueError('PRESERVED_INTENT_LIST')
+        return sorted((x['id'],x['name'])for x in items)
+    if pairs(intent['existingContainers']) != sorted((x['id'],x['name'])for x in baseline['containers']) or pairs(intent['existingNetworks']) != sorted((x['id'],x['name'])for x in baseline['customNetworks']):
+        raise ValueError('PRESERVED_INTENT_MISMATCH')
+    if not isinstance(owned,list): raise ValueError('PRESERVED_OWNED_LIST')
+    new_ids=set();new_names=set()
+    for item in owned:
+        if (not isinstance(item,dict) or not {'id','name','image'}<=set(item)
+                or not re.fullmatch('[a-f0-9]{64}',str(item['id'])) or not re.fullmatch('sha256:[a-f0-9]{64}',str(item['image']))
+                or not isinstance(item['name'],str) or not item['name'].startswith('supabase_') or not item['name'].endswith('_'+project)
+                or item['id'] in old_ids|new_ids or item['name'] in old_names|new_names): raise ValueError('PRESERVED_OWNED_COLLISION')
+        new_ids.add(item['id']);new_names.add(item['name'])
+    added={}
+    for filename,keys,old in [('owned-networks.json',{'id','name'},net_ids),('owned-volumes.json',{'name'},volume_names)]:
+        value=json.loads(preserved_private_bytes(root,filename)) if (Path(root)/filename).exists() else []
+        if not isinstance(value,list): raise ValueError('PRESERVED_OWNED_LIST')
+        seen=set(); seen_names=set()
+        for item in value:
+            if (not isinstance(item,dict) or set(item)!=keys or not isinstance(item['name'],str)
+                    or not item['name'].startswith('supabase_') or not item['name'].endswith('_'+project)):
+                raise ValueError('PRESERVED_OWNED_RESOURCE')
+            key=item.get('id',item['name'])
+            if 'id'in keys and not re.fullmatch('[a-f0-9]{64}',str(key)): raise ValueError('PRESERVED_OWNED_RESOURCE')
+            if key in old|seen or item['name'] in net_names|volume_names|seen_names: raise ValueError('PRESERVED_OWNED_COLLISION')
+            seen.add(key);seen_names.add(item['name'])
+        added[filename]=value
+    return {'baseline':baseline,'owned':owned,'networks':added['owned-networks.json'],'volumes':added['owned-volumes.json']}
+
+
+def preserved_resource_pins(root, intent):
+    if intent.get('version',1) != 2: return None
+    raw=preserved_private_bytes(root,'execution-intent.json')
+    if json.loads(raw)!=intent: raise ValueError('PRESERVED_INTENT_CHANGED')
+    pins={'intentSha256':hashlib.sha256(raw).hexdigest(),'baselineSha256':intent['preservedBaselineSha256']}
+    for filename,key in [('owned-containers.json','ownedContainersSha256'),('owned-networks.json','ownedNetworksSha256'),('owned-volumes.json','ownedVolumesSha256')]:
+        pins[key]=hashlib.sha256(preserved_private_bytes(root,filename)).hexdigest() if (Path(root)/filename).exists() else None
+    return pins
+
+
+def verify_preserved_resources(root, host, project, call, expected_pins=None):
+    """기존 메타데이터와 전체 목록을 읽기로 대조한다. 변경 명령은 없다."""
+    raw=preserved_private_bytes(root,'execution-intent.json') if expected_pins is not None else (Path(root)/'execution-intent.json').read_bytes()
+    intent=json.loads(raw)
+    if expected_pins is not None and preserved_resource_pins(root,intent)!=expected_pins:
+        raise ValueError('PRESERVED_PIN_CHANGED')
+    if intent.get('version',1)==1:
+        preserved_contract(root,intent,[],host,project)
+        return
+    raw=preserved_private_bytes(root,'execution-intent.json');intent=json.loads(raw)
+    pins=preserved_resource_pins(root,intent)
+    if expected_pins is not None and pins!=expected_pins: raise ValueError('PRESERVED_PIN_CHANGED')
+    owned=json.loads(preserved_private_bytes(root,'owned-containers.json'))
+    contract=preserved_contract(root,intent,owned,host,project);baseline=contract['baseline']
+    digest=lambda x:hashlib.sha256(json.dumps(x,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    def inspections(args, keys, field):
+        if not keys:return {}
+        values=json.loads(call(args+sorted(keys)))
+        if not isinstance(values,list) or len(values)!=len(keys) or {v[field]for v in values}!=keys:
+            raise ValueError('PRESERVED_INSPECT_INVENTORY_CHANGED')
+        return {v[field]:v for v in values}
+    if call(['context','inspect',intent['context'],'--format','{{.Endpoints.docker.Host}}']).strip()!=host:
+        raise ValueError('PRESERVED_SOCKET_CHANGED')
+    ids=set(call(['ps','-a','--no-trunc','--format','{{.ID}}']).splitlines())
+    if ids!={x['id']for x in baseline['containers']}|{x['id']for x in owned}: raise ValueError('PRESERVED_CONTAINER_INVENTORY_CHANGED')
+    containers=inspections(['inspect'],ids,'Id')
+    for item in baseline['containers']:
+        live=containers[item['id']];state=live['State']
+        actual={'id':live['Id'],'name':live['Name'].removeprefix('/'),'image':live['Image'],
+            'labelsSha256':digest(live['Config']['Labels']),'configSha256':digest(live['Config']),
+            'hostConfigSha256':digest(live['HostConfig']),'mountsSha256':digest(live['Mounts']),
+            'state':{'running':state['Running'],'status':state['Status'],'oomKilled':state['OOMKilled']}}
+        if actual!=item: raise ValueError('PRESERVED_CONTAINER_CHANGED')
+    for item in owned:
+        live=containers[item['id']]
+        if (live['Id']!=item['id'] or live['Name']!='/'+item['name'] or live['Image']!=item['image']
+                or live['Config']['Labels'].get('com.supabase.cli.project')!=project):raise ValueError('PRESERVED_OWNED_ID_CHANGED')
+    networks=[json.loads(x)for x in call(['network','ls','--no-trunc','--format','{{json .}}']).splitlines()]
+    custom={x['ID']for x in networks if x['Name']not in('bridge','host','none')}
+    if custom!={x['id']for x in baseline['customNetworks']}|{x['id']for x in contract['networks']}:raise ValueError('PRESERVED_NETWORK_INVENTORY_CHANGED')
+    network_details=inspections(['network','inspect'],custom,'Id')
+    for item in baseline['customNetworks']:
+        live=network_details[item['id']]
+        if live['Id']!=item['id'] or live['Name']!=item['name'] or digest(live)!=item['inspectionSha256']:raise ValueError('PRESERVED_NETWORK_CHANGED')
+    for item in contract['networks']:
+        live=network_details[item['id']]
+        if live['Id']!=item['id'] or live['Name']!=item['name']:raise ValueError('PRESERVED_OWNED_NETWORK_CHANGED')
+    volumes=set(call(['volume','ls','--format','{{.Name}}']).splitlines())
+    if volumes!={x['name']for x in baseline['volumes']}|{x['name']for x in contract['volumes']}:raise ValueError('PRESERVED_VOLUME_INVENTORY_CHANGED')
+    volume_details=inspections(['volume','inspect'],volumes,'Name')
+    for item in baseline['volumes']:
+        live=volume_details[item['name']]
+        if live['Name']!=item['name'] or digest(live)!=item['inspectionSha256']:raise ValueError('PRESERVED_VOLUME_CHANGED')
+    if (preserved_resource_pins(root,json.loads(preserved_private_bytes(root,'execution-intent.json')))!=pins
+            or hashlib.sha256(preserved_private_bytes(root,'protected-resource-baseline.json')).hexdigest()!=pins['baselineSha256']):
+        raise ValueError('PRESERVED_PIN_CHANGED')
 
 
 def isolated_command_error(stderr):
@@ -72,16 +260,20 @@ def isolated_prepared_target(prepared_root):
     host = "unix://" + str(Path.home() / ".colima/jonghyun-backend100/docker.sock")
     if (intent["context"] != "colima-jonghyun-backend100" or intent["dockerHost"] != host
             or intent["project"] != project or intent["scope"] != "new-synthetic-only"
-            or intent["existingContainers"] != [] or intent["existingNetworks"] != []):
+            or intent.get('version',1)==1 and (intent['existingContainers']!=[] or intent['existingNetworks']!=[])):
         raise ValueError("ISOLATED_INTENT_INVALID")
     owned = json.loads(read("owned-containers.json"))
+    preserved_contract(root, intent, owned, host, project)
     matching = [x for x in owned if x["name"] == "supabase_db_" + project]
     if (len(matching) != 1 or not re.fullmatch(r"[a-f0-9]{64}", matching[0]["id"])
             or not re.fullmatch(r"sha256:[a-f0-9]{64}", matching[0]["image"])):
         raise ValueError("ISOLATED_DB_ID_INVALID")
-    return {"context": intent["context"], "host": host, "project": project,
+    result = {"context": intent["context"], "host": host, "project": project,
             "container": matching[0]["name"], "id": matching[0]["id"], "image": matching[0]["image"],
             "versions": [x["version"] for x in history["migrations"]]}
+    pins=preserved_resource_pins(root,intent)
+    if pins is not None: result['preservedResourcePins']=pins
+    return result
 
 
 def current_ai_cases(payloads):
@@ -113,6 +305,7 @@ def run_current_ai(prepared_root):
                 raise isolated_command_error(result.stderr)
             return result.stdout.strip()
         def verify_identity():
+            verify_preserved_resources(prepared_root, target['host'], target['project'], call, target.get('preservedResourcePins'))
             if call(["context", "inspect", target["context"], "--format", "{{.Endpoints.docker.Host}}"] ) != target["host"]:
                 raise ValueError("ISOLATED_SOCKET_CHANGED")
             inspected = json.loads(call(["inspect", target["container"]]))
@@ -125,10 +318,17 @@ def run_current_ai(prepared_root):
                 raise ValueError("ISOLATED_ID_CHANGED")
         def query(statement):
             verify_identity()
-            return call(["exec", "-i", target["id"], "psql", "-XqAt", "-U", "postgres", "-d", "postgres",
-                         "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=sqlstate", "-f", "-"],
-                        data="set application_name='ym_current_ai_sql';set statement_timeout='15s';"
-                             "set lock_timeout='10s';set plpgsql.check_asserts=on;\n" + statement)
+            try:
+                result = call(["exec", "-i", target["id"], "psql", "-XqAt", "-U", "postgres", "-d", "postgres",
+                               "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=sqlstate", "-f", "-"],
+                              data="set application_name='ym_current_ai_sql';set statement_timeout='15s';"
+                                   "set lock_timeout='10s';set plpgsql.check_asserts=on;\n" + statement)
+            except BaseException as error:
+                try: verify_identity()
+                except BaseException: error.add_note('PRESERVED_POST_SQL_UNPROVEN')
+                raise
+            verify_identity()
+            return result
         stage = "target_guard"
         verify_identity()
         actual_versions = json.loads(query("select json_agg(version order by version) from supabase_migrations.schema_migrations;"))
