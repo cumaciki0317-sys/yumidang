@@ -163,6 +163,33 @@ class MemberRootBoundaryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 call()
 
+    def test_read_only_native_postgres_booleans_and_json_keep_exact_types(self):
+        h = m.load_j01().load_helpers()
+        responses = [('t', True), ('f', False), ('true', True), ('false', False),
+                     ('null', None), ('0', 0), ('"f"', 'f'), ('{"exists":true}', {'exists': True})]
+        for raw, expected in responses:
+            with self.subTest(raw=raw):
+                b = self.boundary()
+                b.h = h
+                calls = []
+                b.ports = SimpleNamespace(read_sql=lambda sql, timeout: calls.append((sql, timeout)) or raw)
+                value = b.read('select native_boolean_or_json;')
+                self.assertEqual(value, expected)
+                self.assertIs(type(value), type(expected))
+                self.assertEqual(calls, [('select native_boolean_or_json;', 5)])
+                self.assertEqual(len(b.live_calls), 1)
+
+    def test_malformed_native_read_never_defaults_to_false(self):
+        h = m.load_j01().load_helpers()
+        for raw in ('', 't garbage', 'f ', 'TRUE', 'not-json', '{broken}',
+                    'NaN', 'Infinity', '{"exists":true,"exists":false}', False):
+            with self.subTest(raw=raw):
+                b = self.boundary()
+                b.h = h
+                b.ports = SimpleNamespace(read_sql=lambda sql, timeout: raw)
+                with self.assertRaises(ValueError):
+                    b.read('select native_boolean_or_json;')
+
     def test_owned_subtraction_preserves_duplicate_unknown_rows(self):
         self.assertEqual(m.subtract_owned_bags({'public.profiles': {H: 2, F: 1}},
                                              {'public.profiles': {H: 1}}),

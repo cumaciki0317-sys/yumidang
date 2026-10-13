@@ -276,7 +276,13 @@ class RootMemberBoundary:
 
     def read(self, statement):
         self.live()
-        return json.loads(self.ports.read_sql(statement, timeout=5))
+        raw = self.ports.read_sql(statement, timeout=5)
+        require(type(raw) is str, 'READ_TEXT_REQUIRED')
+        if raw == 't':
+            return True
+        if raw == 'f':
+            return False
+        return self.h.signed_exact_json(raw)
 
     def mutate(self, name, statement):
         self.live()
