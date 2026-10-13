@@ -76,7 +76,7 @@ export function createPotensModel(config: PotensAdapterConfig): ModelPort {
   const modelVersion = "potens." + model;
   return {
     async generate(request): Promise<ModelResponse> {
-      if (request.signal?.aborted) throw new ModelError("CANCELLED");
+      if (request.signal?.aborted) throw new ModelError("CANCELLED", { dispatchState: "not_sent" });
       let body: string;
       try {
         const payload = { prompt: buildPotensPrompt(request), model };
@@ -84,15 +84,19 @@ export function createPotensModel(config: PotensAdapterConfig): ModelPort {
         const encoded = outputLimit ? outputLimit.apply(payload, request.maxOutputTokens) : payload;
         if (!encoded || encoded.prompt !== payload.prompt || encoded.model !== model) throw new Error();
         body = JSON.stringify(encoded);
-      } catch { throw new ModelError("INVALID_MODEL_RESPONSE"); }
+      } catch { throw new ModelError("INVALID_MODEL_RESPONSE", { dispatchState: "not_sent" }); }
       const controller = new AbortController();
       let timedOut = false;
       const cancel = () => controller.abort();
       request.signal?.addEventListener("abort", cancel, { once: true });
       const timer = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
+      let dispatchState: "not_sent" | "sent" = "not_sent";
+      let usage: ModelUsage | null = null;
       try {
         let response: Response;
         try {
+          if (request.signal?.aborted) throw new ModelError("CANCELLED", { dispatchState: "not_sent" });
+          dispatchState = "sent"; // transport 호출부터 동기 예외도 미전송으로 추정하지 않는다.
           response = await transport(endpoint, {
             method: "POST",
             headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
@@ -108,13 +112,14 @@ export function createPotensModel(config: PotensAdapterConfig): ModelPort {
         catch { throw new ModelError(timedOut ? "TIMEOUT" : controller.signal.aborted ? "CANCELLED" : "INVALID_MODEL_RESPONSE"); }
         if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new ModelError("INVALID_MODEL_RESPONSE");
         const record = payload as Record<string, unknown>;
+        usage = mapUsage(record.token_usage, usageFields);
         if (typeof record.message !== "string" || !record.message.trim()) throw new ModelError("INVALID_MODEL_RESPONSE");
         const value = parseStructuredMessage(record.message);
         const reported = typeof record.model === "string" && /^[A-Za-z0-9._:/-]{1,128}$/.test(record.model) ? record.model : undefined;
-        return { value, modelVersion, usage: mapUsage(record.token_usage, usageFields), ...(reported ? { reportedModel: reported } : {}) };
+        return { value, modelVersion, usage, ...(reported ? { reportedModel: reported } : {}) };
       } catch (error) {
-        if (error instanceof ModelError) throw error;
-        throw new ModelError("MODEL_UNAVAILABLE");
+        if (error instanceof ModelError) throw new ModelError(error.code, { dispatchState, usage });
+        throw new ModelError("MODEL_UNAVAILABLE", { dispatchState, usage });
       } finally {
         clearTimeout(timer);
         request.signal?.removeEventListener("abort", cancel);

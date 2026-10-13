@@ -1,5 +1,5 @@
 import type { ModelPort, ModelRequest, ModelResponse, ModelUsage } from "./model-port.ts";
-import { ModelError, safeModelError } from "./provider-errors.ts";
+import { ModelError, safeModelError, generateWithPreDispatchRetry } from "./provider-errors.ts";
 
 /** 실제 API 어댑터는 계정별 규격 확인 후 주입한다. OpenAI 호환을 가정하지 않는다. */
 /** 서버 구성에서만 전달한다. approved는 팀의 보관 기준 검토 완료이며 ZDR을 뜻하지 않는다. */
@@ -19,12 +19,12 @@ function validUsage(usage: unknown): usage is ModelUsage {
   if (!usage || typeof usage !== "object" || Array.isArray(usage)) return false;
   const value = usage as Record<string, unknown>;
   return Number.isSafeInteger(value.inputTokens) && (value.inputTokens as number) >= 0 &&
-    Number.isSafeInteger(value.outputTokens) && (value.outputTokens as number) >= 0;
+    Number.isSafeInteger(value.outputTokens) && (value.outputTokens as number) >= 0 && Number.isSafeInteger((value.inputTokens as number) + (value.outputTokens as number));
 }
 export function createModelRouter(config: { primary: ReviewedProvider; fallback?: ReviewedProvider; budget: ModelBudgetPort }): ModelPort {
   // HTTP handler는 점유에서 받은 같은 scope 객체를 모든 단계에 전달한다.
   // WeakSet은 요청 종료 뒤 회원/요청 식별자를 영구 보관하지 않는다.
-  const retriedRequests = new WeakSet<NonNullable<ModelRequest["memberRequest"]>>();
+  const retriedRequests = new WeakSet<object>();
   async function call(provider: ReviewedProvider, request: ModelRequest): Promise<ModelResponse> {
     const review = provider.retentionReview;
     if (review?.status !== "approved" || typeof review.decisionId !== "string" || !review.decisionId.trim()) {
@@ -46,9 +46,14 @@ export function createModelRouter(config: { primary: ReviewedProvider; fallback?
     let result: ModelResponse;
     try {
       if (request.signal?.aborted) throw new ModelError("CANCELLED");
-      result = await provider.model.generate(request);
+      result = await generateWithPreDispatchRetry(() => provider.model.generate(request), {
+        memberScope: request.memberRequest, retriedRequests, signal: request.signal,
+      });
     } catch (error) {
-      try { await config.budget.settle({ reservationId, outcome: "unknown" }); }
+      const failure = safeModelError(error);
+      try { await config.budget.settle(failure.usage
+        ? { reservationId, outcome: "success", usage: failure.usage }
+        : { reservationId, outcome: "unknown" }); }
       catch { throw new ModelError("MODEL_UNAVAILABLE"); }
       if (request.signal?.aborted) throw new ModelError("CANCELLED");
       throw safeModelError(error);
@@ -64,19 +69,7 @@ export function createModelRouter(config: { primary: ReviewedProvider; fallback?
       ...(typeof result.reportedModel === "string" && result.reportedModel.trim() ? { reportedModel: result.reportedModel } : {}) };
   }
   return { async generate(request) {
-    try {
-      try { return await call(config.primary, request); }
-      catch (error) {
-        if (request.memberRequest && !retriedRequests.has(request.memberRequest) && error instanceof ModelError && ["TIMEOUT", "RATE_LIMITED", "MODEL_UNAVAILABLE"].includes(error.code) && !request.signal?.aborted) {
-          retriedRequests.add(request.memberRequest);
-          return await call(config.primary, request);
-        }
-        throw error;
-      }
-    }
-    catch (error) {
-      if (error instanceof ModelError && error.code === "DAILY_QUOTA_EXHAUSTED" && config.fallback) return call(config.fallback, request);
-      throw safeModelError(error);
-    }
+    try { return await call(config.primary, request); }
+    catch (error) { throw safeModelError(error); }
   } };
 }

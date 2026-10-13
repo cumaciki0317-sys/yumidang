@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createModelRouter} from "../../../backend/supabase/functions/_shared/ai/providers/provider-adapter.ts";
+import {createPotensModel} from "../../../backend/supabase/functions/_shared/ai/providers/potens-adapter.ts";
 import {ModelError} from "../../../backend/supabase/functions/_shared/ai/providers/provider-errors.ts";
 const req={task:"intent",system:"rules",input:{messages:"PRIVATE_BODY"},maxOutputTokens:20};
 const result={value:{ok:true},modelVersion:"synthetic",usage:{inputTokens:10,outputTokens:5}};
@@ -23,15 +24,15 @@ test("팀 결정 참조가 있는 합성 구성은 특정 미보관 정책을 �
  const s=setup();assert.equal(await createModelRouter(s).generate(req).then(x=>x.modelVersion),"synthetic");
  assert.equal(Object.hasOwn(s.primary,"zeroRetentionVerified"),false);
 });
-test("대체 제공사의 보관 검토도 별도 확인하고 미정이면 원문 전송 차단",async()=>{
- const s=setup();let called=0;s.primary.model.generate=async()=>{throw new ModelError("DAILY_QUOTA_EXHAUSTED");};
- s.fallback.retentionReview={status:"pending"};s.fallback.model.generate=async()=>{called++;return result;};
- await assert.rejects(createModelRouter(s).generate(req),/RETENTION_REVIEW_PENDING/);
- assert.equal(called,0);assert.deepEqual(s.reservations.map(x=>x.providerId),["primary"]);
-});
-test("일일 한도 소진만 승인 대체 모델로 전환하고 예약에는 원문을 넘기지 않음",async()=>{
- const s=setup();s.primary.model.generate=async()=>{throw new ModelError("DAILY_QUOTA_EXHAUSTED");};
- await createModelRouter(s).generate(req);assert.deepEqual(s.reservations.map(x=>x.providerId),["primary","fallback"]); assert.equal(JSON.stringify(s.reservations).includes("PRIVATE_BODY"),false);assert.equal(s.settlements[0].outcome,"unknown");
+test("전송 후 또는 미확인 일일 한도 오류도 자동 대체 제공사로 전환하지 않음",async()=>{
+ for(const dispatchState of ["sent","unknown","not_sent"]){
+  const s=setup();let fallbackCalls=0;
+  s.primary.model.generate=async()=>{throw new ModelError("DAILY_QUOTA_EXHAUSTED",{dispatchState});};
+  s.fallback.model.generate=async()=>{fallbackCalls++;return result;};
+  await assert.rejects(createModelRouter(s).generate(req),/DAILY_QUOTA_EXHAUSTED/);
+  assert.equal(fallbackCalls,0);assert.deepEqual(s.reservations.map(x=>x.providerId),["primary"]);
+  assert.equal(s.settlements[0].outcome,"unknown");
+ }
 });
 test("알 수 없는 429/오류는 일일 한도로 추정하지 않고 원문 오류도 제거",async()=>{
  const s=setup();s.primary.model.generate=async()=>{throw new Error("429 PRIVATE_BODY");};
@@ -61,4 +62,29 @@ test("JS 경계에서 변조한 오류 코드는 고정 오류로 치환",async(
  const s=setup();s.primary.model.generate=async()=>{const e=new ModelError("MODEL_UNAVAILABLE");e.code="PRIVATE_BODY";throw e;};
  await assert.rejects(createModelRouter(s).generate(req),e=>e.message==="MODEL_UNAVAILABLE");
  assert.equal(new ModelError("PRIVATE_BODY").message,"MODEL_UNAVAILABLE");
+});
+
+test("형식 실패도 공급사 보고 사용량만 원 예약에 정산하고 원문을 전달하지 않음",async()=>{
+ const s=setup();s.primary.model.generate=async()=>{throw new ModelError("INVALID_MODEL_RESPONSE",{dispatchState:"sent",usage:{inputTokens:12,outputTokens:3}});};
+ await assert.rejects(createModelRouter(s).generate(req),e=>e.code==="INVALID_MODEL_RESPONSE"&&e.usage.inputTokens===12);
+ assert.deepEqual(s.settlements,[{reservationId:"r1",outcome:"success",usage:{inputTokens:12,outputTokens:3}}]);
+});
+test("형식 사용량·미전송 사용량은 UNKNOWN으로 보존",async()=>{
+ for(const evidence of [{dispatchState:"sent",usage:{inputTokens:-1,outputTokens:2}},{dispatchState:"not_sent",usage:{inputTokens:2,outputTokens:1}}]){
+  const s=setup();s.primary.model.generate=async()=>{throw new ModelError("INVALID_MODEL_RESPONSE",evidence);};
+  await assert.rejects(createModelRouter(s).generate(req));assert.equal(s.settlements[0].outcome,"unknown");
+ }
+});
+
+test("실제 어댑터→라우터 실패 경계는 호출후 재전송0과 보고usage 정산을 함께 보장",async()=>{
+ for(const kind of ["parse","transport","rate","server"]){
+  const s=setup();let sends=0;
+  s.primary.model=createPotensModel({apiKey:"synthetic",baseUrl:"https://ai.potens.ai",model:"synthetic",timeoutMs:1000,usageFields:{input:"in",output:"out"},fetch:async()=>{
+   sends++;if(kind==="transport")throw new ModelError("MODEL_UNAVAILABLE",{dispatchState:"not_sent"});
+   return new Response(JSON.stringify({message:"PRIVATE_BODY invalid json",token_usage:{in:10,out:3}}),{status:kind==="rate"?429:kind==="server"?503:200});
+  }});
+  await assert.rejects(createModelRouter(s).generate({...req,memberRequest:{userId:"u",requestId:"r",leaseToken:"l"}}));
+  assert.equal(sends,1);assert.equal(s.reservations.length,1);assert.equal(s.settlements.length,1);
+  assert.equal(s.settlements[0].outcome,kind==="parse"?"success":"unknown");
+ }
 });

@@ -107,6 +107,22 @@ test("서울은 원천 상세 코드로 식별하며 HTTPS 포트가 없으면 �
     classifySeoulCultureResponse({ RESULT: { CODE: "ERROR-500" } }, 100)
   );
 });
+test("서울 신규 aiViewCulture envelope와 미검토 HTTP transport는 성공으로 처리하지 않는다", async () => {
+  for (const code of ["INFO-000", "INFO-200"]) {
+    assert.throws(() => classifySeoulCultureResponse({
+      aiViewCulture: { RESULT: { CODE: code }, list_total_count: 0, row: [] },
+    }, 100), /SOURCE_INVALID_RESPONSE/);
+  }
+  let calls = 0;
+  assert.throws(() => createSeoulEventProvider({
+    now: () => now,
+    transport: {
+      securityEvidence: { protocol: "https:", endpoint: "http://openapi.seoul.go.kr:8088/sample/json/aiViewCulture/1/5", decisionId: "synthetic-unreviewed" },
+      async fetchPage() { calls++; return { items: [] }; },
+    },
+  }), /EVENT_PROVIDER_UNCONFIGURED/);
+  assert.equal(calls, 0);
+});
 const item = (rank = 1, id = "PF1", genre = "뮤지컬") =>
   `<boxof><rnum>${rank}</rnum><mt20id>${id}</mt20id><cate>${genre}</cate><prfnm>가상공연</prfnm><prfpd>2026.10.01~2026.10.10</prfpd><prfplcnm>가상극장</prfplcnm><area>서울</area></boxof>`;
 const xml = (content = item(), period = "2026-09-28~2026-10-04") =>
@@ -149,6 +165,19 @@ test("KOPIS 공식 응답 기간 검증·순위 보존·공개 최소 필드", (
       parseKopisRankingXml(bad, "musical", kopisRankingPeriod(now), now)
     );
   }
+});
+test("KOPIS 순위50개가 있어도 basedate 없거나 비검증 빈 응답이면 공개 가능한 snapshot을 만들지 않는다", async () => {
+  const rows = Array.from({ length: 50 }, (_, i) => item(i + 1, `PF${i + 1}`)).join("");
+  for (const response of [`<boxofs>${rows}</boxofs>`, "<boxofs/>", xml("")]) {
+    let calls = 0;
+    const provider = createKopisRankingProvider({
+      apiKey: "SYNTHETIC", timeoutMs: 1000, now: () => now,
+      fetch: async () => { calls++; return new Response(response, { headers: { "content-type": "application/xml" } }); },
+    });
+    await assert.rejects(() => provider.collect("all"), /SOURCE_INVALID_RESPONSE/);
+    assert.equal(calls, 1);
+  }
+  assert.equal(publicKopisRanking(null, "all", now).status, "unavailable");
 });
 test("Top10 전국 요청은 지역을 보내지 않고 뮤지컬만 공식 GGGA 코드", async () => {
   const calls = [];

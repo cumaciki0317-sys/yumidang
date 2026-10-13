@@ -6,7 +6,7 @@ import { HttpError } from "../_shared/http/errors.ts";
 export interface HttpEventQuery { query: EventPageQuery; cursor?: string; limit: number }
 export type PublicEventExecutor = (db: RpcClient, input: HttpEventQuery) => Promise<EventPage>;
 export type EventFilterExecutor = (db: RpcClient) => Promise<EventFilterValues>;
-const allowed = new Set(["mode", "periodStart", "periodEnd", "ongoingOnly", "query", "region", "category", "cursor", "limit"]);
+const allowed = new Set(["mode", "periodStart", "periodEnd", "ongoingOnly", "includeOngoing", "freeOnly", "performanceGenre", "query", "region", "category", "cursor", "limit"]);
 const invalid = (): never => { throw new HttpError("INVALID_REQUEST"); };
 
 export function parseEventQuery(url: URL): HttpEventQuery {
@@ -15,10 +15,18 @@ export function parseEventQuery(url: URL): HttpEventQuery {
   const mode = params.get("mode") ?? "new_this_week";
   if (mode !== "overlapping" && mode !== "new_this_week" && mode !== "post_selection") return invalid();
   const limit = params.get("limit");
-  // 운영 기본 수량은 미정이므로 호출자가 기술 범위 안의 페이지 크기를 명시한다.
+  // 제품의 행사 조회는10개씩이며, HTTP는 기존 기술 범위1..50 안의 명시 limit을 받는다.
   if (limit === null || !/^[1-9]\d*$/.test(limit) || !Number.isSafeInteger(Number(limit)) || Number(limit) > 50) invalid();
-  const ongoing = params.get("ongoingOnly");
-  if (ongoing !== null && ongoing !== "true" && ongoing !== "false") invalid();
+  const boolean = (key: string): boolean | undefined => {
+    const value = params.get(key);
+    if (value === null) return undefined;
+    if (value !== "true" && value !== "false") return invalid();
+    return value === "true";
+  };
+  const ongoingOnly = boolean("ongoingOnly"), includeOngoing = boolean("includeOngoing"), freeOnly = boolean("freeOnly");
+  if (includeOngoing && (ongoingOnly || mode !== "new_this_week")) invalid();
+  const performanceGenre = params.get("performanceGenre");
+  if (performanceGenre !== null && !["concert", "musical", "play"].includes(performanceGenre)) invalid();
   const start = params.get("periodStart"), end = params.get("periodEnd");
   if ((start === null) !== (end === null)) invalid();
   if (start !== null && end !== null && (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end))) invalid();
@@ -31,7 +39,9 @@ export function parseEventQuery(url: URL): HttpEventQuery {
   const keyword = optional("query", true), region = optional("region"), category = optional("category"), cursor = optional("cursor");
   return { query: { mode,
     ...(start !== null && end !== null ? { period: { start, end } } : {}),
-    ...(ongoing !== null ? { ongoingOnly: ongoing === "true" } : {}),
+    ...(ongoingOnly !== undefined ? { ongoingOnly } : {}),
+    ...(includeOngoing !== undefined ? { includeOngoing } : {}), ...(freeOnly !== undefined ? { freeOnly } : {}),
+    ...(performanceGenre !== null ? { performanceGenre: performanceGenre as EventPageQuery["performanceGenre"] } : {}),
     ...(keyword !== undefined ? { query: keyword } : {}), ...(region !== undefined ? { region } : {}), ...(category !== undefined ? { category } : {}),
   }, ...(cursor !== undefined ? { cursor } : {}), limit: Number(limit) };
 }

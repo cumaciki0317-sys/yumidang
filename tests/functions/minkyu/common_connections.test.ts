@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRuntimeHandler } from "../../../backend/supabase/functions/service-api/index.ts";
+import { encodeEventCursor, normalizeEventPageQuery } from "../../../backend/supabase/functions/_shared/db/repositories/events.ts";
 import { parseEventQuery } from "../../../backend/supabase/functions/service-api/events-http.ts";
 import { loadRuntimeConfig, requireInternalConfig } from "../../../backend/supabase/functions/_shared/config/env.ts";
 import { requirePrincipal } from "../../../backend/supabase/functions/_shared/auth/principal.ts";
@@ -66,6 +67,55 @@ test("행사 선택 모드·진행중만 필터와 진행중 포함 표현을 �
   const parse = (query: string) => parseEventQuery(new URL(`https://api.example.test/events?${query}`));
   assert.deepEqual(parse("mode=post_selection&ongoingOnly=true&limit=5"), { query: { mode: "post_selection", ongoingOnly: true }, limit: 5 });
   assert.deepEqual(parse("mode=overlapping&periodStart=2026-09-28&periodEnd=2026-10-04&limit=5"), { query: { mode: "overlapping", period: { start: "2026-09-28", end: "2026-10-04" } }, limit: 5 });
+});
+
+test("확정 행사 필터는 엄격한 값으로 파싱하고 익명·회원의 같은 RPC 조건으로 전달한다", async () => {
+  const parse = (query: string) => parseEventQuery(new URL(`https://api.example.test/events?${query}`));
+  assert.deepEqual(parse("includeOngoing=true&freeOnly=true&performanceGenre=concert&limit=10"), {
+    query: { mode: "new_this_week", includeOngoing: true, freeOnly: true, performanceGenre: "concert" }, limit: 10,
+  });
+  assert.deepEqual(parse("includeOngoing=false&freeOnly=false&limit=10"), {
+    query: { mode: "new_this_week", includeOngoing: false, freeOnly: false }, limit: 10,
+  });
+  for (const genre of ["concert", "musical", "play"]) {
+    await runtimeTest(async (send, calls) => {
+      for (const authorization of [undefined, `Bearer ${token}`]) {
+        calls.length = 0;
+        assert.equal((await send(`/events?includeOngoing=true&freeOnly=true&performanceGenre=${genre}&limit=10`, authorization)).status, 200);
+        const rpc = calls.at(-1)!;
+        assert.deepEqual(rpc.args, { p_filters: { mode: "new_this_week", ongoingOnly: false, includeOngoing: true, freeOnly: true, performanceGenre: genre }, p_cursor: null, p_limit: 10 });
+        assert.equal(rpc.bearer, authorization ?? `Bearer ${env.SUPABASE_ANON_KEY}`);
+      }
+    });
+  }
+});
+
+test("행사 새 필터의 중복·빈값·잘못된 값·진행중 충돌은 RPC 전에 거절한다", async () => {
+  await runtimeTest(async (send, calls) => {
+    for (const query of [
+      "includeOngoing=", "includeOngoing=1", "includeOngoing=True", "includeOngoing=true&includeOngoing=false",
+      "freeOnly=", "freeOnly=1", "freeOnly=FALSE", "freeOnly=true&freeOnly=true",
+      "performanceGenre=", "performanceGenre=opera", "performanceGenre= concert", "performanceGenre=play&performanceGenre=musical",
+      "mode=overlapping&includeOngoing=true", "mode=post_selection&includeOngoing=true", "includeOngoing=true&ongoingOnly=true",
+    ]) assert.equal((await send(`/events?limit=10&${query}`)).status, 400, query);
+    assert.equal(calls.length, 0);
+  });
+});
+
+test("행사 커서는 새 필터 변경을 거절하고 생략·false의 같은 정규형은 유지한다", async () => {
+  const cursor = encodeEventCursor(normalizeEventPageQuery({ mode: "new_this_week", includeOngoing: true, freeOnly: true, performanceGenre: "concert" }), { rank: 0, key: "-1", id });
+  await runtimeTest(async (send, calls) => {
+    for (const query of ["includeOngoing=false&freeOnly=true&performanceGenre=concert", "includeOngoing=true&freeOnly=false&performanceGenre=concert", "includeOngoing=true&freeOnly=true&performanceGenre=musical"])
+      assert.equal((await send(`/events?limit=10&cursor=${cursor}&${query}`)).status, 400, query);
+    assert.equal(calls.length, 0);
+    assert.equal((await send(`/events?limit=10&cursor=${cursor}&includeOngoing=true&freeOnly=true&performanceGenre=concert`)).status, 200);
+    assert.deepEqual(calls[0].args, { p_filters: { mode: "new_this_week", ongoingOnly: false, includeOngoing: true, freeOnly: true, performanceGenre: "concert" }, p_cursor: { rank: 0, key: "-1", id }, p_limit: 10 });
+  });
+  const defaultCursor = encodeEventCursor(normalizeEventPageQuery({ mode: "new_this_week" }), { rank: 0, key: "-1", id });
+  await runtimeTest(async (send, calls) => {
+    assert.equal((await send(`/events?limit=10&cursor=${defaultCursor}&includeOngoing=false&freeOnly=false`)).status, 200);
+    assert.equal(calls.length, 1);
+  });
 });
 
 test("진행중 포함은 선택 기간 겹침으로 장기 진행·신규 예정 행사를 함께 반환한다", async () => {

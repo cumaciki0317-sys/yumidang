@@ -4,7 +4,7 @@
  * Date reset must preserve pending reservations; settlement always uses their original identity.
  */
 import type { ModelPort, ModelRequest, ModelResponse, ModelUsage } from './model-port.ts';
-import { ModelError, safeModelError } from './provider-errors.ts';
+import { ModelError, safeModelError, generateWithPreDispatchRetry } from './provider-errors.ts';
 
 export interface AccountReservation {
   readonly accountId: string;
@@ -37,7 +37,7 @@ const usageValid = (value: unknown): value is ModelUsage => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const v = value as Record<string, unknown>;
   return Number.isSafeInteger(v.inputTokens) && (v.inputTokens as number) >= 0 &&
-    Number.isSafeInteger(v.outputTokens) && (v.outputTokens as number) >= 0;
+    Number.isSafeInteger(v.outputTokens) && (v.outputTokens as number) >= 0 && Number.isSafeInteger((v.inputTokens as number) + (v.outputTokens as number));
 };
 
 export function createAccountPoolModel(options: {
@@ -60,8 +60,10 @@ export function createAccountPoolModel(options: {
   const settle = options.reservations.settle.bind(options.reservations);
   const factory = options.modelForAccount;
   const depletion = options.confirmedDepletion ? { ...options.confirmedDepletion } : undefined;
+  const retriedRequests = new WeakSet<object>();
   return { async generate(request: ModelRequest): Promise<ModelResponse> {
     if (request.signal?.aborted) throw new ModelError('CANCELLED');
+    const retryScope = request.memberRequest;
     let inputBytes: number;
     try {
       if (typeof request.system !== 'string' || !Number.isSafeInteger(request.maxOutputTokens) || request.maxOutputTokens < 1 ||
@@ -107,14 +109,19 @@ export function createAccountPoolModel(options: {
         if (request.signal?.aborted) throw new ModelError('CANCELLED');
         const model = factory(accountId);
         if (!model || typeof model.generate !== 'function') throw new ModelError('NOT_CONFIGURED');
-        response = await model.generate(request);
+        response = await generateWithPreDispatchRetry(() => model.generate(request), {
+          memberScope: retryScope, retriedRequests, signal: request.signal,
+        });
       } catch (error) {
         let confirmedDepletion: { decisionId: string; code: string } | undefined;
         if (depletion) {
           try { const code = depletion.classify(error); if (typeof code === 'string' && id.test(code)) confirmedDepletion = { decisionId: depletion.decisionId, code }; }
           catch { /* Classification uncertainty never triggers account switching. */ }
         }
-        try { await settle({ reservation, outcome: 'usage_unknown', ...(confirmedDepletion ? { confirmedDepletion } : {}) }); }
+        const failure = safeModelError(error);
+        try { await settle(failure.usage
+          ? { reservation, outcome: 'usage_reported', usage: failure.usage }
+          : { reservation, outcome: 'usage_unknown', ...(confirmedDepletion ? { confirmedDepletion } : {}) }); }
         catch { throw new ModelError('MODEL_UNAVAILABLE'); }
         if (request.signal?.aborted) throw new ModelError('CANCELLED');
         throw safeModelError(error); // No post-dispatch retry or account rotation.

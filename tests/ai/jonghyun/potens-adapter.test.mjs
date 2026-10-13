@@ -1,5 +1,6 @@
 // 포텐스닷 어댑터 가상 검사. fetch는 주입한 가상 응답이며 실제 공급사 호출·모델 품질 검증이 아니다.
 import test from "node:test";
+import { ModelError } from "../../../backend/supabase/functions/_shared/ai/providers/provider-errors.ts";
 import assert from "node:assert/strict";
 import { createPotensModel, parseStructuredMessage, buildPotensPrompt, POTENS_PROMPT_OVERHEAD_BYTES }
   from "../../../backend/supabase/functions/_shared/ai/providers/potens-adapter.ts";
@@ -101,4 +102,27 @@ test("확인된 공급사 origin·모델 ID 형식 밖의 설정은 호출 전�
     assert.throws(() => createPotensModel({ ...base, fetch, ...bad }), /NOT_CONFIGURED/, JSON.stringify(Object.keys(bad)));
   }
   assert.ok(POTENS_PROMPT_OVERHEAD_BYTES > 0);
+});
+
+test("message 파싱 실패도 검증된 usage를 내부 오류로 보존하고 wire 호출 이후는 sent",async()=>{
+ const {port,calls}=model(()=>ok({message:"PRIVATE_BODY invalid json",token_usage:{in_t:10,out_t:3}}),{usageFields:{input:"in_t",output:"out_t"}});
+ await assert.rejects(port.generate(req),e=>{
+  assert.equal(e.code,"INVALID_MODEL_RESPONSE");assert.equal(e.dispatchState,"sent");assert.deepEqual(e.usage,{inputTokens:10,outputTokens:3});
+  assert.equal(JSON.stringify(e).includes("PRIVATE_BODY"),false);assert.equal(JSON.stringify(e).includes("inputTokens"),false);return true;
+ });assert.equal(calls.length,1);
+});
+test("transport 동기 throw도 호출된 이후는 sent이며 미전송으로 추정하지 않음",async()=>{
+ const {port,calls}=model(()=>{throw new Error("PRIVATE_BODY");});
+ await assert.rejects(port.generate(req),e=>e.code==="MODEL_UNAVAILABLE"&&e.dispatchState==="sent"&&e.usage===null);assert.equal(calls.length,1);
+});
+test("전송 전 취소·출력 인코더 설정 오류는 not_sent이며 추가 호출0",async()=>{
+ const c=new AbortController();c.abort();const {port,calls}=model(()=>ok({message:"{}"}));
+ await assert.rejects(port.generate({...req,signal:c.signal}),e=>e.code==="CANCELLED"&&e.dispatchState==="not_sent");assert.equal(calls.length,0);
+ const broken=model(()=>ok({message:"{}"}),{outputLimit:{decisionId:"synthetic",apply(){throw Error("PRIVATE_BODY");}}});
+ await assert.rejects(broken.port.generate(req),e=>e.code==="INVALID_MODEL_RESPONSE"&&e.dispatchState==="not_sent");assert.equal(broken.calls.length,0);
+});
+
+test("transport가 not_sent 오류를 던져도 실제 호출 이후는 sent로 강제",async()=>{
+ const {port,calls}=model(()=>{throw new ModelError("MODEL_UNAVAILABLE",{dispatchState:"not_sent"});});
+ await assert.rejects(port.generate(req),e=>e.dispatchState==="sent"&&e.code==="MODEL_UNAVAILABLE");assert.equal(calls.length,1);
 });

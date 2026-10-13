@@ -59,17 +59,17 @@ test("개인 첫 차감과 전체 예산은 하나의 RPC로 요청하고 내부
   assert.equal(calls[0].args.p_units,816);
   assert.equal(calls.some(c=>c.name==="reserve_ai_budget"),false,"두 독립 예약으로 원자성을 흉내내지 않는다");
 });
-test("탐색 일시 오류는 자동 1회 재시도하며 내부 재시도에 같은 개인 요청키를 사용한다",async()=>{
+test("탐색 미전송 일시 오류만 자동 1회 재시도하며 같은 요청과 예약을 사용한다",async()=>{
   let calls=0;const reserves=[];
-  const model=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async()=>{calls++;if(calls===1)throw new ModelError("TIMEOUT");return response({});}}},
+  const model=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async()=>{calls++;if(calls===1)throw new ModelError("TIMEOUT",{dispatchState:"not_sent"});return response({});}}},
     budget:{reserve:async v=>{reserves.push(v);return id(4);},settle:async()=>{}}});
   await model.generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:scope});
-  assert.equal(calls,2);assert.deepEqual(reserves.map(r=>r.memberRequest),[scope,scope]);
-  calls=0; await assert.rejects(createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async()=>{calls++;throw new ModelError("TIMEOUT");}}},budget:{reserve:async()=>id(4),settle:async()=>{}}}).generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:scope}),/TIMEOUT/);
+  assert.equal(calls,2);assert.deepEqual(reserves.map(r=>r.memberRequest),[scope]);
+  calls=0; await assert.rejects(createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async()=>{calls++;throw new ModelError("TIMEOUT",{dispatchState:"not_sent"});}}},budget:{reserve:async()=>id(4),settle:async()=>{}}}).generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:scope}),/TIMEOUT/);
   assert.equal(calls,2);
 });
 test("요약 작업 호출은 탐색 자동 재시도를 적용하지 않아 단계 호출 상한을 보존한다",async()=>{
-  let count=0; const model=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async()=>{count++;throw new ModelError("TIMEOUT");}}},budget:{reserve:async()=>id(4),settle:async()=>{}}});
+  let count=0; const model=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async()=>{count++;throw new ModelError("TIMEOUT",{dispatchState:"not_sent"});}}},budget:{reserve:async()=>id(4),settle:async()=>{}}});
   await assert.rejects(model.generate({task:"review_chunk",system:"s",input:{},maxOutputTokens:800}),/TIMEOUT/);assert.equal(count,1);
 });
 test("입력의 이전 메시지·조건 개인정보도 전송 전 차단하고 선택 구간을 자동 제출하지 않는다",async()=>{
@@ -181,14 +181,14 @@ test("사용자 요청의 모든 모델 단계가 자동 재시도 한 번을 �
   const attempts = new Map(), reservations=[];
   const router=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{generate:async r=>{
     const key=r.memberRequest.requestId+":"+r.task, count=(attempts.get(key)??0)+1; attempts.set(key,count);
-    if(count===1)throw new ModelError("TIMEOUT"); return response({});
+    if(count===1)throw new ModelError("TIMEOUT",{dispatchState:"not_sent"}); return response({});
   }}},budget:{reserve:async r=>{reservations.push(r);return id(4);},settle:async()=>{}}});
   const first={...scope};
   await router.generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:first});
   await assert.rejects(router.generate({task:"explanation",system:"s",input:{},maxOutputTokens:800,memberRequest:first}),/TIMEOUT/);
   assert.equal(attempts.get(first.requestId+":intent"),2);
   assert.equal(attempts.get(first.requestId+":explanation"),1);
-  assert.equal(reservations.length,3);
+  assert.equal(reservations.length,2);
   assert.equal(reservations.every(r=>r.memberRequest===first),true);
   const second={...scope,requestId:id(8)};
   await router.generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:second});
@@ -260,4 +260,17 @@ test("요약 최종 허가 RPC 준비 확인은 없는 작업을 사용하며 �
   assert.equal(seen.args.p_worker_run_token,seen.args.p_job_id);
   assert.equal(seen.args.p_contract_version,"2026-10-05");
   assert.equal(await probeSummaryWorkerRpcs({rpc:async()=>({reservationId:id(4)})}),"DB_RPC_UNAVAILABLE","준비 확인에서 예약 생성 응답은 거부");
+});
+
+test("전송후·전송불명·비일시오류·예약유실은 자동 재시도하지 않음",async()=>{
+ for(const code of ["TIMEOUT","RATE_LIMITED","MODEL_UNAVAILABLE","PROVIDER_REJECTED","CANCELLED","BUDGET_EXHAUSTED","AI_CONSENT_REVOKED","REQUEST_LEASE_LOST","NOT_CONFIGURED"]){
+  for(const dispatchState of ["sent","unknown",...( ["TIMEOUT","MODEL_UNAVAILABLE"].includes(code)?[]:["not_sent"])]){
+   let calls=0,reserves=0,settles=0;
+   const router=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{async generate(){calls++;throw new ModelError(code,{dispatchState});}}},budget:{async reserve(){reserves++;return id(4);},async settle(){settles++;}}});
+   await assert.rejects(router.generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:{...scope}}));
+   assert.equal(calls,1);assert.equal(reserves,1);assert.equal(settles,1);
+  }
+ }
+ let calls=0;const router=createModelRouter({primary:{id:"synthetic",retentionReview:{status:"approved",decisionId:"synthetic"},model:{async generate(){calls++;return response({});}}},budget:{async reserve(){throw new ModelError("MODEL_UNAVAILABLE",{dispatchState:"not_sent"});},async settle(){assert.fail();}}});
+ await assert.rejects(router.generate({task:"intent",system:"s",input:{},maxOutputTokens:800,memberRequest:{...scope}}));assert.equal(calls,0);
 });

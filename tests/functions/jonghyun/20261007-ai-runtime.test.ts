@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createConfiguredModel } from "../../../backend/supabase/functions/_shared/ai/providers/runtime.ts";
+import type { JsonValue } from "../../../backend/supabase/functions/_shared/contracts/common.ts";
 import type { RpcClient } from "../../../backend/supabase/functions/_shared/db/transport.ts";
 const uid="11111111-1111-4111-8111-111111111111",rid="22222222-2222-4222-8222-222222222222";
 const env: Record<string,string>={AI_RETENTION_DECISION_ID:"synthetic",AI_COST_EVIDENCE_ID:"synthetic",AI_PROCESSING_LEGAL_DECISION_ID:"synthetic",AI_MEMBER_TRANSMISSION_APPROVAL_ID:"synthetic",AI_BUDGET_LEDGER_ID:"synthetic",POTENS_ACCOUNT_ORDER:"yumi,jonghyun",POTENS_API_KEY_YUMI:"synthetic-yumi",POTENS_API_KEY_JONGHYUN:"synthetic-jonghyun",POTENS_ACCOUNT_TOKEN_BUDGET:"3200000",POTENS_RESET_TIMEZONE:"Asia/Seoul",POTENS_MODEL:"claude-5-sonnet",POTENS_API_BASE_URL:"https://ai.potens.ai",UPSTREAM_TIMEOUT_MS:"1000"};
@@ -8,7 +9,7 @@ const request={task:"intent" as const,system:"synthetic",input:{query:"synthetic
 const outputLimit={decisionId:"synthetic-output-limit",apply:(body:any)=>body};
 test("runtime 다중계정: 사전 계정 거절만 다음으로, 단일예산 중첩 없음, 미확인 사용량 보존",async()=>{
  const calls:{name:string;args:any}[]=[], dispatched:string[]=[];
- const db:RpcClient={async rpc(name,args){calls.push({name,args});if(name==="reserve_ai_chat_account_model")return args.p_account_id==="yumi"?{status:"account_budget_denied",reservationId:null}:{status:"reserved",accountId:"jonghyun",reservationId:rid,accountDay:"2026-10-06"};if(name==="settle_ai_account_budget")return{settled:false,pending:true};throw Error("unexpected RPC");}};
+ const db:RpcClient={async rpc(name,args):Promise<JsonValue>{calls.push({name,args});if(name==="reserve_ai_chat_account_model")return args.p_account_id==="yumi"?{status:"account_budget_denied",reservationId:null}:{status:"reserved",accountId:"jonghyun",reservationId:rid,accountDay:"2026-10-06"};if(name==="settle_ai_account_budget")return{settled:false,pending:true};throw Error("unexpected RPC");}};
  const runtime=createConfiguredModel(key=>env[key],{budgetDb:db,outputLimit,fetch:async(_url,init)=>{dispatched.push((init.headers as Record<string,string>).Authorization);return new Response(JSON.stringify({message:'{"ok":true}'}));}});
  assert.equal(runtime.status,"ready");if(runtime.status!=="ready")return;
  assert.equal(runtime.usageIncludesAllAttempts,true);const result=await runtime.model.generate(request);assert.equal(result.usage,null);assert.deepEqual(dispatched,["Bearer synthetic-jonghyun"]);
@@ -16,7 +17,7 @@ test("runtime 다중계정: 사전 계정 거절만 다음으로, 단일예산 �
  const settlement=calls[2].args;assert.equal(settlement.p_account_day,"2026-10-06");assert.equal(settlement.p_outcome,"usage_unknown");assert.equal(settlement.p_input_tokens,null);
 });
 test("runtime 429 후 타계정 재전송 없음; 미확인 정산",async()=>{
- const calls:any[]=[], db:RpcClient={async rpc(name,args){calls.push({name,args});return name==="settle_ai_account_budget"?{settled:false,pending:true}:{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};}};
+ const calls:any[]=[], db:RpcClient={async rpc(name,args):Promise<JsonValue>{calls.push({name,args});return name==="settle_ai_account_budget"?{settled:false,pending:true}:{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};}};
  let sends=0;const runtime=createConfiguredModel(key=>env[key],{budgetDb:db,outputLimit,fetch:async()=>{sends++;return new Response("synthetic",{status:429});}});
  assert.equal(runtime.status,"ready");if(runtime.status!=="ready")return;await assert.rejects(runtime.model.generate(request));assert.equal(sends,1);assert.equal(calls.length,2);assert.equal(calls[1].args.p_outcome,"usage_unknown");
 });
@@ -28,7 +29,7 @@ test("runtime 기존 승인/출력제한 hold 및 잘못된 pool이 단일키 fa
 });
 test("runtime 보고된 사용량 원예약 날짜 정산, 정산 응답 유실은 재전송/타계정 전환 없음",async()=>{
  for(const lost of [false,true]){
-  const calls:any[]=[], db:RpcClient={async rpc(name,args){calls.push({name,args});if(name==="settle_ai_account_budget"){if(lost)throw Error("synthetic lost");return{settled:true,pending:false};}return{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};}};
+  const calls:any[]=[], db:RpcClient={async rpc(name,args):Promise<JsonValue>{calls.push({name,args});if(name==="settle_ai_account_budget"){if(lost)throw Error("synthetic lost");return{settled:true,pending:false};}return{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};}};
   let sends=0;const runtime=createConfiguredModel(key=>key==="POTENS_USAGE_INPUT_FIELD"?"syntheticInput":key==="POTENS_USAGE_OUTPUT_FIELD"?"syntheticOutput":env[key],{budgetDb:db,outputLimit,fetch:async()=>{sends++;return new Response(JSON.stringify({message:'{"ok":true}',token_usage:{syntheticInput:10,syntheticOutput:3}}));}});
   assert.equal(runtime.status,"ready");if(runtime.status!=="ready")return;
   if(lost)await assert.rejects(runtime.model.generate(request));else assert.deepEqual((await runtime.model.generate(request)).usage,{inputTokens:10,outputTokens:3});
@@ -36,9 +37,55 @@ test("runtime 보고된 사용량 원예약 날짜 정산, 정산 응답 유실�
  }
 });
 test("runtime 후기 scope는 전용 원자 계정RPC를 사용",async()=>{
- const calls:any[]=[], db:RpcClient={async rpc(name,args){calls.push({name,args});return name==="settle_ai_account_budget"?{settled:false,pending:true}:{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};}};
+ const calls:any[]=[], db:RpcClient={async rpc(name,args):Promise<JsonValue>{calls.push({name,args});return name==="settle_ai_account_budget"?{settled:false,pending:true}:{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};}};
  const runtime=createConfiguredModel(key=>env[key],{budgetDb:db,outputLimit,fetch:async()=>new Response(JSON.stringify({message:'{"claims":[]}'}))});
  assert.equal(runtime.status,"ready");if(runtime.status!=="ready")return;
  await runtime.model.generate({task:"review_chunk",system:"synthetic",input:{reviews:[]},maxOutputTokens:20,summaryRequest:{jobId:uid,leaseToken:uid,targetUserId:uid,workerRunToken:uid,sourceRevision:"1",modelVersion:"potens.claude-5-sonnet",promptVersion:"synthetic",sourceReviewIds:[uid,rid,"33333333-3333-4333-8333-333333333333"]}});
  assert.deepEqual(calls.map(c=>c.name),["reserve_review_summary_account_model","settle_ai_account_budget"]);
+});
+
+test("runtime 단일·다중 조립은 형식 실패의 확인 usage만 원예약 RPC에 정산하고 추가 전송하지 않음",async()=>{
+ for(const pooled of [false,true])for(const usage of [{syntheticInput:10,syntheticOutput:3},null,{syntheticInput:-1,syntheticOutput:3}]){
+  const calls:{name:string;args:any}[]=[], wire:string[]=[];
+  const db:RpcClient={async rpc(name,args):Promise<JsonValue>{
+   calls.push({name,args});
+   if(name==="reserve_ai_chat_account_model")return{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};
+   if(name==="reserve_ai_chat_model")return{reservationId:rid};
+   if(name==="settle_ai_account_budget")return{settled:args.p_outcome==="usage_reported",pending:args.p_outcome==="usage_unknown"};
+   if(name==="settle_ai_budget")return{settled:true};
+   throw Error("unexpected RPC");
+  }};
+  const read=(key:string)=>key==="POTENS_API_KEY"?"synthetic-single":!pooled&&(key.startsWith("POTENS_ACCOUNT_")||key.startsWith("POTENS_API_KEY_")||key==="POTENS_RESET_TIMEZONE")?undefined:key==="POTENS_USAGE_INPUT_FIELD"?"syntheticInput":key==="POTENS_USAGE_OUTPUT_FIELD"?"syntheticOutput":env[key];
+  const runtime=createConfiguredModel(read,{budgetDb:db,outputLimit,fetch:async(_url,init)=>{wire.push((init.headers as Record<string,string>).Authorization);return Response.json({message:"synthetic-invalid-json",token_usage:usage});}});
+  assert.equal(runtime.status,"ready");if(runtime.status!=="ready")return;
+  await assert.rejects(runtime.model.generate(request),(error:any)=>error.code==="INVALID_MODEL_RESPONSE"&&error.dispatchState==="sent");
+  assert.deepEqual(wire,[pooled?"Bearer synthetic-yumi":"Bearer synthetic-single"]);
+  assert.deepEqual(calls.map(c=>c.name),pooled?["reserve_ai_chat_account_model","settle_ai_account_budget"]:["reserve_ai_chat_model","settle_ai_budget"]);
+  const args=calls[1].args, known=usage?.syntheticInput===10;
+  assert.equal(args.p_reservation_id,rid);assert.equal(args.p_outcome,known?"usage_reported":"usage_unknown");
+  assert.equal(args.p_input_tokens,known?10:null);assert.equal(args.p_output_tokens,known?3:null);
+  if(pooled){assert.equal(args.p_account_id,"yumi");assert.equal(args.p_account_day,"2026-10-06");}
+  assert.equal(JSON.stringify(calls).includes("synthetic-invalid-json"),false);
+ }
+});
+
+test("runtime의 원장 예약·정산 응답 유실은 미전송 오류 표식이 있어도 재시도하지 않음",async()=>{
+ const {ModelError}=await import("../../../backend/supabase/functions/_shared/ai/providers/provider-errors.ts");
+ for(const pooled of [false,true])for(const lost of ["reserve","settle"]){
+  const calls:string[]=[];let wire=0;
+  const db:RpcClient={async rpc(name,args):Promise<JsonValue>{
+   calls.push(name);
+   if(name.startsWith(lost+"_"))throw new ModelError("TIMEOUT",{dispatchState:"not_sent"});
+   if(name==="reserve_ai_chat_account_model")return{status:"reserved",accountId:"yumi",reservationId:rid,accountDay:"2026-10-06"};
+   if(name==="reserve_ai_chat_model")return{reservationId:rid};
+   if(name==="settle_ai_account_budget")return{settled:args.p_outcome==="usage_reported",pending:args.p_outcome==="usage_unknown"};
+   if(name==="settle_ai_budget")return{settled:true};
+   throw Error("unexpected RPC");
+  }};
+  const read=(key:string)=>key==="POTENS_API_KEY"?"synthetic-single":!pooled&&(key.startsWith("POTENS_ACCOUNT_")||key.startsWith("POTENS_API_KEY_")||key==="POTENS_RESET_TIMEZONE")?undefined:env[key];
+  const runtime=createConfiguredModel(read,{budgetDb:db,outputLimit,fetch:async()=>{wire++;return Response.json({message:'{"ok":true}'});}});
+  assert.equal(runtime.status,"ready");if(runtime.status!=="ready")return;
+  await assert.rejects(runtime.model.generate(request));
+  assert.equal(wire,lost==="reserve"?0:1);assert.equal(calls.length,lost==="reserve"?1:2);
+ }
 });

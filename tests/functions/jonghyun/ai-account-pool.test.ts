@@ -69,3 +69,31 @@ test('summary capability and evidence array are copied and frozen, blank fields 
  for(const field of ['jobId','leaseToken','targetUserId','sourceRevision','workerRunToken','modelVersion','promptVersion']){const h=harness();await assert.rejects(h.model.generate({...request,task:'review_merge',memberRequest:undefined,summaryRequest:{...scope,[field]:' '}}));assert.equal(h.reserved.length,0);}
  const h=harness();await assert.rejects(h.model.generate({...request,summaryRequest:scope}));assert.equal(h.reserved.length,0);
 });
+
+test('member-wide pre-dispatch retry shares frozen scope and one reservation; next stage has no retry',async()=>{
+ const h=harness();let attempts=0;const scopes:any[]=[];
+ const model=createAccountPoolModel({orderedAccountIds:['a','b'],reservations:h.port,modelForAccount:()=>({async generate(r){attempts++;scopes.push(r.memberRequest);if(attempts!==2)throw new ModelError('MODEL_UNAVAILABLE',{dispatchState:'not_sent'});return response;}})});
+ await model.generate(request);assert.equal(attempts,2);assert.equal(scopes[0],scopes[1]);assert.ok(Object.isFrozen(scopes[0]));assert.deepEqual(h.reserved,['a']);assert.equal(h.settled.length,1);
+ await assert.rejects(model.generate({...request,task:'explanation'}));assert.equal(attempts,3);assert.deepEqual(h.reserved,['a','a']);
+ const next={...request,memberRequest:{...request.memberRequest!,requestId:'next'}};
+ await assert.rejects(model.generate(next));assert.equal(attempts,5);assert.deepEqual(h.reserved,['a','a','a']);
+});
+test('known failure usage settles original account/day without extra dispatch or account switch',async()=>{
+ const h=harness();let calls=0;
+ const model=createAccountPoolModel({orderedAccountIds:['a','b'],reservations:h.port,modelForAccount:()=>({async generate(){calls++;throw new ModelError('INVALID_MODEL_RESPONSE',{dispatchState:'sent',usage:{inputTokens:10,outputTokens:3}});}})});
+ await assert.rejects(model.generate(request));assert.equal(calls,1);assert.deepEqual(h.reserved,['a']);
+ assert.deepEqual(h.settled,[{reservation:{accountId:'a',reservationId:'reservation-1',accountDay:'2026-10-06'},outcome:'usage_reported',usage:{inputTokens:10,outputTokens:3}}]);
+});
+test('configuration consent lease cancellation and failed settlement are never retried even if not_sent',async()=>{
+ for(const code of ['NOT_CONFIGURED','AI_CONSENT_REVOKED','REQUEST_LEASE_LOST','CANCELLED','BUDGET_EXHAUSTED','RATE_LIMITED'] as const){
+  const h=harness();let calls=0;const model=createAccountPoolModel({orderedAccountIds:['a','b'],reservations:h.port,modelForAccount:()=>({async generate(){calls++;throw new ModelError(code,{dispatchState:'not_sent'});}})});
+  await assert.rejects(model.generate(request));assert.equal(calls,1);assert.deepEqual(h.reserved,['a']);
+ }
+});
+
+test('cancellation after not_sent failure suppresses retry and keeps original reservation unknown',async()=>{
+ const h=harness(),controller=new AbortController();let calls=0;
+ const model=createAccountPoolModel({orderedAccountIds:['a','b'],reservations:h.port,modelForAccount:()=>({async generate(){calls++;controller.abort();throw new ModelError('MODEL_UNAVAILABLE',{dispatchState:'not_sent'});}})});
+ await assert.rejects(model.generate({...request,signal:controller.signal}),(e:any)=>e.code==='CANCELLED');
+ assert.equal(calls,1);assert.deepEqual(h.reserved,['a']);assert.equal(h.settled[0].outcome,'usage_unknown');
+});
