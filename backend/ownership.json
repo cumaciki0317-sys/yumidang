@@ -136,6 +136,17 @@
       "paths": [
         "tests/database/jonghyun/test_isolated_observer.py"
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "from": "minkyu",
+      "to": "jonghyun",
+      "authorization": "사용자: 한시 재배정 후 종현 진행 (추천)",
+      "scope": "종현 전용 clone의 새 합성 격리 연결 검증에 한정해 아래 두 파일만 한시 재배정한다. 기존 자원 보존과 OS 임시 폴더 호환을 수정·로컬 커밋하고, 실제 검증과 새 자원 정리 후 두 파일을 시작 시점 원본 바이트로 복원·로컬 커밋한다. 이어 민규 정책 관리 단계에서 두 경로를 minkyu로 복귀시킨다. 다른 담당·hook·운영·실회원·공급사·푸시 범위는 확대하지 않는다.",
+      "paths": [
+        "tools/local/run_database_tests.py",
+        "tests/integration/jonghyun/isolated_ai_contracts.py"
+      ]
     }
   ],
   "rules": [
@@ -461,7 +472,7 @@
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_contracts.py",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_factory.ts",
@@ -477,7 +488,7 @@
     },
     {
       "path": "tools/local/run_database_tests.py",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/database/jonghyun/test_isolated_midnight_preparation.py",
