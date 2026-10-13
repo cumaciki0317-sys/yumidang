@@ -2000,11 +2000,17 @@ class FixedLifecycleProvisioningPorts(FixedSignedProvisioningPorts):
         if (not isinstance(tables,list)or any(type(row)is not list or len(row)!=2
                 or any(type(v)is not str or not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*',v)for v in row)or row[0]not in schemas for row in tables)
                 or len({tuple(row)for row in tables})!=len(tables)):raise ValueError('LCP_FULL_TABLE_INVENTORY')
-        result={}
+        if not tables:return {}
+        terms=[]
         for schema,table in tables:
             identifier=lambda v:'"'+v.replace('"','""')+'"'
-            query="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r group by 1)s;'
-            result[schema+'.'+table]=json.loads(self.read_sql(query,timeout=5))
+            bag="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r group by 1)s'
+            terms.append("select '"+schema+'.'+table+"'::text table_name,("+bag+')bag')
+        query='select jsonb_object_agg(table_name,bag)from('+' union all '.join(terms)+')q;'
+        result=signed_exact_json(self.read_sql(query,timeout=5))
+        if type(result)is not dict or set(result)!={schema+'.'+table for schema,table in tables}:raise ValueError('LCP_FULL_ROW_BAGS')
+        for bag in result.values():
+            if type(bag)is not dict or any(type(h)is not str or not re.fullmatch('[a-f0-9]{64}',h)or type(n)is not int or n<=0 for h,n in bag.items()):raise ValueError('LCP_FULL_ROW_BAGS')
         return result
     def history(self):return signed_verify_history(self.runner)
     def settings(self):

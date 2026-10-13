@@ -532,7 +532,7 @@ class BindingTests(unittest.TestCase):
             if cls is None:continue
             rows=next((n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows'),None)
             if rows is not None:
-                self.assertEqual(hashlib.sha256(dump(rows).encode()).hexdigest(),'d9505cbc7edc45675471681e7516a6b36f11bd47c35991d937cdde64726c5847');cls.body.remove(rows)
+                self.assertIn(hashlib.sha256(dump(rows).encode()).hexdigest(),{'d9505cbc7edc45675471681e7516a6b36f11bd47c35991d937cdde64726c5847','9a85939279d85f4559c2dda8c1f518b961b97681e33631147e364ced3ee34de1'});cls.body.remove(rows)
             snapshot=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='snapshot')
             fields=[n for n in ast.walk(snapshot)if isinstance(n,ast.Constant)and type(n.value)is str and "n.nspname in('auth','public','private','storage','cron','vault')"in n.value]
             if fields:
@@ -1182,6 +1182,7 @@ class NativeLifecycleFullInventoryTests(unittest.TestCase):
     def read(self,query,timeout=5):
         self.queries.append(query)
         if 'from pg_tables'in query:return json.dumps(self.tables if "'cron','vault'"in query else[r for r in self.tables if r[0]not in('cron','vault')])
+        if 'jsonb_object_agg(table_name,bag)'in query:return json.dumps({schema+'.'+table:self.bag for schema,table in self.tables})
         if 'jsonb_object_agg(h,n)'in query:return json.dumps(self.bag)
         if "'roles',(select"in query:return 'b'*64
         return '{}'
@@ -1248,6 +1249,71 @@ class NativeLifecycleFullInventoryTests(unittest.TestCase):
             calls=[];p.read_sql=lambda q,timeout:(calls.append(q)or json.dumps(roster))
             with self.subTest(roster=roster),self.assertRaises(ValueError):p.original_rows()
             self.assertEqual(len(calls),1)
+
+
+class LifecycleSingleRowsTests(unittest.TestCase):
+    """검증된 schema의 원 rowsha/count만 합친다. 실제 SQL 실행·성능 증거는 별도다."""
+    def setUp(self):
+        self.tables=[['auth','users'],['cron','job'],['private','items'],['storage','objects'],['vault','secrets'],['public','profiles']]
+        self.bags={schema+'.'+table:({}if i==1 else{hashlib.sha256((schema+'.'+table).encode()).hexdigest():i+1})for i,(schema,table)in enumerate(self.tables)}
+        self.calls=[];self.answer=json.dumps(self.bags);self.p=object.__new__(module.FixedLifecycleProvisioningPorts);self.p.read_sql=self.read
+    def read(self,query,timeout=5):
+        self.assertEqual(timeout,5);self.calls.append(query)
+        return json.dumps(self.tables)if 'from pg_tables'in query else self.answer
+    def test_single_statement_exact_old_bags_duplicate_counts_and_sql_projection(self):
+        import types
+        old=subprocess.check_output(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO).decode()
+        cls=next(n for n in ast.parse(old).body if isinstance(n,ast.ClassDef)and n.name=='FixedLifecycleProvisioningPorts');fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows')
+        ns={'json':json,'re':re};exec(compile(ast.Module(body=[fn],type_ignores=[]),'captured-original-per-table-read','exec'),ns)
+        old_queries=[]
+        def per_table(query,timeout=5):
+            self.assertEqual(timeout,5);old_queries.append(query)
+            if 'from pg_tables'in query:return json.dumps(self.tables)
+            match=re.search(r'from "([A-Za-z_0-9]+)"\."([A-Za-z_0-9]+)" r group by 1',query);self.assertIsNotNone(match)
+            return json.dumps(self.bags['.'.join(match.groups())])
+        expected=ns['original_rows'](types.SimpleNamespace(read_sql=per_table));self.assertEqual(self.p.original_rows(),expected)
+        self.assertEqual(len(self.calls),2);self.assertEqual(len(old_queries),len(self.tables)+1)
+        query=self.calls[-1];self.assertEqual(query.count(' union all '),len(self.tables)-1)
+        for old_query in old_queries[1:]:
+            inner=old_query[old_query.index('from(select '):].removesuffix(';')
+            self.assertIn(inner,query)
+        self.assertEqual(query.count("sha256(convert_to(to_jsonb(r)::text,'UTF8'))"),len(self.tables));self.assertEqual(query.count(';'),1)
+        self.assertFalse(any(x in query.lower()for x in('insert ','update ','delete ','alter ','set role')))
+    def test_missing_foreign_malformed_hashbag_and_duplicate_json_refuse_whole_result(self):
+        missing=copy.deepcopy(self.bags);missing.pop('vault.secrets');foreign={**self.bags,'foreign.secrets':{}}
+        cases=[[],None,missing,foreign,{**self.bags,'auth.users':[]},{**self.bags,'auth.users':{'short':1}}]
+        cases.extend({**self.bags,'auth.users':{'a'*64:n}}for n in(True,1.0,0,-1,'1'))
+        raw_cases=[json.dumps(x)for x in cases]+['{"auth.users":{},"auth.users":{}}','{"auth.users":{"'+('a'*64)+'":1,"'+('a'*64)+'":2}}']
+        for i,value in enumerate(raw_cases):
+            with self.subTest(case=i):
+                self.calls=[];self.answer=value
+                with self.assertRaises(ValueError):self.p.original_rows()
+                self.assertEqual(len(self.calls),2)
+    def test_empty_list_compatibility_and_invalid_roster_never_reaches_aggregate(self):
+        self.tables=[];self.assertEqual(self.p.original_rows(),{});self.assertEqual(len(self.calls),1)
+        for tables in(None,[['auth','users'],['auth','users']],[['foreign','item']],[['private','item;drop']],[['private','bad"name']],[['private',1]],[['vault','x'],['vault']]):
+            with self.subTest(tables=tables):
+                self.calls=[];self.tables=tables
+                with self.assertRaises(ValueError):self.p.original_rows()
+                self.assertEqual(len(self.calls),1)
+    def test_timeout_or_bad_json_does_not_retry_or_return_partial_bags(self):
+        failure=subprocess.TimeoutExpired('one-read-only-aggregate',5)
+        def failing(query,timeout=5):
+            self.calls.append(query)
+            if 'from pg_tables'in query:return json.dumps(self.tables)
+            raise failure
+        self.p.read_sql=failing
+        with self.assertRaises(subprocess.TimeoutExpired)as caught:self.p.original_rows()
+        self.assertIs(caught.exception,failure);self.assertEqual(len(self.calls),2)
+        self.p.read_sql=self.read;self.answer='{';self.calls=[]
+        with self.assertRaises(ValueError):self.p.original_rows()
+        self.assertEqual(len(self.calls),2)
+    def test_exact_preservation_variant_refuses_other_lifecycle_or_base_mutation(self):
+        current=ast.parse(RUNNER.read_text());helper=BindingTests();helper.assert_original_python_preserved(current,current)
+        for name in('FixedLifecycleProvisioningPorts','SignedMidnightRunner','FixedSignedProvisioningPorts'):
+            changed=copy.deepcopy(current);cls=next(n for n in changed.body if isinstance(n,ast.ClassDef)and n.name==name)
+            fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows');fn.body.append(ast.Pass())
+            with self.subTest(name=name),self.assertRaises(AssertionError):helper.assert_original_python_preserved(current,changed)
 
 
 class NativeRestoreAclValueTests(unittest.TestCase):
