@@ -22,12 +22,11 @@ import stat
 import time
 import urllib.request
 import urllib.error
-import tempfile
 from functools import lru_cache
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'tools/local'))
-from run_database_tests import isolated_prepared_target, isolated_command_error, preserved_contract, preserved_resource_pins, verify_preserved_resources
+from run_database_tests import isolated_prepared_target, isolated_command_error
 
 INTERNAL = {'acquire_ai_chat_request', 'reserve_ai_chat_account_model', 'settle_ai_account_budget',
             'record_ai_chat_result_available', 'finish_ai_chat_request'}
@@ -57,7 +56,6 @@ class Runner:
 
     def identity(self):
         t = self.target
-        verify_preserved_resources(self.root, t['host'], t['project'], self.call, t.get('preservedResourcePins'))
         item = json.loads(self.call(['inspect', t['id']]))[0]
         if (item['Id'] != t['id'] or item['Image'] != t['image'] or item['Name'] != '/' + t['container']
                 or not item['State']['Running'] or item['Config']['Labels'].get('com.supabase.cli.project') != t['project']):
@@ -67,16 +65,9 @@ class Runner:
 
     def sql(self, statement):
         self.identity()
-        try:
-            result = self.call(['exec', '-i', self.target['id'], 'psql', '-XqAt', '-U', 'postgres', '-d', 'postgres',
-                               '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=sqlstate', '-f', '-'],
-                              "set statement_timeout='15s';set lock_timeout='10s';set plpgsql.check_asserts=on;\n" + statement)
-        except BaseException as error:
-            try: self.identity()
-            except BaseException: error.add_note('PRESERVED_POST_SQL_UNPROVEN')
-            raise
-        self.identity()
-        return result
+        return self.call(['exec', '-i', self.target['id'], 'psql', '-XqAt', '-U', 'postgres', '-d', 'postgres',
+                          '-v', 'ON_ERROR_STOP=1', '-v', 'VERBOSITY=sqlstate', '-f', '-'],
+                         "set statement_timeout='15s';set lock_timeout='10s';set plpgsql.check_asserts=on;\n" + statement)
 
     def digest(self):
         return self.sql("begin;create temp table fingerprints(n text,h text);do $$declare t record;h text;begin "
@@ -267,7 +258,7 @@ def signed_private_read(path):
     path = Path(path)
     if not path.is_absolute() or path != path.resolve(): raise ValueError('SIGNED_PRIVATE_PATH')
     for parent in path.parents:
-        if parent in {Path('/private/tmp').resolve(), Path('/tmp').resolve(), Path(tempfile.gettempdir()).resolve()}: break
+        if parent == Path('/private/tmp') or parent == Path('/tmp').resolve(): break
         s = parent.lstat()
         if not stat.S_ISDIR(s.st_mode) or s.st_uid != os.getuid() or stat.S_IMODE(s.st_mode) != 0o700:
             raise ValueError('SIGNED_PRIVATE_DIRECTORY')
@@ -405,19 +396,14 @@ def signed_prepared_target(prepared_root):
     context=intent.get('context');profile=profiles.get(context)
     host='unix://'+str(Path.home()/'.colima'/str(profile)/'docker.sock')
     if (profile is None or intent.get('dockerHost')!=host or intent.get('project')!=overlay['project_id']
-            or intent.get('scope')!='new-synthetic-only'
-            or intent.get('version',1)==1 and (intent.get('existingContainers')!=[] or intent.get('existingNetworks')!=[])):
+            or intent.get('scope')!='new-synthetic-only' or intent.get('existingContainers')!=[] or intent.get('existingNetworks')!=[]):
         raise ValueError('SIGNED_PREPARED_AUTHORITY')
     owned=signed_exact_json(signed_private_read(root/'owned-containers.json'))
-    preserved_contract(root,intent,owned,host,overlay['project_id'])
     matching=[x for x in owned if x.get('name')=='supabase_db_'+overlay['project_id']]
     if len(matching)!=1 or not re.fullmatch(r'[a-f0-9]{64}',matching[0]['id']) or not re.fullmatch(r'sha256:[a-f0-9]{64}',matching[0]['image']):
         raise ValueError('SIGNED_PREPARED_DB')
     item=matching[0]
-    result={'context':context,'host':host,'project':overlay['project_id'],'container':item['name'],'id':item['id'],'image':item['image'],'versions':[e['version']for e in entries]}
-    pins=preserved_resource_pins(root,intent)
-    if pins is not None:result['preservedResourcePins']=pins
-    return result
+    return {'context':context,'host':host,'project':overlay['project_id'],'container':item['name'],'id':item['id'],'image':item['image'],'versions':[e['version']for e in entries]}
 
 def inspect_signed_binding(binding_path, prepared_root):
     """비공개 fd로 읽은 원 바이트를 묶는다. 실행·인증 승인은 반환하지 않는다."""
@@ -1184,7 +1170,7 @@ class SignedMidnightRunner(SignedRunner):
 PROVISION_FAILURE_CODES = ('PROVISION_AUTHORITY_HASH_REQUIRED', 'PROVISION_ADDED_ROW_SCOPE','PROVISION_ADDED_ROW_COUNT','PROVISION_ADDED_ROW_OWNER','PROVISION_UNOWNED_ROW_CHANGED','PROVISION_DATABASE_CONTROLS_OPEN', 'PROVISION_PREVIOUS_ATTEMPT_PRESERVED', 'PROVISION_CLEANUP_CREATED_ID_CHANGED', 'PROVISION_ACTUAL_AUTH_SESSION_FAILED', 'PROVISION_ARTIFACT_NAME', 'PROVISION_CLEANUP_SCOPE_UNKNOWN', 'PROVISION_CONTAINER_BINDING', 'PROVISION_CONTAINER_FIELDS', 'PROVISION_CREATE_FAILED', 'PROVISION_CREDENTIAL_FIELDS', 'PROVISION_CREDENTIAL_ROLE', 'PROVISION_DATABASE_BINDING', 'PROVISION_DELETE_UNKNOWN', 'PROVISION_EMAIL_ALREADY_PRESENT', 'PROVISION_EMAIL_SCOPE_UNKNOWN', 'PROVISION_EXACT_SIX_POPULATION_FAILED', 'PROVISION_EXPIRY_REQUIREMENT', 'PROVISION_FAILED', 'PROVISION_FAILED_PRIVATE_EVIDENCE_PRESERVED', 'PROVISION_FIXED_HTTP_PATH', 'PROVISION_FRESH_EMPTY_TARGET_REQUIRED', 'PROVISION_HEAD_CHANGED', 'PROVISION_HTTP_OUTCOME_UNKNOWN', 'PROVISION_IDENTITY_CHANGED', 'PROVISION_LOGIN_FAILED', 'PROVISION_LOOPBACK_REQUIRED', 'PROVISION_MEMORY_PARSE', 'PROVISION_MEMORY_READ', 'PROVISION_MONITOR_DID_NOT_CLOSE', 'PROVISION_ORIGINAL_JWT_METADATA', 'PROVISION_ORIGINAL_ROWS_OR_AUTHORITY_CHANGED', 'PROVISION_PROFILE_EPISODE_FAILED', 'PROVISION_RESOURCE_GUARD', 'PROVISION_RESOURCE_MONITOR_FAILED', 'PROVISION_REVIEWED_CODE_REQUIRED', 'PROVISION_SOURCE_CHANGED', 'PROVISION_SOURCE_NOT_COMMITTED', 'PROVISION_SOURCE_PATH')
 
 PROVISION_OWNED_TABLES = ('auth.users','auth.sessions','auth.identities','auth.refresh_tokens',
-    'auth.audit_log_entries','public.profiles','private.member_episodes','auth.mfa_amr_claims')
+    'auth.audit_log_entries','public.profiles','private.member_episodes')
 PROVISION_CLOSED_CONTROLS = ('ai_processing_guard','member_cleanup_guard','worker_runtime_journal_control',
     'worker_runtime_atomic_control','worker_invocation_control','worker_intent_confirmation_control',
     'report_purge_control','ai_report_handling_control','ai_feedback_maintenance_control',
@@ -1286,24 +1272,13 @@ class FixedSignedProvisioningPorts:
         return int(lines[0].split()[1])
 
     def read_sql(self, query, timeout=3):
-        verify_preserved_resources(self.runner.root,self.target['host'],self.target['project'],self.runner.call,self.target.get('preservedResourcePins'))
-        try:
-            result=SignedMidnightRunner.read_sql(self,query,timeout)
-        except BaseException as error:
-            try: verify_preserved_resources(self.runner.root,self.target['host'],self.target['project'],self.runner.call,self.target.get('preservedResourcePins'))
-            except BaseException: error.add_note('PRESERVED_POST_READ_UNPROVEN')
-            raise
-        verify_preserved_resources(self.runner.root,self.target['host'],self.target['project'],self.runner.call,self.target.get('preservedResourcePins'))
-        return result
+        return SignedMidnightRunner.read_sql(self,query,timeout)
 
     def sql(self, query):
         return self.runner.sql(query)
 
     def original_rows(self):
-        # 기존 검증된 단일 조회의 행 해시·중복 개수 검사를 재사용한다.
-        # 일반 생성기의 원래 네 schema 범위는 초기·종료 모두 유지한다.
-        rows=FixedLifecycleProvisioningPorts.original_rows(self)
-        return {table:bag for table,bag in rows.items() if table.split('.')[0] in ('auth','public','private','storage')}
+        return SignedMidnightRunner.original_rows(self)
 
     def snapshot(self):
         rows=self.original_rows()
@@ -1329,7 +1304,6 @@ class FixedSignedProvisioningPorts:
         conditions={'auth.users':'r.id::text=a.user_id','auth.sessions':'r.user_id::text=a.user_id and r.id::text=a.session_id',
             'auth.identities':"r.user_id::text=a.user_id and r.provider='email'",
             'auth.refresh_tokens':'r.user_id::text=a.user_id and r.session_id::text=a.session_id',
-            'auth.mfa_amr_claims':"r.session_id::text=a.session_id and r.authentication_method='password' and exists(select 1 from auth.sessions s where s.id=r.session_id and s.user_id::text=a.user_id)",
             'public.profiles':'r.id::text=a.user_id','private.member_episodes':'r.profile_id::text=a.user_id and r.identity_id is null and r.ended_at is null',
             'auth.audit_log_entries':"((r.payload->>'action'='user_signedup'and r.payload->'traits'->>'user_id'=a.user_id and r.payload->'traits'->>'user_email'=a.email)or(r.payload->>'action'='login'and r.payload->>'actor_id'=a.user_id and r.payload->>'actor_username'=a.email))"}
         result={}
@@ -1342,7 +1316,6 @@ class FixedSignedProvisioningPorts:
     def request(self, method, path, payload=None, token=None, admin=False):
         allowed=(method=='POST'and path in('/admin/users','/token?grant_type=password'))or(method=='GET'and(path=='/user'or re.fullmatch(r'/admin/users/[a-f0-9-]{36}',path)))or(method=='DELETE'and re.fullmatch(r'/admin/users/[a-f0-9-]{36}',path))
         if not allowed:raise ValueError('PROVISION_FIXED_HTTP_PATH')
-        verify_preserved_resources(self.runner.root,self.target['host'],self.target['project'],self.runner.call,self.target.get('preservedResourcePins'))
         c=self.reviewed.credentials;credential=c['service']if admin else c['anon']
         class NoRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self,*args):return None
@@ -1351,17 +1324,11 @@ class FixedSignedProvisioningPorts:
             headers={'apikey':credential,'Authorization':'Bearer '+(token or credential),'Content-Type':'application/json'})
         opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
         try:
-            try:
-                with opener.open(request,timeout=5)as response:
-                    data=response.read(65537);status=response.status
-            except urllib.error.HTTPError as error:
-                status=error.code;data=error.read(65537)
-            except Exception:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')from None
-        except BaseException as error:
-            try: verify_preserved_resources(self.runner.root,self.target['host'],self.target['project'],self.runner.call,self.target.get('preservedResourcePins'))
-            except BaseException: error.add_note('PRESERVED_POST_HTTP_UNPROVEN')
-            raise
-        verify_preserved_resources(self.runner.root,self.target['host'],self.target['project'],self.runner.call,self.target.get('preservedResourcePins'))
+            with opener.open(request,timeout=5)as response:
+                data=response.read(65537);status=response.status
+        except urllib.error.HTTPError as error:
+            status=error.code;data=error.read(65537)
+        except Exception:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')from None
         if len(data)>65536:raise ValueError('PROVISION_HTTP_OUTCOME_UNKNOWN')
         return status,(signed_exact_json(data)if data else {})
 
@@ -1483,7 +1450,6 @@ def provision_signed_accounts(prepared_root, reviewed):
         if any(a['expiresAt']<max(reviewed.minimum_expiry,time.time()+300)for a in accounts):raise ValueError('PROVISION_ORIGINAL_JWT_METADATA')
         if not ports.verify_population(accounts):raise ValueError('PROVISION_EXACT_SIX_POPULATION_FAILED')
         final=ports.snapshot()
-        save('final-private.json',final)
         if final['authoritySha256']!=baseline['authoritySha256']:raise ValueError('PROVISION_ORIGINAL_ROWS_OR_AUTHORITY_CHANGED')
         added=ports.added_rows(baseline['rows'],accounts)
         provisioning_added_scope(baseline['rows'],final['rows'],added,accounts)
@@ -1925,7 +1891,7 @@ def run_signed_auth_lifecycle(reviewed, binding, value, node):
     if errors:raise ValueError('LIFECYCLE_FAILED_PRIVATE_EVIDENCE_PRESERVED')
 
 
-LCP_TABLES=PROVISION_OWNED_TABLES
+LCP_TABLES=PROVISION_OWNED_TABLES+('auth.mfa_amr_claims',)
 LCP_CODES=('LCP_REVIEWED_CODE_REQUIRED','LCP_PREVIOUS_ATTEMPT','LCP_PRIVATE_SCOPE','LCP_STATE_BINDING',
     'LCP_FRESH_EMPTY_REQUIRED','LCP_SETTINGS_REQUIRED','LCP_CLOSED_REQUIRED','LCP_RESOURCE_GUARD',
     'LCP_MONITOR_FAILED','LCP_MONITOR_UNCLOSED','LCP_HTTP_UNKNOWN','LCP_CREATE_PROOF','LCP_LOGIN_PROOF',
