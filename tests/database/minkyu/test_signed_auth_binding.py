@@ -511,8 +511,8 @@ class BindingTests(unittest.TestCase):
                 prefix=ast.parse('"""Lifecycle와 AI24가 같은 source-only reader와 inventory 검사를 사용한다."""\nfactory = \'tests/integration/jonghyun/isolated_ai_factory.ts\'\nif not root.is_absolute() or root.resolve() != root or root == REPO or (not isinstance(pins, dict)) or (not 1 <= len(pins) <= 256) or any((pins.get(k) != v for k, v in expected.items())):\n    raise ValueError(\'MIDNIGHT_CUSTODY_CAPSULE\')').body
                 self.assertEqual(dump(ast.Module(body=shared.body,type_ignores=[])),dump(ast.Module(body=prefix+tail,type_ignores=[])))
                 candidate.body=copy.deepcopy(original.body)
-        # 승인된 native119 v1/v2 전체 함수 AST만 예외로 묶는다. 다른 변경은 허용하지 않는다.
-        history_hashes={'fb5b103065382ffe8c759c57c0a3e30fe543866305071f28ba56632dca3e935e','31ec8172bb801ca0857fb4cc60a5ce4b97fb5a16e2135315806d31fe23d6c01c'}
+        # native119 v1/v2와 불변 projection 재사용 후속의 정확한 함수 AST만 묶는다.
+        history_hashes={'fb5b103065382ffe8c759c57c0a3e30fe543866305071f28ba56632dca3e935e','31ec8172bb801ca0857fb4cc60a5ce4b97fb5a16e2135315806d31fe23d6c01c','9305e35cb87c8741c5ba05ed35c4d00b0725539c36d29dd64ae3cabb557199e1'}
         old_history=next((n for n in before.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history'),None)
         if old_history is not None:
             new_history=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history')
@@ -1532,6 +1532,82 @@ class NativeSignedHistoryV2Tests(unittest.TestCase):
         self.role_drift=False;self.helper_drift=True;self.commands=[]
         with self.assertRaisesRegex(ValueError,'HELPER_UNCOMMITTED'):self.verify()
         self.assertFalse(any(c[0]=='docker'for c in self.commands))
+
+
+class NativeSignedHistoryCacheTests(unittest.TestCase):
+    """불변 순수 결과만 재사용하며 매번 현재 권한 읽기를 하는 오프라인 모형."""
+    prepare_proofs=NativeSignedHistoryV2Tests.prepare_proofs
+    persist_baseline=NativeSignedHistoryV2Tests.persist_baseline
+    persist_provenance=NativeSignedHistoryV2Tests.persist_provenance
+    fake_process=NativeSignedHistoryV2Tests.fake_process
+    verify=NativeSignedHistoryV2Tests.verify
+    write=BindingTests.write
+    def setUp(self):
+        module._signed_native_immutable_projection.cache_clear();BindingTests.setUp(self)
+    def tearDown(self):
+        module._signed_native_immutable_projection.cache_clear();BindingTests.tearDown(self)
+    def test_second_call_reuses_only_pure_projection_and_keeps_all_current_queries(self):
+        self.prepare_proofs();first=self.verify();commands=list(self.commands);self.commands=[];calls=list(self.calls);self.calls=[]
+        self.assertEqual(self.verify(),first);self.assertEqual(self.commands,commands);self.assertEqual(self.calls,calls)
+        cache=module._signed_native_immutable_projection.cache_info()
+        self.assertEqual((cache.maxsize,cache.currsize,cache.misses,cache.hits),(1,1,1,1))
+        self.assertEqual(self.runner.signed_identity.call_count,2);self.runner.sql.assert_not_called()
+        self.assertTrue(any(c[0]=='git'for c in self.commands));self.assertTrue(any('pg_dump'in c for c in self.commands))
+    def test_cached_projection_rejects_second_call_current_acl_or_effective_drift(self):
+        self.prepare_proofs();self.verify()
+        for kind in('acl','effective'):
+            self.current_authority=copy.deepcopy(self.state['rawAuthority']);self.current_effective=copy.deepcopy(self.state['effectivePrivileges'])
+            if kind=='acl':self.current_authority['schemas'][0][-1]=['postgres=UC/postgres']
+            else:self.current_effective[0][-1]=False
+            self.calls=[]
+            with self.subTest(kind=kind),self.assertRaisesRegex(ValueError,'CURRENT_AUTHORITY_CHANGED'):self.verify()
+            self.assertIn('raw',self.calls);self.assertIn('effective',self.calls)
+        cache=module._signed_native_immutable_projection.cache_info();self.assertEqual((cache.misses,cache.hits),(1,2))
+    def test_cached_projection_keeps_current_role_and_catalog_checks(self):
+        self.prepare_proofs();self.verify()
+        for kind in('role','catalog'):
+            self.role_drift=kind=='role';self.schema_drift=kind=='catalog'
+            with self.subTest(kind=kind),self.assertRaisesRegex(ValueError,'CURRENT_SCHEMA_ROLES_CHANGED'):self.verify()
+        self.assertEqual(module._signed_native_immutable_projection.cache_info().hits,2)
+    def test_cached_projection_keeps_full_source_hash_and_helper_commit_checks(self):
+        self.prepare_proofs();self.verify();raw=self.source.read_bytes();self.commands=[]
+        self.source.write_bytes(raw+b' ')
+        with self.assertRaisesRegex(ValueError,'SOURCE_STATE_CHANGED'):self.verify()
+        self.assertFalse(any(c[0]=='docker'for c in self.commands));self.source.write_bytes(raw)
+        self.helper_drift=True;self.commands=[]
+        with self.assertRaisesRegex(ValueError,'HELPER_UNCOMMITTED'):self.verify()
+        self.assertFalse(any(c[0]=='docker'for c in self.commands))
+        self.assertEqual(module._signed_native_immutable_projection.cache_info().hits,0)
+    def test_changed_baseline_bytes_miss_and_failed_pure_comparison_is_not_cached(self):
+        self.prepare_proofs();self.verify();self.baseline['sequences']['public.fixture_seq'][0]+=1;self.persist_baseline();self.persist_provenance()
+        for attempt in range(2):
+            self.commands=[]
+            with self.assertRaises(AssertionError):self.verify()
+            self.assertFalse(any(c[0]=='docker'for c in self.commands))
+        cache=module._signed_native_immutable_projection.cache_info();self.assertEqual((cache.maxsize,cache.currsize,cache.misses,cache.hits),(1,1,3,0))
+    def test_cached_return_has_no_mutable_projection_and_raw_helper_key_is_exact(self):
+        self.prepare_proofs();self.verify();relative='tests/integration/minkyu/product_connection_restore108_local.py'
+        args=(self.source.read_bytes(),self.baseline_path.read_bytes(),self.constants['NATIVE_SIGNED_SOURCE_STATE_SHA'],
+            self.provenance['cloneBaselineStateSha256'],(module.REPO/relative).read_bytes(),self.pins[relative])
+        value=module._signed_native_immutable_projection(*args)
+        def immutable(item):
+            self.assertIn(type(item),(tuple,bytes,str,int))
+            if type(item)is tuple:
+                for child in item:immutable(child)
+        immutable(value);self.assertEqual(module._signed_native_immutable_projection.cache_info().hits,1)
+        changed=(*args[:4],args[4]+b'\n',args[5])
+        with self.assertRaisesRegex(ValueError,'IMMUTABLE_BYTES_CHANGED'):module._signed_native_immutable_projection(*changed)
+        self.assertEqual(module._signed_native_immutable_projection.cache_info().currsize,1)
+    def test_v1_never_calls_immutable_cache(self):
+        case=NativeSignedHistoryTests();case.setUp()
+        try:
+            case.prepare_proofs()
+            with patch.object(module,'_signed_native_immutable_projection',side_effect=AssertionError('V1 cache forbidden')):
+                self.assertEqual(case.verify()['method'],'PINNED_NATIVE119_RECEIPTS_AND_CURRENT_SCHEMA_ROLES')
+        finally:case.tearDown()
+        current=ast.parse(RUNNER.read_text());mutant=copy.deepcopy(current)
+        next(n for n in mutant.body if isinstance(n,ast.FunctionDef)and n.name=='signed_verify_history').body.append(ast.Pass())
+        with self.assertRaises(AssertionError):BindingTests().assert_original_python_preserved(current,mutant)
 
 
 class FakeLifecycleProvisioningPorts:

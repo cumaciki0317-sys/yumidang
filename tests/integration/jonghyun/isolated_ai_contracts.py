@@ -22,6 +22,7 @@ import stat
 import time
 import urllib.request
 import urllib.error
+from functools import lru_cache
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'tools/local'))
@@ -454,6 +455,30 @@ def signed_native_permission_selected(pins):
         {'json':json,**values})
 
 
+@lru_cache(maxsize=1)
+def _signed_native_immutable_projection(source_raw, baseline_raw, source_sha, baseline_sha, helper_raw, helper_sha):
+    """검증된 불변 bytes의 순수 비교만 재사용한다. 현재 DB/파일 검사는 호출자가 매번 한다."""
+    import ast
+    for raw,pin in ((source_raw,source_sha),(baseline_raw,baseline_sha),(helper_raw,helper_sha)):
+        if (type(raw)is not bytes or len(raw)>64*1024*1024 or type(pin)is not str
+                or not re.fullmatch('[a-f0-9]{64}',pin)or hashlib.sha256(raw).hexdigest()!=pin):
+            raise ValueError('SIGNED_NATIVE_IMMUTABLE_BYTES_CHANGED')
+    names={'native_restore_json','native_restore_source','native_restore_ident','native_restore_acl_entries',
+        'native_restore_catalog','native_restore_acl_plan','native_restore_schema_grant_lines','native_restore_compare'}
+    nodes=[n for n in ast.parse(helper_raw).body if isinstance(n,ast.FunctionDef)and n.name in names]
+    if len(nodes)!=len(names)or{n.name for n in nodes}!=names:raise ValueError('SIGNED_NATIVE_HELPER_FUNCTIONS')
+    namespace={'json':json,'hashlib':hashlib,'re':re}
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),'committed-native-immutable-comparison','exec'),namespace)
+    source=signed_exact_json(source_raw);baseline=signed_exact_json(baseline_raw)
+    namespace['native_restore_compare'](source,baseline,source_sha)
+    canonical=lambda value:json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()
+    grants=tuple(namespace['native_restore_schema_grant_lines'](baseline))
+    return (len(source['snapshot']['rows']),hashlib.sha256(source['snapshot']['catalog'].encode()).hexdigest(),
+        hashlib.sha256(canonical(source['snapshot']['roles'])).hexdigest(),canonical(baseline['rawAuthority']),
+        canonical(baseline['effectivePrivileges']),canonical(baseline['snapshot']['roles']),grants,
+        namespace['native_restore_catalog'](baseline['snapshot']['catalog'],grants))
+
+
 def signed_verify_history(runner):
     """일반 DB 이력과 고정 native119 원 영수증을 별도 증거로 검증한다."""
     path=runner.root/'native119-runtime-provenance.json'
@@ -505,10 +530,11 @@ def signed_verify_history(runner):
         identity=lambda value:(value.st_dev,value.st_ino,value.st_size,value.st_mtime_ns,value.st_ctime_ns,value.st_nlink)
         if (len(raw)>64*1024*1024 or len(raw)!=before.st_size or identity(before)!=identity(after)or identity(after)!=identity(current)
                 or hashlib.sha256(raw).hexdigest()!=NATIVE_SIGNED_SOURCE_STATE_SHA):raise ValueError('SIGNED_NATIVE_SOURCE_STATE_CHANGED')
-    state=signed_exact_json(raw);snapshot=state['snapshot'];schema=snapshot['catalog'];roles=snapshot['roles']
-    if (len(snapshot['rows'])!=178 or provenance['sourceCatalogSha256']!=hashlib.sha256(schema.encode()).hexdigest()
-            or provenance['sourcePortableRolesSha256']!=digest(roles)):raise ValueError('SIGNED_NATIVE_SOURCE_METADATA')
-    baseline=state;comparison=None
+    comparison=None
+    if version==1:
+        state=signed_exact_json(raw);snapshot=state['snapshot'];schema=snapshot['catalog'];roles=snapshot['roles']
+        if (len(snapshot['rows'])!=178 or provenance['sourceCatalogSha256']!=hashlib.sha256(schema.encode()).hexdigest()
+                or provenance['sourcePortableRolesSha256']!=digest(roles)):raise ValueError('SIGNED_NATIVE_SOURCE_METADATA')
     if version==2:
         baseline_path=runner.root/'native119-clone-baseline-private.json'
         if provenance['cloneBaselineStatePath']!=str(baseline_path)or not isinstance(provenance['cloneBaselineStateSha256'],str)or not re.fullmatch('[a-f0-9]{64}',provenance['cloneBaselineStateSha256']):
@@ -518,11 +544,17 @@ def signed_verify_history(runner):
             before=os.fstat(stream.fileno());baseline_raw=stream.read(64*1024*1024+1);after=os.fstat(stream.fileno());current=baseline_path.lstat()
             if (len(baseline_raw)>64*1024*1024 or len(baseline_raw)!=before.st_size or identity(before)!=identity(after)or identity(after)!=identity(current)
                     or hashlib.sha256(baseline_raw).hexdigest()!=provenance['cloneBaselineStateSha256']):raise ValueError('SIGNED_NATIVE_BASELINE_CHANGED')
-        baseline=signed_exact_json(baseline_raw)
         comparison=signed_native_selected('tests/integration/minkyu/product_connection_restore108_local.py',
             {'native_restore_json','native_restore_source','native_restore_ident','native_restore_acl_entries','native_restore_catalog',
              'native_restore_acl_plan','native_restore_schema_grant_lines','native_restore_compare'},pins,{'json':json,'hashlib':hashlib,'re':re})
-        comparison['native_restore_compare'](state,baseline,NATIVE_SIGNED_SOURCE_STATE_SHA)
+        relative='tests/integration/minkyu/product_connection_restore108_local.py'
+        helper_raw=(REPO/relative).read_bytes()
+        if hashlib.sha256(helper_raw).hexdigest()!=pins[relative]:raise ValueError('SIGNED_NATIVE_HELPER_PIN_CHANGED')
+        rows,source_catalog_sha,source_roles_sha,baseline_authority,baseline_effective,baseline_roles,allowed,baseline_catalog=\
+            _signed_native_immutable_projection(raw,baseline_raw,NATIVE_SIGNED_SOURCE_STATE_SHA,
+                provenance['cloneBaselineStateSha256'],helper_raw,pins[relative])
+        if (rows!=178 or provenance['sourceCatalogSha256']!=source_catalog_sha
+                or provenance['sourcePortableRolesSha256']!=source_roles_sha):raise ValueError('SIGNED_NATIVE_SOURCE_METADATA')
     from types import SimpleNamespace
     def read_query(name,statement):
         if name!=runner.target['id']:raise ValueError('SIGNED_NATIVE_QUERY_TARGET')
@@ -548,11 +580,10 @@ def signed_verify_history(runner):
         permission=signed_native_permission_selected(pins)
         current_authority=permission['platform_json'](read_query(runner.target['id'],permission['NATIVE_BACKUP_ACL_QUERY']))
         current_effective=permission['native_backup_permissions'](read_query,runner.target['id'])
-        if canonical(current_authority)!=canonical(baseline['rawAuthority'])or canonical(current_effective)!=canonical(baseline['effectivePrivileges']):
+        if canonical(current_authority)!=baseline_authority or canonical(current_effective)!=baseline_effective:
             raise ValueError('SIGNED_NATIVE_CURRENT_AUTHORITY_CHANGED')
-        if canonical(current_roles)!=canonical(baseline['snapshot']['roles']):raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
-        allowed=comparison['native_restore_schema_grant_lines'](baseline)
-        if comparison['native_restore_catalog'](current_schema,allowed)!=comparison['native_restore_catalog'](baseline['snapshot']['catalog'],allowed):
+        if canonical(current_roles)!=baseline_roles:raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
+        if comparison['native_restore_catalog'](current_schema,allowed)!=baseline_catalog:
             raise ValueError('SIGNED_NATIVE_CURRENT_SCHEMA_ROLES_CHANGED')
     runner.signed_identity()
     if version==2:
