@@ -1,3 +1,7 @@
+## 현재 파일 담당 — 2026-10-14
+
+종현은 웹·앱 Frontend, UX/UI, 화면 구현과 API·인증·세션 클라이언트 연결을 담당한다. 민규는 BE·DB·서버·AI와 서버 검색/행사/작업 실행을 전담한다. QA는 민규·종현·유미 공통, UT는 유미 담당이다. 성호의 현재 담당 배정은 제거했다. 기존 구현·검증 증거와 파일 경로는 보존하며 상세 수정 경계는 [소유권 정책](../../backend/ownership.json)을 따른다.
+
 # 유미당 모바일 프론트
 
 현재 정책 기준은 [정책.md](../../정책.md)다. 화면 요구는 [IA](../../docs/planning/design/IA.md)·[USERFLOW](../../docs/planning/design/USERFLOW.md), 서버 계약은 [공통 API](../../backend/contracts/service-api.md)·[검색](../../backend/contracts/search.md)·[AI 탐색](../../backend/contracts/ai-chat.md)·[후기 요약](../../backend/contracts/review-summary.md)을 따른다.
@@ -57,7 +61,7 @@ AI 신고 캡처는 별도의 `installAiReportCaptureUpload(upload)` 포트가 �
 | `src/remote.tsx`, `src/web-member-session.ts`, `src/avatar-service.ts` | 신뢰할 세션·Storage 포트 조립 |
 | `design/stitch/manifest.json` | 디자인 원천 기록 |
 
-공통 설정·SQL·`service-api`는 민규 담당이다. 종현 함수 산출물 중 장소는 `places/index.ts`, 행사 수집은 `event-sync/index.ts`의 default.fetch를 사용한다. 공통 `SUPABASE_URL`·`SUPABASE_ANON_KEY`·`UPSTREAM_TIMEOUT_MS`·`MAX_REQUEST_BYTES`·`ALLOWED_ORIGINS`가 필요하며 내부 함수는 서비스 역할 키와 내부 작업 secret을 별도로 요구한다.
+공통 설정·SQL·`service-api`는 민규 담당이다. 민규 담당 서버 함수 중 장소는 `places/index.ts`, 행사 수집은 `event-sync/index.ts`의 default.fetch를 사용한다. 공통 `SUPABASE_URL`·`SUPABASE_ANON_KEY`·`UPSTREAM_TIMEOUT_MS`·`MAX_REQUEST_BYTES`·`ALLOWED_ORIGINS`가 필요하며 내부 함수는 서비스 역할 키와 내부 작업 secret을 별도로 요구한다.
 
 장소 추가 설정은 `KAKAO_REST_API_KEY`·`PLACES_PAGE_SIZE=10`이다. 행사 추가 설정은 `EVENT_SYNC_PROVIDERS`·`EVENT_SYNC_MAX_PERIOD_DAYS`·`EVENT_SYNC_MAX_PAGE`·`EVENT_SYNC_PAGE_ROWS`와 원천별 `KOPIS_API_KEY` 또는 `TOUR_API_SERVICE_KEY`·확인된 `TOUR_API_KEY_FORMAT`이다. 수집 상한은 코드에서 공급사 규격으로 검사하며 임의 운영 기본값을 만들지 않는다. 설정값·키를 문서에 기록하지 않는다. 함수·worker의 전체 연결은 [현재 구현 결과](../../docs/collaboration/requests/jonghyun/2026-10-07-implementation-result.md)를 따른다.
 
@@ -83,7 +87,7 @@ SERVICE_PREVIEW_URL=http://127.0.0.1:8089 node ../../tests/integration/jonghyun/
 
 과거 의존성 설치 검사에29건(높음19·중간10)이 기록돼 있으나 현재 재검사 수치가 아니다. 이번 작업에서 네트워크 audit를 반복하지 않았다. 이를 현재 보안 통과나 현재 결함 개수로 해석하지 않는다. `npm audit fix --force`로 호환되지 않는 메이저 변경을 하지 않는다.
 
-현재 작업은 `/private/tmp/yumidang-jonghyun-implementation-20261007` 독립 clone의 `jonghyun/queue-integration`에서 진행했다. 사용자 요청에 따라 이 브랜치에 커밋·푸시하며 제출 결과는 Git 기록으로 확인한다. 이 문서나 코드 공유를 출시 완료의 증거로 사용하지 않는다. 실제 외부 요청·운영 배포는 별도 범위다. 실제 기기·운영·성호 UT/QA와 승인된 인증 초기화가 남아 있다.
+현재 작업은 `/private/tmp/yumidang-jonghyun-implementation-20261007` 독립 clone의 `jonghyun/queue-integration`에서 진행했다. 사용자 요청에 따라 이 브랜치에 커밋·푸시하며 제출 결과는 Git 기록으로 확인한다. 이 문서나 코드 공유를 출시 완료의 증거로 사용하지 않는다. 실제 외부 요청·운영 배포는 별도 범위다. 실제 기기·운영·유미 UT·공통 QA와 승인된 인증 초기화가 남아 있다.
 
 ## 2026-10-08 후속 서버 연결
 
