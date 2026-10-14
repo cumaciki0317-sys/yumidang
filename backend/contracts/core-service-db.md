@@ -1,5 +1,7 @@
 # 핵심 업무 DB 연결 — 민규
 
+현재 담당(2026-10-14): 이 서버 계약과 BE·AI 구현은 민규 전담이며 프론트 클라이언트 소비·UX/UI는 종현, QA는 공통(민규·종현·유미), UT는 유미다. 아래 과거 구현자·검사·인계 증거는 당시 기록으로 보존한다.
+
 ## 기준과 구현 차이
 
 현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
@@ -40,7 +42,7 @@
 
 내부 client는 예산 `reserve_ai_budget`, `settle_ai_budget`, 작업 `yield_job`, `fail_job`, `supersede_job`, 요약 `load_review_summary_source`, `load_review_summary_checkpoint`, `save_review_summary_checkpoint`, `discard_review_summary_checkpoint`, `mark_review_summary_insufficient`, `publish_review_summary_for_job`, 행사 `upsert_events`를 추가로 허용한다. 실제 SQL의 원자성·점유·revision·예산 단위는 [작업 DB](worker-jobs.md)와 [요약 DB](review-summary-db.md)의 연결 계약을 따른다. 원장 구성·조회용 운영 RPC는 HTTP 클라이언트 허용 목록에 추가하지 않는다.
 
-회원·익명 client는 `list_public_events(p_filters jsonb,p_cursor jsonb,p_limit integer)`와 `list_event_filter_values()`를 허용한다. 내부 `upsert_events(p_events jsonb)`는 `{receivedCount,insertedCount,updatedCount,staleCount}`를 반환하고 공개 목록은 `{items,nextCursor}`, 필터 값은 `{regions:[{provider,value,count}],categories:[{provider,value,count}]}`다. HTTP는 종현 `createRpcEventRepository.listPage`와 `listEventFilterValues`를 재사용하여 이 DB 결과를 엄격 검사·불투명 커서로 변환한다. 기존 행사 후보 RPC와 별도 데이터베이스를 중복 생성하지 않는다.
+회원·익명 client는 `list_public_events(p_filters jsonb,p_cursor jsonb,p_limit integer)`와 `list_event_filter_values()`를 허용한다. 내부 `upsert_events(p_events jsonb)`는 `{receivedCount,insertedCount,updatedCount,staleCount}`를 반환하고 공개 목록은 `{items,nextCursor}`, 필터 값은 `{regions:[{provider,value,count}],categories:[{provider,value,count}]}`다. HTTP는 민규 담당 `createRpcEventRepository.listPage`와 `listEventFilterValues`를 재사용하여 이 DB 결과를 엄격 검사·불투명 커서로 변환한다. 기존 행사 후보 RPC와 별도 데이터베이스를 중복 생성하지 않는다.
 
 서버 `.env.example`은 필수 변수 이름과 빈 값만 추가한다. 빈 내부 키·secret은 미설정으로 처리하여 공개/사용자 기능을 시작할 수 있고 내부 호출은 여전히503이다. 공통 필수 URL·anon 키·Origin·시간/크기 설정은 완화하지 않는다. AI 보관 결정·지출 근거·원장·안전 검사·운영 한도의 부재는 각 기능의 미준비 상태를 유지한다. 파일·허용 목록 연결은 실제 회원 원문 전송·외부 모델 성공·운영 배포 승인으로 확대하지 않는다.
 

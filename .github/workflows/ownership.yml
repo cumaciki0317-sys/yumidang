@@ -20,8 +20,8 @@ jobs:
           case "$HEAD_BRANCH" in
             minkyu/*) actor=minkyu ;;
             jonghyun/*) actor=jonghyun ;;
-            sungho/*) actor=sungho ;;
-            *) echo "Use a minkyu/, jonghyun/ or sungho/ branch."; exit 1 ;;
+            yumi/*) actor=yumi ;;
+            *) echo "Use a minkyu/, jonghyun/ or yumi/ branch. sungho is inactive."; exit 1 ;;
           esac
           git fetch origin "refs/pull/${PR_NUMBER}/head"
           python3 tools/collaboration/check_ownership.py --actor "$actor" --diff "$BASE_SHA" FETCH_HEAD

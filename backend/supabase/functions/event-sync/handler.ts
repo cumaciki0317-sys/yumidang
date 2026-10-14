@@ -1,5 +1,5 @@
 /**
- * 담당: 종현담당. 내부 행사 수집(한 페이지) HTTP 처리.
+ * 담당: 민규담당. 내부 행사 수집(한 페이지) HTTP 처리.
  * POST /functions/v1/event-sync(또는 /event-sync), 내부 비밀 인증, 본문 정확히 {provider, period:{start,end}, page}.
  * 한 요청 = 제공처 한 페이지 조회 → (provider, sourceId) upsert. 삭제·다음 페이지 자동 진행·재시도 없음.
  * 외부 실패·정규화 실패·DB 실패를 0건 성공으로 바꾸지 않는다. 24시간 주기 호출은 scheduled-jobs(lane S) 책임이다.

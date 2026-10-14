@@ -1,5 +1,5 @@
 /**
- * 종현담당. KOPIS 공연목록(pblprfr) transport·정규화.
+ * 민규담당. KOPIS 공연목록(pblprfr) transport·정규화.
  * 공식 가이드 v5.0: 요청 service/stdate/eddate(최대 31일)/cpage/rows(최대 100), XML <dbs><db>..</db></dbs> 응답.
  * 가이드의 운영 주소는 http://www.kopis.or.kr 이지만 키를 HTTP로 보내지 않는다. 2026-09-29 키 없는 확인에서
  * https://kopis.or.kr(인증서 SAN kopis.or.kr/www.kopis.or.kr)가 같은 API의 XML 오류 envelope를 반환했다.

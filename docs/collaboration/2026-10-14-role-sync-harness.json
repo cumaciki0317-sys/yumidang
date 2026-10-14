@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "date": "2026-10-14",
+  "actor": "minkyu",
+  "objective": "WBS 및 프로젝트 현재 역할과 파일 단독 소유권 동기화",
+  "baseline": "bee255c6ec5fcfb66c195b5dccf0b94e83ac8a46",
+  "branch": "backend-work",
+  "lanes": {
+    "root": [
+      "backend/ownership.json",
+      "AGENTS.md",
+      "PLAN.md",
+      "PLAN_상세설계.md",
+      "README.md",
+      "정책.md",
+      "docs/collaboration/README.md",
+      "docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md",
+      "docs/planning/ut/README.md",
+      "docs/collaboration/2026-10-14-role-sync-harness.json",
+      "docs/collaboration/requests/minkyu/2026-10-05-sungho-start.md",
+      "docs/collaboration/requests/minkyu/2026-10-09-sungho-frontend-access.md",
+      "docs/collaboration/requests/minkyu/2026-10-10-jonghyun-backend100-handoff.md",
+      "docs/collaboration/requests/minkyu/2026-10-13-jonghyun-parallel-backend.md"
+    ],
+    "role_audit": [
+      "260929_종현담당_PLAN.md",
+      "apps/mobile/README.md",
+      "backend/.env.example",
+      "backend/API_INPUT.md",
+      "backend/README.md",
+      "backend/contracts/ai-chat.md",
+      "backend/contracts/auth-runtime.md",
+      "backend/contracts/conventions.md",
+      "backend/contracts/core-service-db.md",
+      "backend/contracts/db-foundation.md",
+      "backend/contracts/event-storage.md",
+      "backend/contracts/posts-search.md",
+      "backend/contracts/public-post-search-db.md",
+      "backend/contracts/reports.md",
+      "backend/contracts/review-summary-db.md",
+      "backend/contracts/review-summary.md",
+      "backend/contracts/search.md",
+      "backend/contracts/service-api.md",
+      "backend/contracts/worker-jobs.md",
+      "backend/supabase/functions/_shared/integrations/events/kopis.ts",
+      "backend/supabase/functions/ai-chat/handler.ts",
+      "backend/supabase/functions/ai-chat/index.ts",
+      "backend/supabase/functions/event-sync/handler.ts",
+      "backend/supabase/functions/places/handler.ts",
+      "backend/supabase/functions/places/index.ts",
+      "docs/collaboration/jonghyun.md",
+      "docs/collaboration/minkyu-progress.md",
+      "docs/collaboration/minkyu.md",
+      "tests/functions/minkyu/test_sungho_guard.py",
+      "tools/local/check_search_core.ts",
+      "유미당_출시결정_보류사항_민규전달_20261005.md"
+    ],
+    "ownership_review": [
+      "tools/collaboration/check_ownership.py",
+      "tools/collaboration/setup_actor.py",
+      "tools/collaboration/start_jonghyun.py",
+      "tools/collaboration/test_ownership.py",
+      ".githooks/pre-commit",
+      ".github/workflows/ownership.yml"
+    ],
+    "notion_tasks": [
+      "Notion WBS 하위 task 담당 속성·현재 책임 문구"
+    ]
+  },
+  "boundaries": [
+    "단독 편집",
+    "사용자 명시 담당 재배정 동기화 예외 기록",
+    "HEAD 정책 신뢰 유지",
+    "운영 없음; 사용자 후속 승인으로 이번51개 파일만 owner별 커밋·origin/backend-work 일반 푸시",
+    "실회원 HOLD 유지",
+    "역사 증거와 공급사 계정 보존"
+  ],
+  "validation": {
+    "tracked_files": 1246,
+    "minkyu_owned": 967,
+    "jonghyun_owned": 279,
+    "unassigned": 0,
+    "removed_owner": 0,
+    "tooling_tests": "22 PASS",
+    "role_hook_tests": "11 PASS",
+    "working_tree_policy": "policy committed f4bf239b636a61dfee3efcc6292bdd37b990e35e; HEAD policy active",
+    "notion": {
+      "pages_read_back": 117,
+      "tasks_updated": 80,
+      "content_updated": 74,
+      "assignee_properties_updated": 51,
+      "title_updated": 1,
+      "legacy_current_assignee_or_instruction": 0,
+      "immutable_task_fields": "PASS",
+      "native_page_and_database_references": "PASS",
+      "remaining_blockers": 0
+    },
+    "local_links_languages_lanes_whitespace": "PASS"
+  },
+  "delivery": {
+    "authorization": "사용자: 커밋 푸쉬해",
+    "branch": "backend-work",
+    "remote": "origin",
+    "scope": "하네스51개 경로만; 기존 미추적본 제외",
+    "sequence": [
+      "policy1 minkyu",
+      "role documentation and tooling47 minkyu",
+      "frontend/client current status2 jonghyun",
+      "UT guidance1 yumi"
+    ],
+    "policy_commit": "f4bf239b636a61dfee3efcc6292bdd37b990e35e",
+    "upstream_preexisting_local_commits": 110,
+    "method": "별도 actor clone·hook 검사·순차 fast-forward, force 없음"
+  }
+}

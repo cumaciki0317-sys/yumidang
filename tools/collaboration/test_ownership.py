@@ -64,6 +64,31 @@ class PolicyTests(unittest.TestCase):
             with self.subTest(raw=raw), self.assertRaises(checker.CheckError):
                 checker.parse_name_status(raw)
 
+    def test_inactive_owner_is_readable_without_reactivating_actor(self):
+        legacy = sample_policy()
+        legacy["rules"].append({"path": "backend/legacy-ui/", "owner": "sungho"})
+        policy = checker.validate_policy(legacy)
+        self.assertIn("sungho", checker.POLICY_OWNERS)
+        self.assertNotIn("sungho", checker.ACTORS)
+        self.assertEqual(checker.violations(policy, "minkyu", ["backend/legacy-ui/app.ts"]),
+                         [("backend/legacy-ui/app.ts", "sungho")])
+
+    def test_yumi_has_only_explicit_ut_paths(self):
+        proposed = sample_policy()
+        proposed["protected_paths"].append("docs/planning/ut/")
+        proposed["rules"].append({"path": "docs/planning/ut/", "owner": "yumi"})
+        policy = checker.validate_policy(proposed)
+        self.assertEqual(checker.violations(policy, "yumi", ["docs/planning/ut/result.md"]), [])
+        self.assertEqual(checker.violations(policy, "yumi", ["frontend/app.ts", "backend/core/auth.ts"]),
+                         [("frontend/app.ts", None), ("backend/core/auth.ts", "minkyu")])
+
+    def test_common_qa_is_not_a_shared_file_owner(self):
+        for owner in ["common", ["minkyu", "jonghyun", "yumi"]]:
+            bad = sample_policy()
+            bad["rules"].append({"path": "tests/qa/", "owner": owner})
+            with self.subTest(owner=owner), self.assertRaises(checker.CheckError):
+                checker.validate_policy(bad)
+
 
 class GitIntegrationTests(unittest.TestCase):
     def setUp(self):
@@ -173,6 +198,61 @@ class GitIntegrationTests(unittest.TestCase):
         self.assertEqual(self.run_check("minkyu", "--staged").returncode, 0)
         result = self.run_check("jonghyun", "--paths", str(self.repo / "backend/ai/new.ts"))
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_legacy_committed_policy_remains_readable_but_actor_is_inactive(self):
+        policy = sample_policy()
+        policy["rules"].append({"path": "backend/legacy-ui/", "owner": "sungho"})
+        self.write("backend/ownership.json", json.dumps(policy))
+        self.commit()
+        self.assertEqual(self.run_check("minkyu", "--paths", "backend/core/auth.ts").returncode, 0)
+        self.assertEqual(self.run_check("sungho", "--paths", "backend/legacy-ui/app.ts").returncode, 2)
+
+    def test_yumi_staged_check_cannot_touch_other_owner_or_unprotected_path(self):
+        policy = sample_policy()
+        policy["protected_paths"].append("docs/planning/ut/")
+        policy["rules"].append({"path": "docs/planning/ut/", "owner": "yumi"})
+        self.write("backend/ownership.json", json.dumps(policy))
+        self.commit()
+        self.write("docs/planning/ut/result.md", "UT result")
+        self.git("add", "docs/planning/ut/result.md")
+        self.assertEqual(self.run_check("yumi", "--staged").returncode, 0)
+        self.write("frontend/app.ts", "not assigned to yumi")
+        self.git("add", "frontend/app.ts")
+        self.assertEqual(self.run_check("yumi", "--staged").returncode, 1)
+
+    def test_precommit_accepts_explicit_yumi_work_and_rejects_inactive_actor(self):
+        policy = sample_policy()
+        policy["protected_paths"].append("docs/planning/ut/")
+        policy["rules"].append({"path": "docs/planning/ut/", "owner": "yumi"})
+        self.write("backend/ownership.json", json.dumps(policy))
+        self.commit()
+        self.write("docs/planning/ut/result.md", "UT result")
+        self.git("add", "docs/planning/ut/result.md")
+        hook = Path(checker.__file__).resolve().parents[2] / ".githooks/pre-commit"
+        for actor, expected in [("yumi", 0), ("sungho", 1)]:
+            with self.subTest(actor=actor):
+                self.git("config", "--local", "yumidang.actor", actor)
+                result = subprocess.run(["sh", str(hook)], cwd=self.repo,
+                                        env=self.env, capture_output=True, text=True, check=False)
+                self.assertEqual(result.returncode, expected, result.stderr)
+
+
+class RoleEntryPointTests(unittest.TestCase):
+    def test_setup_rejects_inactive_actor_before_configuration(self):
+        script = Path(checker.__file__).with_name("setup_actor.py")
+        result = subprocess.run([sys.executable, str(script), "--actor", "sungho"],
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_legacy_backend_start_is_blocked_before_package_or_clone_work(self):
+        script = Path(checker.__file__).with_name("start_jonghyun.py")
+        for arguments in [[], ["--prepare-only"], ["--prepare-only", "--package", "/missing/package"]]:
+            with self.subTest(arguments=arguments):
+                result = subprocess.run([sys.executable, str(script), *arguments],
+                                        capture_output=True, text=True, check=False)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn("현재 종현 담당은 FE·UX/UI·앱 서비스 연동", result.stderr)
+                self.assertIn("BE·AI는 민규 전담", result.stderr)
 
 
 if __name__ == "__main__":

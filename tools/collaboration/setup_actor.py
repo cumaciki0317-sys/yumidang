@@ -7,7 +7,7 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--actor", choices=("minkyu", "jonghyun", "sungho"), required=True)
+    parser.add_argument("--actor", choices=("minkyu", "jonghyun", "yumi"), required=True)
     actor = parser.parse_args().actor
     root = Path(__file__).resolve().parents[2]
     def git(*args):

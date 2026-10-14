@@ -12,12 +12,12 @@
 
 | 수집한 항목 | 입력란 | 연결 담당 |
 |---|---|---|
-| 카카오 장소 검색 | `KAKAO_REST_API_KEY` | 종현 |
-| KOPIS 공연 정보 | `KOPIS_API_KEY` | 종현 |
-| 서울 열린데이터 | `SEOUL_OPEN_DATA_API_KEY` | 종현 |
-| TourAPI | `TOUR_API_SERVICE_KEY`, `TOUR_API_KEY_FORMAT` | 종현 |
-| 포텐스닷 API | `POTENS_API_KEY`, `POTENS_API_BASE_URL`, `POTENS_MODEL`, `POTENS_API_DOCS_URL` | 종현 |
-| AI 공급사·모델·키 | `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY` 또는 `GEMINI_API_KEY` | 종현 |
+| 카카오 장소 검색 | `KAKAO_REST_API_KEY` | 민규 |
+| KOPIS 공연 정보 | `KOPIS_API_KEY` | 민규 |
+| 서울 열린데이터 | `SEOUL_OPEN_DATA_API_KEY` | 민규 |
+| TourAPI | `TOUR_API_SERVICE_KEY`, `TOUR_API_KEY_FORMAT` | 민규 |
+| 포텐스닷 API | `POTENS_API_KEY`, `POTENS_API_BASE_URL`, `POTENS_MODEL`, `POTENS_API_DOCS_URL` | 민규 |
+| AI 공급사·모델·키 | `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY` 또는 `GEMINI_API_KEY` | 민규 |
 | 네이버 로그인 | 실제 서버 설정명·세션 연결은 인증 담당 계약 확인 | 민규 |
 | 그 밖의 API | `OTHER_API_1_…`의 이름·용도·주소·문서·키 | 해당 기능 담당 |
 
@@ -28,12 +28,12 @@
 ## 저장과 공유
 
 - `.env`은 기존 `.gitignore` 규칙으로 Git에서 제외되고 최초 파일 권한은 소유자 읽기/쓰기(0600)다. 키를 채팅·공유 문서·`.env.example`에 복사하지 않는다.
-- 공유하는 [빈 양식](.env.example)에는 실제 키를 넣지 않는다. 종현은 자기 작업 폴더에서 이 양식을 저장소 최상위 `.env`로 복사하여 사용한다. 기존 로컬 파일이 있으면 덮어쓰지 않는다.
+- 공유하는 [빈 양식](.env.example)에는 실제 키를 넣지 않는다. 민규는 자기 작업 폴더에서 이 양식을 저장소 최상위 `.env`로 복사하여 사용한다. 기존 로컬 파일이 있으면 덮어쓰지 않는다.
 - 서버 키를 `VITE_` 변수나 프런트 코드에 넣지 않는다. 이 파일은 키 입력·인계 장소이며 프런트에서 읽지 않는다.
 
 ## 입력 이후
 
-설정 모듈은 `supabase/functions/_shared/config/providers.ts`다. `EnvReader`를 주입받아 기능별로 읽으며, 파일을 자동으로 탐색하거나 import 시 네트워크를 호출하지 않는다. 종현이 각 함수의 런타임에서 `Deno.env.get` 등 서버 환경 조회를 연결해야 실제 기능이 실행된다. 공통 service-api가 모든 외부 키를 필수로 요구하도록 바꾸지 않는다.
+설정 모듈은 `supabase/functions/_shared/config/providers.ts`다. `EnvReader`를 주입받아 기능별로 읽으며, 파일을 자동으로 탐색하거나 import 시 네트워크를 호출하지 않는다. 민규가 각 함수의 런타임에서 `Deno.env.get` 등 서버 환경 조회를 연결해야 실제 기능이 실행된다. 공통 service-api가 모든 외부 키를 필수로 요구하도록 바꾸지 않는다.
 
 현재 작업 폴더의 입력 파일을 다음 오프라인 명령으로 점검한다. 키·URL·모델값을 출력하지 않고 입력 상태만 표시한다.
 

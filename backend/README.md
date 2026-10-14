@@ -43,26 +43,26 @@
 |---|---|---|
 | 일반 API 진입·경로 연결 | functions/service-api/index.ts, handler.ts, routes.ts | 민규담당 |
 | 가입·인증 요청 | functions/signup/, verification/의 index.ts·handler.ts | 민규담당 |
-| 탐색·요약 요청 | functions/ai-chat/, review-summary-worker/의 index.ts·handler.ts | 종현담당 |
-| 장소·행사·예약 실행 | functions/places/, event-sync/, scheduled-jobs/의 index.ts·handler.ts | 종현담당 |
+| 탐색·요약 요청 | functions/ai-chat/, review-summary-worker/의 index.ts·handler.ts | 민규담당 |
+| 장소·행사·예약 실행 | functions/places/, event-sync/, scheduled-jobs/의 index.ts·handler.ts | 민규담당 |
 | 일반 콘텐츠 검사·저장 결합 | _shared/services/content-inspection.ts, _shared/db/content-inspection-client.ts, functions/service-api/content-inspection-http.ts | 민규담당 |
 | 사용자·내부 호출자·세션 | _shared/auth/ | 민규담당 |
 | 환경·HTTP·공통 오류 | _shared/config/, http/ | 민규담당 |
-| 실행 시 계약 검증 | _shared/contracts/ | search.ts·ai.ts는 종현, 나머지는 민규 |
-| 업무 처리 | _shared/services/*-service.ts | search·event는 종현, 나머지는 민규 |
+| 실행 시 계약 검증 | _shared/contracts/ | 민규 전담 |
+| 업무 처리 | _shared/services/*-service.ts | 민규 전담 |
 | DB 클라이언트 | _shared/db/user-client.ts, internal-client.ts | 민규담당 |
-| DB 조회·RPC 연결 | _shared/db/repositories/ | search·events·review-summaries·jobs는 종현, 나머지는 민규 |
+| DB 조회·RPC 연결 | _shared/db/repositories/ | 민규 전담 |
 | 인증 제공사 연결 | _shared/auth/ 및 signup/·verification/; 기존 identity·phone 구조는 네이버 전용 전환 점검, email·bank는 후속 검토 | 민규담당 |
-| 장소·행사 제공사 연결 | _shared/integrations/places·events의 port.ts·adapter.ts, events/normalize.ts | 종현담당 |
-| AI 탐색 | _shared/ai/Agents/chatbot/ | 종현담당 |
-| AI 리뷰 요약 | _shared/ai/Agents/review-summary/ | 종현담당 |
-| AI 모델 연결 | _shared/ai/providers/ | 종현담당 |
-| 작업 등록·점유·재시도 | _shared/jobs/ | 종현담당 |
+| 장소·행사 제공사 연결 | _shared/integrations/places·events의 port.ts·adapter.ts, events/normalize.ts | 민규담당 |
+| AI 탐색 | _shared/ai/Agents/chatbot/ | 민규담당 |
+| AI 리뷰 요약 | _shared/ai/Agents/review-summary/ | 민규담당 |
+| AI 모델 연결 | _shared/ai/providers/ | 민규담당 |
+| 작업 등록·점유·재시도 | _shared/jobs/ | 민규담당 |
 | 로그·민감 필드 제거 | _shared/observability/logger.ts, redaction.ts | 민규담당 |
-| 공통 처리·AI 사용량 지표 | _shared/observability/metrics.ts | 종현담당 |
-| 사람이 합의할 API 계약 | contracts/*.md | search·ai-chat·review-summary는 종현, 나머지는 민규 |
-| DB 변경 | supabase/migrations/의 후속 변경 파일 | 민규가 통합, 종현은 필요한 변경안 제공 |
-| 로컬 가상 데이터 | supabase/seeds/minkyu/, jonghyun/ | 각자 자기 폴더만 작성, 로드 설정은 민규 |
+| 공통 처리·AI 사용량 지표 | _shared/observability/metrics.ts | 민규담당 |
+| 사람이 합의할 API 계약 | contracts/*.md | 민규 전담 |
+| DB 변경 | supabase/migrations/의 후속 변경 파일 | 민규 전담 |
+| 로컬 가상 데이터 | supabase/seeds/minkyu/, jonghyun/ | 기존 폴더·자료를 보존하고 민규 전담 |
 
 ## AI 파일 상세
 

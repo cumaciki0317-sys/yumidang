@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""종현 실행 패키지를 검증하고 새 clone에서 담당 작업을 시작한다."""
+"""이전 종현 백엔드 실행 패키지는 읽기 검증만 제공한다."""
 import argparse
 import hashlib
 import json
@@ -88,6 +88,16 @@ def main(argv=None):
     parser.add_argument("--check", action="store_true", help="패키지만 검사하며 clone/Codex 실행 없음")
     parser.add_argument("--prepare-only", action="store_true", help="새 clone까지 준비하며 Codex 실행 없음")
     args = parser.parse_args(argv)
+    if not args.check:
+        print(
+            "이전 종현 백엔드 실행 패키지로 작업을 시작할 수 없습니다. "
+            "현재 종현 담당은 FE·UX/UI·앱 서비스 연동이며 BE·AI는 민규 전담입니다. "
+            "docs/collaboration/README.md와 PLAN.md의 최신 담당을 확인하고 "
+            "최신 정책을 반영한 종현 전용 clone에서 시작하세요. "
+            "--check는 이전 패키지의 무결성 읽기 검사만 수행합니다.",
+            file=sys.stderr,
+        )
+        return 1
     try:
         package, metadata = verify_package(args.package)
         if args.check:

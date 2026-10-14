@@ -1,5 +1,7 @@
 # 공개 공고 검색 DB 연결
 
+현재 담당(2026-10-14): 이 서버 계약과 BE·AI 구현은 민규 전담이며 프론트 클라이언트 소비·UX/UI는 종현, QA는 공통(민규·종현·유미), UT는 유미다. 아래 과거 구현자·검사·인계 증거는 당시 기록으로 보존한다.
+
 ## 현재 검색 정책과 DB 구현 경계
 
 현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
@@ -38,7 +40,7 @@ public.search_public_posts_v2(
 
 `p_limit`은 기존 기술 한도인 기본 20, 범위 1~50이다. 현재 화면은 10개씩 요청하며 기본값의 정책 일치 여부는 후속 변경 대상이다. 명시적 null·범위 밖 값은 거절한다.
 
-`p_cursor`는 SQL NULL/JSON null 또는 정확히 `{sortAt,id}`인 객체다. timezone 포함 시각과 UUID를 검사한다. 이전의 periodGroup/recruitingGroup 키는 받지 않는다. 커서는 권한 증거나 고정 snapshot이 아니며 새 페이지에서도 모든 공개 조건을 적용한다. HTTP opaque cursor의 필터·정렬 결합은 종현 코드 동기화 대상이다.
+`p_cursor`는 SQL NULL/JSON null 또는 정확히 `{sortAt,id}`인 객체다. timezone 포함 시각과 UUID를 검사한다. 이전의 periodGroup/recruitingGroup 키는 받지 않는다. 커서는 권한 증거나 고정 snapshot이 아니며 새 페이지에서도 모든 공개 조건을 적용한다. HTTP opaque cursor의 필터·정렬 결합은 민규 담당 서버 코드 동기화 대상이다.
 
 ## 결과와 정렬
 

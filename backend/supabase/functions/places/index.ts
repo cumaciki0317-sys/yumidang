@@ -1,5 +1,5 @@
 /**
- * 담당: 종현담당. 장소 검색 런타임 진입점. import는 환경을 읽거나 서버를 시작하지 않는다.
+ * 담당: 민규담당. 장소 검색 런타임 진입점. import는 환경을 읽거나 서버를 시작하지 않는다.
  * 공통 설정(loadRuntimeConfig)·Auth(requirePrincipal)·Kakao 설정(loadKakaoConfig)을 조립한다.
  * PLACES_PAGE_SIZE는 제품 정책10과 같아야 한다. 공급사 기술 상한15와 구분한다. Kakao 키·페이지 크기 누락은 인증된 요청에서 503이다.
  */

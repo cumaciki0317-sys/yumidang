@@ -1,5 +1,7 @@
 # 민규 서비스 API 런타임 계약
 
+현재 담당(2026-10-14): 이 서버 계약과 BE·AI 구현은 민규 전담이며 프론트 클라이언트 소비·UX/UI는 종현, QA는 공통(민규·종현·유미), UT는 유미다. 아래 과거 구현자·검사·인계 증거는 당시 기록으로 보존한다.
+
 ## 현재 정책 목표와 기존 인터페이스
 
 현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
@@ -25,7 +27,7 @@ GET `/profiles/:id/reviews`의 `{reviews,praisesTop5,nextCursor}`에 `completedC
 ## HTTP 및 인증
 
 - Supabase 경로는 `/functions/v1/service-api`이며 직접 실행용 `/service-api`도 지원한다. 아래 표의 경로를 뒤에 붙인다. 임의 suffix, 인코딩 우회, 알 수 없는 경로는 404다.
-- 공개 검색·행사 및 정확한 GET `/posts/:id`는 선택 인증을 사용한다. Authorization 헤더가 아예 없을 때만 익명이며 헤더가 있으면 실제 Auth 검증을 거친 원래 사용자 JWT를 사용한다. 그 외 사용자 경로는 `Authorization: Bearer <검증되는 사용자 access token>`이 필요하다. 상세는 아래 공개 상세 계약, 검색은 종현 코어와 민규 HTTP 연결 계약을 따른다.
+- 공개 검색·행사 및 정확한 GET `/posts/:id`는 선택 인증을 사용한다. Authorization 헤더가 아예 없을 때만 익명이며 헤더가 있으면 실제 Auth 검증을 거친 원래 사용자 JWT를 사용한다. 그 외 사용자 경로는 `Authorization: Bearer <검증되는 사용자 access token>`이 필요하다. 상세는 아래 공개 상세 계약, 검색은 민규 담당 코어·HTTP 연결 계약을 따른다.
 - 내부 유지보수는 별도 내부 secret을 Bearer로 받는다. 사용자 JWT·서비스 역할 키 자체를 내부 비밀로 대신 사용하지 않는다. 사용자 경로가 실패해도 내부 클라이언트로 재시도하지 않는다.
 - 허용된 정확한 Origin만 CORS 응답을 받는다. preflight 허용 헤더는 `authorization, content-type, apikey`다. apikey 자체는 사용자 인증이 아니다.
 - POST는 `application/json`과 객체 본문을 사용한다. 인자가 없는 POST도 `{}`를 보낸다. 초과 필드·타입 불일치·중복 query는 400이다. 크기 한도는 `MAX_REQUEST_BYTES` 설정값이다.
@@ -121,7 +123,7 @@ POST `/conversations/:id/leave`는 UUID 신청 ID와 정확한 JSON `{}`만 받�
 
 두 경로는 기존 내부 secret 인증과 service-role client를 사용한다. 공개/사용자 RPC 허용 목록에는 추가하지 않는다. `snapshot`은 정확히 `{mode,requestedPeriod:{start,end},collectedAt,items}`이며 순위 항목은 `{rank,sourceId,title,genre,performancePeriodText,placeName,region}`다. 항목1~10개·연속 순위·ID 중복 없음·실제 달력/기간·뮤지컬 모드의 장르 등은 DB가 검증한다. 운영 수집 기간/빈도는 이 기술 검사로 확정하지 않는다.
 
-저장 결과는 `{status:"saved"|"stale",itemCount,deduplicated}`다. 같은 수집 시각·같은 본문은 중복 안전, 같은 시각·다른 본문은409, 오래된 수집본은 최신 내용을 유지한다. 조회는 `{status:"available"|"unavailable",mode,source:"kopis",requestedPeriod,responsePeriod:null,periodVerification:"requested_only",collectedAt,items}`이며 자료 없으면 기간/수집시각은null, 항목은빈 배열이다. upstream 응답 기간 검증 성공으로 해석하지 않는다. 공개 Top10·종현 수집 어댑터·취소/종료 순위 자료의 공개 정책은 남아 있다.
+저장 결과는 `{status:"saved"|"stale",itemCount,deduplicated}`다. 같은 수집 시각·같은 본문은 중복 안전, 같은 시각·다른 본문은409, 오래된 수집본은 최신 내용을 유지한다. 조회는 `{status:"available"|"unavailable",mode,source:"kopis",requestedPeriod,responsePeriod:null,periodVerification:"requested_only",collectedAt,items}`이며 자료 없으면 기간/수집시각은null, 항목은빈 배열이다. upstream 응답 기간 검증 성공으로 해석하지 않는다. 공개 Top10·민규 담당 수집 어댑터·취소/종료 순위 자료의 공개 정책은 남아 있다.
 
 ### 확정 후 일정 변경·취소 연결
 
@@ -179,7 +181,7 @@ rating은 정수1..5, experience는 `positive|neutral|negative`, comment는 선�
 
 GET `/events`와 `/events/filters`는 공고 검색과 동일한 선택 인증을 사용한다. Authorization 헤더가 없을 때만 익명 client, 있으면 Auth `/user` 검증 후 같은 사용자 JWT client를 사용한다. 빈·위조·만료·서버 키 인증 실패를 익명으로 강등하지 않는다. 정확한 function prefix·GET·허용 Origin·no-store·공통 envelope를 유지한다. POST나 DELETE는405, 알 수 없는/중복 query는400이다.
 
-| GET `/events` query | HTTP → 종현 행사 저장소 입력 |
+| GET `/events` query | HTTP → 민규 담당 행사 저장소 입력 |
 |---|---|
 | mode | `overlapping|new_this_week|post_selection`, 생략 시 확정 정책 `new_this_week` |
 | periodStart, periodEnd | YYYY-MM-DD 두 날짜를 함께 전달, `period:{start,end}`. 양 끝 날짜 포함·KST 날짜 검증은 기존 저장소 |
@@ -231,7 +233,7 @@ Node import 검사와 Deno 타입 검사, standalone Deno handler·로컬 Supaba
 1. 기존 정확한 경로·메서드·CORS 검사.
 2. Authorization 헤더가 없으면 익명 client, 있으면 실제 Auth 검증 후 사용자 client를 만든다. 빈 값·위조·만료·서비스 키 등 실패를 익명으로 바꾸지 않는다.
 3. 중복/알 수 없는 query와 caller/userId 주입을 거절하고 HTTP 문자열을 검색 입력으로 변환한다.
-4. 종현 executor가 조건 정규화·커서·공개 투영·repository를 담당한다. HTTP 코드에 SQL 호출·정렬·페이지 나누기를 복제하지 않는다.
+4. 민규 담당 executor가 조건 정규화·커서·공개 투영·repository를 담당한다. HTTP 코드에 SQL 호출·정렬·페이지 나누기를 복제하지 않는다.
 5. 기존 `{data,requestId}`/`{error,requestId}`·no-store·CORS를 적용한다. 조회 결과는 `data:{status,posts,nextCursor}`다.
 
 | query | HTTP 처리 |

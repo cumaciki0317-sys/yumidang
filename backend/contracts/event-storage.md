@@ -1,5 +1,7 @@
 # 행사 저장·페이지 조회·회원 공개 프로필 DB 계약
 
+현재 담당(2026-10-14): 이 서버 계약과 BE·AI 구현은 민규 전담이며 프론트 클라이언트 소비·UX/UI는 종현, QA는 공통(민규·종현·유미), UT는 유미다. 아래 과거 구현자·검사·인계 증거는 당시 기록으로 보존한다.
+
 현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
 
 기준 인터페이스는 `_shared/integrations/events/port.ts`의 SourceEventRecord/StoredEventRecord와 기존 normalize·repository·event-service다. 현재 저장·페이지·필터 RPC를 재사용하고 공급사별 실제 연결·자료 범위·UI/AI 연결을 검증한다.
@@ -23,7 +25,7 @@ rpc("upsert_source_events_v1", { p_events: SourceEventRecord[] })
 // -> { savedCount: number }
 ```
 
-- 실행 권한은 `service_role`에만 부여한다. 일반 회원·비로그인은 실행할 수 없다. 내부 HTTP 호출자 검증은 종현 event-sync 진입점에서 별도로 수행해야 하며 이 RPC를 일반 요청에 노출하지 않는다.
+- 실행 권한은 `service_role`에만 부여한다. 일반 회원·비로그인은 실행할 수 없다. 내부 HTTP 호출자 검증은 민규 담당 event-sync 진입점에서 별도로 수행해야 하며 이 RPC를 일반 요청에 노출하지 않는다.
 - `private.source_events`에 `id: uuid`, `provider`, `source_id`, 비교용 `collected_at`, 검증된 공개 데이터 `record: jsonb`를 저장한다. `provider + sourceId`가 유일 식별자다. 다른 제공처의 유사 행사를 자동 병합하지 않는다.
 - 최초 저장 시 생성한 UUID를 모든 갱신에서 유지한다. 더 늦은 `collectedAt`만 갱신한다. 같은 시각 또는 과거 입력은 저장된 값을 덮지 않으며 `savedCount`에 포함하지 않는다. 같은 시각의 상이한 입력은 먼저 저장한 내용을 유지한다. 따라서 `savedCount`는 입력 개수나 처리한 전체 개수가 아닌 실제 삽입·최신 갱신한 수다.
 - 한 배치에 같은 제공처·ID가 반복되면 SQLSTATE `22023`으로 배치 전체를 거절한다. 실행 순서로 하나를 임의 선택하지 않는다. 하나라도 잘못된 행사이면 전체 배치를 저장하지 않는다. 빈 배열은 `{ "savedCount": 0 }`이다.
@@ -66,7 +68,7 @@ rpc("list_event_candidates_v1", {
 - 비로그인·회원·내부 서비스 역할 모두 호출할 수 있다. 출처에서 정규화한 **공개 행사 정보**만 반환하며 공고의 비공개 만남 주소와 섞지 않는다.
 - 반환 배열의 각 원소는 저장한 `SourceEventRecord`에 안정적인 UUID `id`를 추가한 형태다. `record`, `source_id`, 내부 비교 컬럼 같은 DB 구조는 반환하지 않는다.
 - `region`·`category`는 정확히 일치하는 값만 사전 선택한다. SQL `null` 또는 인수 생략은 제한 없음이다. 빈 문자열은 유효한 필터가 아니다. 원천 값이 null이면 특정 필터와 일치하지 않는다. 지역·분류를 추측하거나 재매핑하지 않는다.
-- 취소 행사는 반환하지 않는다. 과거·진행 중·예정 행사는 모두 후보에 포함한다. 시간·기간·검색어·신규/일반/작성 선택 모드·사용자 표시 순서는 기존 종현 `queryStoredEvents` → `selectEvents`에서 처리한다. DB 배열의 UUID순은 결정적인 전송 순서이며 상품 정렬 정책이 아니다.
+- 취소 행사는 반환하지 않는다. 과거·진행 중·예정 행사는 모두 후보에 포함한다. 시간·기간·검색어·신규/일반/작성 선택 모드·사용자 표시 순서는 기존 `queryStoredEvents` → `selectEvents`에서 처리한다. DB 배열의 UUID순은 결정적인 전송 순서이며 상품 정렬 정책이 아니다.
 - 사전 필터 적용 후 후보가 1,000개를 넘으면 SQLSTATE `54000`, `EVENT_CANDIDATE_LIMIT_EXCEEDED`로 실패한다. 1,000개만 잘라 성공으로 반환하지 않는다. 후보 제한은 임시 안전 경계이며 생산 환경에서는 기존 모드·정렬과 동일한 서버 페이지네이션 계약이 후속으로 필요하다.
 - 결과 없음은 `[]`이다. 후보 목록은 같은 statement snapshot에서 읽는다.
 
@@ -93,7 +95,7 @@ rpc("list_event_candidates_v1", {
 - `precision:"instant"`는 `startsAt`, `endsAt`를 사용하며 `endsAt > startsAt`이다. `Z` 또는 숫자 offset이 필수이고 `-00:00`은 알려지지 않은 시간대로 거절한다. 초·분·시·offset 범위와 실제 날짜를 확인한다. 원문 시각과 offset은 그대로 반환한다.
 - date·instant 필드를 동시에 넣거나 다른 precision, 잘못된 윤년 날짜, 역전 기간, 누락된 비용, 잘못된 admission 추가 필드는 거절한다. `unknown` 비용을 무료로 바꾸지 않는다. 행사 입장료와 동행 비용을 합치지 않는다.
 
-## 권한·실패·종현 연결
+## 권한·실패·서버 연결
 
 직접 테이블 접근은 `anon`, `authenticated`, `service_role` 모두 revoke하며 RLS를 활성화하고 직접 접근 정책을 두지 않는다. 두 RPC는 고정 빈 `search_path`의 SECURITY DEFINER로 필요한 작업만 수행한다. 내부 검사 함수는 외부 역할에서 실행할 수 없다.
 
@@ -104,7 +106,7 @@ rpc("list_event_candidates_v1", {
 | 동일·과거 collectedAt | 정상 응답, 해당 항목 savedCount 미포함, 기존 UUID·내용 유지 |
 | 사전 필터 후 공개 후보 1,001개 이상 | `54000`, `EVENT_CANDIDATE_LIMIT_EXCEEDED`, 부분 목록 없음 |
 
-종현의 createRpcEventRepository(db)는 신규 upsert_events/list_public_events에 연결하며 createRpcEventFilterRepository(db)는 list_event_filter_values에 연결한다. v1 후보 방식은 이전 어댑터 호환용이다. 공통 client·서비스 HTTP의 실제 연결은 담당자가 현재 소스와 대조한다. 내부 writer에는 검증된 내부 호출 문맥의 service client를, 공개 reader에는 역할에 맞는 공개/회원 client를 사용한다.
+민규 담당 createRpcEventRepository(db)는 신규 upsert_events/list_public_events에 연결하며 createRpcEventFilterRepository(db)는 list_event_filter_values에 연결한다. v1 후보 방식은 이전 어댑터 호환용이다. 공통 client·서비스 HTTP의 실제 연결은 담당자가 현재 소스와 대조한다. 내부 writer에는 검증된 내부 호출 문맥의 service client를, 공개 reader에는 역할에 맞는 공개/회원 client를 사용한다.
 
 공개/회원 client는 현재 공개 행사·필터·호환 후보 RPC를, 내부 client는 저장 RPC를 허용한다. 정확한 allowlist는 auth-runtime 계약과 현재 소스로 대조한다. 내부 저장은 requireInternalCaller 성공 후 내부 client로 호출한다.
 
@@ -120,7 +122,7 @@ mode=overlapping은 선택 기간과 겹치는 행사(과거 포함), new_this_w
 
 제품의 ‘진행 중 행사도 포함’은 ongoingOnly=true가 아니다. 기존 mode=overlapping·주간 기간은 장기 진행 행사를 포함할 수 있지만 이미 종료된 이번 주 행사도 포함할 수 있다. 현재 목표인 신규 미종료+이전 주 시작 미종료에 맞도록 조회 계약을 변경·검증하고 과거 기간 조회는 별도 유지한다. ongoingOnly=true는 기존 기술 계약인 현재 진행중만 필터다. 화면의 주간 날짜 계산·옵션 연결은 별도 UI 작업이며 SQL 기능 존재를 UI 검증 성공으로 설명하지 않는다.
 
-정렬은 진행중(최근 시작) → 예정(빠른 시작) → 종료(최근 종료), 동률 id다. SQL keyset 커서는 rank와 부호 있는 epoch-second key 문자열·UUID id이며 시간 경과에 따라 그룹이 바뀌면 페이지 간 누락·중복 가능성이 있어 snapshot 커서로 주장하지 않는다. 종현 repository는 필터 조건에 결합한 불투명 커서로 변환한다. 날짜/시각은 원래 precision을 유지하고 ISO 출력은 UTC millisecond 형식이다. items는 기존 EventRecord+id/state이며 API주소·상세설명·연락처·좌표를 추가하지 않는다.
+정렬은 진행중(최근 시작) → 예정(빠른 시작) → 종료(최근 종료), 동률 id다. SQL keyset 커서는 rank와 부호 있는 epoch-second key 문자열·UUID id이며 시간 경과에 따라 그룹이 바뀌면 페이지 간 누락·중복 가능성이 있어 snapshot 커서로 주장하지 않는다. 민규 담당 repository는 필터 조건에 결합한 불투명 커서로 변환한다. 날짜/시각은 원래 precision을 유지하고 ISO 출력은 UTC millisecond 형식이다. items는 기존 EventRecord+id/state이며 API주소·상세설명·연락처·좌표를 추가하지 않는다.
 
 list_event_filter_values()는 {regions:[{provider,value,count}],categories:[{provider,value,count}]}다. 신규 reader가 지원하는 provider 형식의 active 행사만 집계하고 null값/취소행사만 가진값을 제외한다. 값을 추정·지역매핑·공급사별합병하지 않는다. provider/value순 정렬이며 count는 실제 행 수다. 공개 RPC와 같은 역할에 허용한다.
 

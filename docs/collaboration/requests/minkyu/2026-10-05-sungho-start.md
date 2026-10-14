@@ -1,3 +1,5 @@
+> 현재 담당은 [2026-10-14 재배정](2026-10-14-role-reassignment.md)을 따른다. 아래는 당시 인계·검증 기록이며 현재 실행 허가가 아니다. BE·AI는 민규, FE·UX/UI·앱 연동은 종현, QA는 공통, UT는 유미다. 성호 시작 및 이전 종현 백엔드 자동 재개는 중단한다.
+
 # 2026-10-09 권한 확대 — 최신 안내
 
 사용자 승인으로 성호는 웹 frontend 전체와 모바일 src/screens·src/app·src/components·src/ui.tsx·src/presentation, design·assets 및 docs/planning/design을 직접 편집한다. RemoteMemberScreens.tsx도 성호 담당이다. 아래 2026-10-05의 실제 화면 편집 금지는 이번 배정 경로에 적용하지 않는다. 인증·API·세션·상태·서비스 연결 파일과 모바일 패키지·환경·공통 설정, 백엔드는 기존 담당을 유지한다. 화면의 정책·공개 권한 조건과 기존 변경 내용을 보존한다.

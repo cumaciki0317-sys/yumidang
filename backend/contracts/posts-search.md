@@ -1,5 +1,7 @@
 # 공고 작성·공개 데이터 계약
 
+현재 담당(2026-10-14): 이 서버 계약과 BE·AI 구현은 민규 전담이며 프론트 클라이언트 소비·UX/UI는 종현, QA는 공통(민규·종현·유미), UT는 유미다. 아래 과거 구현자·검사·인계 증거는 당시 기록으로 보존한다.
+
 현재 기준은 [정책.md](../../정책.md)다. 아래에서 현재 정책 목표와 기존 기술 인터페이스를 구분한다. 이번 문서 동기화는 서버 코드·SQL·설정·DB·외부 호출·배포를 변경하거나 검증하지 않았다.
 
 ## 작성·등록
@@ -36,14 +38,14 @@
 
 공고에는 `source_event_id`만 저장한다. `get_service_post`는 `eventId`와 현재 canonical 자료의 `linkedEvent`를 반환하며 연결 없으면 둘 다 `null`이다. `linkedEvent`에는 행사 식별자·제목·공개 장소/주소·일정·`sourceStatus`·`state`가 포함된다. 표시를 과거 snapshot으로 고정하지 않는다. 행사 공급자 갱신은 공고의 등록 입력·동행 일정·`updatedAt`·동의 지문을 변경하지 않는다. 사용자가 연결 UUID를 교체/해제/새로 선택하면 기존 동의를 무효화하고 새 버전으로 다시 동의해야 한다. 동의 지문에는 선택 UUID만 추가하며 공급자의 최신 필드를 넣지 않는다.
 
-연결 행사명은 기존 `search_public_posts_v2`의 검색 일치에 포함한다. 현재 공개 검색 카드는 `id,title,authorDisplayName,publicArea,startsAt,endsAt,cost,state,canApply` 9개 필드를 유지한다. 행사 정보를 카드에 추가하는 종현 decoder·AI 연결은 별도 후속이다. 공고의 비공개 실명·정확한 장소 권한은 행사 공개 정보와 독립이며 확정/취소 관계 권한을 유지한다.
+연결 행사명은 기존 `search_public_posts_v2`의 검색 일치에 포함한다. 현재 공개 검색 카드는 `id,title,authorDisplayName,publicArea,startsAt,endsAt,cost,state,canApply` 9개 필드를 유지한다. 행사 정보를 카드에 추가하는 서버 decoder·AI 연결(민규 담당)은 별도 후속이다. 공고의 비공개 실명·정확한 장소 권한은 행사 공개 정보와 독립이며 확정/취소 관계 권한을 유지한다.
 
 행사 일정 겹침·종료 선택 차단과 현재 정책의 전체 입력 제약은 실제 코드·DB·화면에서 검증한다. 문서 정리를 외부 수집·네이버·사진·운영 연결 성공으로 보고하지 않는다.
 
 
 ## 최신 공개 검색 HTTP 연결 (2026-10-05)
 
-`GET /service-api/posts`와 `GET /functions/v1/service-api/posts`는 종현의 현재 검색 코어를 호출한다. 선택 인증으로 익명은 anon 자격 증명, 회원은 Auth에서 검증한 동일 JWT를 RPC에 전달하며 서비스 키를 공개 검색에 사용하지 않는다.
+`GET /service-api/posts`와 `GET /functions/v1/service-api/posts`는 민규 담당 검색 코어를 호출한다. 선택 인증으로 익명은 anon 자격 증명, 회원은 Auth에서 검증한 동일 JWT를 RPC에 전달하며 서비스 키를 공개 검색에 사용하지 않는다.
 
 - 분류는 `POST_CATEGORIES`의 16개, `region`은 `POST_REGIONS`의 정식 17개 시도 명칭을 받는다. 생략하면 전체이며 문자열 `전체`와 시도 약칭은 거절한다.
 - 회원 나이는 `ageMin=19&ageMax=99`처럼 양쪽 정수로 입력한다. 19~99 범위에서 최소가 최대 이하여야 한다. `authorAge=all` 또는 나이 키 생략은 상한 없는 전체이며 숫자 키와 함께 입력할 수 없다. 구형 `20s/30s/40plus` 값은 거절한다.

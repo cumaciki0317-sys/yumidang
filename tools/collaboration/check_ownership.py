@@ -16,7 +16,10 @@ import sys
 
 
 MANIFEST = "backend/ownership.json"
-ACTORS = ("minkyu", "jonghyun", "sungho")
+ACTORS = ("minkyu", "jonghyun", "yumi")
+# HEAD 정책의 과거 소유자는 읽을 수 있어야 하며 새 작업자로 활성화하지 않는다.
+POLICY_OWNERS = (*ACTORS, "sungho")
+EXPLICIT_PATH_ACTORS = ("yumi", "sungho")
 
 
 class CheckError(Exception):
@@ -70,7 +73,7 @@ def validate_policy(data):
     validated = []
     seen = set()
     for rule in rules:
-        if not isinstance(rule, dict) or rule.get("owner") not in ACTORS:
+        if not isinstance(rule, dict) or rule.get("owner") not in POLICY_OWNERS:
             raise CheckError(f"유효하지 않은 담당 규칙: {rule!r}")
         path = normalize_path(rule.get("path"), allow_prefix=True)
         if path in seen:
@@ -132,7 +135,7 @@ def parse_name_status(raw):
 def violations(policy, actor, paths):
     denied = []
     for path in dict.fromkeys(paths):
-        if actor != "sungho" and not any(matches(path, pattern) for pattern in policy["protected_paths"]):
+        if actor not in EXPLICIT_PATH_ACTORS and not any(matches(path, pattern) for pattern in policy["protected_paths"]):
             continue
         rules = [rule for rule in policy["rules"] if matches(path, rule["path"])]
         owner = max(rules, key=lambda rule: len(rule["path"]))["owner"] if rules else None

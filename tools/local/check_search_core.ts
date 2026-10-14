@@ -1,4 +1,4 @@
-/** 민규담당: 종현 검색 코어와 v2 DB 계약의 오프라인 연결 준비 검사. DB/HTTP 성공을 뜻하지 않는다. */
+/** 민규담당: 검색 코어와 v2 DB 계약의 오프라인 연결 준비 검사. DB/HTTP 성공을 뜻하지 않는다. */
 import process from "node:process";
 import { normalizePublicPostListInput } from "../../backend/supabase/functions/_shared/contracts/search.ts";
 import type { PublicPostListInput } from "../../backend/supabase/functions/_shared/contracts/search.ts";

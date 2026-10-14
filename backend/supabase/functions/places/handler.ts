@@ -1,5 +1,5 @@
 /**
- * 담당: 종현담당. 공고 작성용 장소 검색 HTTP 처리.
+ * 담당: 민규담당. 공고 작성용 장소 검색 HTTP 처리.
  * GET /functions/v1/places(또는 /places)?query=...&page=N. 로그인 회원만 사용한다.
  * 응답은 PlaceLookupResult(source/sourceId/placeName/address/roadAddress, nextPage)만 반환한다.
  * 좌표·반경·거리순·전화번호 입력/출력이 없다. 검색어·키·공급사 원문을 로그·오류에 넣지 않는다.

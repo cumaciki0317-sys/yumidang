@@ -1,5 +1,5 @@
 /**
- * 종현담당: AI 탐색 HTTP 처리. POST /functions/v1/ai-chat, /ai-chat.
+ * 민규담당: AI 탐색 HTTP 처리. POST /functions/v1/ai-chat, /ai-chat.
  * 로그인 회원만 사용한다. 인증 주체는 공통 인증(requirePrincipal)만 인정하고 본문의 userId·권한 주장은 받지 않는다.
  * 대화 본문은 요청 메모리에서만 사용하며 로그·오류·응답 헤더에 남기지 않는다(이 모듈은 로그를 쓰지 않는다).
  * 모델이 준비되지 않았거나(보관 검토·지출 근거·설정 누락) 한도 설정이 없으면 검색을 호출하지 않고 200 unavailable로 알린다.

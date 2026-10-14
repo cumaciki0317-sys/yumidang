@@ -4,9 +4,9 @@ set -eu
 repo_root=$(git rev-parse --show-toplevel)
 actor=$(git config --local --get yumidang.actor || true)
 case "$actor" in
-  minkyu|jonghyun|sungho) ;;
+  minkyu|jonghyun|yumi) ;;
   *)
-    echo '작업자 설정 필요: git config --local yumidang.actor minkyu 또는 jonghyun 또는 sungho' >&2
+    echo '현재 작업자 설정 필요: minkyu 또는 jonghyun 또는 yumi. 본인 별도 clone에서 setup_actor.py를 사용하세요.' >&2
     exit 1
     ;;
 esac

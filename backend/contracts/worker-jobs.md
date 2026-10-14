@@ -1,5 +1,7 @@
 # 내부 작업 큐·AI 예산 RPC — 민규 구현
 
+현재 담당(2026-10-14): 이 서버 계약과 BE·AI 구현은 민규 전담이며 프론트 클라이언트 소비·UX/UI는 종현, QA는 공통(민규·종현·유미), UT는 유미다. 아래 과거 구현자·검사·인계 증거는 당시 기록으로 보존한다.
+
 ## 2026-10-08 공통 포트 후속 상태
 
 사용자 확정: 실행기의 최대20은 같은 전역 실행의 고유 queue jobId 수이며 동일 작업의 첨부·metadata·ACK·완료는 추가 차감하지 않는다. helpful/terminal 별도 유지관리 배정과 RPC·Storage 호출 횟수는 구분한다. SQL100은 자기 토큰 일정과 terminal 일정 조회를 추가하고 기존 ABI를 보존한다. SQL101은 기본 비활성 최소 intent 포트로, 제품 journal·원격 종결·자동 재전송을 구현했다고 표시하지 않는다. 최신 범위·실제 TLS/HTTP 검증·활성화 전 조건은 [공통 실행기 인계](../../docs/collaboration/requests/minkyu/2026-10-08-common-runtime.md)를 따른다. 아래 날짜별 기록과 별도 요약 batch 한도는 구분한다.
@@ -111,11 +113,11 @@ RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/le
 
 ## 전역 실행과 개별 작업 점유 결합 (2026-10-05)
 
-`20261005003000_worker_job_fences.sql`은 전역 실행 singleton과 개별 작업 claim을 결합한다. `acquire_worker_run`으로 받은 전역 토큰을 종현 `createRpcJobRepository(db,{workerRunToken})`에 전달한다. 기존 옵션 생략은 TypeScript 포트에 남아 있지만 실제 DB의 기존 미결합 claim·complete·retry·yield·fail·supersede 실행 권한은 PUBLIC/anon/authenticated/service_role에서 회수했으므로 우회할 수 없다. 등록·maintenance의 `enqueue_job`은 기존 인수와 권한을 유지한다.
+`20261005003000_worker_job_fences.sql`은 전역 실행 singleton과 개별 작업 claim을 결합한다. `acquire_worker_run`으로 받은 전역 토큰을 민규 담당 `createRpcJobRepository(db,{workerRunToken})`에 전달한다. 기존 옵션 생략은 TypeScript 포트에 남아 있지만 실제 DB의 기존 미결합 claim·complete·retry·yield·fail·supersede 실행 권한은 PUBLIC/anon/authenticated/service_role에서 회수했으므로 우회할 수 없다. 등록·maintenance의 `enqueue_job`은 기존 인수와 권한을 유지한다.
 
 신규 6개 RPC는 표의 마지막 `p_worker_run_token uuid` 인수를 요구하며 기존 반환 객체를 그대로 유지한다. 전역 singleton을 `FOR UPDATE`로 잠근 뒤 DB `clock_timestamp()`의 현재 토큰·만료를 확인한다. claim 성공 때 비공개 `worker_job_run_fences`에 작업 UUID·개별 점유 UUID·전역 점유 UUID만 저장한다. 모든 전이는 세 값이 정확히 일치해야 하며 전역 점유와 개별 running lease가 모두 유효해야 한다. 전역 토큰 교체만으로 이전 실행이 claim한 작업을 이어받을 수 없다. 개별 작업 lease가 만료된 뒤 재claim하면 새로운 개별 토큰과 현재 전역 토큰으로 매핑을 교체한다.
 
-전이 성공 시 매핑을 삭제하고 retry/yield 시에는 기존 중간 checkpoint를 보존한다. fail/supersede/complete의 checkpoint 삭제·실패 횟수와 원자적 상태 변경은 기존 소유자 전용 함수가 담당한다. 전역/개별 lease를 자동 연장하지 않는다. 잘못된 전역 토큰·매핑·만료는 SQLSTATE `40001`의 정형 `state_conflict`다. 종현 어댑터는 이를 `lease_lost`로 해석한다. 기존 함수에서 발생한 입력/개별 점유 오류 계약도 유지한다.
+전이 성공 시 매핑을 삭제하고 retry/yield 시에는 기존 중간 checkpoint를 보존한다. fail/supersede/complete의 checkpoint 삭제·실패 횟수와 원자적 상태 변경은 기존 소유자 전용 함수가 담당한다. 전역/개별 lease를 자동 연장하지 않는다. 잘못된 전역 토큰·매핑·만료는 SQLSTATE `40001`의 정형 `state_conflict`다. 민규 담당 어댑터는 이를 `lease_lost`로 해석한다. 기존 함수에서 발생한 입력/개별 점유 오류 계약도 유지한다.
 
 공통 helper는 `private.assert_current_worker_run(uuid)`와 `private.assert_current_worker_job(uuid,uuid,uuid)`이며 반환은 `void`다. 둘 다 호출 트랜잭션 끝까지 전역 행 잠금을 유지한다. 작업 helper는 매핑과 현재 job을 읽어 검증하며 job 행의 추가 잠금을 먼저 획득하지 않는다. 요약 RPC는 이후 기존 projection→job→checkpoint 잠금 순서로 작업을 다시 확인한다. 6개 전이 wrapper는 기존 개별 행 잠금·상태 변경 후 전역 시각을 재검사해 대기나 처리 중 전역 lease가 만료되면 변경 전체를 rollback한다. 다른 모델 예약·요약 wrapper에서도 의존 행 잠금 대기 뒤 helper를 재확인해야 한다.
 
@@ -140,7 +142,7 @@ RLS/직접 권한, 익명·회원 거절, service_role RPC, 잘못된 payload/le
 
 ## SQL102/103 원자 결과·큐 작업 수·복구 (2026-10-08)
 
-공통 `createWorkerAtomicRuntime`은 기존 RPC의 DB 변경과 결과 저장을 원자화한다. 같은 requestId·입력은 저장 결과를 반환하고 다른 입력은 충돌한다. 조회 결과·replayed 결과는 외부 DELETE 허가가 아니다. SQL101 observed_response는 종결 근거로 사용하지 않는다. 정확한 operation 입력·권한·종현 연결은 [독립 실행 포트 인계](../../docs/collaboration/requests/minkyu/2026-10-08-independent-runtime.md)에 고정한다.
+공통 `createWorkerAtomicRuntime`은 기존 RPC의 DB 변경과 결과 저장을 원자화한다. 같은 requestId·입력은 저장 결과를 반환하고 다른 입력은 충돌한다. 조회 결과·replayed 결과는 외부 DELETE 허가가 아니다. SQL101 observed_response는 종결 근거로 사용하지 않는다. 정확한 operation 입력·권한·민규 담당 서버 연결은 [독립 실행 포트 인계](../../docs/collaboration/requests/minkyu/2026-10-08-independent-runtime.md)에 고정한다.
 
 SQL102 공유20은 활성화 시 기존 supported claim 지점의 전역 token당 고유 queue jobId20개다. 동일 job·첨부·ACK는 다시 차감하지 않으며 빈 claim은 예약하지 않는다. 회원 정리 batch는 기존 별도 task 포트에 배정≤10·deadline·signal을 연결한 것이다. event/member 별도 저장소를 큐 슬롯과 통합했다고 설명하지 않는다. 제품 scheduler 연결과 회원 UNKNOWN 재시작 차단이 준비되지 않으면 운영 기능을 비활성으로 둔다.
 
