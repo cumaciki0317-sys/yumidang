@@ -25,7 +25,37 @@
     "tests/integration/sungho/",
     "tests/fixtures/sungho/",
     ".github/",
-    "docs/planning/design/"
+    "docs/planning/design/",
+    "정책.md",
+    "포텐스닷.md",
+    "260929_종현담당_PLAN.md",
+    "유미당_출시결정_보류사항_민규전달_20261005.md",
+    "docs/planning/requirements/",
+    "tests/frontend/",
+    "tests/mobile/",
+    "docs/planning/ut/",
+    "docs/collaboration/requests/yumi/",
+    "tests/functions/jonghyun/ai-result-state-service.test.mjs",
+    "tests/functions/jonghyun/mobile-avatar-service.test.ts",
+    "tests/functions/jonghyun/mobile-member-service.test.ts",
+    "tests/functions/jonghyun/mobile-policy.test.ts",
+    "tests/functions/jonghyun/mobile-service.test.ts",
+    "tests/functions/jonghyun/mobile-session.test.ts",
+    "tests/functions/jonghyun/mobile-web-session.test.ts",
+    "tests/functions/jonghyun/postcode-picker.test.ts",
+    "tests/functions/minkyu/member_message_read_consumer.test.ts",
+    "tests/functions/minkyu/member_report_hide_consumer.test.ts",
+    "tests/functions/minkyu/mobile_retirement_adapter.test.ts",
+    "tests/functions/minkyu/mobile_retirement_consumer.test.ts",
+    "tests/functions/minkyu/mobile_retirement_fixture.ts",
+    "tests/integration/jonghyun/20261008-followup-browser.mjs",
+    "tests/integration/jonghyun/20261008-independent-browser.mjs",
+    "tests/integration/jonghyun/mobile-ai-browser.mjs",
+    "tests/integration/jonghyun/mobile-browser.mjs",
+    "tests/integration/jonghyun/mobile-member-browser.mjs",
+    "tests/integration/jonghyun/mobile-member-writes-browser.mjs",
+    "tests/integration/jonghyun/mobile-service-browser.mjs",
+    "apps/mobile/src/domain/"
   ],
   "reassignments": [
     {
@@ -180,20 +210,344 @@
         "tools/local/run_database_tests.py",
         "tests/integration/jonghyun/isolated_ai_contracts.py"
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "from": "sungho/jonghyun/minkyu",
+      "to": "minkyu/jonghyun/yumi",
+      "authorization": "사용자: WBS 성호 담당 제거, FE·UX/UI 종현, QA 공통, UT 유미, BE 민규 전담 및 AI 민규; 프로젝트 전체 담당 파일 반영",
+      "scope": "BE·AI·검색·행사·예약 작업·서버 운영·DB·마이그레이션·환경·검증 도구는 민규, FE·UX/UI·웹·모바일 앱/API/세션 소비·빌드 연결은 종현, UT 문서·관찰 결과는 유미. QA는 팀 공동 책임이며 파일마다 한 명만 수정한다. 기존 이름이 든 경로·작성자·PASS·공급사 계정은 보존한다. 이전 백엔드100/J01~J09 및 성호 UI 배정의 현재 실행 권한을 대체하며 운영·커밋·푸시·실회원 HOLD 조건은 변경하지 않는다.",
+      "changes": [
+        {
+          "path": "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/functions/jonghyun/20261008-followup-safety.test.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/functions/jonghyun/j1-consumers.test.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/event-sync/index.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/event-sync/operations.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/background.mjs",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/runtime.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/review-summary-worker/handler.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/review-summary-worker/index.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": ".env.example",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tools/local/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/ai-chat/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/review-summary-worker/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/places/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/event-sync/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/scheduled-jobs/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/places/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/contracts/search.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/contracts/ai.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/search-service.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/event-service.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/search.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/events.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/observability/metrics.ts",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/contracts/ai-chat.md",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/contracts/review-summary.md",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/contracts/search.md",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "backend/supabase/seeds/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/database/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/functions/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/contracts/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/integration/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/ai/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "tests/fixtures/jonghyun/",
+          "from": "jonghyun",
+          "to": "minkyu"
+        },
+        {
+          "path": "apps/mobile/design/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/assets/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/src/presentation/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "frontend/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "frontend/src/assets/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "docs/collaboration/requests/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "tests/functions/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "tests/integration/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "tests/fixtures/sungho/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/src/screens/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/src/app/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/src/components/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/src/ui.tsx",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/src/presentation/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/design/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "apps/mobile/assets/",
+          "from": "sungho",
+          "to": "jonghyun"
+        },
+        {
+          "path": "docs/planning/design/",
+          "from": "sungho",
+          "to": "jonghyun"
+        }
+      ]
     }
   ],
   "rules": [
     {
       "path": "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/functions/jonghyun/20261008-followup-safety.test.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/functions/jonghyun/j1-consumers.test.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "apps/mobile/src/member-service.ts",
@@ -209,55 +563,55 @@
     },
     {
       "path": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/event-sync/index.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/event-sync/operations.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/background.mjs",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/runtime.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/review-summary-worker/handler.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/review-summary-worker/index.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "AGENTS.md",
@@ -281,7 +635,7 @@
     },
     {
       "path": ".env.example",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": ".gitignore",
@@ -297,7 +651,7 @@
     },
     {
       "path": "tools/local/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "docs/collaboration/",
@@ -305,91 +659,91 @@
     },
     {
       "path": "tests/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/ai-chat/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/review-summary-worker/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/places/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/event-sync/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/scheduled-jobs/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/ai/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/jobs/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/integrations/places/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/integrations/events/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/contracts/search.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/contracts/ai.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/services/search-service.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/services/event-service.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/search.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/events.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/functions/_shared/observability/metrics.ts",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/contracts/ai-chat.md",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/contracts/review-summary.md",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/contracts/search.md",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "backend/supabase/seeds/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "docs/collaboration/jonghyun.md",
@@ -401,27 +755,27 @@
     },
     {
       "path": "tests/database/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/functions/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/contracts/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/integration/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/ai/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/fixtures/jonghyun/",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "apps/mobile/",
@@ -429,39 +783,39 @@
     },
     {
       "path": "apps/mobile/design/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/assets/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/presentation/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "frontend/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "frontend/src/assets/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "docs/collaboration/requests/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/functions/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/integration/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/fixtures/sungho/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": ".github/",
@@ -469,35 +823,35 @@
     },
     {
       "path": "apps/mobile/src/screens/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/app/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/components/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/ui.tsx",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/src/presentation/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/design/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "apps/mobile/assets/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "docs/planning/design/",
-      "owner": "sungho"
+      "owner": "jonghyun"
     },
     {
       "path": "backend/ownership.json",
@@ -549,6 +903,126 @@
     },
     {
       "path": "tests/database/jonghyun/test_isolated_observer.py",
+      "owner": "minkyu"
+    },
+    {
+      "path": "정책.md",
+      "owner": "minkyu"
+    },
+    {
+      "path": "포텐스닷.md",
+      "owner": "minkyu"
+    },
+    {
+      "path": "260929_종현담당_PLAN.md",
+      "owner": "minkyu"
+    },
+    {
+      "path": "유미당_출시결정_보류사항_민규전달_20261005.md",
+      "owner": "minkyu"
+    },
+    {
+      "path": "docs/planning/requirements/",
+      "owner": "minkyu"
+    },
+    {
+      "path": "tests/frontend/",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/mobile/",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "docs/planning/ut/",
+      "owner": "yumi"
+    },
+    {
+      "path": "docs/collaboration/requests/yumi/",
+      "owner": "yumi"
+    },
+    {
+      "path": "tests/functions/jonghyun/ai-result-state-service.test.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-avatar-service.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-member-service.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-policy.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-service.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-session.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-web-session.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/jonghyun/postcode-picker.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/minkyu/member_message_read_consumer.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/minkyu/member_report_hide_consumer.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/minkyu/mobile_retirement_adapter.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/minkyu/mobile_retirement_consumer.test.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/functions/minkyu/mobile_retirement_fixture.ts",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/20261008-followup-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/20261008-independent-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/mobile-ai-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/mobile-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/mobile-member-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/mobile-member-writes-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "tests/integration/jonghyun/mobile-service-browser.mjs",
+      "owner": "jonghyun"
+    },
+    {
+      "path": "apps/mobile/src/domain/",
       "owner": "minkyu"
     }
   ]
