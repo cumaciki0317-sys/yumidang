@@ -123,6 +123,23 @@ class IsolatedRunnerTests(unittest.TestCase):
                 self.assertIsNone(error.execution_line)
                 self.assertNotIn("SECRET", str(error))
 
+    def test_approved_native_pair_keeps_separate_rollback_payloads_and_rejects_partial_pair(self):
+        helper = "create function pg_temp.pool_failure(x text) returns void language plpgsql as $$begin null;end;$$;"
+        payload = {"ai_atomic_requests.sql": "begin;select 'atomic';rollback;",
+                   "ai_account_budget.sql": helper,
+                   "ai_account_scopes.sql": "select pg_temp.pool_failure('scope');",
+                   "current_summary_fences.sql": "begin;select 'summary';rollback;"}
+        approved = {name: (ROOT / "tests/database/jonghyun" / name).read_text()
+                    for name in ("ai_result_state.sql", "operator_receipts_retirement.sql")}
+        cases = dict(runner.current_ai_cases({**payload, **approved}))
+        for name, statement in approved.items():
+            self.assertEqual(cases[name.removesuffix(".sql")], statement)
+        for partial in [{"ai_result_state.sql": approved["ai_result_state.sql"]},
+                        {"operator_receipts_retirement.sql": approved["operator_receipts_retirement.sql"]},
+                        {**approved, "ai_result_state.sql": "begin; select 'no rollback';"}]:
+            with self.subTest(partial=list(partial)), self.assertRaises(ValueError):
+                runner.current_ai_cases({**payload, **partial})
+
 
 if __name__ == "__main__":
     unittest.main()

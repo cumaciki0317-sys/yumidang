@@ -5,11 +5,15 @@
 Node의 임의 SQL이나 JSON 승인 flag는 받지 않는다. 실제 실행은 Root가 검토·커밋한 packet만 받는다.
 """
 import argparse
+import ast
+import base64
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
+from datetime import datetime
 import re
 import secrets
 import selectors
@@ -17,6 +21,11 @@ import subprocess
 import sys
 import time
 import uuid
+import urllib.error
+import urllib.request
+
+# 기존 실제 Storage 책임 fixture의 1x1 JPEG. 회원 사진·외부 파일을 읽지 않는다.
+COMPLETION_JPEG = base64.b64decode('/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAb/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q==')
 
 REPO = Path(__file__).resolve().parents[3]
 CALLER = Path(__file__).resolve()
@@ -32,6 +41,11 @@ METHOD_ARGS = {
     'prepareRetirement': ('userId',), 'inspectRetirement': ('userId', 'withdrawalId'),
     'cleanupRetirement': ('userId', 'withdrawalId'),
 }
+COMPLETED_METHOD_ARGS = {
+    'prepareCompletedRetirement': ('userId',),
+    'inspectCompletedRetirement': ('userId', 'withdrawalId'),
+    'cleanupCompletedRetirement': ('userId', 'withdrawalId'),
+}
 MAX_FRAME = 2 * 1024 * 1024
 MAINTENANCE_SIGNATURES = (
     'public.purge_ai_feedback_scoped(uuid,uuid,integer)',
@@ -44,8 +58,21 @@ RETIREMENT_SIGNATURES = (
     'public.record_member_cleanup_delete_ack(uuid,uuid,uuid,uuid,text)',
     'public.complete_member_cleanup_task(uuid,uuid,uuid,uuid,text)',
 )
+COMPLETION_SIGNATURES = (*RETIREMENT_SIGNATURES,
+    'public.begin_member_cleanup_delete(uuid,uuid,uuid,uuid)',
+    'public.acquire_worker_run(integer,uuid)', 'public.release_worker_run(uuid)',
+    'public.read_worker_run_budget(uuid)',
+    'public.prepare_queue_invocation(uuid,uuid,text,integer,integer)',
+    'public.claim_queue_invocation_dispatch(uuid,uuid,text,integer,integer)',
+    'public.get_queue_invocation(uuid)', 'public.mark_queue_invocation_unknown(uuid)',
+    'public.complete_queue_invocation(uuid)',
+    'public.begin_member_cleanup_reconcile(uuid,uuid,uuid,uuid)',
+    'public.get_member_cleanup_reconcile(uuid)', 'public.finish_member_cleanup_reconcile(uuid,text)',
+    'public.read_member_cleanup_unknown_invocations(uuid,integer)',
+)
 CONTROL_TABLES = {'atomic': 'worker_runtime_atomic_control', 'feedback': 'ai_feedback_maintenance_control',
-                  'retirement': 'member_retirement_receipt_control', 'cleanup': 'member_cleanup_guard'}
+                  'retirement': 'member_retirement_receipt_control', 'cleanup': 'member_cleanup_guard',
+                  'invocation': 'worker_invocation_control'}
 
 
 def require(value, code):
@@ -78,6 +105,13 @@ def digest(value):
 
 def is_sha(value):
     return isinstance(value, str) and re.fullmatch('[a-f0-9]{64}', value) is not None
+
+
+def is_instant(value):
+    try:
+        return type(value) is str and datetime.fromisoformat(value.replace('Z', '+00:00')).tzinfo is not None
+    except (ValueError, TypeError):
+        return False
 
 
 def uid(value):
@@ -120,6 +154,75 @@ def foreign_state_unchanged(before, after, before_owned, after_owned):
             == subtract_owned_bags(after['rows'], after_owned), 'FOREIGN_ROW_CHANGED')
 
 
+def validate_storage_creation(receipt, original, owned, protected, root, target, head, delta):
+    """생성 전후 원 관측을 대조한다. 현재 inspect 또는 created flag만 받지 않는다."""
+    fields = {'version', 'scenario', 'head', 'producerPath', 'producerSha256', 'preparedRoot', 'project', 'context', 'dockerHost',
+              'originalCreationReceiptPath', 'originalCreationReceiptSha256', 'ownedContainersSha256', 'storage'}
+    original_fields = {'version', 'scenario', 'head', 'producerPath', 'producerSha256', 'preparedRoot', 'project', 'context', 'dockerHost',
+                       'intentBeforeSha256', 'protectedBaselineSha256', 'command', 'cli', 'commandExit', 'commandStdoutSha256', 'commandStderrSha256', 'before', 'after', 'owned'}
+    require(type(receipt) is dict and set(receipt) == fields and type(receipt['version']) is int and receipt['version'] == 1
+        and receipt['scenario'] == 'OWNED_STORAGE_CREATION_V1', 'STORAGE_CREATION_SHAPE')
+    require(type(original) is dict and set(original) == original_fields and type(original['version']) is int and original['version'] == 1
+        and original['scenario'] == 'OWNED_RESOURCES_CREATION_V1' and type(original['commandExit']) is int and original['commandExit'] == 0,
+        'STORAGE_ORIGINAL_CREATION_SHAPE')
+    expected = {'head': head, 'producerPath': 'tools/local/start_owned_validation.py', 'preparedRoot': str(root),
+                'project': target['project'], 'context': target['context'], 'dockerHost': target['host']}
+    require(all(receipt[k] == v and original[k] == v for k, v in expected.items())
+        and receipt['producerSha256'] == original['producerSha256']
+        and receipt['originalCreationReceiptPath'] == str(root / 'owned-resource-creation-receipt.json')
+        and type(original['cli']) is dict and set(original['cli']) == {'path', 'sha256', 'version'}
+        and type(original['cli']['path']) is str and Path(original['cli']['path']).is_absolute()
+        and original['cli']['version'] == '2.116.0' and original['cli']['sha256'] == '42a9fe8b8a266bc0fbde804c08efb75cc0653480e91ba3f20fba1c3c27a7b49a'
+        and original['command'] == [original['cli']['path'], 'start', '--workdir', str(root), '-x', 'realtime,imgproxy'], 'STORAGE_CREATOR_BINDING')
+    for value, keys in ((receipt, ('producerSha256', 'originalCreationReceiptSha256', 'ownedContainersSha256')),
+                        (original, ('producerSha256', 'intentBeforeSha256', 'protectedBaselineSha256', 'commandStdoutSha256', 'commandStderrSha256'))):
+        require(all(is_sha(value[k]) for k in keys), 'STORAGE_CREATOR_HASHES')
+    container_fields = {'id', 'name', 'image', 'configSha256', 'hostConfigSha256', 'mountsSha256', 'project', 'running', 'oomKilled'}
+    for inventory in (original['before'], original['after'], original['owned']):
+        require(type(inventory) is dict and set(inventory) == {'containers', 'networks', 'volumes'}, 'STORAGE_CREATOR_INVENTORY')
+        for kind in inventory:
+            require(type(inventory[kind]) is list, 'STORAGE_CREATOR_INVENTORY')
+        for c in inventory['containers']:
+            require(type(c) is dict and set(c) == container_fields and re.fullmatch('[a-f0-9]{64}', str(c['id'])) is not None
+                and re.fullmatch('sha256:[a-f0-9]{64}', str(c['image'])) is not None
+                and all(is_sha(c[k]) for k in ('configSha256', 'hostConfigSha256', 'mountsSha256'))
+                and type(c['running']) is bool and type(c['oomKilled']) is bool, 'STORAGE_CREATOR_CONTAINER')
+        for n in inventory['networks']:
+            require(type(n) is dict and set(n) == {'id', 'name', 'inspectionSha256'} and re.fullmatch('[a-f0-9]{64}', str(n['id']))
+                and type(n['name']) is str and is_sha(n['inspectionSha256']), 'STORAGE_CREATOR_NETWORK')
+        for v in inventory['volumes']:
+            require(type(v) is dict and set(v) == {'name', 'inspectionSha256'} and type(v['name']) is str
+                and is_sha(v['inspectionSha256']), 'STORAGE_CREATOR_VOLUME')
+    require(len(original['before']['containers']) == 6 and len(original['after']['containers']) == 12, 'STORAGE_CREATOR_TWELVE_INVENTORY')
+    require(type(protected) is dict and {c['id'] for c in protected['containers']} == {c['id'] for c in original['before']['containers']}, 'STORAGE_PROTECTED_INVENTORY')
+    for c in original['before']['containers']:
+        old = next(v for v in protected['containers'] if v['id'] == c['id'])
+        require(all(c[k] == old[k] for k in ('id', 'name', 'image', 'configSha256', 'hostConfigSha256', 'mountsSha256'))
+            and c['running'] == old['state']['running'] and c['oomKilled'] == old['state']['oomKilled'], 'STORAGE_PROTECTED_CONTAINER')
+    require(original['before']['networks'] == protected['customNetworks'] and original['before']['volumes'] == protected['volumes'], 'STORAGE_PROTECTED_RESOURCES')
+    added = delta(original['before'], original['after'], target['project'])
+    require(added == original['owned'] and owned == added['containers'], 'STORAGE_CREATION_DELTA')
+    found = [c for c in owned if c['name'] == 'supabase_storage_' + target['project']]
+    storage_fields = {'id', 'name', 'image', 'configSha256', 'hostConfigSha256', 'mountsSha256'}
+    require(len(found) == 1 and type(receipt['storage']) is dict and set(receipt['storage']) == storage_fields
+        and receipt['storage'] == {k: found[0][k] for k in storage_fields}, 'STORAGE_ORIGINAL_METADATA')
+    return dict(receipt['storage'])
+
+
+def validate_creation_port_preflight(value, overlay, started_at):
+    require(type(overlay) is dict and all(type(k) is str for k in overlay), 'STORAGE_PORT_OVERLAY')
+    values = [v for k, v in overlay.items() if k.endswith('.port') or k.endswith('_port')]
+    require(values and all(type(v) is int and 1025 <= v <= 65535 for v in values), 'STORAGE_PORT_SET')
+    expected = sorted(set(values))
+    require(type(value) is dict and set(value) == {'ports', 'dockerBindings', 'vmListeners', 'hostBind', 'reservation', 'observedAt'}
+        and type(value['ports']) is list and all(type(v) is int for v in value['ports']) and value['ports'] == expected
+        and all(value[k] == 'FREE' for k in ('dockerBindings', 'vmListeners', 'hostBind'))
+        and value['reservation'] is False, 'STORAGE_PORT_PREFLIGHT')
+    require(type(value['observedAt']) in (int, float) and type(started_at) in (int, float)
+        and math.isfinite(value['observedAt']) and math.isfinite(started_at)
+        and 0 < value['observedAt'] <= started_at, 'STORAGE_PORT_OBSERVATION_ORDER')
+
+
 def load_j01():
     spec = importlib.util.spec_from_file_location('member_existing_root_j01', CALLER.with_name('j01-root-boundary.py'))
     module = importlib.util.module_from_spec(spec)
@@ -138,12 +241,17 @@ class RootMemberBoundary:
         fields = {'version', 'scenario', 'decisionId', 'head', 'preparedRoot', 'bindingPath', 'bindingSha256',
                   'provisionReceiptPath', 'provisionReceiptSha256', 'inputPath', 'inputSha256', 'privateRoot',
                   'nodePath', 'nodeSha256', 'callerSha256', 'j01CallerSha256'}
-        require(type(p) is dict and set(p) == fields and type(p['version']) is int and p['version'] == 1
-                and p['scenario'] == 'MEMBER_ROOT_BOUNDARY', 'REVIEWED_FIELDS')
+        require(type(p) is dict and type(p.get('version')) is int and p['version'] in (1, 2), 'REVIEWED_FIELDS')
+        self.completed_mode = p['version'] == 2
+        if self.completed_mode:
+            fields |= {'storageReceiptPath', 'storageReceiptSha256', 'ownedContainersSha256'}
+        require(set(p) == fields and p['scenario'] == ('MEMBER_ROOT_COMPLETED' if self.completed_mode else 'MEMBER_ROOT_BOUNDARY'), 'REVIEWED_FIELDS')
         require(re.fullmatch('[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}', p['decisionId']) is not None
                 and re.fullmatch('[a-f0-9]{40}', p['head']) is not None, 'REVIEWED_IDENTITY')
         require(all(is_sha(p[k]) for k in ('bindingSha256', 'provisionReceiptSha256', 'inputSha256',
                                            'nodeSha256', 'callerSha256', 'j01CallerSha256')), 'REVIEWED_HASHES')
+        if self.completed_mode:
+            require(is_sha(p['storageReceiptSha256']) and is_sha(p['ownedContainersSha256']), 'STORAGE_REVIEWED_HASHES')
         self.root = Path(p['preparedRoot'])
         self.target = self.h.signed_prepared_target(self.root)
         self.binding_raw = self.h.signed_private_read(Path(p['bindingPath']))
@@ -160,12 +268,16 @@ class RootMemberBoundary:
         self.input_raw = self.h.signed_private_read(Path(p['inputPath']))
         require(sha(self.input_raw) == p['inputSha256'], 'INPUT_BYTES')
         self.input = self.h.signed_exact_json(self.input_raw)
-        require(type(self.input) is dict and set(self.input) == {'version', 'scenario', 'repositoryRoot', 'codeRoot', 'head',
-                'sourceFiles', 'migrationFiles', 'target', 'bindingSha256'} and type(self.input['version']) is int
-                and self.input['version'] == 1 and self.input.get('head') == p['head'] and self.input.get('repositoryRoot') == str(REPO)
-                and self.input.get('scenario') == 'MEMBER_CONNECTIONS_J07_J08_J09'
+        input_fields = {'version', 'scenario', 'repositoryRoot', 'codeRoot', 'head', 'sourceFiles', 'migrationFiles', 'target', 'bindingSha256'}
+        if self.completed_mode:
+            input_fields.add('completionMode')
+        require(type(self.input) is dict and set(self.input) == input_fields and type(self.input['version']) is int
+                and self.input['version'] == p['version'] and self.input.get('head') == p['head'] and self.input.get('repositoryRoot') == str(REPO)
+                and self.input.get('scenario') == ('MEMBER_CONNECTIONS_COMPLETED' if self.completed_mode else 'MEMBER_CONNECTIONS_J07_J08_J09')
                 and self.input.get('bindingSha256') == p['bindingSha256'] and self.input.get('target') is not None,
                 'INPUT_BINDING')
+        if self.completed_mode:
+            require(self.input['completionMode'] in ('ack_loss', 'delete_loss'), 'COMPLETION_MODE')
         require(type(self.input['target']) is dict and set(self.input['target']) == {'dockerSocket', 'project', 'runId',
                 'containers', 'origin', 'authIssuer', 'authAudience'}, 'TARGET_FIELDS')
         self.run_id = uid(self.input['target']['runId'])
@@ -210,6 +322,12 @@ class RootMemberBoundary:
         self.retirement_observation_receipt_sha = None
         self.retirement_functions = None
         self.retirement_function_owned = None
+        self.completed_retirement = None
+        self.storage_receipt = None
+        self.storage_private_pins = {}
+        self.storage_source_pins = {}
+        if self.completed_mode:
+            self.load_completed_storage()
         self.source_check()
 
     save = lambda self, name, value: self.h.provisioning_json(self.evidence, name, value)
@@ -261,6 +379,14 @@ class RootMemberBoundary:
         for path, expected in ((self.packet_path, sha(self.packet_raw)), (Path(p['bindingPath']), p['bindingSha256']),
                                (Path(p['inputPath']), p['inputSha256']), (Path(p['provisionReceiptPath']), p['provisionReceiptSha256'])):
             require(sha(self.h.signed_private_read(path)) == expected, 'PRIVATE_INPUT_CHANGED')
+        for path, expected in getattr(self, 'storage_private_pins', {}).items():
+            require(sha(self.h.signed_private_read(Path(path))) == expected, 'STORAGE_PRIVATE_INPUT_CHANGED')
+        for relative, expected in getattr(self, 'storage_source_pins', {}).items():
+            if relative not in self.hashes:
+                result = subprocess.run(['git', '-C', str(REPO), 'show', p['head'] + ':' + relative], capture_output=True, timeout=10)
+                require(result.returncode == 0, 'STORAGE_CREATOR_SOURCE_CHANGED')
+                self.hashes[relative] = sha(result.stdout)
+            require(self.hashes[relative] == expected and sha((REPO / relative).read_bytes()) == expected, 'STORAGE_CREATOR_SOURCE_CHANGED')
 
     def live(self):
         self.source_check()
@@ -275,6 +401,8 @@ class RootMemberBoundary:
                 and target['project'] == self.target['project'] and target['origin'] == self.binding['origin']
                 and target['authIssuer'] == self.binding['jwtIssuer'] and target['authAudience'] == 'authenticated'
                 and target['containers'] == self.binding['containers'], 'TARGET_BINDING')
+        if getattr(self, 'completed_mode', False):
+            self.verify_completed_storage()
         return {'target': target, 'bindingSha256': self.packet['bindingSha256'],
                 'sourceFiles': self.input['sourceFiles'], 'migrationFiles': self.input['migrationFiles']}
 
@@ -323,6 +451,12 @@ class RootMemberBoundary:
         require(self.original_global['token'] is None and self.original_global['expires_at'] is None, 'GLOBAL_BUSY')
         self.original_controls = self.read('select jsonb_build_object(' + ','.join(
             q(k) + ',(select to_jsonb(c)from private.' + table + ' c where singleton)' for k, table in CONTROL_TABLES.items()) + ');')
+        if getattr(self, 'completed_mode', False):
+            # standalone v2는 이전 연결 fixture를 만들지 않는다. 원 Auth6 현재 baseline을 독립 보존한다.
+            self.connection_closed = True
+            self.connection_closure = 'NOT_OPENED_VERIFIED'
+            self.save('completed-connections-not-opened.json', {'runId': self.run_id,
+                'originalBaselineSha256': digest(self.outer_baseline), 'previousPassReused': False})
 
     def control_cas(self, key, changes, opening):
         require(key in CONTROL_TABLES and type(changes) is dict and changes, 'FIXED_CONTROL')
@@ -928,11 +1062,14 @@ class RootMemberBoundary:
         return self.retirement
 
     def retirement_function_rows(self):
+        return self.function_rows(RETIREMENT_SIGNATURES)
+
+    def function_rows(self, signatures):
         terms = [q(s) + ", (select jsonb_build_object('oid',p.oid::bigint,'owner',p.proowner::bigint,'proacl',to_jsonb(p.proacl),'rowSha256',"
             + row_sha_sql('p') + ",'serviceExecute',has_function_privilege('service_role',p.oid,'EXECUTE'))from pg_proc p where p.oid="
-            + q(s) + '::regprocedure)' for s in RETIREMENT_SIGNATURES]
+            + q(s) + '::regprocedure)' for s in signatures]
         value = self.read('select jsonb_build_object(' + ','.join(terms) + ');')
-        require(type(value) is dict and set(value) == set(RETIREMENT_SIGNATURES)
+        require(type(value) is dict and set(value) == set(signatures)
             and all(type(v) is dict and is_sha(v['rowSha256']) and type(v['oid']) is int
                 and type(v['owner']) is int and type(v['serviceExecute']) is bool for v in value.values()), 'RETIREMENT_RPC_METADATA')
         return value
@@ -949,12 +1086,12 @@ class RootMemberBoundary:
             'originalExecutionFailurePreserved': True, 'actualRetirement': 'NOT_RUN'})
         self.retirement_preparation_closed = True
 
-    def function_rows_cas(self, values):
-        require(set(values) == set(RETIREMENT_SIGNATURES), 'FIXED_FUNCTION_SCOPE')
+    def function_rows_cas(self, values, signatures=RETIREMENT_SIGNATURES):
+        require(set(values) == set(signatures), 'FIXED_FUNCTION_SCOPE')
         return 'do $$begin ' + ''.join('perform 1 from pg_proc p where p.oid=' + q(s)
             + '::regprocedure and p.oid=' + str(values[s]['oid']) + ' and p.proowner=' + str(values[s]['owner'])
             + ' and ' + row_sha_sql('p') + '=' + q(values[s]['rowSha256'])
-            + ";if not found then raise exception 'member_function_cas';end if;" for s in RETIREMENT_SIGNATURES) + 'end;$$;'
+            + ";if not found then raise exception 'member_function_cas';end if;" for s in signatures) + 'end;$$;'
 
     def retirement_owned_rows(self, user, withdrawal):
         uid(user)
@@ -981,6 +1118,403 @@ class RootMemberBoundary:
             bag = "select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select " + row_sha_sql('r') + ' h,count(*)n from ' + table + ' r where ' + predicate + ' group by 1)q'
             terms.append(q(table) + ',(' + bag + ')')
         return self.read('select jsonb_build_object(' + ','.join(terms) + ');')
+
+    def completed_scope(self, user, withdrawal=None):
+        require(getattr(self, 'completed_mode', False) and self.input.get('completionMode') in ('ack_loss', 'delete_loss'), 'COMPLETED_ONLY')
+        require(user == self.binding['accounts'][5]['userId'], 'COMPLETED_OWNED_USER')
+        if withdrawal is not None:
+            require(self.completed_retirement is not None and withdrawal == self.completed_retirement['withdrawalId'], 'COMPLETED_OWNED_WITHDRAWAL')
+
+    def verify_completed_storage(self):
+        require(self.storage_receipt is not None and getattr(self, 'storage_creation_verified', False), 'STORAGE_CREATION_CONTRACT_REQUIRED')
+        value = self.storage_receipt
+        current = self.h.signed_exact_json(self.ports.runner.call(['inspect', value['id']]))
+        require(type(current) is list and len(current) == 1, 'STORAGE_CURRENT_INSPECT')
+        c = current[0]
+        require(c['Id'] == value['id'] and c['Name'] == '/' + value['name'] and c['Image'] == value['image']
+            and c['State']['Running'] is True and c['State']['OOMKilled'] is False
+            and c['Config']['Labels'].get('com.supabase.cli.project') == self.target['project'], 'STORAGE_CURRENT_IDENTITY')
+        # producer는 Docker 원 Mounts 배열을 해시한다. 기존 signed Auth4의 정렬 규칙을 변경하지 않는다.
+        for field, key in (('Config', 'configSha256'), ('HostConfig', 'hostConfigSha256'), ('Mounts', 'mountsSha256')):
+            raw = json.dumps(c[field], sort_keys=True, separators=(',', ':')).encode()
+            require(sha(raw) == value[key], 'STORAGE_CURRENT_CONFIG')
+
+    def load_completed_storage(self):
+        p = self.packet
+        require(Path(p['storageReceiptPath']) == self.root / 'owned-storage-creation-receipt.json', 'STORAGE_RECEIPT_PATH')
+        def read(name):
+            path = self.root / name
+            raw = self.h.signed_private_read(path)
+            self.storage_private_pins[str(path)] = sha(raw)
+            return raw
+        raw = read('owned-storage-creation-receipt.json')
+        require(sha(raw) == p['storageReceiptSha256'], 'STORAGE_RECEIPT_BYTES')
+        receipt = self.h.signed_exact_json(raw)
+        original_raw = read('owned-resource-creation-receipt.json')
+        require(type(receipt) is dict and receipt.get('originalCreationReceiptSha256') == sha(original_raw), 'STORAGE_ORIGINAL_RECEIPT_BYTES')
+        original = self.h.signed_exact_json(original_raw)
+        owned_raw = read('owned-containers.json')
+        require(sha(owned_raw) == p['ownedContainersSha256'] == receipt.get('ownedContainersSha256'), 'STORAGE_OWNED_BYTES')
+        protected_raw, intent_raw = read('protected-resource-baseline.json'), read('execution-intent.json')
+        require(type(original) is dict and original.get('protectedBaselineSha256') == sha(protected_raw)
+            and original.get('intentBeforeSha256') == sha(intent_raw)
+            and original.get('commandStdoutSha256') == sha(read('creation-stdout-private.log'))
+            and original.get('commandStderrSha256') == sha(read('creation-stderr-private.log')), 'STORAGE_ORIGINAL_OBSERVATIONS')
+        creator_source = self.h.signed_exact_json(read('creation-source-pins.json'))
+        require(type(creator_source) is dict and set(creator_source) == {'head', 'sourceFiles'} and creator_source['head'] == p['head']
+            and type(creator_source['sourceFiles']) is dict and creator_source['sourceFiles'] and 'tools/local/start_owned_validation.py' in creator_source['sourceFiles'], 'STORAGE_CREATOR_SOURCE_PINS')
+        for path, expected in creator_source['sourceFiles'].items():
+            require(type(path) is str and re.fullmatch('[A-Za-z0-9_./-]+', path) and '..' not in Path(path).parts
+                and not Path(path).is_absolute() and path.startswith(('backend/', 'apps/mobile/', 'tests/', 'tools/local/')) and is_sha(expected), 'STORAGE_CREATOR_SOURCE_PATH')
+            committed = subprocess.run(['git', '-C', str(REPO), 'show', p['head'] + ':' + path], capture_output=True, timeout=10)
+            require(committed.returncode == 0 and sha(committed.stdout) == expected and (REPO / path).resolve() == REPO / path
+                and sha((REPO / path).read_bytes()) == expected, 'STORAGE_CREATOR_NOT_COMMITTED')
+            self.hashes[path] = expected
+        self.storage_source_pins = dict(creator_source['sourceFiles'])
+        producer_path = 'tools/local/start_owned_validation.py'
+        require(self.storage_source_pins[producer_path] == receipt.get('producerSha256') == original.get('producerSha256'), 'STORAGE_PRODUCER_BYTES')
+        tree = ast.parse((REPO / producer_path).read_text())
+        functions = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'creation_delta']
+        require(len(functions) == 1 and not functions[0].decorator_list, 'STORAGE_PURE_DELTA_SOURCE')
+        namespace = {'require': require, 're': re}
+        exec(compile(ast.Module(body=functions, type_ignores=[]), producer_path, 'exec'), namespace)
+        self.storage_receipt = validate_storage_creation(receipt, original, self.h.signed_exact_json(owned_raw),
+            self.h.signed_exact_json(protected_raw), self.root, self.target, p['head'], namespace['creation_delta'])
+        require(self.h.signed_exact_json(read('owned-networks.json')) == [{k: x[k] for k in ('id', 'name')} for x in original['owned']['networks']]
+            and self.h.signed_exact_json(read('owned-volumes.json')) == [{'name': x['name']} for x in original['owned']['volumes']], 'STORAGE_OWNED_RESOURCE_FILES')
+        intent = self.h.signed_exact_json(read('creation-intent-private.json'))
+        process = self.h.signed_exact_json(read('creation-process-private.json'))
+        terminal = self.h.signed_exact_json(read('creation-terminal-private.json'))
+        require(type(intent) is dict and set(intent) == {'head', 'producerSha256', 'command', 'intentSha256', 'before', 'availableKiB', 'portPreflight', 'startedAt'}
+            and intent['head'] == p['head'] and intent['producerSha256'] == receipt['producerSha256'] and intent['command'] == original['command']
+            and intent['intentSha256'] == original['intentBeforeSha256'] and intent['before'] == original['before']
+            and type(intent['availableKiB']) is int and intent['availableKiB'] >= 1048576, 'STORAGE_ORIGINAL_START_INTENT')
+        manifest = self.h.signed_exact_json(read('database-manifest.json'))
+        require(type(manifest) is dict and 'config_overlay' in manifest, 'STORAGE_PORT_MANIFEST')
+        validate_creation_port_preflight(intent['portPreflight'], manifest['config_overlay'], intent['startedAt'])
+        require(type(process) is dict and set(process) == {'pid', 'command'} and type(process['pid']) is int and process['pid'] > 0
+            and process['command'] == original['command'], 'STORAGE_ORIGINAL_PROCESS')
+        require(type(terminal) is dict and set(terminal) == {'commandExit', 'after', 'observedAt'} and type(terminal['commandExit']) is int
+            and terminal['commandExit'] == 0 and terminal['after'] == original['after'], 'STORAGE_ORIGINAL_TERMINAL')
+        require(type(intent['startedAt']) in (int, float) and type(terminal['observedAt']) in (int, float)
+            and math.isfinite(intent['startedAt']) and math.isfinite(terminal['observedAt'])
+            and 0 < intent['startedAt'] <= terminal['observedAt'], 'STORAGE_ORIGINAL_PROCESS_ORDER')
+        cli = Path(original['cli']['path'])
+        require(cli.resolve() == cli and cli.is_file() and cli.stat().st_uid == os.getuid() and os.access(cli, os.X_OK)
+            and sha(cli.read_bytes()) == original['cli']['sha256'], 'STORAGE_ORIGINAL_CLI_BYTES')
+        self.storage_creation_verified = True
+
+    def completed_storage_request(self, method, upload=False):
+        """고정 한 key만 취급한다. 동적 URL/SQL/삭제 명령을 Node에서 받지 않는다."""
+        self.live()
+        s = self.completed_retirement
+        self.completed_scope(s['userId'], s['withdrawalId'])
+        require(method == ('POST' if upload else 'GET'), 'COMPLETED_STORAGE_METHOD')
+        path = s['userId'] + '/' + s['withdrawalId'] + '.jpg'
+        suffix = '/storage/v1/object/profile-images/' if upload else '/storage/v1/object/authenticated/profile-images/'
+        credential = self.binding['accounts'][5]['accessToken'] if upload else self.binding['credentials']['service']
+        apikey = self.binding['credentials']['anon'] if upload else credential
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *args):
+                return None
+        request = urllib.request.Request(self.binding['origin'] + suffix + path, method=method,
+            data=COMPLETION_JPEG if upload else None,
+            headers={'Authorization': 'Bearer ' + credential, 'apikey': apikey,
+                     'Content-Type': 'image/jpeg', 'Accept': 'application/json' if upload else 'image/jpeg'})
+        try:
+            with urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect).open(request, timeout=10) as response:
+                raw = response.read(2097153)
+                require(len(raw) <= 2097152, 'COMPLETED_STORAGE_SIZE')
+                return response.status, raw
+        except urllib.error.HTTPError as error:
+            # 본문·키·URL은 private 실패코드에도 노출하지 않는다.
+            code = error.code
+            raw = error.read(65537) if code == 400 else b''
+            error.close()
+            require(len(raw) <= 65536, 'COMPLETED_STORAGE_ERROR_SIZE')
+            return code, raw
+        except Exception:
+            raise ValueError('MEMBER_ROOT_COMPLETED_STORAGE_TRANSPORT') from None
+
+    def completed_other_rows(self, snapshot, owned):
+        """행 bag에서 원 fixture의 정확 행만 제거한다. 테이블 전체를 비교에서 빼지 않는다."""
+        result = subtract_owned_bags(snapshot['rows'], owned)
+        return result
+
+    def prepare_completed_retirement(self, user):
+        self.completed_scope(user)
+        require(self.completed_retirement is None and not self.retirement_attempted and self.connection_closed, 'COMPLETED_PREPARATION_ONCE')
+        self.live()
+        self.retirement_attempted = True
+        self.completed_baseline = self.ports.snapshot()
+        self.retirement_baseline = self.completed_baseline
+        withdrawal = str(uuid.uuid4())
+        episode = self.read("select coalesce(jsonb_agg(to_jsonb(e)),'[]'::jsonb)from private.member_episodes e where profile_id=" + q(user) + '::uuid;')
+        require(len(episode) == 1 and episode[0]['ended_at'] is None and episode[0]['identity_id'] is None, 'COMPLETED_FRESH_EPISODE')
+        require(self.read("select not exists(select 1 from storage.objects where bucket_id='profile-images'and(owner_id=" + q(user) + " or split_part(name,'/',1)=" + q(user) + '));') is True, 'COMPLETED_PREEXISTING_OBJECT_PRESERVED')
+        self.retirement_episode_id = uid(episode[0]['id'])
+        s = {'status': 'preparing', 'userId': user, 'withdrawalId': withdrawal, 'objectId': None,
+             'objectSha256': sha(COMPLETION_JPEG), 'objectBytes': len(COMPLETION_JPEG),
+             'invocationRequestId': str(uuid.uuid4()), 'recoveryRequestId': str(uuid.uuid4())}
+        self.completed_retirement = s
+        self.retirement = s
+        self.save('completed-baseline-private.json', self.completed_baseline)
+        self.save('completed-destructive-intent.json', {**s, 'completionMode': self.input['completionMode'],
+            'lastOriginalSessionId': self.binding['accounts'][5]['sessionId'], 'newAuthAccounts': 0,
+            'originalFiveUserIds': [a['userId'] for a in self.binding['accounts'][:5]],
+            'storageReceiptSha256': self.packet['storageReceiptSha256'], 'workerStarted': False})
+        self.completed_before_owned = self.completed_owned_rows(user, withdrawal)
+        self.completion_functions = self.function_rows(COMPLETION_SIGNATURES)
+        self.qualify(5, False)
+        # Upload intent는 첫 wire보다 먼저 저장한다. 응답 유실은 같은 key의 재업로드 허가가 아니다.
+        self.save('completed-upload-intent.json', {'userId': user, 'withdrawalId': withdrawal,
+            'objectSha256': s['objectSha256'], 'objectBytes': s['objectBytes'], 'replayAllowed': False})
+        status, raw = self.completed_storage_request('POST', True)
+        require(status == 200, 'COMPLETED_STORAGE_UPLOAD')
+        uploaded = self.h.signed_exact_json(raw)
+        require(type(uploaded) is dict and uploaded.get('Key') == 'profile-images/' + user + '/' + withdrawal + '.jpg', 'COMPLETED_UPLOAD_BINDING')
+        s['objectId'] = uid(uploaded.get('Id'))
+        row = self.read("select jsonb_build_object('id',o.id,'name',o.name,'ownerId',o.owner_id,'bucketId',o.bucket_id,'rowSha256'," + row_sha_sql('o') + ")from storage.objects o where o.id=" + q(s['objectId']) + '::uuid;')
+        require(row and row['id'] == s['objectId'] and row['name'] == user + '/' + withdrawal + '.jpg' and row['ownerId'] == user
+            and row['bucketId'] == 'profile-images' and is_sha(row['rowSha256']), 'COMPLETED_UPLOADED_NATIVE_OBJECT')
+        self.save('completed-upload-observed.json', {**row, 'sha256': s['objectSha256'], 'bytes': s['objectBytes']})
+        status, raw = self.completed_storage_request('GET')
+        require(status == 200 and sha(raw) == s['objectSha256'] and len(raw) == s['objectBytes'], 'COMPLETED_ORIGINAL_BYTES')
+        # 기존 공개 RPC를 원 JWT로만 호출한다. 임의 profile/avatar SQL을 만들지 않는다.
+        self.completion_set_avatar(user + '/' + withdrawal + '.jpg')
+        self.completion_enable_changes = {'atomic': {'enabled': True}, 'invocation': {'enabled': True},
+            'cleanup': {'external_deletion_approved': True},
+            'retirement': {'enabled': True, 'expected_issuer': self.binding['jwtIssuer'], 'expected_audience': 'authenticated'}}
+        statement = 'begin;' + ''.join(self.control_cas(k, v, True) for k, v in self.completion_enable_changes.items())
+        statement += self.function_rows_cas(self.completion_functions, COMPLETION_SIGNATURES)
+        statement += 'grant execute on function ' + ','.join(COMPLETION_SIGNATURES) + " to service_role;notify pgrst,'reload schema';commit;"
+        self.save('completed-enable-intent.json', {'sqlSha256': sha(statement.encode()), 'functions': self.completion_functions,
+            'changes': self.completion_enable_changes, 'workerStateOrAckWritten': False})
+        self.ports.sql(statement)
+        for key in self.completion_enable_changes:
+            self.control_overrides[CONTROL_TABLES[key]] = True
+        self.live()
+        self.completion_function_owned = self.function_rows(COMPLETION_SIGNATURES)
+        s['status'] = 'prepared'
+        return dict(s)
+
+    def completion_set_avatar(self, path):
+        self.live()
+        s = self.completed_retirement
+        require(path == s['userId'] + '/' + s['withdrawalId'] + '.jpg', 'COMPLETED_AVATAR_KEY')
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *args):
+                return None
+        request = urllib.request.Request(self.binding['origin'] + '/rest/v1/rpc/set_my_profile_avatar', method='POST',
+            data=canonical({'p_avatar_path': path}), headers={'Content-Type': 'application/json', 'Accept': 'application/json',
+                'apikey': self.binding['credentials']['anon'], 'Authorization': 'Bearer ' + self.binding['accounts'][5]['accessToken']})
+        try:
+            with urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect).open(request, timeout=10) as response:
+                raw = response.read(65537)
+                require(response.status == 200 and len(raw) <= 65536, 'COMPLETED_AVATAR_RESPONSE')
+                value = self.h.signed_exact_json(raw)
+        except Exception:
+            raise ValueError('MEMBER_ROOT_COMPLETED_AVATAR_TRANSPORT') from None
+        require(type(value) is list and len(value) == 1 and value[0] == {'avatar_url': path, 'previous_avatar_path': None}, 'COMPLETED_AVATAR_RESULT')
+
+    def completed_owned_rows(self, user, withdrawal):
+        own = self.retirement_owned_rows(user, withdrawal)
+        s = self.completed_retirement
+        task = '(select id from private.member_cleanup_tasks where profile_id=' + q(user) + '::uuid and withdrawal_id=' + q(withdrawal) + '::uuid)'
+        conditions = {
+            'auth.users': 'r.id=' + q(user) + '::uuid',
+            'auth.identities': 'r.user_id=' + q(user) + '::uuid',
+            'storage.objects': ('r.id=' + q(s['objectId']) + '::uuid and r.bucket_id=\'profile-images\' and r.name=' + q(user + '/' + withdrawal + '.jpg')) if s['objectId'] is not None else 'false',
+            'private.member_cleanup_tasks': 'r.id in ' + task,
+            'private.member_cleanup_delete_acks': 'r.task_id in ' + task,
+            'private.member_cleanup_dispatches': 'r.task_id in ' + task,
+            'private.worker_jobs': 'r.id in ' + task + " and r.kind='member_cleanup'",
+            'private.worker_job_run_fences': 'r.job_id in ' + task,
+            'private.worker_runtime_job_slots': 'r.job_id in ' + task,
+            'private.worker_invocations': 'r.request_id=' + q(s['invocationRequestId']) + '::uuid',
+            'private.worker_invocation_jobs': 'r.request_id=' + q(s['invocationRequestId']) + '::uuid and r.job_id in ' + task,
+            'private.member_cleanup_reconciliations': 'r.recovery_request_id=' + q(s['recoveryRequestId']) + '::uuid and r.invocation_request_id=' + q(s['invocationRequestId']) + '::uuid and r.task_id in ' + task,
+        }
+        # 원 Auth6 발급 helper의 실제 uid/email/session 결합 audit scope를 그대로 재사용한다.
+        for table, entries in self.ports.added_rows(self.completed_baseline, [self.binding['accounts'][5]]).items():
+            bag = {}
+            for entry in entries.values():
+                require(is_sha(entry['rowSha256']) and entry['ownerUserId'] == user, 'COMPLETED_AUTH_ROW_HASH')
+                h = entry['rowSha256']
+                bag[h] = bag.get(h, 0) + 1
+            if table not in own:
+                own[table] = bag
+        own['auth.audit_log_entries'] = self.ports.cleanup_audits({'last': self.binding['accounts'][5]})
+        terms = []
+        for table, predicate in conditions.items():
+            terms.append(q(table) + ',(select coalesce(jsonb_object_agg(h,n),\'{}\'::jsonb)from(select ' + row_sha_sql('r') + ' h,count(*)n from ' + table + ' r where ' + predicate + ' group by 1)x)')
+        own.update(self.read('select jsonb_build_object(' + ','.join(terms) + ');'))
+        own.update(self.completed_control_bags())
+        return own
+
+    def completed_control_bags(self):
+        s = self.completed_retirement
+        keys = ('atomic', 'invocation', 'cleanup', 'retirement')
+        rows = self.read('select jsonb_build_object(' + ','.join(q(k) + ',(select to_jsonb(c)from private.' + CONTROL_TABLES[k] + ' c where singleton)' for k in keys)
+            + ",'global',(select to_jsonb(g)from private.global_worker_run g where singleton),'tokens',(select coalesce(jsonb_agg(t),'[]'::jsonb)from(select global_token t from private.worker_invocations where request_id=" + q(s['invocationRequestId']) + "::uuid union select recovery_global_token from private.member_cleanup_reconciliations where recovery_request_id=" + q(s['recoveryRequestId']) + '::uuid)x));')
+        for key in keys:
+            expected = self.original_controls[key]
+            if self.control_overrides.get(CONTROL_TABLES[key]):
+                expected = {**expected, **self.completion_enable_changes[key]}
+            require(rows[key] == expected, 'COMPLETED_CONTROL_CHANGED')
+        require(rows['global']['token'] is None or rows['global']['token'] in rows['tokens'], 'COMPLETED_FOREIGN_GLOBAL')
+        # 행 해시는 DB 네이티브 to_jsonb::text에서 계산하며 Python 직렬화 해시로 대체하지 않는다.
+        terms = [q('private.' + CONTROL_TABLES[k]) + ',(select jsonb_build_object(' + row_sha_sql('c') + ',1)from private.' + CONTROL_TABLES[k] + ' c where singleton)' for k in keys]
+        terms.append("'private.global_worker_run',(select jsonb_build_object(" + row_sha_sql('c') + ',1)from private.global_worker_run c where singleton)')
+        return self.read('select jsonb_build_object(' + ','.join(terms) + ');')
+
+    def completed_fixture_rows(self, user, withdrawal):
+        """제품이 만든 원 행만 읽는다. lease/ACK/작업 상태를 fixture SQL로 만들지 않는다."""
+        s = self.completed_retirement
+        query = "select jsonb_build_object('withdrawalId',r.withdrawal_id,'userId',r.profile_id,'state',r.state,'rowSha256'," + row_sha_sql('r')
+        query += ",'ackSha256',(select a.ack_sha256 from private.member_cleanup_delete_acks a where a.withdrawal_id=r.withdrawal_id and a.profile_id=r.profile_id and a.kind='auth_user'),"
+        query += "'tasks',(select coalesce(jsonb_agg(jsonb_build_object('taskId',t.id,'withdrawalId',t.withdrawal_id,'profileId',t.profile_id,'kind',t.kind,'state',t.state,'objectId',t.object_id,'leaseToken',t.lease_token,'workerRunToken',t.worker_run_token,'leaseExpiresAt',t.lease_expires_at,'evidenceSha256',t.evidence_sha256,'completedAt',t.completed_at,'rowSha256'," + row_sha_sql('t')
+        query += ",'dispatch',(select jsonb_build_object('dispatchId',d.dispatch_id,'rowSha256'," + row_sha_sql('d') + ")from private.member_cleanup_dispatches d where d.task_id=t.id),'ack',(select jsonb_build_object('receiptId',a.receipt_id,'ackSha256',a.ack_sha256,'rowSha256'," + row_sha_sql('a') + ")from private.member_cleanup_delete_acks a where a.task_id=t.id))order by t.id),'[]'::jsonb)from private.member_cleanup_tasks t where t.withdrawal_id=r.withdrawal_id and t.profile_id=r.profile_id),"
+        query += "'invocations',(select coalesce(jsonb_agg(private.worker_invocation_json(v)||jsonb_build_object('rowSha256'," + row_sha_sql('v') + ")order by v.request_id),'[]'::jsonb)from private.worker_invocations v where v.request_id=" + q(s['invocationRequestId']) + "::uuid),'reconciliations',(select coalesce(jsonb_agg(jsonb_build_object('recoveryRequestId',x.recovery_request_id,'invocationRequestId',x.invocation_request_id,'taskId',x.task_id,'state',x.state,'evidenceSha256',x.evidence_sha256,'rowSha256'," + row_sha_sql('x') + ")order by x.recovery_request_id),'[]'::jsonb)from private.member_cleanup_reconciliations x where x.recovery_request_id=" + q(s['recoveryRequestId']) + "::uuid),"
+        query += "'authUserPresent',exists(select 1 from auth.users u where u.id=r.profile_id),'storageObjectPresent',exists(select 1 from storage.objects o where o.id=" + q(s['objectId']) + "::uuid or(o.bucket_id='profile-images'and o.name=" + q(user + '/' + withdrawal + '.jpg') + ")))from private.member_retirements r where r.withdrawal_id=" + q(withdrawal) + '::uuid and r.profile_id=' + q(user) + '::uuid;'
+        return self.read(query)
+
+    def validate_completed_rows(self, value):
+        s = self.completed_retirement
+        fields = {'withdrawalId', 'userId', 'state', 'rowSha256', 'ackSha256', 'tasks', 'invocations', 'reconciliations', 'authUserPresent', 'storageObjectPresent'}
+        require(type(value) is dict and set(value) == fields and value['withdrawalId'] == s['withdrawalId']
+            and value['userId'] == s['userId'] and value['state'] in ('pending_cleanup', 'completed') and is_sha(value['rowSha256'])
+            and (value['ackSha256'] is None or is_sha(value['ackSha256']))
+            and type(value['authUserPresent']) is bool and type(value['storageObjectPresent']) is bool, 'COMPLETED_NATIVE_RECEIPT')
+        require(type(value['tasks']) is list and len(value['tasks']) == 2, 'COMPLETED_TWO_TASKS')
+        task_fields = {'taskId', 'withdrawalId', 'profileId', 'kind', 'state', 'objectId', 'leaseToken', 'workerRunToken', 'leaseExpiresAt', 'evidenceSha256', 'completedAt', 'rowSha256', 'dispatch', 'ack'}
+        previous, kinds, task_ids = None, set(), set()
+        for t in value['tasks']:
+            require(type(t) is dict and set(t) == task_fields and t['withdrawalId'] == s['withdrawalId'] and t['profileId'] == s['userId']
+                and t['kind'] in ('storage_object', 'auth_user') and t['kind'] not in kinds and t['state'] in ('pending', 'running', 'completed')
+                and t['objectId'] == (s['objectId'] if t['kind'] == 'storage_object' else None) and is_sha(t['rowSha256']), 'COMPLETED_NATIVE_TASK')
+            ident = uid(t['taskId'])
+            require(previous is None or ident > previous, 'COMPLETED_TASK_ORDER')
+            previous = ident
+            task_ids.add(ident)
+            kinds.add(t['kind'])
+            for key in ('leaseToken', 'workerRunToken'):
+                if t[key] is not None:
+                    uid(t[key])
+            if t['state'] == 'running':
+                require(t['leaseToken'] is not None and t['workerRunToken'] is not None and is_instant(t['leaseExpiresAt']), 'COMPLETED_RUNNING_LEASE')
+            else:
+                require(all(t[k] is None for k in ('leaseToken', 'workerRunToken', 'leaseExpiresAt')), 'COMPLETED_TERMINAL_LEASE')
+            if t['dispatch'] is not None:
+                require(type(t['dispatch']) is dict and set(t['dispatch']) == {'dispatchId', 'rowSha256'} and is_sha(t['dispatch']['rowSha256']), 'COMPLETED_NATIVE_DISPATCH')
+                uid(t['dispatch']['dispatchId'])
+            if t['ack'] is not None:
+                require(type(t['ack']) is dict and set(t['ack']) == {'receiptId', 'ackSha256', 'rowSha256'} and all(is_sha(t['ack'][k]) for k in ('ackSha256', 'rowSha256')) and t['dispatch'] is not None, 'COMPLETED_NATIVE_ACK')
+                uid(t['ack']['receiptId'])
+                require(t['state'] != 'pending', 'COMPLETED_PENDING_ACK')
+            require((t['state'] == 'completed') == (t['completedAt'] is not None and is_sha(t['evidenceSha256'])), 'COMPLETED_TASK_EVIDENCE')
+            require(is_instant(t['completedAt']) if t['state'] == 'completed' else t['completedAt'] is None and t['evidenceSha256'] is None, 'COMPLETED_TASK_TIME')
+        require(type(value['invocations']) is list and len(value['invocations']) <= 1 and type(value['reconciliations']) is list and len(value['reconciliations']) <= 1, 'COMPLETED_INVOCATION_SCOPE')
+        for v in value['invocations']:
+            require(type(v) is dict and set(v) == {'requestId', 'globalToken', 'kind', 'limit', 'remainingMs', 'state', 'result', 'closedAt', 'rowSha256'}
+                and v['requestId'] == s['invocationRequestId'] and v['kind'] == 'member_cleanup' and type(v['limit']) is int and v['limit'] == 2
+                and type(v['remainingMs']) is int and 1 <= v['remainingMs'] <= 180000 and v['state'] in ('prepared', 'unknown', 'completed') and is_sha(v['rowSha256']), 'COMPLETED_NATIVE_INVOCATION')
+            uid(v['globalToken'])
+            if v['state'] == 'completed':
+                result = v['result']
+                require(is_instant(v['closedAt']) and type(result) is dict and set(result) == {'status', 'counts'}
+                    and result['status'] == 'ran' and type(result['counts']) is dict
+                    and set(result['counts']) == {'claimed', 'failed', 'retried', 'succeeded', 'superseded', 'yielded'}, 'COMPLETED_INVOCATION_RESULT')
+                counts = result['counts']
+                require(all(type(n) is int and 0 <= n <= 2 for n in counts.values())
+                    and counts['claimed'] == sum(n for k, n in counts.items() if k != 'claimed'), 'COMPLETED_INVOCATION_COUNTS')
+            else:
+                require(v['result'] is None and v['closedAt'] is None, 'COMPLETED_UNKNOWN_NOT_COMPLETE')
+        for r in value['reconciliations']:
+            require(type(r) is dict and set(r) == {'recoveryRequestId', 'invocationRequestId', 'taskId', 'state', 'evidenceSha256', 'rowSha256'}
+                and r['recoveryRequestId'] == s['recoveryRequestId'] and r['invocationRequestId'] == s['invocationRequestId'] and r['taskId'] in task_ids
+                and r['state'] in ('prepared', 'completed', 'superseded') and is_sha(r['rowSha256']), 'COMPLETED_NATIVE_RECONCILIATION')
+            require(is_sha(r['evidenceSha256']) if r['state'] == 'completed' else r['evidenceSha256'] is None, 'COMPLETED_RECOVERY_EVIDENCE')
+        if value['state'] == 'completed':
+            require(all(t['state'] == 'completed' and t['ack'] is not None for t in value['tasks']) and not value['authUserPresent'] and not value['storageObjectPresent'], 'COMPLETED_OUTCOME_UNPROVEN')
+        auth_ack = next(t['ack'] for t in value['tasks'] if t['kind'] == 'auth_user')
+        require(value['ackSha256'] == (auth_ack['ackSha256'] if auth_ack is not None else None), 'COMPLETED_AUTH_ACK_BINDING')
+        return value
+
+    def inspect_completed_retirement(self, user, withdrawal):
+        self.completed_scope(user, withdrawal)
+        self.live()
+        value = self.validate_completed_rows(self.completed_fixture_rows(user, withdrawal))
+        current = self.ports.snapshot()
+        owned = self.completed_owned_rows(user, withdrawal)
+        before = self.completed_other_rows(self.completed_baseline, self.completed_before_owned)
+        after = self.completed_other_rows(current, owned)
+        value['scopeRowsSha256'] = digest({'rows': owned, 'native': value})
+        value['otherFivePreserved'] = before == after
+        status, raw = self.completed_storage_request('GET')
+        if status == 400:
+            absent = self.h.signed_exact_json(raw)
+            require(type(absent) is dict and absent.get('code') == 'NoSuchKey' and absent.get('statusCode') == '404', 'COMPLETED_STORAGE_READ')
+        else:
+            require(status in (200, 404), 'COMPLETED_STORAGE_READ')
+        if status == 200:
+            require(len(raw) == self.completed_retirement['objectBytes'] and sha(raw) == self.completed_retirement['objectSha256'], 'COMPLETED_STORAGE_BYTES_CHANGED')
+        value['storageBytesPresent'] = status == 200
+        require(value['state'] != 'completed' or not value['storageBytesPresent'], 'COMPLETED_STORAGE_ABSENCE_UNPROVEN')
+        self.completed_observation = json.loads(json.dumps(value))
+        self.completed_inspection_count = getattr(self, 'completed_inspection_count', 0) + 1
+        self.save('completed-inspection-' + str(self.completed_inspection_count) + '.json', value)
+        return value
+
+    def close_completed_guards(self):
+        if not hasattr(self, 'completion_enable_changes'):
+            require(self.function_rows(COMPLETION_SIGNATURES) == self.completion_functions, 'COMPLETED_PRE_ENABLE_FUNCTION_CHANGED')
+            return
+        # Opening은 한 transaction이다. 응답 유실에도 exact 원본/예상 전체행만 구분한다.
+        raw = self.ports.read_sql('select jsonb_build_object(' + ','.join(q(k) + ',(select to_jsonb(c)from private.' + CONTROL_TABLES[k] + ' c where singleton)' for k in self.completion_enable_changes) + ');', timeout=5)
+        observed = self.h.signed_exact_json(raw.encode())
+        original = {k: self.original_controls[k] for k in self.completion_enable_changes}
+        during = {k: {**original[k], **v} for k, v in self.completion_enable_changes.items()}
+        require(observed == original or observed == during, 'COMPLETED_OPENING_CAS_UNKNOWN')
+        if observed == during:
+            for k in self.completion_enable_changes:
+                self.control_overrides[CONTROL_TABLES[k]] = True
+            statement = 'begin;' + ''.join(self.control_cas(k, v, False) for k, v in self.completion_enable_changes.items())
+            if hasattr(self, 'completion_function_owned'):
+                statement += self.function_rows_cas(self.completion_function_owned, COMPLETION_SIGNATURES)
+                for sig in COMPLETION_SIGNATURES:
+                    if not self.completion_functions[sig]['serviceExecute']:
+                        statement += 'revoke execute on function ' + sig + ' from service_role;'
+            statement += "notify pgrst,'reload schema';commit;"
+            self.save('completed-guard-close-intent.json', {'sqlSha256': sha(statement.encode()), 'receiptStateWritten': False})
+            self.ports.sql(statement)
+        for k in self.completion_enable_changes:
+            self.control_overrides.pop(CONTROL_TABLES[k], None)
+        self.live()
+        require(self.function_rows(COMPLETION_SIGNATURES) == self.completion_functions, 'COMPLETED_FUNCTION_OPEN_UNKNOWN_PRESERVED')
+
+    def cleanup_completed_retirement(self, user, withdrawal):
+        self.completed_scope(user, withdrawal)
+        require(hasattr(self, 'completion_functions'), 'COMPLETED_PREPARATION_UNKNOWN_PRESERVED')
+        if getattr(self, 'completed_closed', False):
+            return dict(self.completed_closure)
+        self.close_completed_guards()
+        current = self.ports.snapshot()
+        owned = self.completed_owned_rows(user, withdrawal)
+        foreign_state_unchanged(self.completed_baseline, current, self.completed_before_owned, owned)
+        for account in self.binding['accounts'][:5]:
+            require(self.ports.session_proof(account), 'COMPLETED_ORIGINAL_FIVE_SESSION')
+        value = self.validate_completed_rows(self.completed_fixture_rows(user, withdrawal))
+        # 이 메서드는 판단·영수증을 보존한다. UNKNOWN에서 외부 DELETE/ACK를 재전송하지 않는다.
+        self.completed_closure = {'status': 'closed', 'userId': user, 'withdrawalId': withdrawal,
+            'state': value['state'], 'ackSha256': value['ackSha256'], 'guardsAndAuthorityRestored': True,
+            'originalFivePreserved': True, 'receiptsPreserved': True, 'unknownPreserved': True,
+            'wholeOriginalSixRestored': False, 'resourceDeletion': 'ROOT_SEPARATE_APPROVED_SCOPE'}
+        self.save('completed-final-retained.json', {**self.completed_closure, 'scopeRowsSha256': digest(owned),
+            'actualNaver': False, 'production': False, 'nativeSourceHead': self.packet['head']})
+        self.completed_closed = True
+        self.retirement_receipt_retained = True
+        return dict(self.completed_closure)
 
     def inspect_retirement(self, user, withdrawal):
         require(self.retirement and user == self.retirement['userId'] and withdrawal == self.retirement['withdrawalId'], 'OWNED_RETIREMENT')
@@ -1068,12 +1602,14 @@ class RootMemberBoundary:
         return {'receiptRetained': True, 'wholeBaselineRestored': False, 'externalDeletion': 'NOT_RUN'}
 
     def dispatch(self, frame):
+        allowed = ({k: METHOD_ARGS[k] for k in ('verifyTarget', 'readCredentials', 'readIssuedAuth', 'readTls')}
+            | COMPLETED_METHOD_ARGS) if getattr(self, 'completed_mode', False) else METHOD_ARGS
         require(type(frame) is dict and set(frame) == {'type', 'requestId', 'sequence', 'method', 'args'}
                 and frame['type'] == 'call' and frame['requestId'] == self.run_id
                 and type(frame['sequence']) is int and frame['sequence'] == self.sequence + 1
-                and frame['method'] in METHOD_ARGS and type(frame['args']) is dict, 'FIXED_FRAME')
+                and frame['method'] in allowed and type(frame['args']) is dict, 'FIXED_FRAME')
         method, args = frame['method'], frame['args']
-        require(set(args) == {'runId', 'bindingSha256', *METHOD_ARGS[method]} and args['runId'] == self.run_id
+        require(set(args) == {'runId', 'bindingSha256', *allowed[method]} and args['runId'] == self.run_id
                 and args['bindingSha256'] == self.packet['bindingSha256'], 'METHOD_BINDING')
         self.sequence += 1
         self.live()
@@ -1092,7 +1628,10 @@ class RootMemberBoundary:
         elif method == 'cleanupConnections': value = self.cleanup_connections(args['memberUserIds'])
         elif method == 'prepareRetirement': value = self.prepare_retirement(args['userId'])
         elif method == 'inspectRetirement': value = self.inspect_retirement(args['userId'], args['withdrawalId'])
-        else: value = self.cleanup_retirement(args['userId'], args['withdrawalId'])
+        elif method == 'cleanupRetirement': value = self.cleanup_retirement(args['userId'], args['withdrawalId'])
+        elif method == 'prepareCompletedRetirement': value = self.prepare_completed_retirement(args['userId'])
+        elif method == 'inspectCompletedRetirement': value = self.inspect_completed_retirement(args['userId'], args['withdrawalId'])
+        else: value = self.cleanup_completed_retirement(args['userId'], args['withdrawalId'])
         self.observations.append({'sequence': self.sequence, 'method': method, 'outcome': 'RESPONSE_OBSERVED'})
         return {'requestId': self.run_id, 'sequence': self.sequence, 'ok': True, 'value': value}
 
@@ -1122,7 +1661,7 @@ class RootMemberBoundary:
                     reply = self.dispatch(frame)
                 except Exception as error:
                     method = frame.get('method') if type(frame) is dict else None
-                    self.observations.append({'sequence': self.sequence, 'method': method if type(method) is str and method in METHOD_ARGS else 'invalid',
+                    self.observations.append({'sequence': self.sequence, 'method': method if type(method) is str and method in (METHOD_ARGS | COMPLETED_METHOD_ARGS) else 'invalid',
                         'outcome': 'REJECTED_NO_RETRY', 'failureCode': safe_code(error, self.j01)})
                     reply = {'requestId': self.run_id, 'sequence': self.sequence, 'ok': False, 'error': 'MEMBER_ROOT_FIXED_METHOD_REJECTED'}
                 self.child.stdin.write(json.dumps(reply) + '\n')
@@ -1152,7 +1691,9 @@ class RootMemberBoundary:
         finally:
             if self.evidence.exists():
                 try:
-                    if self.retirement:
+                    if getattr(self, 'completed_mode', False) and self.completed_retirement:
+                        self.cleanup_completed_retirement(self.completed_retirement['userId'], self.completed_retirement['withdrawalId'])
+                    elif self.retirement:
                         self.cleanup_retirement(self.retirement['userId'], self.retirement['withdrawalId'])
                     elif self.retirement_attempted:
                         self.close_retirement_preparation_not_dispatched()

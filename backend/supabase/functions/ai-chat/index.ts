@@ -7,7 +7,8 @@ import { loadRuntimeConfig, type EnvReader } from "../_shared/config/env.ts";
 import { requirePrincipal } from "../_shared/auth/principal.ts";
 import { createUserClient } from "../_shared/db/user-client.ts";
 import { createInternalClient } from "../_shared/db/internal-client.ts";
-import { createAiReportEvidenceHandling, recordAiResultAvailable } from "../_shared/db/ai-feedback-client.ts";
+import { createAiReportEvidenceHandling, recordAiResultAvailable, createRpcAiResultStateReader } from "../_shared/db/ai-feedback-client.ts";
+import type { AiResultState } from "../_shared/contracts/ai.ts";
 import type { FetchLike, RpcClient } from "../_shared/db/transport.ts";
 import { createRpcAiFeedback, type ReportEvidenceHandlingPort } from "../_shared/ai/Agents/chatbot/feedback.ts";
 import type { MemberModelRequest } from "../_shared/ai/providers/model-port.ts";
@@ -44,10 +45,15 @@ export function createAiChatRuntime(read: EnvReader, fetchImpl: FetchLike = fetc
   let engine: AiChatEngine;
   let feedback: AiFeedbackPort | undefined;
   let recordResultAvailable: ((scope: MemberModelRequest) => Promise<void>) | undefined;
+  let getResultState: ((userId: string, requestId: string, signal?: AbortSignal) => Promise<AiResultState>) | undefined;
   try {
     const feedbackDb = createInternalClient(config, fetchImpl);
     feedback = createRpcAiFeedback(feedbackDb, options.reportEvidenceHandling ?? createAiReportEvidenceHandling(feedbackDb));
     recordResultAvailable = (scope) => recordAiResultAvailable(feedbackDb, scope);
+    getResultState = (userId, requestId, signal) => {
+      const scopedFetch: FetchLike = (url, init) => fetchImpl(url, { ...init, signal: signal ? AbortSignal.any([signal, ...(init?.signal ? [init.signal] : [])]) : init?.signal });
+      return createRpcAiResultStateReader(createInternalClient(config, scopedFetch)).get(userId, requestId, signal);
+    };
   }
   catch { /* 내부 저장 연결 전에는 helpful/report 접수 성공으로 표시하지 않는다. */ }
   let requestGate: ReturnType<typeof createRpcAiChatRequestGate> | undefined;
@@ -69,11 +75,17 @@ export function createAiChatRuntime(read: EnvReader, fetchImpl: FetchLike = fetc
     metrics: options.metrics,
     allowedOrigins: config.allowedOrigins,
     maxBodyBytes: config.maxRequestBytes,
-    authenticate: (request) => requirePrincipal(request, config, fetchImpl),
+    authenticate: (request) => {
+      if (!["/functions/v1/ai-chat/results/", "/ai-chat/results/"].some(prefix => new URL(request.url).pathname.startsWith(prefix))) return requirePrincipal(request, config, fetchImpl);
+      const scopedFetch: FetchLike = (url, init) => fetchImpl(url, { ...init, signal: AbortSignal.any([request.signal, ...(init?.signal ? [init.signal] : [])]) });
+      return requirePrincipal(request, config, scopedFetch);
+    },
     engine,
     requestGate,
     feedback,
     recordResultAvailable,
+    getResultState,
+    resultReadTimeoutMs: config.upstreamTimeoutMs,
     openSession: (principal, model) => {
       // 검색·성향 조회는 요청 회원 JWT로만 실행한다(RLS·auth.uid() 유지). service role을 쓰지 않는다.
       const db = createUserClient(config, principal as Parameters<typeof createUserClient>[1], fetchImpl);

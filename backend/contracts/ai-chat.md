@@ -16,6 +16,10 @@
 
 현재 탐색 `messages`는 화면 메모리만 사용하고 종료·로그아웃 때 삭제한다. 서비스 서버·브라우저 영구 저장소·로그·캐시·작업 payload에 대화 원문을 남기지 않는다. 사용자/AI 합계 20메시지·각 500자·전체 4,000자다. 초과 전에 안내하고 확인한 필터로 새 탐색하며 몰래 자르거나 저장하지 않는다.
 
+하루20회 자정 초기화는 이용 횟수의 초기화다. 과거 날짜의 AI 대화를 다시 여는 기능을 제공하지 않는다. helpful 평가와 서버의 결과 준비 기록도 대화 본문 보관 기능이 아니다. 현재 화면 메모리에 남아 사용자가 확인할 답변의 평가만 기존 화면에서 제공하며 화면 종료/로그아웃 뒤 상태 조회로 답변을 복원하지 않는다.
+
+사용자 승인에 따라 원 DB의 본인 정상 결과 receipt와 request.finished가 확인되면 기록 이후 취소/응답 유실이 있었더라도 helpful을 허용하는 의미를 유지한다. 이 정상 준비 기록을 사용자의 실제 열람 증거로 해석하지 않는다. 탐색 동의 철회 후에도 현재 메모리에 남아 확인 가능한 기존 답변의 모델 전송 없는 helpful을 허용하는 방향을 적용하며, 철회 후 신규 AI 전송 중단은 유지한다. 새 결과 상태 GET과 SDK 읽기 포트는 구현·합성 검사를 마쳤으며 새 SQL의 실제 DB 적용/연결과 실제 화면 소비는 미검증이다.
+
 입력 개인정보 발견 시 전송을 중단하고 수정 또는 사용자가 선택한 최소 구간의 오탐 문의를 제공한다. 출력 개인정보 발견 시 응답을 숨기고 사용자 재시도 1회를 제공하며 반복되면 일반 탐색으로 안내한다. 공개 장소명과 비공개 상세 위치를 구분하며 탐지 완벽성을 보장하지 않는다.
 
 외부 실제 회원 원문은 포텐스닷의 보관·로그·캐시·백업·학습·삭제 조건 회신의 팀 검토와 사용자 확인 전 전송하지 않는다. 그 전에는 합성 입력만 사용한다. 공급사 포텐스닷·모델 Sonnet 5(`claude-5-sonnet`) 선택과 실제 계정·API 지원 검증은 별개다.
@@ -35,6 +39,7 @@ AI 예산은 등록 계정별 한국시간 하루 320만 토큰 상한, 전체�
 ## HTTP·코어 인터페이스
 
 - `POST /functions/v1/ai-chat`: 인증된 회원의 `{clientRequestId,messages,currentFilters,outputRetryOf?}`, 여분 필드 400·초과 413·공통 envelope의 `AiChatResult`다.
+- `GET /functions/v1/ai-chat/results/{requestId}`(단축 `/ai-chat/results/{requestId}`): 인증 회원의 원 서버 요청 ID만 조회한다. 응답 data는 정확히 `{requestId,status:"available"|"pending"|"unavailable",availableAt:null|string,helpfulAllowed:boolean}`이며 HTTP envelope ID는 이번 조회의 새 ID다. 본인 정상 finished+receipt와 현재 회원·원 준비+90일이 유효할 때만 available/true다. 살아 있는 NULL outcome은 pending/false, 그 외는 unavailable/false이며 두 상태의 준비 시각은null이다. 타인·없는 요청·결과90일 만료는 같은404, 미지원/실패는503이다. query/hash/body/range를 거절하고 응답은 private/no-store다. 모델 전송·차감·finish·평가 쓰기를 하지 않으며 상태 조회로 답변을 복원하지 않는다. SDK `getAiResultState`는 토큰 조회부터 총15초/호출자 취소를 적용한다. 기존 동일키 평가 영수증 복구 앞에 이 GET을 강제하지 않는다.
 - `runChat(input,trustedContext,deps,requestId,signal?)`에는 검증된 주체·명시 limits·모델·검색/재조회 포트를 주입한다. 본문 ID/역할로 권한을 만들지 않는다.
 - `currentFilters`의 성향은 `{values:[{text,polarity:"include"|"exclude"}],combine?:"any"|"all"}`이고 복수 include는 combine이 필요하다. `authorAge`는 `"all" | {min,max}`이며 범위는 정수 19~99, min≤max다. 이전 연령대 값은 거절한다. region은 공고·행사 모두 공식 17개 시·도명이며 축약값을 임의 보정하지 않는다. 지역이 없으면 모델 없이 질문한다. 무료 행사 요구는 최신 와이어프레임 S20의 무료 행사 필터링과 정책9를 따른다. cost free는 DB의 freeOnly로 전달하고 공식 admission.kind free인 행사만 페이징 전에 필터링한다. described/unknown에서 무료·유료를 추정하지 않으며 paid 행사 요청은 검색 대신 지원 범위를 질문한다. 행사 `includeOngoing:true`는 이번 주 신규+이전부터 진행 중인 행사를 뜻하며 `ongoingOnly:true`와 구분한다. `performanceGenre`는 concert/musical/play이며 콘서트에는 대중음악·서양음악(클래식)·한국음악(국악)을 포함한다.
 - 기존 결과 상태 `needs_clarification`, `results`, `no_results`, `unavailable` 및 `partial:true`를 화면 의미와 대조한다. `preference_match`에는 불투명 ref·요청/등록 성향만 보내고 원본 성향·유사도·추론·traitsVersion은 공개 결과에서 제외한다.

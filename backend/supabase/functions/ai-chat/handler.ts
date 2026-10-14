@@ -4,8 +4,8 @@
  * 대화 본문은 요청 메모리에서만 사용하며 로그·오류·응답 헤더에 남기지 않는다(이 모듈은 로그를 쓰지 않는다).
  * 모델이 준비되지 않았거나(보관 검토·지출 근거·설정 누락) 한도 설정이 없으면 검색을 호출하지 않고 200 unavailable로 알린다.
  */
-import type { AiChatResult, ChatInput, ChatLimits, TrustedChatContext } from "../_shared/contracts/ai.ts";
-import { AiInputError } from "../_shared/contracts/ai.ts";
+import type { AiChatResult, AiResultState, ChatInput, ChatLimits, TrustedChatContext } from "../_shared/contracts/ai.ts";
+import { AiInputError, readAiResultState } from "../_shared/contracts/ai.ts";
 import type { JsonValue } from "../_shared/contracts/common.ts";
 import { createCors } from "../_shared/http/cors.ts";
 import { HttpError, toPublicError } from "../_shared/http/errors.ts";
@@ -47,6 +47,9 @@ export interface AiChatHandlerDependencies {
   feedback?: AiFeedbackPort;
   /** 최종 개인정보 검사 후 서버 scope만 기록한다. 원문·응답 본문은 전달하지 않는다. */
   recordResultAvailable?(scope: MemberModelRequest): Promise<void>;
+  /** 본인 원 요청 metadata만 읽는다. 원문/모델/차감/완료 쓰기를 호출하지 않는다. */
+  getResultState?(userId: string, requestId: string, signal?: AbortSignal): Promise<AiResultState>;
+  resultReadTimeoutMs?: number;
   openSession(principal: AiChatPrincipal, model: ModelPort): AiChatSession;
 }
 
@@ -77,8 +80,60 @@ export function createAiChatHandler(deps: AiChatHandlerDependencies) {
   // 준비된 엔진의 대화 한도는 시작 시 검사한다. 요청 처리 중 설정 오류를 입력 오류(400)로 바꾸지 않는다.
   if (deps.engine.status === "ready") assertLimits(deps.engine.limits);
   const cors = createCors({ allowedOrigins: deps.allowedOrigins, allowedMethods: ["POST"], allowedHeaders: ["authorization", "content-type", "apikey"] });
+  const resultCors = createCors({ allowedOrigins: deps.allowedOrigins, allowedMethods: ["GET"], allowedHeaders: ["authorization", "content-type", "apikey"] });
+  const resultReadTimeoutMs = deps.resultReadTimeoutMs ?? 15000;
+  if (!Number.isSafeInteger(resultReadTimeoutMs) || resultReadTimeoutMs < 1) throw new TypeError("결과 조회 제한시간이 필요합니다.");
   return async (request: Request): Promise<Response> => {
     const context = createRequestContext();
+    const resultUrl = new URL(request.url);
+    const resultPrefix = ["/functions/v1/ai-chat/results/", "/ai-chat/results/"].find(prefix => resultUrl.pathname.startsWith(prefix));
+    if (resultPrefix) {
+      const privateResponse = (response: Response) => {
+        response.headers.set("Cache-Control", "private, no-store");
+        response.headers.set("Pragma", "no-cache");
+        const vary = new Set((response.headers.get("Vary") ?? "").split(",").map(value => value.trim()).filter(Boolean));
+        vary.add("Authorization"); vary.add("Origin"); response.headers.set("Vary", [...vary].join(", "));
+        response.headers.set("X-Content-Type-Options", "nosniff");
+        return response;
+      };
+      const preflight = resultCors.preflight(request, context);
+      if (preflight) return privateResponse(preflight);
+      let originAllowed = false;
+      const readAbort = new AbortController();
+      const readSignal = AbortSignal.any([request.signal, readAbort.signal]);
+      const deadline = performance.now() + resultReadTimeoutMs;
+      const timer = setTimeout(() => readAbort.abort(), resultReadTimeoutMs);
+      const wait = <T>(operation: () => Promise<T>): Promise<T> => new Promise((resolve, reject) => {
+        let settled = false;
+        const stop = () => { if (settled) return; settled = true; readSignal.removeEventListener("abort", stop); reject(new HttpError("EXTERNAL_UNAVAILABLE")); };
+        const live = () => { if (readSignal.aborted || performance.now() >= deadline) throw new HttpError("EXTERNAL_UNAVAILABLE"); };
+        readSignal.addEventListener("abort", stop, { once: true });
+        Promise.resolve().then(() => { live(); return operation(); }).then(value => {
+          if (settled) return;
+          try { live(); } catch { stop(); return; }
+          settled = true; readSignal.removeEventListener("abort", stop); resolve(value);
+        }, error => {
+          if (settled) return;
+          settled = true; readSignal.removeEventListener("abort", stop); reject(readSignal.aborted ? new HttpError("EXTERNAL_UNAVAILABLE") : error);
+        });
+      });
+      try {
+        resultCors.responseHeaders(request); originAllowed = true;
+        if (request.method !== "GET") throw new HttpError("METHOD_NOT_ALLOWED");
+        const originalId = resultUrl.pathname.slice(resultPrefix.length);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(originalId) || resultUrl.search || resultUrl.hash || request.body !== null || request.headers.has("range")) throw new HttpError("INVALID_REQUEST");
+        const principal = await wait(() => deps.authenticate(new Request(request, { signal: readSignal })));
+        if (!deps.getResultState) throw new HttpError("EXTERNAL_UNAVAILABLE");
+        const raw = await wait(() => deps.getResultState!(principal.userId, originalId.toLowerCase(), readSignal));
+        let state: AiResultState;
+        try { state = readAiResultState(raw, originalId.toLowerCase()); }
+        catch { throw new HttpError("EXTERNAL_UNAVAILABLE"); }
+        return resultCors.apply(privateResponse(jsonSuccess(state as unknown as JsonValue, context)), request);
+      } catch (error) {
+        const response = privateResponse(jsonFailure(error instanceof HttpError ? error : new HttpError("EXTERNAL_UNAVAILABLE"), context));
+        return originAllowed ? resultCors.apply(response, request) : response;
+      } finally { clearTimeout(timer); readAbort.abort(); }
+    }
     const preflight = cors.preflight(request, context);
     if (preflight) return preflight;
     const observation = beginAiObservation(["/functions/v1/ai-chat", "/ai-chat"].includes(new URL(request.url).pathname) ? deps.metrics : undefined, "ai_chat");

@@ -1,5 +1,6 @@
 """Root member 전용 경계 책임 시험. 실제 SQL/Auth/VM/HTTP는 호출하지 않는다."""
 import copy
+import ast
 import importlib.util
 import json
 from pathlib import Path
@@ -790,6 +791,265 @@ process.exitCode=0;
             b.prepare_retirement(RUN)
         self.assertEqual(len(snapshots), 2)
         self.assertEqual(b.sql_calls, [])
+
+    def completed_boundary(self):
+        b = self.boundary()
+        b.completed_mode = True
+        b.input = {'completionMode': 'ack_loss'}
+        b.binding['accounts'] = [{'userId': str(uuid.UUID(int=50 + i)), 'sessionId': str(uuid.UUID(int=60 + i)),
+                                 'authEmail': 'synthetic-ai-test-' + str(i) + '@example.invalid'} for i in range(6)]
+        b.storage_receipt = None
+        b.completed_retirement = {'status': 'prepared', 'userId': b.binding['accounts'][5]['userId'],
+            'withdrawalId': RUN, 'objectId': OTHER, 'objectSha256': H, 'objectBytes': 128,
+            'invocationRequestId': str(uuid.UUID(int=90)), 'recoveryRequestId': str(uuid.UUID(int=91))}
+        b.completion_functions = {}
+        b.sql_calls = []
+        b.ports = SimpleNamespace(sql=lambda sql: b.sql_calls.append(sql))
+        return b
+
+    def completed_native(self, b):
+        s = b.completed_retirement
+        tasks = [{'taskId': str(uuid.UUID(int=100 + i)), 'withdrawalId': RUN, 'profileId': s['userId'],
+                  'kind': kind, 'state': 'pending', 'objectId': OTHER if i == 0 else None,
+                  'leaseToken': None, 'workerRunToken': None, 'leaseExpiresAt': None,
+                  'evidenceSha256': None, 'completedAt': None, 'rowSha256': H, 'dispatch': None, 'ack': None}
+                 for i, kind in enumerate(('storage_object', 'auth_user'))]
+        return {'withdrawalId': RUN, 'userId': s['userId'], 'state': 'pending_cleanup', 'rowSha256': H,
+                'ackSha256': None, 'tasks': tasks, 'invocations': [], 'reconciliations': [],
+                'authUserPresent': True, 'storageObjectPresent': True}
+
+    def test_completed_methods_are_unavailable_in_original_v1_before_live(self):
+        b = self.boundary()
+        for name, fields in m.COMPLETED_METHOD_ARGS.items():
+            args = {'runId': RUN, 'bindingSha256': H, 'userId': USER}
+            if 'withdrawalId' in fields:
+                args['withdrawalId'] = RUN
+            with self.assertRaisesRegex(ValueError, 'FIXED_FRAME'):
+                b.dispatch({'type': 'call', 'requestId': RUN, 'sequence': 1, 'method': name, 'args': args})
+        self.assertEqual(b.live_calls, [])
+        self.assertEqual(len(m.METHOD_ARGS), 16)
+
+    def test_completed_new_packet_does_not_enable_old_mutation_methods(self):
+        b = self.completed_boundary()
+        with self.assertRaisesRegex(ValueError, 'FIXED_FRAME'):
+            b.dispatch({'type': 'call', 'requestId': RUN, 'sequence': 1, 'method': 'prepareRetirement',
+                        'args': {'runId': RUN, 'bindingSha256': H, 'userId': b.completed_retirement['userId']}})
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.live_calls, [])
+
+    def test_completed_missing_creation_metadata_cannot_be_current_inspect_or_created_flag(self):
+        b = self.completed_boundary()
+        for alleged in (None, {'created': True}, {'id': 'a' * 64, 'image': 'sha256:' + H, 'configSha256': H}):
+            b.storage_receipt = alleged
+            with self.assertRaisesRegex(ValueError, 'STORAGE_CREATION_CONTRACT_REQUIRED'):
+                b.verify_completed_storage()
+        self.assertEqual(b.sql_calls, [])
+
+    def storage_creation_model(self):
+        root = Path('/synthetic-model-only')
+        project = 'jonghyun-backend100-12345678'
+        target = {'project': project, 'context': 'colima-jonghyun-backend100', 'host': 'unix:///synthetic-model-only/docker.sock'}
+        def container(i, name, selected):
+            return {'id': format(i, '064x'), 'name': name, 'image': 'sha256:' + H,
+                'configSha256': H, 'hostConfigSha256': H, 'mountsSha256': H,
+                'project': selected, 'running': True, 'oomKilled': False}
+        old = [container(i + 1, 'preserved-' + str(i), 'preserved') for i in range(6)]
+        roles = ('db', 'auth', 'rest', 'kong', 'storage', 'inbucket')
+        new = [container(i + 20, 'supabase_' + role + '_' + project, project) for i, role in enumerate(roles)]
+        before = {'containers': old, 'networks': [], 'volumes': []}
+        added = {'containers': new, 'networks': [{'id': 'd' * 64, 'name': 'supabase_network_' + project, 'inspectionSha256': H}],
+                 'volumes': [{'name': 'supabase_db_' + project, 'inspectionSha256': H}, {'name': 'supabase_storage_' + project, 'inspectionSha256': H}]}
+        after = {'containers': old + new, 'networks': added['networks'], 'volumes': added['volumes']}
+        protected = {'containers': [{**{k: v for k, v in c.items() if k not in ('project', 'running', 'oomKilled')},
+                        'state': {'running': True, 'oomKilled': False}} for c in old], 'customNetworks': [], 'volumes': []}
+        common = {'version': 1, 'head': '1' * 40, 'producerPath': 'tools/local/start_owned_validation.py',
+            'producerSha256': H, 'preparedRoot': str(root), 'project': project, 'context': target['context'], 'dockerHost': target['host']}
+        original = {**common, 'scenario': 'OWNED_RESOURCES_CREATION_V1', 'intentBeforeSha256': H, 'protectedBaselineSha256': H,
+            'cli': {'path': '/synthetic-model-only/supabase', 'sha256': '42a9fe8b8a266bc0fbde804c08efb75cc0653480e91ba3f20fba1c3c27a7b49a', 'version': '2.116.0'},
+            'command': ['/synthetic-model-only/supabase', 'start', '--workdir', str(root), '-x', 'realtime,imgproxy'], 'commandExit': 0,
+            'commandStdoutSha256': H, 'commandStderrSha256': H, 'before': before, 'after': after, 'owned': added}
+        receipt = {**common, 'scenario': 'OWNED_STORAGE_CREATION_V1',
+            'originalCreationReceiptPath': str(root / 'owned-resource-creation-receipt.json'), 'originalCreationReceiptSha256': H,
+            'ownedContainersSha256': H, 'storage': {k: new[4][k] for k in ('id', 'name', 'image', 'configSha256', 'hostConfigSha256', 'mountsSha256')}}
+        producer = CALLER.parents[3] / 'tools/local/start_owned_validation.py'
+        tree = ast.parse(producer.read_text())
+        function = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'creation_delta')
+        import re
+        namespace = {'require': m.require, 're': re}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), str(producer), 'exec'), namespace)
+        return receipt, original, new, protected, root, target, common['head'], namespace['creation_delta']
+
+    def test_completed_original_creation_model_rejects_existing_resource_and_storage_mismatch(self):
+        fixture = self.storage_creation_model()
+        result = m.validate_storage_creation(*copy.deepcopy(fixture[:-1]), fixture[-1])
+        self.assertEqual(result, fixture[0]['storage'])
+        changes = [lambda f: f[0]['storage'].update(image='sha256:' + F),
+                   lambda f: f[1]['after']['containers'][0].update(configSha256=F),
+                   lambda f: f[1].update(commandExit=1),
+                   lambda f: f[1].update(command=['supabase', 'stop']),
+                   lambda f: f[0].update(created=True),
+                   lambda f: f[1]['after']['containers'].pop(),
+                   lambda f: f[1]['after']['containers'].append(copy.deepcopy(f[1]['after']['containers'][0]))]
+        for mutate in changes:
+            bad = list(copy.deepcopy(fixture[:-1]))
+            mutate(bad)
+            with self.assertRaises(ValueError):
+                m.validate_storage_creation(*bad, fixture[-1])
+        # 이 검사는 정형 관측의 모형 대조이며 start/VM/SQL/Auth/HTTP를 실행하지 않는다.
+
+    def test_completed_current_storage_config_or_image_drift_refused(self):
+        b = self.completed_boundary()
+        b.target = {'project': 'jonghyun-backend100-12345678'}
+        c = {'Id': 'd' * 64, 'Name': '/supabase_storage_' + b.target['project'], 'Image': 'sha256:' + H,
+             'State': {'Running': True, 'OOMKilled': False},
+             'Config': {'Labels': {'com.supabase.cli.project': b.target['project']}}, 'HostConfig': {}, 'Mounts': []}
+        canon = lambda v: m.sha(json.dumps(v, sort_keys=True, separators=(',', ':')).encode())
+        b.storage_receipt = {'id': c['Id'], 'name': c['Name'][1:], 'image': c['Image'],
+            'configSha256': canon(c['Config']), 'hostConfigSha256': canon(c['HostConfig']), 'mountsSha256': canon(c['Mounts'])}
+        b.storage_creation_verified = True
+        b.ports.runner = SimpleNamespace(call=lambda args: json.dumps([c]))
+        b.h.signed_exact_json = json.loads
+        b.verify_completed_storage()
+        for field in ('Id', 'Image'):
+            before = c[field]
+            c[field] = 'wrong-owned-target'
+            with self.assertRaisesRegex(ValueError, 'STORAGE_CURRENT_IDENTITY'):
+                b.verify_completed_storage()
+            c[field] = before
+        c['Mounts'].append({'Source': '/other-target'})
+        with self.assertRaisesRegex(ValueError, 'STORAGE_CURRENT_CONFIG'):
+            b.verify_completed_storage()
+        self.assertEqual(b.sql_calls, [])
+
+    def test_creation_port_preflight_requires_exact_overlay_ports_and_all_free_without_reservation(self):
+        overlay = {'api.port': 54321, 'db.port': 54322, 'db.shadow_port': 54320, 'other.port': 54321, 'jwt.expiry': 3600}
+        good = {'ports': [54320, 54321, 54322], 'dockerBindings': 'FREE', 'vmListeners': 'FREE',
+                'hostBind': 'FREE', 'reservation': False, 'observedAt': 1000.5}
+        m.validate_creation_port_preflight(good, overlay, 1001)
+        mutations = [lambda v: v.update(ports=[54320, 54321]),
+                     lambda v: v.update(ports=[54321, 54320, 54322]),
+                     lambda v: v.update(ports=[54320, 54321, 54321, 54322]),
+                     lambda v: v.update(dockerBindings='OCCUPIED'),
+                     lambda v: v.update(vmListeners='UNKNOWN'),
+                     lambda v: v.update(hostBind='UNKNOWN'),
+                     lambda v: v.update(reservation=True),
+                     lambda v: v.update(reservation=0),
+                     lambda v: v.update(observedAt=1001.1),
+                     lambda v: v.update(observedAt=float('nan')),
+                     lambda v: v.update(created=True)]
+        for mutate in mutations:
+            value = copy.deepcopy(good)
+            mutate(value)
+            with self.assertRaises(ValueError):
+                m.validate_creation_port_preflight(value, overlay, 1001)
+        for invalid in ({'api.port': True}, {'db.port': '54322'}, {'api.port': 1024}, {}):
+            with self.assertRaises(ValueError):
+                m.validate_creation_port_preflight(good, invalid, 1001)
+        # bind/listen/VM/Docker 호출은 없다. 생성 시점 관측을 예약 보장으로 확대하지 않는다.
+
+    def test_completed_foreign_member_and_withdrawal_refused_without_mutation(self):
+        b = self.completed_boundary()
+        with self.assertRaisesRegex(ValueError, 'COMPLETED_OWNED_USER'):
+            b.prepare_completed_retirement(USER)
+        with self.assertRaisesRegex(ValueError, 'COMPLETED_OWNED_WITHDRAWAL'):
+            b.inspect_completed_retirement(b.completed_retirement['userId'], OTHER)
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.saved, {})
+
+    def test_completed_native_scope_rejects_foreign_duplicate_reordered_tasks_and_false_outcome(self):
+        b = self.completed_boundary()
+        good = self.completed_native(b)
+        self.assertEqual(b.validate_completed_rows(copy.deepcopy(good)), good)
+        changes = [lambda v: v['tasks'][0].update(profileId=USER),
+                   lambda v: v['tasks'][0].update(withdrawalId=OTHER),
+                   lambda v: v['tasks'].reverse(),
+                   lambda v: v['tasks'].append(copy.deepcopy(v['tasks'][0])),
+                   lambda v: v['tasks'][1].update(kind='storage_object'),
+                   lambda v: v.update(state='completed'),
+                   lambda v: v.update(ackSha256=H)]
+        for mutate in changes:
+            bad = copy.deepcopy(good)
+            mutate(bad)
+            with self.assertRaises(ValueError):
+                b.validate_completed_rows(bad)
+        self.assertEqual(b.sql_calls, [])
+
+    def test_completed_auth_ack_is_original_auth_hash_not_storage_or_aggregate(self):
+        b = self.completed_boundary()
+        value = self.completed_native(b)
+        for index, mark in enumerate((H, F)):
+            value['tasks'][index].update(state='running', leaseToken=str(uuid.UUID(int=140 + index)),
+                workerRunToken=str(uuid.UUID(int=150)), leaseExpiresAt='2026-10-14T01:00:00+00:00')
+            value['tasks'][index]['dispatch'] = {'dispatchId': str(uuid.UUID(int=120 + index)), 'rowSha256': H}
+            value['tasks'][index]['ack'] = {'receiptId': str(uuid.UUID(int=130 + index)), 'ackSha256': mark, 'rowSha256': H}
+        value['ackSha256'] = F
+        b.validate_completed_rows(value)
+        value['ackSha256'] = H
+        with self.assertRaisesRegex(ValueError, 'COMPLETED_AUTH_ACK_BINDING'):
+            b.validate_completed_rows(value)
+        value['tasks'][1]['ack'] = None
+        value['ackSha256'] = None
+        b.validate_completed_rows(value)
+
+    def test_completed_product_query_is_read_only_and_uses_original_ids(self):
+        b = self.completed_boundary()
+        queries = []
+        b.read = lambda sql: queries.append(sql) or None
+        b.completed_fixture_rows(b.completed_retirement['userId'], RUN)
+        query = queries[0]
+        for word in ('update ', 'insert ', 'delete ', 'set lease', 'record_member_cleanup_delete_ack(', 'begin_member_cleanup_delete('):
+            self.assertNotIn(word, query.lower())
+        self.assertIn("a.kind='auth_user'", query)
+        self.assertIn(b.completed_retirement['invocationRequestId'], query)
+        self.assertIn(b.completed_retirement['recoveryRequestId'], query)
+        self.assertEqual(b.sql_calls, [])
+
+    def test_completed_cleanup_foreign_whole_bag_change_prevents_closed_receipt(self):
+        b = self.completed_boundary()
+        b.completed_baseline = {'rows': {'public.profiles': {H: 5}, 'private.unrelated': {F: 1}}, 'authoritySha256': H}
+        current = copy.deepcopy(b.completed_baseline)
+        current['rows']['private.unrelated'] = {N: 1}
+        b.completed_before_owned = {}
+        b.completed_owned_rows = lambda *args: {}
+        b.function_rows = lambda signatures: {}
+        b.ports.snapshot = lambda: current
+        with self.assertRaisesRegex(ValueError, 'FOREIGN_ROW_CHANGED'):
+            b.cleanup_completed_retirement(b.completed_retirement['userId'], RUN)
+        self.assertFalse(getattr(b, 'completed_closed', False))
+        self.assertNotIn('completed-final-retained.json', b.saved)
+        self.assertEqual(b.sql_calls, [])
+
+    def test_completed_guard_cas_foreign_change_refuses_all_writes(self):
+        b = self.completed_boundary()
+        b.original_controls = {'atomic': {'singleton': True, 'enabled': False}}
+        b.completion_enable_changes = {'atomic': {'enabled': True}}
+        b.control_overrides = {}
+        b.ports.read_sql = lambda *args, **kwargs: json.dumps({'atomic': {'singleton': True, 'enabled': True, 'foreignColumn': True}})
+        with self.assertRaisesRegex(ValueError, 'COMPLETED_OPENING_CAS_UNKNOWN'):
+            b.close_completed_guards()
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.saved, {})
+
+    def test_completed_cleanup_cas_failure_does_not_claim_closed_or_rewrite_ack_and_lease(self):
+        b = self.completed_boundary()
+        b.original_controls = {'atomic': {'singleton': True, 'enabled': False}}
+        b.completion_enable_changes = {'atomic': {'enabled': True}}
+        b.control_overrides = {}
+        b.ports.read_sql = lambda *args, **kwargs: json.dumps({'atomic': {'singleton': True, 'enabled': True}})
+        def denied(sql):
+            b.sql_calls.append(sql)
+            raise ValueError('SQLSTATE_40001')
+        b.ports.sql = denied
+        with self.assertRaisesRegex(ValueError, 'SQLSTATE_40001'):
+            b.close_completed_guards()
+        self.assertEqual(len(b.sql_calls), 1)
+        sql = b.sql_calls[0].lower()
+        self.assertIn('to_jsonb(c)=', sql)
+        for table in ('member_cleanup_tasks', 'member_cleanup_delete_acks', 'member_cleanup_dispatches', 'worker_invocations', 'global_worker_run'):
+            self.assertNotIn('update private.' + table, sql)
+            self.assertNotIn('delete from private.' + table, sql)
+        self.assertFalse(getattr(b, 'completed_closed', False))
+        self.assertNotIn('completed-final-retained.json', b.saved)
 
 
 if __name__ == '__main__':

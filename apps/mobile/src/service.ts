@@ -1,4 +1,4 @@
-import { ApiError, ServiceApiClient } from "./api.ts";
+import { ApiError, ServiceApiClient, requestSignal } from "./api.ts";
 import type { Filters } from "./types.ts";
 import type { PlaceLookupResult } from "../../../backend/supabase/functions/_shared/integrations/places/port.ts";
 import { CATEGORIES } from "./domain.ts";
@@ -11,10 +11,12 @@ import type {
 import type {
   AiCard,
   AiChatResult,
+  AiResultState,
   AiFeedbackInput,
   AiFeedbackResult,
   ChatInput,
 } from "../../../backend/supabase/functions/_shared/contracts/ai.ts";
+import { readAiResultState } from "../../../backend/supabase/functions/_shared/contracts/ai.ts";
 import type {
   EventPage,
   EventPageQuery as ServerEventPageQuery,
@@ -925,6 +927,41 @@ export class YumidangService {
         signal,
       }),
     );
+  }
+  /** 원 결과의 상태만 조회한다. 답변/대화 복원·모델 재전송·feedback 쓰기는 하지 않는다. */
+  async getAiResultState(requestId: string, signal?: AbortSignal): Promise<AiResultState> {
+    if (!uuid.test(requestId)) return invalid();
+    if (!this.options.aiChatUrl) throw new ApiError(503, "AI_NOT_CONFIGURED");
+    const id = requestId.toLowerCase();
+    const url = new URL(this.options.aiChatUrl);
+    // 새 읽기 포트는 토큰 대기부터 총15초를 적용한다. 늦은 토큰으로 요청을 시작하지 않는다.
+    const request = requestSignal([signal]);
+    const deadline = Date.now() + 15000;
+    const aborted = () => new ApiError(408, signal?.aborted ? "CANCELLED" : "REQUEST_TIMEOUT", !signal?.aborted);
+    const live = () => { if (request.signal.aborted || Date.now() >= deadline) throw aborted(); };
+    try {
+      const value = await new Promise<unknown>((resolve, reject) => {
+        let settled = false;
+        const stop = () => { if (settled) return; settled = true; request.signal.removeEventListener("abort", stop); reject(aborted()); };
+        request.signal.addEventListener("abort", stop, { once: true });
+        Promise.resolve().then(async () => {
+          live();
+          const token = await this.options.accessToken();
+          live();
+          const client = new ServiceApiClient(url.origin, async () => token, this.options.fetcher);
+          const result = await client.request<unknown>(`${url.pathname.replace(/\/$/, "")}/results/${id}`, { auth: "required", signal: request.signal });
+          live(); return result;
+        }).then(result => {
+          if (settled) return;
+          settled = true; request.signal.removeEventListener("abort", stop); resolve(result);
+        }, error => {
+          if (settled) return;
+          settled = true; request.signal.removeEventListener("abort", stop);
+          reject(request.signal.aborted || Date.now() >= deadline ? aborted() : error);
+        });
+      });
+      try { return readAiResultState(value, id); } catch { return fail(); }
+    } finally { request.dispose(); }
   }
   async sendAiFeedback(input: AiFeedbackInput, signal?: AbortSignal): Promise<AiFeedbackResult> {
     if (!this.options.aiChatUrl) throw new ApiError(503, "AI_NOT_CONFIGURED");

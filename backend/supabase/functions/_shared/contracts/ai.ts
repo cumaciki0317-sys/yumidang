@@ -76,6 +76,37 @@ export interface AiChatResult {
    */
   partial?: true;
 }
+/** 원 결과의 본인 상태만 조회한다. 답변 본문·실제 열람·평가 접수 증거가 아니다. */
+export interface AiResultState {
+  requestId: string;
+  status: "available" | "pending" | "unavailable";
+  availableAt: string | null;
+  helpfulAllowed: boolean;
+}
+/** HTTP 요청 context의 새 ID와 원 결과 ID를 혼동하지 않는 공통 메타데이터 검사다. */
+export function readAiResultState(value: unknown, requestId: string): AiResultState {
+  try {
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof requestId !== "string" || !uuid.test(requestId) || !value || typeof value !== "object" || Array.isArray(value)) throw new Error();
+    const row = value as Record<string, unknown>;
+    if (Reflect.ownKeys(row).length !== 4 || Object.values(Object.getOwnPropertyDescriptors(row))
+      .some(field => !field.enumerable || !Object.hasOwn(field, "value"))) throw new Error();
+    if (Object.keys(row).sort().join(",") !== "availableAt,helpfulAllowed,requestId,status" ||
+      row.requestId !== requestId.toLowerCase() || typeof row.status !== "string" || !["available", "pending", "unavailable"].includes(row.status)) throw new Error();
+    if (row.status === "available") {
+      if (row.helpfulAllowed !== true || typeof row.availableAt !== "string") throw new Error();
+      const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.exec(row.availableAt);
+      if (!parts || !Number.isFinite(Date.parse(row.availableAt))) throw new Error();
+      const date = new Date(0);
+      date.setUTCFullYear(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+      date.setUTCHours(Number(parts[4]), Number(parts[5]), Number(parts[6]), 0);
+      if ([date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
+        .some((part, index) => part !== Number(parts[index + 1]))) throw new Error();
+    } else if (row.helpfulAllowed !== false || row.availableAt !== null) throw new Error();
+    return { requestId: requestId.toLowerCase(), status: row.status as AiResultState["status"],
+      availableAt: row.availableAt as string | null, helpfulAllowed: row.helpfulAllowed as boolean };
+  } catch { throw new AiInputError("INVALID_AI_RESULT_STATE"); }
+}
 export class AiInputError extends Error { constructor(code: string) { super(code); this.name = "AiInputError"; } }
 
 /** AI 문제 접수는 사용자가 확인한 답변 일부 또는 캡처 하나만 받는다. 전체 대화는 없다. */

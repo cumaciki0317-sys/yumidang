@@ -14,7 +14,7 @@ const internalRpcs = new Set([
   // SQL116 발급 전송. 검사 제어·issuer EXEC는 기본 닫힘이며 실제 승인 조립에서만 사용한다.
   "issue_content_inspection_ticket",
   "read_worker_runtime_pending_v2", "read_worker_runtime_maintenance_schedule", "read_ai_feedback_maintenance_schedule", "purge_ai_feedback_scoped",
-  "record_ai_chat_result_available", "get_ai_feedback_readiness", "submit_ai_feedback", "purge_expired_ai_feedback",
+  "record_ai_chat_result_available", "get_ai_feedback_readiness", "get_ai_result_state", "submit_ai_feedback", "purge_expired_ai_feedback",
   "reserve_ai_chat_account_model", "reserve_review_summary_account_model", "settle_ai_account_budget",
   // 공식 순위 완료는 공급사 근거가 보류되어 계속 제외한다.
   "read_event_collection_contract", "register_event_collection_jobs", "claim_event_collection", "commit_event_collection_page",
