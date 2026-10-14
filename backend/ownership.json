@@ -169,6 +169,17 @@
         "tools/local/run_database_tests.py",
         "tests/integration/jonghyun/isolated_ai_contracts.py"
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "from": "jonghyun",
+      "to": "minkyu",
+      "authorization": "사용자: 두 도구 두 번째 한시 재배정 승인 및 현재까지 작업 커밋·푸시/인수인계 전 임시 검증 도구 권한 원상복구",
+      "scope": "두 번째 한시 검증의 새 대상5개 생성 자원 정리 영수증과 원본 바이트 복구 커밋 c0ec948a31b1eefe270e0e015cbeb86511c82f4e를 확인하고 아래 두 개별 경로만 minkyu 담당으로 복귀한다. 별도 AI 민규 정책 관리 단계이며 사람 민규가 수행한 작업 성과를 뜻하지 않는다. 기존 자원 metadata·실행 상태 보존 확인을 기존 저장 바이트 전체 보존이나 실패 run의 SQL 원복 성공으로 확대하지 않는다. 임시 도구 버전의 실제 검증 증거와 원복 후 도구의 지원 범위를 구분한다. 다른 규칙·보호 경로·hook·종현 미커밋 파일·원본 공유 clone·운영·실회원·공급사 범위는 변경하지 않는다. 이 정책 관리 단계는 원격 푸시를 실행하지 않는다.",
+      "paths": [
+        "tools/local/run_database_tests.py",
+        "tests/integration/jonghyun/isolated_ai_contracts.py"
+      ]
     }
   ],
   "rules": [
@@ -494,7 +505,7 @@
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_contracts.py",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_factory.ts",
@@ -510,7 +521,7 @@
     },
     {
       "path": "tools/local/run_database_tests.py",
-      "owner": "jonghyun"
+      "owner": "minkyu"
     },
     {
       "path": "tests/database/jonghyun/test_isolated_midnight_preparation.py",

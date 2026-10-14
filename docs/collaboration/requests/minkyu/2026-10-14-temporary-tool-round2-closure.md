@@ -1,0 +1,36 @@
+# 두 번째 한시 검증 도구 담당 복귀 — 2026-10-14
+
+전체 **79%(22/28)** 유지. 이번 작업은 별도 AI 민규 정책 관리 단계이며 사람 민규가 수행한 작업 성과를 뜻하지 않는다. 두 도구 담당 복귀는 백엔드 전체 완료나 운영 적용을 뜻하지 않는다.
+
+사용자의 두 번째 한시 재배정 승인과 최신 “현재까지 작업 커밋·푸시/인수인계 전 임시 검증 도구 권한 원상복구” 지시에 따라 원복 선행조건을 확인하고 정책만 별도로 종료한다. [종현 실행 기록](../jonghyun/2026-10-14-round2-validation-result.md)의 실패·성공·미확인 구분을 유지한다.
+
+## 원본 바이트 복구 확인
+
+종현 원복 커밋 `c0ec948a31b1eefe270e0e015cbeb86511c82f4e`의 변경 목록은 아래 두 파일뿐이다. 정책 전용 clone을 해당 커밋까지 정상 fast-forward하고 각 파일이 시작 기준 `ad08baf76dfb7f71704308999419d561aa965578`과 바이트 단위로 같음과 Python AST 파싱을 확인했다.
+
+| 경로 | 원복 SHA256 |
+|---|---|
+| `tools/local/run_database_tests.py` | `5e848bc7a52cadb9409b3e487b00107944613dceb8d5ff8f11ca77d41bb54d49` |
+| `tests/integration/jonghyun/isolated_ai_contracts.py` | `04c68bb41214e3cf865637094fdc409cd901eaa8b0c31d1f0392d0979862ad8d` |
+
+## 새 자원 정리 선행조건
+
+비공개 정리 영수증5개를 읽어 다음 SHA와 일치함을 확인했다. 각 영수증의 실제 삭제 관측 exit0, 대상별 새 컨테이너6개·network1개·volume2개 제거, 최종 기존6개 실행 중과 metadata 일치, 기존 자원 변경 없음과 VM 중지 없음을 확인했다. 다섯 최종 inventory도 서로 동일하다. 이 단계에서는 Docker·SQL·HTTP 실행을 하지 않았다.
+
+| 새 대상 식별자 | 정리 영수증 SHA256 |
+|---|---|
+| `03bd62a0` | `b9b45c874215e8c0d7bfb60cbe42036c79cc48071bab50e1450bbaa0b63c9bed` |
+| `b1513a9e` | `5d991d982c743e60d61b8e4359952dd7d1e2966c428066eb81a5592ab83ee8d3` |
+| `1e02a89f` | `347e425b94fa162e4f1d35cb50f6911c7469914e7e29ab3f2cb9caee97d144a0` |
+| `cfc0636b` | `4082d1defa943cb4f979ca041f1a23f0f9775d69e4cd758a6d21808bfa9e101e` |
+| `db327fd3` | `a63f808e219117ab2aca5cacbdf1d93828eff5cad39f6d537e84ef7a9a2571ac` |
+
+기존 저장 바이트 전체와 전체 SQL baseline 복원은 이 정리 증거로 확인되지 않는다. 특히 실패 run의 SQL 정리 성공과 DELETE 응답 유실/ACK 없음의 미확인 상태를 자원 정리 성공으로 바꾸지 않는다.
+
+## 정식 담당 복귀 범위
+
+`backend/ownership.json`에서 위 두 개별 규칙의 owner만 `jonghyun`에서 `minkyu`로 복귀하고 이번 종료 기록을 추가한다. 기존 재배정 기록·나머지 규칙·보호 경로·정책 버전·성호 담당은 그대로 보존한다. 종현 전용 clone이나 원본 공유 clone의 actor·hook은 바꾸지 않는다.
+
+별도 정책 clone `/private/tmp/yumidang-minkyu-policy-round2-20261014`, 브랜치 `minkyu/temporary-tool-round2-20261014`, actor `minkyu`, hook `.githooks`를 사용한다. 정책 및 이 민규 담당 종료 문서만 정상 소유권 검사·hook으로 별도 로컬 커밋한다. 종현은 이 정책 커밋을 반영한 뒤 두 경로가 minkyu 담당으로 돌아왔음을 다시 확인하고 최종 인수인계를 진행한다. 이번 정책 관리 단계에서 원격 푸시·제품 코드 편집·운영·실회원·공급사 실행은 없다.
+
+두 도구의 원복은 한시 지원 기능도 원본으로 돌아갔다는 뜻이다. 향후 같은 확장 검증을 재실행하려면 별도 정식 지원 또는 다시 합의한 한시 절차가 필요하며, 과거 임시 소스의 PASS를 원복된 도구의 지원 증거로 쓰지 않는다.
