@@ -63,7 +63,15 @@ function imageMagic(bytes: Uint8Array, mime: string) {
   if (mime === "image/webp") return bytes.length >= 12 && String.fromCharCode(...bytes.slice(0,4)) === "RIFF" && String.fromCharCode(...bytes.slice(8,12)) === "WEBP" && new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getUint32(4,true) === bytes.length-8;
   return false;
 }
-async function readCapture(response: Response, metadata: Record<string,JsonValue>, signal: AbortSignal) {
+type CaptureWait = <T>(operation: () => Promise<T>, late?: (value: T) => void) => Promise<T>;
+function cancelCaptureBody(response: Response | null) {
+  try { if(response?.body)void response.body.cancel().catch(()=>{}); } catch { /* best-effort, 외부 종료 증거가 아니다. */ }
+}
+function releaseCaptureReader(reader: ReadableStreamDefaultReader<Uint8Array>) {
+  try { void reader.cancel().catch(()=>{}); } catch { /* 정리 실패가 HTTP 종료를 막지 않는다. */ }
+  try { reader.releaseLock(); } catch { /* 진행 중인 read의 lock은 늦은 완료 때 다시 해제한다. */ }
+}
+async function readCapture(response: Response, metadata: Record<string,JsonValue>, live: () => void, wait: CaptureWait) {
   const mime = String(metadata.mimeType), expected = Number(metadata.byteSize);
   const extension = String(metadata.path).split(".").at(-1);
   if (response.status !== 200 || response.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== mime || ({"image/jpeg":"jpg","image/png":"png","image/webp":"webp"} as Record<string,string>)[mime] !== extension) throw new HttpError("EXTERNAL_UNAVAILABLE");
@@ -73,8 +81,8 @@ async function readCapture(response: Response, metadata: Record<string,JsonValue
   const reader=response.body.getReader();const chunks:Uint8Array[]=[];let size=0;
   try {
     while (true) {
-      if(signal.aborted)throw new HttpError("EXTERNAL_UNAVAILABLE");
-      const next=await reader.read();if(next.done)break;
+      live();
+      const next=await wait(()=>reader.read(),()=>releaseCaptureReader(reader));if(next.done)break;
       size+=next.value.byteLength;
       if(size>MAX_REPORT_CAPTURE_BYTES || size>expected)throw new HttpError("EXTERNAL_UNAVAILABLE");
       chunks.push(next.value);
@@ -83,8 +91,9 @@ async function readCapture(response: Response, metadata: Record<string,JsonValue
     const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
     // MIME 전송 손상 검사다. 사진 전체 디코딩·원본 대화 수집을 수행하지 않는다.
     if(!imageMagic(bytes,mime))throw new HttpError("EXTERNAL_UNAVAILABLE");
+    live();
     return bytes;
-  } finally {await reader.cancel().catch(()=>{});reader.releaseLock();}
+  } finally {releaseCaptureReader(reader);}
 }
 export function createReportOperatorExecutor(config: RuntimeConfig, fetchImpl: FetchLike = fetch) {
   return async (request: Request, route: ReportOperatorRoute, context: RequestContext = createRequestContext()): Promise<Response> => {
@@ -123,12 +132,30 @@ export function createReportOperatorExecutor(config: RuntimeConfig, fetchImpl: F
       } else throw new HttpError("INVALID_REQUEST");
       startArgs.p_appeal_id=route.appealId; startArgs.p_outcome=value.outcome;
     }
-    const signal=AbortSignal.any([request.signal,AbortSignal.timeout(config.upstreamTimeoutMs)]);
-    const scopedFetch:FetchLike=(input,init)=>fetchImpl(input,{...init,signal:init?.signal?AbortSignal.any([signal,init.signal]):signal});
+    const captureAbort=route.kind==="capture"?new AbortController():null;
+    const deadline=performance.now()+config.upstreamTimeoutMs;
+    const timer=captureAbort?setTimeout(()=>captureAbort.abort(),config.upstreamTimeoutMs):undefined;
+    const signal=AbortSignal.any([request.signal,captureAbort?.signal??AbortSignal.timeout(config.upstreamTimeoutMs)]);
+    const live=()=>{if(signal.aborted || performance.now()>=deadline)throw new HttpError("EXTERNAL_UNAVAILABLE");};
+    const wait:CaptureWait=(operation,late)=>new Promise((resolve,reject)=>{
+      let settled=false;
+      const dispose=()=>signal.removeEventListener("abort",expired);
+      const expired=()=>{if(settled)return;settled=true;dispose();reject(new HttpError("EXTERNAL_UNAVAILABLE"));};
+      signal.addEventListener("abort",expired,{once:true});
+      Promise.resolve().then(()=>{live();return operation();}).then(value=>{
+        if(settled){late?.(value);return;}
+        try{live();}catch{expired();late?.(value);return;}
+        settled=true;dispose();resolve(value);
+      }).catch(error=>{if(settled)return;settled=true;dispose();reject(error);});
+    });
+    const scopedFetch:FetchLike=(input,init)=>{
+      const operation=()=>fetchImpl(input,{...init,signal:init?.signal?AbortSignal.any([signal,init.signal]):signal});
+      return captureAbort?wait(operation,cancelCaptureBody):operation();
+    };
     let upstream:Response|null=null;
     try {
       if(signal.aborted)throw new HttpError("EXTERNAL_UNAVAILABLE");
-      const principal=await requirePrincipal(request,config,scopedFetch);
+      const principal=await (captureAbort?wait(()=>requirePrincipal(request,config,scopedFetch)):requirePrincipal(request,config,scopedFetch));
       const db=createReportOperatorClient(config,principal,scopedFetch);
       if(route.kind==="clock-state" || route.kind==="clock-repair") {
         const result=await db.rpc(route.kind==="clock-state"?"get_assigned_cancellation_clock_state":"repair_assigned_cancellation_clocks",startArgs??{p_report_id:route.reportId});
@@ -179,23 +206,26 @@ export function createReportOperatorExecutor(config: RuntimeConfig, fetchImpl: F
         return response;
       }
       const args={p_report_id:route.reportId,p_asset_id:route.assetId};
-      const metadata=await db.rpc("get_assigned_report_capture",args) as Record<string,JsonValue>;
+      const metadata=await wait(()=>db.rpc("get_assigned_report_capture",args)) as Record<string,JsonValue>;
+      live();
       const target=config.supabaseUrl+"/storage/v1/object/authenticated/report-evidence/"+metadata.path;
       const headers={apikey:config.supabaseAnonKey,Authorization:"Bearer "+getPrincipalToken(principal),Accept:String(metadata.mimeType)};
       upstream=await scopedFetch(target,{method:"GET",headers,redirect:"error",cache:"no-store"});
       if(denied(upstream.status))throw new HttpError("RESOURCE_NOT_FOUND");
-      const bytes=await readCapture(upstream,metadata,signal);
-      const rechecked=await db.rpc("get_assigned_report_capture",args) as Record<string,JsonValue>;
+      const bytes=await readCapture(upstream,metadata,live,wait);
+      const rechecked=await wait(()=>db.rpc("get_assigned_report_capture",args)) as Record<string,JsonValue>;
       if(!sameCapture(metadata,rechecked))throw new HttpError("RESOURCE_NOT_FOUND");
+      live();
       const head=await scopedFetch(target,{method:"HEAD",headers,redirect:"error",cache:"no-store"});
-      await head.body?.cancel();
+      cancelCaptureBody(head);
       if(denied(head.status))throw new HttpError("RESOURCE_NOT_FOUND");
-      if(head.status!==200 || signal.aborted)throw new HttpError("EXTERNAL_UNAVAILABLE");
+      if(head.status!==200)throw new HttpError("EXTERNAL_UNAVAILABLE");
+      live();
       return new Response(new Uint8Array(bytes).buffer,{status:200,headers:{...privateHeaders,"X-Request-Id":context.requestId,"Content-Type":String(metadata.mimeType),"Content-Length":String(bytes.byteLength)}});
     } catch(error) {
-      await upstream?.body?.cancel().catch(()=>{});
+      cancelCaptureBody(upstream);
       if(error instanceof HttpError)throw error;
       throw new HttpError("EXTERNAL_UNAVAILABLE");
-    }
+    } finally {clearTimeout(timer);}
   };
 }

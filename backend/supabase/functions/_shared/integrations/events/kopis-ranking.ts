@@ -40,6 +40,9 @@ export function kopisRankingPeriod(now: Date): EventPeriod {
 const invalid = (): never => {
   throw new EventProviderError("SOURCE_INVALID_RESPONSE");
 };
+const rankingDate = (value: string): void => {
+  try { parseCalendarDate(value); } catch { invalid(); }
+};
 const plain = (v: unknown): string => {
   if (typeof v !== "string" || !v.trim() || /[<>\u0000-\u001f]/u.test(v)) {
     return invalid();
@@ -52,8 +55,8 @@ export function parseKopisRankingXml(
   period: EventPeriod,
   now: Date,
 ): VerifiedKopisRanking {
-  parseCalendarDate(period.start);
-  parseCalendarDate(period.end);
+  rankingDate(period.start);
+  rankingDate(period.end);
   if (
     !["all", "musical"].includes(mode) ||
     (period.start !== kopisRankingPeriod(now).start ||
@@ -98,8 +101,8 @@ export function parseKopisRankingXml(
     if (!dates) return invalid();
     const start = `${dates[1]}-${dates[2]}-${dates[3]}`,
       end = `${dates[4]}-${dates[5]}-${dates[6]}`;
-    parseCalendarDate(start);
-    parseCalendarDate(end);
+    rankingDate(start);
+    rankingDate(end);
     if (end < start) return invalid();
     return {
       rank: i + 1,
@@ -143,42 +146,102 @@ export function createKopisRankingProvider(
       if (!["all", "musical"].includes(mode)) {
         throw new EventProviderError("INVALID_EVENT_REQUEST");
       }
-      signal?.throwIfAborted();
+      if (signal?.aborted) throw new EventProviderError("CANCELLED");
       const now = options.now(), period = kopisRankingPeriod(now);
       const url = new URL("https://kopis.or.kr/openApi/restful/boxoffice");
       url.searchParams.set("service", options.apiKey);
       url.searchParams.set("stdate", period.start.replaceAll("-", ""));
       url.searchParams.set("eddate", period.end.replaceAll("-", ""));
       if (mode === "musical") url.searchParams.set("catecode", "GGGA");
-      const timeout = AbortSignal.timeout(options.timeoutMs);
+      const controller = new AbortController(), deadline = performance.now() + options.timeoutMs;
+      let stopped: EventProviderError | undefined, finished = false;
+      let response: Response | undefined, reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      let rejectWait!: (error: EventProviderError) => void;
+      const waitFailure = new Promise<never>((_, reject) => { rejectWait = reject; });
+      const cancelBody = (body: ReadableStream<Uint8Array> | null) => {
+        if (body && !body.locked) { try { void body.cancel().catch(() => {}); } catch { /* 취소 요청만 보장한다. */ } }
+      };
+      const stop = (code: "CANCELLED" | "SOURCE_TIMEOUT") => {
+        if (finished || stopped) return;
+        stopped = new EventProviderError(code);
+        controller.abort();
+        if (reader) { try { void reader.cancel().catch(() => {}); } catch { /* 외부 종료 보장 없음. */ } }
+        rejectWait(stopped);
+      };
+      const callerAbort = () => stop("CANCELLED");
+      const timer = setTimeout(() => stop("SOURCE_TIMEOUT"), options.timeoutMs);
+      signal?.addEventListener("abort", callerAbort, { once: true });
+      const check = () => {
+        if (signal?.aborted) stop("CANCELLED");
+        if (performance.now() >= deadline) stop("SOURCE_TIMEOUT");
+        if (stopped) throw stopped;
+      };
       try {
-        const response = await options.fetch(url.href, {
-          method: "GET",
-          redirect: "error",
-          signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+        const pending = Promise.resolve().then(() => {
+          check();
+          return options.fetch(url.href, {
+            method: "GET", headers: { Accept: "application/xml, text/xml" },
+            redirect: "error", credentials: "omit", cache: "no-store", signal: controller.signal,
+          });
         });
-        if (!response.ok) {
+        // transport가 중단을 무시해도 마감 뒤 응답 본문을 직접 소비하지 않는다.
+        void pending.then(late => { if (finished || stopped) cancelBody(late.body); }, () => {});
+        response = await Promise.race([pending, waitFailure]);
+        check();
+        if (response.status !== 200) {
           throw new EventProviderError(
-            response.status === 429
+            response.status === 401 || response.status === 403
+              ? "SOURCE_AUTH_REJECTED"
+              : response.status === 429
               ? "SOURCE_RATE_LIMITED"
-              : "SOURCE_UNAVAILABLE",
+              : response.status >= 500 && response.status <= 599
+              ? "SOURCE_UNAVAILABLE"
+              : "SOURCE_REJECTED",
           );
         }
         const contentType = response.headers.get("content-type") ?? "";
-        if (!/(?:text|application)\/xml/i.test(contentType)) return invalid();
-        const text = await response.text();
-        signal?.throwIfAborted();
-        if (text.length > 2_000_000) return invalid();
-        return parseKopisRankingXml(text, mode, period, now);
+        if (!/^(?:application|text)\/xml(?:\s*;\s*[a-z0-9!#$%&'*+.^_`|~-]+\s*=\s*(?:[a-z0-9!#$%&'*+.^_`|~-]+|"(?:[^"\\\r\n]|\\[\t\x20-\x7e])*"))*\s*$/i.test(contentType) || !response.body) return invalid();
+        const body = response.body;
+        const consume = async () => {
+          try {
+            reader = body.getReader();
+            const decoder = new TextDecoder("utf-8", { fatal: true });
+            let size = 0, text = "";
+            while (true) {
+              check();
+              const chunk = await reader.read();
+              check();
+              if (chunk.done) break;
+              if (!(chunk.value instanceof Uint8Array)) return invalid();
+              size += chunk.value.byteLength;
+              if (size > 2_000_000) return invalid();
+              try { text += decoder.decode(chunk.value, { stream: true }); } catch { return invalid(); }
+            }
+            try { return text + decoder.decode(); } catch { return invalid(); }
+          } catch (error) {
+            check();
+            if (error instanceof EventProviderError) throw error;
+            throw new EventProviderError("SOURCE_UNAVAILABLE");
+          }
+        };
+        const text = await Promise.race([consume(), waitFailure]);
+        check();
+        const ranking = parseKopisRankingXml(text, mode, period, now);
+        check();
+        return ranking;
       } catch (error) {
+        check();
         if (error instanceof EventProviderError) throw error;
-        throw new EventProviderError(
-          signal?.aborted
-            ? "CANCELLED"
-            : timeout.aborted
-            ? "SOURCE_TIMEOUT"
-            : "SOURCE_UNAVAILABLE",
-        );
+        throw new EventProviderError("SOURCE_UNAVAILABLE");
+      } finally {
+        finished = true;
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", callerAbort);
+        controller.abort();
+        if (reader) {
+          try { void reader.cancel().catch(() => {}); } catch { /* 응답 원문을 노출하지 않는다. */ }
+          try { reader.releaseLock(); } catch { /* 비협조 transport는 실제 종료를 보장하지 않는다. */ }
+        } else if (response) cancelBody(response.body);
       }
     },
   };
@@ -252,8 +315,9 @@ export async function collectKopisRanking(input: {
       reason: "RANKING_VERIFIED_PERSISTENCE_NOT_CONNECTED",
     };
   }
+  if (input.signal?.aborted) throw new EventProviderError("CANCELLED");
   const snapshot = await input.provider.collect(input.mode, input.signal);
-  input.signal?.throwIfAborted();
+  if (input.signal?.aborted) throw new EventProviderError("CANCELLED");
   if (
     snapshot.mode !== input.mode || snapshot.periodVerification !== "verified"
   ) return invalid();

@@ -54,7 +54,8 @@ test("DB budget은 exact 단일 필드·양의 정수·180초 상한만 인정�
     await assert.rejects(() => read(token), code("EXTERNAL_UNAVAILABLE"));
   }
   await clockRun(11000, 10000, async finish => {
-    const read = createMemberCleanupBudgetReader(config, async () => { finish(); return new Response('{"remainingMs":10000}'); });
+    // DB 예산 만료를 검사한다. 공통 RPC 마감이 먼저 끝나는 조건과 분리한다.
+    const read = createMemberCleanupBudgetReader({ ...config, upstreamTimeoutMs: 20000 }, async () => { finish(); return new Response('{"remainingMs":10000}'); });
     await assert.rejects(() => read(token), code("STATE_CONFLICT"));
   });
 });

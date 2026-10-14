@@ -9,14 +9,47 @@ export interface RpcClient {
   supportsRpc?(name: string): boolean;
 }
 export async function fetchJson(url: string, init: RequestInit, timeoutMs: number, fetchImpl: FetchLike = fetch): Promise<{ status: number; body: JsonValue }> {
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw new HttpError("EXTERNAL_UNAVAILABLE");
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let signal: AbortSignal;
+  try { signal = AbortSignal.any([controller.signal, ...(init.signal ? [init.signal] : [])]); }
+  catch { throw new HttpError("EXTERNAL_UNAVAILABLE"); }
+  if (signal.aborted) throw new HttpError("EXTERNAL_UNAVAILABLE");
+  const deadline = performance.now() + timeoutMs;
+  let finished = false, stopped = false, response: Response | undefined;
+  let rejectWait!: (error: HttpError) => void;
+  const failure = new Promise<never>((_, reject) => { rejectWait = reject; });
+  const cancelBody = (value: Response) => {
+    try { if (value?.body) void value.body.cancel().catch(() => {}); } catch { /* 외부 종료 증거가 아니다. */ }
+  };
+  const stop = () => {
+    if (finished || stopped) return;
+    stopped = true; controller.abort();
+    rejectWait(new HttpError("EXTERNAL_UNAVAILABLE"));
+  };
+  signal.addEventListener("abort", stop, { once: true });
+  const timer = setTimeout(stop, timeoutMs);
+  const check = () => {
+    if (signal.aborted || performance.now() >= deadline) stop();
+    if (stopped) throw new HttpError("EXTERNAL_UNAVAILABLE");
+  };
+  const wait = async <T>(operation: () => Promise<T>, late?: (value: T) => void): Promise<T> => {
+    const pending = Promise.resolve().then(() => { check(); return operation(); });
+    void pending.then(value => { if (finished || stopped) late?.(value); }, () => {});
+    const value = await Promise.race([pending, failure]);
+    try { check(); } catch (error) { late?.(value); throw error; }
+    return value;
+  };
   try {
-    const response = await fetchImpl(url, { ...init, signal: controller.signal, redirect: "error" });
-    const body = response.status === 204 ? null : await response.json() as JsonValue;
+    response = await wait(() => fetchImpl(url, { ...init, signal, redirect: "error" }), cancelBody);
+    const body = response.status === 204 ? null : await wait(() => response!.json()) as JsonValue;
+    check();
     return { status: response.status, body };
   } catch { throw new HttpError("EXTERNAL_UNAVAILABLE"); }
-  finally { clearTimeout(timer); }
+  finally {
+    finished = true; clearTimeout(timer); signal.removeEventListener("abort", stop);
+    controller.abort(); if (response) cancelBody(response);
+  }
 }
 function rpcFailure(status: number, body: JsonValue): never {
   const code = body && typeof body === "object" && !Array.isArray(body) ? body.code : null;

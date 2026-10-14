@@ -24,6 +24,8 @@ DRIVER = 'tests/integration/jonghyun/member-connections-rest.mjs'
 METHOD_ARGS = {
     'verifyTarget': (), 'readCredentials': (), 'readIssuedAuth': (), 'readTls': (),
     'prepareConversation': ('memberUserIds',), 'inspectConversation': ('requestId',),
+    'prepareReadBoundaryCases': ('requestId',), 'inspectReadBoundaryCases': ('requestId',),
+    'setReadBoundaryCase': ('requestId', 'stage'),
     'inspectAiFeedback': ('userId', 'requestId'),
     'prepareFeedbackRetention': ('userId', 'requestId', 'feedbackId'),
     'inspectMaintenance': ('requestId',), 'cleanupConnections': ('memberUserIds',),
@@ -184,6 +186,7 @@ class RootMemberBoundary:
         self.capsule_paths = None
         self.qualifications = {}
         self.fixture = None
+        self.read_boundary = None
         self.ai_request = None
         self.feedback_id = None
         self.maintenance = None
@@ -390,6 +393,322 @@ class RootMemberBoundary:
         require(self.fixture and request == self.fixture['requestId'], 'OWNED_CONVERSATION')
         return self.read("select jsonb_build_object('messages',(select coalesce(jsonb_agg(jsonb_build_object('id',m.id,'rowSha256'," + row_sha_sql('m') + ")order by m.id),'[]'::jsonb)from public.chat_messages m where m.join_request_id=" + q(request) + "::uuid),'reads',(select coalesce(jsonb_agg(jsonb_build_object('userId',r.user_id,'messageId',r.message_id,'readAt',r.read_at)order by r.user_id,r.message_id),'[]'::jsonb)from private.conversation_message_reads r where r.request_id=" + q(request) + '::uuid));')
 
+    def read_boundary_statement(self, request):
+        state = self.read_boundary
+        require(state is not None and self.fixture and request == self.fixture['requestId'], 'READ_BOUNDARY_OWNED')
+        rooms = ','.join(q(x) + '::uuid' for x in (request, state['foreignRequestId']))
+        posts = ','.join(q(x) + '::uuid' for x in (self.fixture['postId'], state['foreignPostId']))
+        account = self.binding['accounts'][0]
+        queries = {
+            'posts': ('public.posts', 'r.id in(' + posts + ')'),
+            'requests': ('public.join_requests', 'r.id in(' + rooms + ')or r.post_id in(' + posts + ')'),
+            'messages': ('public.chat_messages', 'r.join_request_id in(' + rooms + ')'),
+            'reads': ('private.conversation_message_reads', 'r.request_id in(' + rooms + ')'),
+            'visibility': ('private.conversation_visibility', 'r.request_id in(' + rooms + ')'),
+            'hidden': ('private.member_hidden_targets', 'r.id=' + q(state['hiddenId']) + '::uuid or(r.identity_id='
+                + q(self.qualifications[0]['identityId']) + "::uuid and r.target_type='chat'and r.target_id="
+                + q(state['hiddenMessageId']) + '::uuid)'),
+            'session': ('private.naver_sessions', 'r.session_id=' + q(account['sessionId']) + '::uuid or r.user_id='
+                + q(account['userId']) + '::uuid'),
+        }
+        terms = [q(k) + ",(select coalesce(jsonb_agg(jsonb_build_object('row',to_jsonb(r),'rowSha256',"
+            + row_sha_sql('r') + ")order by to_jsonb(r)::text),'[]'::jsonb)from " + table + ' r where ' + predicate + ')'
+            for k, (table, predicate) in queries.items()]
+        derived = []
+        ids = {'posts': posts, 'requests': rooms,
+               'messages': ','.join(q(x) + '::uuid' for x in [*state['messageIds'], state['foreignMessageId']])}
+        for meta in state['references']:
+            derived.append("jsonb_build_object('table'," + q(meta['schema'] + '.' + meta['table'])
+                + ",'column'," + q(meta['column']) + ",'parent'," + q(meta['parent'])
+                + ",'rows',(select coalesce(jsonb_agg(jsonb_build_object('row',to_jsonb(r),'rowSha256',"
+                + row_sha_sql('r') + ")order by to_jsonb(r)::text),'[]'::jsonb)from " + meta['schema'] + '.'
+                + meta['table'] + ' r where r.' + meta['column'] + ' in(' + ids[meta['parent']] + ')))')
+        terms.append("'derived',jsonb_build_array(" + ','.join(derived) + ')')
+        descendants = []
+        for child in state['descendantReferences']:
+            parents = [x for x in state['references'] if x['schema'] == child['parentSchema'] and x['table'] == child['parentTable']]
+            joins = ' and '.join('c.' + local + '=r.' + remote
+                for local, remote in zip(child['childColumns'], child['parentColumns']))
+            scoped = ' or '.join('r.' + meta['column'] + ' in(' + ids[meta['parent']] + ')' for meta in parents)
+            if not parents:
+                leaf = [predicate for table, predicate in queries.values()
+                        if table == child['parentSchema'] + '.' + child['parentTable']]
+                require(len(leaf) == 1, 'READ_BOUNDARY_DESCENDANT_PARENT')
+                scoped = leaf[0]
+            descendants.append('not exists(select 1 from ' + child['schema'] + '.' + child['table'] + ' c join '
+                + child['parentSchema'] + '.' + child['parentTable'] + ' r on ' + joins + ' where ' + scoped + ')')
+        terms.append("'descendantsAbsent',(" + (' and '.join(descendants) if descendants else 'true') + ')')
+        return 'select jsonb_build_object(' + ','.join(terms) + ');'
+
+    def read_boundary_scope(self, request):
+        value = self.read(self.read_boundary_statement(request))
+        require(type(value) is dict and set(value) == {'posts', 'requests', 'messages', 'reads', 'visibility',
+            'hidden', 'session', 'derived', 'descendantsAbsent'}, 'READ_BOUNDARY_NATIVE_FIELDS')
+        require(value['descendantsAbsent'] is True, 'READ_BOUNDARY_DESCENDANT_UNKNOWN_PRESERVED')
+        arrays = [value[k] for k in value if k not in ('derived', 'descendantsAbsent')]
+        require(type(value['derived']) is list and len(value['derived']) == len(self.read_boundary['references']),
+                'READ_BOUNDARY_DERIVED_FIELDS')
+        for meta, item in zip(self.read_boundary['references'], value['derived']):
+            require(type(item) is dict and set(item) == {'table', 'column', 'parent', 'rows'}
+                and item['table'] == meta['schema'] + '.' + meta['table'] and item['column'] == meta['column']
+                and item['parent'] == meta['parent'], 'READ_BOUNDARY_DERIVED_SCOPE')
+            arrays.append(item['rows'])
+        for rows in arrays:
+            require(type(rows) is list and all(type(x) is dict and set(x) == {'row', 'rowSha256'}
+                and type(x['row']) is dict and is_sha(x['rowSha256']) for x in rows), 'READ_BOUNDARY_NATIVE_ROWS')
+        return value
+
+    def validate_read_boundary_scope(self, value, seeded=True):
+        state = self.read_boundary
+        users = {a['userId'] for a in self.binding['accounts'][:2]}
+        request = self.fixture['requestId']
+        main_ids = set(state['messageIds'])
+        all_ids = main_ids | {state['foreignMessageId']}
+        rooms = {request, state['foreignRequestId']}
+        require(value.get('descendantsAbsent') is True, 'READ_BOUNDARY_DESCENDANT_UNKNOWN_PRESERVED')
+        for table, ids in (('posts', {self.fixture['postId'], state['foreignPostId']}),
+                           ('requests', rooms), ('messages', all_ids)):
+            rows = value[table]
+            require(len(rows) == len(ids) and {x['row'].get('id') for x in rows} == ids,
+                    'READ_BOUNDARY_GRAPH_IDS')
+            if seeded:
+                require(sorted(x['rowSha256'] for x in rows) == state['graph'][table], 'READ_BOUNDARY_GRAPH_CHANGED')
+        for item in value['posts']:
+            require(item['row'].get('author_id') == self.binding['accounts'][0]['userId'], 'READ_BOUNDARY_POST_OWNER')
+        for item in value['requests']:
+            row = item['row']
+            expected_post = self.fixture['postId'] if row['id'] == request else state['foreignPostId']
+            require(row.get('post_id') == expected_post and row.get('requester_id') == self.binding['accounts'][1]['userId'],
+                    'READ_BOUNDARY_REQUEST_OWNER')
+        for item in value['messages']:
+            row = item['row']
+            require(row.get('join_request_id') == (request if row['id'] in main_ids else state['foreignRequestId'])
+                and row.get('sender_id') in users, 'READ_BOUNDARY_MESSAGE_OWNER')
+        if seeded:
+            require(value['derived'] == state['graph']['derived'], 'READ_BOUNDARY_DERIVED_CHANGED')
+        read_keys = []
+        for item in value['reads']:
+            row = item['row']
+            require(row.get('user_id') in users and row.get('message_id') in all_ids and row.get('request_id') ==
+                (request if row['message_id'] in main_ids else state['foreignRequestId'])
+                and type(row.get('read_at')) is str and row['read_at'], 'READ_BOUNDARY_READ_OWNER')
+            read_keys.append((row['user_id'], row['message_id']))
+        require(len(read_keys) == len(set(read_keys)), 'READ_BOUNDARY_DUPLICATE_READ')
+        require(len(value['hidden']) <= 1 and all(x['row'] == {'id': state['hiddenId'],
+            'identity_id': self.qualifications[0]['identityId'], 'target_type': 'chat',
+            'target_id': state['hiddenMessageId']} for x in value['hidden']), 'READ_BOUNDARY_HIDDEN_CONFLICT')
+        require(len(value['visibility']) <= 1 and all(x['row'].get('user_id') == self.binding['accounts'][0]['userId']
+            and x['row'].get('request_id') == request and type(x['row'].get('hidden_at')) is str
+            for x in value['visibility']), 'READ_BOUNDARY_VISIBILITY_CONFLICT')
+        require(len(value['session']) <= 1 and all(x == state['originalSession'] for x in value['session']),
+                'READ_BOUNDARY_SESSION_CONFLICT')
+
+    def inspect_read_boundary(self, request):
+        state = self.read_boundary
+        require(state is not None and state['phase'] == 'prepared', 'READ_BOUNDARY_NOT_PREPARED')
+        value = self.read_boundary_scope(request)
+        self.validate_read_boundary_scope(value)
+        reads = [{'userId': x['row']['user_id'], 'requestId': x['row']['request_id'],
+                  'messageId': x['row']['message_id'], 'readAt': x['row']['read_at'], 'rowSha256': x['rowSha256']}
+                 for x in value['reads']]
+        hidden = [{'id': x['row']['id'], 'rowSha256': x['rowSha256']} for x in value['hidden']]
+        visibility = [{'userId': x['row']['user_id'], 'requestId': x['row']['request_id'], 'rowSha256': x['rowSha256']}
+                      for x in value['visibility']]
+        return {'requestId': request, 'scopeRowsSha256': digest(value),
+                'reads': sorted(reads, key=lambda x: (x['userId'], x['requestId'], x['messageId'])),
+                'hidden': sorted(hidden, key=lambda x: x['id']),
+                'visibility': sorted(visibility, key=lambda x: (x['userId'], x['requestId'])),
+                'sessionBindingRestored': value['session'] == [state['originalSession']]}
+
+    def prepare_read_boundary(self, request):
+        require(self.fixture and request == self.fixture['requestId'] and self.read_boundary is None
+            and set(self.qualifications) >= {0, 1}, 'READ_BOUNDARY_PREPARATION_SCOPE')
+        prior = self.inspect_conversation(request)
+        require(len(prior['messages']) == 3 and {m['id'] for m in prior['messages']} == set(self.fixture['messageIds']),
+                'READ_BOUNDARY_ORIGINAL_THREE')
+        account = self.binding['accounts'][0]
+        sessions = self.read("select coalesce(jsonb_agg(jsonb_build_object('row',to_jsonb(s),'rowSha256',"
+            + row_sha_sql('s') + ")),'[]'::jsonb)from private.naver_sessions s where user_id="
+            + q(account['userId']) + '::uuid or session_id=' + q(account['sessionId']) + '::uuid;')
+        require(type(sessions) is list and len(sessions) == 1 and set(sessions[0]) == {'row', 'rowSha256'}
+            and sessions[0]['rowSha256'] == self.qualifications[0]['sessionSha256']
+            and type(sessions[0]['row']) is dict and set(sessions[0]['row']) == {'session_id', 'user_id', 'subject', 'registered_at'}
+            and sessions[0]['row']['session_id'] == account['sessionId'] and sessions[0]['row']['user_id'] == account['userId']
+            and sessions[0]['row']['subject'] == self.qualifications[0]['subject'], 'READ_BOUNDARY_ORIGINAL_SESSION')
+        references = self.read("select coalesce(jsonb_agg(distinct jsonb_build_object('schema',ns.nspname,'table',t.relname,"
+            "'column',a.attname,'parent',case c.confrelid when 'public.posts'::regclass then 'posts'when 'public.join_requests'::regclass "
+            "then 'requests'else 'messages'end)),'[]'::jsonb)from pg_constraint c join pg_class t on t.oid=c.conrelid "
+            "join pg_namespace ns on ns.oid=t.relnamespace cross join lateral unnest(c.conkey,c.confkey)keys(local_key,parent_key) "
+            "join pg_attribute a on a.attrelid=c.conrelid and a.attnum=keys.local_key join pg_attribute pa on pa.attrelid=c.confrelid "
+            "and pa.attnum=keys.parent_key where c.contype='f'and c.confrelid in('public.posts'::regclass,'public.join_requests'::regclass,"
+            "'public.chat_messages'::regclass)and pa.attname='id'and c.conrelid not in('public.posts'::regclass,'public.join_requests'::regclass,"
+            "'public.chat_messages'::regclass,'private.conversation_message_reads'::regclass,'private.conversation_visibility'::regclass);")
+        require(type(references) is list and all(type(x) is dict and set(x) == {'schema', 'table', 'column', 'parent'}
+            and x['schema'] in ('public', 'private') and x['parent'] in ('posts', 'requests', 'messages')
+            and all(type(x[k]) is str and re.fullmatch('[a-z][a-z0-9_]*', x[k]) for k in ('table', 'column'))
+            for x in references), 'READ_BOUNDARY_REFERENCE_CATALOG')
+        references.sort(key=lambda x: (x['schema'], x['table'], x['column'], x['parent']))
+        descendant_references = []
+        tables = sorted({x['schema'] + '.' + x['table'] for x in references}
+            | {'private.conversation_message_reads', 'private.conversation_visibility',
+               'private.member_hidden_targets', 'private.naver_sessions'})
+        if tables:
+            descendant_references = self.read("select coalesce(jsonb_agg(jsonb_build_object('schema',ns.nspname,'table',t.relname,"
+                "'parentSchema',pns.nspname,'parentTable',pt.relname,'childColumns',(select jsonb_agg(a.attname order by k.n)from "
+                "unnest(c.conkey)with ordinality k(att,n)join pg_attribute a on a.attrelid=c.conrelid and a.attnum=k.att),"
+                "'parentColumns',(select jsonb_agg(a.attname order by k.n)from unnest(c.confkey)with ordinality k(att,n)join pg_attribute a "
+                "on a.attrelid=c.confrelid and a.attnum=k.att))),'[]'::jsonb)from pg_constraint c join pg_class t on t.oid=c.conrelid "
+                "join pg_namespace ns on ns.oid=t.relnamespace join pg_class pt on pt.oid=c.confrelid join pg_namespace pns on pns.oid=pt.relnamespace "
+                "where c.contype='f'and c.confrelid in(" + ','.join(q(t) + '::regclass' for t in tables) + ');')
+            require(type(descendant_references) is list and all(type(x) is dict
+                and set(x) == {'schema', 'table', 'parentSchema', 'parentTable', 'childColumns', 'parentColumns'}
+                and x['schema'] in ('public', 'private') and x['parentSchema'] in ('public', 'private')
+                and x['parentSchema'] + '.' + x['parentTable'] in tables
+                and all(type(x[k]) is str and re.fullmatch('[a-z][a-z0-9_]*', x[k]) for k in ('table', 'parentTable'))
+                and type(x['childColumns']) is list and type(x['parentColumns']) is list
+                and len(x['childColumns']) == len(x['parentColumns']) and len(x['childColumns']) > 0
+                and all(type(c) is str and re.fullmatch('[a-z][a-z0-9_]*', c) for c in x['childColumns'] + x['parentColumns'])
+                for x in descendant_references), 'READ_BOUNDARY_DESCENDANT_CATALOG')
+            descendant_references.sort(key=lambda x: canonical(x))
+        state = {'messageIds': [*self.fixture['messageIds'], *[str(uuid.uuid4()) for _ in range(97)]],
+                 'foreignPostId': str(uuid.uuid4()), 'foreignRequestId': str(uuid.uuid4()),
+                 'foreignMessageId': str(uuid.uuid4()), 'hiddenId': str(uuid.uuid4()),
+                 'originalSession': sessions[0], 'references': references, 'descendantReferences': descendant_references,
+                 'phase': 'preparing', 'stage': 'initial', 'dispatchState': 'NOT_SENT'}
+        state['hiddenMessageId'] = state['messageIds'][-1]
+        self.read_boundary = state
+        self.save('read-boundary-state-intent.json', state)
+        new_ids = [state['foreignMessageId'], *state['messageIds'][3:]]
+        absent = self.read('select not exists(select 1 from public.posts where id=' + q(state['foreignPostId'])
+            + '::uuid)and not exists(select 1 from public.join_requests where id=' + q(state['foreignRequestId'])
+            + '::uuid)and not exists(select 1 from public.chat_messages where id in('
+            + ','.join(q(x) + '::uuid' for x in new_ids) + '))and not exists(select 1 from private.member_hidden_targets where id='
+            + q(state['hiddenId']) + '::uuid);')
+        require(absent is True, 'READ_BOUNDARY_NEW_IDS_CONFLICT')
+        a, b = [x['userId'] for x in self.binding['accounts'][:2]]
+        statement = "begin;insert into public.posts(id,author_id,title,description,category,starts_at,ends_at,recruitment_ends_at,public_area,cost_type,amount)values("
+        statement += q(state['foreignPostId']) + '::uuid,' + q(a) + "::uuid,'합성 별도 방','합성 경계 검사','산책',clock_timestamp()+interval'3 days',clock_timestamp()+interval'3 days 2 hours',clock_timestamp()+interval'2 days','서울특별시 강남구 역삼동','free',0);"
+        statement += 'insert into public.join_requests(id,post_id,requester_id,message)values(' + q(state['foreignRequestId']) + '::uuid,' + q(state['foreignPostId']) + '::uuid,' + q(b) + "::uuid,'합성 별도 방 첫 메시지');"
+        for i, message in enumerate(new_ids):
+            room = state['foreignRequestId'] if message == state['foreignMessageId'] else request
+            statement += 'insert into public.chat_messages(id,join_request_id,sender_id,content,created_at)values(' + q(message) + '::uuid,' + q(room) + '::uuid,' + q(b) + "::uuid,'합성 추가 메시지',clock_timestamp()+interval'" + str(i + 3) + " milliseconds');"
+        self.mutate('read-boundary-seed', statement + 'commit;', state)
+        value = self.read_boundary_scope(request)
+        self.validate_read_boundary_scope(value, seeded=False)
+        require(all(any(x['row']['id'] == old['id'] and x['rowSha256'] == old['rowSha256']
+            for x in value['messages']) for old in prior['messages']), 'READ_BOUNDARY_PRIOR_MESSAGES_CHANGED')
+        state['graph'] = {k: sorted(x['rowSha256'] for x in value[k]) for k in ('posts', 'requests', 'messages')}
+        state['graph']['derived'] = value['derived']
+        state['phase'] = 'prepared'
+        self.save('read-boundary-owned.json', state)
+        return {'requestId': request, 'messageIds': state['messageIds'], 'foreignRequestId': state['foreignRequestId'],
+                'foreignMessageId': state['foreignMessageId'], 'hiddenMessageId': state['hiddenMessageId']}
+
+    def restore_read_boundary_sql(self, value):
+        state = self.read_boundary
+        self.validate_read_boundary_scope(value)
+        sql = ''
+        if not value['session']:
+            account = self.binding['accounts'][0]
+            self.live()
+            require(self.ports.session_proof(account) is True, 'READ_BOUNDARY_PARENT_SESSION')
+            row = state['originalSession']['row']
+            sql += 'if exists(select 1 from private.naver_sessions where session_id=' + q(row['session_id'])
+            sql += '::uuid or user_id=' + q(row['user_id']) + "::uuid)then raise exception 'member_read_session_conflict';end if;"
+            sql += 'perform 1 from auth.sessions where id=' + q(row['session_id']) + '::uuid and user_id=' + q(row['user_id'])
+            sql += "::uuid and(not_after is null or not_after>clock_timestamp())for share;if not found then raise exception 'member_read_parent_session';end if;"
+            sql += 'insert into private.naver_sessions select *from jsonb_populate_record(null::private.naver_sessions,'
+            sql += q(json.dumps(row)) + '::jsonb);'
+        for item in value['hidden']:
+            sql += 'delete from private.member_hidden_targets h where id=' + q(item['row']['id']) + '::uuid and '
+            sql += row_sha_sql('h') + '=' + q(item['rowSha256'])
+            sql += ";get diagnostics n=row_count;if n<>1 then raise exception 'member_read_hidden_cas';end if;"
+        return sql
+
+    def set_read_boundary(self, request, stage):
+        require(type(stage) is str and stage in ('hidden', 'revoked', 'restored'), 'READ_BOUNDARY_STAGE')
+        state = self.read_boundary
+        require(state is not None and state['phase'] == 'prepared' and self.fixture['requestId'] == request,
+                'READ_BOUNDARY_OWNED')
+        require(state['stage'] == {'hidden': 'initial', 'revoked': 'hidden', 'restored': 'revoked'}[stage],
+                'READ_BOUNDARY_STAGE_ORDER')
+        value = self.read_boundary_scope(request)
+        self.validate_read_boundary_scope(value)
+        if stage == 'hidden':
+            require(not value['hidden'] and value['session'] == [state['originalSession']], 'READ_BOUNDARY_HIDE_PRECONDITION')
+            sql = 'insert into private.member_hidden_targets(id,identity_id,target_type,target_id)values('
+            sql += q(state['hiddenId']) + '::uuid,' + q(self.qualifications[0]['identityId']) + "::uuid,'chat'," + q(state['hiddenMessageId']) + '::uuid);'
+        elif stage == 'revoked':
+            require(len(value['hidden']) == 1 and value['session'] == [state['originalSession']], 'READ_BOUNDARY_REVOKE_PRECONDITION')
+            sql = 'delete from private.naver_sessions s where session_id=' + q(self.binding['accounts'][0]['sessionId'])
+            sql += '::uuid and ' + row_sha_sql('s') + '=' + q(state['originalSession']['rowSha256'])
+            sql += ";get diagnostics n=row_count;if n<>1 then raise exception 'member_read_session_cas';end if;"
+        else:
+            require(len(value['hidden']) == 1 and not value['session'], 'READ_BOUNDARY_RESTORE_PRECONDITION')
+            sql = self.restore_read_boundary_sql(value)
+        state['stage'] = stage + '_unknown'
+        self.mutate('read-boundary-' + stage, 'begin;do $$declare n integer;begin ' + sql + 'end;$$;commit;', state)
+        observed = self.inspect_read_boundary(request)
+        require(observed['sessionBindingRestored'] is (stage != 'revoked')
+            and len(observed['hidden']) == (0 if stage == 'restored' else 1), 'READ_BOUNDARY_STAGE_EFFECT')
+        state['stage'] = stage
+        self.save('read-boundary-' + stage + '-observed.json', observed)
+        return observed
+
+    def cleanup_read_boundary(self):
+        state = self.read_boundary
+        if state is None:
+            return
+        require(state['phase'] == 'prepared', 'READ_BOUNDARY_UNKNOWN_PRESERVED')
+        request = self.fixture['requestId']
+        value = self.read_boundary_scope(request)
+        self.validate_read_boundary_scope(value)
+        restoration = self.restore_read_boundary_sql(value)
+        # parent→child 원래 FK 잠금 순서. 전부 잠근 후 native scope 전체 JSON을 다시 비교한다.
+        sql = 'begin;do $$declare n integer;begin '
+        account = self.binding['accounts'][0]
+        sql += 'perform 1 from auth.sessions where id=' + q(account['sessionId']) + '::uuid and user_id='
+        sql += q(account['userId']) + "::uuid and(not_after is null or not_after>clock_timestamp())for share;"
+        sql += "if not found then raise exception 'member_read_parent_session';end if;"
+        for key, table in (('posts', 'public.posts'), ('requests', 'public.join_requests'), ('messages', 'public.chat_messages')):
+            for item in sorted(value[key], key=lambda x: x['row']['id']):
+                sql += 'perform 1 from ' + table + ' r where id=' + q(item['row']['id']) + '::uuid and '
+                sql += row_sha_sql('r') + '=' + q(item['rowSha256'])
+                sql += " for update;if not found then raise exception 'member_read_graph_cas';end if;"
+        child_rows = [(table, item) for key, table in (('reads', 'private.conversation_message_reads'),
+                      ('visibility', 'private.conversation_visibility'), ('hidden', 'private.member_hidden_targets'),
+                      ('session', 'private.naver_sessions')) for item in value[key]]
+        child_rows += [(d['table'], item) for d in value['derived'] for item in d['rows']]
+        for table, item in child_rows:
+            sql += 'perform 1 from ' + table + ' r where to_jsonb(r)=' + q(json.dumps(item['row']))
+            sql += '::jsonb and ' + row_sha_sql('r') + '=' + q(item['rowSha256'])
+            sql += " for update;if not found then raise exception 'member_read_child_cas';end if;"
+        native = self.read_boundary_statement(request).removeprefix('select ').removesuffix(';')
+        sql += 'if (' + native + ')is distinct from ' + q(json.dumps(value))
+        sql += "::jsonb then raise exception 'member_read_scope_cas';end if;"
+        sql += restoration
+        for item in value['visibility']:
+            row = item['row']
+            sql += 'delete from private.conversation_visibility r where user_id=' + q(row['user_id'])
+            sql += '::uuid and request_id=' + q(row['request_id']) + '::uuid and ' + row_sha_sql('r') + '=' + q(item['rowSha256'])
+            sql += ";get diagnostics n=row_count;if n<>1 then raise exception 'member_read_visibility_cas';end if;"
+        for item in value['reads']:
+            row = item['row']
+            sql += 'delete from private.conversation_message_reads r where user_id=' + q(row['user_id'])
+            sql += '::uuid and request_id=' + q(row['request_id']) + '::uuid and message_id=' + q(row['message_id'])
+            sql += '::uuid and ' + row_sha_sql('r') + '=' + q(item['rowSha256'])
+            sql += ";get diagnostics n=row_count;if n<>1 then raise exception 'member_read_receipt_cas';end if;"
+        for item in value['posts']:
+            sql += 'delete from public.posts r where id=' + q(item['row']['id']) + '::uuid and '
+            sql += row_sha_sql('r') + '=' + q(item['rowSha256'])
+            sql += ";get diagnostics n=row_count;if n<>1 then raise exception 'member_read_post_cas';end if;"
+        sql += 'end;$$;commit;'
+        state['phase'] = 'cleanup_unknown'
+        self.mutate('read-boundary-cleanup', sql, state)
+        state['phase'] = 'cleaned'
+        self.save('read-boundary-cleaned.json', {'mainRequestId': request, 'foreignRequestId': state['foreignRequestId'],
+            'nativeScopeComparedUnderLocks': True, 'originalSessionRestored': True, 'wholeBaselineStillRequired': True})
+
     def inspect_ai(self, user, request):
         require(user == self.binding['accounts'][0]['userId'], 'AI_OWNED_USER')
         uid(request)
@@ -529,8 +848,10 @@ class RootMemberBoundary:
                 self.ai_request = uid(requests[0]['request_id'])
                 self.save('ai-cleanup-lineage.json', {'requestId': self.ai_request, 'clientHash': client_hash,
                     'modelStarted': False, 'finished': True, 'readRecoveryOnly': True})
+        if self.read_boundary is not None:
+            self.cleanup_read_boundary()
         statement = 'begin;' + (self.completed_maintenance_delete() if self.maintenance else '')
-        if self.fixture:
+        if self.fixture and self.read_boundary is None:
             request, post = self.fixture['requestId'], self.fixture['postId']
             statement += 'delete from private.conversation_message_reads where request_id=' + q(request) + '::uuid;delete from public.posts where id=' + q(post) + '::uuid and author_id=' + q(users[0]) + '::uuid;'
         if self.ai_request:
@@ -762,6 +1083,9 @@ class RootMemberBoundary:
         elif method == 'readTls': value = self.j01.RootJ01Boundary.read_tls(self)
         elif method == 'prepareConversation': value = self.prepare_conversation(args['memberUserIds'])
         elif method == 'inspectConversation': value = self.inspect_conversation(args['requestId'])
+        elif method == 'prepareReadBoundaryCases': value = self.prepare_read_boundary(args['requestId'])
+        elif method == 'inspectReadBoundaryCases': value = self.inspect_read_boundary(args['requestId'])
+        elif method == 'setReadBoundaryCase': value = self.set_read_boundary(args['requestId'], args['stage'])
         elif method == 'inspectAiFeedback': value = self.inspect_ai(args['userId'], args['requestId'])
         elif method == 'prepareFeedbackRetention': value = self.prepare_retention(args['userId'], args['requestId'], args['feedbackId'])
         elif method == 'inspectMaintenance': value = self.inspect_maintenance(args['requestId'])

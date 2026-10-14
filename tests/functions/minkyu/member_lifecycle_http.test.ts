@@ -85,7 +85,9 @@ test("탈퇴 HTTP의 주입 필드·query·잘못된 ID·메서드는 저장 전
     assert.equal((await handler(retirementRequest(body))).status,400);
   }
   assert.equal((await handler(retirementRequest(undefined,"?actor=other"))).status,400);
-  assert.equal((await handler(retirementRequest(undefined,"","GET"))).status,405);
+  // 승인된 원 요청 GET 복구에는 withdrawalId가 필요하다. 메서드 자체를 금지하지 않는다.
+  assert.equal((await handler(retirementRequest(undefined,"","GET"))).status,400);
+  assert.equal((await handler(retirementRequest(undefined,"","PUT"))).status,405);
   assert.equal(counts.rpc,0);assert.equal(counts.internal,0);
 });
 test("탈퇴 HTTP는 접근 미회수·다른 요청 결과·DB 충돌을 성공으로 바꾸지 않는다",async()=>{

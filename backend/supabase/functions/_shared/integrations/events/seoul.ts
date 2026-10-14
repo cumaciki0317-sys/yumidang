@@ -1,5 +1,7 @@
-/** 서울 문화행사 공식 필드 정규화. 공식문서가 HTTP만 안내하여 확인된 HTTPS transport 주입 전에는 호출하지 않는다.
- * https://data.seoul.go.kr/dataList/OA-15486/A/1/datasetView.do
+/** 기존 culturalEventInfo 필드 정규화·응답 분류다. 확인된 HTTPS transport 전에는 호출하지 않는다.
+ * 최신 OA-23041은 aiViewCulture를 안내하지만 실제 envelope·HTTPS·ongoing 계약이 미확인이라 신규 수집은 보류한다.
+ * 최신 공식 문서: https://data.seoul.go.kr/dataList/openApiView.do?infId=OA-23041&srvType=A
+ * 역사 참고 OA-15486: https://data.seoul.go.kr/dataList/OA-15486/A/1/datasetView.do
  */
 import {
   createEventProviderAdapter,
@@ -101,22 +103,41 @@ export function classifySeoulCultureResponse(
 ): { items: SeoulCultureItem[]; total: number } {
   const object = (v: unknown): v is Record<string, unknown> =>
     !!v && typeof v === "object" && !Array.isArray(v);
-  if (!object(value)) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
-  const data = object(value.culturalEventInfo)
-    ? value.culturalEventInfo
-    : value;
+  if (!Number.isSafeInteger(rows) || rows < 1 || rows > SEOUL_MAX_ROWS || !object(value)) {
+    throw new EventProviderError("SOURCE_INVALID_RESPONSE");
+  }
+  // 미확인 신규 envelope나 서로 다른 응답 범위를 섞은 본문은 해석하지 않는다.
+  const wrapped = Object.hasOwn(value, "culturalEventInfo");
+  if (Object.hasOwn(value, "aiViewCulture") || (wrapped && (
+    !object(value.culturalEventInfo) || Object.keys(value).length !== 1
+  ))) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
+  const data = wrapped ? value.culturalEventInfo as Record<string, unknown> : value;
+  if (Object.keys(data).some(key => !["RESULT", "list_total_count", "row"].includes(key))) {
+    throw new EventProviderError("SOURCE_INVALID_RESPONSE");
+  }
   const result = data.RESULT;
   if (!object(result) || typeof result.CODE !== "string") {
     throw new EventProviderError("SOURCE_INVALID_RESPONSE");
   }
-  if (result.CODE === "INFO-200") return { items: [], total: 0 };
+  if (result.CODE === "INFO-200") {
+    if ((Object.hasOwn(data, "list_total_count") && data.list_total_count !== 0) ||
+      (Object.hasOwn(data, "row") && (!Array.isArray(data.row) || data.row.length !== 0))) {
+      throw new EventProviderError("SOURCE_INVALID_RESPONSE");
+    }
+    return { items: [], total: 0 };
+  }
+  if (result.CODE === "INFO-100") throw new EventProviderError("SOURCE_AUTH_REJECTED");
+  if (result.CODE === "ERROR-500" || result.CODE === "ERROR-600") {
+    throw new EventProviderError("SOURCE_UNAVAILABLE");
+  }
   if (result.CODE !== "INFO-000") {
     throw new EventProviderError("SOURCE_REJECTED");
   }
   if (
     !Number.isSafeInteger(data.list_total_count) ||
     (data.list_total_count as number) < 0 ||
-    !Array.isArray(data.row) || data.row.length > rows
+    !Array.isArray(data.row) || data.row.length > rows ||
+    (data.list_total_count as number) < data.row.length || !data.row.every(object)
   ) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
   return {
     items: data.row as SeoulCultureItem[],

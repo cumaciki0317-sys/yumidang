@@ -45,6 +45,32 @@ export async function getOwnRetirementReceipt(client:RetirementReceiptClient,wit
 /** 신뢰할 로컬 조립 옵션. 회원 입력·HTTP body/header에서 받지 않는다. */
 export interface MemberCleanupExecutionOptions { readonly maxExecutionMs?: number; readonly limit?: number; }
 
+/** 예산 조회는 읽기다. 취소 뒤 늦은 반환을 새 삭제 작업의 근거로 사용하지 않는다. */
+function waitForCleanupBudget(signal: AbortSignal, read: () => Promise<CleanupExecutionBudget>): Promise<CleanupExecutionBudget> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => signal.removeEventListener("abort", stop);
+    const stop = () => {
+      if (settled) return;
+      settled = true; cleanup(); reject(new HttpError("STATE_CONFLICT"));
+    };
+    if (signal.aborted) { stop(); return; }
+    signal.addEventListener("abort", stop, { once: true });
+    Promise.resolve().then(() => {
+      if (signal.aborted) throw new HttpError("STATE_CONFLICT");
+      return read();
+    }).then(value => {
+      if (settled) return;
+      if (signal.aborted) { stop(); return; }
+      settled = true; cleanup(); resolve(value);
+    }, error => {
+      if (settled) return;
+      if (signal.aborted) { stop(); return; }
+      settled = true; cleanup(); reject(error);
+    });
+  });
+}
+
 /** 내부 실행 계약. 입력·전역 점유 발급/해제·권한 활성화는 기존 runner 책임이다. */
 export async function drainMemberCleanupTasks(workerRunToken: string,
   readBudget: (token: string, signal?: AbortSignal) => Promise<CleanupExecutionBudget>,
@@ -59,11 +85,11 @@ export async function drainMemberCleanupTasks(workerRunToken: string,
   const localWallDeadline = startedAt + localMs;
   const abort = new AbortController();
   const readSignal = AbortSignal.any([abort.signal, ...(signal ? [signal] : [])]);
-  // 명시적인 로컬 상한은 budget 조회 시간부터 포함한다. abort는 실제 provider 종료 증거가 아니다.
-  const readTimer = maxExecutionMs === undefined ? undefined : setTimeout(() => abort.abort(), localMs);
+  // 기본180초/명시 로컬 상한은 budget 조회 시간부터 포함한다. abort는 실제 provider 종료 증거가 아니다.
+  const readTimer = setTimeout(() => abort.abort(), localMs);
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const budget = await readBudget(workerRunToken.toLowerCase(), readSignal);
+    const budget = await waitForCleanupBudget(readSignal, () => readBudget(workerRunToken.toLowerCase(), readSignal));
     if (readSignal.aborted || performance.now() >= startedMonotonic + localMs || Date.now() >= localWallDeadline) throw new HttpError("STATE_CONFLICT");
     if (!budget || !Number.isSafeInteger(budget.deadlineAt)) throw new HttpError("EXTERNAL_UNAVAILABLE");
     const wallDeadline = Math.min(budget.deadlineAt!, localWallDeadline);

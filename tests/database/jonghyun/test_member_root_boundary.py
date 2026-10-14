@@ -9,6 +9,7 @@ import stat
 import shutil
 import tempfile
 import unittest
+import uuid
 from types import SimpleNamespace
 
 CALLER = Path(__file__).resolve().parents[3] / 'tests/integration/jonghyun/member-root-boundary.py'
@@ -35,6 +36,7 @@ class MemberRootBoundaryTests(unittest.TestCase):
         b.live = lambda: b.live_calls.append(True) or {'target': None, 'bindingSha256': H, 'sourceFiles': {}, 'migrationFiles': {}}
         b.seed_attempted = False
         b.fixture = None
+        b.read_boundary = None
         b.qualifications = {}
         b.maintenance = None
         b.maintenance_completion = None
@@ -61,6 +63,226 @@ class MemberRootBoundaryTests(unittest.TestCase):
         b.h = SimpleNamespace(signed_private_read=lambda path: json.dumps(b.saved[path.name], sort_keys=True).encode(),
                               signed_exact_json=json.loads)
         return b
+
+    def read_case_boundary(self):
+        b = self.boundary()
+        ids = [str(uuid.UUID(int=100 + i)) for i in range(100)]
+        post, foreign_post, foreign_room, foreign_message, hidden = [str(uuid.UUID(int=1000 + i)) for i in range(5)]
+        b.binding['accounts'][0]['sessionId'] = str(uuid.UUID(int=2000))
+        b.fixture = {'postId': post, 'requestId': RUN, 'messageIds': ids[:3]}
+        b.qualifications = {0: {'identityId': str(uuid.UUID(int=3000)), 'subject': 'synthetic-owned', 'sessionSha256': H}, 1: {}}
+        session = {'session_id': b.binding['accounts'][0]['sessionId'], 'user_id': USER,
+                   'subject': 'synthetic-owned', 'registered_at': '2026-10-14T01:02:03.123456+00:00'}
+        owned = lambda row: {'row': row, 'rowSha256': H}
+        b.native = {
+            'posts': [owned({'id': x, 'author_id': USER}) for x in (post, foreign_post)],
+            'requests': [owned({'id': RUN, 'post_id': post, 'requester_id': OTHER}),
+                         owned({'id': foreign_room, 'post_id': foreign_post, 'requester_id': OTHER})],
+            'messages': [owned({'id': x, 'join_request_id': RUN, 'sender_id': OTHER}) for x in ids]
+                + [owned({'id': foreign_message, 'join_request_id': foreign_room, 'sender_id': OTHER})],
+            'reads': [owned({'user_id': USER, 'request_id': RUN, 'message_id': ids[0], 'read_at': '2026-10-14T01:02:04+00:00'})],
+            'visibility': [], 'hidden': [], 'session': [owned(session)], 'derived': [], 'descendantsAbsent': True,
+        }
+        b.read_boundary = {'messageIds': ids, 'foreignPostId': foreign_post, 'foreignRequestId': foreign_room,
+            'foreignMessageId': foreign_message, 'hiddenMessageId': ids[-1], 'hiddenId': hidden,
+            'originalSession': owned(session), 'references': [], 'descendantReferences': [],
+            'phase': 'prepared', 'stage': 'initial', 'dispatchState': 'SQL_ENTRY_UNKNOWN',
+            'graph': {**{k: sorted(x['rowSha256'] for x in b.native[k]) for k in ('posts', 'requests', 'messages')}, 'derived': []}}
+        b.sql_calls = []
+        b.ports = SimpleNamespace(sql=lambda sql: b.sql_calls.append(sql), session_proof=lambda account: True)
+        b.read = lambda sql: copy.deepcopy(b.native)
+        return b
+
+    def hidden_native_row(self, b):
+        s = b.read_boundary
+        return {'row': {'id': s['hiddenId'], 'identity_id': b.qualifications[0]['identityId'],
+                        'target_type': 'chat', 'target_id': s['hiddenMessageId']}, 'rowSha256': F}
+
+    def test_read_boundary_wrong_scope_and_stage_order_never_dispatch_sql(self):
+        b = self.read_case_boundary()
+        for call in (lambda: b.prepare_read_boundary(OTHER), lambda: b.inspect_read_boundary(OTHER),
+                     lambda: b.set_read_boundary(RUN, 'revoked'), lambda: b.set_read_boundary(RUN, 'restored'),
+                     lambda: b.set_read_boundary(RUN, 'sql'), lambda: b.set_read_boundary(RUN, {'approved': True})):
+            with self.assertRaises(ValueError):
+                call()
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.saved, {})
+
+    def test_read_boundary_exact_native_scope_rejects_unknown_reads_session_and_hidden(self):
+        b = self.read_case_boundary()
+        original = copy.deepcopy(b.native)
+        changes = [('reads', lambda v: v['reads'][0]['row'].update(user_id=RUN)),
+                   ('reads', lambda v: v['reads'][0]['row'].update(message_id=RUN)),
+                   ('reads', lambda v: v['reads'].append(copy.deepcopy(v['reads'][0]))),
+                   ('messages', lambda v: v['messages'][0].update(rowSha256=F)),
+                   ('session', lambda v: v['session'][0]['row'].update(registered_at='new-clock')),
+                   ('hidden', lambda v: v['hidden'].append({'row': {'id': RUN}, 'rowSha256': H})),
+                   ('visibility', lambda v: v['visibility'].append({'row': {'user_id': OTHER, 'request_id': RUN, 'hidden_at': 'time'}, 'rowSha256': H}))]
+        for name, mutate in changes:
+            with self.subTest(name=name):
+                b.native = copy.deepcopy(original)
+                mutate(b.native)
+                with self.assertRaises(ValueError):
+                    b.inspect_read_boundary(RUN)
+                self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_digest_changes_on_native_rows_without_sending_rows_or_tokens(self):
+        b = self.read_case_boundary()
+        before = b.inspect_read_boundary(RUN)
+        b.native['reads'][0]['row']['read_at'] = '2026-10-14T01:02:05+00:00'
+        after = b.inspect_read_boundary(RUN)
+        self.assertNotEqual(before['scopeRowsSha256'], after['scopeRowsSha256'])
+        self.assertEqual(set(after), {'requestId', 'scopeRowsSha256', 'reads', 'hidden', 'visibility', 'sessionBindingRestored'})
+        self.assertNotIn('registered_at', json.dumps(after))
+        self.assertNotIn('synthetic-owned', json.dumps(after))
+        self.assertEqual(after['reads'][0]['rowSha256'], H)
+        self.assertTrue(after['sessionBindingRestored'])
+
+    def test_read_boundary_unknown_cascade_descendant_blocks_inspection_and_cleanup(self):
+        b = self.read_case_boundary()
+        b.native['descendantsAbsent'] = False
+        for call in (lambda: b.inspect_read_boundary(RUN), lambda: b.cleanup_read_boundary(),
+                     lambda: b.set_read_boundary(RUN, 'hidden')):
+            with self.assertRaisesRegex(ValueError, 'DESCENDANT_UNKNOWN_PRESERVED'):
+                call()
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.read_boundary['phase'], 'prepared')
+
+    def test_read_boundary_cascade_guard_uses_all_fk_columns_and_exact_parent_scope(self):
+        b = self.read_case_boundary()
+        b.read_boundary['references'] = [{'schema': 'private', 'table': 'synthetic_parent', 'column': 'request_id', 'parent': 'requests'}]
+        b.read_boundary['descendantReferences'] = [{'schema': 'private', 'table': 'synthetic_child',
+            'parentSchema': 'private', 'parentTable': 'synthetic_parent', 'childColumns': ['parent_id', 'revision'],
+            'parentColumns': ['id', 'revision']}]
+        sql = b.read_boundary_statement(RUN)
+        self.assertIn('c.parent_id=r.id and c.revision=r.revision', sql)
+        self.assertIn('from private.synthetic_child c join private.synthetic_parent r', sql)
+        self.assertIn('where r.request_id in(', sql)
+        self.assertIn('descendantsAbsent', sql)
+        self.assertNotIn('delete ', sql)
+        self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_read_visibility_hidden_and_session_descendants_are_guarded(self):
+        b = self.read_case_boundary()
+        for table in ('conversation_message_reads', 'conversation_visibility', 'member_hidden_targets', 'naver_sessions'):
+            with self.subTest(table=table):
+                b.read_boundary['descendantReferences'] = [{'schema': 'private', 'table': 'synthetic_child',
+                    'parentSchema': 'private', 'parentTable': table, 'childColumns': ['parent_id'], 'parentColumns': ['id']}]
+                sql = b.read_boundary_statement(RUN)
+                self.assertIn('from private.synthetic_child c join private.' + table + ' r on c.parent_id=r.id where ', sql)
+                self.assertNotIn(' where )', sql)
+        self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_stage_loss_preserves_unknown_and_does_not_resend(self):
+        for stage in ('hidden', 'revoked', 'restored'):
+            with self.subTest(stage=stage):
+                b = self.read_case_boundary()
+                if stage in ('revoked', 'restored'):
+                    b.native['hidden'] = [self.hidden_native_row(b)]
+                    b.read_boundary['stage'] = 'hidden' if stage == 'revoked' else 'revoked'
+                if stage == 'restored':
+                    b.native['session'] = []
+                def lost(sql):
+                    b.sql_calls.append(sql)
+                    raise ValueError('SQLSTATE_08006')
+                b.ports.sql = lost
+                with self.assertRaisesRegex(ValueError, 'SQLSTATE_08006'):
+                    b.set_read_boundary(RUN, stage)
+                self.assertEqual(b.read_boundary['stage'], stage + '_unknown')
+                self.assertEqual(b.read_boundary['dispatchState'], 'SQL_ENTRY_UNKNOWN')
+                with self.assertRaisesRegex(ValueError, 'STAGE_ORDER'):
+                    b.set_read_boundary(RUN, stage)
+                self.assertEqual(len(b.sql_calls), 1)
+                self.assertIn('read-boundary-' + stage + '-intent.json', b.saved)
+
+    def test_read_boundary_restores_captured_session_timestamp_only_with_parent_proof(self):
+        b = self.read_case_boundary()
+        b.native['session'] = []
+        b.native['hidden'] = [self.hidden_native_row(b)]
+        sql = b.restore_read_boundary_sql(b.native)
+        self.assertIn('2026-10-14T01:02:03.123456+00:00', sql)
+        self.assertIn('jsonb_populate_record(null::private.naver_sessions', sql)
+        self.assertIn('member_read_session_conflict', sql)
+        self.assertIn("='" + F + "'", sql)
+        self.assertNotIn('delete from auth.', sql)
+        self.assertNotIn('insert into auth.', sql)
+        self.assertNotIn('on conflict', sql)
+        b.ports.session_proof = lambda account: False
+        with self.assertRaisesRegex(ValueError, 'PARENT_SESSION'):
+            b.restore_read_boundary_sql(b.native)
+        self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_cleanup_compares_complete_scope_under_parent_child_locks(self):
+        b = self.read_case_boundary()
+        b.native['hidden'] = [self.hidden_native_row(b)]
+        b.native['session'] = []
+        b.native['visibility'] = [{'row': {'user_id': USER, 'request_id': RUN, 'hidden_at': 'time'}, 'rowSha256': N}]
+        b.cleanup_read_boundary()
+        self.assertEqual(len(b.sql_calls), 1)
+        sql = b.sql_calls[0]
+        self.assertLess(sql.index('from auth.sessions'), sql.index('from public.posts'))
+        self.assertLess(sql.index('from public.posts'), sql.index('from public.join_requests'))
+        self.assertLess(sql.index('member_read_scope_cas'), sql.index('delete from private.member_hidden_targets'))
+        self.assertIn('is distinct from', sql)
+        self.assertEqual(sql.count('delete from public.posts'), 2)
+        self.assertIn('member_read_visibility_cas', sql)
+        self.assertIn('member_read_receipt_cas', sql)
+        self.assertEqual(b.read_boundary['phase'], 'cleaned')
+        self.assertFalse(b.connection_closed)
+        self.assertTrue(b.saved['read-boundary-cleaned.json']['wholeBaselineStillRequired'])
+
+    def test_read_boundary_unknown_seed_or_cleanup_is_preserved_not_replayed(self):
+        for phase in ('preparing', 'cleanup_unknown', 'cleaned'):
+            with self.subTest(phase=phase):
+                b = self.read_case_boundary()
+                b.read_boundary['phase'] = phase
+                with self.assertRaisesRegex(ValueError, 'UNKNOWN_PRESERVED'):
+                    b.cleanup_read_boundary()
+                self.assertEqual(b.sql_calls, [])
+        b = self.read_case_boundary()
+        def lost(sql):
+            b.sql_calls.append(sql)
+            raise ValueError('SQLSTATE_08006')
+        b.ports.sql = lost
+        with self.assertRaisesRegex(ValueError, 'SQLSTATE_08006'):
+            b.cleanup_read_boundary()
+        with self.assertRaisesRegex(ValueError, 'UNKNOWN_PRESERVED'):
+            b.cleanup_read_boundary()
+        self.assertEqual(len(b.sql_calls), 1)
+        self.assertEqual(b.read_boundary['phase'], 'cleanup_unknown')
+
+    def test_read_boundary_prepare_creates_97_plus_one_preserves_original_three(self):
+        b = self.read_case_boundary()
+        old_native, old_state = copy.deepcopy(b.native), copy.deepcopy(b.read_boundary)
+        b.read_boundary = None
+        b.inspect_conversation = lambda request: {'messages': [{'id': x, 'rowSha256': H} for x in b.fixture['messageIds']], 'reads': []}
+        responses = iter([[old_state['originalSession']], [], [], True])
+        def read(sql):
+            if 'select jsonb_build_object(' not in sql:
+                return next(responses)
+            state = b.read_boundary
+            value = copy.deepcopy(old_native)
+            value['posts'][1]['row']['id'] = state['foreignPostId']
+            value['requests'][1]['row'].update(id=state['foreignRequestId'], post_id=state['foreignPostId'])
+            value['messages'] = [{'row': {'id': x, 'join_request_id': RUN, 'sender_id': OTHER}, 'rowSha256': H}
+                for x in state['messageIds']] + [{'row': {'id': state['foreignMessageId'], 'join_request_id': state['foreignRequestId'], 'sender_id': OTHER}, 'rowSha256': H}]
+            return value
+        b.read = read
+        value = b.prepare_read_boundary(RUN)
+        self.assertEqual(len(value['messageIds']), 100)
+        self.assertEqual(len(set(value['messageIds'])), 100)
+        self.assertEqual(value['messageIds'][:3], b.fixture['messageIds'])
+        self.assertNotIn(value['foreignMessageId'], value['messageIds'])
+        self.assertEqual(value['hiddenMessageId'], value['messageIds'][-1])
+        self.assertEqual(b.sql_calls[0].count('insert into public.chat_messages'), 98)
+        self.assertEqual(len(b.sql_calls), 1)
+        self.assertIn('read-boundary-state-intent.json', b.saved)
+        self.assertIn('read-boundary-seed-intent.json', b.saved)
+        self.assertNotIn('auth.users', b.sql_calls[0])
+        self.assertEqual(b.read_boundary['phase'], 'prepared')
+        with self.assertRaises(ValueError):
+            b.prepare_read_boundary(RUN)
+        self.assertEqual(len(b.sql_calls), 1)
 
     def maintenance_boundary(self, row):
         b = self.boundary()
@@ -145,7 +367,7 @@ class MemberRootBoundaryTests(unittest.TestCase):
                 self.assertEqual(value['credentialReads'], 0)
                 self.assertFalse(value['vmStarted'])
                 self.assertFalse(value['ready'])
-                self.assertEqual(len(value['methods']), 13)
+                self.assertEqual(len(value['methods']), 16)
                 self.assertNotIn('sql', value['methods'])
 
     def test_run_requires_reviewed_packet_without_implicit_auth(self):

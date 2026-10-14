@@ -84,45 +84,79 @@ export function createPotensModel(config: PotensAdapterConfig): ModelPort {
         const encoded = outputLimit ? outputLimit.apply(payload, request.maxOutputTokens) : payload;
         if (!encoded || encoded.prompt !== payload.prompt || encoded.model !== model) throw new Error();
         body = JSON.stringify(encoded);
-      } catch { throw new ModelError("INVALID_MODEL_RESPONSE", { dispatchState: "not_sent" }); }
-      const controller = new AbortController();
-      let timedOut = false;
-      const cancel = () => controller.abort();
-      request.signal?.addEventListener("abort", cancel, { once: true });
-      const timer = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
+      } catch { throw new ModelError(request.signal?.aborted ? "CANCELLED" : "INVALID_MODEL_RESPONSE", { dispatchState: "not_sent" }); }
+      if (request.signal?.aborted) throw new ModelError("CANCELLED", { dispatchState: "not_sent" });
+      const controller = new AbortController(), deadline = performance.now() + timeoutMs;
       let dispatchState: "not_sent" | "sent" = "not_sent";
-      let usage: ModelUsage | null = null;
+      let usage: ModelUsage | null = null, response: Response | undefined;
+      let stopped: ModelError | undefined, finished = false;
+      let rejectWait!: (error: ModelError) => void;
+      const waitFailure = new Promise<never>((_, reject) => { rejectWait = reject; });
+      const cancelBody = (value: Response) => {
+        try { if (value.body) void value.body.cancel().catch(() => {}); } catch { /* 실제 외부 종료를 보장하지 않는다. */ }
+      };
+      const stop = (code: "CANCELLED" | "TIMEOUT") => {
+        if (finished || stopped) return;
+        stopped = new ModelError(code, { dispatchState, usage });
+        controller.abort();
+        if (response) cancelBody(response);
+        rejectWait(stopped);
+      };
+      const cancel = () => stop("CANCELLED");
+      request.signal?.addEventListener("abort", cancel, { once: true });
+      const timer = setTimeout(() => stop("TIMEOUT"), timeoutMs);
+      const check = () => {
+        if (request.signal?.aborted) stop("CANCELLED");
+        if (performance.now() >= deadline) stop("TIMEOUT");
+        if (stopped) throw stopped;
+      };
       try {
-        let response: Response;
         try {
-          if (request.signal?.aborted) throw new ModelError("CANCELLED", { dispatchState: "not_sent" });
-          dispatchState = "sent"; // transport 호출부터 동기 예외도 미전송으로 추정하지 않는다.
-          response = await transport(endpoint, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
-            body, signal: controller.signal, redirect: "error", credentials: "omit", cache: "no-store",
+          const pending = Promise.resolve().then(() => {
+            check();
+            dispatchState = "sent"; // 함수 진입부터 동기 예외/자체 not_sent 주장도 전송 후다.
+            return transport(endpoint, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
+              body, signal: controller.signal, redirect: "error", credentials: "omit", cache: "no-store",
+            });
           });
-        } catch { throw new ModelError(timedOut ? "TIMEOUT" : controller.signal.aborted ? "CANCELLED" : "MODEL_UNAVAILABLE"); }
+          void pending.then(late => { if (finished || stopped) cancelBody(late); }, () => {});
+          response = await Promise.race([pending, waitFailure]);
+          check();
+        } catch { check(); throw new ModelError("MODEL_UNAVAILABLE"); }
         if (response.status === 401 || response.status === 403) throw new ModelError("PROVIDER_REJECTED");
         if (response.status === 429) throw new ModelError("RATE_LIMITED");
         if (response.status >= 500) throw new ModelError("MODEL_UNAVAILABLE");
         if (response.status !== 200) throw new ModelError("PROVIDER_REJECTED");
         let payload: unknown;
-        try { payload = await response.json(); }
-        catch { throw new ModelError(timedOut ? "TIMEOUT" : controller.signal.aborted ? "CANCELLED" : "INVALID_MODEL_RESPONSE"); }
+        try {
+          const pending = Promise.resolve().then(() => { check(); return response!.json(); });
+          payload = await Promise.race([pending, waitFailure]);
+          check();
+        } catch { check(); throw new ModelError("INVALID_MODEL_RESPONSE"); }
         if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new ModelError("INVALID_MODEL_RESPONSE");
         const record = payload as Record<string, unknown>;
-        usage = mapUsage(record.token_usage, usageFields);
+        const confirmedUsage = mapUsage(record.token_usage, usageFields);
+        check();
+        usage = confirmedUsage; // 총 마감 전에 확인을 마친 usage만 원 예약의 근거로 남긴다.
         if (typeof record.message !== "string" || !record.message.trim()) throw new ModelError("INVALID_MODEL_RESPONSE");
         const value = parseStructuredMessage(record.message);
         const reported = typeof record.model === "string" && /^[A-Za-z0-9._:/-]{1,128}$/.test(record.model) ? record.model : undefined;
+        check();
         return { value, modelVersion, usage, ...(reported ? { reportedModel: reported } : {}) };
       } catch (error) {
+        if (request.signal?.aborted) stop("CANCELLED");
+        if (performance.now() >= deadline) stop("TIMEOUT");
+        if (stopped) throw new ModelError(stopped.code, { dispatchState, usage });
         if (error instanceof ModelError) throw new ModelError(error.code, { dispatchState, usage });
         throw new ModelError("MODEL_UNAVAILABLE", { dispatchState, usage });
       } finally {
+        finished = true;
         clearTimeout(timer);
         request.signal?.removeEventListener("abort", cancel);
+        controller.abort();
+        if (response) cancelBody(response);
       }
     },
   };
