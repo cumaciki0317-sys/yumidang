@@ -158,6 +158,17 @@
         "tools/local/run_database_tests.py",
         "tests/integration/jonghyun/isolated_ai_contracts.py"
       ]
+    },
+    {
+      "date": "2026-10-14",
+      "from": "minkyu",
+      "to": "jonghyun",
+      "authorization": "사용자: ① 두 도구만 다시 한시 재배정 (추천)",
+      "scope": "두 번째 한시 주기. 아래 두 개별 경로만 종현 전용 clone의 남은 합성 격리 실제 연결 검증 지원 패치·로컬 커밋 대상으로 재배정한다. 실제 검증과 새로 생성한 검증 자원 정리 후 두 파일을 이번 주기 시작 시점 원본 바이트로 복원·로컬 커밋하고, 별도 민규 정책 관리 단계에서 두 경로를 minkyu 담당으로 복귀시킨다. 이번 정책은 별도 AI 민규 정책 관리 단계이며 사람 민규가 수행한 작업 성과를 뜻하지 않는다. 다른 민규 경로·성호 화면·보호 경로·hook·기존 자원·실회원·공급사 호출·운영 변경·푸시 범위는 확대하지 않는다.",
+      "paths": [
+        "tools/local/run_database_tests.py",
+        "tests/integration/jonghyun/isolated_ai_contracts.py"
+      ]
     }
   ],
   "rules": [
@@ -483,7 +494,7 @@
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_contracts.py",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/integration/jonghyun/isolated_ai_factory.ts",
@@ -499,7 +510,7 @@
     },
     {
       "path": "tools/local/run_database_tests.py",
-      "owner": "minkyu"
+      "owner": "jonghyun"
     },
     {
       "path": "tests/database/jonghyun/test_isolated_midnight_preparation.py",
