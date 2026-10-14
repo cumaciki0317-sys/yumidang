@@ -55,7 +55,7 @@ Always use harness agent team architecture for complex tasks.
 
 **2026-10-14 최신 사용자 역할 변경은 이전 인계의 담당 지시보다 우선한다.** 성호 시작 안내·종현 백엔드100·J01~J09는 당시 작업/검증 기록으로 보존하며 현재 백엔드 실행 권한으로 사용하지 않는다. 성호에게 새 작업을 배정하지 않는다. `sungho` 이름이 든 기존 자산 경로와 공급사 계정 식별값은 삭제하지 않는다.
 
-종현 자기소개 자동 재개 승인은 현재 종현 소유의 FE·UX/UI·앱 연동 잔여에 한정해 이어간다. 별도 clone/worktree·`jonghyun/` 브랜치·actor/hook·최신 정책을 확인하고 담당·첫 작업을 짧게 설명한 뒤 기존 승인 범위의 독립 작업을 계속한다. 민규 공유 작업 공간의 actor를 바꾸지 않는다. 이전 `start_jonghyun.py` 백엔드 패키지 실행은 중단하고 현재 문서로 시작한다. BE·AI 변경은 민규 요청 문서로 연결한다.
+**세 사람 자기소개 자동 시작 — 최신 사용자 승인:** “나 종현이야”, “나 유미야”, “나 민규야”와 이에 준하는 자기소개를 각자 Notion 담당 작업의 시작 요청으로 처리한다. [팀 시작 절차](docs/collaboration/team-start.md)와 [종현 인계](docs/collaboration/requests/minkyu/2026-10-14-jonghyun-start.md)·[유미 인계](docs/collaboration/requests/minkyu/2026-10-14-yumi-start.md)·[민규 인계](docs/collaboration/requests/minkyu/2026-10-14-minkyu-start.md), [WBS 작업 목록](docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.md)을 먼저 읽는다. 본인 별도 clone·본인 브랜치·actor/hook·HEAD 소유권을 확인하고 WBS 담당/상태와 실제 완료 증거를 대조한다. 담당·첫 작업을 짧게 설명한 뒤 본인 소유 미완료의 독립 구현·문서 작성·격리 검증을 바로 계속한다. 계획만 설명하고 종료하거나 “작업을 시작할까요?”를 다시 묻지 않는다. 공유 clone의 actor를 바꾸지 않는다. 이전 `start_jonghyun.py` 백엔드 패키지 실행은 사용하지 않는다. 자기소개는 접근 인증·자동 커밋/푸시·운영 실행 승인이 아니다.
 
 첫 안내에는 현재 작업 공간의 [정책](정책.md)·[PLAN](PLAN.md)·[상세설계](PLAN_상세설계.md)·[AGENTS](AGENTS.md)·[협업 규칙](docs/collaboration/README.md) 링크를 포함한다. 최신 실행 증거를 대조하며 기존 완료 구현을 재작성하지 않는다. 마지막 명시 기준은 전체79%(22/28), 핵심9/10·추가5/6·독립5/5·운영3/7이며 역할 변경만으로 완료 수를 늘리지 않는다. 진행 보고는 실제 완료 근거가 있는 항목만 집계한다.
 
@@ -63,4 +63,4 @@ Always use harness agent team architecture for complex tasks.
 
 새 presentation 컴포넌트는 props로 표시 값과 이벤트를 받으며 인증·세션·domain 정책과 민감정보 공개 조건을 임의 변경하지 않는다. 앱 클라이언트 연결은 종현, 서버 정책·응답은 민규가 담당한다. 유미는 UT 문서·관찰·개선 과제를 작성하고 실제 코드 결함은 해당 파일 소유자에게 연결한다.
 
-소유권 검사는 HEAD 정책을 신뢰한다. 이번 미커밋 후보 정책과 실제 hook 적용 상태를 구분하며, 정책을 커밋하고 각 clone에서 갱신한 뒤 신규 구현을 시작한다. 검사 우회·actor 바꾸기·`--no-verify`를 사용하지 않는다. 이번 사용자 승인 역할 동기화의 사전 HEAD 거절과 후보 정책 검증은 재배정 기록에 따로 남긴다.
+소유권 검사는 HEAD 정책을 신뢰한다. 현재 역할 정책은 커밋되어 있으며 각 clone의 HEAD에 최신 정책이 포함됐는지 확인한 뒤 신규 구현을 시작한다. 검사 우회·actor 바꾸기·`--no-verify`를 사용하지 않는다. 이번 사용자 승인 역할 동기화의 사전 HEAD 거절과 후보 정책 검증은 재배정 기록에 따로 남긴다.

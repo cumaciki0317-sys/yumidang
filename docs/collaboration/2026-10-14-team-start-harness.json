@@ -1,0 +1,32 @@
+{
+  "task": "삼인 자기소개로 Notion 담당 작업 자동 시작",
+  "actor": "minkyu",
+  "mode": "지속형 전문가 분산 검토 후 root 통합",
+  "lanes": {
+    "root": [
+      "AGENTS.md",
+      "README.md",
+      "PLAN_상세설계.md",
+      "docs/collaboration/README.md",
+      "docs/collaboration/team-start.md",
+      "docs/collaboration/requests/minkyu/2026-10-14-jonghyun-start.md",
+      "docs/collaboration/requests/minkyu/2026-10-14-yumi-start.md",
+      "docs/collaboration/requests/minkyu/2026-10-14-minkyu-start.md",
+      "docs/collaboration/2026-10-14-team-start-harness.json"
+    ],
+    "notion_tasks": [
+      "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.json",
+      "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.md"
+    ],
+    "ownership_review": [],
+    "role_audit": []
+  },
+  "checks": [
+    "현재 HEAD 단독 소유권",
+    "WBS 담당/상태 그대로 보존 및 삭제항목 제외",
+    "세 자기소개별 정확한 인계 연결",
+    "문서 상대 링크 존재",
+    "기존 작업자/hook/미추적 자료 보존"
+  ],
+  "execution_boundary": "문서 인계 및 읽기 검증; 기능 실행·Notion 쓰기·커밋·푸시 없음"
+}

@@ -1,0 +1,5296 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-14T23:42:07+09:00",
+  "timezone": "Asia/Seoul",
+  "source": {
+    "data_source_url": "collection://987a6def-75f8-8338-9785-07f248cc9096",
+    "wbs_page_url": "https://app.notion.com/p/3f9a6def75f880ae8f31f6cdbd69ea78",
+    "method": "스키마 fetch → 활성 SQL112행 조회 → 이전117행과 ID 대조 → 117개별 페이지 fetch",
+    "notion_write_performed": false
+  },
+  "counts": {
+    "catalog_total": 117,
+    "active": 112,
+    "deleted": 5,
+    "active_status_counts": {
+      "대기": 62,
+      "최종 완료": 3,
+      "작업 중": 42,
+      "배포 완료": 2,
+      "퍼블리싱 완료": 2,
+      "BE 연동 대기": 1
+    }
+  },
+  "interpretation": {
+    "status_values": "노션 실제 상태 그대로 보존. 대기·작업중·단계완료를 전체 완료로 재해석하지 않음.",
+    "final_complete": "최종 완료 상태3건. 배포 완료2·퍼블리싱 완료2는 각 단계 상태이며 최종 완료 합계에 합치지 않음.",
+    "deleted": "개별fetch deleted 확인5건. 자동 시작 후보에서 제외하고 복구·삭제를 실행하지 않음.",
+    "baseline_progress": "마지막 명시 전체 기준79%(22/28)를 역할·카탈로그 동기화만으로 올리지 않음.",
+    "identity": "자기소개는 작업 담당 구분이며 접근 인증이나 운영 실행 승인이 아님."
+  },
+  "first_start_candidates": [
+    {
+      "actor": "minkyu",
+      "wbs_id": "4.2",
+      "reason": "기존 PASS·실제 최신 소스와 서버 계약의 차이부터 읽기 확인. 운영 쓰기·VM 실행 조건을 해제하지 않는다."
+    },
+    {
+      "actor": "jonghyun",
+      "wbs_id": "3.1",
+      "reason": "앱 라우팅·인증·세션·서비스 연결 지점을 현재 서버 계약과 대조하고 종현 소유 클라이언트 잔여부터 구현."
+    },
+    {
+      "actor": "yumi",
+      "wbs_id": "2.4",
+      "reason": "실회원 검증 없이 UT 시나리오·판정 기준을 준비하고 2.5 개선 Task 체계로 연결."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "223a6def-75f8-839e-9119-81ea905ceff3",
+      "wbs_id": null,
+      "title": "",
+      "area": null,
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/223a6def75f8839e911981ea905ceff3",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:44.993Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "618a6def-75f8-8393-a053-01dbb31944ff",
+      "wbs_id": null,
+      "title": "",
+      "area": "PM/기획",
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/618a6def75f88393a05301dbb31944ff",
+      "deleted": true,
+      "page_last_edited_at": "2026-10-14T13:14:00.932Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": true
+      }
+    },
+    {
+      "id": "8ffa6def-75f8-825b-8d8f-81e0c93c1a15",
+      "wbs_id": null,
+      "title": "",
+      "area": "PM/기획",
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/8ffa6def75f8825b8d8f81e0c93c1a15",
+      "deleted": true,
+      "page_last_edited_at": "2026-10-14T13:14:00.932Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": true
+      }
+    },
+    {
+      "id": "a04a6def-75f8-8392-a0af-010f96b510df",
+      "wbs_id": null,
+      "title": "",
+      "area": "UX/UI",
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/a04a6def75f88392a0af010f96b510df",
+      "deleted": true,
+      "page_last_edited_at": "2026-10-14T13:16:52.862Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": true
+      }
+    },
+    {
+      "id": "ae6a6def-75f8-83ce-8402-016cd066d17f",
+      "wbs_id": null,
+      "title": "",
+      "area": null,
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/ae6a6def75f883ce8402016cd066d17f",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:43.999Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "d4ca6def-75f8-82ee-a2ad-01027d36dcac",
+      "wbs_id": null,
+      "title": "공통 컴포넌트 작업",
+      "area": "FE/화면 구현",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "최종 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/d4ca6def75f882eea2ad01027d36dcac",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:26:25.302Z",
+      "status_class": "notion_final_complete",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": "S1",
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "공통 컴포넌트 작업",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "b92a6def-75f8-8348-8999-01be76df77d9",
+      "wbs_id": null,
+      "title": "내 정보 조회 API <mention-page url=\"https://app.notion.com/p/16b44227a435829c83ca01e724ba2e7e\"/>",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/b92a6def75f88348899901be76df77d9",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:26:07.570Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": [
+          "https://app.notion.com/p/672a6def75f8824fb3070152c7b5f7ef"
+        ]
+      },
+      "source_title_raw": "내 정보 조회 API <mention-page url=\"https://app.notion.com/p/16b44227a435829c83ca01e724ba2e7e\"/>",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "9dfa6def-75f8-8247-90b5-81cd025de4f2",
+      "wbs_id": null,
+      "title": "배포 환경 설정",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "배포 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/9dfa6def75f8824790b581cd025de4f2",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:41.456Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": "S1",
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "배포 환경 설정",
+      "scope_note": "완료 수행자는 유미. Railway 결제·GitHub 연결 완료만 확인된 범위이며 운영 DB·Runner·복구 검증은 7.1에 남는다.",
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f72a6def-75f8-8220-acd2-0121cadb9832",
+      "wbs_id": null,
+      "title": "앱인 토스 출시",
+      "area": null,
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": "P3",
+      "url": "https://app.notion.com/p/f72a6def75f88220acd20121cadb9832",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:46.605Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "앱인 토스 출시",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "313a6def-75f8-83bf-9bf8-81ecc0be46cc",
+      "wbs_id": null,
+      "title": "어떤 미팅을 진행할 예정인가요?",
+      "area": null,
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/313a6def75f883bf9bf881ecc0be46cc",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:51.848Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "어떤 미팅을 진행할 예정인가요?",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "706a6def-75f8-8248-b33c-019daf76864c",
+      "wbs_id": null,
+      "title": "요구사항 명세서 작성",
+      "area": "AI",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "최종 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/706a6def75f88248b33c019daf76864c",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:25:15.571Z",
+      "status_class": "notion_final_complete",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": "S1",
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "요구사항 명세서 작성",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e8da6def-75f8-8226-9f48-0194122fdbb7",
+      "wbs_id": null,
+      "title": "이름: 사유를 간략히 입력해 주세요",
+      "area": null,
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/e8da6def75f882269f480194122fdbb7",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:52.833Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "이름: 사유를 간략히 입력해 주세요",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "c8ea6def-75f8-8383-b1e4-81cc54debd2d",
+      "wbs_id": null,
+      "title": "회원가입 API <mention-page url=\"https://app.notion.com/p/4c844227a435835dad0781d4edd628ec\"/>",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "배포 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/c8ea6def75f88383b1e481cc54debd2d",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:26:15.102Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": [
+          "https://app.notion.com/p/895a6def75f883f9aff981dad6ff6e71"
+        ]
+      },
+      "source_title_raw": "회원가입 API <mention-page url=\"https://app.notion.com/p/4c844227a435835dad0781d4edd628ec\"/>",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "c4da6def-75f8-825d-93ae-01a8f4717fb7",
+      "wbs_id": null,
+      "title": "TASTK",
+      "area": "FE/화면 구현",
+      "assignees": [],
+      "notion_status": "대기",
+      "priority": null,
+      "url": "https://app.notion.com/p/c4da6def75f8825d93ae01a8f4717fb7",
+      "deleted": true,
+      "page_last_edited_at": "2026-10-14T13:18:35.185Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "TASTK",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": true
+      }
+    },
+    {
+      "id": "348a6def-75f8-832b-a45c-815cc6585414",
+      "wbs_id": "1.1",
+      "title": "[1.1] MVP 포함·제외·보류 범위 정합성 검토",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/348a6def75f8832ba45c815cc6585414",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:23:54.334Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.1\\] MVP 포함·제외·보류 범위 정합성 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "099a6def-75f8-83a2-af55-012cf217b65a",
+      "wbs_id": "1.2",
+      "title": "[1.2] 정책·PRD·IA·USERFLOW·구현 차이 목록 정리",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/099a6def75f883a2af55012cf217b65a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:23.968Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.2\\] 정책·PRD·IA·USERFLOW·구현 차이 목록 정리",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "55fa6def-75f8-82fb-96d5-010ba09af412",
+      "wbs_id": "1.3",
+      "title": "[1.3] 변경·보류 의사결정 로그 준비",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/55fa6def75f882fb96d5010ba09af412",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:23:56.864Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.3\\] 변경·보류 의사결정 로그 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "c5da6def-75f8-82ae-97d7-81ef71a46d1c",
+      "wbs_id": "1.4",
+      "title": "[1.4] 출시 필수 검증 조건 목록 합의",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/c5da6def75f882ae97d781ef71a46d1c",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:23:59.288Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.4\\] 출시 필수 검증 조건 목록 합의",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e0ba6def-75f8-8225-a658-0192a539e7f1",
+      "wbs_id": "1.5",
+      "title": "[1.5] WBS 책임·우선순위·실행 범위 승인",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/e0ba6def75f88225a6580192a539e7f1",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:38.157Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.5\\] WBS 책임·우선순위·실행 범위 승인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "c85a6def-75f8-83af-9409-01663676f842",
+      "wbs_id": "1.6",
+      "title": "[1.6] 최신 정책·계획·협업 문서의 승인된 차이 반영",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/c85a6def75f883af940901663676f842",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:34.314Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.6\\] 최신 정책·계획·협업 문서의 승인된 차이 반영",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "526a6def-75f8-82d0-a511-014db6697359",
+      "wbs_id": "1.7",
+      "title": "[1.7] 담당·소유권·작업 환경 인계 정합성 확인",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/526a6def75f882d0a511014db6697359",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:33.777Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[1.7\\] 담당·소유권·작업 환경 인계 정합성 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "192a6def-75f8-82c1-a1c8-01906dce8d3d",
+      "wbs_id": "2.1",
+      "title": "[2.1] 실제 화면 목록과 IA 대조",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/192a6def75f882c1a1c801906dce8d3d",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:13.262Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.1\\] 실제 화면 목록과 IA 대조",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "679a6def-75f8-82d1-8845-01d68181bde7",
+      "wbs_id": "2.2",
+      "title": "[2.2] 가입→탐색→동행→채팅→완료 UX 점검",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/679a6def75f882d1884501d68181bde7",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:20.829Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.2\\] 가입→탐색→동행→채팅→완료 UX 점검",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "fafa6def-75f8-8215-9521-0191ded00d3d",
+      "wbs_id": "2.3",
+      "title": "[2.3] 비로그인·빈 결과·실패 화면 점검",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/fafa6def75f8821595210191ded00d3d",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:22.675Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.3\\] 비로그인·빈 결과·실패 화면 점검",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "b1ea6def-75f8-8233-b2ee-816474c82f24",
+      "wbs_id": "2.4",
+      "title": "[2.4] UT 시나리오와 판정 기준 설계",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/b1ea6def75f88233b2ee816474c82f24",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:15.249Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.4\\] UT 시나리오와 판정 기준 설계",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/ut/",
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "871a6def-75f8-8359-9ef0-81cb9cab1eab",
+      "wbs_id": "2.5",
+      "title": "[2.5] UT 관찰과 개선 Task 정리",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/871a6def75f883599ef081cb9cab1eab",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:00.623Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.5\\] UT 관찰과 개선 Task 정리",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/ut/",
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "738a6def-75f8-824c-bfe2-0138db215630",
+      "wbs_id": "2.6",
+      "title": "[2.6] 현재 화면의 공통 디자인 기준·컴포넌트 반영",
+      "area": "FE/화면 구현",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/738a6def75f8824cbfe20138db215630",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:43.500Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.6\\] 현재 화면의 공통 디자인 기준·컴포넌트 반영",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "4cea6def-75f8-83c8-9f4e-813d06dd6da7",
+      "wbs_id": "2.7",
+      "title": "[2.7] 가입·프로필·마이페이지·탈퇴 화면 개선",
+      "area": "FE/화면 구현",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/4cea6def75f883c89f4e813d06dd6da7",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:35.538Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.7\\] 가입·프로필·마이페이지·탈퇴 화면 개선",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "893a6def-75f8-8279-80a3-8172eb090eba",
+      "wbs_id": "2.8",
+      "title": "[2.8] 탐색·행사·동행 작성/상세 화면 개선",
+      "area": "FE/화면 구현",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/893a6def75f8827980a38172eb090eba",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:06.019Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.8\\] 탐색·행사·동행 작성/상세 화면 개선",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "dbea6def-75f8-8277-9d9c-81e8e5eb8d5a",
+      "wbs_id": "2.9",
+      "title": "[2.9] 채팅·확정/변경·후기·신고·AI 화면 개선",
+      "area": "FE/화면 구현",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/dbea6def75f882779d9c81e8e5eb8d5a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:48.189Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.9\\] 채팅·확정/변경·후기·신고·AI 화면 개선",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e73a6def-75f8-8287-a028-81652c183d43",
+      "wbs_id": "2.10",
+      "title": "[2.10] 접근성·글자 확대·키보드·작은 화면 결함 개선",
+      "area": "FE/화면 구현",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/e73a6def75f88287a02881652c183d43",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:59.675Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.10\\] 접근성·글자 확대·키보드·작은 화면 결함 개선",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "frontend/",
+          "apps/mobile/src/screens/",
+          "apps/mobile/src/app/",
+          "apps/mobile/src/components/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "d7da6def-75f8-8238-aba1-018c6e8f4cdc",
+      "wbs_id": "2.11",
+      "title": "[2.11] 브랜드·세로 영상·게시물 재사용 템플릿 준비",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/d7da6def75f88238aba1018c6e8f4cdc",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:35:31.900Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.11\\] 브랜드·세로 영상·게시물 재사용 템플릿 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "5f6a6def-75f8-82f9-b7ad-01323e3956de",
+      "wbs_id": "2.12",
+      "title": "[2.12] Android 앱 아이콘·Play 그래픽 제작·검수",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/5f6a6def75f882f9b7ad01323e3956de",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:15.819Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.12\\] Android 앱 아이콘·Play 그래픽 제작·검수",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "9b2a6def-75f8-8375-9ef7-81c4012832f9",
+      "wbs_id": "2.13",
+      "title": "[2.13] Android 실제 화면 스크린샷·스토어 이미지 검수",
+      "area": "UX/UI",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/9b2a6def75f883759ef781c4012832f9",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:32.791Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[2.13\\] Android 실제 화면 스크린샷·스토어 이미지 검수",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/planning/design/",
+          "apps/mobile/design/",
+          "apps/mobile/src/screens/",
+          "frontend/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "516a6def-75f8-83e1-9d13-016dd99e5788",
+      "wbs_id": "3.1",
+      "title": "[3.1] 앱 라우팅·인증·서비스 연결 지점 확인",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/516a6def75f883e19d13016dd99e5788",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:45.994Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.1\\] 앱 라우팅·인증·서비스 연결 지점 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "040a6def-75f8-83e3-b3cd-81b4f7a917ba",
+      "wbs_id": "3.2a",
+      "title": "[3.2a] 네이버 로그인 인증·세션 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "퍼블리싱 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/040a6def75f883e3b3cd81b4f7a917ba",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:27.218Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": [
+          "https://app.notion.com/p/731a6def75f883ca9a5f018d896eaafd"
+        ],
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.2a\\] 네이버 로그인 인증·세션 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "895a6def-75f8-83f9-aff9-81dad6ff6e71",
+      "wbs_id": "3.2b",
+      "title": "[3.2b] 네이버 가입·사진·자격 확인 서비스 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "퍼블리싱 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/895a6def75f883f9aff981dad6ff6e71",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:48.561Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": [
+          "https://app.notion.com/p/731a6def75f883ca9a5f018d896eaafd"
+        ],
+        "children": null,
+        "related": [
+          "https://app.notion.com/p/c8ea6def75f88383b1e481cc54debd2d"
+        ]
+      },
+      "source_title_raw": "\\[3.2b\\] 네이버 가입·사진·자격 확인 서비스 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "731a6def-75f8-83ca-9a5f-018d896eaafd",
+      "wbs_id": "3.3",
+      "title": "[3.3] 메인 동행 목록 API 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/731a6def75f883ca9a5f018d896eaafd",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:43.283Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": [
+          "https://app.notion.com/p/040a6def75f883e3b3cd81b4f7a917ba",
+          "https://app.notion.com/p/895a6def75f883f9aff981dad6ff6e71"
+        ],
+        "related": null
+      },
+      "source_title_raw": "\\[3.3\\] 메인 동행 목록 API 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e22a6def-75f8-837b-b90b-81b71cefcffa",
+      "wbs_id": "3.4",
+      "title": "[3.4] 동행 작성·첫 메시지 신청·확정/변경 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/e22a6def75f8837bb90b81b71cefcffa",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:51.537Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.4\\] 동행 작성·첫 메시지 신청·확정/변경 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "296a6def-75f8-82df-bd52-011ecf7c6b13",
+      "wbs_id": "3.5",
+      "title": "[3.5] 완료·후기·신고·차단 API·상태 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/296a6def75f882dfbd52011ecf7c6b13",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:34.534Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.5\\] 완료·후기·신고·차단 API·상태 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e3aa6def-75f8-825d-bc90-01b4f42bca22",
+      "wbs_id": "3.6",
+      "title": "[3.6] API 실패·재시도·권한 회수의 앱 상태 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/e3aa6def75f8825dbc9001b4f42bca22",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:54.299Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.6\\] API 실패·재시도·권한 회수의 앱 상태 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "8ffa6def-75f8-8365-aeb2-012fc5401e26",
+      "wbs_id": "3.7",
+      "title": "[3.7] 검색어·초안 저장/만료/삭제 실기기 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/8ffa6def75f88365aeb2012fc5401e26",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:16.504Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.7\\] 검색어·초안 저장/만료/삭제 실기기 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "3dba6def-75f8-836b-b294-01f78cd39506",
+      "wbs_id": "3.8",
+      "title": "[3.8] 행사 목록·상세 실제 API 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/3dba6def75f8836bb29401f78cd39506",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:40.865Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.8\\] 행사 목록·상세 실제 API 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "672a6def-75f8-824f-b307-0152c7b5f7ef",
+      "wbs_id": "3.9",
+      "title": "[3.9] 마이페이지 회원·사진·탈퇴 API 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "BE 연동 대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/672a6def75f8824fb3070152c7b5f7ef",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:36:30.909Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": [
+          "https://app.notion.com/p/b92a6def75f88348899901be76df77d9"
+        ]
+      },
+      "source_title_raw": "\\[3.9\\] 마이페이지 회원·사진·탈퇴 API 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "84ca6def-75f8-829b-ad07-815230411f8e",
+      "wbs_id": "3.10",
+      "title": "[3.10] 유입·가입·첫 신청 퍼널의 측정 연결과 정확성 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/84ca6def75f8829bad07815230411f8e",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:50.207Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[3.10\\] 유입·가입·첫 신청 퍼널의 측정 연결과 정확성 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "68ba6def-75f8-8253-a107-017eede551d6",
+      "wbs_id": "4.1",
+      "title": "[4.1] 목표 운영 DB 식별과 실제 구조 확인",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/68ba6def75f88253a107017eede551d6",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:28.060Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.1\\] 목표 운영 DB 식별과 실제 구조 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "8e9a6def-75f8-8284-8e5c-019c7cad8c1b",
+      "wbs_id": "4.2",
+      "title": "[4.2] 최신 정책·API 계약·DB 구현 차이 검토",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/8e9a6def75f882848e5c019c7cad8c1b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:13.481Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.2\\] 최신 정책·API 계약·DB 구현 차이 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "d8aa6def-75f8-833c-b207-01769ca5e118",
+      "wbs_id": "4.3",
+      "title": "[4.3] 실제 네이버 인증·가입 서버 통합 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/d8aa6def75f8833cb20701769ca5e118",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:45.379Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.3\\] 실제 네이버 인증·가입 서버 통합 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "a50a6def-75f8-825e-ade2-0138b6009554",
+      "wbs_id": "4.4",
+      "title": "[4.4] 행사·공고 조회/작성/수정·공개 DTO 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/a50a6def75f8825eade20138b6009554",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:31:00.858Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.4\\] 행사·공고 조회/작성/수정·공개 DTO 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "80da6def-75f8-8269-be2c-8103f82bf4c5",
+      "wbs_id": "4.5",
+      "title": "[4.5] 첫 메시지 신청·확정·변경·만료 동시성 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/80da6def75f88269be2c8103f82bf4c5",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:46.915Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.5\\] 첫 메시지 신청·확정·변경·만료 동시성 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "5f2a6def-75f8-8367-878d-014b1e35e5ea",
+      "wbs_id": "4.6",
+      "title": "[4.6] 실제 완료·분쟁 보류·후기 공개 시점 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/5f2a6def75f88367878d014b1e35e5ea",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:12.479Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.6\\] 실제 완료·분쟁 보류·후기 공개 시점 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "ecba6def-75f8-82fe-ad16-81432f030dd3",
+      "wbs_id": "4.7",
+      "title": "[4.7] 신고·차단·탈퇴·제재 승계·사진 파기·RLS 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/ecba6def75f882fead1681432f030dd3",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:09.811Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.7\\] 신고·차단·탈퇴·제재 승계·사진 파기·RLS 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "58ca6def-75f8-8217-980a-010dda12b177",
+      "wbs_id": "4.8",
+      "title": "[4.8] 내 정보 조회 서버 권한·응답 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/58ca6def75f88217980a010dda12b177",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:49.960Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[4.8\\] 내 정보 조회 서버 권한·응답 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "7a5a6def-75f8-8306-8a69-814c5c7a9edf",
+      "wbs_id": "5.1",
+      "title": "[5.1] AI 외부전송·동의·공급사 조건 확인",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/7a5a6def75f883068a69814c5c7a9edf",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:53.677Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.1\\] AI 외부전송·동의·공급사 조건 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "512a6def-75f8-8249-afbb-81226a0a0043",
+      "wbs_id": "5.2",
+      "title": "[5.2] 자연어 조건과 실제 DB 검색 연동 검증",
+      "area": "AI",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/512a6def75f88249afbb81226a0a0043",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:38.650Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.2\\] 자연어 조건과 실제 DB 검색 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "c3ba6def-75f8-837b-80e9-818c1542538f",
+      "wbs_id": "5.3",
+      "title": "[5.3] 모델 설명·개인정보 필터·0건/실패 검증",
+      "area": "AI",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/c3ba6def75f8837b80e9818c1542538f",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:28.753Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.3\\] 모델 설명·개인정보 필터·0건/실패 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "ef7a6def-75f8-82af-9eb6-81080a111ae7",
+      "wbs_id": "5.4a",
+      "title": "[5.4a] 회원 하루20회·동시1개 서버 한도 검증",
+      "area": "BE",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/ef7a6def75f882af9eb681080a111ae7",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:16.412Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.4a\\] 회원 하루20회·동시1개 서버 한도 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "990a6def-75f8-8225-b0a5-011c9a890108",
+      "wbs_id": "5.4b",
+      "title": "[5.4b] AI 한도·중단 응답의 앱 상태 연동 검증",
+      "area": "앱·서비스 연동",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/990a6def75f88225b0a5011c9a890108",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:35:50.082Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.4b\\] AI 한도·중단 응답의 앱 상태 연동 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/src/service.ts",
+          "apps/mobile/src/remote.tsx",
+          "apps/mobile/src/api.ts",
+          "apps/mobile/src/member-session.ts",
+          "apps/mobile/src/member-service.ts",
+          "apps/mobile/src/web-member-session.ts"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "acca6def-75f8-8212-a932-81641203618f",
+      "wbs_id": "5.5",
+      "title": "[5.5] 다중 계정 예산·원장 런타임 연결 검증",
+      "area": "AI",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/acca6def75f88212a93281641203618f",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:31:03.828Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.5\\] 다중 계정 예산·원장 런타임 연결 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "6f7a6def-75f8-827f-956a-01d6837b5e24",
+      "wbs_id": "5.6",
+      "title": "[5.6] 출력 상한·실제 모델·공급사 사용량 측정 검증",
+      "area": "AI",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/6f7a6def75f8827f956a01d6837b5e24",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:37.928Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.6\\] 출력 상한·실제 모델·공급사 사용량 측정 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "990a6def-75f8-82c0-afd2-81cef4c7e203",
+      "wbs_id": "5.7",
+      "title": "[5.7] 후기 AI 요약의 경쟁·철회·숨김·삭제 통합 검증",
+      "area": "AI",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/990a6def75f882c0afd281cef4c7e203",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:29.533Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[5.7\\] 후기 AI 요약의 경쟁·철회·숨김·삭제 통합 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "2eea6def-75f8-8245-b5dd-810ae8e7117f",
+      "wbs_id": "6.1",
+      "title": "[6.1] 출시 필수 QA 케이스와 증빙 방식 정의",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/2eea6def75f88245b5dd810ae8e7117f",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:27.163Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.1\\] 출시 필수 QA 케이스와 증빙 방식 정의",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "553a6def-75f8-8276-be33-011a751fca59",
+      "wbs_id": "6.2",
+      "title": "[6.2] 로그인→후기 실제 회원 회귀 QA",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/553a6def75f88276be33011a751fca59",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:42.017Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.2\\] 로그인→후기 실제 회원 회귀 QA",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "47ea6def-75f8-827f-ab90-814de9fd15b6",
+      "wbs_id": "6.3",
+      "title": "[6.3] 신고·차단·비로그인·AI 위험 케이스 QA",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/47ea6def75f8827fab90814de9fd15b6",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:32.976Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.3\\] 신고·차단·비로그인·AI 위험 케이스 QA",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "ef6a6def-75f8-8204-83f6-01c0b48dc19b",
+      "wbs_id": "6.4a",
+      "title": "[6.4a] Android 독립 설치 앱 QA",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/ef6a6def75f8820483f601c0b48dc19b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:13.554Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.4a\\] Android 독립 설치 앱 QA",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "46ca6def-75f8-8378-8dae-818db298fce0",
+      "wbs_id": "6.4b",
+      "title": "[6.4b] iPhone 독립 설치 앱 QA 준비",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P3",
+      "url": "https://app.notion.com/p/46ca6def75f883788dae818db298fce0",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:29.927Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.4b\\] iPhone 독립 설치 앱 QA 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "c22a6def-75f8-83ca-a733-014eb5c55a38",
+      "wbs_id": "6.5",
+      "title": "[6.5] 수정 재검증과 출시 차단 후보 정리",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/c22a6def75f883caa733014eb5c55a38",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:23.116Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.5\\] 수정 재검증과 출시 차단 후보 정리",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "ccba6def-75f8-8371-a1e8-014fc312844f",
+      "wbs_id": "6.6",
+      "title": "[6.6] Android 비공개 베타 운영·결함 분류·수정 재검증",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/ccba6def75f88371a1e8014fc312844f",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:37.029Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.6\\] Android 비공개 베타 운영·결함 분류·수정 재검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "09ea6def-75f8-8379-a9cf-8192a6898e79",
+      "wbs_id": "6.7",
+      "title": "[6.7] 정식 공개 후 Play 설치·로그인·핵심 흐름 확인",
+      "area": "QA",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/09ea6def75f88379a9cf8192a6898e79",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:24.877Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[6.7\\] 정식 공개 후 Play 설치·로그인·핵심 흐름 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "566a6def-75f8-83f0-a413-011071b40c71",
+      "wbs_id": "7.1",
+      "title": "[7.1] 현재 Railway·운영 DB 연결 재검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/566a6def75f883f0a413011071b40c71",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:47.436Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.1\\] 현재 Railway·운영 DB 연결 재검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "af8a6def-75f8-82e4-b49e-81a03a577568",
+      "wbs_id": "7.2",
+      "title": "[7.2] 자동완료 실행기 DB 권한·실제 처리·복구 검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/af8a6def75f882e4b49e81a03a577568",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:35:34.649Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.2\\] 자동완료 실행기 DB 권한·실제 처리·복구 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "541a6def-75f8-82fe-955b-015ffc320e15",
+      "wbs_id": "7.3a",
+      "title": "[7.3a] Android 내부 APK 빌드·설치 검증",
+      "area": "빌드·출시 기술 준비",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/541a6def75f882fe955b015ffc320e15",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:23:59.303Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.3a\\] Android 내부 APK 빌드·설치 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "1dda6def-75f8-8355-91cb-81245fe3359a",
+      "wbs_id": "7.3b",
+      "title": "[7.3b] iOS 빌드·서명·배포 준비 검토",
+      "area": "빌드·출시 기술 준비",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P3",
+      "url": "https://app.notion.com/p/1dda6def75f8835591cb81245fe3359a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:22:29.261Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.3b\\] iOS 빌드·서명·배포 준비 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "4a8a6def-75f8-8310-b2e1-01cf52d37d19",
+      "wbs_id": "7.4",
+      "title": "[7.4] 스토어 제출·운영 정책 조건 체크리스트",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/4a8a6def75f88310b2e101cf52d37d19",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:11.092Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.4\\] 스토어 제출·운영 정책 조건 체크리스트",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f69a6def-75f8-83dd-a9b7-0192edcb0f0a",
+      "wbs_id": "7.5",
+      "title": "[7.5] 플랫폼별 출시 승인/보류 결정표",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/f69a6def75f883dda9b70192edcb0f0a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:25.578Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.5\\] 플랫폼별 출시 승인/보류 결정표",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "0d1a6def-75f8-829e-8701-016c568cbf03",
+      "wbs_id": "7.6",
+      "title": "[7.6] J1 취소·신고 소비자 로컬 구현·가상 검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "최종 완료",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/0d1a6def75f8829e8701016c568cbf03",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:22.056Z",
+      "status_class": "notion_final_complete",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.6\\] J1 취소·신고 소비자 로컬 구현·가상 검증",
+      "scope_note": "J1 로컬·가상 소비자 검증 완료 범위. 운영 배포·실회원·후속 요약/AI22/23 완료로 확대하지 않는다.",
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "076a6def-75f8-82c3-aee5-81cfa3bda841",
+      "wbs_id": "7.7",
+      "title": "[7.7] 의존성 보안·Expo 호환 패치 검토",
+      "area": "빌드·출시 기술 준비",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/076a6def75f882c3aee581cfa3bda841",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:22:10.546Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.7\\] 의존성 보안·Expo 호환 패치 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "562a6def-75f8-82dd-b5f2-817590b37a16",
+      "wbs_id": "7.8",
+      "title": "[7.8] KOPIS 공식 순위 기간·표기 검증 준비",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/562a6def75f882ddb5f2817590b37a16",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:44.665Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.8\\] KOPIS 공식 순위 기간·표기 검증 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "b17a6def-75f8-829c-a840-8158830e21e0",
+      "wbs_id": "7.9",
+      "title": "[7.9] 서울 행사 안전 HTTPS 자동 수집 검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/b17a6def75f8829ca8408158830e21e0",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:18.481Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.9\\] 서울 행사 안전 HTTPS 자동 수집 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "621a6def-75f8-83f1-a8fa-81255cf24217",
+      "wbs_id": "7.10",
+      "title": "[7.10] 출시 전 협업 변경 검사 체계 점검",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/621a6def75f883f1a8fa81255cf24217",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:40.490Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.10\\] 출시 전 협업 변경 검사 체계 점검",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "0e3a6def-75f8-82c3-9682-81d2ea300005",
+      "wbs_id": "7.11",
+      "title": "[7.11] 백엔드·AI 검증 환경과 기존 인계 자료 정리",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/0e3a6def75f882c3968281d2ea300005",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:15.907Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.11\\] 백엔드·AI 검증 환경과 기존 인계 자료 정리",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "a68a6def-75f8-825c-98c8-01dfb46c1f1c",
+      "wbs_id": "7.12",
+      "title": "[7.12] 행사 일일 수집·갱신·재개와 앱·AI 표시 일치 검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/a68a6def75f8825c98c801dfb46c1f1c",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:57.257Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.12\\] 행사 일일 수집·갱신·재개와 앱·AI 표시 일치 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "695a6def-75f8-82e1-9c97-818193aa1d46",
+      "wbs_id": "7.13",
+      "title": "[7.13] 개인정보·AI 피드백·신고 자료의 주기 파기 연결 검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/695a6def75f882e19c97818193aa1d46",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:30.928Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.13\\] 개인정보·AI 피드백·신고 자료의 주기 파기 연결 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "5b8a6def-75f8-8204-be8e-01a4c193d12a",
+      "wbs_id": "7.14",
+      "title": "[7.14] 최종 DB·권한·Storage 원본 백업과 격리 복원 검증",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/5b8a6def75f88204be8e01a4c193d12a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:24:52.657Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.14\\] 최종 DB·권한·Storage 원본 백업과 격리 복원 검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "eafa6def-75f8-8247-b4e2-018a8f4cc67b",
+      "wbs_id": "7.15",
+      "title": "[7.15] Android 앱 식별자·서명·버전 설정 확인",
+      "area": "빌드·출시 기술 준비",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/eafa6def75f88247b4e2018a8f4cc67b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:05.501Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.15\\] Android 앱 식별자·서명·버전 설정 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "5c9a6def-75f8-8212-8ae7-0141ce4ba47b",
+      "wbs_id": "7.16",
+      "title": "[7.16] Google Play 제출용 AAB 빌드·검증",
+      "area": "빌드·출시 기술 준비",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/5c9a6def75f882128ae70141ce4ba47b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:08.986Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.16\\] Google Play 제출용 AAB 빌드·검증",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "030a6def-75f8-82c4-ab36-81a22e9fb3f5",
+      "wbs_id": "7.17",
+      "title": "[7.17] Play 내부·비공개 테스트 트랙의 기술 설정·배포",
+      "area": "빌드·출시 기술 준비",
+      "assignees": [
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/030a6def75f882c4ab3681a22e9fb3f5",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:22:05.758Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.17\\] Play 내부·비공개 테스트 트랙의 기술 설정·배포",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "apps/mobile/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e84a6def-75f8-8262-a224-0108488cf18d",
+      "wbs_id": "7.18",
+      "title": "[7.18] 출시 후 서버·수집·AI·오류 감시와 긴급 복구 준비",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/e84a6def75f88262a2240108488cf18d",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:02.556Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[7.18\\] 출시 후 서버·수집·AI·오류 감시와 긴급 복구 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "853a6def-75f8-83ab-a404-01550ff46c9a",
+      "wbs_id": "8.1",
+      "title": "[8.1] 핵심 페르소나·페인포인트·소구점 문서화",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/853a6def75f883aba40401550ff46c9a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:49.007Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.1\\] 핵심 페르소나·페인포인트·소구점 문서화",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "3afa6def-75f8-8258-ad64-812c0fdb5f20",
+      "wbs_id": "8.2",
+      "title": "[8.2] 브랜드 가치제안·포지셔닝 검토",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/3afa6def75f88258ad64812c0fdb5f20",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:23:41.978Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.2\\] 브랜드 가치제안·포지셔닝 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "51da6def-75f8-82c0-bf48-010b1e029e9b",
+      "wbs_id": "8.3",
+      "title": "[8.3] 유입→탐색→동행 퍼널·KPI 설계",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/51da6def75f882c0bf48010b1e029e9b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:44.689Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.3\\] 유입→탐색→동행 퍼널·KPI 설계",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "7e9a6def-75f8-83eb-8bc1-815ee3d55118",
+      "wbs_id": "8.4",
+      "title": "[8.4] Reels·TikTok·Threads 콘텐츠 필러·오가닉 테스트 설계",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/7e9a6def75f883eb8bc1815ee3d55118",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:46.793Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.4\\] Reels·TikTok·Threads 콘텐츠 필러·오가닉 테스트 설계",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "ea2a6def-75f8-83dd-9e00-812bad9ece52",
+      "wbs_id": "8.5",
+      "title": "[8.5] 출시 단계별 콘텐츠 실행 계획 초안",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/ea2a6def75f883dd9e00812bad9ece52",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:42.589Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.5\\] 출시 단계별 콘텐츠 실행 계획 초안",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "488a6def-75f8-8260-9205-014292eeb1d4",
+      "wbs_id": "8.6",
+      "title": "[8.6] Instagram·TikTok·Threads 소개·프로필·이동 경로 준비",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/488a6def75f882609205014292eeb1d4",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:43.074Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.6\\] Instagram·TikTok·Threads 소개·프로필·이동 경로 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "e72a6def-75f8-82b5-b288-81cb572e596a",
+      "wbs_id": "8.7",
+      "title": "[8.7] 첫 세로 영상 1개와 채널별 변형 만들기",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/e72a6def75f882b5b28881cb572e596a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:56.942Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.7\\] 첫 세로 영상 1개와 채널별 변형 만들기",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "24ba6def-75f8-83a0-ba9d-0162f7a45541",
+      "wbs_id": "8.8",
+      "title": "[8.8] 첫 Threads 글·Instagram/TikTok 게시 문구 만들기",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/24ba6def75f883a0ba9d0162f7a45541",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:23.191Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.8\\] 첫 Threads 글·Instagram/TikTok 게시 문구 만들기",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "5b3a6def-75f8-828e-af47-81e582b6cd39",
+      "wbs_id": "8.9",
+      "title": "[8.9] AI 콘텐츠 자동화의 입력자료·단계·검수 기준 정하기",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/5b3a6def75f8828eaf4781e582b6cd39",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:38.963Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.9\\] AI 콘텐츠 자동화의 입력자료·단계·검수 기준 정하기",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "1d7a6def-75f8-8317-a013-01f6449c69c5",
+      "wbs_id": "8.10",
+      "title": "[8.10] AI 대본·음성·자막으로 콘텐츠 한 묶음 시험 제작",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/1d7a6def75f88317a01301f6449c69c5",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:31.041Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.10\\] AI 대본·음성·자막으로 콘텐츠 한 묶음 시험 제작",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f48a6def-75f8-821f-9797-015e030ef774",
+      "wbs_id": "8.11",
+      "title": "[8.11] 반복 제작 템플릿·승인 대기 목록으로 두 번째 콘텐츠 만들기",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P2",
+      "url": "https://app.notion.com/p/f48a6def75f8821f9797015e030ef774",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:45.526Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.11\\] 반복 제작 템플릿·승인 대기 목록으로 두 번째 콘텐츠 만들기",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "7ffa6def-75f8-8298-b4b8-81bc8bbe447a",
+      "wbs_id": "8.12",
+      "title": "[8.12] 승인 콘텐츠의 채널별 게시·기록",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/7ffa6def75f88298b4b881bc8bbe447a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:40.246Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.12\\] 승인 콘텐츠의 채널별 게시·기록",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "76ba6def-75f8-8219-b8f4-016075899901",
+      "wbs_id": "8.13",
+      "title": "[8.13] 비공개 베타 참여자 모집·참여 선택 확인",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/76ba6def75f88219b8f4016075899901",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:57.032Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.13\\] 비공개 베타 참여자 모집·참여 선택 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "d79a6def-75f8-82ef-bfff-812e108cca6d",
+      "wbs_id": "8.14",
+      "title": "[8.14] 초기 동행 공고 공급·첫 이용 안내 준비",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/d79a6def75f882efbfff812e108cca6d",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:33.020Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.14\\] 초기 동행 공고 공급·첫 이용 안내 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f8fa6def-75f8-8371-ba83-015c11adf3cc",
+      "wbs_id": "8.15",
+      "title": "[8.15] 출시·콘텐츠·AI 운영의 비용과 시간 범위 검토",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/f8fa6def75f88371ba83015c11adf3cc",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:30.001Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.15\\] 출시·콘텐츠·AI 운영의 비용과 시간 범위 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "6eda6def-75f8-8230-ab19-01cf5bccb26c",
+      "wbs_id": "8.16",
+      "title": "[8.16] Google Play 앱 소개·스토어 문구 작성·검수",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/6eda6def75f88230ab1901cf5bccb26c",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:00.004Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.16\\] Google Play 앱 소개·스토어 문구 작성·검수",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "df3a6def-75f8-827f-9105-01d4d189d4ab",
+      "wbs_id": "8.17",
+      "title": "[8.17] 공개 개인정보·탈퇴 요청·고객지원 문서 검수·게시 준비",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/df3a6def75f8827f910501d4d189d4ab",
+      "deleted": true,
+      "page_last_edited_at": "2026-10-14T13:14:00.932Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.17\\] 공개 개인정보·탈퇴 요청·고객지원 문서 검수·게시 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": true
+      }
+    },
+    {
+      "id": "e71a6def-75f8-8216-b650-0157a7450b9e",
+      "wbs_id": "8.18",
+      "title": "[8.18] 게시 반응·유입 경로 기록·다음 소재 결정",
+      "area": "Brand&Marketing",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/e71a6def75f88216b6500157a7450b9e",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:42.367Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.18\\] 게시 반응·유입 경로 기록·다음 소재 결정",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "ef4a6def-75f8-8241-8105-812cc66bbe0b",
+      "wbs_id": "8.19",
+      "title": "[8.19] 개인 Play 개발자 계정의 검증·생성 시점·테스트 요건 확인",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/ef4a6def75f882418105812cc66bbe0b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:04.406Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.19\\] 개인 Play 개발자 계정의 검증·생성 시점·테스트 요건 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "9c3a6def-75f8-8363-aa11-812912a0f1c5",
+      "wbs_id": "8.20",
+      "title": "[8.20] 베타 설치·사용·피드백 제출 안내 만들기",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/9c3a6def75f88363aa11812912a0f1c5",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:30:36.080Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.20\\] 베타 설치·사용·피드백 제출 안내 만들기",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f51a6def-75f8-832d-a0fc-018439d947d9",
+      "wbs_id": "8.21",
+      "title": "[8.21] Play 데이터 보안·등급·콘텐츠·심사 접근 자료 준비",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/f51a6def75f8832da0fc018439d947d9",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:34:19.863Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.21\\] Play 데이터 보안·등급·콘텐츠·심사 접근 자료 준비",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "17aa6def-75f8-82f5-8328-814711fa46b8",
+      "wbs_id": "8.22",
+      "title": "[8.22] 비공개 테스트 요건 충족 확인·정식 출시 권한 신청",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/17aa6def75f882f58328814711fa46b8",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:42:14.145Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.22\\] 비공개 테스트 요건 충족 확인·정식 출시 권한 신청",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "6f5a6def-75f8-83b8-8856-013b84464959",
+      "wbs_id": "8.23",
+      "title": "[8.23] Android 제출 자료 최종 대조·심사 제출",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/6f5a6def75f883b88856013b84464959",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:29:34.741Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.23\\] Android 제출 자료 최종 대조·심사 제출",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "acda6def-75f8-83de-8f50-0196e84f1639",
+      "wbs_id": "8.24",
+      "title": "[8.24] 심사 결과 확인·반려 사유 분류·재제출 관리",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/acda6def75f883de8f500196e84f1639",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:33:12.185Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.24\\] 심사 결과 확인·반려 사유 분류·재제출 관리",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "b7fa6def-75f8-8369-8dfb-0100390d273e",
+      "wbs_id": "8.25",
+      "title": "[8.25] Android 정식 공개 실행·스토어 노출 확인",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/b7fa6def75f883698dfb0100390d273e",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:23:57.899Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.25\\] Android 정식 공개 실행·스토어 노출 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "0e7a6def-75f8-83e4-a031-012d55e96328",
+      "wbs_id": "8.26",
+      "title": "[8.26] 지원메일·삭제 요청 접수·응답 경로 시험 확인",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/0e7a6def75f883e4a031012d55e96328",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:06.979Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.26\\] 지원메일·삭제 요청 접수·응답 경로 시험 확인",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f09a6def-75f8-8327-ada6-81fde7d4cc0b",
+      "wbs_id": "8.27",
+      "title": "[8.27] 필요한 지출의 사전 승인·집행·증빙 관리(발생 시)",
+      "area": "PM/기획",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P2",
+      "url": "https://app.notion.com/p/f09a6def75f88327ada681fde7d4cc0b",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:43.491Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[8.27\\] 필요한 지출의 사전 승인·집행·증빙 관리(발생 시)",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "f9aa6def-75f8-82ae-8c99-01f42b34617a",
+      "wbs_id": "9.1",
+      "title": "[9.1] 신고·개인정보·지원 운영 체계 검토",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "priority": "P0",
+      "url": "https://app.notion.com/p/f9aa6def75f882ae8c9901f42b34617a",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T08:24:16.095Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[9.1\\] 신고·개인정보·지원 운영 체계 검토",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    },
+    {
+      "id": "391a6def-75f8-83cd-a74b-811d988e9fde",
+      "wbs_id": "9.2",
+      "title": "[9.2] 출시 직후 문의·리뷰·첫 사용 문제 확인과 개선 결정",
+      "area": "Ops",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "priority": "P1",
+      "url": "https://app.notion.com/p/391a6def75f883cda74b811d988e9fde",
+      "deleted": false,
+      "page_last_edited_at": "2026-10-14T12:23:46.327Z",
+      "status_class": "notion_remaining_or_milestone",
+      "dates": {
+        "start": null,
+        "end": null,
+        "is_datetime": 0
+      },
+      "milestone": null,
+      "relations": {
+        "parent": null,
+        "children": null,
+        "related": null
+      },
+      "source_title_raw": "\\[9.2\\] 출시 직후 문의·리뷰·첫 사용 문제 확인과 개선 결정",
+      "scope_note": null,
+      "repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      }
+    }
+  ],
+  "repo_mapping_policy": "기존 경로의 영역별 후보 매핑이며 파일 수정 승인이나 미구현 판단이 아님. 같은 폴더에 중복 기능 폴더를 만들지 않고 기존 파일·최신 ownership을 먼저 확인한다."
+}

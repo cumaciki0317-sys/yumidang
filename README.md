@@ -1,5 +1,7 @@
 # 유미당
 
+브랜치를 받은 뒤 “나 종현이야”·“나 유미야”·“나 민규야”라고 입력하면 [팀원별 시작 안내](docs/collaboration/team-start.md)에 따라 Notion 담당 작업을 바로 이어간다.
+
 ## 현재 팀 역할
 
 BE·AI·서버 운영은 민규 전담, FE·UX/UI·앱·서비스 연동·빌드 준비는 종현, PM/기획·브랜딩·UT는 유미, 정책은 유미·종현 공동 정리, QA는 공통 담당이다. 성호의 현재 담당은 제거했다. [담당 재배정](docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md)·[소유권 정책](backend/ownership.json)·[협업 규칙](docs/collaboration/README.md)을 따른다. 기존 이름이 든 경로와 완료 증거는 보존한다.
