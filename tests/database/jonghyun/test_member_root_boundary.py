@@ -99,6 +99,26 @@ class MemberRootBoundaryTests(unittest.TestCase):
         return {'row': {'id': s['hiddenId'], 'identity_id': b.qualifications[0]['identityId'],
                         'target_type': 'chat', 'target_id': s['hiddenMessageId']}, 'rowSha256': F}
 
+    def generation_case_boundary(self):
+        b = self.read_case_boundary()
+        messages = {'schema': 'private', 'table': 'conversation_message_generations',
+                    'column': 'message_id', 'parent': 'messages'}
+        generations = {'schema': 'private', 'table': 'conversation_retention_generations',
+                       'column': 'request_id', 'parent': 'requests'}
+        b.read_boundary['references'] = [messages, generations]
+        b.read_boundary['descendantReferences'] = [{'schema': 'private', 'table': 'conversation_message_generations',
+            'parentSchema': 'private', 'parentTable': 'conversation_retention_generations',
+            'childColumns': ['request_id', 'generation'], 'parentColumns': ['request_id', 'generation']}]
+        rows = [{'row': {'message_id': x['row']['id'], 'request_id': x['row']['join_request_id'], 'generation': 1},
+                 'rowSha256': H} for x in b.native['messages']]
+        parents = [{'row': {'request_id': x['row']['id'], 'generation': 1}, 'rowSha256': F}
+                   for x in b.native['requests']]
+        b.native['derived'] = [{'table': 'private.' + meta['table'], 'column': meta['column'],
+                               'parent': meta['parent'], 'rows': data}
+                              for meta, data in ((messages, rows), (generations, parents))]
+        b.read_boundary['graph']['derived'] = copy.deepcopy(b.native['derived'])
+        return b
+
     def test_read_boundary_wrong_scope_and_stage_order_never_dispatch_sql(self):
         b = self.read_case_boundary()
         for call in (lambda: b.prepare_read_boundary(OTHER), lambda: b.inspect_read_boundary(OTHER),
@@ -158,7 +178,7 @@ class MemberRootBoundaryTests(unittest.TestCase):
         sql = b.read_boundary_statement(RUN)
         self.assertIn('c.parent_id=r.id and c.revision=r.revision', sql)
         self.assertIn('from private.synthetic_child c join private.synthetic_parent r', sql)
-        self.assertIn('where r.request_id in(', sql)
+        self.assertIn('where (r.request_id in(', sql)
         self.assertIn('descendantsAbsent', sql)
         self.assertNotIn('delete ', sql)
         self.assertEqual(b.sql_calls, [])
@@ -170,9 +190,114 @@ class MemberRootBoundaryTests(unittest.TestCase):
                 b.read_boundary['descendantReferences'] = [{'schema': 'private', 'table': 'synthetic_child',
                     'parentSchema': 'private', 'parentTable': table, 'childColumns': ['parent_id'], 'parentColumns': ['id']}]
                 sql = b.read_boundary_statement(RUN)
-                self.assertIn('from private.synthetic_child c join private.' + table + ' r on c.parent_id=r.id where ', sql)
+                self.assertIn('from private.synthetic_child c join private.' + table + ' r on c.parent_id=r.id where (', sql)
                 self.assertNotIn(' where )', sql)
         self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_known_generation_descendants_require_exact_scoped_json_and_hash(self):
+        b = self.generation_case_boundary()
+        sql = b.read_boundary_statement(RUN)
+        self.assertIn('c.request_id=r.request_id and c.generation=r.generation', sql)
+        self.assertIn('private.conversation_message_generations tracked where (tracked.message_id in(', sql)
+        self.assertIn('to_jsonb(tracked)=to_jsonb(c)', sql)
+        self.assertIn(m.row_sha_sql('tracked') + '=' + m.row_sha_sql('c'), sql)
+        # 두 방의 소유 메시지101개에만 연결한다. 같은 테이블이라는 이유로 무시하지 않는다.
+        tracked = sql.split('private.conversation_message_generations tracked where (', 1)[1]
+        tracked = tracked.split(') and to_jsonb(tracked)', 1)[0]
+        for message in b.native['messages']:
+            self.assertIn(message['row']['id'], tracked)
+        self.assertNotIn(USER, tracked)
+        self.assertEqual(len(b.native['derived'][0]['rows']), 101)
+        self.assertTrue(b.inspect_read_boundary(RUN)['sessionBindingRestored'])
+        self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_untracked_generation_or_appointment_descendant_is_not_ignored(self):
+        b = self.generation_case_boundary()
+        b.read_boundary['descendantReferences'].append({'schema': 'private', 'table': 'conversation_generation_appointments',
+            'parentSchema': 'private', 'parentTable': 'conversation_retention_generations',
+            'childColumns': ['request_id', 'generation'], 'parentColumns': ['request_id', 'generation']})
+        sql = b.read_boundary_statement(RUN)
+        self.assertIn('from private.conversation_generation_appointments c join private.conversation_retention_generations r', sql)
+        self.assertNotIn('private.conversation_generation_appointments tracked', sql)
+        # native 포트의 미추적 추가행/foreign 메시지 관측 모형: 삭제/단계 mutation 전에 거절.
+        b.native['descendantsAbsent'] = False
+        for call in (lambda: b.inspect_read_boundary(RUN), lambda: b.cleanup_read_boundary(),
+                     lambda: b.set_read_boundary(RUN, 'hidden')):
+            with self.assertRaisesRegex(ValueError, 'DESCENDANT_UNKNOWN_PRESERVED'):
+                call()
+        self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_derived_union_includes_all_scoped_direct_fk_predicates(self):
+        b = self.generation_case_boundary()
+        b.read_boundary['references'].append({'schema': 'private', 'table': 'conversation_message_generations',
+                                             'column': 'request_id', 'parent': 'requests'})
+        sql = b.read_boundary_statement(RUN)
+        covered = sql.split('private.conversation_message_generations tracked where (', 1)[1]
+        self.assertIn(' or tracked.request_id in(', covered)
+        self.assertIn(') and to_jsonb(tracked)=to_jsonb(c) and ', covered)
+        self.assertIn("'descendantsAbsent',(not exists", sql)
+
+    def test_read_boundary_changed_generation_json_or_sha_is_rejected_without_sql(self):
+        for changed in ('row', 'rowSha256'):
+            with self.subTest(changed=changed):
+                b = self.generation_case_boundary()
+                item = b.native['derived'][0]['rows'][0]
+                if changed == 'row':
+                    item['row']['generation'] = 2
+                else:
+                    item['rowSha256'] = N
+                for call in (lambda: b.inspect_read_boundary(RUN), lambda: b.cleanup_read_boundary()):
+                    with self.assertRaisesRegex(ValueError, 'DERIVED_CHANGED'):
+                        call()
+                self.assertEqual(b.sql_calls, [])
+
+    def test_read_boundary_cleanup_rechecks_known_descendants_after_exact_child_locks(self):
+        b = self.generation_case_boundary()
+        b.cleanup_read_boundary()
+        self.assertEqual(len(b.sql_calls), 1)
+        sql = b.sql_calls[0]
+        lock = sql.index('perform 1 from private.conversation_message_generations r where to_jsonb(r)=')
+        compare = sql.index('private.conversation_message_generations tracked where (')
+        deletion = sql.index('delete from public.posts')
+        self.assertLess(lock, compare)
+        self.assertLess(compare, deletion)
+        self.assertIn('member_read_scope_cas', sql)
+        self.assertNotIn('delete from private.conversation_message_generations', sql)
+        self.assertNotIn('delete from private.conversation_retention_generations', sql)
+        self.assertEqual(sql.count('delete from public.posts'), 2)
+        self.assertTrue(b.saved['read-boundary-cleaned.json']['wholeBaselineStillRequired'])
+
+    def test_read_boundary_foreign_extra_row_in_tracked_table_remains_unknown(self):
+        b = self.generation_case_boundary()
+        foreign = str(uuid.UUID(int=9000))
+        query = b.read_boundary_statement(RUN)
+        covered = query.split('private.conversation_message_generations tracked where (', 1)[1]
+        covered = covered.split(') and to_jsonb(tracked)', 1)[0]
+        self.assertNotIn(foreign, covered)
+        # DB 포트가 scoped generation에 붙은 미소유 message_id를 관측했다고 전달한다.
+        b.native['descendantsAbsent'] = False
+        with self.assertRaisesRegex(ValueError, 'DESCENDANT_UNKNOWN_PRESERVED'):
+            b.cleanup_read_boundary()
+        self.assertEqual(b.sql_calls, [])
+        self.assertEqual(b.read_boundary['phase'], 'prepared')
+
+    def test_read_boundary_unknown_added_after_locks_does_not_claim_cleanup_or_replay(self):
+        b = self.generation_case_boundary()
+        native = b.read_boundary_statement(RUN).removeprefix('select ').removesuffix(';')
+        def after_lock_refusal(sql):
+            b.sql_calls.append(sql)
+            # native 전체 SELECT를 잠금 뒤 재실행하고 삭제 전 비교하는 동일 SQL을 검사한다.
+            self.assertIn('if (' + native + ')is distinct from ', sql)
+            self.assertLess(sql.index('member_read_scope_cas'), sql.index('delete from public.posts'))
+            raise ValueError('SQLSTATE_40001')
+        b.ports.sql = after_lock_refusal
+        with self.assertRaisesRegex(ValueError, 'SQLSTATE_40001'):
+            b.cleanup_read_boundary()
+        self.assertEqual(b.read_boundary['phase'], 'cleanup_unknown')
+        self.assertNotIn('read-boundary-cleaned.json', b.saved)
+        with self.assertRaisesRegex(ValueError, 'UNKNOWN_PRESERVED'):
+            b.cleanup_read_boundary()
+        self.assertEqual(len(b.sql_calls), 1)
 
     def test_read_boundary_stage_loss_preserves_unknown_and_does_not_resend(self):
         for stage in ('hidden', 'revoked', 'restored'):

@@ -569,8 +569,16 @@ class RootMemberBoundary:
                         if table == child['parentSchema'] + '.' + child['parentTable']]
                 require(len(leaf) == 1, 'READ_BOUNDARY_DESCENDANT_PARENT')
                 scoped = leaf[0]
+            # 같은 SELECT/MVCC snapshot의 derived union에 정확히 포함된 행만 수용한다.
+            # 테이블 이름만 같거나 scoped FK 밖의 추가 행이면 계속 UNKNOWN으로 보존한다.
+            tracked = [x for x in state['references'] if x['schema'] == child['schema'] and x['table'] == child['table']]
+            covered = ' or '.join('tracked.' + meta['column'] + ' in(' + ids[meta['parent']] + ')' for meta in tracked)
+            untracked = (' and not exists(select 1 from ' + child['schema'] + '.' + child['table']
+                + ' tracked where (' + covered + ') and to_jsonb(tracked)=to_jsonb(c) and '
+                + row_sha_sql('tracked') + '=' + row_sha_sql('c') + ')') if tracked else ''
             descendants.append('not exists(select 1 from ' + child['schema'] + '.' + child['table'] + ' c join '
-                + child['parentSchema'] + '.' + child['parentTable'] + ' r on ' + joins + ' where ' + scoped + ')')
+                + child['parentSchema'] + '.' + child['parentTable'] + ' r on ' + joins + ' where (' + scoped + ')' + untracked + ')')
+        # 기존 내부 필드명 유지: 여기서 absent는 추적된 derived 밖의 후손이 없다는 뜻이다.
         terms.append("'descendantsAbsent',(" + (' and '.join(descendants) if descendants else 'true') + ')')
         return 'select jsonb_build_object(' + ','.join(terms) + ');'
 
