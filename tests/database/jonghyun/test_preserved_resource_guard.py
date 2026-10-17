@@ -1,5 +1,6 @@
 """기존 자원 보존 경계의 모형 검사. 도커·인증·SQL 실제 호출은 없다."""
 import copy
+from contextlib import closing
 import hashlib
 import importlib.util
 import json
@@ -39,7 +40,7 @@ class PreservedGuardTest(unittest.TestCase):
         self.vol={'Name':'supabase_db_jonghyun-backend100-b1234567','Labels':{'test':'original'}}
         old={'id':self.old['Id'],'name':self.old['Name'][1:],'image':self.old['Image'],
              'labelsSha256':sha(self.old['Config']['Labels']),'configSha256':sha(self.old['Config']),
-             'hostConfigSha256':sha(self.old['HostConfig']),'mountsSha256':sha(self.old['Mounts']),
+             'hostConfigSha256':sha(self.old['HostConfig']),'mountsSha256':guard.preserved_mounts_sha(self.old['Mounts']),
              'state':{'running':True,'status':'running','oomKilled':False}}
         self.baseline={'version':1,'scope':'OBSERVED_EXISTING_RESOURCES_METADATA_ONLY','profile':'jonghyun-backend100',
             'dockerHost':self.host,'containers':[old],'customNetworks':[{'id':self.net['Id'],'name':self.net['Name'],'inspectionSha256':sha(self.net)}],
@@ -84,6 +85,44 @@ class PreservedGuardTest(unittest.TestCase):
         self.verify();self.assertTrue(self.calls)
         self.assertFalse(any(c[0]in('run','stop','rm','start')or c[:2]in(['network','create'],['volume','rm'])for c in self.calls))
 
+    def test_minkyu_profile_preserves_existing_inventory_on_exact_socket(self):
+        self.host='unix://'+str(Path.home()/'.colima/yumidang-minkyu/docker.sock')
+        self.baseline.update(profile='yumidang-minkyu',dockerHost=self.host)
+        raw=self.write('protected-resource-baseline.json',self.baseline)
+        self.intent.update(context='colima-yumidang-minkyu',dockerHost=self.host,
+                           preservedBaselineSha256=hashlib.sha256(raw).hexdigest())
+        self.write('execution-intent.json',self.intent)
+        pins=guard.preserved_resource_pins(self.root,self.intent)
+        guard.verify_preserved_resources(self.root,self.host,self.project,self.call,pins)
+        self.intent['context']='colima-jonghyun-backend100'
+        with self.assertRaises(ValueError):
+            guard.preserved_contract(self.root,self.intent,self.owned,self.host,self.project)
+
+    def test_duplicate_descriptor_keys_and_nonfinite_json_are_rejected(self):
+        for raw in [b'{"version":2,"version":1}',b'{"count":NaN}',b'{"count":Infinity}']:
+            with self.subTest(raw=raw),self.assertRaises(ValueError):
+                guard.preserved_json(raw)
+        raw=(self.root/'execution-intent.json').read_bytes()
+        (self.root/'execution-intent.json').write_bytes(raw[:-1]+b',"version":1}')
+        with self.assertRaises(ValueError):
+            guard.verify_preserved_resources(self.root,self.host,self.project,self.call)
+        self.assertEqual(self.calls,[])
+
+    def test_nonregular_private_file_is_rejected_without_blocking(self):
+        path=self.root/'fifo.json'
+        os.mkfifo(path,0o600)
+        with self.assertRaises(ValueError):
+            guard.preserved_private_bytes(self.root,path.name)
+
+    def test_baseline_replacement_is_rejected_before_inventory_read(self):
+        pins=guard.preserved_resource_pins(self.root,self.intent)
+        changed=copy.deepcopy(self.baseline)
+        changed['containers'][0]['state']['running']=False
+        self.write('protected-resource-baseline.json',changed)
+        with self.assertRaises(ValueError):
+            guard.verify_preserved_resources(self.root,self.host,self.project,self.call,pins)
+        self.assertEqual(self.calls,[])
+
     def test_legacy_empty_never_activates_preservation(self):
         self.write('execution-intent.json',{'existingContainers':[],'existingNetworks':[]})
         self.verify();self.assertEqual(self.calls,[])
@@ -122,6 +161,32 @@ class PreservedGuardTest(unittest.TestCase):
                           ('Config',{'Labels':{}}),('HostConfig',{}),('Mounts',[{'Name':'changed'}])]:
             self.old=copy.deepcopy(original);self.old[key]=value
             with self.assertRaises(ValueError):self.verify()
+
+    def test_mount_order_changes_preserve_all_entries_and_duplicate_counts(self):
+        self.old['Mounts']=[{'Type':'volume','Name':'volume-b','Destination':'/b','RW':False},
+                            {'Type':'bind','Source':'/private/tmp/original','Destination':'/a','RW':True}]
+        mounts=copy.deepcopy(self.old['Mounts'])
+        self.baseline['containers'][0]['mountsSha256']=guard.preserved_mounts_sha(mounts)
+        raw=self.write('protected-resource-baseline.json',self.baseline)
+        self.intent['preservedBaselineSha256']=hashlib.sha256(raw).hexdigest()
+        self.write('execution-intent.json',self.intent)
+        self.old['Mounts'].reverse()
+        self.verify()
+        self.assertEqual(guard.preserved_mounts_sha(mounts),guard.preserved_mounts_sha(self.old['Mounts']))
+        self.assertNotEqual(guard.preserved_mounts_sha(mounts),guard.preserved_mounts_sha(mounts+[mounts[0]]))
+
+    def test_mount_entry_field_changes_are_still_rejected(self):
+        self.old['Mounts']=[{'Type':'volume','Name':'original','Destination':'/data','RW':False}]
+        original=copy.deepcopy(self.old['Mounts'])
+        self.baseline['containers'][0]['mountsSha256']=guard.preserved_mounts_sha(original)
+        raw=self.write('protected-resource-baseline.json',self.baseline)
+        self.intent['preservedBaselineSha256']=hashlib.sha256(raw).hexdigest()
+        self.write('execution-intent.json',self.intent)
+        for change in [{'RW':True},{'Name':'changed'},{'Destination':'/elsewhere'},{'Extra':'added'}]:
+            self.old['Mounts']=copy.deepcopy(original)
+            self.old['Mounts'][0].update(change)
+            with self.subTest(change=change),self.assertRaisesRegex(ValueError,'PRESERVED_CONTAINER_CHANGED'):
+                self.verify()
 
     def test_unexpected_inventory_network_attachment_volume_changes_fail(self):
         self.extra_id='f'*64
@@ -208,7 +273,7 @@ class PreservedGuardTest(unittest.TestCase):
         ports.added_rows({},[account])
         query=next(q for q in queries if 'from auth.mfa_amr_claims'in q)
         condition=query.rsplit(' on ',1)[1].removesuffix(';').replace('::text','')
-        with sqlite3.connect(':memory:')as db:
+        with closing(sqlite3.connect(':memory:'))as db:
             db.execute("attach database ':memory:' as auth")
             db.execute('create table auth.sessions(id text,user_id text)')
             db.execute('create table auth.mfa_amr_claims(id text,session_id text,authentication_method text)')

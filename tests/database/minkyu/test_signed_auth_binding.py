@@ -56,6 +56,29 @@ class BindingTests(unittest.TestCase):
         with patch.object(module,'signed_source_pins',return_value={'fixed':'f'*64}):
             return module.validate_signed_binding(value or self.value,self.root,self.target,now=1900000000)
 
+    def test_private_reader_accepts_canonical_runtime_temp_root_and_rejects_open_parent(self):
+        with tempfile.TemporaryDirectory(prefix='signed-runtime-temp-')as name:
+            root=Path(name).resolve();root.chmod(0o700)
+            private=root/'original.json';self.write(private,b'{"original":true}')
+            self.assertEqual(module.signed_private_read(private),b'{"original":true}')
+            root.chmod(0o755)
+            with self.assertRaises(ValueError):module.signed_private_read(private)
+
+    def test_reviewed_preservation_support_mutations_fail_closed(self):
+        current=ast.parse(RUNNER.read_text())
+        for classname,method in (("Runner","identity"),("Runner","sql"),("FixedSignedProvisioningPorts","read_sql"),("FixedSignedProvisioningPorts","request"),("FixedSignedProvisioningPorts","added_rows")):
+            changed=copy.deepcopy(current)
+            cls=next(n for n in changed.body if isinstance(n,ast.ClassDef)and n.name==classname)
+            target=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name==method)
+            target.body.append(ast.Pass())
+            with self.subTest(unit=classname+'.'+method),self.assertRaises(AssertionError):
+                self.assert_original_python_preserved(current,changed)
+
+    def test_private_fifo_is_rejected_without_blocking(self):
+        fifo=self.root/'private.fifo';os.mkfifo(fifo,0o600)
+        with self.assertRaisesRegex(ValueError,'SIGNED_PRIVATE_FILE'):
+            module.signed_private_read(fifo)
+
     def test_valid_is_metadata_only(self):
         self.assertIs(self.validate(),self.value)
         self.assertFalse(self.value['approvedByRoot'])
@@ -544,6 +567,25 @@ class BindingTests(unittest.TestCase):
             new_scope=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='lcp_snapshot')
             for n in(old_scope,new_scope):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),{'de9faecc2f05339d2835ecebaa9177656e123755c4fcf41129be0f55bc506fa9','de8249d9d415f73d0565636462eb456817c44bd57cac86c691011e2adb32b6fc'})
             new_scope.body=copy.deepcopy(old_scope.body)
+        # 2026-10-17 승인된 보존/임시경계/Auth6 증거 지원만 전체 unit AST pin으로 허용한다.
+        # 기존 HEAD·root7898와 검토 후보의 세부 본문 외 변경은 계속 거절한다.
+        support_pins = {'Runner.identity': ['38690b56597b46212307dabbee76b32c5dcc82c71ee701e0e39e08e022ab72fd', '6820ceacd042ebe3e60645d5598b9abee8b1857a2492c99b5a1009da7cc6f164'], 'Runner.sql': ['55dec663f84c15d1948414638c0b7c982a9fa1aa714d2db8ef7eec031f0c2e88', '70d909f44cda914ccbef85685ce75f24fc57c9be566f8693b1621b41643ddf77'], 'signed_private_read': ['5731f1bec0db1e63d654ae8eedd978787bca79d75f2e01fa5d93cd932cc531ed', 'fea65c6ebd55630fcd6b38a1b34606dd380bd21a0126d95f401fabd7a82f9c33'], 'signed_prepared_target': ['732da1839bd23afa9913b59e655fb087eef0e1955de0200101095fc35e709649', 'a2f1ad066897fb8823c4ce47c46bf2d9d565b5962326756d3c548b199b8041c1'], 'SignedMidnightRunner.__init__': ['673854af8c0b247933089ce1bf4c2107a309b3ba96d929894f16dbbfc0cf7e2c', 'e54ec5a5be1e961158e1125f12f54579e132b1a56c9c677da5eaac3a3efc8d30'], 'FixedSignedProvisioningPorts.read_sql': ['0b38d7fa47e16e130e97847cf8a525b40959490193594e4f433eb8684d0c2f72', 'b0db843014d00c8e939d8cd142dfbf4a87eed548a009f9429f24bb41acbacbf5'], 'FixedSignedProvisioningPorts.original_rows': ['bf7f5ede998fc285c57ea69eb2a5abac1ecb79bb84421aa7e2e44601a051dfdc', 'c12a564c5746437d4638abf42153086a441307ea71e75734c0df08ef0412978d'], 'FixedSignedProvisioningPorts.added_rows': ['737299db036c49aacafbf75f58a38b987424e46528a88446dccc9c185875aa55', '7ef311461a984a7088b24408f1374386bd05e319f11955a0641731d8cd06c8ef'], 'FixedSignedProvisioningPorts.request': ['1e34c8ab8f8b173d02b6d9ac883250d351a3bbd1ccc943553928fd7c0baaaf15', 'b88aecc2db8cd33dc3ef4b7e19a02ecd7ec8efd9da33f74b67a026c19e6ad000'], 'provision_signed_accounts': ['2e726f031a0a01dc5cd6c70d4bfceb4addc09dc21b2f31a68cc934f387805173', 'dc28508314c0d1bd4194a221ec9368e3dc5fa40923c12a331fed771090136303']}
+        def support_unit(tree, key):
+            parent = tree
+            for name in key.split('.'):
+                parent = next((n for n in parent.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name == name), None)
+                if parent is None:
+                    return None
+            return parent
+        for key, allowed in support_pins.items():
+            original = support_unit(before, key)
+            if original is None:
+                continue
+            candidate = support_unit(after, key)
+            self.assertIsNotNone(candidate, key)
+            for item in (original, candidate):
+                self.assertIn(hashlib.sha256(dump(item).encode()).hexdigest(), allowed, key)
+            candidate.body = copy.deepcopy(original.body)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -928,6 +970,39 @@ class ProvisioningFunctionTests(unittest.TestCase):
             prepare.assert_called_once()
         self.assertEqual(self.ports.calls,original_calls)
         self.assertTrue((evidence/'failure.json').is_file());self.assertEqual(evidence.stat().st_mode&0o777,0o700)
+    def test_provisioning_tracks_exact_password_mfa_session_owner(self):
+        self.assertIn('auth.mfa_amr_claims',module.PROVISION_OWNED_TABLES)
+        self.assertEqual(len(module.LCP_TABLES),len(set(module.LCP_TABLES)))
+        ports=object.__new__(module.FixedSignedProvisioningPorts);queries=[]
+        ports.read_sql=lambda query,timeout:queries.append(query)or'{}'
+        accounts=[{'userId':str(uuid.uuid4()),'sessionId':str(uuid.uuid4()),'authEmail':'synthetic@example.invalid'}]
+        result=ports.added_rows({},accounts)
+        self.assertIn('auth.mfa_amr_claims',result)
+        mfa=next(query for query in queries if 'from auth.mfa_amr_claims r'in query)
+        for constraint in ('r.session_id::text=a.session_id',"r.authentication_method='password'",'s.user_id::text=a.user_id'):
+            self.assertIn(constraint,mfa)
+        self.assertNotIn('delete ',mfa.lower())
+
+    def test_provisioning_saves_final_snapshot_before_unowned_row_failure(self):
+        reviewed=self.reviewed();original=self.ports.verify_population
+        def verified(accounts):self.ports.extra_row=True;return original(accounts)
+        self.ports.verify_population=verified
+        with self.assertRaisesRegex(ValueError,'PROVISION_FAILED_PRIVATE'):self.invoke(reviewed)
+        evidence=next(self.root.glob('auth-provision-*'))
+        before=json.loads((evidence/'baseline-private.json').read_bytes())
+        after=json.loads((evidence/'final-private.json').read_bytes())
+        self.assertEqual(before['rows']['private.worker_invocations'],{})
+        self.assertEqual(after['rows']['private.worker_invocations'],{'f'*64:1})
+        self.assertFalse((self.root/'signed-ai-binding-private.json').exists())
+        self.assertEqual((evidence/'final-private.json').stat().st_mode&0o777,0o600)
+
+    def test_provisioning_success_receipt_pins_before_and_after_snapshots(self):
+        receipt=self.invoke();evidence=next(self.root.glob('auth-provision-*'))
+        for name,key in (('baseline-private.json','baselineSha256'),('final-private.json','finalSha256')):
+            raw=(evidence/name).read_bytes()
+            self.assertEqual(receipt[key],hashlib.sha256(raw).hexdigest())
+        self.assertEqual(receipt['actualAI22AI23AI24'],'NOT_RUN')
+
     def test_json_boolean_is_not_provisioning_authority(self):
         with self.assertRaisesRegex(ValueError,'PROVISION_REVIEWED_CODE_REQUIRED'):
             self.invoke({'approvedByRoot':True,'dockerSlotReady':True})
@@ -1263,7 +1338,7 @@ class LifecycleSingleRowsTests(unittest.TestCase):
     def test_single_statement_exact_old_bags_duplicate_counts_and_sql_projection(self):
         import types
         old=subprocess.check_output(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO).decode()
-        cls=next(n for n in ast.parse(old).body if isinstance(n,ast.ClassDef)and n.name=='FixedLifecycleProvisioningPorts');fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows')
+        cls=next(n for n in ast.parse(old).body if isinstance(n,ast.ClassDef)and n.name=='SignedMidnightRunner');fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows')
         ns={'json':json,'re':re};exec(compile(ast.Module(body=[fn],type_ignores=[]),'captured-original-per-table-read','exec'),ns)
         old_queries=[]
         def per_table(query,timeout=5):
