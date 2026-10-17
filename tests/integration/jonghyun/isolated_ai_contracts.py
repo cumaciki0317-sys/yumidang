@@ -155,21 +155,42 @@ class Runner:
         isolated_prepared_target(self.root)
 
     def prove(self, fixture, observations):
-        """TS transport observations must match committed SQL requests and receipts."""
+        """원 ID의 요청·예약·일곱 원문 canary를 동일한 DB snapshot 한 번으로 검사한다."""
+        request_ids=set();reservation_ids=set()
+        try:
+            for observation in observations:
+                request=observation['requests'][0]
+                for value,target in ((request['requestId'],request_ids),*((r['reservationId'],reservation_ids)for r in observation['reservations'])):
+                    if type(value)is not str or str(uuid.UUID(value))!=value:raise ValueError('PROOF_ID')
+                    target.add(value)
+        except (KeyError,IndexError,TypeError,AttributeError,ValueError):raise ValueError('PROOF_IDENTIFIERS_INVALID')from None
+        def ids(values):return ','.join(quote(value)+'::uuid'for value in sorted(values))or'null::uuid'
+        request_projection="jsonb_build_object('owner',r.user_id,'finished',outcome='finished'and finished_at is not null,'started',started_at is not null,'lease',encode(sha256(convert_to(lease_token::text,'UTF8')),'hex'),'day',counted_day,'dayBound',counted_day=(started_at at time zone'Asia/Seoul')::date,'results',(select count(*)from private.ai_result_receipts where request_id=r.request_id and user_id=r.user_id))"
+        reservation_projection="jsonb_build_object('ledger',ledger_id,'account',account_id,'day',account_day,'units',reserved_units,'unknown',unknown_at is not null,'settled',settled_at is not null,'input',input_tokens,'output',output_tokens,'pending',exists(select 1 from private.ai_budget_reservations where id=a.reservation_id))"
+        tables=('ai_chat_requests','ai_member_processing','ai_member_daily_usage','ai_budget_ledgers','ai_budget_reservations','ai_account_budget_reservations','ai_result_receipts')
+        canary=','.join(quote(table)+",exists(select 1 from private."+table+" t where strpos(to_jsonb(t)::text,'AI_DIALOGUE_CANARY')>0)"for table in tables)
+        query="select jsonb_build_object('requests',(select coalesce(jsonb_object_agg(r.request_id::text,"+request_projection+"),'{}'::jsonb)from private.ai_chat_requests r where r.request_id in("+ids(request_ids)+")),'reservations',(select coalesce(jsonb_object_agg(a.reservation_id::text,"+reservation_projection+"),'{}'::jsonb)from private.ai_account_budget_reservations a where a.reservation_id in("+ids(reservation_ids)+")),'canary',jsonb_build_object("+canary+'));'
+        proof=signed_exact_json(self.sql(query))
+        if (type(proof)is not dict or set(proof)!={'requests','reservations','canary'}
+                or any(type(proof[key])is not dict for key in proof)
+                or not set(proof['requests']).issubset(request_ids)or not set(proof['reservations']).issubset(reservation_ids)
+                or set(proof['canary'])!=set(tables)or any(type(v)is not bool for v in proof['canary'].values())):
+            raise ValueError('BULK_PROOF_RESPONSE')
         for o in observations:
             request=o['requests'][0];rid=request['requestId'];uid=fixture['accounts'][o['account']]['userId']
             if request['acquireStatus']!='acquired':
-                if self.sql('select count(*)from private.ai_chat_requests where request_id='+quote(rid)+'::uuid;')!='0':raise ValueError('DENIED_REQUEST_CREATED')
+                if rid in proof['requests']:raise ValueError('DENIED_REQUEST_CREATED')
                 continue
             denied=o['case']=='global-denied';unknown=o['case'] in ('unknown-provider-loss','unknown-preserved')
-            row=json.loads(self.sql("select jsonb_build_object('owner',user_id="+quote(uid)+"::uuid,'finished',outcome='finished'and finished_at is not null,'started',started_at is not null,'lease',encode(sha256(convert_to(lease_token::text,'UTF8')),'hex'),'day',counted_day,'dayBound',counted_day=(started_at at time zone'Asia/Seoul')::date,'results',(select count(*)from private.ai_result_receipts where request_id=r.request_id and user_id=r.user_id))from private.ai_chat_requests r where request_id="+quote(rid)+'::uuid;'))
-            if not(row['owner'] and row['finished'] and row['lease']==request['leaseSha256'] and row['started']==(not denied) and row['results']==int(not denied and not unknown) and (denied or row['dayBound'])):raise ValueError('REQUEST_SQL_PROOF')
+            row=proof['requests'].get(rid)
+            if (type(row)is not dict or set(row)!={'owner','finished','started','lease','day','dayBound','results'}
+                    or not(row['owner']==uid and row['finished'] and row['lease']==request['leaseSha256'] and row['started']==(not denied) and row['results']==int(not denied and not unknown) and (denied or row['dayBound']))):raise ValueError('REQUEST_SQL_PROOF')
             for receipt in o['reservations']:
-                actual=json.loads(self.sql("select jsonb_build_object('ledger',ledger_id,'account',account_id,'day',account_day,'units',reserved_units,'unknown',unknown_at is not null,'settled',settled_at is not null,'input',input_tokens,'output',output_tokens,'pending',exists(select 1 from private.ai_budget_reservations where id=a.reservation_id))from private.ai_account_budget_reservations a where reservation_id="+quote(receipt['reservationId'])+'::uuid;'))
+                actual=proof['reservations'].get(receipt['reservationId'])
                 charge=o.get('reportedCharge',2)
-                if not(actual['ledger']==fixture['aiLedgerId'] and actual['account']==receipt['accountId'] and actual['day']==row['day'] and actual['units']==receipt['units'] and actual['unknown']==unknown and actual['settled']==(not unknown) and actual['pending']==unknown and (actual['input'],actual['output'])==((None,None)if unknown else(charge-1,1))):raise ValueError('RESERVATION_SQL_PROOF')
-        for table in ('ai_chat_requests','ai_member_processing','ai_member_daily_usage','ai_budget_ledgers','ai_budget_reservations','ai_account_budget_reservations','ai_result_receipts'):
-            if self.sql("select exists(select 1 from private."+table+" t where strpos(to_jsonb(t)::text,'AI_DIALOGUE_CANARY')>0);")!='f':raise ValueError('RAW_DIALOGUE_PERSISTED')
+                if (type(actual)is not dict or set(actual)!={'ledger','account','day','units','unknown','settled','input','output','pending'}
+                        or not(actual['ledger']==fixture['aiLedgerId'] and actual['account']==receipt['accountId'] and actual['day']==row['day'] and actual['units']==receipt['units'] and actual['unknown']==unknown and actual['settled']==(not unknown) and actual['pending']==unknown and (actual['input'],actual['output'])==((None,None)if unknown else(charge-1,1)))):raise ValueError('RESERVATION_SQL_PROOF')
+        if any(proof['canary'].values()):raise ValueError('RAW_DIALOGUE_PERSISTED')
 
 def product_graph():
     pending = [REPO/'backend/supabase/functions/ai-chat/index.ts']; found = {}
@@ -809,6 +830,27 @@ def signed_main():
     result={'status':'PASS','scope':SIGNED_KIND,'checks':proof,'actualAuthPostgrest':'PASS','actualNaver':'NOT_RUN','externalProvider':'NOT_RUN','tls':'NOT_RUN_LOCAL_HTTP','naturalMidnight':'NOT_RUN','originalProtectedRowsPreserved':True,'authFixtureBaselinePreserved':True}
     r.save_signed('receipt.json',result);print(json.dumps(result))
 
+def lifecycle_row_bags(read_sql, conditions=None):
+    """기존 네 schema의 테이블 집합·행 해시·중복 수를 두 번의 읽기로 검사한다."""
+    tables=signed_exact_json(read_sql("select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage');",timeout=5))
+    schemas={'auth','public','private','storage'}
+    if (type(tables)is not list or any(type(row)is not list or len(row)!=2
+            or any(type(v)is not str or not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*',v)for v in row)or row[0]not in schemas for row in tables)
+            or len({tuple(row)for row in tables})!=len(tables)):raise ValueError('LIFECYCLE_TABLE_INVENTORY')
+    if not tables:return {}
+    terms=[];conditions=conditions or{}
+    for schema,table in tables:
+        identifier=lambda name:'"'+name.replace('"','""')+'"'
+        key=schema+'.'+table
+        bag="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r where '+conditions.get(key,'true')+' group by 1)s'
+        terms.append('select '+quote(key)+'::text table_name,('+bag+')bag')
+    result=signed_exact_json(read_sql('select jsonb_object_agg(table_name,bag)from('+' union all '.join(terms)+')q;',timeout=5))
+    if type(result)is not dict or set(result)!={schema+'.'+table for schema,table in tables}:raise ValueError('LIFECYCLE_ROW_BAGS')
+    for bag in result.values():
+        if type(bag)is not dict or any(type(h)is not str or not re.fullmatch('[a-f0-9]{64}',h)or type(n)is not int or n<=0 for h,n in bag.items()):raise ValueError('LIFECYCLE_ROW_BAGS')
+    return result
+
+
 class SignedMidnightRunner(SignedRunner):
     """AI24 조립용 고정 포트. 생성·재기동·자정 대기·승인은 호출자가 담당한다."""
     def __init__(self, prepared_root, binding, member_ids, evidence_root, scope_id, boundary_epoch):
@@ -900,6 +942,7 @@ class SignedMidnightRunner(SignedRunner):
             query="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r group by 1)s;'
             result[schema+'.'+table]=json.loads(self.read_sql(query,timeout=5))
         return result
+
 
     def snapshot(self):
         rows=self.original_rows();hash_value=lambda value:hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
@@ -1626,7 +1669,8 @@ class SignedAuthLifecycleRunner(SignedRunner):
         super().__init__(root,binding);self.lifecycle=value;self.mutations=set();self.children=[]
         if value is not None:self.evidence=Path(value['evidenceRoot'])
     read_sql=SignedMidnightRunner.read_sql
-    original_rows=SignedMidnightRunner.original_rows
+    def original_rows(self):
+        return lifecycle_row_bags(self.read_sql)
     closed_controls=FixedSignedProvisioningPorts.closed_controls
     memory_kib=FixedSignedProvisioningPorts.memory_kib
 
@@ -1699,13 +1743,7 @@ class SignedAuthLifecycleRunner(SignedRunner):
             'auth.refresh_tokens':'r.session_id is distinct from '+quote(revoke['sessionId'])+'::uuid',
             'auth.mfa_amr_claims':'r.session_id is distinct from '+quote(revoke['sessionId'])+'::uuid',
             'auth.audit_log_entries':"not (((r.payload->>'action'='logout'and r.payload->>'actor_id'="+quote(revoke['userId'])+")or(r.payload->>'action'='user_modified'and r.payload->'traits'->>'user_id'="+quote(ban['userId'])+')) is true)'}
-        tables=signed_exact_json(self.read_sql("select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage');",timeout=5));result={}
-        for schema,table in tables:
-            identifier=lambda name:'"'+name.replace('"','""')+'"'
-            key=schema+'.'+table
-            query="select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from "+identifier(schema)+'.'+identifier(table)+' r where '+conditions.get(key,'true')+' group by 1)s;'
-            result[key]=signed_exact_json(self.read_sql(query,timeout=5))
-        return result
+        return lifecycle_row_bags(self.read_sql,conditions)
 
     def mutation_state(self):
         v=self.lifecycle;revoke=v['accounts']['revokedSession'];ban=v['accounts']['memberChanged']
@@ -1731,19 +1769,22 @@ class SignedAuthLifecycleRunner(SignedRunner):
         return result
 
     def verify_final(self, baseline, rows, state, dependent, foreign=None, foreign_baseline=None):
-        self.live();current=self.snapshot()
-        if any(current[key]!=baseline[key]for key in('authoritySha256','constraintsSha256'))or self.preservation_rows()!=rows:
+        self.live();current=self.snapshot();current_rows=self.preservation_rows()
+        actual=self.mutation_state();current_dependent=self.dependent_rows()
+        self.save_signed('final-private.json',{'snapshot':current,'preservationRows':current_rows,
+            'mutationState':actual,'dependentRows':current_dependent,'authMutationsRetained':sorted(self.mutations)})
+        if any(current[key]!=baseline[key]for key in('authoritySha256','constraintsSha256'))or current_rows!=rows:
             raise ValueError('LIFECYCLE_ORIGINAL_ROWS_AUTHORITY_CHANGED')
-        actual=self.mutation_state();before=dict(state['user']);after=dict(actual['user'])if actual['user']is not None else{}
+        before=dict(state['user']);after=dict(actual['user'])if actual['user']is not None else{}
         for column in('banned_until','updated_at'):before.pop(column,None);after.pop(column,None)
         if before!=after or actual['logoutAudit']not in(0,1)or actual['banAudit']not in(0,1):raise ValueError('LIFECYCLE_MUTATION_OVERFLOW')
-        current_dependent=self.dependent_rows()
         if 'revokedSession'not in self.mutations:
             if actual['revokedSession']!=state['revokedSession']or current_dependent!=dependent:raise ValueError('LIFECYCLE_ORIGINAL_SESSION_CHANGED')
         elif(actual['revokedSession']is not None or actual['revokedRefreshCount']!=0 or actual['revokedAmrCount']!=0 or any(current_dependent.values())):
             raise ValueError('LIFECYCLE_REVOCATION_CASCADE_UNPROVEN')
         if 'memberChanged'not in self.mutations and actual['user']!=state['user']:raise ValueError('LIFECYCLE_ORIGINAL_USER_CHANGED')
         if foreign is not None and foreign.snapshot()!=foreign_baseline:raise ValueError('LIFECYCLE_FOREIGN_ROWS_CHANGED')
+        self.live()
 
     def invoke_case(self, case, account, node):
         self.live();key=uuid.uuid4().hex

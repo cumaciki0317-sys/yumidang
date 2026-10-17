@@ -22,6 +22,17 @@ RUNNER=REPO/'tests/integration/jonghyun/isolated_ai_contracts.py'
 spec=importlib.util.spec_from_file_location('signed_runner_test',RUNNER)
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
+LEGACY_PROOF_SOURCE_COMMIT = '37921cfe312ea7f5ba35a2d38ad76d04426de6b8'
+LEGACY_PROOF_SOURCE_SHA256 = '28bdda382658e5117d6bb02ad536040fb23b5001f916cf98fbf0baa9f4aad414'
+
+
+def reviewed_legacy_source():
+    """원 동작 대조군은 후속 HEAD 이동과 무관한 검토 커밋·바이트로 고정한다."""
+    raw = subprocess.check_output(['git', 'show', LEGACY_PROOF_SOURCE_COMMIT + ':tests/integration/jonghyun/isolated_ai_contracts.py'], cwd=REPO)
+    if hashlib.sha256(raw).hexdigest() != LEGACY_PROOF_SOURCE_SHA256:
+        raise AssertionError('검토된 원 증거 조회 소스가 다릅니다')
+    return raw.decode()
+
 def jwt(claims):
     enc=lambda value:base64.urlsafe_b64encode(json.dumps(value).encode()).decode().rstrip('=')
     return enc({'alg':'HS256'})+'.'+enc(claims)+'.synthetic_signature'
@@ -567,9 +578,35 @@ class BindingTests(unittest.TestCase):
             new_scope=next(n for n in after.body if isinstance(n,ast.FunctionDef)and n.name=='lcp_snapshot')
             for n in(old_scope,new_scope):self.assertIn(hashlib.sha256(dump(n).encode()).hexdigest(),{'de9faecc2f05339d2835ecebaa9177656e123755c4fcf41129be0f55bc506fa9','de8249d9d415f73d0565636462eb456817c44bd57cac86c691011e2adb32b6fc'})
             new_scope.body=copy.deepcopy(old_scope.body)
-        # 2026-10-17 승인된 보존/임시경계/Auth6 증거 지원만 전체 unit AST pin으로 허용한다.
+        # 2026-10-17 승인된 보존/임시경계/Auth6·bulk 증거 지원만 전체 unit AST pin으로 허용한다.
         # 기존 HEAD·root7898와 검토 후보의 세부 본문 외 변경은 계속 거절한다.
-        support_pins = {'Runner.identity': ['38690b56597b46212307dabbee76b32c5dcc82c71ee701e0e39e08e022ab72fd', '6820ceacd042ebe3e60645d5598b9abee8b1857a2492c99b5a1009da7cc6f164'], 'Runner.sql': ['55dec663f84c15d1948414638c0b7c982a9fa1aa714d2db8ef7eec031f0c2e88', '70d909f44cda914ccbef85685ce75f24fc57c9be566f8693b1621b41643ddf77'], 'signed_private_read': ['5731f1bec0db1e63d654ae8eedd978787bca79d75f2e01fa5d93cd932cc531ed', 'fea65c6ebd55630fcd6b38a1b34606dd380bd21a0126d95f401fabd7a82f9c33'], 'signed_prepared_target': ['732da1839bd23afa9913b59e655fb087eef0e1955de0200101095fc35e709649', 'a2f1ad066897fb8823c4ce47c46bf2d9d565b5962326756d3c548b199b8041c1'], 'SignedMidnightRunner.__init__': ['673854af8c0b247933089ce1bf4c2107a309b3ba96d929894f16dbbfc0cf7e2c', 'e54ec5a5be1e961158e1125f12f54579e132b1a56c9c677da5eaac3a3efc8d30'], 'FixedSignedProvisioningPorts.read_sql': ['0b38d7fa47e16e130e97847cf8a525b40959490193594e4f433eb8684d0c2f72', 'b0db843014d00c8e939d8cd142dfbf4a87eed548a009f9429f24bb41acbacbf5'], 'FixedSignedProvisioningPorts.original_rows': ['bf7f5ede998fc285c57ea69eb2a5abac1ecb79bb84421aa7e2e44601a051dfdc', 'c12a564c5746437d4638abf42153086a441307ea71e75734c0df08ef0412978d'], 'FixedSignedProvisioningPorts.added_rows': ['737299db036c49aacafbf75f58a38b987424e46528a88446dccc9c185875aa55', '7ef311461a984a7088b24408f1374386bd05e319f11955a0641731d8cd06c8ef'], 'FixedSignedProvisioningPorts.request': ['1e34c8ab8f8b173d02b6d9ac883250d351a3bbd1ccc943553928fd7c0baaaf15', 'b88aecc2db8cd33dc3ef4b7e19a02ecd7ec8efd9da33f74b67a026c19e6ad000'], 'provision_signed_accounts': ['2e726f031a0a01dc5cd6c70d4bfceb4addc09dc21b2f31a68cc934f387805173', 'dc28508314c0d1bd4194a221ec9368e3dc5fa40923c12a331fed771090136303']}
+        support_pins = {'FixedSignedProvisioningPorts.added_rows': ['737299db036c49aacafbf75f58a38b987424e46528a88446dccc9c185875aa55',
+                                                     '7ef311461a984a7088b24408f1374386bd05e319f11955a0641731d8cd06c8ef'],
+         'FixedSignedProvisioningPorts.original_rows': ['bf7f5ede998fc285c57ea69eb2a5abac1ecb79bb84421aa7e2e44601a051dfdc',
+                                                        'c12a564c5746437d4638abf42153086a441307ea71e75734c0df08ef0412978d'],
+         'FixedSignedProvisioningPorts.read_sql': ['0b38d7fa47e16e130e97847cf8a525b40959490193594e4f433eb8684d0c2f72',
+                                                   'b0db843014d00c8e939d8cd142dfbf4a87eed548a009f9429f24bb41acbacbf5'],
+         'FixedSignedProvisioningPorts.request': ['1e34c8ab8f8b173d02b6d9ac883250d351a3bbd1ccc943553928fd7c0baaaf15',
+                                                  'b88aecc2db8cd33dc3ef4b7e19a02ecd7ec8efd9da33f74b67a026c19e6ad000'],
+         'Runner.identity': ['38690b56597b46212307dabbee76b32c5dcc82c71ee701e0e39e08e022ab72fd',
+                             '6820ceacd042ebe3e60645d5598b9abee8b1857a2492c99b5a1009da7cc6f164'],
+         'Runner.prove': ['667cdab7dc4b56d8ea1af84b22b246fe0893284f9534ac4b55679531f372fe7c',
+                          '70f2f62570eeec433a34939fa363ed111b2441a50b8b5e1f57a913f436ea1027'],
+         'Runner.sql': ['55dec663f84c15d1948414638c0b7c982a9fa1aa714d2db8ef7eec031f0c2e88',
+                        '70d909f44cda914ccbef85685ce75f24fc57c9be566f8693b1621b41643ddf77'],
+         'SignedAuthLifecycleRunner.preservation_rows': ['3987954c23210896b66947e82dc7eb46eca5f70802c78a008b07fd13c5e2758e',
+                                                         '3cb081334d302a31bdc374bc2b715a61cb0dd4c6d90c6fa7648cac638d9a75cb'],
+         'SignedAuthLifecycleRunner.verify_final': ['81351268e7bca1b59e79c2100c4d660d8ff88c2161b01a8dadbe79b34d3ad7d9',
+                                                    'da6c084dd22fd6154dc691d7c35f4f5aa15941db289380b214dabe74b798bf1f'],
+         'SignedMidnightRunner.__init__': ['673854af8c0b247933089ce1bf4c2107a309b3ba96d929894f16dbbfc0cf7e2c',
+                                           'e54ec5a5be1e961158e1125f12f54579e132b1a56c9c677da5eaac3a3efc8d30'],
+         'SignedMidnightRunner.original_rows': ['42ae05123b5df3146a0f0f03140183827a28a3a540f21842d5cd8ea0d4cf9b1f'],
+         'provision_signed_accounts': ['2e726f031a0a01dc5cd6c70d4bfceb4addc09dc21b2f31a68cc934f387805173',
+                                       'dc28508314c0d1bd4194a221ec9368e3dc5fa40923c12a331fed771090136303'],
+         'signed_prepared_target': ['732da1839bd23afa9913b59e655fb087eef0e1955de0200101095fc35e709649',
+                                    'a2f1ad066897fb8823c4ce47c46bf2d9d565b5962326756d3c548b199b8041c1'],
+         'signed_private_read': ['5731f1bec0db1e63d654ae8eedd978787bca79d75f2e01fa5d93cd932cc531ed',
+                                 'fea65c6ebd55630fcd6b38a1b34606dd380bd21a0126d95f401fabd7a82f9c33']}
         def support_unit(tree, key):
             parent = tree
             for name in key.split('.'):
@@ -586,6 +623,20 @@ class BindingTests(unittest.TestCase):
             for item in (original, candidate):
                 self.assertIn(hashlib.sha256(dump(item).encode()).hexdigest(), allowed, key)
             candidate.body = copy.deepcopy(original.body)
+        # AI24 원 메서드는 보존하고 수명주기만 정확한 별도 override로 전환한다.
+        original_alias = ast.parse('original_rows=SignedMidnightRunner.original_rows').body[0]
+        for revision in (before, after):
+            cls = next((n for n in revision.body if isinstance(n, ast.ClassDef) and n.name == 'SignedAuthLifecycleRunner'), None)
+            if cls is None:
+                continue
+            selected = [n for n in cls.body if (isinstance(n, ast.FunctionDef) and n.name == 'original_rows') or (isinstance(n, ast.Assign) and any(isinstance(k, ast.Name) and k.id == 'original_rows' for k in n.targets))]
+            self.assertEqual(len(selected), 1)
+            member = selected[0]
+            if isinstance(member, ast.Assign):
+                self.assertEqual(dump(member), dump(original_alias))
+            else:
+                self.assertEqual(hashlib.sha256(dump(member).encode()).hexdigest(), '2ccc81b3f40bde7fff7887b263a9cf1ef4386b3be7b7b7db12478a6c3554131f')
+            cls.body.remove(member)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -789,7 +840,7 @@ class BindingTests(unittest.TestCase):
         runner=self.lifecycle_runner();queries=[]
         def read(query,timeout=5):
             if 'from pg_tables' in query:return json.dumps([['auth','audit_log_entries']])
-            queries.append(query);return '{}'
+            queries.append(query);return json.dumps({'auth.audit_log_entries':{}})
         with patch.object(runner,'read_sql',side_effect=read):runner.preservation_rows()
         self.assertEqual(len(queries),1)
         condition=queries[0].split(' r where ',1)[1].rsplit(' group by 1)',1)[0]
@@ -806,7 +857,7 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(retained,payloads[:len(unowned)])
 
     def test_lifecycle_cascade_and_no_mutation_original_bags(self):
-        runner=self.lifecycle_runner();baseline={'authoritySha256':'a','constraintsSha256':'b'};rows={'auth.users':{'old':1},'private.ai_budget_reservations':{'unknown':1}}
+        runner=self.lifecycle_runner();runner.save_signed=Mock();baseline={'authoritySha256':'a','constraintsSha256':'b'};rows={'auth.users':{'old':1},'private.ai_budget_reservations':{'unknown':1}}
         state={'user':{'id':runner.lifecycle['accounts']['memberChanged']['userId'],'banned_until':None,'updated_at':1},'revokedSession':{'id':'owned'},
                'revokedRefreshCount':1,'revokedAmrCount':1,'logoutAudit':0,'banAudit':0,'banActive':False}
         dependent={'refresh_tokens':{'original-refresh':1},'mfa_amr_claims':{'original-amr':1}}
@@ -1257,7 +1308,7 @@ class NativeLifecycleFullInventoryTests(unittest.TestCase):
     def read(self,query,timeout=5):
         self.queries.append(query)
         if 'from pg_tables'in query:return json.dumps(self.tables if "'cron','vault'"in query else[r for r in self.tables if r[0]not in('cron','vault')])
-        if 'jsonb_object_agg(table_name,bag)'in query:return json.dumps({schema+'.'+table:self.bag for schema,table in self.tables})
+        if 'jsonb_object_agg(table_name,bag)'in query:return json.dumps({schema+'.'+table:self.bag for schema,table in self.tables if "select '"+schema+'.'+table+"'::text table_name"in query})
         if 'jsonb_object_agg(h,n)'in query:return json.dumps(self.bag)
         if "'roles',(select"in query:return 'b'*64
         return '{}'
@@ -1337,7 +1388,7 @@ class LifecycleSingleRowsTests(unittest.TestCase):
         return json.dumps(self.tables)if 'from pg_tables'in query else self.answer
     def test_single_statement_exact_old_bags_duplicate_counts_and_sql_projection(self):
         import types
-        old=subprocess.check_output(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO).decode()
+        old=reviewed_legacy_source()
         cls=next(n for n in ast.parse(old).body if isinstance(n,ast.ClassDef)and n.name=='SignedMidnightRunner');fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='original_rows')
         ns={'json':json,'re':re};exec(compile(ast.Module(body=[fn],type_ignores=[]),'captured-original-per-table-read','exec'),ns)
         old_queries=[]
@@ -2383,5 +2434,199 @@ class LifecycleDispatchTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.invoke(module.dispatch_lifecycle_accounts,reviewed)
         self.assertEqual(self.invoke(module.inspect_lifecycle_dispatch,reviewed)['phase'],'DISPATCH_UNKNOWN_NO_REPLAY')
 
+
+
+class BulkProofTests(unittest.TestCase):
+    """기존 검증과의 판정 동등성 및 생성된 조회 SQL을 독립 SQLite 자료로 검사한다."""
+    tables=('ai_chat_requests','ai_member_processing','ai_member_daily_usage','ai_budget_ledgers','ai_budget_reservations','ai_account_budget_reservations','ai_result_receipts')
+    def setUp(self):
+        self.uid=str(uuid.uuid4());self.rid=str(uuid.uuid4());self.resid=str(uuid.uuid4())
+        self.fixture={'accounts':[{'userId':self.uid}],'aiLedgerId':'synthetic-only'}
+        self.observations=[{'account':0,'case':'normal','requests':[{'requestId':self.rid,'acquireStatus':'acquired','leaseSha256':'a'*64}],
+            'reservations':[{'reservationId':self.resid,'accountId':'yumi','units':5}]}]
+        self.proof={'requests':{self.rid:{'owner':self.uid,'finished':True,'started':True,'lease':'a'*64,'day':'2026-10-17','dayBound':True,'results':1}},
+            'reservations':{self.resid:{'ledger':'synthetic-only','account':'yumi','day':'2026-10-17','units':5,'unknown':False,'settled':True,'input':1,'output':1,'pending':False}},
+            'canary':{table:False for table in self.tables}}
+        source=reviewed_legacy_source()
+        cls=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef)and n.name=='Runner')
+        fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef)and n.name=='prove')
+        ns={'json':json,'quote':module.quote};exec(compile(ast.Module(body=[fn],type_ignores=[]),'reviewed-legacy-proof','exec'),ns)
+        self.legacy=ns['prove']
+    def run_proof(self,proof=None,observations=None,legacy=False):
+        import types
+        proof=copy.deepcopy(self.proof if proof is None else proof);observations=self.observations if observations is None else observations
+        calls=[]
+        def sql(query):
+            calls.append(query)
+            if not legacy:return json.dumps(proof)
+            if query.startswith('select count(*)from private.ai_chat_requests'):
+                return str(int(self.rid in proof['requests']))
+            if 'from private.ai_chat_requests r'in query:
+                row=copy.deepcopy(proof['requests'].get(self.rid));row['owner']=row['owner']==self.uid
+                return json.dumps(row)
+            if 'from private.ai_account_budget_reservations a'in query:return json.dumps(proof['reservations'].get(self.resid))
+            table=next(table for table in self.tables if 'from private.'+table+' t'in query)
+            return 't'if proof['canary'][table]else'f'
+        runner=types.SimpleNamespace(sql=sql)
+        (self.legacy if legacy else module.Runner.prove)(runner,self.fixture,observations)
+        return calls
+    def test_all_legacy_conditions_keep_acceptance_and_rejection(self):
+        self.assertGreater(len(self.run_proof(legacy=True)),1);self.assertEqual(len(self.run_proof()),1)
+        changes=[('requests','owner',str(uuid.uuid4())),('requests','finished',False),('requests','started',False),('requests','lease','b'*64),
+            ('requests','dayBound',False),('requests','results',0),('reservations','ledger','wrong'),('reservations','account','wrong'),
+            ('reservations','day','2026-10-18'),('reservations','units',6),('reservations','unknown',True),('reservations','settled',False),
+            ('reservations','input',None),('reservations','output',None),('reservations','pending',True)]
+        for group,key,value in changes:
+            proof=copy.deepcopy(self.proof);proof[group][self.rid if group=='requests'else self.resid][key]=value
+            for legacy in (False,True):
+                with self.subTest(group=group,key=key,legacy=legacy),self.assertRaises(ValueError):self.run_proof(proof,legacy=legacy)
+        for table in self.tables:
+            proof=copy.deepcopy(self.proof);proof['canary'][table]=True
+            for legacy in (False,True):
+                with self.subTest(table=table,legacy=legacy),self.assertRaisesRegex(ValueError,'RAW_DIALOGUE_PERSISTED'):self.run_proof(proof,legacy=legacy)
+    def test_unknown_denied_and_repeated_observations_keep_original_meaning(self):
+        observations=copy.deepcopy(self.observations);observations[0]['case']='unknown-preserved'
+        proof=copy.deepcopy(self.proof);proof['requests'][self.rid]['results']=0
+        proof['reservations'][self.resid].update(unknown=True,settled=False,pending=True,input=None,output=None)
+        for legacy in (False,True):self.run_proof(proof,observations*2,legacy)
+        observations[0].update(case='global-denied',reservations=[])
+        proof['requests'][self.rid].update(started=False,day=None,dayBound=None)
+        proof['reservations']={}
+        for legacy in (False,True):self.run_proof(proof,observations,legacy)
+        observations[0]['requests'][0]['acquireStatus']='blocked'
+        for legacy in (False,True):
+            with self.assertRaisesRegex(ValueError,'DENIED_REQUEST_CREATED'):self.run_proof(proof,observations,legacy)
+        proof['requests']={}
+        for legacy in (False,True):self.run_proof(proof,observations,legacy)
+    def test_missing_extra_duplicate_json_and_invalid_id_fail_closed(self):
+        for mutate in (lambda p:p['requests'].clear(),lambda p:p['reservations'].clear(),
+            lambda p:p['requests'].update({str(uuid.uuid4()):{}}),lambda p:p['reservations'].update({str(uuid.uuid4()):{}}),
+            lambda p:p['canary'].pop(self.tables[0]),lambda p:p['canary'].update(extra=False),lambda p:p['canary'].update({self.tables[0]:0})):
+            proof=copy.deepcopy(self.proof);mutate(proof)
+            with self.assertRaises(ValueError):self.run_proof(proof)
+        import types
+        for wire in ('{"requests":{},"requests":{},"reservations":{},"canary":{}}','NaN'):
+            with self.assertRaises(ValueError):module.Runner.prove(types.SimpleNamespace(sql=lambda _:wire),self.fixture,self.observations)
+        observations=copy.deepcopy(self.observations);observations[0]['requests'][0]['requestId']="x');select 1;--"
+        with self.assertRaisesRegex(ValueError,'PROOF_IDENTIFIERS_INVALID'),patch.object(module.subprocess,'run',side_effect=AssertionError('자원 호출')):
+            self.run_proof(observations=observations)
+    def test_generated_projection_queries_real_sqlite_rows_and_exact_id_subset(self):
+        import sqlite3,types
+        from contextlib import closing
+        queries=[];runner=types.SimpleNamespace(sql=lambda query:queries.append(query)or json.dumps(self.proof))
+        module.Runner.prove(runner,self.fixture,self.observations)
+        query=queries[0];self.assertEqual(query.count("AI_DIALOGUE_CANARY"),7)
+        self.assertFalse(any(token in query.lower()for token in ('insert ','update ','delete ','alter ')))
+        def decoded(value):
+            if type(value)is str and value.startswith(('{','[')):
+                try:return json.loads(value)
+                except ValueError:pass
+            return value
+        def build(*args):
+            result={args[i]:decoded(args[i+1])for i in range(0,len(args),2)}
+            for key in ('finished','started','dayBound','unknown','settled','pending',*self.tables):
+                if key in result and result[key]is not None:result[key]=bool(result[key])
+            return json.dumps(result)
+        class ObjectAgg:
+            def __init__(self):self.data={}
+            def step(self,key,value):self.data[str(key)]=decoded(value)
+            def finalize(self):return json.dumps(self.data)
+        with closing(sqlite3.connect(':memory:'))as db:
+            db.execute("attach database ':memory:' as private")
+            db.create_function('jsonb_build_object',-1,build);db.create_aggregate('jsonb_object_agg',2,ObjectAgg)
+            db.create_function('sha256',1,lambda x:hashlib.sha256(str(x).encode()).digest())
+            db.create_function('convert_to',2,lambda x,encoding:x);db.create_function('encode',2,lambda x,encoding:x.hex())
+            db.create_function('strpos',2,lambda haystack,needle:haystack.find(needle)+1)
+            db.create_function('kst_date',1,lambda value:value[:10]if value else None)
+            db.execute('create table private.ai_chat_requests(request_id text,user_id text,outcome text,finished_at text,started_at text,lease_token text,counted_day text,canary_payload text)')
+            db.execute('insert into private.ai_chat_requests values(?,?,?,?,?,?,?,?)',(self.rid,self.uid,'finished','done','2026-10-17T01:00:00','lease-original','2026-10-17','{}'))
+            db.execute('insert into private.ai_chat_requests values(?,?,?,?,?,?,?,?)',(str(uuid.uuid4()),self.uid,'finished','done','2026-10-17T01:00:00','unrelated','2026-10-17','{}'))
+            db.execute('create table private.ai_result_receipts(request_id text,user_id text,canary_payload text)')
+            db.execute('insert into private.ai_result_receipts values(?,?,?)',(self.rid,self.uid,'{}'))
+            db.execute('create table private.ai_account_budget_reservations(reservation_id text,ledger_id text,account_id text,account_day text,reserved_units integer,unknown_at text,settled_at text,input_tokens integer,output_tokens integer,canary_payload text)')
+            db.execute('insert into private.ai_account_budget_reservations values(?,?,?,?,?,?,?,?,?,?)',(self.resid,'synthetic-only','yumi','2026-10-17',5,None,'done',1,1,'{}'))
+            for table in self.tables:
+                if table not in ('ai_chat_requests','ai_result_receipts','ai_account_budget_reservations'):
+                    db.execute('create table private.'+table+'('+('id text,'if table=='ai_budget_reservations'else'')+'canary_payload text)')
+            sql=query.replace("(started_at at time zone'Asia/Seoul')::date",'kst_date(started_at)').replace('to_jsonb(t)::text','t.canary_payload')
+            sql=re.sub(r'::(?:uuid|text|jsonb)\b','',sql)
+            actual=json.loads(db.execute(sql).fetchone()[0]);self.assertEqual(set(actual['requests']),{self.rid})
+            self.assertEqual(set(actual['reservations']),{self.resid});self.assertEqual(actual['requests'][self.rid]['results'],1)
+            self.assertEqual(actual['requests'][self.rid]['lease'],hashlib.sha256(b'lease-original').hexdigest())
+            self.assertFalse(any(actual['canary'].values()))
+            observations=copy.deepcopy(self.observations);observations[0]['requests'][0]['leaseSha256']=actual['requests'][self.rid]['lease']
+            module.Runner.prove(types.SimpleNamespace(sql=lambda _:json.dumps(actual)),self.fixture,observations)
+            db.execute("insert into private.ai_budget_ledgers values('AI_DIALOGUE_CANARY')")
+            changed=json.loads(db.execute(sql).fetchone()[0]);self.assertTrue(changed['canary']['ai_budget_ledgers'])
+            with self.assertRaisesRegex(ValueError,'RAW_DIALOGUE_PERSISTED'):
+                module.Runner.prove(types.SimpleNamespace(sql=lambda _:json.dumps(changed)),self.fixture,observations)
+
+
+class LifecycleBulkRowsTests(unittest.TestCase):
+    def test_strict_inventory_bags_and_two_reads(self):
+        bag={hashlib.sha256('원 행'.encode()).hexdigest():2};tables=[['auth','users'],['public','profiles'],['private','ledger'],['storage','objects']]
+        expected={'.'.join(row):bag for row in tables};calls=[]
+        def read(query,timeout=5):calls.append(query);return json.dumps(tables if 'from pg_tables'in query else expected)
+        self.assertEqual(module.lifecycle_row_bags(read),expected);self.assertEqual(len(calls),2)
+        self.assertEqual(calls[1].count(' union all '),3);self.assertEqual(calls[1].count('count(*)n'),4)
+        for bad in (tables+[tables[0]],[['other','secret']],[['auth','users;drop']],None):
+            with self.subTest(bad=bad),self.assertRaises(ValueError):module.lifecycle_row_bags(lambda *a,**k:json.dumps(bad))
+        for bad in ({}, {**expected,'other.extra':bag},{**expected,'auth.users':{'short':1}},{**expected,'auth.users':{next(iter(bag)):True}}):
+            with self.subTest(bad=bad),self.assertRaises(ValueError):
+                module.lifecycle_row_bags(lambda query,**k:json.dumps(tables if 'from pg_tables'in query else bad))
+    def test_generated_row_bag_sql_keeps_duplicate_counts_and_exact_exception_scope(self):
+        import sqlite3
+        from contextlib import closing
+        with closing(sqlite3.connect(':memory:'))as db:
+            for schema in ('auth','private'):
+                db.execute("attach database ':memory:' as "+schema)
+                db.execute('create table '+schema+'.events(owner text,payload text)')
+                db.executemany('insert into '+schema+'.events values(?,?)',[('keep','{"value":"same"}'),('keep','{"value":"same"}'),('excluded','{"value":"other"}')])
+            def decoded(value):return json.loads(value)if type(value)is str and value.startswith('{')else value
+            class Aggregate:
+                def __init__(self):self.rows={}
+                def step(self,key,value):self.rows[str(key)]=decoded(value)
+                def finalize(self):return json.dumps(self.rows)
+            db.create_aggregate('jsonb_object_agg',2,Aggregate)
+            db.create_function('sha256',1,lambda value:hashlib.sha256(value.encode()).digest())
+            db.create_function('convert_to',2,lambda value,encoding:value)
+            db.create_function('encode',2,lambda value,encoding:value.hex())
+            queries=[]
+            def read(query,timeout=5):
+                queries.append(query)
+                if 'from pg_tables'in query:
+                    return json.dumps([[schema,row[0]]for schema in ('auth','private')for row in db.execute('select name from '+schema+'.sqlite_master where type=\'table\'order by name')])
+                sql=query.replace('to_jsonb(r)::text','r.payload')
+                sql=re.sub(r'::(?:text|jsonb)\b','',sql)
+                return db.execute(sql).fetchone()[0]
+            actual=module.lifecycle_row_bags(read,{'auth.events':"r.owner<>'excluded'"})
+            same=hashlib.sha256(b'{"value":"same"}').hexdigest();other=hashlib.sha256(b'{"value":"other"}').hexdigest()
+            self.assertEqual(actual,{'auth.events':{same:2},'private.events':{same:2,other:1}})
+            self.assertEqual(len(queries),2)
+
+    def test_post_snapshot_is_private_and_saved_before_authority_failure(self):
+        helper=BindingTests();helper.setUp()
+        try:
+            runner=helper.lifecycle_runner();baseline={'authoritySha256':'a','constraintsSha256':'b'}
+            after={'authoritySha256':'changed','constraintsSha256':'b','rows':{'auth.users':{'original':1}}}
+            state={'user':{'id':'original'},'revokedSession':{},'logoutAudit':0,'banAudit':0}
+            with patch.object(runner,'live'),patch.object(runner,'snapshot',return_value=after),patch.object(runner,'preservation_rows',return_value={}),patch.object(runner,'mutation_state',return_value=state),patch.object(runner,'dependent_rows',return_value={}):
+                with self.assertRaisesRegex(ValueError,'LIFECYCLE_ORIGINAL_ROWS_AUTHORITY_CHANGED'):runner.verify_final(baseline,{},state,{})
+            p=runner.evidence/'final-private.json';saved=json.loads(p.read_bytes())
+            self.assertEqual(saved['snapshot'],after);self.assertEqual(saved['mutationState'],state)
+            self.assertEqual(p.stat().st_mode&0o777,0o600)
+        finally:helper.tearDown()
+
+    def test_final_live_check_rejects_metadata_drift_after_successful_comparison(self):
+        helper=BindingTests();helper.setUp()
+        try:
+            runner=helper.lifecycle_runner();baseline={'authoritySha256':'a','constraintsSha256':'b'}
+            state={'user':{'id':'original','banned_until':None},'revokedSession':{'id':'session'},'logoutAudit':0,'banAudit':0}
+            dependent={'refresh_tokens':{},'mfa_amr_claims':{}}
+            with patch.object(runner,'live',side_effect=[None,ValueError('LIFECYCLE_SOURCE_CHANGED')])as live,patch.object(runner,'snapshot',return_value=baseline),patch.object(runner,'preservation_rows',return_value={}),patch.object(runner,'mutation_state',return_value=state),patch.object(runner,'dependent_rows',return_value=dependent):
+                with self.assertRaisesRegex(ValueError,'LIFECYCLE_SOURCE_CHANGED'):runner.verify_final(baseline,{},state,dependent)
+                self.assertEqual(live.call_count,2)
+            self.assertTrue((runner.evidence/'final-private.json').is_file())
+        finally:helper.tearDown()
 
 if __name__=='__main__':unittest.main()
