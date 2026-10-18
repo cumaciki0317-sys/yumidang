@@ -159,12 +159,19 @@ class ReviewedAuthNegativePair:
                  foreign_project, foreign_port, foreign_subnet, source_head, pins,
                  cli_path, cli_sha256, node_path, node_sha256, images, refresh_mode,
                  daemon_id,
-                 approved_operations):
+                 approved_operations, *, capsule_root):
         require(type(decision_id) is str and re.fullmatch('[A-Za-z0-9_.:-]{1,128}', decision_id),
                 'NEGATIVE_REVIEW_DECISION')
         root = Path(pair_root)
         require(root.is_absolute() and root.resolve() == root and root != Path(tempfile.gettempdir()).resolve()
                 and Path(tempfile.gettempdir()).resolve() in root.parents and not root.is_relative_to(ROOT), 'NEGATIVE_PRIVATE_ROOT')
+        # source-only reader의 공식 경계는 /private/tmp다. token/state OS root와 분리해 봉인한다.
+        capsule = Path(capsule_root)
+        boundary = Path('/private/tmp')
+        require(capsule.is_absolute() and capsule.resolve() == capsule
+                and boundary in capsule.parents and capsule.parent != boundary
+                and not capsule.is_relative_to(ROOT) and not capsule.is_relative_to(root)
+                and not root.is_relative_to(capsule), 'NEGATIVE_CAPSULE_ROOT')
         projects, ports, networks = set(), set(), set()
         contexts = {}
         for key, project, port, subnet in (
@@ -191,6 +198,7 @@ class ReviewedAuthNegativePair:
         operations = frozenset(approved_operations)
         require(operations <= {'prepare', 'create', 'issue', 'dispatch', 'close'}, 'NEGATIVE_APPROVAL_SCOPE')
         self._sealed = canonical({'decisionId': decision_id, 'root': str(root), 'contexts': contexts,
+            'capsuleRoot': str(capsule),
             'sourceHead': source_head, 'pins': pins, 'cliPath': str(cli_path), 'cliSha256': cli_sha256,
             'nodePath': str(node_path), 'nodeSha256': node_sha256, 'images': images,
             'daemonId': daemon_id,
@@ -861,7 +869,7 @@ class FixedPair:
         cap = self.read(self.root, 'capsule-review.json')
         expected = {**self.ai.product_graph(), 'tests/integration/jonghyun/isolated_ai_factory.ts':
             self.reviewed.pins['tests/integration/jonghyun/isolated_ai_factory.ts']}
-        require(Path(cap['capsuleRoot']).is_relative_to(self.root) and cap['capsulePins'] == expected
+        require(cap['capsuleRoot'] == self.value['capsuleRoot'] and cap['capsulePins'] == expected
                 and cap['nodePath'] == self.value['nodePath'] and cap['nodeSha256'] == self.value['nodeSha256'],
                 'NEGATIVE_CAPSULE_REVIEW')
         self.ai.sealed_runtime_capsule(self.reviewed.source_head, Path(cap['capsuleRoot']), expected, expected)

@@ -2,6 +2,7 @@
 import ast
 import base64
 import copy
+import hashlib
 import importlib.util
 import json
 import os
@@ -45,13 +46,15 @@ def reader():
                            private_temp_root=namespace['private_temp_root'])
 
 
-def reviewed(root, operations=('prepare', 'create', 'issue', 'dispatch', 'close')):
+def reviewed(root, operations=('prepare', 'create', 'issue', 'dispatch', 'close'),
+             capsule_root=Path('/private/tmp/unit-negative-capsule-parent/capsule'),
+             source_head='a' * 40, pins=None):
     return negative.ReviewedAuthNegativePair('unit-review', root,
         'jonghyun-backend100-a0170001', 57441, '10.253.101.0/24',
         'jonghyun-backend100-f0170001', 57461, '10.253.102.0/24',
-        'a' * 40, {'unit': 'b' * 64}, '/reviewed/supabase', 'c' * 64,
+        source_head, {'unit': 'b' * 64} if pins is None else pins, '/reviewed/supabase', 'c' * 64,
         '/reviewed/node', 'd' * 64, {x: 'sha256:' + str(i) * 64 for i, x in enumerate(negative.ROLES, 1)},
-        'legacy_v1', '879401ec-e2b7-4ad8-9915-0a16ea74e3f5', operations)
+        'legacy_v1', '879401ec-e2b7-4ad8-9915-0a16ea74e3f5', operations, capsule_root=capsule_root)
 
 
 def anonymous_fixture():
@@ -129,7 +132,7 @@ class ConfigContract(unittest.TestCase):
                     'jonghyun-backend100-a0170001', 57441, '10.253.101.0/24',
                     'jonghyun-backend100-f0170001', 57461, '10.253.102.0/24',
                     args['sourceHead'], args['pins'], args['cliPath'], args['cliSha256'], args['nodePath'], args['nodeSha256'],
-                    args['images'], 'session_hmac_v2', args['daemonId'], ('issue',))
+                    args['images'], 'session_hmac_v2', args['daemonId'], ('issue',), capsule_root=args['capsuleRoot'])
 
 
 class TypedAdapterContract(unittest.TestCase):
@@ -473,6 +476,90 @@ class PhaseFailureContract(unittest.TestCase):
                 self.assertEqual(receipt['status'], 'FAIL' if fail_one else 'PASS_OWN_CREATED_STOPPED_EXISTING_METADATA_PRESERVED')
                 self.assertEqual(receipt['remainingIds'], ['anonymous-db'] if fail_one else [])
                 self.assertTrue((root / 'pair-after-close-private.json').exists())
+
+
+class SealedCapsuleBoundaryContract(unittest.TestCase):
+    def helpers(self):
+        source = REFERENCE / 'tests/integration/jonghyun/isolated_ai_contracts.py'
+        names = {'lifecycle_capsule_source_read', 'sealed_runtime_capsule', 'product_graph'}
+        namespace = dict(Path=Path, os=os, stat=stat, re=re, hashlib=hashlib,
+                         subprocess=subprocess, REPO=REFERENCE)
+        nodes = [node for node in ast.parse(source.read_bytes()).body
+                 if isinstance(node, ast.FunctionDef) and node.name in names]
+        self.assertEqual(len(nodes), 3)
+        exec(compile(ast.Module(body=nodes, type_ignores=[]), str(source), 'exec'), namespace)
+        return namespace
+
+    def seal(self, root, pins):
+        root.mkdir(mode=0o700)
+        for relative in pins:
+            target = root / relative; target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((REFERENCE / relative).read_bytes()); target.chmod(0o400)
+        for directory in sorted([root, *[p for p in root.rglob('*') if p.is_dir()]],
+                                key=lambda p: len(p.parts), reverse=True): directory.chmod(0o500)
+
+    def unseal_for_cleanup(self, root):
+        if root.exists():
+            for directory in [root, *[p for p in root.rglob('*') if p.is_dir()]]: directory.chmod(0o700)
+
+    def test_typed_capsule_root_is_separate_explicit_canonical_private_tmp(self):
+        with tempfile.TemporaryDirectory() as folder:
+            pair = Path(folder).resolve()
+            capsule = Path('/private/tmp/negative-owned-unit/source-capsule')
+            obj = reviewed(pair, capsule_root=capsule)
+            self.assertEqual(obj.descriptor()['capsuleRoot'], str(capsule))
+            obj.descriptor()['capsuleRoot'] = str(pair / 'different')
+            self.assertEqual(obj.descriptor()['capsuleRoot'], str(capsule))
+            for bad in (pair / 'inside-os-pair', Path('/private/tmp'), Path('/private/tmp/capsule-no-private-parent'),
+                        Path('relative/capsule'), Path('/private/tmp/unit/../capsule')):
+                with self.subTest(path=str(bad)), self.assertRaisesRegex(ValueError, 'CAPSULE_ROOT'):
+                    reviewed(pair, capsule_root=bad)
+
+    def test_existing_helper_rejects_os_temp_and_accepts_real_private_tmp_all_51_files(self):
+        helpers = self.helpers(); factory = 'tests/integration/jonghyun/isolated_ai_factory.ts'
+        pins = {**helpers['product_graph'](), factory: negative.digest((REFERENCE / factory).read_bytes())}
+        self.assertEqual(len(pins), 51)
+        head = subprocess.check_output(['git', '-C', str(REFERENCE), 'rev-parse', 'HEAD'], text=True).strip()
+        with tempfile.TemporaryDirectory() as os_folder, tempfile.TemporaryDirectory(dir='/private/tmp') as source_folder:
+            bad = Path(os_folder).resolve() / 'os-source-capsule'
+            good = Path(source_folder).resolve() / 'source-capsule'
+            try:
+                self.seal(bad, pins); self.seal(good, pins)
+                # 실제 기존 helper, 실제 봉인파일, 실제 Git HEAD를 사용한다. TMPDIR/reader를 바꾸지 않는다.
+                if not Path(os_folder).resolve().is_relative_to(Path('/private/tmp')):
+                    with self.assertRaisesRegex(ValueError, 'LIFECYCLE_CAPSULE_SOURCE_(DIRECTORY|ROOT)'):
+                        helpers['sealed_runtime_capsule'](head, bad, pins, pins)
+                self.assertEqual(helpers['sealed_runtime_capsule'](head, good, pins, pins), (good, good / factory))
+                os.chmod(good / factory, 0o600)
+                with self.assertRaisesRegex(ValueError, 'SOURCE_FILE'):
+                    helpers['sealed_runtime_capsule'](head, good, pins, pins)
+            finally:
+                self.unseal_for_cleanup(bad); self.unseal_for_cleanup(good)
+
+    def test_capsule_review_cannot_choose_path_outside_typed_descriptor(self):
+        helpers = self.helpers(); factory = 'tests/integration/jonghyun/isolated_ai_factory.ts'
+        pins = {**helpers['product_graph'](), factory: negative.digest((REFERENCE / factory).read_bytes())}
+        head = subprocess.check_output(['git', '-C', str(REFERENCE), 'rev-parse', 'HEAD'], text=True).strip()
+        with tempfile.TemporaryDirectory() as os_folder, tempfile.TemporaryDirectory(dir='/private/tmp') as source_folder:
+            pair = Path(os_folder).resolve(); source = Path(source_folder).resolve() / 'source-capsule'
+            try:
+                self.seal(source, pins)
+                obj = object.__new__(negative.FixedPair)
+                obj.reviewed = reviewed(pair, capsule_root=source, source_head=head, pins=pins)
+                obj.value = obj.reviewed.descriptor(); obj.root = pair
+                obj.ai = SimpleNamespace(**vars(reader()), product_graph=helpers['product_graph'],
+                    sealed_runtime_capsule=helpers['sealed_runtime_capsule'])
+                binaries = []; obj.binary = lambda *args: binaries.append(args)
+                cap = {'capsuleRoot': str(source), 'capsulePins': pins,
+                    'nodePath': obj.value['nodePath'], 'nodeSha256': obj.value['nodeSha256']}
+                obj.save(pair, 'capsule-review.json', cap)
+                self.assertEqual(obj.capsule(), cap); self.assertEqual(len(binaries), 1)
+                # 다른 올바른모양 JSON도 typed 경로와 다르면 reader/실행 전에 거절한다.
+                changed = {**cap, 'capsuleRoot': str(source.parent / 'different-capsule')}
+                obj.read = lambda *_: changed
+                with self.assertRaisesRegex(ValueError, 'CAPSULE_REVIEW'): obj.capsule()
+                self.assertEqual(len(binaries), 1)
+            finally: self.unseal_for_cleanup(source)
 
 
 class SourceHeadContract(unittest.TestCase):
