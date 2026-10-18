@@ -57,6 +57,43 @@ def isolated_config(config_bytes, project_id, port_base):
     return rendered, overrides
 
 
+
+def anonymous_negative_config(config_bytes, project_id, port_base):
+    """새 익명 거절 fixture 전용. 제품 기본 설정·표준 overlay는 변경하지 않는다."""
+    rendered, overlay = isolated_config(config_bytes, project_id, port_base)
+    source = tomllib.loads(rendered.decode('utf-8'))
+    changes = {'auth.enable_signup': True, 'auth.enable_anonymous_sign_ins': True,
+               'auth.email.enable_signup': False}
+    expected = copy.deepcopy(source)
+    for path, value in changes.items():
+        current = expected
+        parts = path.split('.')
+        for part in parts[:-1]:
+            if not isinstance(current.get(part), dict):
+                raise PreparationError('익명 전용 overlay 설정이 없습니다.')
+            current = current[part]
+        if type(current.get(parts[-1])) is not bool:
+            raise PreparationError('익명 전용 overlay는 기존 boolean 설정만 허용합니다.')
+        current[parts[-1]] = value
+    section, changed, lines = '', set(), []
+    for line in rendered.decode('utf-8').splitlines(keepends=True):
+        header = re.fullmatch(r'\s*\[([A-Za-z0-9_.-]+)\]\s*(?:#[^\r\n]*)?(?:\r?\n)?', line)
+        if header:
+            section = header[1]
+        entry = re.match(r'^(\s*)([A-Za-z0-9_-]+)\s*=', line)
+        path = (section + '.' if section else '') + entry[2] if entry else None
+        if path in changes:
+            if path in changed:
+                raise PreparationError('익명 전용 설정이 중복됐습니다.')
+            newline = '\r\n' if line.endswith('\r\n') else '\n' if line.endswith('\n') else ''
+            line = entry[1] + entry[2] + ' = ' + json.dumps(changes[path]) + newline
+            changed.add(path)
+        lines.append(line)
+    result = ''.join(lines).encode('utf-8')
+    if changed != set(changes) or tomllib.loads(result.decode('utf-8')) != expected:
+        raise PreparationError('고정 익명 전용 설정 외 변경은 허용하지 않습니다.')
+    return result, {**overlay, **changes}
+
 def prepare_database(repo, output, *, project_id=None, port_base=None):
     repo = Path(repo).resolve()
     config = repo / "backend/supabase/config.toml"
