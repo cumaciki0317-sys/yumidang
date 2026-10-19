@@ -171,7 +171,8 @@ export function classifyTourApiResponse(
       ...(r.addr2 !== undefined ? { addr2: r.addr2 as string } : {}),
     };
   });
-  return { items, hasMore: page * rows < total && page < TOUR_API_MAX_PAGE };
+  // 요청 상한은 수집 완료를 뜻하지 않는다. 남은 범위를 collector의 partial로 보존한다.
+  return { items, hasMore: page * rows < total };
 }
 
 export function createTourApiTransport(

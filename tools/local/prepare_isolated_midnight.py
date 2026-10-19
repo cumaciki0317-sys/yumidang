@@ -118,6 +118,8 @@ def contract_pins():
         'tests/integration/minkyu/content_inspection_http_local.ts',
         'tests/integration/jonghyun/isolated_ai_contracts.py',
         'tests/integration/jonghyun/isolated_ai_factory.ts',
+        'tests/integration/minkyu/member_cleanup_reconcile_local.py',
+        'tests/integration/minkyu/product_connection_restore108_local.py',
         'tools/local/run_database_tests.py', 'tools/local/prepare_isolated_midnight.py',
         'tools/local/prepare_database.py', 'tools/local/prepare_migrations.py',
     }

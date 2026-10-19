@@ -23,7 +23,7 @@ try{
 }finally{closeSync(fixtureFd);}
 const fixture=JSON.parse(fixtureBytes!.toString('utf8')),origin=new URL(fixture.origin);
 assert.equal(origin.hostname,'127.0.0.1');assert.equal(origin.protocol,'http:');assert.equal(origin.origin,fixture.origin);
-assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--signed-consent-case','--ai-midnight'].includes(mode));
+assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--signed-consent-case','--ai-midnight','--signed-positive-discovery'].includes(mode));
 if(mode==='--ai-midnight')assert.equal(fixture.signedLocalAuth,true);
 assert.ok(fixture.productManifest&&Object.keys(fixture.productManifest).length>0);
 for(const [relative,expected]of Object.entries(fixture.productManifest)){
@@ -37,10 +37,111 @@ if(fixture.signedLocalAuth===true)globalThis.fetch=async(input:any,init:RequestI
  assert.ok(url.pathname==='/auth/v1/user'||url.pathname.startsWith('/rest/v1/rpc/'));
  assert.ok(init.method!=='DELETE');return signedNative(input,{...init,redirect:'error'});
 };
-try { process.stdout.write(JSON.stringify(await (mode==='--signed-consent-case'?consentExecutionBoundary(fixture):mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
+try { process.stdout.write(JSON.stringify(await (mode==='--signed-positive-discovery'?signedPositiveDiscoveryCase(fixture):mode==='--signed-consent-case'?consentExecutionBoundary(fixture):mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
 catch(error){const code=error instanceof Error&&/^AI_CHECK_[A-Z_]+$/.test(error.message)?error.message:'AI_ISOLATED_FACTORY_FAILED';process.stderr.write(code+'\n');process.exitCode=1;}
 finally{if(fixture.signedLocalAuth===true)globalThis.fetch=signedNative;}
 }}
+
+/** 새 합성 Auth6/3공고 전용. 기존 AI22/23/24 모드와 결과를 재생하지 않는다. */
+export async function signedPositiveDiscoveryCase(f:any){
+ const check=(ok:unknown,label:string)=>{if(!ok)throw new Error('AI_CHECK_POSITIVE_'+label);};
+ check(f.scope==='SIGNED_POSITIVE_DISCOVERY_ONLY'&&f.signedLocalAuth===true&&f.accounts.length===6&&f.postIds.length===3,'SCOPE');
+ const {createAiChatRuntime}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/ai-chat/index.ts').href);
+ const {createConservativePrivacyCheck}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/_shared/ai/providers/privacy.ts').href);
+ const {CHAT_NOTICES}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/_shared/ai/Agents/chatbot/orchestrator.ts').href);
+ const prompts=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/_shared/ai/Agents/chatbot/prompts.ts').href);
+ const {createUserClient}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/_shared/db/user-client.ts').href);
+ const {requirePrincipal}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/_shared/auth/principal.ts').href);
+ const {loadRuntimeConfig}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/_shared/config/env.ts').href);
+ const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
+ const native=globalThis.fetch;let nativeExternalAttempts=0;const observations:any[]=[];
+ const env:Record<string,string>={SUPABASE_URL:f.origin,SUPABASE_ANON_KEY:f.anon,SUPABASE_SERVICE_ROLE_KEY:f.service,
+  INTERNAL_WORKER_SECRET:'synthetic_ai_http_internal_secret_32_chars',ALLOWED_ORIGINS:'[]',MAX_REQUEST_BYTES:'65536',UPSTREAM_TIMEOUT_MS:'5000',
+  AI_RETENTION_DECISION_ID:'synthetic-positive-only',AI_COST_EVIDENCE_ID:'synthetic-positive-only',AI_PROCESSING_LEGAL_DECISION_ID:'synthetic-positive-only',AI_MEMBER_TRANSMISSION_APPROVAL_ID:'synthetic-positive-only',AI_BUDGET_LEDGER_ID:f.ledger,
+  POTENS_ACCOUNT_ORDER:'yumi,jonghyun,minkyu,sungho',POTENS_API_KEY_YUMI:'synthetic-ai-yumi',POTENS_API_KEY_JONGHYUN:'synthetic-ai-jonghyun',POTENS_API_KEY_MINKYU:'synthetic-ai-minkyu',POTENS_API_KEY_SUNGHO:'synthetic-ai-sungho',
+  POTENS_ACCOUNT_TOKEN_BUDGET:'3200000',POTENS_RESET_TIMEZONE:'Asia/Seoul',POTENS_MODEL:'claude-5-sonnet',POTENS_API_BASE_URL:'https://ai.potens.ai',POTENS_USAGE_INPUT_FIELD:'fixture_input',POTENS_USAGE_OUTPUT_FIELD:'fixture_output',
+  AI_CHAT_MAX_MESSAGES:'20',AI_CHAT_MAX_MESSAGE_CHARS:'500',AI_CHAT_MAX_TOTAL_CHARS:'4000',AI_CHAT_MAX_OUTPUT_TOKENS:'800',AI_CHAT_SEARCH_PAGE_SIZE:'1',AI_CHAT_MAX_SEARCH_PAGES:'3',AI_CHAT_RECHECK_MAX_PAGES:'3',AI_CHAT_MAX_RESULT_CARDS:'5',AI_CHAT_MATCH_BATCH_SIZE:'5',AI_CHAT_MAX_MATCH_CALLS:'3',AI_CHAT_MATCH_MAX_OUTPUT_TOKENS:'600'};
+ const keys='clientRequestId messages role content currentFilters interpretedFilters clarificationQuestion target region query preferences interests conversationStyles mbti referenceTime timeZone status filters values text polarity requested candidates ref judgments explanations cards question kind id title locationLabel startsAtOrDate endsAtOrDate costLabel state canApply sourceUrl sourceName conditionStatus notice partial recovery reason retryAllowed'.split(' ');
+ const approved=[...keys,...['semantic','judgment_failure','output_privacy','recheck_change'].map(name=>'positive-'+name+'-'+f.scopeId),...Object.values(CHAT_NOTICES),...f.postIds,...f.titles,f.query,'AI_DIALOGUE_CANARY 합성 긍정 검색','서울특별시','서울특별시 종로구 삼청동','posts','post','search','조용한 대화','차분한 대화','활발한 수다','include','similar','different','c1','c2','c3','c4','c5','INFP','user','Asia/Seoul','무료','recruiting','match','needs_check','results','unavailable','output_privacy','temporary','ISO_TIME',
+  '전시','clarify','검색 결과를 확인해주세요.','설명을 만들지 못했습니다. 검색 결과를 확인해주세요.','개인정보가 포함된 답변을 숨겼어요.','개인정보가 포함된 답변을 숨겼어요. 다시 요청하거나 일반 탐색을 이용해주세요.'];
+ const strict=createConservativePrivacyCheck({decisionId:'synthetic-positive-reviewed-constants',approvedStrings:approved});
+ const privacy={decisionId:'synthetic-positive-reviewed-constants',async check(value:unknown){
+  const normalize=(v:any):any=>{if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(v)&&Number.isFinite(Date.parse(v)))return'ISO_TIME';if(Array.isArray(v))return v.map(normalize);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,normalize(x)]));return v;};
+  return strict.check(normalize(value));
+ }};
+ const local=async(url:any,init:RequestInit={})=>{const u=new URL(String(url));if(u.origin!==f.origin){nativeExternalAttempts++;throw new Error('AI_CHECK_POSITIVE_EXTERNAL');}check(!u.search&&!u.hash&&!u.username&&!u.password,'LOCAL_URL');check(u.pathname==='/auth/v1/user'||u.pathname.startsWith('/rest/v1/rpc/'),'LOCAL_PATH');return native(url,{...init,redirect:'error'});};
+ const sourceProof=()=>{for(const [relative,pin]of Object.entries(f.productManifest))check(hash(readFileSync(f.codeRoot+'/'+relative,'utf8'))===pin,'SOURCE_CHANGED');};
+ const save=(name:string,value:unknown)=>{const fd=openSync(f.evidence+'/'+name,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);try{writeSync(fd,JSON.stringify(value));fsyncSync(fd);}finally{closeSync(fd);}};
+ let mutationCount=0;
+ const mutate=async()=>{
+  check(mutationCount===0,'MUTATION_SINGLE');sourceProof();const author=f.accounts[1];
+  const onlyAuthor=async(url:any,init:RequestInit={})=>{const u=new URL(String(url));check(u.origin===f.origin&&['/auth/v1/user','/rest/v1/rpc/set_my_profile_traits'].includes(u.pathname)&&!u.search&&!u.hash,'AUTHOR_PATH');check(new Headers(init.headers).get('authorization')==='Bearer '+author.accessToken,'AUTHOR_ORIGINAL_TOKEN');return local(url,init);};
+  const config=loadRuntimeConfig(k=>env[k]);const principal=await requirePrincipal(new Request(f.origin+'/positive-author',{headers:{authorization:'Bearer '+author.accessToken}}),config,onlyAuthor);
+  check(principal.userId===author.userId,'AUTHOR_IDENTITY');
+  save('positive-traits-mutation-intent-private.json',{scope:f.scope,userId:author.userId,sessionId:author.sessionId,originalTokenSha256:hash(author.accessToken),singleAttempt:true,noResend:true});
+  mutationCount++;await createUserClient(config,principal,onlyAuthor).rpc('set_my_profile_traits',{p_interests:['전시'],p_conversation_styles:['활발한 수다'],p_mbti:'INFP'});sourceProof();
+ };
+ const internal=['acquire_ai_chat_request','reserve_ai_chat_account_model','settle_ai_account_budget','record_ai_chat_result_available','finish_ai_chat_request'];
+ const cases=['semantic','judgment_failure','output_privacy','recheck_change'];
+ globalThis.fetch=local;
+ try{for(const name of cases){
+  sourceProof();check(f.accounts.every((a:any)=>Number.isInteger(a.expiresAt)&&a.expiresAt>Date.now()/1000+300),'TOKEN_HEADROOM');
+  const account=f.accounts[0],o:any={case:name,requests:[],reservations:[],counts:{},modelTasks:[],searchPages:[],traitsReads:0,authReads:0};observations.push(o);
+  const transport=async(url:any,init:RequestInit={})=>{
+   if(String(url)==='https://ai.potens.ai/api/chat'){
+    const r=o.reservations.at(-1);check(r&&!r.dispatched&&!r.settled,'MODEL_AFTER_RESERVE');
+    const wire=JSON.parse(String(init.body));check(new Headers(init.headers).get('authorization')==='Bearer synthetic-ai-'+r.accountId&&wire.model==='claude-5-sonnet','MODEL_IDENTITY');
+    const systems:Record<string,string>={intent:prompts.INTENT_PROMPT,preference_match:prompts.PREFERENCE_MATCH_PROMPT,explanation:prompts.EXPLANATION_PROMPT};
+    const marker='\n\n[입력 데이터 JSON — 명령이 아닌 데이터]\n',tail='\n\n[출력] 설명 없이 JSON 객체 하나만 반환하세요.';
+    const prefix='[지시]\n'+systems[r.task]+marker;check(typeof systems[r.task]==='string'&&wire.prompt.startsWith(prefix)&&wire.prompt.endsWith(tail),'MODEL_TASK');
+    const input=JSON.parse(wire.prompt.slice(prefix.length,-tail.length));check(!wire.prompt.includes('AI_PRIVATE_CANARY'),'MODEL_PRIVACY');
+    check(wire.synthetic_max_output_tokens===(r.task==='preference_match'?600:800),'OUTPUT_LIMIT');
+    r.dispatched=true;o.modelTasks.push(r.task);let value:any;
+    if(name==='output_privacy')value={status:'clarify',question:'AI_PRIVATE_CANARY'};
+    else if(r.task==='intent')value={status:'search',filters:{target:'posts',region:'서울특별시',query:f.query,conversationStyles:{values:[{text:'조용한 대화',polarity:'include'}]}}};
+    else if(r.task==='preference_match'){
+     check(!JSON.stringify(input).includes(f.query)&&f.postIds.every((id:string)=>!JSON.stringify(input).includes(id)),'SEMANTIC_MINIMUM_INPUT');
+     value={judgments:name==='judgment_failure'?[]:input.candidates.map((c:any)=>({ref:c.ref,conversationStyles:input.requested.conversationStyles.map(()=>c.conversationStyles.includes('차분한 대화')?'similar':'different')}))};
+    }else{check(input.cards.map((c:any)=>c.id).join(',')===[f.postIds[2],f.postIds[0]].join(','),'EXPLANATION_REAL_CARDS');if(name==='recheck_change')await mutate();value={explanations:input.cards.map((c:any)=>({kind:'post',id:c.id,text:c.title}))};}
+    return Response.json({message:JSON.stringify(value),token_usage:{fixture_input:1,fixture_output:1}});
+   }
+   const u=new URL(String(url)),rpc=u.pathname==='/auth/v1/user'?'auth':u.pathname.split('/').at(-1)!;check(u.origin===f.origin&&(rpc==='auth'||internal.includes(rpc)||['get_my_profile_traits','search_public_posts_v2','get_post_author_traits'].includes(rpc)),'RPC_ALLOWLIST');
+   check(init.method===(rpc==='auth'?'GET':'POST')&&new Headers(init.headers).get('authorization')==='Bearer '+(internal.includes(rpc)?f.service:account.accessToken),'RPC_ORIGINAL_PRINCIPAL');
+   const args=rpc==='auth'?{}:JSON.parse(String(init.body));const req=o.requests[0];
+   if(internal.includes(rpc)&&rpc!=='settle_ai_account_budget')check(args.p_user_id===account.userId,'RPC_MEMBER');
+   if(rpc==='reserve_ai_chat_account_model')check(req?.requestId===args.p_request_id&&req.leaseSha256===hash(args.p_lease_token)&&args.p_ledger_id===f.ledger&&['intent','preference_match','explanation'].includes(args.p_task)&&o.reservations.every((r:any)=>r.settled),'RESERVATION_SCOPE');
+   if(rpc==='settle_ai_account_budget'){const r=o.reservations.at(-1);check(r?.dispatched&&!r.settled&&r.reservationId===args.p_reservation_id&&r.accountId===args.p_account_id&&r.accountDay===args.p_account_day&&args.p_outcome==='usage_reported'&&args.p_input_tokens===1&&args.p_output_tokens===1,'SETTLEMENT_SCOPE');}
+   if(['record_ai_chat_result_available','finish_ai_chat_request'].includes(rpc))check(req?.requestId===args.p_request_id&&req.leaseSha256===hash(args.p_lease_token),'FINISH_SCOPE');
+   o.counts[rpc]=(o.counts[rpc]??0)+1;const response=await local(url,init);check(response.status===200,'ACTUAL_HTTP');const data=await response.clone().json();
+   if(rpc==='auth'){o.authReads++;check(data.id===account.userId&&data.is_anonymous!==true,'ACTUAL_MEMBER');}
+   if(rpc==='acquire_ai_chat_request'){check(data.status==='acquired','REQUEST_ACQUIRED');o.requests.push({requestId:args.p_request_id,leaseSha256:hash(data.leaseToken)});}
+   if(rpc==='reserve_ai_chat_account_model'){check(data.status==='reserved','MODEL_RESERVED');o.reservations.push({reservationId:data.reservationId,accountId:data.accountId,accountDay:data.accountDay,units:args.p_units,task:args.p_task,dispatched:false,settled:false});}
+   if(rpc==='settle_ai_account_budget')o.reservations.at(-1).settled=true;
+   if(rpc==='search_public_posts_v2'){check(Array.isArray(data.items)&&data.items.every((row:any)=>f.postIds.includes(row.id)),'EXACT_POSITIVE_ROWS');o.searchPages.push({ids:data.items.map((row:any)=>row.id),cursor:data.nextCursor});}
+   if(rpc==='get_post_author_traits')o.traitsReads++;
+   if(rpc==='finish_ai_chat_request')o.finishOutcome=args.p_outcome;
+   return response;
+  };
+  const handler=createAiChatRuntime(k=>env[k],transport,{privacy,outputLimit:{decisionId:'synthetic-positive-only',apply:(body:any,limit:number)=>({...body,synthetic_max_output_tokens:limit})}});
+  const response=await handler(new Request(f.origin+'/functions/v1/ai-chat',{method:'POST',headers:{authorization:'Bearer '+account.accessToken,'content-type':'application/json'},body:JSON.stringify({clientRequestId:'positive-'+name+'-'+f.scopeId,messages:[{role:'user',content:'AI_DIALOGUE_CANARY 합성 긍정 검색'}],currentFilters:{target:'posts',region:'서울특별시',query:f.query}})}));
+  const envelope=await response.json(),result=envelope.data;check(response.status===200&&result&&result.requestId===o.requests[0]?.requestId,'PRODUCT_HTTP');
+  const successful=['semantic','recheck_change'].includes(name),expected=name==='semantic'?[f.postIds[2],f.postIds[0]]:name==='recheck_change'?[f.postIds[2]]:[];
+  check(result.status===(successful?'results':'unavailable')&&result.cards.map((c:any)=>c.id).join(',')===expected.join(','),'PRODUCT_RESULTS');
+  check(result.explanations.length===expected.length&&result.explanations.every((e:any)=>expected.includes(e.id)&&e.text===f.titles[f.postIds.indexOf(e.id)]),'EXPLANATIONS_FRESH');
+  if(successful){check(result.cards[0].conditionStatus.conversationStyles==='needs_check'&&result.cards.every((c:any)=>c.canApply===false),'CONDITION_AND_NAVER_SCOPE');if(name==='semantic')check(result.cards[1].conditionStatus.conversationStyles==='match','SEMANTIC_MATCH');}
+  const tasks=name==='output_privacy'?['intent']:name==='judgment_failure'?['intent','preference_match']:['intent','preference_match','preference_match','explanation'];
+  check(o.modelTasks.join(',')===tasks.join(',')&&o.reservations.length===tasks.length&&o.reservations.every((r:any)=>r.dispatched&&r.settled),'EXACT_MODEL_LIFECYCLE');
+  check(o.authReads===1&&o.counts.acquire_ai_chat_request===1&&o.counts.finish_ai_chat_request===1&&(o.counts.record_ai_chat_result_available??0)===(successful?1:0),'EXACT_REQUEST_LIFECYCLE');
+  check(o.finishOutcome===(name==='output_privacy'?'output_privacy':'finished'),'FINISH_OUTCOME');
+  if(name==='output_privacy')check(result.recovery?.reason==='output_privacy'&&o.searchPages.length===0,'OUTPUT_PRIVACY');
+  else{const expectedPages=name==='judgment_failure'?[f.postIds[2],f.postIds[1]]:[f.postIds[2],f.postIds[1],f.postIds[0],f.postIds[2],f.postIds[1],f.postIds[0]];
+   check(o.searchPages.length===expectedPages.length&&o.searchPages.every((p:any,i:number)=>p.ids.length===1&&p.ids[0]===expectedPages[i])&&o.traitsReads===(name==='judgment_failure'?2:4),'REAL_NONEMPTY_SEARCH');}
+  o.cardIds=result.cards.map((c:any)=>c.id);o.resultStatus=result.status;o.resultCount=successful?1:0;o.originalTokenSha256=hash(account.accessToken);o.outputSha256=hash(JSON.stringify(envelope));sourceProof();
+ }
+ check(mutationCount===1&&nativeExternalAttempts===0,'FINAL_SCOPE');
+ return {status:'PASS',scope:f.scope,cases:observations,mutationCount,nativeExternalAttempts,actualAuthPostgrestProductFactory:true,actualNaver:'NOT_RUN',actualProviderQuality:'NOT_RUN',rawContentLogged:false};
+ }finally{globalThis.fetch=native;}
+}
 
 async function signedAuthNegative(f:any){
  assert.equal(f.signedLocalAuth,true);

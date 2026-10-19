@@ -96,3 +96,86 @@ test("forbidden Origin cannot enter photo executor",async()=>{
  const s=scenario();const r=await service(s)(request("",{headers:{authorization:"Bearer "+token,origin:"https://forbidden.example"}}));
  assert.equal(r.status,403);assert.equal(s.calls.length,0);assert.equal((await r.json()).error.code,"ACCESS_DENIED");
 });
+
+// 실제 executor + 비협조 I/O 포트다. 실제 Auth/Storage 및 native fetch의 종료 증거가 아니다.
+const pause=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
+function deferred<T>() { let resolve!:(value:T)=>void;const promise=new Promise<T>(yes=>{resolve=yes;});return{promise,resolve}; }
+async function bounded<T>(pending:Promise<T>) {
+ let timer:ReturnType<typeof setTimeout>;
+ try { return await Promise.race([pending,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error("LOCAL_WAIT_EXCEEDED")),500);})]); }
+ finally { clearTimeout(timer!); }
+}
+function deadlineScenario(options:{read?:()=>Promise<ReadableStreamReadResult<Uint8Array>>;cancel?:()=>Promise<void>;head?:()=>Promise<Response>;get?:()=>Promise<Response>;auth?:()=>Promise<Response>;timeout?:number}={}) {
+ const calls:string[]=[];const controller=new AbortController();let index=0;
+ const response={status:200,headers:new Headers({"content-type":"image/jpeg"}),body:{
+  cancel:async()=>{},getReader:()=>({read:options.read??(async()=>index++===0?{done:false,value:photo}:{done:true}),cancel:options.cancel??(async()=>{}),releaseLock:()=>{}}),
+ }} as unknown as Response;
+ const fetcher:FetchLike=async(url,init={})=>{
+  assert.equal(new Headers(init.headers).get("authorization"),"Bearer "+token);
+  assert.equal(new Headers(init.headers).get("apikey"),"public-anon");
+  if(String(url)===api+"/auth/v1/user"){calls.push("auth");return options.auth?options.auth():Response.json({id:uid,role:"authenticated",is_anonymous:false});}
+  assert.equal(String(url),api+"/storage/v1/object/authenticated/profile-images/"+path);
+  calls.push(init.method??"GET");
+  if(init.method==="HEAD")return options.head?options.head():new Response(null,{status:200});
+  return options.get?options.get():response;
+ };
+ const run=createProfileImageExecutor({...config,upstreamTimeoutMs:options.timeout??40},fetcher);
+ return{run:()=>run(request("",{signal:controller.signal}),path),calls,controller,response};
+}
+const unavailable=(e:unknown)=>toPublicError(e).error.code==="EXTERNAL_UNAVAILABLE";
+test("photo deadline includes Auth200 JSON body and never sends Storage after late authentication",async()=>{
+ const late=deferred<unknown>();const s=deadlineScenario({auth:async()=>Object.assign(Response.json({}),{json:()=>late.promise}) as Response});
+ await assert.rejects(bounded(s.run()),unavailable);
+ late.resolve({id:uid,role:"authenticated",is_anonymous:false});await pause(0);assert.deepEqual(s.calls,["auth"]);
+});
+test("photo deadline ends a signal-ignoring GET and cancels late body without reading or HEAD",async()=>{
+ const late=deferred<Response>();let cancelled=0;const s=deadlineScenario({get:()=>late.promise});
+ await assert.rejects(bounded(s.run()),unavailable);
+ late.resolve({body:{cancel:()=>{cancelled++;return Promise.reject(Error("PRIVATE_PHOTO_REASON"));}}} as unknown as Response);await pause(0);
+ assert.equal(cancelled,1);assert.deepEqual(s.calls,["auth","GET"]);
+});
+test("photo deadline ends an uncooperative read and discards late bytes without HEAD",async()=>{
+ const late=deferred<ReadableStreamReadResult<Uint8Array>>();const s=deadlineScenario({read:()=>late.promise});
+ await assert.rejects(bounded(s.run()),unavailable);late.resolve({done:false,value:photo});await pause(0);
+ assert.deepEqual(s.calls,["auth","GET"]);
+});
+test("photo deadline returns safe JSON for a real ReadableStream that never produces bytes",async()=>{
+ let cancellations=0;
+ const stream=new ReadableStream<Uint8Array>({cancel:()=>{cancellations++;return new Promise(()=>{});}});
+ const s=deadlineScenario({get:async()=>new Response(stream,{headers:{"content-type":"image/jpeg"}})});
+ const apiHandler=createServiceApi({allowedOrigins:[],maxBodyBytes:8192,profileImages:{execute:async()=>s.run()}});
+ const response=await bounded(apiHandler(request()));
+ assert.equal(response.status,503);assert.equal(response.headers.get("cache-control"),"no-store");
+ assert.ok(response.headers.get("content-type")?.startsWith("application/json"));
+ const body=await response.json();assert.equal(body.error.code,"EXTERNAL_UNAVAILABLE");
+ assert.equal(JSON.stringify(body).includes(path),false);assert.equal(JSON.stringify(body).includes(token),false);
+ assert.equal(cancellations,1);assert.deepEqual(s.calls,["auth","GET"]);
+});
+test("photo deadline ends a hanging reader cancel without a later HEAD",async()=>{
+ const s=deadlineScenario({cancel:()=>new Promise(()=>{})});
+ await assert.rejects(bounded(s.run()),unavailable);assert.deepEqual(s.calls,["auth","GET"]);
+});
+test("photo deadline ends a signal-ignoring HEAD and cancels its late body without bytes",async()=>{
+ const late=deferred<Response>();let cancelled=0;const s=deadlineScenario({head:()=>late.promise});
+ await assert.rejects(bounded(s.run()),unavailable);
+ late.resolve({body:{cancel:()=>{cancelled++;return Promise.reject(Error("PRIVATE_PHOTO_REASON"));}}} as unknown as Response);await pause(0);
+ assert.equal(cancelled,1);assert.deepEqual(s.calls,["auth","GET","HEAD"]);
+});
+test("photo deadline ends a hanging HEAD body cancel instead of returning image bytes",async()=>{
+ const s=deadlineScenario({head:async()=>({status:200,body:{cancel:()=>new Promise(()=>{})}} as unknown as Response)});
+ await assert.rejects(bounded(s.run()),unavailable);assert.deepEqual(s.calls,["auth","GET","HEAD"]);
+});
+test("photo caller abort ends pending read even when cleanup throws or never settles",async()=>{
+ const started=deferred<void>();const s=deadlineScenario({timeout:1000,read:()=>{started.resolve();return new Promise(()=>{});},cancel:()=>{throw Error("PRIVATE_PHOTO_REASON");}});
+ const pending=s.run();await started.promise;s.controller.abort("PRIVATE_PHOTO_REASON");
+ await assert.rejects(bounded(pending),error=>{
+  assert.equal(toPublicError(error).error.code,"EXTERNAL_UNAVAILABLE");
+  assert.equal((String(error)+JSON.stringify(toPublicError(error))).includes("PRIVATE_PHOTO_REASON"),false);return true;
+ });assert.deepEqual(s.calls,["auth","GET"]);
+});
+test("photo GET and body read share one total deadline without restarting it",async()=>{
+ let reads=0;let s:ReturnType<typeof deadlineScenario>;
+ s=deadlineScenario({timeout:60,get:async()=>{await pause(40);return s.response;},read:async()=>{reads++;await pause(40);return{done:false,value:photo};}});
+ await assert.rejects(bounded(s.run()),unavailable);await pause(50);
+ assert.equal(reads,1);assert.deepEqual(s.calls,["auth","GET"]);
+});

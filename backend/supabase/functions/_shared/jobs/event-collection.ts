@@ -171,6 +171,14 @@ export async function runEventCollection(input: {
   let progress = await store.load(reference);
   if (progress === "not_claimed") return { ...base, status: "not_claimed" };
   validateProgress(progress, reference);
+  // 목록 공급사는 page만 받는다. DB의 숫자 cursor는 재개 위치의 일관성 확인용이다.
+  // ongoing은 원천 ID cursor를 쓰므로 이 변환을 적용하지 않는다.
+  const pageNumberProvider = reference.lane !== "ongoing" &&
+    ["kopis", "tour-api"].includes(reference.provider);
+  if (pageNumberProvider && progress.cursor !== undefined &&
+    progress.cursor !== String(progress.nextPage)) {
+    throw new Error("INVALID_EVENT_COLLECTION_PROGRESS");
+  }
   let pages = 0, fetchedCount = 0;
   while (pages < input.maxPages) {
     signal?.throwIfAborted();
@@ -186,7 +194,9 @@ export async function runEventCollection(input: {
     const page = await provider.fetchPage({
       period: reference.period,
       page: progress.nextPage,
-      ...(progress.cursor !== undefined ? { cursor: progress.cursor } : {}),
+      ...(!pageNumberProvider && progress.cursor !== undefined
+        ? { cursor: progress.cursor }
+        : {}),
       signal,
     });
     signal?.throwIfAborted();
@@ -194,7 +204,9 @@ export async function runEventCollection(input: {
       !page || !Array.isArray(page.events) ||
       (page.nextCursor !== undefined &&
         (typeof page.nextCursor !== "string" || !page.nextCursor.trim() ||
-          page.nextCursor === progress.cursor))
+          page.nextCursor === progress.cursor ||
+          (pageNumberProvider &&
+            page.nextCursor !== String(progress.nextPage + 1))))
     ) {
       throw new Error("INVALID_EVENT_COLLECTION_PAGE");
     }
