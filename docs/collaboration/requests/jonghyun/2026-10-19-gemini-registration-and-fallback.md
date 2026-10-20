@@ -1,0 +1,45 @@
+# Gemini 테스트 등록·무료 공급사 전환 검토
+
+2026-10-19 / 사용자 요청: 포텐스닷과 별개로 Gemini 또는 무료 API 대체 호출을 검토하고 가능하지 않으면 Gemini를 미리 등록. 계정 선택 답변은 “내 Google 계정의 테스트 전용 프로젝트”다. 실회원·유료 연결·배포 승인이 아니다.
+
+## 공식 자료 확인
+
+- [Gemini API 약관](https://ai.google.dev/gemini-api/terms) 2026-03-23 시행본: Unpaid Services 입력·출력을 제품 개선에 사용할 수 있고 사람 검토 가능, 개인정보·민감/기밀정보를 보내지 말라는 조건이 있다. 한국 서비스에서 무료 계층을 실회원 개인정보 전송의 해결책으로 보지 않는다. 유럽 일부 지역의 예외를 한국에 적용하지 않는다.
+- Paid Services 조건은 활성 결제 계정에 연결된 프로젝트로 API를 호출할 때 적용된다. Standard Paid는 제품 개선 미사용 조건이지만 안전/위반 방지·법적 공개 목적의 한시 로그가 있을 수 있어 무보관으로 안내하지 않는다. 가격표의 Contributor 등 별도 계층은 조건을 따로 확인한다.
+- [프로젝트 한도](https://ai.google.dev/gemini-api/docs/rate-limits)는 API 키 단위가 아니다. [Google API 약관2.d](https://developers.google.com/terms)는 정해진 한도 우회를 금지한다. 한 공급사 제한을 새 계정/프로젝트/키로 우회하는 방식과 정상적으로 허용된 별도 공급사 quota의 사용은 구분한다.
+- [API 키 등록·보안](https://ai.google.dev/gemini-api/docs/api-key): Google 프로젝트와 키를 연결하고 새 키는 인증 사용 키로 발급한다. Gemini API로 제한하고 서버 비밀 저장소에서만 사용한다. 앱·웹·Git·채팅에 키 원문을 넣지 않는다.
+- [결제](https://ai.google.dev/gemini-api/docs/billing)·[가격](https://ai.google.dev/gemini-api/docs/pricing)은 실제 계정 화면에서 확인한다. 결제 연결/선불 충전/자동 충전은 이번에 하지 않는다. 예산 알림·지출 제한이 완벽한 실시간 hard cap이라고 보장하지 않는다.
+
+## 설계 판단 — 아직 자동 전환 구현 승인 아님
+
+공식 API·각 공급사 약관·정상 quota·데이터 수신처 조건을 충족하는 공급사 간 자동 전환 구조는 가능하다. 무료라는 이유만으로 전환 대상으로 넣지 않는다. 각 공급사의 보관/학습/삭제, 한국 제공지역·상업 이용·출력형식·품질을 검증한다. 회원 원문을 여러 공급사에 배포하는 새 정책을 자동 승인하지 않는다.
+
+등록 준비 추천: 테스트용 Gemini 하나를 먼저 준비해 가상 대화·가상 후기만 검증하고, 운영은 실제 데이터 처리 조건과 비용이 확인된 공급사를 별도 승인한다. 무료 모델들을 엮는 것만으로 연속 무료·무제한·실서비스 안정성을 보장할 수 없다. 모두 한도 부족이면 일반 검색·공개 가능한 후기 원문으로 돌아가고 신규 요약은 대기한다.
+
+## 저장소 현재 상태
+
+현재 providers에는 model-port/provider-adapter/potens-adapter 경계가 있고 Gemini 어댑터는 확인되지 않았다. .env.example에 GEMINI_API_KEY 예시가 있다는 사실은 연결 완료가 아니다. 서버 연결은 민규 소유이며 이번 작업에서 코드·공급사·운영 .env를 바꾸지 않는다.
+
+## 등록 완료 상태
+
+Chrome 제어는 Native pipe startup failed로 접근하지 못해 공식 gcloud CLI로 대체했다. 사용자는 현재 로그인 계정 `ds5305naver@gmail.com`으로 테스트 프로젝트 생성을 명시 승인했다.
+
+- 프로젝트 ID: `yumidang-jh-test-261019`
+- 프로젝트 이름: `Yumidang Jonghyun Test`
+- 프로젝트 번호: `266524605801`
+- Gemini API와 키 발급에 필요한 관리 API만 활성화했다.
+- 테스트 전용 서비스 계정에 연결된 인증 API 키를 발급했고 Gemini API만 사용하도록 제한했다. 관리자 역할·운영 프로젝트 접근을 추가 부여하지 않았다.
+- 최초 등록은 결제 미연결로 완료했다. 이후 사용자 명시 승인으로 My Billing Account에 연결했고 월50,000KRW Gemini 사용중단 예산을 설정·재조회했다. 현재 billingEnabled:true, cap CONFIGURED다. 선충전·자동충전은 하지 않았다. 자세한 상태는 [월 예산 기록](2026-10-19-gemini-monthly-budget.md)을 따른다.
+- 새 키로 `GET /v1beta/models?pageSize=1` 읽기 조회 HTTP200·모델1개 수신을 확인했다. 생성 요청·실회원 데이터 전송은0이며 무료 생성 quota·품질·앱 연결 성공까지 검증한 것은 아니다.
+- gcloud 기본 프로젝트 설정과 기존 프로젝트·운영 환경 파일은 바꾸지 않았다.
+- 등록 메타데이터는 [JSON 기록](2026-10-19-gemini-registration.json)에 있으며 키 원문은 포함하지 않는다. 새 키 원문은 로컬 파일·Git·채팅에 저장하지 않았다. 사용자 Google Cloud의 키 관리 화면에서 관리한다.
+
+[프로젝트 API 키 관리](https://console.cloud.google.com/apis/credentials?project=yumidang-jh-test-261019), [AI Studio 키 관리](https://aistudio.google.com/api-keys). AI Studio에 프로젝트가 안 보이면 Projects → Import projects에서 위 프로젝트를 가져온다. 키 원문을 채팅에 붙이지 않는다.
+
+## 생성 응답 노출과 조치
+
+최초 gcloud 키 생성 명령은 format 옵션에도 완료 로그의 JSON에 키 원문을 포함했다. 이를 인지한 뒤 해당 키를 즉시 삭제하고 삭제 시각이 있는 상태를 확인했다. 이후 CLI 응답을 메모리에서 필터링하고 파일 로그를 비활성화하는 방식으로 새 키를 발급했다. 새 키는 Gemini API 제한·서비스 계정 연결·모델 목록 HTTP200까지 확인했다. 노출된 이전 키와 현재 키의 리소스 식별자는 JSON 기록에서 구분하며 원문은 기록하지 않는다.
+
+## 다음 단계
+
+새 키 발급은 Gemini를 실회원용 운영 공급사로 확정하거나 기존 포텐스닷 어댑터를 교체한 것이 아니다. 앱에 키를 넣지 않고, 민규가 서버 공급사 포트·동의·데이터 처리 조건·예산·실패 시 전환을 먼저 설계한 후 별도 연결한다. 테스트에서 생성 호출이 필요하면 가상 입력·무료 quota·모델별 제한을 확인한 범위로 검증한다.

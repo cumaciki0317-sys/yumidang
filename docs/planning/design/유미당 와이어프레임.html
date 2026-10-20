@@ -1080,6 +1080,7 @@ textarea.inp{height:auto; min-height:76px; padding:10px 12px; line-height:1.55; 
 </style>
 </head>
 <body>
+<div class="docnotice"><b>행사 화면 현행 기준</b><span>이 파일의 기존 행사 모형은 이전 구현 참고입니다. 현재 작성 위치·날짜 비강제·직접 입력·비표출·통합 기준은 <a href="행사UX_미리보기.html" style="color:#fff;text-decoration:underline">최신 행사 UX 미리보기</a>와 <a href="../../collaboration/requests/jonghyun/2026-10-20-event-ux-approved-spec.md" style="color:#fff;text-decoration:underline">확정 명세</a>를 따릅니다. 기존 모의 동작을 실제 서버 지원으로 보지 않습니다.</span></div>
 
 
 <div class="docnotice">
@@ -2895,7 +2896,7 @@ S({id:"S20",name:"AI 동행 탐색",form:"전체 화면",group:"AI 탐색",task:
      "대화는 클라이언트 메모리에만 유지 (서버/로컬스토리지 영구 미저장)",
      "AI 동의 철회 후 해당 AI 처리 중단",
      "프로토타입 범위: 카테고리/주요지역/무료/주말 필터링 가능, 세부 운영시간·실시간 날짜 계산·미등록 지역 인식은 2단계 과제"
-   ], ["행사 카드 클릭 → S09-3 행사 상세", "동행 카드 클릭 → S02 공고 상세", "뒤로가기 → 이전 화면"], "두 AI 가입 필수 동의는 제품 의도이며 법률 검토 대기입니다. 최초 이용 별도 동의 팝업은 제공하지 않습니다.")
+   ], ["행사 카드 클릭 → S09-3 행사 상세", "동행 카드 클릭 → S02 공고 상세", "뒤로가기 → 이전 화면"], "AI 탐색은 첫 사용 시 동의받고 거절하면 일반 검색을 유지합니다. 후기 AI 세 항목은 가입 시 선택 동의이며 기본 미선택·전체 동의 편의 기능을 제공합니다. 미동의여도 가입·일반 동행을 유지하고 해당 AI 기능·처리만 제한합니다. 이는 최신 설계 설명이며 시안의 실제 동의 화면·동작 구현과 법적 적합성 확인은 별도입니다.")
   }) + consentModal;
  }
 });
@@ -2914,7 +2915,7 @@ var MEMO = [
  ["합성 자료", "모든 회원·대화·신고·후기·행사와 순위는 화면 검토용 예시다. 외부 로그인·공급사·AI·메일·DB 요청을 실행하지 않는다."],
  ["시간과 운영 검토", "상세 보기 아래 검토 도구에서 시간을 이동하고 상대 완료·분쟁·운영 결정을 재현한다. 실제 운영자 도구가 아니다."],
  ["개인정보 경계", "비로그인 프로필은 중립 자리표시자만 렌더링한다. 확정 당사자의 실명·상세 지점은 취소 시 즉시 숨긴다. 합성 데이터가 포함된 이 정적 파일은 서버 접근 통제의 증거가 아니다."],
- ["외부·팀 확인", "포텐스닷 보관 조건, AI 가입 필수 동의 적합성, 실제 신고 담당, 운영 주체·보관 근거와 백업은 정책 상단을 따른다."]
+ ["외부·팀 확인", "포텐스닷 보관 조건, AI 선택 동의 적합성, 실제 신고 담당, 운영 주체·보관 근거와 백업은 정책 상단을 따른다."]
 ];
 
 /* ════════ 렌더 ════════ */
@@ -3854,7 +3855,7 @@ var originalGoBack=goBack;goBack=function(){if(cur.id==='S20')clearAiChatSession
 var originalSync=syncChatScreen;syncChatScreen=function(){Object.values(CHAT_ROOMS).forEach(lifecycle);originalSync();if(cur.id==='S16'){var r=roomNow();cur.st=r.dispute?'dispute':r.match.status==='ended'||r.invalid?'canceled':r.completedAt?'done':r.completions[cur.role]?'hold':POLICY.now>=chatInterval(currentPost())[1]?'endable':'upcoming';}};
 var originalDemo=setChatDemoState;setChatDemoState=function(st){originalDemo(st);var r=roomNow();r.applied=true;if(r.match.status==='waiting')r.requestExpires=Math.min(POLICY.now+6*HOUR,chatInterval(currentPost())[0]);if(r.match.status==='confirmed')r.confirmedAt=POLICY.now;if(r.proposal)r.proposal.expires=Math.min(POLICY.now+6*HOUR,chatInterval(currentPost())[0]);};
 // Product screens use the lifecycle above; scenario controls stay outside the phone frame.
-byId('S06').notes=note(['AI 탐색·후기 요약을 각각 가입 필수 동의로 받으려는 제품 의도는 법적 적합성 검토 대기다. 현재 시안은 이를 이유로 가입을 차단하지 않는다.','실제 제공처·처리 항목·보관/철회 문구 확정 전 외부 전송하지 않는다.'],['가입 완료 → S00']);
+byId('S06').notes=note(['AI 탐색은 첫 사용 시 별도 동의받고 거절하면 일반 검색을 유지한다. 후기 요약 열람·내 프로필 요약 생성·노출·작성 후기 AI 활용은 가입 시 각각 선택 동의이며 기본 미선택·전체 동의 편의 기능을 제공한다. 미동의여도 가입·일반 동행을 허용하고 해당 AI 기능·처리만 제한한다. 각 항목의 독립 철회는 유지하며 최신 설계 설명과 시안의 실제 동의 화면·동작 구현은 구분한다.','실제 제공처·처리 항목·보관/철회 문구 확정 전 외부 전송하지 않는다.'],['가입 완료 → S00']);
 var oldS16=byId('S16').r;byId('S16').roles=true;byId('S16').r=function(c){var r=roomNow();if(r.match.status!=='confirmed'&&r.match.status!=='ended')return F({top:nav({back:true,title:'약속 상세'}),body:wrap(box('확정된 약속이 없어요.'))});var html=oldS16(c);return html.replace('</section><button class="s16-safety"','</section><button class="s16-safety"');};
 var oldS17=byId('S17').r;byId('S17').roles=true;byId('S17').r=function(c){var r=roomNow(),role=c.role||cur.role;REVIEW=r.reviews[role]||null;if(c.st==='published'){var reviews=Object.keys(r.reviews).filter(function(k){return reviewPublic(r,k);});return SH({top:nav({closeRight:true,title:'공개 후기'}),body:wrap(reviews.length?reviews.map(function(k){var rv=r.reviews[k];return '<div class="card"><b>'+esc(k===role?'내가 쓴 후기':'상대가 쓴 후기')+'</b><p>'+esc(rv.mood)+' · '+rv.stars+'점</p><p>'+esc(rv.comment)+'</p><p>'+rv.praise.map(esc).join(' · ')+'</p>'+action('후기 신고','report-open','s')+'</div>';}).join(''):box('아직 공개된 후기가 없어요. 동행 실제 완료와 공개 조건을 확인해 주세요.')),bot:wrap(link('약속으로','S16','','s'))});}var state=r.dispute?'hold':REVIEW?'submitted':canReview(r,role)?'write':'unavailable';return oldS17({st:state,role:role});};
 byId('S21').r=function(c){var r=roomNow(),sanctions=POLICY.sanctions.filter(function(s){return !s.invalid;});var body='<h2>계정 및 안전 상태</h2>'+box(restricted()?'신규 공고·신청·확정 이용 제한 중':'정상 이용 가능')+'<div class="card"><b>'+esc(DEMO_USER.name)+'</b><p>네이버 · '+esc(DEMO_USER.gender)+' · 만 '+DEMO_USER.age+'세</p><p>당도 '+sweetness(cur.role)+' · 완료 '+Object.values(CHAT_ROOMS).filter(function(x){return x.completedAt&&!x.invalid&&!x.previousAccount;}).length+'회</p></div><h3>제재·이의 신청</h3><p>확정 동행 연속 3회 취소 시 첫 경고, 이후 연속 3회마다 7일 제한이에요. 일반 위반은 경고→7일→30일, 중대 위반은 확인 후 영구 제한해요.</p>'+(POLICY.cancelWarning?box('연속 취소 경고가 있어요.'):box('연속 취소 경고가 없어요.'))+sanctions.map(function(s){var i=POLICY.sanctions.indexOf(s);return '<div class="card">'+esc(s.kind)+' · '+(s.until===Infinity?'영구 제한':s.until>s.at?policyTime(s.until)+'까지':'경고')+'<p>사유·제재 이의는 안내 후 7일 이내 접수할 수 있어요.</p>'+(s.kind==='cancel'?'':action('제재 이의 신청','sanction-appeal','s','data-index="'+i+'"'))+'</div>';}).join('')+(r.cancelledAt?action('취소 사유 이의 신청 (24시간)','cancel-appeal','s'):'')+'<h3>AI 동의 관리</h3>'+['explore','summary'].map(function(k){return '<div class="card">'+(k==='explore'?'AI 탐색':'AI 후기 요약')+' · '+(POLICY.aiConsent[k]?'이용 중': '철회 접수·새 처리 중단')+(POLICY.aiConsent[k]?action('동의 철회','ai-withdraw','s','data-kind="'+k+'"'):'')+'</div>';}).join('')+'<p>철회 시 해당 AI의 새 전송을 중단하고 관련 요약을 숨겨요. 계정과 일반 동행은 유지돼요.</p><h3>내 신고 내역</h3>'+POLICY.reports.map(function(x){return '<div class="card">접수번호 '+x.id+' · '+esc(x.status)+'<p>'+esc(x.description)+'</p></div>';}).join('')+'<h3>회원 탈퇴</h3><p>진행 중인 확정 동행만 먼저 정리해 주세요. 남은 후기 기간·분쟁만으로 탈퇴를 막지 않아요. 프로필·사진은 삭제되며, 같은 네이버 계정으로 즉시 재가입할 수 있어요. 적용 중인 제재는 남고 새 프로필은 당도15·완료0회로 시작해요.</p>'+action('회원 탈퇴','withdraw-confirm','dgr')+'<h3>고객지원·앱 밖 탈퇴</h3><p>유미당 · 대표 유미 · cumaciki0317@gmail.com</p><p>공개 개인정보처리방침의 회원 탈퇴 안내에서 이메일 접수를 제공해요. 본인 확인 후 삭제·별도 보관 항목을 안내하며 앱 재설치가 필요하지 않아요.</p>';return F({top:nav({back:true,title:'계정 상태 관리'}),body:wrap(body),bot:tabbar('me')});};

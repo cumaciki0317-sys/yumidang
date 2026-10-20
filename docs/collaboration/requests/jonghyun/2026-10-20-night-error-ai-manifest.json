@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-20",
+  "actor": "jonghyun",
+  "branch": "jonghyun/policy-review-20261017",
+  "head": "b164021323975c241d7a73145bdd66d9c3e6f097",
+  "paths": {
+    "apps/mobile/src/screens/RemoteMemberScreens.tsx": "0df08b009ead88b9f7be59a1f5b42afbecd17707bf121dc0ad1821b2c1f65b74",
+    "apps/mobile/src/screens/RemoteScreens.tsx": "c5d4e81fe07c644e06524a343c26d1a0c99a57d6399f8b177df404061c66501a",
+    "tests/mobile/member-failure-state.test.mjs": "db3b6917c259cc9dd9ab5e242da42e65bfef4ff33e8c2e712dc84d4ba5e83685",
+    "tests/mobile/ai-failure-state.test.mjs": "0b422750dbfb76f92599f5933199cdfe26a4ce3abcfad0a6c375e334715a4d5d",
+    "tests/mobile/remote-failure-browser.mjs": "ed5e75f294a6c3245f635e73245cbc2b2aeb28cc52392b30f35711a919530c9e"
+  },
+  "tasks": {
+    "3.6": {
+      "url": "https://app.notion.com/p/38444227a4358329a32c8153439c1d5f",
+      "notionStatus": "작업 중",
+      "handoff": "PERSISTED_VERIFIED_AFTER_RELOAD",
+      "proof": "2026-10-20-night-error-ai-evidence/notion-3.6.png"
+    },
+    "5.4b": {
+      "url": "https://app.notion.com/p/ddf44227a435827a87a1817155c676b3",
+      "notionStatus": "작업 중",
+      "handoff": "PERSISTED_VERIFIED_AFTER_RELOAD",
+      "proof": "2026-10-20-night-error-ai-evidence/notion-5.4b.png"
+    },
+    "6.3": {
+      "url": "https://app.notion.com/p/a7b44227a4358343b0d5014492f85b76",
+      "notionStatus": "작업 중",
+      "handoff": "PERSISTED_VERIFIED_AFTER_RELOAD",
+      "proof": "2026-10-20-night-error-ai-evidence/notion-6.3.png"
+    },
+    "6.5": {
+      "url": "https://app.notion.com/p/d4a44227a43582a69360813d166c87b6",
+      "notionStatus": "작업 중",
+      "handoff": "PERSISTED_VERIFIED_AFTER_RELOAD",
+      "proof": "2026-10-20-night-error-ai-evidence/notion-6.5.png"
+    }
+  },
+  "validation": {
+    "newClientRegressions": {
+      "pass": 32,
+      "fail": 0,
+      "components": {
+        "member": 16,
+        "ai": 16
+      }
+    },
+    "existingClientRegressions": {
+      "pass": 49,
+      "fail": 0
+    },
+    "browserBefore": {
+      "failures": [
+        "AI 응답 대기 중 새로 쓴 입력 보존",
+        "권한 회수 뒤 과거 페이지 본문 제거",
+        "화면 밖 요청 종료 후 복귀시 로딩 해제"
+      ]
+    },
+    "browserAfter": {
+      "pass": 37,
+      "fail": 0,
+      "externalRequests": 0,
+      "pageErrors": 0,
+      "sourceHashes": {
+        "RemoteMemberScreens.tsx": "0df08b009ead88b9f7be59a1f5b42afbecd17707bf121dc0ad1821b2c1f65b74",
+        "RemoteScreens.tsx": "c5d4e81fe07c644e06524a343c26d1a0c99a57d6399f8b177df404061c66501a"
+      }
+    },
+    "lint": "PASS",
+    "typecheck": "PASS"
+  },
+  "notRun": [
+    "real member",
+    "OAuth",
+    "operating DB",
+    "external AI/provider",
+    "physical device",
+    "commit",
+    "push",
+    "deployment"
+  ],
+  "questionCount": 0,
+  "ownership": "PASS source5 + handoff/evidence files; directory argument unsupported on first doc check, corrected to concrete files",
+  "preservation": {
+    "baselineSnapshot": "/private/tmp/night-remote-baseline-20261020",
+    "previousDirtyPreserved": true,
+    "automaticCommitPush": false,
+    "serverDomainPolicyChanged": false
+  },
+  "questionStatus": "ANSWERED_A_SERVER_AUTHORITY_FIRST",
+  "verificationNotes": [
+    "Browser before/after uses independent Metro cache versions and source hash UI guard; an earlier stale-cache after run was rejected, not reported PASS.",
+    "Notion virtualized content may not be present in initial DOM; final record markers verified only after loading the actual page bottom."
+  ],
+  "decision": {
+    "date": "2026-10-20",
+    "actor": "jonghyun",
+    "choice": "A",
+    "codeChanged": false,
+    "followup": "Minkyu server availability-state contract first; Jonghyun button integration after confirmed contract",
+    "serverIntegration": "NOT_IMPLEMENTED_BY_THIS_DECISION",
+    "notionPersisted": [
+      "5.4b",
+      "6.5"
+    ]
+  }
+}

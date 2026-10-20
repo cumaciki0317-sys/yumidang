@@ -1,0 +1,54 @@
+✖ request settling during blur cannot leave the refocused screen busy (135.848125ms)
+✖ previously paginated private messages disappear after refocus permission denial (72.515083ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 431.761875
+
+✖ failing tests:
+
+test at tests/mobile/member-failure-state.test.mjs:54:1
+✖ request settling during blur cannot leave the refocused screen busy (135.848125ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///private/tmp/yumidang-jonghyun-policy-review-20261017/tests/mobile/member-failure-state.test.mjs:58:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/mobile/member-failure-state.test.mjs:61:1
+✖ previously paginated private messages disappear after refocus permission denial (72.515083ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   {
+  +     content: '이전 비공개 메시지',
+  +     messageId: 'older',
+  +     senderId: 'peer'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///private/tmp/yumidang-jonghyun-policy-review-20261017/tests/mobile/member-failure-state.test.mjs:68:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { messageId: 'older', content: '이전 비공개 메시지', senderId: 'peer' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

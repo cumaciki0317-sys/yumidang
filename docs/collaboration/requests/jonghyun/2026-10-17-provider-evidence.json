@@ -1,0 +1,1359 @@
+{
+  "reviewedAt": "2026-10-17",
+  "seoul": {
+    "result": "HTTPS_FULL_JSON_DOWNLOADED",
+    "endpoint": "https://datafile.seoul.go.kr/bigfile/iot/sheet/json/download.do",
+    "method": "POST",
+    "form": "srvType=S&infId=OA-23041&serviceKind=0&pageNo=1&ssUserId=SAMPLE_VIEW&strWhere=&strOrderby=DATE+DESC",
+    "summary": {
+      "rows": 19637,
+      "fields": [
+        "cgg_cd",
+        "codename",
+        "date",
+        "end_date",
+        "etc_desc",
+        "guname",
+        "hmpg_addr",
+        "inquiry",
+        "is_free",
+        "lat",
+        "lot",
+        "main_img",
+        "org_link",
+        "org_name",
+        "place",
+        "player",
+        "pro_time",
+        "program",
+        "rgstdate",
+        "strtdate",
+        "themecode",
+        "ticket",
+        "title",
+        "use_fee",
+        "use_trgt"
+      ],
+      "ongoing": 284,
+      "old_ongoing": 227,
+      "unended": 414,
+      "nulls": {
+        "cgg_cd": 121,
+        "codename": 0,
+        "date": 0,
+        "end_date": 0,
+        "etc_desc": 19293,
+        "guname": 121,
+        "hmpg_addr": 0,
+        "inquiry": 3414,
+        "is_free": 8,
+        "lat": 496,
+        "lot": 496,
+        "main_img": 0,
+        "org_link": 270,
+        "org_name": 0,
+        "place": 0,
+        "player": 17660,
+        "pro_time": 0,
+        "program": 17467,
+        "rgstdate": 0,
+        "strtdate": 0,
+        "themecode": 3047,
+        "ticket": 0,
+        "title": 0,
+        "use_fee": 10637,
+        "use_trgt": 0
+      }
+    },
+    "rawSha256": "63392fa13e9f08a40df454e2c3a458a11b1f1eb812ec06dbd4c128a4dfe5c84c",
+    "limits": [
+      "두 날짜 스냅샷의 수정·삭제 반영 미검증",
+      "스케줄·배포환경·자동수집 안정성 미검증",
+      "원천 날짜 오류 격리 필요",
+      "미리보기 페이지 중복 확인으로 전체 JSON 경로 권고"
+    ]
+  },
+  "kopis": {
+    "result": "THREE_API_WEB_COMPARISONS_EQUAL_50_OF_50",
+    "comparisons": [
+      {
+        "label": "week-all",
+        "requestedPeriod": {
+          "start": "20261010",
+          "end": "20261016"
+        },
+        "genre": "",
+        "transportExit": 0,
+        "metadata": "200 0",
+        "root": "boxofs",
+        "basedate": null,
+        "rows": [
+          {
+            "rnum": "1",
+            "mt20id": "PF303043",
+            "prfnm": "스위니토드 (SWEENEY TODD)",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.04~2027.05.02"
+          },
+          {
+            "rnum": "2",
+            "mt20id": "PF300887",
+            "prfnm": "AKMU CONCERT: 소문의 낙원 (Paradise of Rumors) [부산]",
+            "cate": "대중음악",
+            "area": "부산",
+            "prfpd": "2026.12.19~2026.12.20"
+          },
+          {
+            "rnum": "3",
+            "mt20id": "PF300910",
+            "prfnm": "AKMU CONCERT: 소문의 낙원 (Paradise of Rumors) [대전]",
+            "cate": "대중음악",
+            "area": "대전",
+            "prfpd": "2026.12.05~2026.12.06"
+          },
+          {
+            "rnum": "4",
+            "mt20id": "PF303493",
+            "prfnm": "이찬원 콘서트: 찬스 감사제: 함께여서 찬란했습니다",
+            "cate": "대중음악",
+            "area": "경기",
+            "prfpd": "2026.12.18~2026.12.20"
+          },
+          {
+            "rnum": "5",
+            "mt20id": "PF300854",
+            "prfnm": "AKMU CONCERT: 소문의 낙원 (Paradise of Rumors) [대구]",
+            "cate": "대중음악",
+            "area": "대구",
+            "prfpd": "2026.11.21~2026.11.22"
+          },
+          {
+            "rnum": "6",
+            "mt20id": "PF301234",
+            "prfnm": "로이킴 LIVE TOUR, R: O: Y in SEOUL",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.20~2026.11.22"
+          },
+          {
+            "rnum": "7",
+            "mt20id": "PF302842",
+            "prfnm": "오페라의 유령 40주년 스페셜 시즌",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.22~2027.02.28"
+          },
+          {
+            "rnum": "8",
+            "mt20id": "PF303361",
+            "prfnm": "COUNTDOWN FANTASY",
+            "cate": "대중음악",
+            "area": "경기",
+            "prfpd": "2026.12.31~2026.12.31"
+          },
+          {
+            "rnum": "9",
+            "mt20id": "PF300893",
+            "prfnm": "AKMU CONCERT: 소문의 낙원 (Paradise of Rumors) [강릉]",
+            "cate": "대중음악",
+            "area": "강원",
+            "prfpd": "2026.11.07~2026.11.07"
+          },
+          {
+            "rnum": "10",
+            "mt20id": "PF303202",
+            "prfnm": "히어로 락 페스티벌 [인천]",
+            "cate": "대중음악",
+            "area": "인천",
+            "prfpd": "2026.12.18~2026.12.20"
+          },
+          {
+            "rnum": "11",
+            "mt20id": "PF303549",
+            "prfnm": "패닉 콘서트: PANIC IS COMING, AGAIN",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.04~2026.12.06"
+          },
+          {
+            "rnum": "12",
+            "mt20id": "PF303624",
+            "prfnm": "Pokémon The Orchestra",
+            "cate": "서양음악(클래식)",
+            "area": "서울",
+            "prfpd": "2026.11.28~2026.11.29"
+          },
+          {
+            "rnum": "13",
+            "mt20id": "PF291461",
+            "prfnm": "드라큘라 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.07.10~2026.10.18"
+          },
+          {
+            "rnum": "14",
+            "mt20id": "PF294946",
+            "prfnm": "엘리자벳",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.16~2026.11.15"
+          },
+          {
+            "rnum": "15",
+            "mt20id": "PF302516",
+            "prfnm": "레베카 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.24~2027.03.14"
+          },
+          {
+            "rnum": "16",
+            "mt20id": "PF303402",
+            "prfnm": "유니버설발레단, 호두까기인형 [서울 종로]",
+            "cate": "무용(서양/한국무용)",
+            "area": "서울",
+            "prfpd": "2026.12.17~2026.12.30"
+          },
+          {
+            "rnum": "17",
+            "mt20id": "PF295552",
+            "prfnm": "광화문연가 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.06~2026.11.15"
+          },
+          {
+            "rnum": "18",
+            "mt20id": "PF292160",
+            "prfnm": "겨울왕국 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.13~2027.03.01"
+          },
+          {
+            "rnum": "19",
+            "mt20id": "PF303398",
+            "prfnm": "영탁 단독 콘서트: TAK SHOW5 [인천]",
+            "cate": "대중음악",
+            "area": "인천",
+            "prfpd": "2026.12.19~2026.12.20"
+          },
+          {
+            "rnum": "20",
+            "mt20id": "PF302469",
+            "prfnm": "제네시스와 함께하는 필라델피아 오케스트라 & 마린 알솝",
+            "cate": "서양음악(클래식)",
+            "area": "서울",
+            "prfpd": "2026.11.07~2026.11.07"
+          },
+          {
+            "rnum": "21",
+            "mt20id": "PF302677",
+            "prfnm": "미세스 다웃파이어 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.03~2027.02.21"
+          },
+          {
+            "rnum": "22",
+            "mt20id": "PF302528",
+            "prfnm": "에픽하이 콘서트",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2027.01.22~2027.01.24"
+          },
+          {
+            "rnum": "23",
+            "mt20id": "PF302015",
+            "prfnm": "시카고 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.05~2027.03.14"
+          },
+          {
+            "rnum": "24",
+            "mt20id": "PF303546",
+            "prfnm": "메이트 단독 콘서트: be with mate",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.19~2026.12.20"
+          },
+          {
+            "rnum": "25",
+            "mt20id": "PF303488",
+            "prfnm": "SJF at the Theater, 백예린 X 윤석철",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.21~2026.11.21"
+          },
+          {
+            "rnum": "26",
+            "mt20id": "PF303571",
+            "prfnm": "박정현 소극장 콘서트: 이음",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.04~2026.12.06"
+          },
+          {
+            "rnum": "27",
+            "mt20id": "PF303466",
+            "prfnm": "비바두비 첫 내한공연 beabadoobee: The Powerlines Tour [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2027.03.23~2027.03.23"
+          },
+          {
+            "rnum": "28",
+            "mt20id": "PF297746",
+            "prfnm": "이승철 40주년 콘서트, THE VOICE: LEE SEUNG CHU [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.04~2026.12.06"
+          },
+          {
+            "rnum": "29",
+            "mt20id": "PF303562",
+            "prfnm": "풍류고생: 차라리 춤추다 죽겠어",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.05~2026.12.06"
+          },
+          {
+            "rnum": "30",
+            "mt20id": "PF296312",
+            "prfnm": "드림하이 시즌3: 리부트",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.08~2026.10.18"
+          },
+          {
+            "rnum": "31",
+            "mt20id": "PF303329",
+            "prfnm": "CRAVITY CONCERT: SONOROUS [부산]",
+            "cate": "대중음악",
+            "area": "부산",
+            "prfpd": "2026.11.21~2026.11.21"
+          },
+          {
+            "rnum": "32",
+            "mt20id": "PF291886",
+            "prfnm": "헬스키친",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.07.24~2026.11.08"
+          },
+          {
+            "rnum": "33",
+            "mt20id": "PF298171",
+            "prfnm": "오셀로와 이아고 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.08~2026.11.22"
+          },
+          {
+            "rnum": "34",
+            "mt20id": "PF299169",
+            "prfnm": "미드나잇: 앤틀러스 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.04~2026.11.15"
+          },
+          {
+            "rnum": "35",
+            "mt20id": "PF301746",
+            "prfnm": "마하고니 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.03~2027.01.24"
+          },
+          {
+            "rnum": "36",
+            "mt20id": "PF301499",
+            "prfnm": "조용필 & 위대한 탄생 전국투어 콘서트 [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.27~2026.11.29"
+          },
+          {
+            "rnum": "37",
+            "mt20id": "PF303613",
+            "prfnm": "신지훈 단독 콘서트: J의 작업실",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.05~2026.12.06"
+          },
+          {
+            "rnum": "38",
+            "mt20id": "PF299346",
+            "prfnm": "렛미플라이 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.06~2027.01.03"
+          },
+          {
+            "rnum": "39",
+            "mt20id": "PF301152",
+            "prfnm": "캣츠 내한공연 [대구]",
+            "cate": "뮤지컬",
+            "area": "대구",
+            "prfpd": "2026.12.18~2027.01.03"
+          },
+          {
+            "rnum": "40",
+            "mt20id": "PF292306",
+            "prfnm": "디어 에반 핸슨 (Musical Dear Evan Hansen) [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.01~2026.11.01"
+          },
+          {
+            "rnum": "41",
+            "mt20id": "PF303435",
+            "prfnm": "리베란테 (Libelante) , XSCALA SERIES: RECORD",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.14~2026.11.15"
+          },
+          {
+            "rnum": "42",
+            "mt20id": "PF303485",
+            "prfnm": "HAON 1st Solo Concert: ARK",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.21~2026.11.21"
+          },
+          {
+            "rnum": "43",
+            "mt20id": "PF303133",
+            "prfnm": "인트라 무로스 (INTRA MUROS)",
+            "cate": "연극",
+            "area": "서울",
+            "prfpd": "2026.11.10~2027.02.14"
+          },
+          {
+            "rnum": "44",
+            "mt20id": "PF303574",
+            "prfnm": "Jang Wooyoung Concert",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.14~2026.11.15"
+          },
+          {
+            "rnum": "45",
+            "mt20id": "PF298745",
+            "prfnm": "클로저 [대학로]",
+            "cate": "연극",
+            "area": "서울",
+            "prfpd": "2026.09.15~2026.12.06"
+          },
+          {
+            "rnum": "46",
+            "mt20id": "PF303327",
+            "prfnm": "한수원 뮤직 페스티벌: THE THEATER [경주]",
+            "cate": "대중음악",
+            "area": "경북",
+            "prfpd": "2026.11.13~2026.11.14"
+          },
+          {
+            "rnum": "47",
+            "mt20id": "PF300915",
+            "prfnm": "AKMU CONCERT: 소문의 낙원 (Paradise of Rumors) [전남 광주]",
+            "cate": "대중음악",
+            "area": "전남광주",
+            "prfpd": "2026.12.25~2026.12.25"
+          },
+          {
+            "rnum": "48",
+            "mt20id": "PF303322",
+            "prfnm": "EVNNE FAN-CONCERT: ONE TAKE [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.21~2026.11.22"
+          },
+          {
+            "rnum": "49",
+            "mt20id": "PF302940",
+            "prfnm": "JEONGHAN X JOSHUA JOURNEY INTO: DREAMING [인천]",
+            "cate": "대중음악",
+            "area": "인천",
+            "prfpd": "2026.10.30~2026.11.01"
+          },
+          {
+            "rnum": "50",
+            "mt20id": "PF303450",
+            "prfnm": "KBS교향악단 70주년 기념 송년음악회: 합창",
+            "cate": "서양음악(클래식)",
+            "area": "서울",
+            "prfpd": "2026.12.24~2026.12.24"
+          }
+        ],
+        "comparison": {
+          "apiCount": 50,
+          "webCount": 50,
+          "allPairsEqual": true,
+          "top10PairsEqual": true,
+          "matchingSamePositions": 50,
+          "webCurDate": "2026.10.16",
+          "webPostDate": "2026.10.16 17:29",
+          "firstDifferent": []
+        }
+      },
+      {
+        "label": "week-musical",
+        "requestedPeriod": {
+          "start": "20261010",
+          "end": "20261016"
+        },
+        "genre": "GGGA",
+        "transportExit": 0,
+        "metadata": "200 0",
+        "root": "boxofs",
+        "basedate": null,
+        "rows": [
+          {
+            "rnum": "1",
+            "mt20id": "PF303043",
+            "prfnm": "스위니토드 (SWEENEY TODD)",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.04~2027.05.02"
+          },
+          {
+            "rnum": "2",
+            "mt20id": "PF302842",
+            "prfnm": "오페라의 유령 40주년 스페셜 시즌",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.22~2027.02.28"
+          },
+          {
+            "rnum": "3",
+            "mt20id": "PF291461",
+            "prfnm": "드라큘라 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.07.10~2026.10.18"
+          },
+          {
+            "rnum": "4",
+            "mt20id": "PF294946",
+            "prfnm": "엘리자벳",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.16~2026.11.15"
+          },
+          {
+            "rnum": "5",
+            "mt20id": "PF302516",
+            "prfnm": "레베카 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.24~2027.03.14"
+          },
+          {
+            "rnum": "6",
+            "mt20id": "PF295552",
+            "prfnm": "광화문연가 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.06~2026.11.15"
+          },
+          {
+            "rnum": "7",
+            "mt20id": "PF292160",
+            "prfnm": "겨울왕국 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.13~2027.03.01"
+          },
+          {
+            "rnum": "8",
+            "mt20id": "PF302677",
+            "prfnm": "미세스 다웃파이어 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.03~2027.02.21"
+          },
+          {
+            "rnum": "9",
+            "mt20id": "PF302015",
+            "prfnm": "시카고 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.05~2027.03.14"
+          },
+          {
+            "rnum": "10",
+            "mt20id": "PF296312",
+            "prfnm": "드림하이 시즌3: 리부트",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.08~2026.10.18"
+          },
+          {
+            "rnum": "11",
+            "mt20id": "PF291886",
+            "prfnm": "헬스키친",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.07.24~2026.11.08"
+          },
+          {
+            "rnum": "12",
+            "mt20id": "PF298171",
+            "prfnm": "오셀로와 이아고 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.08~2026.11.22"
+          },
+          {
+            "rnum": "13",
+            "mt20id": "PF299169",
+            "prfnm": "미드나잇: 앤틀러스 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.04~2026.11.15"
+          },
+          {
+            "rnum": "14",
+            "mt20id": "PF301746",
+            "prfnm": "마하고니 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.03~2027.01.24"
+          },
+          {
+            "rnum": "15",
+            "mt20id": "PF299346",
+            "prfnm": "렛미플라이 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.06~2027.01.03"
+          },
+          {
+            "rnum": "16",
+            "mt20id": "PF301152",
+            "prfnm": "캣츠 내한공연 [대구]",
+            "cate": "뮤지컬",
+            "area": "대구",
+            "prfpd": "2026.12.18~2027.01.03"
+          },
+          {
+            "rnum": "17",
+            "mt20id": "PF292306",
+            "prfnm": "디어 에반 핸슨 (Musical Dear Evan Hansen) [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.01~2026.11.01"
+          },
+          {
+            "rnum": "18",
+            "mt20id": "PF303127",
+            "prfnm": "플릭스! (Musical FLIX!)",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.17~2026.11.28"
+          },
+          {
+            "rnum": "19",
+            "mt20id": "PF297912",
+            "prfnm": "곤 투모로우 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.15~2026.11.29"
+          },
+          {
+            "rnum": "20",
+            "mt20id": "PF303220",
+            "prfnm": "팬레터 [창원]",
+            "cate": "뮤지컬",
+            "area": "경남",
+            "prfpd": "2026.12.24~2026.12.25"
+          },
+          {
+            "rnum": "21",
+            "mt20id": "PF300598",
+            "prfnm": "수레바퀴 아래서 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.13~2027.01.03"
+          },
+          {
+            "rnum": "22",
+            "mt20id": "PF298032",
+            "prfnm": "난세: 정도전과 이방원의 이야기 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.08~2026.11.29"
+          },
+          {
+            "rnum": "23",
+            "mt20id": "PF301308",
+            "prfnm": "하트비트: 심폐소생일지 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.20~2027.01.03"
+          },
+          {
+            "rnum": "24",
+            "mt20id": "PF298792",
+            "prfnm": "섬: 1933~2019",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.22~2026.11.22"
+          },
+          {
+            "rnum": "25",
+            "mt20id": "PF296148",
+            "prfnm": "소크라테스 패러독스",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.10~2026.11.29"
+          },
+          {
+            "rnum": "26",
+            "mt20id": "PF301066",
+            "prfnm": "광화문 연가 [대구]",
+            "cate": "뮤지컬",
+            "area": "대구",
+            "prfpd": "2026.12.05~2026.12.06"
+          },
+          {
+            "rnum": "27",
+            "mt20id": "PF303594",
+            "prfnm": "브로큰 넘버스 (BROKEN NUMBERS)",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.18~2027.02.07"
+          },
+          {
+            "rnum": "28",
+            "mt20id": "PF291533",
+            "prfnm": "빨래: 32차 프로덕션",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.06.11~2027.02.21"
+          },
+          {
+            "rnum": "29",
+            "mt20id": "PF298163",
+            "prfnm": "연의 편지 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.16~2026.11.29"
+          },
+          {
+            "rnum": "30",
+            "mt20id": "PF297794",
+            "prfnm": "엠. 버터플라이",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.22~2026.12.13"
+          },
+          {
+            "rnum": "31",
+            "mt20id": "PF296104",
+            "prfnm": "콰이어 오브 맨 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.18~2027.01.03"
+          },
+          {
+            "rnum": "32",
+            "mt20id": "PF301439",
+            "prfnm": "광화문연가 [인천]",
+            "cate": "뮤지컬",
+            "area": "인천",
+            "prfpd": "2026.12.19~2026.12.20"
+          },
+          {
+            "rnum": "33",
+            "mt20id": "PF300704",
+            "prfnm": "광화문연가 [부산]",
+            "cate": "뮤지컬",
+            "area": "부산",
+            "prfpd": "2026.11.21~2026.11.22"
+          },
+          {
+            "rnum": "34",
+            "mt20id": "PF300974",
+            "prfnm": "두 도시 이야기",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.11~2027.02.08"
+          },
+          {
+            "rnum": "35",
+            "mt20id": "PF301867",
+            "prfnm": "광화문 연가 [세종]",
+            "cate": "뮤지컬",
+            "area": "세종",
+            "prfpd": "2026.12.26~2026.12.27"
+          },
+          {
+            "rnum": "36",
+            "mt20id": "PF296139",
+            "prfnm": "미드나잇: 액터뮤지션 THE CHOICE [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.11~2026.11.29"
+          },
+          {
+            "rnum": "37",
+            "mt20id": "PF299855",
+            "prfnm": "이끼숲",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.01~2026.12.13"
+          },
+          {
+            "rnum": "38",
+            "mt20id": "PF282162",
+            "prfnm": "서울시뮤지컬단, 크리스마스 캐럴",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.02~2026.12.27"
+          },
+          {
+            "rnum": "39",
+            "mt20id": "PF298497",
+            "prfnm": "사의찬미 2ND STAGE [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.08~2026.10.25"
+          },
+          {
+            "rnum": "40",
+            "mt20id": "PF285591",
+            "prfnm": "저항: 찬송이 된 사람들",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.04.10~2026.12.19"
+          },
+          {
+            "rnum": "41",
+            "mt20id": "PF303276",
+            "prfnm": "사의찬미 [서울 영등포]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.20~2026.11.22"
+          },
+          {
+            "rnum": "42",
+            "mt20id": "PF301001",
+            "prfnm": "광화문 연가 [수원]",
+            "cate": "뮤지컬",
+            "area": "경기",
+            "prfpd": "2027.01.02~2027.01.03"
+          },
+          {
+            "rnum": "43",
+            "mt20id": "PF301682",
+            "prfnm": "빨래 [대구]",
+            "cate": "뮤지컬",
+            "area": "대구",
+            "prfpd": "2026.11.25~2026.11.28"
+          },
+          {
+            "rnum": "44",
+            "mt20id": "PF299287",
+            "prfnm": "드라큘라 [대구]",
+            "cate": "뮤지컬",
+            "area": "대구",
+            "prfpd": "2026.10.27~2026.11.01"
+          },
+          {
+            "rnum": "45",
+            "mt20id": "PF297712",
+            "prfnm": "잔혹동화 생존기 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.08~2026.11.29"
+          },
+          {
+            "rnum": "46",
+            "mt20id": "PF298880",
+            "prfnm": "뮤지컬 오페라",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.01~2026.10.18"
+          },
+          {
+            "rnum": "47",
+            "mt20id": "PF298593",
+            "prfnm": "아나키스트 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.15~2026.12.06"
+          },
+          {
+            "rnum": "48",
+            "mt20id": "PF302744",
+            "prfnm": "식스 더 뮤지컬 (SIX THE MUSICAL)",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.15~2027.03.01"
+          },
+          {
+            "rnum": "49",
+            "mt20id": "PF294425",
+            "prfnm": "사칠",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.04~2026.10.25"
+          },
+          {
+            "rnum": "50",
+            "mt20id": "PF296319",
+            "prfnm": "다이브 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.18~2026.11.08"
+          }
+        ],
+        "comparison": {
+          "apiCount": 50,
+          "webCount": 50,
+          "allPairsEqual": true,
+          "top10PairsEqual": true,
+          "matchingSamePositions": 50,
+          "webCurDate": "2026.10.16",
+          "webPostDate": "2026.10.16 17:29",
+          "firstDifferent": []
+        }
+      },
+      {
+        "label": "prevweek-all",
+        "requestedPeriod": {
+          "start": "20261003",
+          "end": "20261009"
+        },
+        "genre": "",
+        "transportExit": 0,
+        "metadata": "200 0",
+        "root": "boxofs",
+        "basedate": null,
+        "rows": [
+          {
+            "rnum": "1",
+            "mt20id": "PF302842",
+            "prfnm": "오페라의 유령 40주년 스페셜 시즌",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.22~2027.02.28"
+          },
+          {
+            "rnum": "2",
+            "mt20id": "PF302745",
+            "prfnm": "DAVICHI CONCERT: IN OUR SCENES",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.12~2026.12.13"
+          },
+          {
+            "rnum": "3",
+            "mt20id": "PF302940",
+            "prfnm": "JEONGHAN X JOSHUA JOURNEY INTO: DREAMING [인천]",
+            "cate": "대중음악",
+            "area": "인천",
+            "prfpd": "2026.10.30~2026.11.01"
+          },
+          {
+            "rnum": "4",
+            "mt20id": "PF302528",
+            "prfnm": "에픽하이 콘서트",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2027.01.22~2027.01.24"
+          },
+          {
+            "rnum": "5",
+            "mt20id": "PF302717",
+            "prfnm": "WOODZ WORLD TOUR Archive. 1: Completed",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.10.31~2026.11.01"
+          },
+          {
+            "rnum": "6",
+            "mt20id": "PF302516",
+            "prfnm": "레베카 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.11.24~2027.03.14"
+          },
+          {
+            "rnum": "7",
+            "mt20id": "PF303098",
+            "prfnm": "Xdinary Heroes Concert: IMPULSE [인천]",
+            "cate": "대중음악",
+            "area": "인천",
+            "prfpd": "2026.11.13~2026.11.15"
+          },
+          {
+            "rnum": "8",
+            "mt20id": "PF302752",
+            "prfnm": "하현상 콘서트: Funny Family",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.10.24~2026.10.25"
+          },
+          {
+            "rnum": "9",
+            "mt20id": "PF302644",
+            "prfnm": "CRAVITY CONCERT: SONOROUS [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.14~2026.11.15"
+          },
+          {
+            "rnum": "10",
+            "mt20id": "PF294946",
+            "prfnm": "엘리자벳",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.16~2026.11.15"
+          },
+          {
+            "rnum": "11",
+            "mt20id": "PF291461",
+            "prfnm": "드라큘라 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.07.10~2026.10.18"
+          },
+          {
+            "rnum": "12",
+            "mt20id": "PF302677",
+            "prfnm": "미세스 다웃파이어 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.03~2027.02.21"
+          },
+          {
+            "rnum": "13",
+            "mt20id": "PF295552",
+            "prfnm": "광화문연가 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.06~2026.11.15"
+          },
+          {
+            "rnum": "14",
+            "mt20id": "PF302015",
+            "prfnm": "시카고 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.05~2027.03.14"
+          },
+          {
+            "rnum": "15",
+            "mt20id": "PF302337",
+            "prfnm": "TOMORROW X TOGETHER WORLD TOUR: STEAL THE WIND [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.13~2026.11.15"
+          },
+          {
+            "rnum": "16",
+            "mt20id": "PF302793",
+            "prfnm": "스트릿 월드 파이터: 디렉터스 워 ON THE STAGE Tour [서울]",
+            "cate": "대중무용",
+            "area": "서울",
+            "prfpd": "2026.11.21~2026.11.22"
+          },
+          {
+            "rnum": "17",
+            "mt20id": "PF297912",
+            "prfnm": "곤 투모로우 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.15~2026.11.29"
+          },
+          {
+            "rnum": "18",
+            "mt20id": "PF292160",
+            "prfnm": "겨울왕국 [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.13~2027.03.01"
+          },
+          {
+            "rnum": "19",
+            "mt20id": "PF297746",
+            "prfnm": "이승철 40주년 콘서트, THE VOICE: LEE SEUNG CHU [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.04~2026.12.06"
+          },
+          {
+            "rnum": "20",
+            "mt20id": "PF302645",
+            "prfnm": "BOL4 CONCERT TOUR: Red Square",
+            "cate": "대중음악",
+            "area": "경기",
+            "prfpd": "2026.11.07~2026.11.08"
+          },
+          {
+            "rnum": "21",
+            "mt20id": "PF302702",
+            "prfnm": "윤마치 (MRCH) CONCERT, 공생관계: We Live Together",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.10.31~2026.11.01"
+          },
+          {
+            "rnum": "22",
+            "mt20id": "PF302693",
+            "prfnm": "장한별 콘서트: THE STAR IS BORN",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.10.31~2026.11.01"
+          },
+          {
+            "rnum": "23",
+            "mt20id": "PF301499",
+            "prfnm": "조용필 & 위대한 탄생 전국투어 콘서트 [서울]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.27~2026.11.29"
+          },
+          {
+            "rnum": "24",
+            "mt20id": "PF291886",
+            "prfnm": "헬스키친",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.07.24~2026.11.08"
+          },
+          {
+            "rnum": "25",
+            "mt20id": "PF303069",
+            "prfnm": "Zion.T LIVE",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.14~2026.11.15"
+          },
+          {
+            "rnum": "26",
+            "mt20id": "PF302734",
+            "prfnm": "스트릿 월드 파이터: 디렉터스 워 ON THE STAGE Tour [부산]",
+            "cate": "대중무용",
+            "area": "부산",
+            "prfpd": "2026.12.05~2026.12.05"
+          },
+          {
+            "rnum": "27",
+            "mt20id": "PF302829",
+            "prfnm": "NANAOAKARI, ALL EYES in Seoul",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2027.01.30~2027.01.30"
+          },
+          {
+            "rnum": "28",
+            "mt20id": "PF291729",
+            "prfnm": "현대카드 슈퍼콘서트 28, 위켄드 (The Weeknd)",
+            "cate": "대중음악",
+            "area": "경기",
+            "prfpd": "2026.10.07~2026.10.08"
+          },
+          {
+            "rnum": "29",
+            "mt20id": "PF298230",
+            "prfnm": "&TEAM CONCERT TOUR: BLAZE THE WAY [서울 (앵콜) ]",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.10.03~2026.10.04"
+          },
+          {
+            "rnum": "30",
+            "mt20id": "PF301152",
+            "prfnm": "캣츠 내한공연 [대구]",
+            "cate": "뮤지컬",
+            "area": "대구",
+            "prfpd": "2026.12.18~2027.01.03"
+          },
+          {
+            "rnum": "31",
+            "mt20id": "PF296312",
+            "prfnm": "드림하이 시즌3: 리부트",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.08~2026.10.18"
+          },
+          {
+            "rnum": "32",
+            "mt20id": "PF298745",
+            "prfnm": "클로저 [대학로]",
+            "cate": "연극",
+            "area": "서울",
+            "prfpd": "2026.09.15~2026.12.06"
+          },
+          {
+            "rnum": "33",
+            "mt20id": "PF292306",
+            "prfnm": "디어 에반 핸슨 (Musical Dear Evan Hansen) [서울]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.08.01~2026.11.01"
+          },
+          {
+            "rnum": "34",
+            "mt20id": "PF302622",
+            "prfnm": "박재정 콘서트: 기록",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.07~2026.11.08"
+          },
+          {
+            "rnum": "35",
+            "mt20id": "PF303046",
+            "prfnm": "스트릿 월드 파이터: 디렉터스 워 ON THE STAGE Tour [대전]",
+            "cate": "대중무용",
+            "area": "대전",
+            "prfpd": "2026.12.13~2026.12.13"
+          },
+          {
+            "rnum": "36",
+            "mt20id": "PF302732",
+            "prfnm": "박진영 콘서트: WET",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.12.24~2026.12.26"
+          },
+          {
+            "rnum": "37",
+            "mt20id": "PF303066",
+            "prfnm": "스트릿 월드 파이터: 디렉터스 워 ON THE STAGE Tour [대구]",
+            "cate": "대중무용",
+            "area": "대구",
+            "prfpd": "2026.12.19~2026.12.19"
+          },
+          {
+            "rnum": "38",
+            "mt20id": "PF298792",
+            "prfnm": "섬: 1933~2019",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.22~2026.11.22"
+          },
+          {
+            "rnum": "39",
+            "mt20id": "PF302744",
+            "prfnm": "식스 더 뮤지컬 (SIX THE MUSICAL)",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.12.15~2027.03.01"
+          },
+          {
+            "rnum": "40",
+            "mt20id": "PF302509",
+            "prfnm": "KGMA, KOREA GRAND MUSIC AWARD 코리아 그랜드 뮤직어워즈",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2026.11.07~2026.11.08"
+          },
+          {
+            "rnum": "41",
+            "mt20id": "PF302869",
+            "prfnm": "임윤찬 피아노 리사이틀 [김해]",
+            "cate": "서양음악(클래식)",
+            "area": "경남",
+            "prfpd": "2026.11.26~2026.11.26"
+          },
+          {
+            "rnum": "42",
+            "mt20id": "PF297978",
+            "prfnm": "꽃의 비밀 [대학로]",
+            "cate": "연극",
+            "area": "서울",
+            "prfpd": "2026.09.12~2026.11.29"
+          },
+          {
+            "rnum": "43",
+            "mt20id": "PF301534",
+            "prfnm": "조용필 & 위대한탄생 콘서트 [부산]",
+            "cate": "대중음악",
+            "area": "부산",
+            "prfpd": "2026.12.12~2026.12.13"
+          },
+          {
+            "rnum": "44",
+            "mt20id": "PF301684",
+            "prfnm": "조용필 & 위대한탄생 콘서트 [인천]",
+            "cate": "대중음악",
+            "area": "인천",
+            "prfpd": "2027.01.09~2027.01.09"
+          },
+          {
+            "rnum": "45",
+            "mt20id": "PF297794",
+            "prfnm": "엠. 버터플라이",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.09.22~2026.12.13"
+          },
+          {
+            "rnum": "46",
+            "mt20id": "PF300887",
+            "prfnm": "AKMU CONCERT: 소문의 낙원 (Paradise of Rumors) [부산]",
+            "cate": "대중음악",
+            "area": "부산",
+            "prfpd": "2026.12.19~2026.12.20"
+          },
+          {
+            "rnum": "47",
+            "mt20id": "PF302796",
+            "prfnm": "Hump Back: HELLO ANEW TOUR SEOUL",
+            "cate": "대중음악",
+            "area": "서울",
+            "prfpd": "2027.01.23~2027.01.23"
+          },
+          {
+            "rnum": "48",
+            "mt20id": "PF302270",
+            "prfnm": "V 에버 애프터 [대학로]",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.21~2027.01.17"
+          },
+          {
+            "rnum": "49",
+            "mt20id": "PF299855",
+            "prfnm": "이끼숲",
+            "cate": "뮤지컬",
+            "area": "서울",
+            "prfpd": "2026.10.01~2026.12.13"
+          },
+          {
+            "rnum": "50",
+            "mt20id": "PF298256",
+            "prfnm": "대구 힙합 페스티벌",
+            "cate": "대중음악",
+            "area": "대구",
+            "prfpd": "2026.12.25~2026.12.26"
+          }
+        ],
+        "comparison": {
+          "apiCount": 50,
+          "webCount": 50,
+          "allPairsEqual": true,
+          "top10PairsEqual": true,
+          "matchingSamePositions": 50,
+          "webCurDate": "2026.10.16",
+          "webPostDate": "2026.10.16 17:29",
+          "firstDifferent": []
+        }
+      }
+    ],
+    "limits": [
+      "모든 API 표본 basedate 누락",
+      "동률 처리·장기 갱신 지연·date 인자 의미 미확인",
+      "API명세 변경 공인 근거를 대신하지 않음",
+      "공개 보류 유지"
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "projectId": "yumidang-jh-test-261019",
+  "billingAccount": "01C854-2D3F7A-796640",
+  "requestedMonthlyKrw": 50000,
+  "billingLinked": true,
+  "prepaymentAuthorized": false,
+  "request": {
+    "displayName": "Yumidang Gemini monthly KRW 50000 spend cap",
+    "budgetFilter": {
+      "projects": [
+        "projects/266524605801"
+      ],
+      "services": [
+        "services/AEFD-7695-64FA"
+      ],
+      "creditTypesTreatment": "EXCLUDE_ALL_CREDITS",
+      "calendarPeriod": "MONTH"
+    },
+    "amount": {
+      "specifiedAmount": {
+        "currencyCode": "KRW",
+        "units": "50000",
+        "nanos": 0
+      }
+    },
+    "thresholdRules": [
+      {
+        "thresholdPercent": 0.5
+      },
+      {
+        "thresholdPercent": 0.8
+      },
+      {
+        "thresholdPercent": 1.0
+      }
+    ],
+    "notificationsRule": {
+      "enableProjectLevelRecipients": true
+    },
+    "spendCap": {
+      "inputState": "CONFIGURED"
+    }
+  },
+  "phase": "verify",
+  "httpStatus": 200,
+  "budget": {
+    "name": "billingAccounts/01C854-2D3F7A-796640/budgets/d679c71e-06cb-47ac-b190-1cd58fbd0c99",
+    "displayName": "Yumidang Gemini monthly KRW 50000 spend cap",
+    "budgetFilter": {
+      "projects": [
+        "projects/266524605801"
+      ],
+      "services": [
+        "services/AEFD-7695-64FA"
+      ],
+      "creditTypesTreatment": "EXCLUDE_ALL_CREDITS",
+      "calendarPeriod": "MONTH"
+    },
+    "amount": {
+      "specifiedAmount": {
+        "currencyCode": "KRW",
+        "units": "50000"
+      }
+    },
+    "thresholdRules": [
+      {
+        "thresholdPercent": 0.5,
+        "spendBasis": "CURRENT_SPEND"
+      },
+      {
+        "thresholdPercent": 0.8,
+        "spendBasis": "CURRENT_SPEND"
+      },
+      {
+        "thresholdPercent": 1,
+        "spendBasis": "CURRENT_SPEND"
+      }
+    ],
+    "notificationsRule": {
+      "enableProjectLevelRecipients": true
+    },
+    "etag": "1792391073947289",
+    "spendCap": {
+      "outputState": "CONFIGURED"
+    }
+  },
+  "configured": true,
+  "verificationField": "spendCap.outputState",
+  "selectedBillingAccountName": "My Billing Account",
+  "currencyCode": "KRW",
+  "prepaymentPerformed": false,
+  "autoReloadConfiguredByThisTask": false,
+  "generationRequestsByThisTask": 0,
+  "strictFinalChargeCapGuaranteed": false
+}

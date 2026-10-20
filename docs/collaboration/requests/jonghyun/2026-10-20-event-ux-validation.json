@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-20",
+  "documentCount": 53,
+  "documentHashes": "PASS",
+  "sourceAnswerImmutable": "PASS",
+  "newLocalLinks": 54,
+  "backendTechnicalFencesUnchanged": true,
+  "eventRegression": "12/12 PASS",
+  "prototype": {
+    "status": "PASS",
+    "externalRequests": 0,
+    "checks": [
+      "weekly-default",
+      "whole-range-search",
+      "general-event-bottom",
+      "event-origin-top",
+      "calendar-highlights",
+      "pre-event-date-not-forced",
+      "registration-error-preserves-draft",
+      "direct-input-public-address-confirmation",
+      "direct-input-post-only",
+      "cancelled-cta",
+      "nonpublication-hides-source-data",
+      "partial-source-hide",
+      "source-conflict-block",
+      "status-not-provided-allow",
+      "image-absent-and-error-no-placeholder",
+      "login-return",
+      "mobile-no-overflow",
+      "no-page-errors"
+    ],
+    "screenshots": [
+      "/private/tmp/event-ux-preview-desktop.png",
+      "/private/tmp/event-ux-preview-mobile.png"
+    ]
+  },
+  "lint": "PASS",
+  "typecheck": "PASS",
+  "webExport": "PASS",
+  "dependency": "Expo57 / expo-image-manipulator57.0.21",
+  "realProviderAndMemberRuntime": "NOT_RUN",
+  "commitPushDeploy": false
+}

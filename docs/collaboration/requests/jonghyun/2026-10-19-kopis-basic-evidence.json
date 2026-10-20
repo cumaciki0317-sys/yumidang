@@ -1,0 +1,124 @@
+{
+  "successfulNetworkRequests": 4,
+  "blockedSandboxAttempts": 2,
+  "verifiedAtKST": "2026-10-19 18:56:40+09:00",
+  "period": {
+    "start": "20261019",
+    "end": "20261118",
+    "inclusiveDays": 31
+  },
+  "allHttp200AndTLSVerified": true,
+  "listRows": 4,
+  "distinctPerformanceIds": 4,
+  "pageIds": [
+    [
+      "PF303837",
+      "PF303836"
+    ],
+    [
+      "PF303834",
+      "PF303829"
+    ]
+  ],
+  "pageOverlap": [],
+  "listEmptyFields": [
+    {
+      "id": "PF303837",
+      "fields": []
+    },
+    {
+      "id": "PF303836",
+      "fields": []
+    },
+    {
+      "id": "PF303834",
+      "fields": []
+    },
+    {
+      "id": "PF303829",
+      "fields": []
+    }
+  ],
+  "detailEmptyScalarFields": [
+    "prfcrew",
+    "prfruntime",
+    "entrpsnm",
+    "entrpsnmP",
+    "entrpsnmA",
+    "entrpsnmS"
+  ],
+  "detailMatchesRequestedPerformance": true,
+  "facilityMatchesDetailId": true,
+  "hallMatchesDetailId": true,
+  "coordinates": {
+    "latitude": "37.580502300000000",
+    "longitude": "127.00325620000000",
+    "validNumericRange": true
+  },
+  "address": "서울특별시 종로구 동숭길 3 (동숭동)",
+  "relatedLinks": {
+    "relate": {
+      "relatenm": "더하우스콘서트",
+      "relateurl": "https://thehouseconcert.com/sub/concert/schedule_view.php?idx=1511"
+    }
+  },
+  "imageUrlsRemainHttp": true,
+  "sourceMetadataDates": {
+    "frstregdt": "2026-10-19 17:32:08",
+    "updatedate": "2026-10-19 18:00:00.095087"
+  },
+  "evidence": [
+    {
+      "label": "list-page-1",
+      "endpoint": "pblprfr",
+      "params": {
+        "stdate": "20261019",
+        "eddate": "20261118",
+        "cpage": "1",
+        "rows": "2"
+      },
+      "rowCount": 2,
+      "sha256": "422d2654c5347a72f49d81c7c269e32a440e6866c4a9e837aaa814a739e3ae5a"
+    },
+    {
+      "label": "list-page-2",
+      "endpoint": "pblprfr",
+      "params": {
+        "stdate": "20261019",
+        "eddate": "20261118",
+        "cpage": "2",
+        "rows": "2"
+      },
+      "rowCount": 2,
+      "sha256": "bedb71e2fbced9f755dd75a00c7f2b75dd7e5e93e50143ab1a448088a65b7f68"
+    },
+    {
+      "label": "performance-detail",
+      "endpoint": "pblprfr/PF303837",
+      "params": {},
+      "rowCount": 1,
+      "sha256": "4f4b6a9e2240169d9be39b643cf2e237473f5c5d9da40fcfd5bb2f3edb534d88"
+    },
+    {
+      "label": "facility-detail",
+      "endpoint": "prfplc/FC002634",
+      "params": {},
+      "rowCount": 1,
+      "sha256": "13aae75f86a7340c93a9a5a9a675a4126bbd08856cb1b6eee8d253305313c9ce"
+    }
+  ],
+  "limitations": [
+    "2 pages, 4 list records, 1 detail, 1 facility only; not complete coverage",
+    "Related external site link not fetched; image HTTPS HEAD only, no image render tested",
+    "No refresh job, DB sync, deletion, ranking, production or app integration executed",
+    "Source N/0/empty values do not establish real-time facility availability or reservation capacity"
+  ],
+  "imageHeadNetworkRequests": 4,
+  "images": {
+    "wwwHttps": "301 to https://kopis.or.kr same path; no automatic redirects",
+    "canonicalHttps": "2/2 HTTP200, TLSverify=0, Content-Type=image/png, HEAD only",
+    "serverDateHeader": "Mon, 19 Oct 2026 09:57:07 GMT",
+    "bodyDownloaded": false,
+    "scope": "one poster and one introduction image only; no repository URL modification"
+  }
+}

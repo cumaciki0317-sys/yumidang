@@ -1,0 +1,164 @@
+{
+  "status": "PASS",
+  "source": "/private/tmp/yumidang-jonghyun-policy-review-20261017",
+  "sourceHashes": {
+    "RemoteMemberScreens.tsx": "0df08b009ead88b9f7be59a1f5b42afbecd17707bf121dc0ad1821b2c1f65b74",
+    "RemoteScreens.tsx": "c5d4e81fe07c644e06524a343c26d1a0c99a57d6399f8b177df404061c66501a"
+  },
+  "temp": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-night-browser-56IBsE",
+  "buildLog": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-night-browser-56IBsE/export.log",
+  "checks": [
+    {
+      "name": "AI 응답 대기 중 새로 쓴 입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI input_privacy 중단 안내·입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI input_privacy 자동 재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "AI input_privacy 실패를 0건으로 안내하지 않음",
+      "pass": true
+    },
+    {
+      "name": "AI output_privacy 중단 안내·입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI output_privacy 자동 재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "AI output_privacy 실패를 0건으로 안내하지 않음",
+      "pass": true
+    },
+    {
+      "name": "출력 재확인은 원 서버 요청 ID 연결",
+      "pass": true
+    },
+    {
+      "name": "AI daily_limit 중단 안내·입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI daily_limit 자동 재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "AI daily_limit 실패를 0건으로 안내하지 않음",
+      "pass": true
+    },
+    {
+      "name": "AI concurrent 중단 안내·입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI concurrent 자동 재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "AI concurrent 실패를 0건으로 안내하지 않음",
+      "pass": true
+    },
+    {
+      "name": "AI consent 중단 안내·입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI consent 자동 재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "AI consent 실패를 0건으로 안내하지 않음",
+      "pass": true
+    },
+    {
+      "name": "AI temporary 중단 안내·입력 보존",
+      "pass": true
+    },
+    {
+      "name": "AI temporary 자동 재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "AI temporary 실패를 0건으로 안내하지 않음",
+      "pass": true
+    },
+    {
+      "name": "고정 조건 검색은 AI 요청을 만들지 않음",
+      "pass": true
+    },
+    {
+      "name": "http401 실패 입력 보존·자동재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "http503 실패 입력 보존·자동재전송 없음",
+      "pass": true
+    },
+    {
+      "name": "새 대화 뒤 늦은 응답을 표시하지 않음",
+      "pass": true
+    },
+    {
+      "name": "채팅 이전 페이지 fixture 정상 표시",
+      "pass": true
+    },
+    {
+      "name": "권한 회수 뒤 과거 페이지 본문 제거",
+      "pass": true
+    },
+    {
+      "name": "메시지 503 실패 입력 보존·자동전송 없음",
+      "pass": true
+    },
+    {
+      "name": "메시지 401 실패 입력 보존·자동전송 없음",
+      "pass": true
+    },
+    {
+      "name": "메시지 403 실패 입력 보존·자동전송 없음",
+      "pass": true
+    },
+    {
+      "name": "메시지 409 실패 입력 보존·자동전송 없음",
+      "pass": true
+    },
+    {
+      "name": "메시지 410 실패 입력 보존·자동전송 없음",
+      "pass": true
+    },
+    {
+      "name": "같은 메시지 수동 재시도는 같은 ID",
+      "pass": true
+    },
+    {
+      "name": "화면 밖 요청 종료 후 복귀시 로딩 해제",
+      "pass": true
+    },
+    {
+      "name": "로그아웃 뒤 늦은 AI 응답 미표시",
+      "pass": true
+    },
+    {
+      "name": "페이지 런타임 오류 없음",
+      "pass": true
+    },
+    {
+      "name": "실제 외부 요청 없음",
+      "pass": true
+    },
+    {
+      "name": "모바일 가로 넘침 없음",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "requests": 51,
+  "scope": "Actual Expo web screens; synthetic HTTP/session only; no real server/provider/member/device"
+}
