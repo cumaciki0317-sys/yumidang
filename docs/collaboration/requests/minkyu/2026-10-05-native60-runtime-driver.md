@@ -1,5 +1,14 @@
 # native60 runtime cleanup 검증 후보
 
+## 2026-10-20 현행 기준과 이 문서의 적용 범위
+
+이 문서는 과거 요청·설계·검증 기록이다. 아래 원 관찰·명령·해시·PASS/FAIL은 당시 증거로 보존한다. 재개할 때는 다음 현행 조건을 먼저 적용하며 과거 작업 권한·보류를 현재 지시로 재사용하지 않는다.
+
+- AI 탐색 동의는 첫 사용 시 받고 거절하면 일반 검색을 유지한다. 후기 요약은 가입 시 열람·내 프로필 생성/노출·작성 후기 활용을 기본 미선택인 별도 선택 세 항목으로 받는다. 전체 동의와 개별 자세히 보기를 유지하고 미동의 가입/일반 동행을 허용한다. 세 동의의 철회는 독립적이다. 현재 서버의 summary_allowed 하나·review_summary 일괄 철회가 이 세분화 요구를 구현했다고 해석하지 않는다. 테스트 계정 동의 간주는 실제 동의 증거·DB 값 변경·회원 원문 전송 승인이 아니다.
+
+최신 기준: [정책.md](../../../../정책.md). 구현과 남은 조건: [서버·DB 대조 원장](../jonghyun/2026-10-20-policy-implementation-audit/server-audit.json).
+
+
 ## 상태와 소유 경계
 
 작업자 민규. main `tests/integration/minkyu/member_cleanup_native_local.ts`의 정확 snapshot SHA `d9d4a9748c4e90602d7ca54698ee892a87d9276de2c0e5a000d7738b771c3234`를 독립 worktree 같은 경로에 복사한 뒤 후보를 작성했다. 대상 driver와 이 문서의 소유권 검사를 통과했다. main/J/SQL/기존 adapter 및 DB ports는 수정하지 않았다. 실제 driver 실행·DB 연결·쓰기·권한 변경은 NOT_RUN이며 native60 적용과 별도 GO를 기다린다.

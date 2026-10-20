@@ -1,5 +1,14 @@
 # 종현 queue 실행기: 전용 LOGIN·TLS 연결 변경 요청
 
+## 2026-10-20 현행 기준과 이 문서의 적용 범위
+
+이 문서는 과거 요청·설계·검증 기록이다. 아래 원 관찰·명령·해시·PASS/FAIL은 당시 증거로 보존한다. 재개할 때는 다음 현행 조건을 먼저 적용하며 과거 작업 권한·보류를 현재 지시로 재사용하지 않는다.
+
+- 담당은 현재 민규=BE·AI·검색·행사·서버 운영, 종현=FE·UX/UI·앱 API/세션 소비·빌드, 유미=UT·출시/지원 책임이다. 아래 옛 종현 BE·성호 UI 배정은 당시 기록이며 현재 실행 권한으로 사용하지 않는다. 구체 파일은 현행 소유권 정책을 따른다.
+
+최신 기준: [정책.md](../../../../정책.md). 구현과 남은 조건: [서버·DB 대조 원장](../jonghyun/2026-10-20-policy-implementation-audit/server-audit.json).
+
+
 작성자 minkyu, 2026-10-05. 민규 별도 worktree에서 읽기·요청 문서만 작성했다. 후보 검토 후 민규 main worktree의 요청 문서로 반영했다. 종현 코드·DB 변경은 없다. 기존 [cleanup 연결 요청](2026-10-05-member-cleanup-worker-connection.md)과 [역할 provisioning](2026-10-05-worker-queue-role-provisioning.md)에 반영할 후속 후보이며 J 구현 완료가 아니다.
 
 ## 현재 코드와 연결 차이
