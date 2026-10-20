@@ -46,7 +46,11 @@ for r in refs:
 originals=load('decision-records.json')['original_sources']
 for f in originals:
  check(hashlib.sha256((R/f['path']).read_bytes()).hexdigest()==f['sha256'],'user original mutated '+f['path'])
- check(subprocess.check_output(['git','show',a['baseline']+':'+f['path']],cwd=R)==(R/f['path']).read_bytes(),'original differs from baseline '+f['path'])
+
+ if f.get('added_after_baseline'):
+  check(subprocess.check_output(['git','show',':'+f['path']],cwd=R)==(R/f['path']).read_bytes(),'new original differs from preserved index '+f['path'])
+ else:
+  check(subprocess.check_output(['git','show',a['baseline']+':'+f['path']],cwd=R)==(R/f['path']).read_bytes(),'original differs from baseline '+f['path'])
 for d in a['documents']:
  check((R/d['path']).is_file(),'missing document '+d['path'])
  check(hashlib.sha256((R/d['path']).read_bytes()).hexdigest()==d['after_sha256'],'stale document '+d['path'])

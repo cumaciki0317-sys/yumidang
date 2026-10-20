@@ -340,6 +340,11 @@
     "tools/local/README.md",
     "유미당_출시결정_보류사항_민규전달_20261005.md",
     "정책.md",
-    "포텐스닷.md"
-  ]
+    "포텐스닷.md",
+    "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html"
+  ],
+  "late_user_document": {
+    "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+    "reason": "진행 중 사용자가 추가 전달한 F01/F02/F03 원본. 기존 A/A/A 결정과 일치."
+  }
 }

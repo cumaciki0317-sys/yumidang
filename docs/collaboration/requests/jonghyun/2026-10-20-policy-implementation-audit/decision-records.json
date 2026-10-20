@@ -15,6 +15,12 @@
     {
       "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_최종선택_작성본.html",
       "sha256": "de23d0063cdf275bf8c5cf7c0d7426b45e922015c01a61977f4ef4712e29d754"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "sha256": "7bf25a2b45442d5f19703104fa897706b808ae6a491264cc61efce62a2050c00",
+      "received_at": "2026-10-20",
+      "added_after_baseline": true
     }
   ],
   "records": [
@@ -913,6 +919,45 @@
       "source": "docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/harness.json",
       "status": "사용자 확정",
       "reask": false
+    },
+    {
+      "id": "event-followup-file:F01",
+      "original_id": "F01",
+      "title": "행사 검색 자동 축소 없음",
+      "original_choice": "A",
+      "original_user_text": "",
+      "original_note": "",
+      "current_decision": "만남 날짜와 관계없이 연결 가능한 예정·진행 중 전체에서 검색하고 달력 날짜만 강조",
+      "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "status": "기존 텍스트 확정과 원본 파일 일치 확인",
+      "reask": false,
+      "new_policy_change": false
+    },
+    {
+      "id": "event-followup-file:F02",
+      "original_id": "F02",
+      "title": "공식 근거가 확실한 동일 행사 통합",
+      "original_choice": "A",
+      "original_user_text": "",
+      "original_note": "",
+      "current_decision": "공식 공통 식별자·정확한 행사 상세 링크 등으로 동일 개최 단위임을 검증한 것만 통합",
+      "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "status": "기존 텍스트 확정과 원본 파일 일치 확인",
+      "reask": false,
+      "new_policy_change": false
+    },
+    {
+      "id": "event-followup-file:F03",
+      "original_id": "F03",
+      "title": "원천별 공개 조건과 핵심 충돌",
+      "original_choice": "A",
+      "original_user_text": "",
+      "original_note": "",
+      "current_decision": "비표출 원천만 숨기고 유효 공개 원천 유지, 핵심 충돌은 안내·새 연결 제한·기존 약속 유지",
+      "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "status": "기존 텍스트 확정과 원본 파일 일치 확인",
+      "reask": false,
+      "new_policy_change": false
     }
   ],
   "rule": "원본 선택은 보존한다. 후속 사용자 결정이 더 구체적이거나 상반되면 후속 결정과 현재 정책을 적용한다. AI가 당시 이유를 지어 쓰지 않는다."

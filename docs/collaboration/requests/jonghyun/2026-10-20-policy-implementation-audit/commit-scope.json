@@ -326,5 +326,10 @@
   "original_policy_ownership_unchanged": true,
   "scope": "문서와 검토 산출물만. 코드/SQL/환경/키/운영 변경 없음.",
   "secrets_scan": "PASS, matched values never printed",
-  "owner_lane_note": "AI가 승인된 문서 동기화 절차를 원래 owner별 독립 clone에서 수행한다. 실제 팀원이 작업했다는 보고가 아니다."
+  "owner_lane_note": "AI가 승인된 문서 동기화 절차를 원래 owner별 독립 clone에서 수행한다. 실제 팀원이 작업했다는 보고가 아니다.",
+  "late_user_source": {
+    "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+    "policy_change": false,
+    "effect": "F01/F02/F03 A/A/A 텍스트 결정의 원본 근거 추가; 원본341개대조/사용자작성본5개보존"
+  }
 }

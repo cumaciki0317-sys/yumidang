@@ -6,7 +6,7 @@
       "path": "AGENTS.md",
       "kind": "current-guidance-sync",
       "before_sha256": "1ed2c02d301dee05226f74fc662594c87a3906275e94938da4ca83011cbb99c8",
-      "after_sha256": "cc174333d5cc5001145e5030df046931bb5cb90a0633fec38601ec6ee79f4887"
+      "after_sha256": "1544abbf547e8550b2540ecf7e4cf2f747e9ee9230c58494042189b920ec924d"
     },
     {
       "path": "PLAN.md",
@@ -18,7 +18,7 @@
       "path": "PLAN_상세설계.md",
       "kind": "current-guidance-sync",
       "before_sha256": "813c437821a135e781a61d588095ff872873684db3b786180b0cb9ef038c80fc",
-      "after_sha256": "5297f780bf573d1cdd39da6cf1637efd8a846e1283d98206bbafef3c5880c0c5"
+      "after_sha256": "ee56fe73eefdc4a3c6ebcab2abaecbd3f74452668eb41ad458f57613a18a0585"
     },
     {
       "path": "README.md",
@@ -54,7 +54,7 @@
       "path": "docs/planning/requirements/PRD.md",
       "kind": "current-guidance-sync",
       "before_sha256": "84015e428e07896c15fe32d59841e65f6f2b8977eafc4ae7eb6ab5b61b199fb4",
-      "after_sha256": "c12a91b1835d9192a413a6e4705bb2c294bdb847e6192db59482283d4291eb65"
+      "after_sha256": "769575673c37872f19f1c6d947f4e76d4cce04b39052e4c402f382217d797572"
     },
     {
       "path": "docs/planning/ut/README.md",
@@ -804,5 +804,9 @@
       "kind": "immutable-user-decision-original",
       "reason": "사용자가 작성한 원본 선택 증거 보존. 최신 정책과 감사 원장에 해석·승계 연결."
     }
+  ],
+  "parent_clarifications": [
+    "P033: 최신 확정 행사 기반 가입복귀 예외를 일반 홈복귀 문장에 명시",
+    "P246: 기존2026-10-14 사용자 확정 미전송 자동재시도 조건을 포괄 문장에 명시"
   ]
 }

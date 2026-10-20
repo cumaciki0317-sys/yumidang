@@ -15181,6 +15181,45 @@
       "source": "docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/harness.json",
       "status": "사용자 확정",
       "reask": false
+    },
+    {
+      "id": "event-followup-file:F01",
+      "original_id": "F01",
+      "title": "행사 검색 자동 축소 없음",
+      "original_choice": "A",
+      "original_user_text": "",
+      "original_note": "",
+      "current_decision": "만남 날짜와 관계없이 연결 가능한 예정·진행 중 전체에서 검색하고 달력 날짜만 강조",
+      "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "status": "기존 텍스트 확정과 원본 파일 일치 확인",
+      "reask": false,
+      "new_policy_change": false
+    },
+    {
+      "id": "event-followup-file:F02",
+      "original_id": "F02",
+      "title": "공식 근거가 확실한 동일 행사 통합",
+      "original_choice": "A",
+      "original_user_text": "",
+      "original_note": "",
+      "current_decision": "공식 공통 식별자·정확한 행사 상세 링크 등으로 동일 개최 단위임을 검증한 것만 통합",
+      "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "status": "기존 텍스트 확정과 원본 파일 일치 확인",
+      "reask": false,
+      "new_policy_change": false
+    },
+    {
+      "id": "event-followup-file:F03",
+      "original_id": "F03",
+      "title": "원천별 공개 조건과 핵심 충돌",
+      "original_choice": "A",
+      "original_user_text": "",
+      "original_note": "",
+      "current_decision": "비표출 원천만 숨기고 유효 공개 원천 유지, 핵심 충돌은 안내·새 연결 제한·기존 약속 유지",
+      "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "status": "기존 텍스트 확정과 원본 파일 일치 확인",
+      "reask": false,
+      "new_policy_change": false
     }
   ],
   "documents": [
@@ -19890,6 +19929,19 @@
         "행사·순위",
         "운영·역할"
       ]
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+      "owner": "jonghyun",
+      "kind": "원본 선택 증거 보존",
+      "changed": true,
+      "reason": "사용자가 작성한 원본 선택값·의견·내장 데이터는 바꾸지 않고 현재 정책 원장과 결정 기록에 연결했다.",
+      "before_committed_sha256": null,
+      "after_sha256": "7bf25a2b45442d5f19703104fa897706b808ae6a491264cc61efce62a2050c00",
+      "topics": [
+        "행사·순위",
+        "운영·역할"
+      ]
     }
   ],
   "questions": [],
@@ -19940,5 +19992,5 @@
       "retry_basis": "AI 일시 오류의 자동 재시도 조건은 backend/contracts/ai-chat.md의 2026-10-14 사용자 최신 선택과 generateWithPreDispatchRetry가 기준이다. 이번 설계에서 새로 정한 정책이 아니며 동일 결정의 정책/PRD 표현을 명확히 맞추는 대상이다."
     }
   },
-  "fingerprint": "5d16059427c30190bb5c158b05204625f601e4de7af474855746f7da453b076c"
+  "fingerprint": "de24decf7723b4805472f786691d8054052c83adb8304938852d0fc7549c6b67"
 }
