@@ -172,12 +172,6 @@ tests/database/minkyu/common_connections.sql과 경합runner에서 null sourceUr
 
 기존 wide provider(33~80자 또는 밑줄)는 source_events/view 및 deprecated list_event_candidates_v1에서 그대로 보존한다. 신규 list_public_events와 list_event_filter_values는 현재 E reader가 지원하는 1~32자·하이픈 provider 범위에 한정한다. 따라서 legacy 형식의 기록이 신규 페이지나 필터 목록 전체를 오류로 만들지 않는다. 해당 기록을 삭제·이름 변경·재저장하지 않으며 신규 API가 과거 provider 전체를 지원한다고 설명하지 않는다. 더 넓은 provider를 신규 화면에 연결하려면 reader와 RPC 계약을 함께 확장해야 한다. 실제 운영 자료가 있다는 뜻은 아니며 회귀 검사는 합성 legacy 기록으로 수행한다.
 
-## 2026-10-08 공개 상세 HTTP
-
-`GET /events/{eventId}`는 기존 저장소의 공개 투영을 재사용하는 `get_public_event`에 연결했다. 비로그인과 선택적 회원 JWT를 지원하되 잘못된 JWT를 비로그인으로 낮추지 않는다. 최신 저장 정보 및 취소 상태를 제공하고 공고의 정확한 만남 위치를 추가하지 않는다. 본인 숨김 행사 직접 조회는 404이며 다른 회원에게는 그대로 제공한다.
-
-`GET /events/rankings` → `get_public_event_ranking_state`의 현재 응답은 `{status:"not_enabled",reason:"KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING"}`다. 이 not_enabled는 기존 구현의 현재 응답이며, 새 공식 사이트 대조 공개·14분류 정책의 구현 완료를 뜻하지 않는다. 검증 상태·기간·분류·이전 성공 목록·지연 상태를 연결하는 별도 구현이 필요하다. 요청 날짜를 집계 기간으로 추정하거나 자체 순위를 생성하지 않는다. 공급사 호출은 발생하지 않는다.
-
 ## 2026-10-19 목록 페이지 연결·상한 수정
 
 KOPIS/TourAPI 목록 lane의 영속 cursor는 다음 페이지 숫자와 일치해야 한다. collector는 이를 검사한 뒤 공급사에는 page만 전달한다. 공급사 transport의 임의 cursor 거절은 유지하며, ongoing의 원천ID cursor는 변경하지 않는다. 공급사가 건너뛴 nextCursor를 반환하면 DB commit 전에 거절한다.
@@ -185,3 +179,10 @@ KOPIS/TourAPI 목록 lane의 영속 cursor는 다음 페이지 숫자와 일치�
 TourAPI의999페이지 요청 상한과 전체 수집 완료를 구분한다. 응답 totalCount에 남은 항목이 있으면 nextCursor를 유지하고 collector는 `PROVIDER_PAGE_LIMIT` partial을 반환한다.1000페이지 실제 요청은 기존 transport 검사가 거절한다. 기존 runtime의 상한 실패 정리와 실제 DB 증거는 별도로 판단한다.
 
 실제 공급사 factory와 합성 fetch·메모리 progress store를 연결한 신규12개 및 관련 기존 회귀를 포함해78개가 통과했다. 2페이지·5페이지 처리 후6페이지 재개·중복 효과 방지·저장cursor불일치·opaque ongoing·999페이지 잔여를 확인했다. [원 영수증](/private/tmp/yumidang-event-pagination-20261019/receipt.json)의 source3 SHA를 독립 검토했다. 외부 공급사 호출·실제 DB write·00:01운영등록·앱 표시 검증을 수행한 증거는 아니다. 최신 전체 잔여는 [민규 전체 담당](../../docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.md)에 유지한다.
+
+
+## 2026-10-08 공개 상세 HTTP
+
+`GET /events/{eventId}`는 기존 저장소의 공개 투영을 재사용하는 `get_public_event`에 연결했다. 비로그인과 선택적 회원 JWT를 지원하되 잘못된 JWT를 비로그인으로 낮추지 않는다. 최신 저장 정보 및 취소 상태를 제공하고 공고의 정확한 만남 위치를 추가하지 않는다. 본인 숨김 행사 직접 조회는 404이며 다른 회원에게는 그대로 제공한다.
+
+`GET /events/rankings` → `get_public_event_ranking_state`의 현재 응답은 `{status:"not_enabled",reason:"KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING"}`다. 이 not_enabled는 기존 구현의 현재 응답이며, 새 공식 사이트 대조 공개·14분류 정책의 구현 완료를 뜻하지 않는다. 검증 상태·기간·분류·이전 성공 목록·지연 상태를 연결하는 별도 구현이 필요하다. 요청 날짜를 집계 기간으로 추정하거나 자체 순위를 생성하지 않는다. 공급사 호출은 발생하지 않는다.
