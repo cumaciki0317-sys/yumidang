@@ -39,7 +39,12 @@ for name in ['root-doc-sync.json','client-doc-sync.json','server-doc-sync.json']
 changed=set(subprocess.check_output(['git','diff','--name-only','-z','72be7fb'],cwd=R).decode().split('\0'))
 documents=[]
 for p in raw['tracked_documents']:
- fp=R/p;s=fp.read_text();is_user='작성본' in p
+ fp=R/p
+ retired=raw.get('retired_documents',{}).get(p)
+ if retired:
+  documents.append({'path':p,'owner':owner(p),'kind':'사용자 요청으로 삭제','changed':True,'reason':retired['reason'],'retired':retired,'before_committed_sha256':retired['sha256'],'after_sha256':None,'topics':[]})
+  continue
+ s=fp.read_text();is_user='작성본' in p
  current=p in {'정책.md','PLAN.md','PLAN_상세설계.md','AGENTS.md','README.md','docs/planning/requirements/PRD.md','docs/planning/design/IA.md','docs/planning/design/USERFLOW.md','docs/collaboration/README.md','docs/collaboration/team-start.md','docs/collaboration/jonghyun.md','docs/collaboration/minkyu.md','docs/planning/ut/README.md','tools/local/README.md','apps/mobile/README.md'} or p.startswith('backend/contracts/') or p in {'backend/README.md','backend/API_INPUT.md','backend/supabase/functions/_shared/ai/Agents/README.md'}
  if is_user:kind='원본 선택 증거 보존';reason='사용자가 작성한 원본 선택값·의견·내장 데이터는 바꾸지 않고 현재 정책 원장과 결정 기록에 연결했다.'
  elif p.endswith('AGENTS.md') and p.startswith('apps/'):kind='기술 일반 지침 보존';reason='Expo 개발 기술 지침이며 제품 정책 값을 정의하지 않는다. 루트 최신 정책이 적용된다.'

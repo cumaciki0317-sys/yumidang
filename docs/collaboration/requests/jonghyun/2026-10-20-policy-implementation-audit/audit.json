@@ -15226,17 +15226,18 @@
     {
       "path": "260929_종현담당_PLAN.md",
       "owner": "minkyu",
-      "kind": "과거 기록·시안의 현행 기준 연결",
+      "kind": "사용자 요청으로 삭제",
       "changed": true,
-      "reason": "과거 결과·선택·레이아웃은 보존하고 현재 정책/담당/미검증 조건을 명시했다.",
-      "before_committed_sha256": "482ed1229ec13244796c5702916623d337e7080783d0b3e91277df1cf79da26c",
-      "after_sha256": "1a99190cb61566fe2143e4b9aef5cafe2689e7481b81ddbf95ae5d530395ba2f",
-      "topics": [
-        "AI·동의",
-        "공급사·비용",
-        "행사·순위",
-        "운영·역할"
-      ]
+      "reason": "사용자 삭제 요청. 최신 정책·PLAN·통합 인수인계로 대체되어 현재 작업 문서에서 삭제. 과거 내용은 Git 이력에서만 보존.",
+      "retired": {
+        "retired_at": "2026-10-20",
+        "revision": "700c791a1ab77f3584764146fecacc343f2283a1",
+        "sha256": "1a99190cb61566fe2143e4b9aef5cafe2689e7481b81ddbf95ae5d530395ba2f",
+        "reason": "사용자 삭제 요청. 최신 정책·PLAN·통합 인수인계로 대체되어 현재 작업 문서에서 삭제. 과거 내용은 Git 이력에서만 보존."
+      },
+      "before_committed_sha256": "1a99190cb61566fe2143e4b9aef5cafe2689e7481b81ddbf95ae5d530395ba2f",
+      "after_sha256": null,
+      "topics": []
     },
     {
       "path": "AGENTS.md",
@@ -15275,7 +15276,7 @@
       "changed": true,
       "reason": "최신 확정 정책을 현재 안내에 반영하고 실제 코드/운영 미완료와 구분했다.",
       "before_committed_sha256": "6f18e96d8be845e9df8c88bb4507e18e6a3605af10a907343a3dd057d9feb477",
-      "after_sha256": "ee56fe73eefdc4a3c6ebcab2abaecbd3f74452668eb41ad458f57613a18a0585",
+      "after_sha256": "7ce95e09a9de5a7fad54983065d328ce77083c4646817cd34d9e11d3f633f460",
       "topics": [
         "AI·동의",
         "공급사·비용",
@@ -16526,7 +16527,7 @@
       "changed": true,
       "reason": "과거 결과·선택·레이아웃은 보존하고 현재 정책/담당/미검증 조건을 명시했다.",
       "before_committed_sha256": "535b4e59b97a4c0bc8a91103a0c43d915b30823a4817a25b474742f7c3f351cc",
-      "after_sha256": "6732510e55308e1c87bdfea209d127d289da2f682e96c13cb6fab5636cd359a0",
+      "after_sha256": "142054de50ab8f6b1742c0e64045bec977d0343f62072c48134b09a707281aaf",
       "topics": [
         "AI·동의",
         "공급사·비용",
@@ -18648,7 +18649,7 @@
       "changed": true,
       "reason": "과거 결과·선택·레이아웃은 보존하고 현재 정책/담당/미검증 조건을 명시했다.",
       "before_committed_sha256": "9a73c5fe478f0a8f53118121fd5d2b81648aa8e25bff9a5a401c9de120994a17",
-      "after_sha256": "dae3d29fd85076497314565f5194a88442eeb6f3cd5271ee167ed1a7473a64df",
+      "after_sha256": "6368ebcaab452759937f1a2735d7fec6eaca3b5f6a13a5ee989ab1dbff3d1729",
       "topics": [
         "AI·동의",
         "공급사·비용",
@@ -19889,17 +19890,18 @@
     {
       "path": "유미당_출시결정_보류사항_민규전달_20261005.md",
       "owner": "minkyu",
-      "kind": "과거 기록·시안의 현행 기준 연결",
+      "kind": "사용자 요청으로 삭제",
       "changed": true,
-      "reason": "과거 결과·선택·레이아웃은 보존하고 현재 정책/담당/미검증 조건을 명시했다.",
-      "before_committed_sha256": "8e702e85f9928b0b0990e599808a670f18f3e7f9eebc3186e31b2d9c32a82957",
-      "after_sha256": "24ea07358df5a5be5080e1ab758edb2d1c46a78bd3b93fb418d0f98cdb2fa1ee",
-      "topics": [
-        "AI·동의",
-        "공급사·비용",
-        "행사·순위",
-        "운영·역할"
-      ]
+      "reason": "사용자 삭제 요청. 최신 정책·PLAN·통합 인수인계로 대체되어 현재 작업 문서에서 삭제. 과거 내용은 Git 이력에서만 보존.",
+      "retired": {
+        "retired_at": "2026-10-20",
+        "revision": "700c791a1ab77f3584764146fecacc343f2283a1",
+        "sha256": "24ea07358df5a5be5080e1ab758edb2d1c46a78bd3b93fb418d0f98cdb2fa1ee",
+        "reason": "사용자 삭제 요청. 최신 정책·PLAN·통합 인수인계로 대체되어 현재 작업 문서에서 삭제. 과거 내용은 Git 이력에서만 보존."
+      },
+      "before_committed_sha256": "24ea07358df5a5be5080e1ab758edb2d1c46a78bd3b93fb418d0f98cdb2fa1ee",
+      "after_sha256": null,
+      "topics": []
     },
     {
       "path": "정책.md",
@@ -19992,5 +19994,5 @@
       "retry_basis": "AI 일시 오류의 자동 재시도 조건은 backend/contracts/ai-chat.md의 2026-10-14 사용자 최신 선택과 generateWithPreDispatchRetry가 기준이다. 이번 설계에서 새로 정한 정책이 아니며 동일 결정의 정책/PRD 표현을 명확히 맞추는 대상이다."
     }
   },
-  "fingerprint": "de24decf7723b4805472f786691d8054052c83adb8304938852d0fc7549c6b67"
+  "fingerprint": "a65439929f26bfcbb94c0048a0341026732d7b473cfe91ad75a9adf3b3288ae9"
 }

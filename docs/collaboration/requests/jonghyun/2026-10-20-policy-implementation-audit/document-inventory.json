@@ -346,5 +346,19 @@
   "late_user_document": {
     "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
     "reason": "진행 중 사용자가 추가 전달한 F01/F02/F03 원본. 기존 A/A/A 결정과 일치."
+  },
+  "retired_documents": {
+    "260929_종현담당_PLAN.md": {
+      "retired_at": "2026-10-20",
+      "revision": "700c791a1ab77f3584764146fecacc343f2283a1",
+      "sha256": "1a99190cb61566fe2143e4b9aef5cafe2689e7481b81ddbf95ae5d530395ba2f",
+      "reason": "사용자 삭제 요청. 최신 정책·PLAN·통합 인수인계로 대체되어 현재 작업 문서에서 삭제. 과거 내용은 Git 이력에서만 보존."
+    },
+    "유미당_출시결정_보류사항_민규전달_20261005.md": {
+      "retired_at": "2026-10-20",
+      "revision": "700c791a1ab77f3584764146fecacc343f2283a1",
+      "sha256": "24ea07358df5a5be5080e1ab758edb2d1c46a78bd3b93fb418d0f98cdb2fa1ee",
+      "reason": "사용자 삭제 요청. 최신 정책·PLAN·통합 인수인계로 대체되어 현재 작업 문서에서 삭제. 과거 내용은 Git 이력에서만 보존."
+    }
   }
 }

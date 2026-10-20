@@ -7,7 +7,7 @@
   "documents": 341,
   "source_and_evidence_references": 298,
   "original_user_forms_preserved": 5,
-  "new_markdown_links_checked": 858,
+  "new_markdown_links_checked": 852,
   "issues": [],
   "scope": "audit integrity and document coverage only; no product/runtime tests"
 }

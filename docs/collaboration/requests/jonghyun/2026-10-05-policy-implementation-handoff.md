@@ -12,7 +12,7 @@
 
 > **서울 열린데이터 보안 연결 보류 — 사용자 A안 확정:** HTTP 구간에서는 서울 API 키를 가로채거나 행사 응답을 변조할 수 있다. 회원 정보가 전송되지는 않지만, “위험이 없다”고 설명할 수는 없다. [OWASP 전송 보안 설명](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html)을 근거로 평문 HTTP 수집은 활성화하지 않는다. KOPIS·TourAPI·서울 3개 공급사의 출시 목표는 유지하고, 서울은 안전한 HTTPS 자동 수집 경로가 확인될 때까지 보류한다. 완료한 나머지 코드는 커밋·푸시 대상으로 확정했다. 서울의 안전한 수집 연결·페이지 재개·저장 ID별 진행 중 갱신은 미완료이며 재개 담당자가 확인해야 한다.
 
-2026-10-05 현재 인계다. 기준은 [정책.md](../../../../정책.md)와 이번 사용자 확정 답변이며, [현재 계획](../../../../260929_종현담당_PLAN.md)·[AI 탐색 계약](../../../../backend/contracts/ai-chat.md)·[요약 계약](../../../../backend/contracts/review-summary.md)·[검색 계약](../../../../backend/contracts/search.md)을 함께 확인한다. 문서·코드·로컬 검증과 실제 운영 완료를 구분한다.
+2026-10-05 현재 인계다. 기준은 [정책.md](../../../../정책.md)와 이번 사용자 확정 답변이며, [당시 종현 계획(Git 이력)](https://github.com/cumaciki0317-sys/yumidang/blob/700c791a1ab77f3584764146fecacc343f2283a1/260929_%EC%A2%85%ED%98%84%EB%8B%B4%EB%8B%B9_PLAN.md)·[AI 탐색 계약](../../../../backend/contracts/ai-chat.md)·[요약 계약](../../../../backend/contracts/review-summary.md)·[검색 계약](../../../../backend/contracts/search.md)을 함께 확인한다. 문서·코드·로컬 검증과 실제 운영 완료를 구분한다.
 
 작업자 `jonghyun`, 통합 worktree `.worktrees/jonghyun-policy-integration`, 브랜치 `jonghyun/policy-integration-20261005`다. 공통 인증·HTTP·DB 클라이언트·SQL·설정은 민규 소유다. 이 문서는 해당 구현 커밋에 포함하며 커밋 해시와 원격 반영 여부는 Git 기록으로 확인한다. 원격 DB·운영 키를 쓰는 공급사 요청·실제 회원 데이터 전송·배포는 하지 않았다. 공식 공개 문서와 키 없는 서울 HTTPS 미리보기·다운로드의 공개 행사 표본을 조회했다. 공개 표본 조회는 운영 수집 연결 완료가 아니다.
 

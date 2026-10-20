@@ -52,6 +52,12 @@ for f in originals:
  else:
   check(subprocess.check_output(['git','show',a['baseline']+':'+f['path']],cwd=R)==(R/f['path']).read_bytes(),'original differs from baseline '+f['path'])
 for d in a['documents']:
+ if d.get('retired'):
+  check(not (R/d['path']).exists(),'retired document still exists '+d['path'])
+  check(d['retired']==load('document-inventory.json').get('retired_documents',{}).get(d['path']),'unapproved retirement '+d['path'])
+  old=subprocess.check_output(['git','show',d['retired']['revision']+':'+d['path']],cwd=R)
+  check(hashlib.sha256(old).hexdigest()==d['retired']['sha256'],'retired history mismatch '+d['path'])
+  continue
  check((R/d['path']).is_file(),'missing document '+d['path'])
  check(hashlib.sha256((R/d['path']).read_bytes()).hexdigest()==d['after_sha256'],'stale document '+d['path'])
  check(bool(d.get('kind') and d.get('reason')),'unclassified document '+d['path'])
