@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "base_branch": "main",
+  "base_commit": "12bc087f201d9f8144354933aa358949bc705eed",
+  "scope": "current document synchronization only; not product/runtime/whole-main functional validation",
+  "policy_sha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa",
+  "changed_existing_documents": 182,
+  "new_document_outputs_before_receipts": 2,
+  "active_policy_header_documents_checked": 117,
+  "owner_lanes_checked": 4,
+  "user_originals_preserved": 5,
+  "changed_json_parsed": 2,
+  "new_markdown_destinations_checked": 17,
+  "historical_audit_embedded_data_preserved": true,
+  "historical_validation_preserved": true,
+  "product_code_changes": 0,
+  "database_changes": 0,
+  "runtime_tests": "NOT_RUN",
+  "commit_push": "NOT_RUN_AT_DOCUMENT_VALIDATION",
+  "issues": [],
+  "commit_authorization": "후속 사용자 요청으로 main 커밋·푸시 승인; 이 영수증 자체는 푸시 완료 증거가 아님",
+  "wbs_reclassification": {
+    "observed_completed": 13,
+    "reopened": [
+      "1.2",
+      "1.3",
+      "6.1"
+    ],
+    "kept_completed": 10,
+    "persisted_status_and_body_verified": true,
+    "rework_execution": "NOT_RUN"
+  }
+}

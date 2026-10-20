@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "classification": "historical_branch_audit",
+  "source_branch": "jonghyun/policy-review-20261017",
+  "last_branch_commit": "f9ef6e3de44c9bdc8f957b013f9b0cb29e92489b",
+  "baseline": "72be7fb7a4af3d24770ea11f3f9e255e85326ccd",
+  "policy_sha256_at_audit": "a8a8ee2c67eb3497b859c38beda21334f306491661ba19a8d630f16ad121152e",
+  "historical_validation_sha256": "c54da6aa9dd340b1c3b3f514d37da995284baee3a6763c50383c1852968b918e",
+  "historical_validation_result": "PASS",
+  "current_main_validation": false,
+  "meaning": "이 폴더의 원장 JSON·source SHA·line·PASS는 종현 문서 전용 작업 당시 증거다. 현재 main의 추가 제품 소스·문서·후속 결정을 통과 판정하지 않는다. 원자료를 현재 상태에 맞춰 덮어쓰지 않는다.",
+  "current_authority": "정책.md",
+  "current_document_sync": "docs/collaboration/requests/jonghyun/2026-10-20-main-policy-sync/README.md",
+  "runtime_verification": "NOT_RUN"
+}

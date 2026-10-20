@@ -1,0 +1,1491 @@
+{
+  "schema_version": 1,
+  "base_commit": "12bc087f201d9f8144354933aa358949bc705eed",
+  "scope": "main working-tree document edits only; owner lanes are AI execution declarations, not human contributions",
+  "documents": [
+    {
+      "path": "AGENTS.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "468d8e2f37ee210ea3e4c54bd705b732681875ef00ea3983bfa2d93e38f396f9",
+      "after_sha256": "6e7cb8ccc4a9c8943377d4f91105784ce8d17a9a36a09c0acdd9953bf10f1120",
+      "status": "modified"
+    },
+    {
+      "path": "PLAN.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "19f81fbcc2234271323fb9832d5b78cb5a3b0df3866f7914f1bac4e50e8ebccf",
+      "after_sha256": "cacbad6eb96a89fd9e9a1548dedc1d263667efd49df2b583aa4736d18a9b93b9",
+      "status": "modified"
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "7ce95e09a9de5a7fad54983065d328ce77083c4646817cd34d9e11d3f633f460",
+      "after_sha256": "538ce3265d2c405a959786b610ae39be8c151c351231566385ef9fadc77633f9",
+      "status": "modified"
+    },
+    {
+      "path": "README.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "932b83e6e004aecca14a99f7275e3cf44867804aab5cfccf468684f81b780988",
+      "after_sha256": "60c6093ae2dbfc285811cebba713ee3586dec3f0ba25243aa3c0a471f3133344",
+      "status": "modified"
+    },
+    {
+      "path": "backend/README.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "b2f0530da82c97c0f22b073966153ab7b213695b5ab980bb05a37786a935c309",
+      "after_sha256": "6413a6695ceb33ecd13fa0adc7a57e71b79fcd55eeb1ef3961d5a2d09e0c7962",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/ai-chat.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "5a0e51b4d4404a51d9452ed8a4bf82a9a227f11da1ad827290f763546cd09eb8",
+      "after_sha256": "69fa387c8888b6ba48b252a190b5bed86d014dcd6b6d1f012801f7dddac3c905",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/auth-runtime.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "c909167e00647f89023d1ac15018ade4a22d5365fb552990222b4af3f2d815b2",
+      "after_sha256": "ba2ff9296e8662b19fa9b1f40b70c82a728393bb7e39a90c3e596e6f0848b7d4",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/completion-db.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "4a3015628670a3783061709878a1255fe2df9bd7b65e930290b43f18755e493e",
+      "after_sha256": "3537db27c8749f28099653285d29d6f83be1abef1aae794c525467f5c6e98f48",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/core-service-db.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "a9e726f821ecb8433ce159adcacca34f50b769127d027891218e709b462aad0a",
+      "after_sha256": "3d23812145f53b6b5099e7202704ae0a6a1403d03c4827fa256e3982a0b8415b",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/db-foundation.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "78894c3f38a1b9e1b8a55452814f5ed539d10cf4e60467c13d2f94f734dcb56d",
+      "after_sha256": "e11cea13f9b89c5cefa73b08c07d7abeb7af886ffb6ab1cff9455cc7794b72be",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/matching.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "5fdf1594109ef815c32609279a5afa02730e7c63773db75c62e396edaeeb1503",
+      "after_sha256": "49c3fb5e34da6a3d15a21b639e23c515efcaf3cdd4e4b9302f2722c1fc4544a8",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/member-activity-sanctions.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "6fb4ccf01d4e281868425b73f7fd0b664ec13eed4c8b00b6a07d0c222def023c",
+      "after_sha256": "214f55024af16d23c80ab198619bae7005e43a00b38c27c3583128d03c542363",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/reports.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "c6658b77ca8b984b5610967b0a6e2c4f4cd175eb9374cd931fe1f2681f813c26",
+      "after_sha256": "f77cf8f1af94cb98500ea429b451bdae7c07e3741fb4a99050353c0dcca4b390",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/review-automation-db.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "6fff3c35a28de7c689960e991727801522d0e8d253a5f581571abb3e691c046b",
+      "after_sha256": "4c2cb2a8c676755e32b97eb3353f00aa815cf6d8bf51a5b2de49eaa7e3c1694d",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/review-summary-db.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "20ced2027a990ae8df195b3e02f650d5b5d0c6eb62bf4728b39a7c74e8acb519",
+      "after_sha256": "a12dd07483c7fbae8cf2e49519e19fb80c92a72fe571fa9d8a1d16ae7693b4aa",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/review-summary.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "fa27b32bf3042bb691d04357b06ca9fa5dca665f9fc662fac0eae802473249c4",
+      "after_sha256": "ae53444059ffe2b5780d3e9ff8812fd87d77a160a9f30ef530a665d245fb2122",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/reviews.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "583233e991662afd917518f45524e380a5b7d7c09f709afc670590fe74ee10b5",
+      "after_sha256": "b2841d72120abc7216c80b5b0decfd608d57e5e1a5a1f962e08e3457de7ef10c",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/service-api.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "b58525d07fa22de01cbad1bfc00ea4d4daca848ff596c784dd5838b22eb6d584",
+      "after_sha256": "289bfd8b238febf9db3d3e0e1b1d06953b9d069eb4c67b2496a20a5239e0f02f",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/signup.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "205185ea44dfc5ac1ad32e75f3df4da7d4afd9eaf93747a4da04af1f1d8b3fe8",
+      "after_sha256": "efb1a29cb91f2a17d044ffc2c0ae83b606b9583e36eb502a6278a62a4f3f0dd2",
+      "status": "modified"
+    },
+    {
+      "path": "backend/contracts/worker-jobs.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "ff14136e9f65cdcf560ebd50c99538f97175dc0d341928a7f4993cccee0d6ff5",
+      "after_sha256": "f6e4b38e962e664e042314eb6a2e2f154fd155829049b05f13d4bda712812492",
+      "status": "modified"
+    },
+    {
+      "path": "backend/supabase/seeds/README.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "bf6db7d5909389ecbde74fa603e4b29bed3a52ac10e9a167846f4407d6d22119",
+      "after_sha256": "c2277bdf4f91d573334f52ad6436f338d25a40e1d9f5715030e6b064d21ddafc",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/README.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "fb0c5267d050e9a6259a197d632d444018bb563de15bc0fa7cea60675cc426b4",
+      "after_sha256": "b2ad63059b7d2dced57cf3486ff47b1544fab0b8f6d78d35c77bc1f95f5c54d0",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/jonghyun.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "ae6c403d3a0905f9fe200c43762005b821b5e5ba4eb79c706f1bbf40c22ad71c",
+      "after_sha256": "cfa51838e14c528edfb5abad8281e9e7f2cf7ec3a5c132dccfcbac1cc63d5034",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/minkyu-progress.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "8394492881648114e10a527314b5818ddb7e63876681d1a465e1dba55a84c216",
+      "after_sha256": "fbda5da60b01f82e216fbd913f4cc1a0fb6c0f93ade481ec9c77ff179083547d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/minkyu.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "6b2b6228f42ebc22faa79f40cece2730119c6acf4a39b0d1fef6de84797fea47",
+      "after_sha256": "369223c503b822ea7f05c823fd96ad26a9784683021bfa8bff9a7290cae0cfe6",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-ai-cost-and-retention.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "466b816ac2186c4b54b847cc405b50c368ebfd57010f7a632bd653a58591ac7c",
+      "after_sha256": "fc42e8522d9a24e70ed3a4329a492a8e0ff714699aaaeeed412a4e210e565514",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-connection-contracts.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "331f23dad2ffcdcf9d56dde3b8b98e7b7e82d541a922008b57fcb16eeb924d66",
+      "after_sha256": "326d4e2a7929c0ab18838f386ed705bd051c5b9e4c06688d6027f78180bcbe49",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "519f6c1b47d5d9cbae00669d52263c895e3be396efb87906cc73bbe97546ef77",
+      "after_sha256": "3cc748f67a4a10de85a97d277a2eeeb5653098ed694d82374d0637b729a10fb9",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-potens-api-reference.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "7ea7e5d5759a0b6840f3b70a276fe3a50cb7a62c1e97f9f9858d377ee5b063f4",
+      "after_sha256": "36d4782f06692a6bae3dde3636dfc915cfdf256aa324b9b8ba77500a2562710a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-team-ai-retention-review.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "b8b83218d48af8adef5f1a647b5fe1a9c0b1ea1133cf79440c0a617472ebea62",
+      "after_sha256": "40cb7c0c7da289934d49f45b6d0fa34e6a935de2b9f094d2fcc0ab5af0d4c68e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-28-connection-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "0aa12f579df9b5ad58a17f403e7f2f8c781315ca5262070f586455117124d58f",
+      "after_sha256": "ff2ea2f9ffddac8d3252081c21b5e971d233864c33fb46ddf7960691a3e09b16",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "b150a6573ad5fd73efdb34ae708cece29f3afb570d38f00d33ea5c7837921013",
+      "after_sha256": "4f713615bb0a82027d489a168b63860695f5d46f98d9237a39ea2cf2da0ede3e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "65b4aebea3c36adcad64febe94d60faeb82ae159d7d8fbfc935f679db5b2f1ac",
+      "after_sha256": "d4ecb64a4e69f097783d8c44ee8f3d9fbc599258f5736c5648ee38f5c8a3eccb",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-c-notes.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "50672e444b1bb8dc086df0d16b05331a1bf0307466550f3c5261bba7580a652f",
+      "after_sha256": "e19c33f92adbce061b87b11b9fc2ecc9a22536eb68f29bf3bb5ead82153be25b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "347570966b055ce359ff1c8feffcb2cd05f68609bf1b0256a6590fcd074e5109",
+      "after_sha256": "17b3aa964846a97260584b174a8a390105232bfb6349af725c02c26186551709",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "ed0147c531107f776ca5b3c05f36e5db387af06c39506b868640ffdf76f3ee5f",
+      "after_sha256": "9ccfb147258753cf9bdb5cdc5ad1a8eb6b75d4ea46ef43dbf9601125e4d3f9fe",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "29832b2262a315d37cdad3e481158cc4a6b9006307bd02a8dcffabeb9fa0ed62",
+      "after_sha256": "732c6547121200b4fa9a1bd9ea0f84be246bb358012e3df3d3b2aff7f161f707",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-maintenance-decoupling-request.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "fde5d7fdcdc61dcd5436577365e3ec8e696e27c67094994c3da124c062c692aa",
+      "after_sha256": "dd628da65523b28a66edb27a04e1d1c7930f2b79200228dedb720dbc816cc1a5",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "7f66f1c85461dfaf95ae99bb0622c14676b10c47f208d82348ec79ae5ba5f3ca",
+      "after_sha256": "1db30cdd6342348410209f2bda3661d2e177f707561b41fe95dc4031dc3a6ea8",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "e899e73f1d3bae81c8714a88519695ad12c89d477867b5f07a51f7454ff39950",
+      "after_sha256": "2cfcf1c561377847f1a753c1c914d3e485b2893812e5c2ec32802e4186e5bf72",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "95390172631b58691e081272a7636d1ce60b6c65e90a328363cf1337a3f4a583",
+      "after_sha256": "ceca523fda75d2aba3e7e41733c6d0cbc855e08e30b9c391f9b3702148b145a1",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "4d0954fe368ffe9525fc9d1690ae319bdd299c4961a2761ba02440829300e015",
+      "after_sha256": "aa20c3e06531a5109d87285bf26a73bba6ccf3ff5a0b700bbefcc8b218e103e1",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "bc358bb49c9823c57a3c37fbafc7f070796dbdb7f647f45a67f224ca2acf1b62",
+      "after_sha256": "b5792a7cd7f1dba04efd89418864c6d754fa600ef4584faea7f1014f053decc2",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-jonghyun-integration-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "a854f640fbf81f8d0a529e4015f0228ed40f2d7b2917e06d4682fbde706c6511",
+      "after_sha256": "d224a39ed449824dd91661984795a78c8d8cec3f9f3c2e2afb6fbc8f35bea035",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "4279589501fd5bcfa6a65a1d6acf9a972d9a2ee653b336dff8d95af3da5d3449",
+      "after_sha256": "bade0413dbe985605d7a40a526ba94b785f76206b97cc4f9bf93de55e554bf9a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-resume-todo.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "520bc1269849436da68c37c163f31a5391981853119b8a5bad4c59e1cb9f4220",
+      "after_sha256": "9f839a701f1c6a6f527bd2b9b7c948492a4878efdc96e851a51b3712f2e25e2d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-01-policy-docs-sync.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "c679ce6889b12ffc2119530a1f9cf720aee262f472a2af5eb32b9c5f9de2a6e8",
+      "after_sha256": "d5d0e0e67775bb3be936044791e1f1ac83d1367d53ae36b2a35f43ac4fa41bb3",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "658a35edf983e8fa6d9230cda69095602f3c1a968ab5486c9097cb2ed528dbfa",
+      "after_sha256": "c106168dfe2bc6cc4916b376a198a4c9a6cb48b91d5adc7cc55e317bfc9004d6",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "5fd588de493e14c9364fe04292b36f15d114097497b860cb506e3b5bdbbfbea0",
+      "after_sha256": "57377689246eb908404adaafbe69cbe952b939a2f0d046644656b53a5777a1fd",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "a8a908c56889f70ebb67573b2540d60ff3d0bb75a02d4defc4ecd86adaa569bc",
+      "after_sha256": "b6f3e46bcc354ce9f63b391f631391825ad035e0e062fb87f5b3d41aab1fb58b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-events-implementation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "dd214f80d8259adc6201b960517f01142a213346e37d7921f470cbde0a8b89fe",
+      "after_sha256": "ef4c367d95eed33cc8e5c3b5a68090ee576a848aca6e9e955a15403ccde5ac2d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-full-implementation-plan.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "d39af11876b4d135498d477fce94cf7f719f23dff2376a9d393993e53cb58aa0",
+      "after_sha256": "81cc129e0e65652c933326d491826acc0f5425d3785a5f0225c6510b16231aa3",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-mobile-implementation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "3a772c80d4e9fb4765d95005a02fbbf16fac82a603b75d96c83e48d1681b96e2",
+      "after_sha256": "03da111ac6359c7c56a78700e32923b03bea4f96abb2a8b9f6f4a9dfafdc646d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-mobile-ui-implementation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "5ff14f2f3a45c7606caf7c89f7389cac0d07fa5f1775225db58342762b3ef9ac",
+      "after_sha256": "a2db5f292600344643659c924b534eec77b0da58a35a2a6c3307b410fd97ea31",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-policy-implementation-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "142054de50ab8f6b1742c0e64045bec977d0343f62072c48134b09a707281aaf",
+      "after_sha256": "4dcd0fce8013b3fca7fb3de9c4de8aee85916460d1aedcebcb1f9c7a1670eeca",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-queue-integration-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "96d136b8a9dba9cc152f33c9ab3c792d8ba3d7098f8a46a21fd441ca62176f52",
+      "after_sha256": "a6c62e2eadd31e10c23ee4e686023fd06932a6f8bd76c6401a9739113e85cb03",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "225ceeadf4500f583743938da1a483af13b8e2e78f95db51c60791059f0209d6",
+      "after_sha256": "fc7d53021040440b240984a3868b5a193a3270885e4ed919def784d1896fbb7a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-06-minkyu-policy-and-potens-briefing.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "79d6f0d98fb9366279bbba64bb1434b631e29dd4ca130617ff2bc6e89580a16a",
+      "after_sha256": "2fe27787c135075b3744fdb3e6b824eb1aa6ff02eca919dfc46adee2bc71b5bb",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-06-potens-account-pool-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "476dcfd6ecde01160487ccae389a02d0b5fc4567d72b7d2ca6deb45d8cd68d71",
+      "after_sha256": "634576f032dfeea21354f5747ce8173da49d2b84751c2bd6bd462b1dcf94e8ab",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-07-common-contract-requests.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "7de36139b83989887c17fd7046bef5ae9f6f251947b463f87c29178b9ba6ba53",
+      "after_sha256": "11acf1f61df66559d5936b321ca09abd3fc3446ef4bdac57dafbbac566a0927c",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-07-implementation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "f076cba9f94ec3e564c8f5ec102bab5bedb8f58d1f2a4e144c5193f0c317b6d0",
+      "after_sha256": "e964991812fad090f0a117749629c2687a0763c510edcc8b291ba9dc55c813ea",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-followup-common-contracts.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "dc649ce0a150154abf29a162a02a4f6de52265252a45a240d4bc1a6c7f2ffc5d",
+      "after_sha256": "3c9a03193530f5b84972df0e8574463bbb8d2a9c7907685d90a4da6d9136664c",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-followup-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "09c1742e8552f7e19aedac9ff7c08e95d0876cbca2fbe166173ee6477485a627",
+      "after_sha256": "75e91cf4fbf10f9abf14dd9d4e8abc7b75602b1e8e28a07dd4d04ae6fa2f16a3",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-independent-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "8fa8b35b7e5abfa4d01a211dc746b220cc01f67c91b0a2ec9a164ef11045667c",
+      "after_sha256": "b8a39cbf2ef4faccbb793ab411db4cda6c3741c2ac6f6d4fce780aae10a9ab70",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-backend100-request-logging.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "0181fe80462468f7ead2812910087d04d303de3ab28732656a9b05d4ec79f53e",
+      "after_sha256": "9b1f9c5361dce7d36786d2dcd595e9079af66a4e6694d1f1a81a2fedbe299050",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-isolated-backend100-execution.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "23e16e5e2959fbdabc6ad3fe0f5af07e5b0221bb95f372ce0f6a6d2c3c510baa",
+      "after_sha256": "4204bad9dbaac65fc7292e61762111c55b30413f6067ca6f803d4450bf9a075d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-isolated-backend100-preparation.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "c78f90af6aa71aec68beff9fea7508bbb620f9deeef2115c7ab6bca50432fa36",
+      "after_sha256": "a18ef10675de505ffb8970d866d0e8e83511f2c15b994555be10c3992b4f1742",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-isolated-current-ai-validation.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "8118a134db887fba873c7b475e5add955e1be502cd0c17fb586e45d0c65ab7fa",
+      "after_sha256": "6485ce2ed59c9d74f9fc81ceffe1ad88f6415b43e2269c5982fb7e6944045645",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-offline-remainder.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "adeeae0fb2c66c4414173d2ae415a5ae3f35921d20a16a54d9c6a5f3c59abdb4",
+      "after_sha256": "41ce9332b94f928a20ec1a0c3cdca0e80ad54b58fa48afe63ccef986e45055c5",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-approved-feedback-operator-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "e890189e1d2b28504b7a7fdbbe2513d8179a9f9e216e74411ba839b32767c910",
+      "after_sha256": "0c36fd3cf9cb639d0ea9fa4fe7d2b36dc3bc477f8c52e593f5846c2bf1e80301",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-followup-commit-review.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "95efc58940c47cc13a04ac67c0f89040ce134a311f72aa50de244466201cf851",
+      "after_sha256": "d3d8df6b137fc21fe04a94068c34e446378920891b77c3f0302ec7e02fe5bf79",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j02-official-contract-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "d5c5b760e1acdeb04e622dcd1aba1920492be27ec425e23dff495ced4d3677b9",
+      "after_sha256": "8c0838733fb3788f3bdce3942657c99919dd2f306d2243d253d20a07e8f83813",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j03-ranking-transport-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "2a287a713d2b26a5c3966de59bdbdb59f36f9d19fe4be0db1ce3a99d9dc5d2bf",
+      "after_sha256": "7f31358b2bf1c3456a2ce7111df57b231328aee4470c37fe75aab52540518d41",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j04-model-deadline-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "aa294c4a3e3f4048e7f018156ff35fb5e7b572da86a9d8e58c70fa96824cfec0",
+      "after_sha256": "b506b80c37ac9575143d7f19332a122e447a1f5db03bc77061ecaef21f2c7a67",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-capture-deadline-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "3253ef187f008e4e36c9e9f0107b2750e5fe9e11cdb00e2716f38e6305233dcb",
+      "after_sha256": "0983d4eeadfd16ee7b7e34185e2efa959d01b38126907753b66a7ad31ec4f42e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-native-concurrency-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "1e985a0552f716fac728e990c59066208685e77511b6242a0d0e3fa847d2fce4",
+      "after_sha256": "3337da96773f2f35e4f2e2e9709682c72939877ac66c646803a843c8037c204f",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-operator-retirement-conflict.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "eda0ca0cea5043c1a1ffbc5440d711497f0459ebd54e7780abe5b683dd196cbe",
+      "after_sha256": "b83dbc8c415e568165c148c36e2fc03990ebd1d6d2e079605de0c0db2fc87202",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-result-finalization-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "a6a331e30c750f79e61a8d117c00f377b7ed16c725a00a8179d72a71dc4760cc",
+      "after_sha256": "155f3a4e9067c47918f8362aa053982590b319bc3c2362f9fcc3d21819be3367",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j08-boundary-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "41deb5f0be02237475db99b7dcd53c4dabe292232b978de0925cdded067d4d07",
+      "after_sha256": "dedd432d99b7e63ac5a614d16f925eed747bd9720ac8aae6f0392645ef4f7eb7",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j09-budget-deadline-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "f277329fa140f7f68bdd0583d5835eaa3fe489d4e990629042f148005403c933",
+      "after_sha256": "aede67bbf8d07f6f36621300d6b5e22ad962dc40da565278d8cf4197143c5ab5",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-live-validation-guard-conflict.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "39f36c3b7f04dbeeb0492775f4c8086a49f01bafabec342667b7a823bb76a742",
+      "after_sha256": "51aa4cad35732b7ef47c90f58905f90ad656dcbc2345ed64a17277a2fa3c78c2",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-member-read-boundary-correction-review.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "d549ac339dcd287acb20211820f7e981beecaf9a102135e25a1f5ff2c8c045da",
+      "after_sha256": "6c15bad0a95e1eb6c0d5d5009c6b6d6fdf599226c9bb39e988c08ad4c0d93836",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-minkyu-final-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "06222b5a7d489a0ed0fbce892c17a2c940ffb89d88697fb34b0b83bcb3b6002d",
+      "after_sha256": "bbfb0771feaa565702f462057ffaecd7f9bba5791bc94ba94a56b2101169ae7d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-parallel-implementation.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "7f443df1831fd19e874dd241e250760d15edbf58648f1eb4140c73a02f127c03",
+      "after_sha256": "7b811e7bb230589c8bd1cb7940a3743ad998b3593282335c1cd0ee8b156628e8",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-remaining-work.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "5a7e1c37fa45051d45778ddca3ce9db2f354c2356b3fe38648f46bea2288476e",
+      "after_sha256": "8295a0b73c09c0749bf4e9d4016dd778e77b481a734f2bc9f924fadeca8a3b05",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-commit-review.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "462cb24b4cc03d7c274a79665c84d0547bd2c2df46fb55f08c870c6f60578e60",
+      "after_sha256": "70fdf5a6678d11ee7a78ed7c3ba951dc08de8eee3ba2ec448d4801836ffcacca",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-validation-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "2615bc9b7435543cff673488606757d3c4ee3338370b902247f918e1d26c02d0",
+      "after_sha256": "1f85718ab6d231db6e360b7760f303a06c36eb006aa34fa9f2078e3509c0395d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-validation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "765e124a78b0eeeac2b817a3f0f4d0f54f5566f88863e5de7ffeba39e5a85ce4",
+      "after_sha256": "9789bfe317e5d171dbfeb0fa1f2968f10f4e70f90673e3e15de7a290f5ac64f6",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-rpc-transport-deadline-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "1e9d8174f418a87aeca65b2dd8467b382a10708ba421dbc89377617e2d8a46fd",
+      "after_sha256": "04d02f93b6bd7f974465f1853becf16cd8e3c01c6a607e3bc7838b030e673ac4",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-temporary-guard-patch-design.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "0ec9d2566c712d2202173aeb8eb1b9a03a912ecfac540239ff6e4ef73faf6580",
+      "after_sha256": "5898fba1e970a65b5614fdeec269e9c37586e6c03fdab460204dd16671c67e32",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-temporary-validation-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "1e686188fd1e25aa3874a74fe4aec5d16b090da0340ff0676cfaba880658585e",
+      "after_sha256": "11920f6588bfcca46e12e3c9af1e96017af724bbf6e862709cc456af819b2a05",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-ai-first-use-decision.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "257d9dd5a29bf503963f5e226f7245447e68b5187e28bad8208d9a1b09233df5",
+      "after_sha256": "e73ac6f68f74de3194c4c5419286bcccbf0ce85f9cf34a7d95a8400019aabd38",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-ai-optional-signup-decision.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "523f2d128c1805f628f0853d76ebbc726d42bc9e526fe318f7a11d76996a2c74",
+      "after_sha256": "28494b3919422db7030478a4a1300752f03fbec168101ca91b8bba49b74764c2",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-approved-policy-sync.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "1a0938fff86107b2145aa3def02d0a9b9824c832272cdddf99d0056631e5bd3e",
+      "after_sha256": "cb078d9f704de669f52fc0db26d7361f98aaedb650d3c9f9a3b620ce0169e81e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-document-sync-summary.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "0779451eb7759db4fb97d88d461f01f06e332e0c171a71a058c18006fa50939d",
+      "after_sha256": "fba57f178ae1a0179804a4583dc17ee86ee5b41a16f5b1ca35418d6117c7b74f",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-screen-mapping.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "e8caa61588a86b0d71f823ac85d5f4bbdd87219733e0155b4393bbaaeef94f2b",
+      "after_sha256": "66787aa69ee5d2befafc1a9b9ec0104bdb06986f082e44e8828567d3d73aa79e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-external-verification.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "f67e25dcf410b0f2a03c8ef5df33741604b1cc082685320ee231dbf80280b942",
+      "after_sha256": "8c951308833fd5dd046617340f017694f29aa68bd8314a3a1e8f24dab4c48466",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-final-selection-and-hide-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "59631e91bc64f4b888a593de0ddbac8acadb382a9bd98b4e0fc622249d617f3b",
+      "after_sha256": "1f54891fcbdf9ad88b0639547dd8e6c9320576c06ae33847e7efdbad97eecce5",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-monthly-budget.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "70d5b2841a2cfe8c203b1ab592843d2232b461c1e3971767f925e26ad8694a41",
+      "after_sha256": "912a29fa1215f36da92d7cbf5fd276cfe68a73a0b5e519d82f3b6333770e2dff",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-registration-and-fallback.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "f3a300db1bfbc069d1c0095b0fac78e6d6b7f645b1e609bc269f146b335839ef",
+      "after_sha256": "485419a8da5cd21b63b8c56994e213436fe2f1e2c478fea1407d9040bc3c7c68",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-synthetic-validation.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "07d9d6a60a04b9312fc2bd067dfd5625e2e2130b48f94bcbef898428ce01db0b",
+      "after_sha256": "9e334aedb87d682c7ae99c4182759809a720b899028389fc99faa1bb82f24cf3",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-basic-followup.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "fa1e6b6b4ea295fe5020d510c917db4ac2edb473121da1596d763722c220d1ae",
+      "after_sha256": "40ac70bd49cdd4499983288f0e9db05922ee985424201ade2e21ef5a3d2281a4",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-column-audit.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "0381534892f8b4d8dfdec0387444d85b248c1f959c36f9b81a4b1bfff247d01f",
+      "after_sha256": "c32c475c94c2a3ea24a2cf78e35c8775496bbef576f574bfa20ce8a9531622ea",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-expanded-ranking-decision.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "59efdbba75b934199287faea5e2b0270d38d19ab186a16d61ce0cfc87a50f9f5",
+      "after_sha256": "b64bf52af5f5360853a93730189ededfb9d08e4f7da0f8f11a7b7b8aff6c088c",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-final-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "e98192ef184243ae96c939f03dfd1856cdf8e39983888eedeea69d14f7a1b4aa",
+      "after_sha256": "dedda5abc0a0395f26ae09e642101b526ffea252db98c75200df6d5fc3753206",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-policy-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "bf8b07b4ff116b656262d2606e8682693be7ad3aeb8edc59d5be5be02744b781",
+      "after_sha256": "7028f419b442ccd9d2febf318339c8aa15fb75ba94d14de690a4a0f8267dc33e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-privacy-store-verification.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "e07ce5bc713224a252ec5c75bd4a1bb271f1a33aadc4709f0d8d1905a16b8773",
+      "after_sha256": "1eab3554b548c175b653b51068adabad9ccf69844d10af21bfc636661b5be814",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-review-consent-signup-decision.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "001f760a6446c85f3afcbd425862fa67b1b9359c46d3774eaede57cdd50ec3f1",
+      "after_sha256": "47271264333df7457d5c44d6837e14c531b26b024e338a5fa9083c5b883cb328",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-column-audit.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "d4f72be388dbdcc15ae113387e54f4d46e85f2909c20c11aac5f74420494b496",
+      "after_sha256": "6e3380c2a0eff66528356d24b1b110781e4c25d9bfc2d8fd88d07448c3341981",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-https-followup.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "934e8e23031480e1e76452d461fba8f7e74d9411dd04c0dfe26de914819a33ad",
+      "after_sha256": "489540679c738d6c664071bee754d19ae6d236d073ee31a90dbca643a65a0768",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-https-security-resolution.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "726915834e8623c7571c0ff87b2fc9f2afa6c5d6dfc626b49efa765d10971f35",
+      "after_sha256": "4f8c68a25ca571fad8229c604f71ebcb85975a9d946c946834e2c69bdc7c8f8e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-sync-ledger.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "fd1aaf4516ccbb2357e86de6c6d2c9983662323c5ccf9e87d4e080c6cf6e3f16",
+      "after_sha256": "b200c368d424f9ef5fb0fac46f1a753077e37579b6f13fa8aaf0a1c5d2654079",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-tourapi-column-audit.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "368163858e082924d15989a29b769b562ed06b6c2ca3629ff43110fc1f9ed294",
+      "after_sha256": "e28ed60a46050e6ebd2b48204c848d3aba0281a28c7c5a500352b5b41371f8c5",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-commit-push-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "d70bb9fed7c0151a997bc3821ea4d9481f43a3e33c16d48051f941e2b873d917",
+      "after_sha256": "2f29ca07a3d74930dda8fc2a0a3dbe1439940b4dce4c3eed24ff496e256085ba",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-common-docs-integration.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "a88b8d145eb40d87808c3f8f0e0bb41e4f67dab4ec9943678137f51311ffa5c4",
+      "after_sha256": "51f8f7252d162a8f55de787b7a32b0c48ff1071d5f25dbb9baa750ab8f849ea2",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-flow-night-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "408261ffda7a5a8246526510b5568100ac540d24304003dbb741d4d1dcf504ac",
+      "after_sha256": "ce5c87d0d8ffcc8ccf0856779fce1c92059cb7ceeb2ab00f07e57960c252c160",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-flow-night-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "6f726b6297fa7d5737877380f2b0ef006a284f7c0b79c1401a43e736ef46a614",
+      "after_sha256": "9acad88905fea338b9f4bd911b46915ff3927bc566c579c2a476b0659c9ba217",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-approved-spec.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "50906c495018f69415c2fd1ee27a3f146874f4066683a44305e710940053117c",
+      "after_sha256": "9413570adcc3766b65bed409f0821d53619a02b4f8dfec024f0ce96b706fb18d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-decisions.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "e6f82b1680f3c83ff1de903ff7b24288b2a66fbbe5dd6deee874d44f83fc1a2b",
+      "after_sha256": "371f94a4d802072fbce5e8e9a190b9b43569c4838688363bc853bd1cd728fba7",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-minkyu-handoff.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "659134de100903ff98cbbe6133141992191bb4857c677adc8d9dbdf3722bfaa1",
+      "after_sha256": "d396de459090f1a4763160242b5217a0fe80a56d67016eb5001fd0a6006e44a8",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-selection-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "20cac0b498135f9ac08975e4de1d41d35ac8d01e9451b6af2a9a1c1dedcba321",
+      "after_sha256": "9014a7c55a495c031c9cfd7422be234e6058890e8c1143384b0fb6adc893561a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-sync-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "140c2af6b612a8662db6e2dd0697e4dda30a0a1ee9e3c80b85d2a2c86132db49",
+      "after_sha256": "399b934c2c792907eed70de252f152e0df45a21d43b05d83a821809fb7a96f07",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-main-policy-sync/README.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": null,
+      "after_sha256": "ae55ad0b04fe11b8fdc9e3bd453ebcf163a3c81d27a09a676e55b6a158136234",
+      "status": "new"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-night-error-ai-result.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "3d244c608017ea1b6c1a9009a60dad525065f23a8bc3c6e8d637177b7493be75",
+      "after_sha256": "6433ac88bd31f96ebbc2b8b725470ec52860e5b51186cb4c75ea2c91f3252183",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-overnight-routing-build-audit.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "4353750c06cc8ed5ab578b25e1b903e64f52daed9ce3fa2e08dca303966879f4",
+      "after_sha256": "400619d369d186f96c0d66806d4e9ea1925c8941b6a4b0b655bbcfaa74fba0e8",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/README.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "5426e1b624f3321768f99968f610b512e6cb08156338ed2cc9b78c050c617b29",
+      "after_sha256": "11505e68d3f736ae8632370a9ef7e11194c899a7865b8adca9d00e48bf02ae7b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/index.html",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "ae5a9b68113a3c95b5fe6c997408dd28ad18b99124910c14c3be6fec24d15d36",
+      "after_sha256": "2043016383f5f96155dc92621aa6cc6711a8231a25bdc5d3c77a879d473fc782",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/review-template.html",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "23e72cd8136a099b14099061808dc5109fd2b968d903fc567ddd27b1504dbaf7",
+      "after_sha256": "64b160da96586f4ba0d2c259820d5d378a0c3533f0076c85ea6c6c2053b6102f",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/snapshot-scope.json",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": null,
+      "after_sha256": "5a119a684e5eab1775875d16ad00d80a2fdfc92f8aa062c6388ad83db1937e61",
+      "status": "new"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-runtime-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "1c119a060296a7d553c53a8416845e47a05badbc5ca49cd62ec3a9360753dbba",
+      "after_sha256": "5716c0916e6d8b5de1064b030d3e5b7688058b1dfe8957a4030c81ffde7cfddf",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "a364717e3981068831a3f4eadee2cf656ce14abd7742d001c17b18a6a1ca6111",
+      "after_sha256": "11a7c7c59c6fafaa83730fc895c1476a1c1b0a3e592f6d49c8d90e28d60e6fd0",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "0c63c245ecf0de7256d852485d595627a1723835ddcea3eec69368bbea1803e9",
+      "after_sha256": "b919616d1ef510a0c85b295728a91cc843766747c33a0f207b09f56fefe991b0",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "623fee5a18dedd8b1a3d9faafdc727deb44031931c154fa6ff8d932d96695a00",
+      "after_sha256": "69d9bd87b2b9128681fabadd6b3ebadb28a2382a4139dbcb4b6dbd1f3c572b56",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-naver-live-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "55fe90a52b51b6425d88dac1f8d229d25aa155ee36fa59c9ca7a8eee1d8f0279",
+      "after_sha256": "73930bfb6ed6d0cc1de3b8ce99d5c306addf9926106f1b3199b91a5594543007",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-ordered-backend-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "95cd61bf7d4ae3c1d6bb45435b9acbe61d07d3611fb168ed4685f92227732583",
+      "after_sha256": "756fd3c9b64e6b203c46f1714778d02e50dbaa51eea7bf55b610a9f960c66ffc",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-conversation-visibility-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "9893e2a21d454450bbb57b7b2432e56bb013c22d4410c3b5f07f7572a37b8da0",
+      "after_sha256": "850c1f2edc81521018a20cc1defe3244a2ec51ac840f16844123215018a3930b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-photo-access-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "12c4e5e92e9324cdb73ca6db4d7ccdce0148e7689d8a5446e43bba5f2a7f3567",
+      "after_sha256": "475745b61f063d9e63b34c40c00717aedf172f7e4543cef3dbdcf1fac2c683b0",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-upgrade-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "5a2de573ae4ff83e1ec12067956df5ed4de19d6faf94e4d56d77759f8b0a7a79",
+      "after_sha256": "547d400b79bbb055ef5e886b7cd625bfd1f6efb70021c48f5f14deaa6963ffdb",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-review-holds.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "1fdfb15e125baeadb89c3424050dbec96eab988c844334c09e33a711ad5e2be6",
+      "after_sha256": "8739b93994d3f4438db3da8f506717ebbda93677d0256a535e8b8eaa058f95cc",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-safety-result-sync.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "321d161af073e0d01a046f8d809af3e7e3f9202c589ee84dba34c13a20045a05",
+      "after_sha256": "4dbbcc6bf5fafeb4fc6e905e247d1a7921d813382ce748fc2d18cbb48dc4cdbf",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-assigned-report-operator-access.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "1e2314432095840b9dc0c5155aaefc110d214363e3ac85cfd90f78a6ae505d1e",
+      "after_sha256": "ecfc5f6e4a5c8ec327e22d43d62cfe925317b77aafca9acc0bcbb1970dba3798",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-safety-state.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "e1e9d897e5c0707ce4261c3c0c17cd7657726143f618b8a79ae1f2722c22b2e7",
+      "after_sha256": "37a7fac24d2793f78bc2cc378d24baae237b6c4249dc8950b3af569653f186c8",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-native-user-api-validation.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "55d39e34920edfb4b5f162db99c13b64c56077a5115958e07788015d2bb21510",
+      "after_sha256": "5b5a97cd1c164cd3f0afdc480dd09f1a3c185ed388889a95ddcdd140cdc89236",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-production-drift-preparation.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "6368ebcaab452759937f1a2735d7fec6eaca3b5f6a13a5ee989ab1dbff3d1729",
+      "after_sha256": "36fd4d63915eef70202ac647e9a3f7f476b217050a222959f25302ab9fae0a01",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-public-deletion-page.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "3472d22ab10beac5cb3bf37de4fae07aa3e94fc2f8e891b3e1094da981780982",
+      "after_sha256": "65648bdb0d45ec099db0ccd2cb76b491550d55984229bb1b017053de382aaa7e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-report-ai-evidence-connection.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "31b9930f0b5a08f69a9b4808db0cb04b13881f911be0f257dd20ae85168f4701",
+      "after_sha256": "f1dc14f8d5ec2888ed446ba9621187c99b3a19dd7c4ef9693fc68e13f0247fb6",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sanction-adjudication-draft.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "ba4df4ae4a6bcb80fbe329d5a83935aad4c3dc631b7cccd3ac52cf9295890ef0",
+      "after_sha256": "cbeebeebbcd07e2f4fb89096ad1a26d7da19156a908203294708a2cb0728ca95",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sweetness-implementation-audit.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "3b94cf8c2961d870eda7a1545452ef9a39496274c37e69010700e493f92dcb60",
+      "after_sha256": "e827803f9e30cadf85262fd8e91e6244020cad690c8d0e6cb3a533e22c15c6c1",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sweetness-ledger-contract.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "153f8bc1265e47917b2a76e2b927a14ff71515f5bfd0a601d22f4454c8b3bd25",
+      "after_sha256": "d6de007ca00610506ba775ab2523829ee490744f55fe81870ef46e36a97f176a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-two-person-next-work.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "8f5f77577cc8a6a256f3fbd27856600861325eae981d856ac594cd799029bbe3",
+      "after_sha256": "76d13e32b8ebb7fa81212a75151a5dbde98945033930800cb9c29e9e5917b2bb",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-appeal-intake.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "9e12421d0b64feeb6cd4e76214a8f6f9768566420250634150e5b21a78bd34de",
+      "after_sha256": "a4963885ddeb75a888ec18943add96957b4472e61b2713e68e6a9bc2d31fd423",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-adjudication.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "557fe362adbda96328ed4d69b33e5031aa3ffe18f6043242257eb8bcf3101456",
+      "after_sha256": "599fd635ec12b90213079953c652b7e2122feade2817854386cdf0321ebb8fac",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-capture-access.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "b46a78252f894afb50e8282b78a78438508af24e2578090cf5d98d32c40a680b",
+      "after_sha256": "c6c7f181eff664950e65fa159f549b127807ba8f89c14def5c0365e4f438f3ea",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-concurrency.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "eca73f19db07b2c7391e57535d4414268ced7b3d583ffd666dfca152a6b1378d",
+      "after_sha256": "33b13e137e2b8a627824f918aacddc78af68432f777cb0ab2f30e9e41e948cf9",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-start.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "69810404da2344bf89825a6195e6d146ecbc0ea20bbbd777f8c27f4ca55219d5",
+      "after_sha256": "690b398fab37e9b357fa38463bdaed0cb6c3991b9dde3c6f864e722f71a7439b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-state.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "122c45095f6f205761bf33704bd981db7553595c569c41083bb3dbcce044f30d",
+      "after_sha256": "0315b7315cf9c27fa17dfffd72900f1ac2c7aa466ae77513632d0f0fce4860c6",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-backend-release-work-split.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "86cdb5102cb2c138fa4bc1448d0ca80a50dc8195f43b67f6559e75b22b261836",
+      "after_sha256": "3a65130b1ed22797508e1c82ab12c3c4c2dcabc66c7c8b608fd77f13dc56849b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-privacy-data-inventory.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "539ec8fde192b7c0b25d289c667f8cb894b738562fe19f840c39cf3d86d141c5",
+      "after_sha256": "0b3801c5ff3be981c9fc289cfdfeb892d071db213fee4defdd0d1af06c4641ae",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-remaining-progress.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "99b16bfc4aea6632d7efc85ab41cb25359f40c462cf1bbe2c7a22cb9df5d0e8e",
+      "after_sha256": "bd796490e54f2d5559b52d18032f98ec3627dbfd8da16ca1c47715335ce6079b",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-07-release-recovery-checklist.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "3ef33621b2a331935b3cb0b3c079afbb61522650cbf218352bf4e877cd4af069",
+      "after_sha256": "6a052badba1e198f20ac8a1db800342772250c1b2b4c3c216581176e0ea8a796",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-additional-backend.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "f98701df0b80be82c5dd83d2e7bb2e733ff2d0bc09bc914fab961667793e2bea",
+      "after_sha256": "92585154c88e400876ffb14ffc3f9df0b4d43c2dfc9dda33321d58d93bf31416",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-100-plan.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "6c2838972c4f35726b17f5a07e153440d04febfee802ec16da17568afd855180",
+      "after_sha256": "c0b1ac791e12f4e9f6ac6e2d102500b27041ed6bf52826ef3cf6ada4d1eb3863",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "1f07c2d9bd2e9a5047585e3ed9ab509ca55118d3a228fb373e1b98a48c9e192c",
+      "after_sha256": "632675fe65f8d6f8c3c75e445eabe72f1281c3b6294a06334da86f6c4bed5990",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-content-inspection-draft.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "457f254d430ff06103e1d0d1700ee9e8d20dfe24ef457341abd11c9a8655c4d9",
+      "after_sha256": "cadca3e5f9b3d477d02da3f80415741166121906ac3bbba592808e5097e68c79",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-operating-handoff.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "078f83d60390cf5e9184ef95e708844db7805af94121d073a5e1efeb21d4d0ba",
+      "after_sha256": "4422585008a10834fd093456bdabf46716fa66787c9ceba06eb6a8aff2d12d8f",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-final-schema-storage-restore-static.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "4237ce3202b76d74a0fc250061ed245323062cea991091acdae197fa5296e8ff",
+      "after_sha256": "988f8c499321123e6fdbd26bbc4847e75f9758695276c261c573209cbe27b50c",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-execution.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "1e1a9b7a84e4996cb32e3e77f817f60f365be7a212e37c3d0e2c509487a2194e",
+      "after_sha256": "910c92979e8189d9399867c10bdbd047c31216b7d115c42bc461930f0fdf0950",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-jonghyun-parallel-backend.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "5849f7a44b64541216defcf4ce11d2e16625c713820ba222c3b647b22bd7bbe4",
+      "after_sha256": "7053c97e311a1b35c435e0e87744e0d27e9b810ac23db8f9b0e35c0adbddb3fa",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "e556fab1d400ddce422df9ff5d82809b3786ccecd0851d07451532e602676aac",
+      "after_sha256": "cdad97f4abbec6da2b054d2d0b5bab047fcd72ea61fc3ff277be0d66eef1f44e",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "5fbe016a8f9e5397655657f0a66ea9313ee03d3fe5ec230c3e0ff8edb514a05e",
+      "after_sha256": "0e79c8f1d7712cfb3d0c4e68c2d7c5dc5fe62c71445a4e93357ffca4db267e1d",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-yumi-start.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "35d920161301cefff64d0854ef1217b66e7155741a5bafea5111c815b6de088f",
+      "after_sha256": "31eb912c6acd1f2ea7bab014895d20f711174e1876a15db1439bdcafd5e6e348",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.json",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "a5e70ffa4bea4ee680c0281b6befc5640b4fd93321628b61514204495838e860",
+      "after_sha256": "53bb6a4287e831a915ca6d28c5360ffbfdda55d3cad71d221d7cc4085f4b80df",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "c31f8759192c886cb02679d6a6630e1b454be637d6838fb041a121d17fb1ffd6",
+      "after_sha256": "724f785dbc6edf99057c7d8c3122f89d1e0f6f67e26f6b7e7ef7f333460c2d83",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-operations-runbook.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "0a51cecc0b269b38bd458af3e48a437d970c8b85674b451aada141ab57045d42",
+      "after_sha256": "1c80402adcc97d45ed9e952ad6292670c846d38c34381051880fc1e7146fc145",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-policy-api-rpc-gap-map.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "71dc9a24ae707d7d00cf7b24407123298d62c8d4d677ea34a9ee63d794d907be",
+      "after_sha256": "e151cbc027927f3adc2598ac1faa2440ce1d42fea8a867dfc845377e7d5c88a3",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-qa-case-evidence-matrix.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "1fc3589e879665b32b6916d67575516f3653113fbd1cea1c40498789e14de808",
+      "after_sha256": "f69aeedb452e80824029478b67c7942e103d7fbf6b5d835c819d787794dfb3de",
+      "status": "modified"
+    },
+    {
+      "path": "docs/collaboration/team-start.md",
+      "declared_owner": "minkyu",
+      "source_lane": "server",
+      "before_sha256": "12d2f09fc595409d9e5188ff99b3d254fe7dae9422da399525011ea047ec1bb7",
+      "after_sha256": "2777831567c976affd0e04185841fe49117e95e5a7b97b65af2ef401a97ac796",
+      "status": "modified"
+    },
+    {
+      "path": "docs/planning/design/IA.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "758f081720578e08d4a74650b4eb5a9ca7a93ac4c76d5412a38bab6bf8c135f2",
+      "after_sha256": "6224a601681730940f66a913d3ff083ef03a3b3a7e1318063f96fc254c30defa",
+      "status": "modified"
+    },
+    {
+      "path": "docs/planning/design/USERFLOW.md",
+      "declared_owner": "jonghyun",
+      "source_lane": "client",
+      "before_sha256": "abaff95780ffc276bedbc3ed9ff5522fd250a3e71de98f5226af170b1dbca968",
+      "after_sha256": "70a8abfd3c030870784fc3d8eba4dfed47256091ff2898e1746ffd63c4e9337f",
+      "status": "modified"
+    },
+    {
+      "path": "docs/planning/requirements/PRD.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "769575673c37872f19f1c6d947f4e76d4cce04b39052e4c402f382217d797572",
+      "after_sha256": "4a0c09cc1a6678bcf1ebdddbcd99c92b022e752be7608beba5dde8e2f86792d4",
+      "status": "modified"
+    },
+    {
+      "path": "docs/planning/ut/README.md",
+      "declared_owner": "yumi",
+      "source_lane": "ut",
+      "before_sha256": "dba8b0c81e9fc7ac385f29963486563aee9dce29ab2a262836915d174027bb50",
+      "after_sha256": "aeb7d9da0e7739a05d2873fd4c6674f357aefbd5df86a4e371cd5f740c60fa8d",
+      "status": "modified"
+    },
+    {
+      "path": "tools/local/README.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "f88e9e7d802b9f5ca59932c003f98cbddb30060adb8c3a92f60d458973064371",
+      "after_sha256": "f3017edf2bcfdf02ea4335087acebab46cc20b1fe9e09d8c1c79c535687ba1b8",
+      "status": "modified"
+    },
+    {
+      "path": "정책.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "a8a8ee2c67eb3497b859c38beda21334f306491661ba19a8d630f16ad121152e",
+      "after_sha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa",
+      "status": "modified"
+    },
+    {
+      "path": "포텐스닷.md",
+      "declared_owner": "minkyu",
+      "source_lane": "core",
+      "before_sha256": "eb4a68a0e8441d11aea8017202d23fdb765f1ca03b93a71f579573e1d6d8e74b",
+      "after_sha256": "0b1d06dae7e6e60b1240c156716e4caa1a816dc23dbfecd762a3f8c91c1cc032",
+      "status": "modified"
+    }
+  ],
+  "excluded_self_outputs": [
+    "docs/collaboration/requests/jonghyun/2026-10-20-main-policy-sync/document-manifest.json",
+    "docs/collaboration/requests/jonghyun/2026-10-20-main-policy-sync/validation.json"
+  ],
+  "policy_sha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa",
+  "historical_originals_preserved": [
+    "docs/collaboration/requests/jonghyun/유미당_운영정보_작성본.html",
+    "docs/collaboration/requests/jonghyun/유미당_정책검토_작성본 (1).html",
+    "docs/collaboration/requests/jonghyun/유미당_추가확인5항목_작성본.html",
+    "docs/collaboration/requests/jonghyun/유미당_행사UX_최종선택_작성본.html",
+    "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html"
+  ]
+}
