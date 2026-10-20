@@ -12,6 +12,15 @@ class GuardTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as root:
    p=Path(root).resolve()/'review.json';p.write_bytes(b'private');p.chmod(0o600);os.utime(p,(1,1))
    self.assertEqual(self.m.private_raw(p),b'private')
+ def test_mount_order_only_uses_exact_bag(self):
+  a={'Source':'/one','Destination':'/data','RW':False,'Propagation':'rprivate'}
+  b={'Source':'/two','Destination':'/conf','RW':True,'Propagation':'rshared'}
+  self.assertEqual(self.m.mount_digest([a,b]),self.m.mount_digest([b,a]))
+  self.assertNotEqual(self.m.mount_digest([a,b,a]),self.m.mount_digest([b,a]))
+ def test_mount_field_changes_are_not_normalized(self):
+  a={'Source':'/one','Destination':'/data','RW':False,'Propagation':'rprivate'}
+  for k,v in [('Source','/other'),('Destination','/other'),('RW',True),('Propagation','rshared')]:
+   self.assertNotEqual(self.m.mount_digest([a]),self.m.mount_digest([{**a,k:v}]))
  def test_existing_unchanged(self):
   self.m.assert_preserved({'containers':[{'id':'old'}],'networks':[],'volumes':[]},{'containers':[{'id':'old'},{'id':'new'}],'networks':[],'volumes':[]},'new')
  def test_existing_change_rejected(self):

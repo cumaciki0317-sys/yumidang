@@ -30,6 +30,9 @@ def need(ok,code):
  if not ok:raise ValueError(code)
 def sha(raw):return hashlib.sha256(raw).hexdigest()
 def canon(v):return json.dumps(v,sort_keys=True,separators=(',',':')).encode()
+def mount_digest(mounts):
+ # Docker inspect 순서 비결정성만 제거한다. 각 전체 항목과 중복 개수는 보존한다.
+ return sha(canon(sorted(canon(x).decode() for x in mounts)))
 def assert_preserved(before,after,own):
  expected={**after,'containers':[x for x in after['containers'] if x['id']!=own]}
  need(before==expected,'EXISTING_RESOURCES_CHANGED')
@@ -103,7 +106,7 @@ class Scratch:
   need(self.docker(['info','--format','{{.ID}}'])[0].decode().strip()==DAEMON,'DAEMON_CHANGED')
   ids=self.docker(['ps','-a','--no-trunc','--format','{{.ID}}'])[0].decode().splitlines()
   rows=json.loads(self.docker(['inspect',*ids])[0]) if ids else []
-  containers=[{'id':x['Id'],'name':x['Name'],'image':x['Image'],'config':sha(canon(x['Config'])),'host':sha(canon(x['HostConfig'])),'mounts':sha(canon(x['Mounts'])),'running':x['State']['Running'],'startedAt':x['State']['StartedAt'],'restart':x['RestartCount']} for x in rows]
+  containers=[{'id':x['Id'],'name':x['Name'],'image':x['Image'],'config':sha(canon(x['Config'])),'host':sha(canon(x['HostConfig'])),'mounts':mount_digest(x['Mounts']),'running':x['State']['Running'],'startedAt':x['State']['StartedAt'],'restart':x['RestartCount']} for x in rows]
   networks=self.docker(['network','ls','--no-trunc','--format','{{.ID}}'])[0].decode().splitlines()
   volumes=self.docker(['volume','ls','--format','{{.Name}}'])[0].decode().splitlines()
   ns=json.loads(self.docker(['network','inspect',*networks])[0]) if networks else []
