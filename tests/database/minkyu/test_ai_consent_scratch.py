@@ -7,6 +7,11 @@ P=Path(__file__).resolve().parents[3]/'tools/local/run_ai_consent_scratch.py'
 class GuardTests(unittest.TestCase):
  def setUp(self):
   spec=importlib.util.spec_from_file_location('scratch',P);self.m=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.m)
+ def test_first_private_read_allows_access_time_update(self):
+  import os,tempfile
+  with tempfile.TemporaryDirectory() as root:
+   p=Path(root)/'review.json';p.write_bytes(b'private');p.chmod(0o600);os.utime(p,(1,1))
+   self.assertEqual(self.m.private_raw(p),b'private')
  def test_existing_unchanged(self):
   self.m.assert_preserved({'containers':[{'id':'old'}],'networks':[],'volumes':[]},{'containers':[{'id':'old'},{'id':'new'}],'networks':[],'volumes':[]},'new')
  def test_existing_change_rejected(self):

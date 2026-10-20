@@ -49,12 +49,15 @@ def source_review(head,pins):
  need(subprocess.check_output(['git','-C',str(ROOT),'config','yumidang.actor'],text=True).strip()=='minkyu','ACTOR')
  need(subprocess.check_output(['git','-C',str(ROOT),'config','core.hooksPath'],text=True).strip()=='.githooks','HOOK')
 
+def file_identity(s):
+ # 실제 읽기가 접근시각을 갱신하는 것은 내용/소유권 변경이 아니다.
+ return (s.st_dev,s.st_ino,s.st_mode,s.st_uid,s.st_gid,s.st_nlink,s.st_size,s.st_mtime_ns,s.st_ctime_ns)
 def private_raw(path):
  need(path.is_absolute() and path.resolve()==path,'PRIVATE_LINK')
  s=path.lstat();need(stat.S_ISREG(s.st_mode) and s.st_uid==os.getuid() and stat.S_IMODE(s.st_mode)==0o600 and s.st_nlink==1,'PRIVATE_MODE')
  with os.fdopen(os.open(path,os.O_RDONLY|os.O_NOFOLLOW),'rb') as f:
-  need(os.fstat(f.fileno())==s,'PRIVATE_CHANGED');raw=f.read(128*1024**2+1)
-  need(len(raw)<=128*1024**2 and os.fstat(f.fileno())==s and path.lstat()==s,'PRIVATE_CHANGED')
+  need(file_identity(os.fstat(f.fileno()))==file_identity(s),'PRIVATE_CHANGED');raw=f.read(128*1024**2+1)
+  need(len(raw)<=128*1024**2 and file_identity(os.fstat(f.fileno()))==file_identity(s) and file_identity(path.lstat())==file_identity(s),'PRIVATE_CHANGED')
  return raw
 
 class Scratch:
