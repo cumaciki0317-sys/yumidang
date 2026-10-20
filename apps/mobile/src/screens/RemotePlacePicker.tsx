@@ -19,15 +19,17 @@ export interface RemotePlacePickerProps {
   onCancel?: () => void;
   /** A source venue name may prefill search; it never auto-selects an address. */
   initialQuery?: string;
+  /** Selection contract stays the same; only the caller's public/private address notice differs. */
+  addressUse?: "meeting" | "public-event";
 }
-/** Precise addresses belong only to this authenticated creation input, never a public post card. */
-export default function RemotePlacePicker({ onSelect, onCancel, initialQuery = "" }: RemotePlacePickerProps) {
+/** Authenticated selection input; caller separates public venue address from private meeting address. */
+export default function RemotePlacePicker({ onSelect, onCancel, initialQuery = "", addressUse = "meeting" }: RemotePlacePickerProps) {
   const session = useServiceSession();
   const { navigate } = useApp();
   if (!session.authenticated) return <View style={{ gap: 12 }}><Body>장소와 주소는 로그인 후 선택할 수 있어요.</Body><Button onPress={() => navigate("S05")}>로그인하기</Button>{onCancel && <Button secondary onPress={onCancel}>닫기</Button>}</View>;
-  return <MemberPlacePicker key={`${session.epoch}:${initialQuery}`} onSelect={onSelect} onCancel={onCancel} initialQuery={initialQuery} epoch={session.epoch} />;
+  return <MemberPlacePicker key={`${session.epoch}:${initialQuery}`} onSelect={onSelect} onCancel={onCancel} initialQuery={initialQuery} addressUse={addressUse} epoch={session.epoch} />;
 }
-function MemberPlacePicker({ onSelect, onCancel, initialQuery = "", epoch }: RemotePlacePickerProps & {epoch: number}) {
+function MemberPlacePicker({ onSelect, onCancel, initialQuery = "", addressUse = "meeting", epoch }: RemotePlacePickerProps & {epoch: number}) {
   const service = useService();
   const session = {authenticated: true, epoch};
   const [mode, setMode] = useState<"place" | "address">("place");
@@ -88,7 +90,7 @@ function MemberPlacePicker({ onSelect, onCancel, initialQuery = "", epoch }: Rem
   if (!service) return <View style={{ gap: 12 }}><Body>장소 조회 연결이 준비되지 않았어요.</Body>{onCancel && <Button secondary onPress={onCancel}>닫기</Button>}</View>;
   return <View style={{ gap: 12 }}>
     <Row><Chip selected={mode === "place"} onPress={() => { setMode("place"); setAddressOpen(false); setCandidate(null); setError(null); }}>장소명 검색</Chip><Chip selected={mode === "address"} onPress={() => { controller.current?.abort(); requestVersion.current++; setBusy(false); setMode("address"); setCandidate(null); setAddressOpen(false); setError(null); }}>주소 검색</Chip></Row>
-    <Body small muted>정확한 주소는 작성 입력으로 사용해요. 공개 공고에는 동·읍·면까지만 표시해요.</Body>
+    <Body small muted>{addressUse === "public-event" ? "선택한 행사 주소는 공고에 공개돼요. 공개 행사장 주소만 선택하고 개인 집 주소나 비공개 만남 지점은 선택하지 마세요." : "정확한 주소는 작성 입력으로 사용해요. 공개 공고에는 동·읍·면까지만 표시해요."}</Body>
     {mode === "place" && !addressOpen && <>
       <Field label="장소 이름" value={query} maxLength={300} onChangeText={setQuery} placeholder="찾을 장소 이름을 입력해 주세요" />
       <Button disabled={!query.trim() || busy} loading={busy} onPress={() => lookup(query.trim(), 1)}>장소 검색</Button>

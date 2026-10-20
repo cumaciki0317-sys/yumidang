@@ -14,9 +14,11 @@ import {
   View,
 } from "react-native";
 import { useApp } from "../state";
+import { clearEventPatch, eventDraftError, manualEventError, manualEventPatch, safeManualEvent, selectedEventPatch } from "../presentation/events/event-draft";
 import type {
   AppContextValue,
   Draft,
+  ManualEvent,
   Filters,
   OperationResult,
   Post,
@@ -142,6 +144,19 @@ function blankDraft(category = ""): Draft {
     wishes: "",
     updatedAt: 0,
   };
+}
+function blankManualEvent(): ManualEvent {
+  return { title: "", placeName: "", publicAddress: "", publicAddressConfirmed: false };
+}
+function ManualEventDetails({ value }: { value: unknown }) {
+  const event = safeManualEvent(value);
+  if (!event) return null;
+  return <View style={{ gap: 8 }}>
+    <Badge tone="gray">직접 입력한 행사</Badge>
+    <Body style={{ fontWeight: "600" }}>{event.title}</Body>
+    {event.placeName ? <Body small>{event.placeName}</Body> : null}
+    {event.publicAddress ? <Body small muted>{event.publicAddress}</Body> : null}
+  </View>;
 }
 function InfoLine({
   icon,
@@ -1166,7 +1181,7 @@ function PreviewEventDetail({ id }: { id: string }) {
           onPress={() =>
             app.navigate(
               app.member ? "S03" : "S05",
-              app.member ? `event:${id}` : undefined,
+              `event:${id}`,
             )
           }
           icon="add"
@@ -1293,6 +1308,7 @@ function PreviewPostDetail({ id }: { id: string }) {
       ["active", "confirmed"].includes(c.status),
   );
   const event = app.events.find((e) => e.id === post.eventId);
+  const manualEvent = safeManualEvent(post.manualEvent);
   const rejected = conversation?.status === "rejected";
   const cooldown =
     conversation?.withdrawnAt && conversation.status === "withdrawn"
@@ -1449,6 +1465,7 @@ function PreviewPostDetail({ id }: { id: string }) {
           </Card>
         ) : null}
       </Section>
+      {manualEvent && <Section title="직접 입력한 행사"><Card><ManualEventDetails value={manualEvent} /></Card></Section>}
       {event && (
         <Section title="연결된 문화 행사">
           <Card
@@ -1670,13 +1687,19 @@ function CreateForm({ id }: { id?: string }) {
   const app = useApp();
   const serviceSession = useServiceSession();
   const [eventOpen, setEventOpen] = useState(false);
+  const [eventQuery, setEventQuery] = useState("");
+  const [eventLimit, setEventLimit] = useState(10);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualInput, setManualInput] = useState<ManualEvent>(blankManualEvent);
+  const [manualError, setManualError] = useState("");
+  const [placeTarget, setPlaceTarget] = useState<"meeting" | "event">("meeting");
   const [liveEvent, setLiveEvent] = useState<{ id: string; title: string; placeName: string | null } | null>(null);
   const eventId = id?.startsWith("event:") ? id.slice(6) : undefined;
   const category = id?.startsWith("category:") ? id.slice(9) : "";
   const continuing = id === "resume" || Boolean(eventId);
   const [draft, setDraft] = useState<Draft>(() => ({
     ...(continuing && app.draft && (!serviceMode || app.draft.serviceDraftEpoch === serviceSession.epoch) ? app.draft : blankDraft(category)),
-    ...(eventId ? { eventId } : {}),
+    ...(eventId ? { ...selectedEventPatch(eventId), eventSectionPosition: "top" as const } : {}),
   }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [restore, setRestore] = useState(
@@ -1721,7 +1744,7 @@ function CreateForm({ id }: { id?: string }) {
       else if (action === "exit") app.back();
       else
         app.showToast(
-          "이 기기에 초안을 임시저장했어요. 마지막 수정 후 7일간 보관해요.",
+          serviceMode ? "현재 로그인 세션에 초안을 보관했어요. 앱을 다시 시작하면 유지되지 않을 수 있어요." : "이 기기에 초안을 임시저장했어요. 마지막 수정 후 7일간 보관해요.",
         );
     } catch {
       app.showToast("임시저장하지 못했어요. 작성 내용은 화면에 남아 있어요.");
@@ -1731,6 +1754,8 @@ function CreateForm({ id }: { id?: string }) {
   };
   const next = () => {
     const nextErrors = validateDraft(draft, app.now);
+    const eventError = eventDraftError(draft);
+    if (eventError) nextErrors.event = eventError;
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length)
       app.showToast("입력 내용을 확인해 주세요.");
@@ -1741,6 +1766,27 @@ function CreateForm({ id }: { id?: string }) {
       placeQuery.trim(),
     ),
   );
+  const openManual = () => {
+    setManualInput(safeManualEvent(draft.manualEvent) ?? blankManualEvent());
+    setManualError(""); setEventOpen(false); setManualOpen(true);
+  };
+  const closePlacePicker = () => { setPlaceOpen(false); if (placeTarget === "event") setManualOpen(true); };
+  const receivePlace = (selected: { placeName: string; address: string; publicArea: string }) => {
+    if (placeTarget === "event") setManualInput((value) => ({ ...value, placeName: value.placeName || selected.placeName, publicAddress: selected.address, publicAddressConfirmed: false }));
+    else change({ placeName: selected.placeName, address: selected.address, publicArea: selected.publicArea });
+    closePlacePicker();
+  };
+  const previewEvents = app.events.filter((candidate) => candidate.endsAt > app.now && `${candidate.title} ${candidate.placeName} ${candidate.publicArea}`.toLocaleLowerCase().includes(eventQuery.trim().toLocaleLowerCase()));
+  const eventSection = <Section title="연결된 행사 (선택)">
+    {draft.eventId || draft.manualEvent !== undefined ? <Card style={{ backgroundColor: colors.lavender }}>
+      {safeManualEvent(draft.manualEvent) ? <ManualEventDetails value={draft.manualEvent} /> : <Body style={{ fontWeight: "600" }}>{event?.title ?? (draft.eventId ? "연결된 행사 정보를 확인하고 있어요" : "직접 입력한 행사 정보를 다시 확인해 주세요")}</Body>}
+      <Row><TextButton onPress={() => setEventOpen(true)}>변경</TextButton><TextButton onPress={() => { change(clearEventPatch()); setLiveEvent(null); }}>삭제</TextButton></Row>
+    </Card> : <Button secondary icon="ticket-outline" onPress={() => setEventOpen(true)}>행사 연결하기</Button>}
+    {serviceMode && event?.placeName && <TextButton onPress={() => { setPlaceTarget("meeting"); setPlaceQuery(event.placeName!); setPlaceOpen(true); }}>행사장을 만남 장소 후보로 찾기</TextButton>}
+    {serviceMode && eventSource.error && <><Body muted>연결된 행사 정보를 확인하지 못했어요. 입력은 유지돼요.</Body><TextButton onPress={eventSource.retry}>행사 다시 확인</TextButton></>}
+    {errors.event ? <Body style={{ color: colors.red }}>{errors.event}</Body> : null}
+    <Body small muted>행사 연결은 선택이에요. 행사 선택은 동행 일정을 바꾸지 않아요.</Body>
+  </Section>;
   if (serviceMode ? !serviceSession.authenticated : !app.member)
     return (
       <Screen title="동행 모집">
@@ -1783,11 +1829,11 @@ function CreateForm({ id }: { id?: string }) {
             작성 중인 초안을 이어서 보고 있어요.
           </Body>
           <Body small muted>
-            만료 · {dateLabel(app.draft.updatedAt + 7 * DAY)}{" "}
-            {timeLabel(app.draft.updatedAt + 7 * DAY)}
+            {serviceMode ? "현재 로그인 세션에서만 이어서 작성할 수 있어요. 앱 재시작 후 보관은 보장하지 않아요." : `만료 · ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}`}
           </Body>
         </Card>
       )}
+      {draft.eventSectionPosition === "top" && eventSection}
       <Section title="활동 카테고리 *">
         <View style={styles.wrap}>
           {CATEGORIES.map((v) => (
@@ -1875,6 +1921,7 @@ function CreateForm({ id }: { id?: string }) {
           secondary
           icon="search-outline"
           onPress={() => {
+            setPlaceTarget("meeting");
             setPlaceQuery("");
             setPlaceOpen(true);
           }}
@@ -1924,44 +1971,38 @@ function CreateForm({ id }: { id?: string }) {
           </Body>
         </Row>
       </Section>
-      <Modal visible={eventOpen} transparent animationType="slide" onRequestClose={() => setEventOpen(false)}><View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }}><Title>연결할 행사 선택</Title><TextButton onPress={() => setEventOpen(false)}>행사 선택 닫기</TextButton><RemoteEventPicker startsAt={draft.startsAt} endsAt={draft.endsAt} onSelect={(selected) => { setLiveEvent(selected); change({ eventId: selected.id }); setEventOpen(false); }} /></ScrollView></View></View></Modal>
-      <Section title="연결 문화 행사 (선택)">
-        {event ? (
-          <Card style={{ backgroundColor: colors.lavender }}>
-            <Row>
-              <Icon name="ticket-outline" color={colors.primary} />
-              <Body style={{ flex: 1, fontWeight: "600" }}>{event.title}</Body>
-            </Row>
-            <Row between>
-              <TextButton
-                onPress={() => {
-                  if (serviceMode) setEventOpen(true); else void saveThen("event");
-                }}
-              >
-                행사 변경
-              </TextButton>
-              <TextButton onPress={() => change({ eventId: undefined })}>
-                연결 해제
-              </TextButton>
-            </Row>
-          </Card>
-        ) : (
-          <Button
-            secondary
-            icon="ticket-outline"
-            onPress={() => {
-              if (serviceMode) setEventOpen(true); else void saveThen("event");
-            }}
-          >
-            연결할 행사 선택하기
-          </Button>
-        )}
-        {serviceMode && event?.placeName && <TextButton onPress={() => { setPlaceQuery(event.placeName!); setPlaceOpen(true); }}>행사장을 장소 후보로 찾기</TextButton>}
-        {serviceMode && eventSource.error && <><Body muted>연결된 행사 정보를 확인하지 못했어요.</Body><TextButton onPress={eventSource.retry}>행사 다시 확인</TextButton></>}
-        <Body small muted>
-          행사 선택은 작성 중인 동행 일정을 바꾸지 않아요.
-        </Body>
-      </Section>
+      {draft.eventSectionPosition !== "top" && eventSection}
+      <Modal visible={eventOpen} transparent animationType="slide" onRequestClose={() => setEventOpen(false)}>
+        <View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }} keyboardShouldPersistTaps="handled">
+          <Title>연결할 행사 선택</Title>
+          <TextButton onPress={() => setEventOpen(false)}>행사 선택 닫기</TextButton>
+          {serviceMode ? <RemoteEventPicker onSelect={(selected) => { setLiveEvent(selected); change(selectedEventPatch(selected.id)); setEventOpen(false); }} onDirectInput={openManual} /> : <>
+            <Body small muted>프로토타입 행사 목록이에요. 예정·진행 중 전체에서 찾아요. 동행 날짜가 달라도 연결할 수 있어요.</Body>
+            <Field label="행사 검색" value={eventQuery} onChangeText={(value) => { setEventQuery(value); setEventLimit(10); }} placeholder="행사명 또는 장소명" />
+            {previewEvents.slice(0, eventLimit).map((candidate) => <Card key={candidate.id} onPress={() => { change(selectedEventPatch(candidate.id)); setEventOpen(false); }}><Body>{candidate.title}</Body><Body small muted>{candidate.placeName} · {candidate.publicArea}</Body></Card>)}
+            {!previewEvents.length && <Body muted>조건에 맞는 행사가 없어요. 검색어를 바꾸거나 직접 입력해 주세요.</Body>}
+            {previewEvents.length > eventLimit && <Button secondary onPress={() => setEventLimit((value) => value + 10)}>행사 10개 더 보기</Button>}
+            <Button secondary onPress={openManual}>직접 입력</Button>
+          </>}
+        </ScrollView></View></View>
+      </Modal>
+      <Modal visible={manualOpen} transparent animationType="slide" onRequestClose={() => setManualOpen(false)}>
+        <View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }} keyboardShouldPersistTaps="handled">
+          <Title>행사 직접 입력</Title>
+          <Body small muted>이 공고에만 표시해요. 공통 행사 목록이나 별도 행사 상세에는 등록하지 않아요.</Body>
+          {serviceMode && <Body small muted>직접 입력 행사 서버 연결은 준비 중이에요. 입력·세션 보관·등록 전 확인은 가능하지만 실제 공고 등록은 아직 할 수 없어요.</Body>}
+          <Field label="행사명 *" value={manualInput.title} onChangeText={(title) => { setManualInput((value) => ({ ...value, title })); setManualError(""); }} placeholder="예: 주말 취미 합주 공연" />
+          <Field label="장소명 (선택)" value={manualInput.placeName} onChangeText={(placeName) => { setManualInput((value) => ({ ...value, placeName })); setManualError(""); }} placeholder="예: 공개된 공연장 또는 공방" />
+          <Button secondary onPress={() => { setPlaceTarget("event"); setPlaceQuery(manualInput.placeName); setManualOpen(false); setPlaceOpen(true); }}>공개 행사장 주소 검색 (선택)</Button>
+          {manualInput.publicAddress ? <><Body>{manualInput.publicAddress}</Body><TextButton onPress={() => setManualInput((value) => ({ ...value, publicAddress: "", publicAddressConfirmed: false }))}>주소 삭제</TextButton>
+            <Pressable accessibilityRole="checkbox" accessibilityLabel="공개 행사장 주소임을 확인했어요" accessibilityState={{ checked: manualInput.publicAddressConfirmed }} onPress={() => setManualInput((value) => ({ ...value, publicAddressConfirmed: !value.publicAddressConfirmed }))}><Body>{manualInput.publicAddressConfirmed ? "☑" : "☐"} 공개 행사장 주소임을 확인했어요.</Body></Pressable>
+          </> : <Body small muted>주소를 찾지 못하면 생략할 수 있어요. 공고의 필수 만남 장소는 별도로 선택해요.</Body>}
+          <Body small style={{ color: colors.red }}>행사 주소는 공개되는 정보예요. 개인 집 주소나 비공개 만남 지점은 입력하지 마세요.</Body>
+          {manualError ? <Body style={{ color: colors.red }}>{manualError}</Body> : null}
+          <Button onPress={() => { const error = manualEventError(manualInput); if (error) { setManualError(error); return; } change(manualEventPatch(manualInput)); setLiveEvent(null); setManualOpen(false); }}>이 공고에 연결</Button>
+          <TextButton onPress={() => setManualOpen(false)}>닫기</TextButton>
+        </ScrollView></View></View>
+      </Modal>
       {errors.personalInfo && (
         <Card style={{ borderColor: "#F2CBD3", backgroundColor: colors.pink }}>
           <Body small style={{ color: colors.red }}>
@@ -1985,7 +2026,7 @@ function CreateForm({ id }: { id?: string }) {
       {restore && app.draft && (
         <ConfirmCard
           title="작성 중이던 공고가 있어요"
-          description={`마지막 수정 후 7일간 보관해요. 만료 시각은 ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}예요. 이어서 작성할까요?`}
+          description={serviceMode ? "현재 로그인 세션에 보관한 초안이에요. 앱 재시작 후 보관은 보장하지 않아요. 이어서 작성할까요?" : `마지막 수정 후 7일간 보관해요. 만료 시각은 ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}예요. 이어서 작성할까요?`}
           confirm="불러오기"
           cancel="새로 작성"
           onConfirm={() => {
@@ -2001,7 +2042,7 @@ function CreateForm({ id }: { id?: string }) {
       {overwrite && (
         <ConfirmCard
           title="저장된 초안을 대체할까요?"
-          description="이 기기에는 최근 초안 1개만 저장해요. 새 내용으로 저장하면 이전 초안을 불러올 수 없어요."
+          description={serviceMode ? "현재 로그인 세션의 초안 1개를 새 내용으로 바꿔요. 앱 재시작 후 보관은 보장하지 않아요." : "이 기기에는 최근 초안 1개만 저장해요. 새 내용으로 저장하면 이전 초안을 불러올 수 없어요."}
           confirm="새 초안으로 저장"
           onCancel={() => setOverwrite(null)}
           onConfirm={() => {
@@ -2014,7 +2055,7 @@ function CreateForm({ id }: { id?: string }) {
       {exit && (
         <ConfirmCard
           title="작성을 나갈까요?"
-          description="작성 중인 내용을 이 기기에 임시저장해요. 마지막 수정 후 7일간 보관하고, 등록 성공·로그아웃 시 삭제해요."
+          description={serviceMode ? "현재 로그인 세션에 초안을 보관해요. 앱 재시작 후 보관은 보장하지 않아요." : "작성 중인 내용을 이 기기에 임시저장해요. 마지막 수정 후 7일간 보관하고, 등록 성공·로그아웃 시 삭제해요."}
           confirm="저장하고 나가기"
           cancel="계속 작성"
           onCancel={() => setExit(false)}
@@ -2028,17 +2069,17 @@ function CreateForm({ id }: { id?: string }) {
         visible={placeOpen}
         transparent
         animationType="slide"
-        onRequestClose={() => setPlaceOpen(false)}
+        onRequestClose={closePlacePicker}
       >
         <View style={styles.sheetOverlay}>
           <View style={styles.filterSheet}>
             <View style={styles.handle} />
             <Row between style={{ paddingHorizontal: 22 }}>
-              <Title>만남 장소 선택</Title>
+              <Title>{placeTarget === "event" ? "공개 행사장 주소 선택" : "만남 장소 선택"}</Title>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="장소 선택 닫기"
-                onPress={() => setPlaceOpen(false)}
+                onPress={closePlacePicker}
                 style={styles.iconTap}
               >
                 <Icon name="close-outline" />
@@ -2048,7 +2089,8 @@ function CreateForm({ id }: { id?: string }) {
               contentContainerStyle={{ padding: 22, gap: 16 }}
               keyboardShouldPersistTaps="handled"
             >
-              {serviceMode ? <RemotePlacePicker initialQuery={placeQuery} onSelect={(selected) => { change({ placeName: selected.placeName, address: selected.address, publicArea: selected.publicArea }); setPlaceOpen(false); }} onCancel={() => setPlaceOpen(false)} /> : <>
+              {serviceMode ? <RemotePlacePicker initialQuery={placeQuery} addressUse={placeTarget === "event" ? "public-event" : "meeting"} onSelect={receivePlace} onCancel={closePlacePicker} /> : <>
+              {placeTarget === "event" && <Body small muted>선택한 행사 주소는 공고에 공개돼요. 공개 행사장 주소만 선택해 주세요.</Body>}
               <Badge tone="gray">프로토타입 장소 목록</Badge>
               <Body small muted>
                 외부 장소 검색은 연결되지 않았어요. 준비된 장소를 선택해 작성
@@ -2083,12 +2125,7 @@ function CreateForm({ id }: { id?: string }) {
                   <Card
                     key={place.address}
                     onPress={() => {
-                      change({
-                        placeName: place.placeName,
-                        address: place.address,
-                        publicArea: place.publicArea,
-                      });
-                      setPlaceOpen(false);
+                      receivePlace(place);
                     }}
                   >
                     <Row between>
@@ -2151,6 +2188,8 @@ function PublishForm() {
   };
   const submit = () => {
     const nextErrors = validateDraft(draft, app.now);
+    const eventError = eventDraftError(draft);
+    if (eventError) nextErrors.event = eventError;
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       app.showToast("입력 내용을 확인해 주세요.");
@@ -2161,6 +2200,7 @@ function PublishForm() {
       return;
     }
     if (serviceMode) {
+      if (draft.manualEvent !== undefined) { setErrors({ event: "직접 입력 행사 서버 연결을 준비 중이에요. 입력은 유지돼요. 다시 시도하거나 수정 화면에서 행사 연결을 삭제해 주세요." }); return; }
       if (!session.authenticated || draft.serviceDraftEpoch !== session.epoch) { app.showToast("이 계정에서 작성한 초안으로 다시 시작해 주세요."); return; }
       const input = {
         title: draft.title.trim(), description: draft.introduction.trim(), category: draft.category,
@@ -2245,6 +2285,7 @@ function PublishForm() {
       </View>
       <Title>{"입력하신 공고를\n최종 점검해 주세요"}</Title>
       {serviceMode && action.error && <Body style={{ color: colors.red }}>{action.error}</Body>}
+      {serviceMode && draft.manualEvent !== undefined && <Card><Body>직접 입력 행사 서버 연결을 준비 중이에요. 입력은 유지돼요. 실제 등록하려면 수정 화면에서 행사 연결을 변경하거나 삭제해 주세요.</Body><TextButton onPress={() => void edit()}>행사 연결 수정·삭제</TextButton></Card>}
       <Body muted>함께할 상대와 공개 범위를 확인해 주세요.</Body>
       <Section title="함께할 분의 희망 나이 (선택)">
         <View style={styles.wrap}>
@@ -2323,6 +2364,7 @@ function PublishForm() {
           />
           <Body>{draft.introduction}</Body>
           {event && <Badge>연결 행사 · {event.title}</Badge>}
+          {safeManualEvent(draft.manualEvent) && <ManualEventDetails value={draft.manualEvent} />}
           <Divider />
           {app.member && <MemberBox memberId={app.member.id} compact />}
         </Card>
@@ -2395,7 +2437,7 @@ function PublishForm() {
       {leave && (
         <ConfirmCard
           title="등록 전에 나갈까요?"
-          description="지금까지 작성한 내용은 이 기기에 임시저장해요. 마지막 수정 후 7일간 보관해요."
+          description={serviceMode ? "현재 로그인 세션에 작성 내용을 보관해요. 앱 재시작 후 보관은 보장하지 않아요." : "지금까지 작성한 내용은 이 기기에 임시저장해요. 마지막 수정 후 7일간 보관해요."}
           confirm="저장하고 나가기"
           cancel="계속 확인"
           onCancel={() => setLeave(false)}

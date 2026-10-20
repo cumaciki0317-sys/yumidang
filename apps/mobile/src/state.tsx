@@ -32,6 +32,7 @@ import {
   validateDraft,
 } from "./domain";
 import * as storage from "./storage";
+import { previewEventError } from "./presentation/events/event-draft";
 import { serviceMode, installServiceSession, serviceSessionEpoch, useServiceSession } from "./remote";
 
 export const routes: Record<ScreenId, string> = {
@@ -136,7 +137,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         screen === "S05"
           ? {
               returnPath:
-                pathname +
+                id?.startsWith("event:")
+                  ? routes.S03 + "?id=" + encodeURIComponent(id)
+                  : pathname +
                 (typeof params.id === "string"
                   ? "?id=" + encodeURIComponent(params.id)
                   : ""),
@@ -369,18 +372,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return err("확정 약속은 변경 제안으로 수정해 주세요.");
       const errors = validateDraft(draft, s.now);
       if (Object.keys(errors).length) return err(Object.values(errors)[0]);
+      const eventError = previewEventError(draft, s.events, s.now);
+      if (eventError) return err(eventError);
       if (fail())
         return err("등록하지 못했어요. 입력을 유지했으니 다시 시도해 주세요.");
       const event = s.events.find((e) => e.id === draft.eventId);
       const start = parseDateInput(draft.startsAt),
         end = parseDateInput(draft.endsAt);
-      if (
-        event &&
-        (event.endsAt <= s.now ||
-          start >= event.endsAt ||
-          end <= event.startsAt)
-      )
-        return err("행사 기간과 동행 일정이 겹치는지 확인해 주세요.");
       const id = original?.id || "post-" + uid();
       const { editingPostId, ...fields } = draft;
       const post = {
@@ -404,6 +402,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           original.placeName !== draft.placeName ||
           original.meetingPoint !== draft.meetingPoint ||
           original.address !== draft.address ||
+          original.eventId !== draft.eventId ||
+          JSON.stringify(original.manualEvent) !== JSON.stringify(draft.manualEvent) ||
           original.deadlineAt !== post.deadlineAt);
       commit({
         posts: original

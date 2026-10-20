@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Image, Linking, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { Linking, View } from "react-native";
+import { EventDetailContent, EventListCard } from "../presentation/events/EventPresentation";
+import { canSelectEvent, eventCreateReturnPath, eventSelectionQuery, eventSelectionUnavailableLabel } from "../presentation/events/event-selection";
+import { router, useFocusEffect } from "expo-router";
 import { ApiError } from "../api";
 import { RemoteAiFeedback } from "./RemoteAiFeedback";
 import { RemoteBlockControls, RemotePostManagement, RemoteProfilePhoto, RemoteReport } from "./RemoteMemberScreens";
@@ -227,26 +229,11 @@ export function RemoteEventResults({
   return (
     <View style={{ gap: 14 }}>
       {page.items.map((event) => (
-        <Card
+        <EventListCard
           key={event.id}
+          event={event}
           onPress={() => app.navigate("S09-3", event.id)}
-        >
-          <Badge>
-            {event.state === "ongoing"
-              ? "진행 중"
-              : event.state === "upcoming"
-              ? "예정"
-              : "종료"}
-          </Badge>
-          <Title>{event.title}</Title>
-          <Body small muted>{event.placeName ?? "장소 미확인"}</Body>
-          <Body small muted>
-            {event.precision === "date"
-              ? `${event.startsOn} ~ ${event.endsOn}`
-              : `${event.startsAt} ~ ${event.endsAt}`}
-          </Body>
-          <Body small muted>{event.provider} · {event.collectedAt}</Body>
-        </Card>
+        />
       ))}
       {page.busy && <Body muted>행사를 확인하고 있어요…</Body>}
       {page.error && (
@@ -376,7 +363,7 @@ function RemoteAiSession() {
           return;
         }
         setMessages([...next, { role: "assistant", content: answer }]);
-        setInput("");
+        setInput((current) => current === input ? "" : current);
       }
     } catch (error) {
       if (
@@ -630,43 +617,20 @@ export function RemoteEventDetail({ id }: { id: string }) {
     <Screen title="행사 상세">
       {page.busy && <Body muted>행사를 확인하고 있어요…</Body>}
       {page.error && (
-        <Body muted>{page.error}</Body>
+        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
       )}
       {event && (
         <Card>
-          <Title large>{event.title}</Title>
-          {event.sourceStatus !== "active" && <Body muted>취소된 행사예요. 신규 동행에 연결할 수 없어요.</Body>}
-          <Body>{event.placeName ?? "장소 미확인"}</Body>
-          <Body>{event.publicAddress ?? ""}</Body>
-          <Body>
-            {event.precision === "date"
-              ? `${event.startsOn} ~ ${event.endsOn}`
-              : `${event.startsAt} ~ ${event.endsAt}`}
-          </Body>
-          <Body>
-            {event.admission.kind === "free"
-              ? "무료 입장"
-              : event.admission.kind === "described"
-              ? event.admission.text
-              : "입장료 미확인"}
-          </Body>
-          <Body muted>출처: {event.provider} · {event.collectedAt}</Body>
-          {event.posterUrl && (
-            <Image
-              accessibilityLabel={`${event.title} 공식 포스터`}
-              source={{ uri: event.posterUrl }}
-              style={{ height: 240, width: "100%" }}
-              resizeMode="contain"
-            />
-          )}
-          {event.description && <Body>{event.description}</Body>}
-          {event.operatingInfo && <Body>{event.operatingInfo}</Body>}
-          {event.sourceStatus === "active" && event.state !== "ended" ? <Button onPress={() => app.navigate(session.authenticated ? "S03" : "S05", session.authenticated ? `event:${event.id}` : undefined)}>이 행사로 동행 모집하기</Button> : <Body muted>종료·취소 행사는 신규 동행 모집에 연결할 수 없어요.</Body>}
+          <EventDetailContent event={event} />
           {event.sourceUrl && (
             <TextButton onPress={() => void Linking.openURL(event.sourceUrl!)}>
               공식 안내 보기
             </TextButton>
           )}
+          {event.sourceStatus === "active" && event.state !== "ended" ? <Button onPress={() => {
+            if (session.authenticated) app.navigate("S03", `event:${event.id}`);
+            else router.push({ pathname: "/login", params: { returnPath: eventCreateReturnPath(event.id) } });
+          }}>이 행사로 동행 구하기</Button> : <Body muted>종료·취소 또는 상태를 확인하지 못한 행사는 신규 동행 모집에 연결할 수 없어요.</Body>}
         </Card>
       )}
     </Screen>
@@ -1038,7 +1002,7 @@ export function RemoteEventListScreen(
       )}
       {selecting && (
         <Body muted>
-          공고 작성 화면에서 작성 일정과 겹치는 행사를 선택할 수 있어요.
+          공고 작성 화면에서 예정·진행 중 행사를 선택할 수 있어요. 동행 일정과 같을 필요는 없어요.
         </Body>
       )}
       {!past || validPeriod
@@ -1057,63 +1021,72 @@ export function RemoteEventListScreen(
   );
 }
 
-/** Draft selection uses the explicit drafting interval; a selected event never replaces that interval. */
+/** Search spans available upcoming/ongoing events independently of the draft interval. */
 export function RemoteEventPicker(
-  { startsAt, endsAt, onSelect }: {
-    startsAt: string;
-    endsAt: string;
+  { onSelect, onDirectInput }: {
+    startsAt?: string;
+    endsAt?: string;
     onSelect: (event: PublicEventItem) => void;
+    onDirectInput?: () => void;
   },
 ) {
   const service = useService();
-  const start = parseDateInput(startsAt), end = parseDateInput(endsAt);
-  const valid = Number.isFinite(start) && Number.isFinite(end) && start < end;
+  const [keyword, setKeyword] = useState("");
+  const [appliedKeyword, setAppliedKeyword] = useState("");
+  const query = eventSelectionQuery(appliedKeyword);
   const page = useRemotePage<PublicEventItem>(
-    JSON.stringify({ startsAt, endsAt }),
+    JSON.stringify(query),
     async (cursor, signal) => {
-      if (!valid) return { items: [], nextCursor: null };
       if (!service) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
-      const result = await service.listEvents(
-        {
-          mode: "post_selection",
-          period: { start: startsAt.slice(0, 10), end: endsAt.slice(0, 10) },
-        },
-        cursor,
-        signal,
-      );
+      const result = await service.listEvents(query, cursor, signal);
       return { items: result.events, nextCursor: result.nextCursor };
     },
   );
-  if (!valid) {
-    return <Body muted>작성할 시작·종료 일정을 먼저 입력해 주세요.</Body>;
-  }
+  const search = () => {
+    const next = keyword.trim();
+    if (next === appliedKeyword) page.retry();
+    else setAppliedKeyword(next);
+  };
   return (
     <View style={{ gap: 12 }}>
       <Body small muted>
-        작성 일정과 겹치는 진행 중·예정 행사를 선택해요. 행사 선택으로 동행
-        일정은 바뀌지 않아요.
+        조회 가능한 전체 기간의 예정·진행 중 행사에서 찾아요. 행사 선택으로 동행 일정은 바뀌지 않아요.
       </Body>
+      <Field
+        label="행사 검색"
+        value={keyword}
+        onChangeText={setKeyword}
+        placeholder="행사명·장소명·공개 주소"
+        maxLength={300}
+        returnKeyType="search"
+        onSubmitEditing={search}
+      />
+      <Row>
+        <Button secondary onPress={search}>검색</Button>
+        <TextButton onPress={() => {
+          setKeyword("");
+          if (appliedKeyword) setAppliedKeyword("");
+          else page.retry();
+        }}>검색 초기화</TextButton>
+      </Row>
+      {onDirectInput && <Button secondary onPress={onDirectInput}>행사 직접 입력</Button>}
       {page.items.map((event) => {
-        const eventStart = event.precision === "date"
-          ? Date.parse(`${event.startsOn}T00:00:00+09:00`)
-          : Date.parse(event.startsAt);
-        const eventEnd = event.precision === "date"
-          ? Date.parse(`${event.endsOn}T00:00:00+09:00`) + 86400000
-          : Date.parse(event.endsAt);
-        const eligible = event.sourceStatus === "active" &&
-          event.state !== "ended" && eventStart < end && eventEnd > start;
+        const eligible = canSelectEvent(event);
         return (
-          <Card key={event.id}>
-            <Title>{event.title}</Title>
-            <Body>{event.placeName || "장소 미확인"}</Body>
+          <View key={event.id} style={{ gap: 8 }}>
+            <EventListCard event={event} onPress={() => {
+              if (canSelectEvent(event)) onSelect(event);
+            }} />
             <Button
               secondary
               disabled={!eligible}
-              onPress={() => onSelect(event)}
+              onPress={() => {
+                if (canSelectEvent(event)) onSelect(event);
+              }}
             >
-              {eligible ? "이 행사 연결하기" : "작성 일정에 연결할 수 없어요"}
+              {eligible ? "이 행사 연결하기" : eventSelectionUnavailableLabel(event)}
             </Button>
-          </Card>
+          </View>
         );
       })}
       {page.busy && <Body muted>선택할 행사를 확인하고 있어요…</Body>}
@@ -1121,13 +1094,13 @@ export function RemoteEventPicker(
         <Empty title={page.error} action="다시 시도" onPress={page.retry} />
       )}
       {!page.busy && !page.error && !page.items.length && (
-        <Empty title="작성 일정에 맞는 행사가 없어요" />
+        <>
+          <Empty title="조건에 맞는 행사가 없어요" />
+          <Body small muted>검색어를 바꾸거나{onDirectInput ? " 행사를 직접 입력해 주세요." : " 검색 조건을 초기화해 주세요."}</Body>
+        </>
       )}
       {page.nextCursor && !page.busy && (
-        <Button
-          secondary
-          onPress={() => void page.more()}
-        >
+        <Button secondary onPress={() => void page.more()}>
           행사 10개 더 보기
         </Button>
       )}

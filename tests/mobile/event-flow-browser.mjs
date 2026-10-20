@@ -1,0 +1,43 @@
+/** Local synthetic app exercise. Never authenticates with a provider or calls a service API. */
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import http from 'node:http';
+import {createRequire} from 'node:module';
+const require=createRequire(new URL('../../apps/mobile/package.json',import.meta.url));
+const {chromium}=require('playwright');
+const root=path.resolve(process.env.EVENT_FLOW_WEB_EXPORT||'/private/tmp/event-flow-web-export-20261020');
+await fs.access(path.join(root,'index.html'));
+const mime={'.js':'application/javascript','.css':'text/css','.html':'text/html','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.ttf':'font/ttf','.woff2':'font/woff2','.ico':'image/x-icon'};
+const server=http.createServer(async(req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);let target=path.resolve(root,'.'+pathname);if(!target.startsWith(root+path.sep)&&target!==root){res.writeHead(403);res.end();return;}let file;try{const stat=await fs.stat(target);file=stat.isFile()?target:path.join(root,'index.html');}catch{file=path.join(root,'index.html');}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(await fs.readFile(file));}catch{res.writeHead(500);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const base='http://127.0.0.1:'+server.address().port;
+const browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE||'/Users/b/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'});
+const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[],external=[],checks=[];
+page.on('pageerror',e=>errors.push(e.message));await page.route('**/*',async route=>{const u=route.request().url();if(/^https?:/.test(u)&&!u.startsWith(base+'/')){external.push(u);await route.abort();}else await route.continue();});
+const click=async name=>page.getByRole('button',{name,exact:true}).last().click();
+const body=()=>page.locator('body').innerText();
+const check=(name,value)=>{assert.ok(value,name);checks.push(name);};
+const screen=async(label,id)=>{await click('프로토타입 상태와 화면 목록');await click(label+' '+id+' ›');};
+try{
+ await page.goto(base+'/preview');await click('신청자');await click('공고 작성 S03 ›');
+ check('no selected event in general draft',await page.getByRole('button',{name:'행사 연결하기',exact:true}).count()===1);
+ await page.getByRole('textbox',{name:'공고 제목 *',exact:true}).fill('독립 행사 흐름 합성 초안');
+ await click('행사 연결하기');check('picker opens without meeting dates',await page.getByRole('textbox',{name:'행사 검색',exact:true}).isVisible());
+ await page.getByRole('textbox',{name:'행사 검색',exact:true}).fill('일치하지않는행사이름');check('empty result offers direct input',(await body()).includes('조건에 맞는 행사가 없어요'));
+ await click('직접 입력');await click('이 공고에 연결');check('manual title required',(await body()).includes('직접 입력할 행사명을 입력해 주세요'));
+ await page.getByRole('textbox',{name:'행사명 *',exact:true}).fill('동네 합주 공연');await page.getByRole('textbox',{name:'장소명 (선택)',exact:true}).fill('공개 공연장');await click('이 공고에 연결');
+ check('manual connection visible',(await body()).includes('직접 입력한 행사')&&(await body()).includes('동네 합주 공연'));
+ check('draft title preserved',await page.getByRole('textbox',{name:'공고 제목 *',exact:true}).inputValue()==='독립 행사 흐름 합성 초안');
+ await click('작성 중인 내용 임시저장');check('manual draft persisted',await page.evaluate(()=>Object.keys(localStorage).some(k=>k.includes('draft')&&(localStorage.getItem(k)||'').includes('동네 합주 공연'))));
+ await click('변경');await page.getByRole('textbox',{name:'행사 검색',exact:true}).fill('');
+ await page.screenshot({path:'/private/tmp/event-flow-picker.png'});
+ await click('행사 선택 닫기');await click('삭제');check('unlink removes manual data',(await body()).includes('행사 연결하기')&&!(await body()).includes('동네 합주 공연'));
+ await screen('행사 상세','S09-3');await click('이 행사로 동행 모집하기');
+ check('event-origin selected event title', (await body()).includes('빛과 색을 만나는 현대미술전') && !(await body()).includes('동네 합주 공연'));
+ check('event-origin compose preserves selection',(await body()).includes('연결된 행사 (선택)')&&!await page.getByRole('button',{name:'행사 연결하기',exact:true}).count());
+ const position=await page.getByText('연결된 행사 (선택)',{exact:true}).last().evaluate(el=>el.getBoundingClientRect().top);const titlePosition=await page.getByRole('textbox',{name:'공고 제목 *',exact:true}).evaluate(el=>el.getBoundingClientRect().top);check('event-origin link above title',position<titlePosition);
+ await page.screenshot({path:'/private/tmp/event-flow-compose.png'});
+ check('no runtime errors',errors.length===0);check('external API requests zero',external.length===0);check('mobile no horizontal overflow',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await fs.writeFile('/private/tmp/event-flow-browser-result.json',JSON.stringify({status:'PASS',checks,errors,external,scope:'actual Expo web preview with synthetic in-memory/device drafts; no real provider/member/server validation'},null,2));console.log(JSON.stringify({status:'PASS',checks:checks.length,externalRequests:external.length}));
+}catch(error){await page.screenshot({path:'/private/tmp/event-flow-browser-failure.png'});console.error((await body()).slice(-5500));throw error;}finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

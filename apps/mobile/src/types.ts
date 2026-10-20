@@ -56,6 +56,7 @@ export type Post = {
     | "completed"
     | "deleted";
   eventId?: string;
+  manualEvent?: ManualEvent;
   image?: string;
   desiredAgeMin?: string;
   desiredAgeMax?: string;
@@ -156,10 +157,19 @@ export type Draft = {
   endsAt: string;
   deadlineAt: string;
   eventId?: string;
+  /** 공고에만 속하며 공용 행사 목록/상세를 생성하지 않는 직접 입력 정보. */
+  manualEvent?: ManualEvent;
+  eventSectionPosition?: "top" | "bottom";
   desiredAgeMin: string;
   desiredAgeMax: string;
   wishes: string;
   updatedAt: number;
+};
+export type ManualEvent = {
+  title: string;
+  placeName: string;
+  publicAddress: string;
+  publicAddressConfirmed: boolean;
 };
 export type Filters = {
   query: string;
