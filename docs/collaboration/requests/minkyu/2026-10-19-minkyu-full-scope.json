@@ -2380,17 +2380,18 @@
       },
       "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
       "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
-      "preserved_coverage": "KOPIS 공식문서·요청/파서 준비와 TLS 관측은 있으나 공식 API GET0 기록이다.",
-      "remaining_acceptance": "공식회신/실응답 basedate·실제기간·정렬/동률·전국/뮤지컬·출처 검증.",
-      "immediate_next_action": "기존 official-read gate와 최신 공식계약의 차이를 확인하고 정확한 key전송/호출 범위 충족 후 실제응답을 검증한다.",
-      "action_class": "NEEDS_PROVIDER_CONTRACT_AND_KEY_TRANSMISSION",
+      "preserved_coverage": "기존 공식문서·요청/파서·TLS 및 API0 준비 기록 보존. 2026-10-20 승인 후 전국 전체1GET은 HTTP200/XML boxof50개·basedate없음으로 제품 파서 거절; 뮤지컬0회·재시도0. 초기 준비와 실제 결과를 구분하며 실행 중단을 유지한다.",
+      "remaining_acceptance": "확정 A안: 전체 공연·연극·뮤지컬·클래식·국악·대중음악·무용·대중무용·서커스/마술·복합·아동·대학로·내한·축제 14분류 Top10, 어제까지 최근7일·매일 갱신. 공식 사이트의 실제 기간·분류/지역·정렬과 API 공연ID·순위·순서가 일치한 분류만 공개한다. 분류별 매핑·대조·저장·서버/앱·갱신 검증은 미완료이며 공급사 회신만이 유일 공개 조건은 아니다.",
+      "immediate_next_action": "새 호출 없이 확정 A안·14분류를 현재 계약/데이터 칼럼/화면 연결 차이에 반영한다. 실제 호출·자동 대조 실행은 기존 중단과 정확한 대상/키전송 승인 조건을 유지하며, 초기 소모 intent나 남은 요청 수를 재실행 권한으로 쓰지 않는다.",
+      "action_class": "NEEDS_CATEGORY_MATCHING_AND_EXECUTION_RESUME_APPROVAL",
       "evidence_refs": [
         "kopis",
         "wbs17",
         "policy"
       ],
       "external_or_shared_conditions": [
-        "이전 자동검토는 정확한 KOPIS 키전송 승인 부재로 거절;그 사실을 우회하지 않고 실제승인 조건을 해소"
+        "이전 자동 승인 거절과 이후 정확한 최대2회 승인/전국 전체1GET의 소비 이력은 현재 KOPIS 읽기 문서에 보존한다. 사용자의 실행 중단은 문서 동기화만으로 해제하지 않는다.",
+        "basedate 누락 시 A안의 공식 사이트 분류별 대조를 공개 근거로 사용하되 API 내부 집계기간을 증명했다고 표현하지 않는다. 요청 날짜 추정·일간 합산 자체 주간 순위는 금지한다."
       ],
       "full_task_complete_claimed": false,
       "latest_local_preparation": {
