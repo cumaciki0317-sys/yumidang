@@ -1,0 +1,1573 @@
+[
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "mt20id",
+    "meaning": "공연 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "PF303837",
+    "nullable": false,
+    "commonField": "sourceId",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "prfnm",
+    "meaning": "공연명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "제1202회 하우스콘서트, 강태환 & 게슈탄트 김",
+    "nullable": false,
+    "commonField": "title",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "prfpdfrom",
+    "meaning": "공연 시작일",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026.11.16",
+    "nullable": false,
+    "commonField": "startsOn",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "prfpdto",
+    "meaning": "공연 종료일",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026.11.16",
+    "nullable": false,
+    "commonField": "endsOn",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "fcltynm",
+    "meaning": "공연시설명(공연장명)",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "예술가의 집",
+    "nullable": null,
+    "commonField": "placeName",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "poster",
+    "meaning": "포스터 URL",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "http://www.kopis.or.kr/upload/pfmPoster/PF_PF303837_261019_173208.png",
+    "nullable": null,
+    "commonField": "posterUrl",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; 공통 정규화에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 원천은 HTTP. 표본 1포스터/1소개이미지 canonical HTTPS HEAD200만 확인. 전체 URL 일괄 변환이나 렌더 성공 근거 아님.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "area",
+    "meaning": "공연 지역",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "서울특별시",
+    "nullable": null,
+    "commonField": "region",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "genrenm",
+    "meaning": "공연 장르명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "서양음악(클래식)",
+    "nullable": null,
+    "commonField": "category",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "openrun",
+    "meaning": "오픈런 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; 공통 정규화에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr",
+    "originalField": "prfstate",
+    "meaning": "공연 상태",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "공연예정",
+    "nullable": false,
+    "commonField": "sourceStatus",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 예정/중/완료는 sourceStatus=active. 공연 완료를 취소로 바꾸지 않음; 화면 state는 날짜로 계산.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "mt20id",
+    "meaning": "공연 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "PF303837",
+    "nullable": null,
+    "commonField": "sourceId",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "mt13id",
+    "meaning": "공연장 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "FC002634-01",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfnm",
+    "meaning": "공연명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "제1202회 하우스콘서트, 강태환 & 게슈탄트 김",
+    "nullable": null,
+    "commonField": "title",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "frstregdt",
+    "meaning": "공연정보 최초 등록일",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026-10-19 17:32:08",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 메타데이터 날짜이며 순위 갱신일/집계일 아님. 시간대 없는 문자열을 UTC로 추정하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfpdfrom",
+    "meaning": "공연 시작일",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026.11.16",
+    "nullable": null,
+    "commonField": "startsOn",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfpdto",
+    "meaning": "공연 종료일",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026.11.16",
+    "nullable": null,
+    "commonField": "endsOn",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "fcltynm",
+    "meaning": "공연시설명(공연장명)",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "예술가의 집 (예술가의 집)",
+    "nullable": null,
+    "commonField": "placeName",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfcast",
+    "meaning": "출연진",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "강태환 등",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfcrew",
+    "meaning": "제작진",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfruntime",
+    "meaning": "공연 런타임",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfage",
+    "meaning": "관람 연령",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "전체 관람가",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "entrpsnm",
+    "meaning": "기획제작사",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "entrpsnmP",
+    "meaning": "제작사",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "entrpsnmA",
+    "meaning": "기획사",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "entrpsnmH",
+    "meaning": "주최",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "더하우스콘서트",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "entrpsnmS",
+    "meaning": "주관",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "pcseguidance",
+    "meaning": "티켓 가격 안내",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "전석 40,000원",
+    "nullable": null,
+    "commonField": "admission",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 서술값 유지. 숫자만 추출하거나 빈값=무료로 처리 금지. 현 코드는 무료 문구도 described이며 free 자동 판정 없음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "poster",
+    "meaning": "포스터 URL",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "http://www.kopis.or.kr/upload/pfmPoster/PF_PF303837_261019_173208.png",
+    "nullable": null,
+    "commonField": "posterUrl",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음; HTTPS 원본만 출력하므로 이번 HTTP 표본 posterUrl=null",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 원천은 HTTP. 표본 1포스터/1소개이미지 canonical HTTPS HEAD200만 확인. 전체 URL 일괄 변환이나 렌더 성공 근거 아님.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "sty",
+    "meaning": "줄거리/소개 원문",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "[PROGRAM]\n\n파경 (波景 Wavescape) - Session 2\n\n제1202회 하우스콘서트 무대는 색소폰 강태환과 전자음악 게슈탄트 김의 프리뮤직 라이브.\n\n두 아티스트의 장르와 형식, 그리고 표현 방법은 전혀 다르지만 끝없이 탐구하고 새 지평에 도전하는 예술혼은 저 높은, 혹은 저 깊은 어느 곳 같은 지점을 향하고 있을 것이다.\n\n그렇기에 90년대 초반 만남 이후 30년이 훌쩍 넘은 현재까지 세대와 장르를 초월하여 ",
+    "nullable": null,
+    "commonField": "description",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "area",
+    "meaning": "공연 지역",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "서울특별시",
+    "nullable": null,
+    "commonField": "region",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "genrenm",
+    "meaning": "공연 장르명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "서양음악(클래식)",
+    "nullable": null,
+    "commonField": "category",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "openrun",
+    "meaning": "오픈런 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "visit",
+    "meaning": "내한 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "child",
+    "meaning": "아동 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "daehakro",
+    "meaning": "대학로 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "festival",
+    "meaning": "축제 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "musicallicense",
+    "meaning": "뮤지컬 라이선스 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "musicalcreate",
+    "meaning": "창작 뮤지컬 여부",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "updatedate",
+    "meaning": "공연정보 최종 수정일",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026-10-19 18:00:00.095087",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 메타데이터 날짜이며 순위 갱신일/집계일 아님. 시간대 없는 문자열을 UTC로 추정하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "prfstate",
+    "meaning": "공연 상태",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "공연예정",
+    "nullable": null,
+    "commonField": "sourceStatus",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 예정/중/완료는 sourceStatus=active. 공연 완료를 취소로 바꾸지 않음; 화면 state는 날짜로 계산.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "mt10id",
+    "meaning": "공연시설 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "FC002634",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "dtguidance",
+    "meaning": "공연 요일·시간 안내",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "월요일(20:00)",
+    "nullable": null,
+    "commonField": "operatingInfo",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "styurls",
+    "meaning": "소개이미지 목록",
+    "type": "XML nested array/container",
+    "evidence": "observed",
+    "sample": null,
+    "nullable": null,
+    "commonField": null,
+    "screen": [],
+    "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "styurls.styurl",
+    "meaning": "소개이미지 URL",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "http://www.kopis.or.kr/upload/pfmIntroImage/PF_PF303837_202610190532530870.png",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "relates",
+    "meaning": "예매처 목록",
+    "type": "XML nested array/container",
+    "evidence": "observed",
+    "sample": null,
+    "nullable": null,
+    "commonField": null,
+    "screen": [],
+    "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "relates.relate",
+    "meaning": "예매처 항목",
+    "type": "XML nested array/container",
+    "evidence": "observed",
+    "sample": null,
+    "nullable": null,
+    "commonField": null,
+    "screen": [],
+    "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "relates.relate.relatenm",
+    "meaning": "예매처명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "더하우스콘서트",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "pblprfr/{mt20id}",
+    "originalField": "relates.relate.relateurl",
+    "meaning": "홈페이지/예매처 URL",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "https://thehouseconcert.com/sub/concert/schedule_view.php?idx=1511",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 외부 사이트 링크는 수신만 확인했고 접속·예약 가능성 미검증. 키 포함 API URL을 sourceUrl로 쓰지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "fcltynm",
+    "meaning": "공연시설명(공연장명)",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "예술가의 집",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt10id",
+    "meaning": "공연시설 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "FC002634",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13cnt",
+    "meaning": "공연장 수",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "3",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "fcltychartr",
+    "meaning": "시설 특성",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "국립",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "opende",
+    "meaning": "개관 연도",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2010",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "seatscale",
+    "meaning": "시설/공연장 좌석 규모",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "110",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "telno",
+    "meaning": "시설 전화번호",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "02-760-4715",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "relateurl",
+    "meaning": "홈페이지/예매처 URL",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "https://arko.or.kr/infra/pm1_01/m2_07/m3_03.do",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 외부 사이트 링크는 수신만 확인했고 접속·예약 가능성 미검증. 키 포함 API URL을 sourceUrl로 쓰지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "adres",
+    "meaning": "시설 주소",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "서울특별시 종로구 동숭길 3 (동숭동)",
+    "nullable": null,
+    "commonField": "publicAddress (후보: 시설 join 필요)",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "la",
+    "meaning": "위도",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "37.580502300000000",
+    "nullable": null,
+    "commonField": "latitude (확장 후보)",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "lo",
+    "meaning": "경도",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "127.00325620000000",
+    "nullable": null,
+    "commonField": "longitude (확장 후보)",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "restaurant",
+    "meaning": "레스토랑",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "cafe",
+    "meaning": "카페",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "Y",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "store",
+    "meaning": "편의점",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "nolibang",
+    "meaning": "놀이방",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "suyu",
+    "meaning": "수유실",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "parkbarrier",
+    "meaning": "장애인 주차시설",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "restbarrier",
+    "meaning": "장애인 화장실",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "runwbarrier",
+    "meaning": "경사로",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "elevbarrier",
+    "meaning": "엘리베이터",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "parkinglot",
+    "meaning": "주차시설",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s",
+    "meaning": "공연장 목록",
+    "type": "XML nested array/container",
+    "evidence": "observed",
+    "sample": null,
+    "nullable": null,
+    "commonField": null,
+    "screen": [],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13",
+    "meaning": "공연장 항목",
+    "type": "XML nested array/container",
+    "evidence": "observed",
+    "sample": null,
+    "nullable": null,
+    "commonField": null,
+    "screen": [],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.prfplcnm",
+    "meaning": "공연장명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "예술가의 집",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.mt13id",
+    "meaning": "공연장 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "FC002634-01",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.seatscale",
+    "meaning": "시설/공연장 좌석 규모",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "110",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.stageorchat",
+    "meaning": "오케스트라 피트",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 문서상 Y/N/Z/0 값 허용; 단순 boolean 변환 전 의미 확인 필요.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.stagepracat",
+    "meaning": "연습실",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "Y",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.stagedresat",
+    "meaning": "분장실",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "Y",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.stageoutdrat",
+    "meaning": "야외공연장",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "N",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.disabledseatscale",
+    "meaning": "장애인 객석 규모",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "0",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "prfplc/{mt10id}",
+    "originalField": "mt13s.mt13.stagearea",
+    "meaning": "무대 넓이",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "",
+    "nullable": true,
+    "commonField": null,
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "cate",
+    "meaning": "공연 장르",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "뮤지컬",
+    "nullable": null,
+    "commonField": "ranking.items.genre",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "rnum",
+    "meaning": "순위",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "1",
+    "nullable": null,
+    "commonField": "ranking.items.rank",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "prfnm",
+    "meaning": "공연명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "스위니토드 (SWEENEY TODD)",
+    "nullable": null,
+    "commonField": "ranking.items.title",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "prfpd",
+    "meaning": "공연 개최 기간",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "2026.12.04~2027.05.02",
+    "nullable": null,
+    "commonField": "ranking.items.performancePeriodText",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "prfdtcnt",
+    "meaning": "상연 횟수",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "22",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 수용 후 출력 제외; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "area",
+    "meaning": "공연 지역",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "서울",
+    "nullable": null,
+    "commonField": "ranking.items.region",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "prfplcnm",
+    "meaning": "공연장명",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "디큐브링크아트센터 디큐브씨어터",
+    "nullable": null,
+    "commonField": "ranking.items.placeName",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "seatcnt",
+    "meaning": "좌석 수",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "1242",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 수용 후 출력 제외; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "poster",
+    "meaning": "포스터 URL",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "http://www.kopis.or.kr/upload/pfmPoster/PF_PF303043_261012_171201.gif",
+    "nullable": null,
+    "commonField": null,
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 수용 후 출력 제외; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 원천은 HTTP. 표본 1포스터/1소개이미지 canonical HTTPS HEAD200만 확인. 전체 URL 일괄 변환이나 렌더 성공 근거 아님.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "mt20id",
+    "meaning": "공연 ID",
+    "type": "XML string",
+    "evidence": "observed",
+    "sample": "PF303043",
+    "nullable": null,
+    "commonField": "ranking.items.sourceId",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+    "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  },
+  {
+    "source": "kopis",
+    "endpoint": "boxoffice",
+    "originalField": "basedate",
+    "meaning": "순위 집계 기준 기간",
+    "type": "XML string (YYYY-MM-DD~YYYY-MM-DD)",
+    "evidence": "documented",
+    "sample": null,
+    "nullable": true,
+    "commonField": "ranking.responsePeriod",
+    "screen": [
+      "공식 순위 영역"
+    ],
+    "codeSupport": "현재 전용 파서는 필수 검증; 실제 응답에 없어 실패",
+    "notes": "공식 명세에만 있음. Dots 14일 A안 대조 결과 대기. 요청 날짜/공연일/수정일/통계 날짜를 대체 증거로 단정하지 않음.",
+    "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+  }
+]

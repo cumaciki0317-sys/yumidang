@@ -1,0 +1,527 @@
+{
+  "date": "2026-10-20",
+  "actor": "jonghyun",
+  "branch": "jonghyun/policy-review-20261017",
+  "scope": "all related product/planning/design/backend-contract/collaboration/UT documents independent of document owner",
+  "authorization": "사용자 명시 전체 문서 동기화 예외. HEAD 검사 거절 보존·정상 PASS로 바꾸지 않음. actor/ownership/hook 불변. 서버 코드·DB·운영·커밋/푸시 승인 아님.",
+  "decisions": {
+    "sourceAnswerSha256": "de23d0063cdf275bf8c5cf7c0d7426b45e922015c01a61977f4ef4712e29d754",
+    "E01": "D user custom: entry-specific placement and no time overlap enforcement",
+    "E02": "A with F01 superseding automatic date filtering",
+    "E03": "A",
+    "E04": "B with F02/F03 A implementation basis",
+    "E05_E12": "A",
+    "F01_F02_F03": "A, A, A explicit user reply",
+    "pendingProductDecisions": []
+  },
+  "existingDocumentsChanged": 53,
+  "documents": [
+    {
+      "path": "정책.md",
+      "beforeSha256": "ae1487c313f90f5fae0120d2124e3c131314961b1ea8da5d140f270a90aee4f7",
+      "afterSha256": "838af16015438837ea8edeaf302cb3238d839815c5739773b0f56f5aa49f99eb",
+      "backup": "/private/tmp/event-ux-before-root/정책.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "PLAN.md",
+      "beforeSha256": "5246703e5617099f9cd83fd6fed5612a2603bc9b8f18b8b4cb68774ceef5d9a4",
+      "afterSha256": "09a59641bc2328a586a4c81d54e50538a02d63dba2115c9a3ba9eec0d91fb160",
+      "backup": "/private/tmp/event-ux-before-root/PLAN.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "beforeSha256": "3156520a66a87b86642a5cefe72f0aa5a60a528879293028b3500d5d32829161",
+      "afterSha256": "813c437821a135e781a61d588095ff872873684db3b786180b0cb9ef038c80fc",
+      "backup": "/private/tmp/event-ux-before-root/PLAN_상세설계.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "AGENTS.md",
+      "beforeSha256": "a6a860f84fb2779c64b855291c395dbff97fcb60390dc1df73957ebe29efcdb9",
+      "afterSha256": "1ed2c02d301dee05226f74fc662594c87a3906275e94938da4ca83011cbb99c8",
+      "backup": "/private/tmp/event-ux-before-root/AGENTS.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "README.md",
+      "beforeSha256": "385e5ad12dedc4c40abccb3e3c68f9dc9b8fe9083304932540e5fe210c42e6d1",
+      "afterSha256": "00c979f4b8a1ca021b1e621fdf2b41ab0aae185229c955bb6a2d299326b02fb3",
+      "backup": "/private/tmp/event-ux-before-root/README.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "260929_종현담당_PLAN.md",
+      "beforeSha256": "fad8fdc2e3b2a837b63172c4ba3c0486e02bddc6f452d8632d819a8f67300c8d",
+      "afterSha256": "5d00b9a415ef5bc7911815d874d01d9a0f4cbb92fa6e2232976158e05e74b47e",
+      "backup": "/private/tmp/event-ux-before-root/260929_종현담당_PLAN.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "유미당_출시결정_보류사항_민규전달_20261005.md",
+      "beforeSha256": "6422f9d304a4e78b8b7ced2ac68275d3aa61cbddaaf8bca8b2fef45a470140ff",
+      "afterSha256": "78dfda876e5e64ff8c05aab070f4ec0c5449f460fce3fe07eba97c6e1dc52120",
+      "backup": "/private/tmp/event-ux-before-root/유미당_출시결정_보류사항_민규전달_20261005.md",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "docs/planning/design/유미당 와이어프레임.html",
+      "beforeSha256": "e09f6d47450ae67cfb86ca9bf1fa6e8bda7094a21559306bf3fe03dc166e1ec4",
+      "afterSha256": "edce537535fe6ab2fb24c196e48afb4af12e3e50e2e339af898a3092c4a6f4cb",
+      "backup": "/private/tmp/event-ux-before-root/docs/planning/design/유미당 와이어프레임.html",
+      "group": "root",
+      "reason": "사용자 확정 행사UX 정책 동기화. 전체문서 명시 예외 승인. 실제 구현/운영과 구분."
+    },
+    {
+      "path": "backend/README.md",
+      "beforeSha256": "dd1fd2495d742514973dcc3ebf786a704407131da2f05f160d0d00cca4649331",
+      "afterSha256": "3ba36ada983dbd2dd401feb5c53a552bb0c4faeb484505734f45c99265318d6c",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/README.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/API_INPUT.md",
+      "beforeSha256": "74ca69a2cdf2593ffa8eeaf563ca9613ee6ed5a585b7c3593fe31810d69c6bbe",
+      "afterSha256": "f9031feb6a430d4dda38ff0065f00f04c916fe71a4ffe9917d425338fbc6012f",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/API_INPUT.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/search.md",
+      "beforeSha256": "66a9b1ac0ea09eb07b90b84f1d461fdd79447350c6666a6fa84c7db53a9eccd4",
+      "afterSha256": "1cd3121011a8079419ad0709a144aa99060cb3844a65e2f22a64d6556c2d2948",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/search.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/event-storage.md",
+      "beforeSha256": "d51000caa2aecf48560811863ec7920acf0b4229328e50e032e508e1f7c87078",
+      "afterSha256": "4b9778e9bed8559be83a37a777050cffebed95099937d8775ff85c8e252e15ff",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/event-storage.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/posts-search.md",
+      "beforeSha256": "365251d83513e0b3555fa461b10d6d4aab012bf88a067379d0ab82a150a894f2",
+      "afterSha256": "599837729412f5ed3891f65435b16affcb466bc5337adbfad462e842f8a63c27",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/posts-search.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/service-api.md",
+      "beforeSha256": "b9f29946ccceb9baf0bced07a7efa03974baf140745b99835b12aff1b9ec8625",
+      "afterSha256": "e6a44be0f1748b097fc829130579e5f8bdc5e1a7598b97ff593ef7420adb47d6",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/service-api.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/daily-jobs.md",
+      "beforeSha256": "ea8bcb0f96f0a9c704f189dbd3ddbf65ab20883e052f807fc7547c3586dc00b9",
+      "afterSha256": "3d1815d3d0790abc6b7e4f70138a7d6d6c90f22104705c5e9bcfa5d27bc22857",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/daily-jobs.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/db-foundation.md",
+      "beforeSha256": "80cde1616fe8070493d06b13022aff88f2e6f33fa0bb621ec1310d6434210dd8",
+      "afterSha256": "11c86996ebc4063894819466c25907ff764c74aca888bb8088cceddeefb52b2b",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/db-foundation.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/core-service-db.md",
+      "beforeSha256": "a72280535dfeea4460f13d97ccc2739d041b40b462cc39048245e9a505e7d08f",
+      "afterSha256": "5d8a0a16a4f851e8aa6d108c429e2d6675426a3d092ed8116818dd1b58f53bbb",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/core-service-db.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/matching.md",
+      "beforeSha256": "3a65d901a721c825bc24cb5af77f5bb419bcd92879e6fa26dc50735c6e8f4ad7",
+      "afterSha256": "90408aad9ab3677cb8d6bafa80781a778a29da7b40175a10566a44e7324c3147",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/matching.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/public-post-search-db.md",
+      "beforeSha256": "1a6dbd10d1d0e80690cf95c7015f2580775b2b68649204183fc6d49d1ecdbed9",
+      "afterSha256": "211244f99cbee2417f7e97ceff4e6a5f9271d43742a33c6b96f1e13af661e659",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/public-post-search-db.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/auth-runtime.md",
+      "beforeSha256": "9082ce26e1cbe30b344fc20c655432c7aa69e663e8e8675821ef3ae53d689a0a",
+      "afterSha256": "2b75d42e4d38b46b938ffaff422190cc536f645b3e617127eb659709a8f6e4a9",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/auth-runtime.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/ai-chat.md",
+      "beforeSha256": "0f98169f13e4fd8d3edbe88688cd8ffb5102a5d30a371d0fb6bc1c38235644db",
+      "afterSha256": "53fde24b31e1f3474ea97116a54305e3317adeb456a5a9c139bb934f831a56fd",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/ai-chat.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/README.md",
+      "beforeSha256": "a2fe2e8b8402a72c5edd593c8e012aca593734c77b37100ff06fb888a2fa9bd4",
+      "afterSha256": "2a16a9030435325ef58875e2aba294c2d775639d119c23ee91e7a8613b8ad84d",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/supabase/functions/_shared/ai/Agents/README.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/worker-jobs.md",
+      "beforeSha256": "c179c6d95f5fa2945107d239666ba782d189264dd39b4135297f123492fc4eba",
+      "afterSha256": "840adfb4035a1aa15753045dfd9d518c287a5bc15b6efefe77220b35213cc39d",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/worker-jobs.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "backend/contracts/reports.md",
+      "beforeSha256": "ebd33e042eef493a7e47bc0a54b4aa98850ed91deb272615693f49e7164bb449",
+      "afterSha256": "219db59c79ab7a3bb5298d0729d64a5cb54980b6bbec0c281f2387823fa2869f",
+      "backup": "/private/tmp/event-ux-before-backend-docs/backend/contracts/reports.md",
+      "group": "backend",
+      "reason": "행사 UX 최종 확정과 기존 구현의 차이를 명시. 일정 겹침 강제·검색 자동축소 제거, 공식 근거 통합·원천 공개/충돌·직접입력·알림·변경계약의 문서별 적용 범위 동기화."
+    },
+    {
+      "path": "docs/planning/design/IA.md",
+      "beforeSha256": "da3f007d370ed587965920e0f00a1a03bd1d75e932b18bcd22d23e6a3d8a8498",
+      "afterSha256": "503953601e5ba2f3a2aad6efc50576055735ca68f8c9a68637cc129a7fa362c7",
+      "backup": "/private/tmp/event-ux-before-docs/docs/planning/design/IA.md",
+      "group": "design",
+      "reason": "현재 IA의 일정 겹침 강제 제거 및 화면별 확정 구조 반영; 합성 행사 UX 미리보기 링크 및 외부 캘린더 제외 경계 명시"
+    },
+    {
+      "path": "docs/planning/design/USERFLOW.md",
+      "beforeSha256": "7592c7871a6f5edcec6c880ab1ff68449ed6aeab6a99eb027330a26838987deb",
+      "afterSha256": "9077d709b891cd96a05fb0fbc5ecb7109b7f9e67dd651286e9ba85d528ca1933",
+      "backup": "/private/tmp/event-ux-before-docs/docs/planning/design/USERFLOW.md",
+      "group": "design",
+      "reason": "사용자 흐름의 기간 강제 및 신규 입력·상태·통합·복귀 분기 동기화; 합성 행사 UX 미리보기 링크 및 외부 캘린더 제외 경계 명시"
+    },
+    {
+      "path": "docs/planning/requirements/PRD.md",
+      "beforeSha256": "e95f177dfd3d8c2322bffb753a92129e4b111e5b7dea087f74ea177baf290829",
+      "afterSha256": "84015e428e07896c15fe32d59841e65f6f2b8977eafc4ae7eb6ab5b61b199fb4",
+      "backup": "/private/tmp/event-ux-before-docs/docs/planning/requirements/PRD.md",
+      "group": "design",
+      "reason": "PRD FR8 및 복제된 행사 정책의 겹침 강제 제거, 확정 수용조건 추가; 합성 행사 UX 미리보기 링크 및 외부 캘린더 제외 경계 명시"
+    },
+    {
+      "path": "apps/mobile/README.md",
+      "beforeSha256": "e41650f33341f4228a22b400dc0e34547ecc5c6c635c78579d5df7138104fc3e",
+      "afterSha256": "cdca72c30d7ccabf2ab9f50c21590c326d0491563031ac866854440006d35c47",
+      "backup": "/private/tmp/event-ux-before-docs/apps/mobile/README.md",
+      "group": "design",
+      "reason": "기존 클라이언트 사실은 보존하고 현행 UX와 구현 차이를 명확히 분리"
+    },
+    {
+      "path": "docs/planning/ut/README.md",
+      "beforeSha256": "4f30f6699590a5e8d6a79e5757762020b025aeaa5fca696bcaf36389ae436bbf",
+      "afterSha256": "ca9979369a53297e40a9275f7fb6454370d37aa54001f8980eb25065e3df8b78",
+      "backup": "/private/tmp/event-ux-before-docs/docs/planning/ut/README.md",
+      "group": "design",
+      "reason": "유미 UT의 행사 현행 기준 연결, 실제 UT 미실행 유지; 합성 행사 UX 미리보기 링크 및 외부 캘린더 제외 경계 명시"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-event-latest-display.md",
+      "beforeSha256": "b5f1cb787c1c24048961c7153d6ce7b4e0056d66bc5011f578bba894295ad597",
+      "afterSha256": "1563b4be6423b850c81294dda0fc9b2b3b4547939f34face9e8989dee02942b7",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-10-02-event-latest-display.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-jonghyun-merge-review.md",
+      "beforeSha256": "5c82f5ea3a9568012c1474d8f55ca8978521b063f82029880c6e20dc16ad2dc4",
+      "afterSha256": "fc2381db15b29a18b90e8586ff3ea468cc1aa4d90a1431a9ab25c3f94567b161",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-28-jonghyun-merge-review.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-kopis-top10-contract.md",
+      "beforeSha256": "24e9afd9d92ffa65a1b94c085bfc54adc6335605646101d82271716b3ce5c4c8",
+      "afterSha256": "34f663e13e4e1de91bb4addf0ae11d3f81169c665d22b3a1652b49024d0b17bd",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-10-02-kopis-top10-contract.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md",
+      "beforeSha256": "a94e198587de4df85ebb14f2ca40648fef63bc94dd7a7da5c4430cf40867b74b",
+      "afterSha256": "ecaca9bd949de9a753456a5fa9183adde621d951a7833890d30326da4e283484",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "beforeSha256": "06d4ca4750ff6f4ebd093c5352c174065374365721f9199a5b5a9704aea1cc1f",
+      "afterSha256": "0a5cddf95834406d81874210c2bfed35fefa08f3d2574c3ee1062464c7c8f2cc",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md",
+      "beforeSha256": "1038f89a763ffafa0cd433378586d9712f3073a628de6f254709c167bcf23a14",
+      "afterSha256": "3d6eaa622b36519f8457ce9e21b42d352e33ae9dd4e5ed5f534e5ff8e98be0ef",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md",
+      "beforeSha256": "a42d66a21381adb821aa2041de501dc0363a61ba98e1348ec126c2166b2ce8d6",
+      "afterSha256": "5fd698d20deecee67e5a9a178960fcf02836aaad61d2822bb32bb9a3ecaccd37",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-additional-backend.md",
+      "beforeSha256": "7db9e1e9bde26f695adadb62f215977ceb323359a42bca7298ebc2a7c70899a0",
+      "afterSha256": "d633aa170eaa91c389259994e977c477abc6357a706cba19eb46253b4fd5916d",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-10-08-additional-backend.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-tour-live.md",
+      "beforeSha256": "828e9e15f2b35bfa9f1fc24e0a171d4fb0c9bbef016b6dc517fd5e33def2e729",
+      "afterSha256": "bf995c4dae39fdfb383a0a77191e058ecd80c9fb832ef4cce388605c5b008c3b",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-29-tour-live.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-events-live.md",
+      "beforeSha256": "684db7fd4815ee34cccb4773c06f18142452dd2139c9d599ffc845de0fc83cf3",
+      "afterSha256": "e8211a3757480d9de2ef3d6670bdac991ddab9482d2671f3d0676c588a41a48f",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-29-events-live.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "beforeSha256": "0ed7e4b34546418f52c2e64ace046bcba08ab00e313487d3ffddae28ee67b20e",
+      "afterSha256": "57c8072f6607971494392a6fe2ac15f14626e79c308e03525b97ab17ac142e59",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md",
+      "beforeSha256": "787b876ca7a49a5b2539a0e8bc3c6b7d6f222fc22402002b3baf80365ba980f0",
+      "afterSha256": "9fd25aca4c813aee31588aa717e1750c01a99a29c56b641927675670187b7605",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-policy-handoff.md",
+      "beforeSha256": "c4b91ff091c5d6abd16cb3c36b0f34058391a8a5f0cf60cfbf3a149766532544",
+      "afterSha256": "3e9ec7c9944731f1529dfb426fbd040fed6798f01dd29d69c727ead88bc559e6",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-10-19-minkyu-policy-handoff.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-screen-mapping.md",
+      "beforeSha256": "fcde92cd711325e0641c4ca750c0f9d1319dc4c80f4087263a8b56a5bb4a26e4",
+      "afterSha256": "28d2ac6ba0497f66dd7752470d1a6921fd74f745c10be12ca656901b23988d91",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-10-19-event-data-screen-mapping.md",
+      "group": "design",
+      "reason": "데이터 매핑의 제품 사용처를 현재 확정 UX로 정리, 기존 코드 사실 구분"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-column-audit.md",
+      "beforeSha256": "d6c4c9f229d7cebe1c551b937518ba898fc611f978f39a279c6bdd1f8c39cfc8",
+      "afterSha256": "a995df222d4a9dfabe66276cd53ad597c1819dd4b7d0366509004789a11b15c9",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-10-19-seoul-column-audit.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+      "beforeSha256": "80dd5166efed6832c2a05e7dd6b7359e6498d8e57ac3fec7cac26a7417f97e70",
+      "afterSha256": "5fd0c13fca72c436b944f09c9fe868687121495867d5e2ea16d1bc4126c45df6",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "beforeSha256": "eb136df06bb16f58767a45e30ca62be58c78e34b2f1fc5895dabe15e8d9e59d6",
+      "afterSha256": "b43b180d8ae51cb5d93fa713395a1cc5c4df3a1a55a2aab44f6c750b938cbb86",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+      "beforeSha256": "e1d8bba668fdb26bf54265fcf3f841e1ef4f677dd48de19491cabe8b4b454cc1",
+      "afterSha256": "0f2e6aaa134c029918ed7453152e78203752f25676da7a6c766ce3106d0d02cb",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "beforeSha256": "d9a23a865f588c1c4b5dfa80f20232db9be4e6cfc1e7c52833c2baef377fa734",
+      "afterSha256": "0a7ebabb0d3b888917390ac7c142be3d25787a097252053f136b723d4fc973b9",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-tourapi-column-audit.md",
+      "beforeSha256": "2b400fb3d05549c956a10d70b749133a7be63b9384aa7df365b82cb214371104",
+      "afterSha256": "909b7c730da1163d5ef0cc192ace843f33520fe37ea176b291658181f0d15287",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-10-19-tourapi-column-audit.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+      "beforeSha256": "7137dfe398bf11322d761bbbc314a1ded57b27f97b0acb7c097b1f2266c8ce4d",
+      "afterSha256": "4f6d65d9abbd3f3dbc499bb623ac5f7e1fc62da5189b969b5b5dd58ccc9d871f",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.md",
+      "beforeSha256": "c9720313d8ffbf9e1921583a782396a6c3db91a1cc90f12ae5aeac22224dbe2f",
+      "afterSha256": "57cd32198c562bb6b4172d08b801c47d43eb8afa2f4c0b2892f496fc9d3db598",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-09-29-work-design.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-independent-result.md",
+      "beforeSha256": "6696f52b35281248c1433ec3d6c937dd66d93b105ee2688da3b572d861b60920",
+      "afterSha256": "aff1b4d80fa157411f9b5b5e2c79c4966d98b0c3309cccc43150501d088f1a04",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-10-08-independent-result.md",
+      "group": "design",
+      "reason": "과거 행사 설계/실행 근거를 보존하고 현행 정책과 구분하는 상단 안내"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-final-handoff.md",
+      "beforeSha256": "3c95da721bdbdd6cc312e0eb0b740145792e51e2e9f1785e970d6ed3ff31331b",
+      "afterSha256": "41a8f1f833920fc5115d5788509d6fcd2d5d8b7c349f133d1d692e900b749a62",
+      "backup": "/private/tmp/event-ux-before-docs/docs/collaboration/requests/jonghyun/2026-10-19-minkyu-final-handoff.md",
+      "group": "design",
+      "reason": "민규 브랜치 통합용 최신 행사 UX와 실제 서버 미지원 계약 명시"
+    }
+  ],
+  "implementation": {
+    "appPaths": [
+      "apps/mobile/src/presentation/events/EventPresentation.tsx",
+      "apps/mobile/src/presentation/events/event-display.ts",
+      "apps/mobile/src/screens/RemoteScreens.tsx",
+      "tests/mobile/event-display.test.ts",
+      "tests/mobile/event-presentation.test.mjs"
+    ],
+    "dependencyPaths": [
+      "apps/mobile/package.json",
+      "apps/mobile/package-lock.json"
+    ],
+    "uxPreview": "docs/planning/design/행사UX_미리보기.html",
+    "serverCodeChanged": false,
+    "databaseChanged": false,
+    "deployed": false,
+    "committedOrPushed": false
+  },
+  "validation": {
+    "documentHashes": "PASS",
+    "addedLocalSpecAndPreviewLinks": 54,
+    "backendFencedTechnicalExamples": "unchanged",
+    "unrelatedLanguageCheck": "PASS",
+    "ui": {
+      "ownership": "PASS: HEAD정책 jonghyun 5경로",
+      "isolated_regression": "PASS 12/12 (날짜/한국시간/요금/분류/장소/취소/실제provider7 + mock RN presentation5)",
+      "test_command": "node --experimental-strip-types --test tests/mobile/event-display.test.ts tests/mobile/event-presentation.test.mjs",
+      "targeted_eslint": "PASS: 새 presentation2개와 RemoteScreens.tsx",
+      "full_lint": "PASS after approved independent dependency restore: normal npm run lint exit0 (no-cache also PASS)",
+      "full_typecheck": "PASS after approved independent dependency restore: npm run typecheck exit0",
+      "typecheck_log": "/private/tmp/event-ux-typecheck-final.log",
+      "lint_log": "/private/tmp/event-ux-lint-current.log",
+      "baseline_logs": [
+        "/private/tmp/event-ux-typecheck-baseline.log",
+        "/private/tmp/event-ux-lint-baseline.log"
+      ],
+      "git_diff_check": "PASS",
+      "runtime_used": "기존 worktree 설치본 Expo57.0.26 RN0.86.3 React19.2.3 TypeScript6.0.3 eslint9.39.5",
+      "dependency_source": "/private/tmp/yumidang-jonghyun-policy-review-20261017/apps/mobile/node_modules",
+      "review_fix_targeted_eslint": "PASS: event-display.ts",
+      "web_export": "PASS 959 modules; /private/tmp/event-ux-app-export-20261020",
+      "dependency_resolution_result": "/private/tmp/event-ux-dependencies-result.json"
+    },
+    "dependencies": {
+      "ownership": "PASS: package.json / package-lock.json HEAD owner jonghyun",
+      "lint": "PASS: npm run lint -- --no-cache 및 기본 npm run lint exit0",
+      "lint_note": "첫 기본 lint는 과거 미해결 import 캐시를 사용해 실패했으나 no-cache 실행 후 정상 기본 lint도 통과. 소스 우회·eslint 규칙 변경 없음.",
+      "typecheck": "PASS: npm run typecheck exit0",
+      "event_regression": "PASS: 12/12, own node_modules TypeScript 사용",
+      "web_export": "PASS: CI=1 EXPO_NO_TELEMETRY=1 expo export --platform web --output-dir /private/tmp/event-ux-app-export-20261020; 959 modules bundled",
+      "web_export_path": "/private/tmp/event-ux-app-export-20261020",
+      "git_diff_check": "PASS"
+    },
+    "prototype": {
+      "status": "PASS",
+      "externalRequests": 0,
+      "checks": [
+        "weekly-default",
+        "whole-range-search",
+        "general-event-bottom",
+        "event-origin-top",
+        "calendar-highlights",
+        "pre-event-date-not-forced",
+        "registration-error-preserves-draft",
+        "direct-input-public-address-confirmation",
+        "direct-input-post-only",
+        "cancelled-cta",
+        "nonpublication-hides-source-data",
+        "partial-source-hide",
+        "source-conflict-block",
+        "status-not-provided-allow",
+        "image-absent-and-error-no-placeholder",
+        "login-return",
+        "mobile-no-overflow",
+        "no-page-errors"
+      ],
+      "screenshots": [
+        "/private/tmp/event-ux-preview-desktop.png",
+        "/private/tmp/event-ux-preview-mobile.png"
+      ]
+    }
+  },
+  "remaining": "서버 계약·DB·원천 상태/동일성 근거·실제API/기기 검증과 남은 클라이언트 연결은 별도 미완료. NOT_RUN을 문서/합성 PASS로 대체하지 않음."
+}

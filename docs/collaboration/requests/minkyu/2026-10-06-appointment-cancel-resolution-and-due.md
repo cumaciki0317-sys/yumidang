@@ -1,5 +1,14 @@
 # 취소 해소 v2: 유효 접수 뒤 기존 suffix 효과 보류 후보
 
+## 2026-10-20 현행 기준과 이 문서의 적용 범위
+
+이 문서는 과거 요청·설계·검증 기록이다. 아래 원 관찰·명령·해시·PASS/FAIL은 당시 증거로 보존한다. 재개할 때는 다음 현행 조건을 먼저 적용하며 과거 작업 권한·보류를 현재 지시로 재사용하지 않는다.
+
+- AI 탐색 동의는 첫 사용 시 받고 거절하면 일반 검색을 유지한다. 후기 요약은 가입 시 열람·내 프로필 생성/노출·작성 후기 활용을 기본 미선택인 별도 선택 세 항목으로 받는다. 전체 동의와 개별 자세히 보기를 유지하고 미동의 가입/일반 동행을 허용한다. 세 동의의 철회는 독립적이다. 현재 서버의 summary_allowed 하나·review_summary 일괄 철회가 이 세분화 요구를 구현했다고 해석하지 않는다. 테스트 계정 동의 간주는 실제 동의 증거·DB 값 변경·회원 원문 전송 승인이 아니다.
+
+최신 기준: [정책.md](../../../../정책.md). 구현과 남은 조건: [서버·DB 대조 원장](../jonghyun/2026-10-20-policy-implementation-audit/server-audit.json).
+
+
 작업자 minkyu/A. root 최신 A3 소유권 검사·하네스 검사는 PASS이며 저장소 source 파일 편집은 0이다. 이 private 후보는 v1 최소 오류 교정 SQL25a51/회귀dc4c15 위에 별도로 작성했다. v1 실제 단일TX PASS 영수증은 `/private/tmp/yumidang-cancel-resolution78-held-record-corrected-reviewed/receipt.json` / `9e47b7b2615c8398be8bde88199e82a9e69f83b2cae04a7a30a21c881c231481`이다. 원14af/36ead/f44b, revision 교정본, 두 FAIL, 설계375a 및 B 독립 리뷰0288은 변경하지 않는다. 이 v2의 실제 SQL/DB/API/CLI 실행은 NOT_RUN이다.
 
 ## 기존 계약과 변경 경계

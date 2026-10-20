@@ -1,0 +1,21 @@
+{
+  "actor": "jonghyun",
+  "branch": "jonghyun/policy-review-20261017",
+  "baseline": "72be7fb7a4af3d24770ea11f3f9e255e85326ccd",
+  "authorization": "사용자: 전체 정책·구현 대조, HTML 검토판+MD, 담당 구역과 관계없는 관련 문서 전체 동기화 및 원본 경로의 원격 반영. 승인 플랜 바로 구현.",
+  "lanes": {
+    "root": "정책.md, 최상위 문서, PRD, 감사 원장/HTML/README/문서 전수 목록, 담당별 commit 통합, 원격 검증, Notion 인수인계",
+    "client_audit": "클라이언트 전수 감사 client-audit.json; IA·USERFLOW 및 apps 아래 문서만 동기화",
+    "server_audit": "서버·DB 전수 감사 server-audit.json; backend 아래 md 및 docs/collaboration/requests/minkyu 아래 md만 동기화",
+    "qa_design": "출시 조건·QA 사례 qa-design.json; 다른 파일 변경 없음"
+  },
+  "boundaries": [
+    "제품 코드·SQL·DB·운영·공급사 호출 변경 없음",
+    "기존 공통44개 미커밋 변경 보존·누적 반영",
+    "문서 예외 승인과 제품 코드 소유권 구분",
+    "공유 clone actor·hook·인덱스 변경 없음",
+    "owner별 독립 clone의 정상 검사·commit을 순차 통합하며 hook 우회 없음",
+    "현재 안내 동기화; 역사적 검증 관찰·원자료는 보존하고 현재 기준과 구분",
+    "미확정 선택 임의 확정 금지; 새 질문은 마지막 검토판에 통합"
+  ]
+}

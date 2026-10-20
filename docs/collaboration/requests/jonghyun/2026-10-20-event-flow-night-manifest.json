@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-20",
+  "actor": "jonghyun",
+  "scope": "1번 행사 검색·연결·직접 입력 클라이언트 흐름만",
+  "userLimits": {
+    "uxRedesign": "다음 검토까지 보류, 날짜시간 기존 Field 유지",
+    "nightTasks": "사용자 정정 뒤 중단. 추가 실행/예약/네이티브 빌드 없음"
+  },
+  "paths": [
+    {
+      "path": "apps/mobile/src/screens/RemoteScreens.tsx",
+      "sha256": "30375ba0ad63e0e5b91b9103340ebc3657bdf911e5e2365c12b58bea4053cc37"
+    },
+    {
+      "path": "apps/mobile/src/presentation/events/event-selection.ts",
+      "sha256": "eb622470aba5f0f3c14254770d82b147543369d415898692a29bb8f0507061db"
+    },
+    {
+      "path": "tests/mobile/event-selection.test.ts",
+      "sha256": "fae0c36bd2874b3b05333f216f1e72f64f20ea400e815c6eb7be8080500b8cf9"
+    },
+    {
+      "path": "tests/mobile/event-selection-picker.test.mjs",
+      "sha256": "f761e9144e22e4aea93806781c8544095ed77a4ddadf94276cf103c5616591ea"
+    },
+    {
+      "path": "apps/mobile/src/screens/BrowseScreens.tsx",
+      "sha256": "3b9185cf91fc2593192749f4209ce01c12b83917fab2e5407f67d226b453dc71"
+    },
+    {
+      "path": "apps/mobile/src/types.ts",
+      "sha256": "6d9cbb712c15503f2ee82ed612d8c609fc36bcb0d129b25f5dd568506aaea986"
+    },
+    {
+      "path": "apps/mobile/src/state.tsx",
+      "sha256": "81f98d2bc91da7d01fd2bbbc26b388031d9287939227ab8101305bba85f95041"
+    },
+    {
+      "path": "apps/mobile/src/screens/RemotePlacePicker.tsx",
+      "sha256": "1590eda6c60a14e49db82e7cd056d927f74315e14791c098e0ce8eca0c64005a"
+    },
+    {
+      "path": "apps/mobile/src/presentation/events/event-draft.ts",
+      "sha256": "3ce33ad04a700d8e4ca878e169b4093e7de501d294a035c13413734e5bd19a3e"
+    },
+    {
+      "path": "tests/mobile/event-draft.test.ts",
+      "sha256": "f01a6ef02b36806de8ad8efebedcd95404cfcb88c96012d541457e475884531b"
+    },
+    {
+      "path": "tests/mobile/event-draft-state.test.mjs",
+      "sha256": "a56ecb7924cf11f842e38f895bd1fa4c86dab71d9d2c89c2cfef6b430ef62230"
+    },
+    {
+      "path": "tests/mobile/event-flow-browser.mjs",
+      "sha256": "e1eb85d649943e468dd2297d63e638a0ade8d621822125a750adf2d272382bb0"
+    }
+  ],
+  "verification": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "relatedRegression": "20/20 PASS",
+    "actualExpoWebPreview": {
+      "status": "PASS",
+      "checks": [
+        "no selected event in general draft",
+        "picker opens without meeting dates",
+        "empty result offers direct input",
+        "manual title required",
+        "manual connection visible",
+        "draft title preserved",
+        "manual draft persisted",
+        "unlink removes manual data",
+        "event-origin selected event title",
+        "event-origin compose preserves selection",
+        "event-origin link above title",
+        "no runtime errors",
+        "external API requests zero",
+        "mobile no horizontal overflow"
+      ],
+      "errors": [],
+      "external": [],
+      "scope": "actual Expo web preview with synthetic in-memory/device drafts; no real provider/member/server validation"
+    },
+    "webExport": "PASS,961modules,/private/tmp/event-flow-web-export-20261020",
+    "ownership": "12/12 paths PASS HEAD jonghyun",
+    "diffCheck": "PASS"
+  },
+  "boundary": {
+    "realManualEventStorage": "NOT_CONNECTED: minkyu server API/DB/authorization; client registration blocks with draft retained",
+    "providerApiOrOAuthCalls": false,
+    "serverCodeDbChanges": false,
+    "commitPushDeploy": false
+  },
+  "reports": [
+    "/private/tmp/event-flow-picker-result.json",
+    "/private/tmp/event-flow-compose-result.json",
+    "/private/tmp/event-flow-browser-result.json"
+  ]
+}

@@ -1,0 +1,24 @@
+✔ request settling during blur cannot leave the refocused screen busy (225.635458ms)
+✔ previously paginated private messages disappear after refocus permission denial (126.238ms)
+✔ rapid action presses are locked and a blurred action cannot be dispatched (118.869375ms)
+✔ late response from an abandoned action cannot unlock a newer focused action (71.998875ms)
+✔ action 401 preserves a failure and never invokes success or auto retry (79.332667ms)
+✔ action 403 preserves a failure and never invokes success or auto retry (115.765208ms)
+✔ action 409 preserves a failure and never invokes success or auto retry (87.848208ms)
+✔ action 410 preserves a failure and never invokes success or auto retry (75.143ms)
+✔ action 503 preserves a failure and never invokes success or auto retry (58.081125ms)
+✔ old session action responses cannot report success or error to the new session (88.051ms)
+✔ late resource response from the previous session cannot restore private data (44.643833ms)
+✔ resource 401 removes previously received private information (67.491541ms)
+✔ resource 403 removes previously received private information (98.549042ms)
+✔ lost first-message response retains input and retries the same message ID (67.990625ms)
+✔ permission denial during send clears received messages but keeps input until manual refresh (71.320458ms)
+✔ manual refresh after 403 never restores old history or conditions while access reads are pending (90.335709ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1707.313208

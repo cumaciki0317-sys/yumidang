@@ -22,6 +22,8 @@ const idOf = (row: Wire, key: string) => text(row[key]);
 const statusLabel = (value: unknown) => ({ pending: "신청 대기", active: "대화 중", confirmed: "동행 확정", completed: "완료", cancelled: "취소", disputed: "분쟁 검토 중", declined: "거절", rejected: "거절", withdrawn: "철회", expired: "기한 만료", recruiting: "모집 중", closed: "모집 종료", submitted: "신고 접수", received: "신고 접수", reviewing: "신고 검토 중", resolved: "처리 완료", accepted: "수락", awaiting_consent: "확정 응답 대기" } as Record<string, string>)[text(value)] ?? "현재 상태 확인 필요";
 const failure = (error: unknown) => error instanceof ApiError && error.status === 401
   ? "다시 로그인해 주세요."
+  : error instanceof ApiError && error.status === 403
+  ? "접근 권한이 없거나 이용할 수 없는 항목이에요. 최신 상태를 다시 확인해 주세요."
   : error instanceof ApiError && (error.status === 409 || error.status === 410)
   ? "상태가 바뀌었거나 응답 기한이 지났어요. 새로고침해서 확인해 주세요."
   : "처리하지 못했어요. 입력한 내용은 유지했으니 상태를 확인하고 다시 시도해 주세요.";
@@ -55,30 +57,31 @@ export function useMemberAction() {
   const service = useMemberService(), session = useServiceSession();
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [actionEpoch, setActionEpoch] = useState(session.epoch);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const active = useRef<AbortController | null>(null);
   const lock = useRef(false);
   const mounted = useRef(true);
   useFocusEffect(useCallback(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; active.current?.abort(); lock.current = false; };
+    mounted.current = true; setBusy(false);
+    return () => { mounted.current = false; active.current?.abort(); active.current = null; lock.current = false; };
   }, []));
-  useEffect(() => { active.current?.abort(); lock.current = false; }, [session.epoch]);
+  useEffect(() => { active.current?.abort(); active.current = null; lock.current = false; }, [session.epoch]);
   const run = async <T,>(task: (s: MemberService, signal: AbortSignal) => Promise<T>, success?: (data: T) => void) => {
-    if (lock.current || !service || !session.authenticated) return false;
+    if (!mounted.current || lock.current || !service || !session.authenticated) return false;
     const controller = new AbortController(), epoch = serviceSessionEpoch();
-    active.current = controller; lock.current = true; setActionEpoch(epoch); setBusy(true); setError("");
+    active.current = controller; lock.current = true; setActionEpoch(epoch); setBusy(true); setError(""); setErrorStatus(null);
     try {
       const data = await task(service, controller.signal);
       if (controller.signal.aborted || epoch !== serviceSessionEpoch() || !mounted.current) return false;
       success?.(data); return true;
     } catch (e) {
-      if (!controller.signal.aborted && epoch === serviceSessionEpoch() && mounted.current) setError(failure(e));
+      if (!controller.signal.aborted && epoch === serviceSessionEpoch() && mounted.current) { setError(failure(e)); setErrorStatus(e instanceof ApiError ? e.status : null); }
       return false;
     } finally {
       if (active.current === controller && epoch === serviceSessionEpoch() && mounted.current) { lock.current = false; setBusy(false); }
     }
   };
-  return { busy: actionEpoch === session.epoch && busy, error: actionEpoch === session.epoch ? error : "", run };
+  return { busy: actionEpoch === session.epoch && busy, error: actionEpoch === session.epoch ? error : "", errorStatus: actionEpoch === session.epoch ? errorStatus : null, clearError: () => { setError(""); setErrorStatus(null); }, run };
 }
 
 function useIntentId() {
@@ -125,8 +128,11 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
   const consent = useMemberResource(`consent:${requestId}`, async (s, signal) => requestId ? s.consent(requestId, signal) : null);
   const viewer = useMemberResource("chat-viewer", (s, signal) => s.profile(signal));
   const [older, setOlder] = useState<Wire[]>([]), [before, setBefore] = useState<string | null | undefined>();
-  const refresh = () => { conversation.reload(); messages.reload(); consent.reload(); setOlder([]); setBefore(undefined); };
-  const olderCursor = before === undefined ? messages.data?.nextCursor : before;
+  const refresh = () => { action.clearError(); conversation.reload(); messages.reload(); consent.reload(); setOlder([]); setBefore(undefined); };
+  const canDisplayMessages = Boolean(conversation.data && !conversation.busy && !conversation.error && !messages.busy && !messages.error && action.errorStatus !== 401 && action.errorStatus !== 403);
+  // Received private data has a different lifetime from the member's unsent input.
+  if (!canDisplayMessages && (older.length > 0 || before !== undefined)) { setOlder([]); setBefore(undefined); }
+  const olderCursor = canDisplayMessages ? (before === undefined ? messages.data?.nextCursor : before) : null;
   const visibleIds = useRef(new Set<string>()), acknowledgedIds = useRef(new Set<string>());
   const readController = useRef<AbortController | null>(null), readGeneration = useRef(0), focused = useRef(false);
   const viewport = useRef<View | null>(null), messageBodies = useRef(new Map<string, View>()), measurementGeneration = useRef(0);
@@ -188,33 +194,34 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
   const conditionsValid = conditions?.costType === "free" && conditions.amount === 0 && Boolean(text(conditions.title)) && Boolean(text(conditions.publicArea)) && Number.isFinite(Date.parse(text(conditions.startsAt))) && Number.isFinite(Date.parse(text(conditions.endsAt))) && Date.parse(text(conditions.startsAt)) < Date.parse(text(conditions.endsAt));
   const expired = !text(consent.data?.expiresAt) || Date.parse(text(consent.data?.expiresAt)) <= app.now;
   const host = conversation.data?.my_role === "author";
-  const sendAllowed = requestId ? conversation.data?.can_send === true : Boolean(postId);
+  const sendAllowed = requestId ? canDisplayMessages && conversation.data?.can_send === true : Boolean(postId);
   return <Screen scroll={false} title={text(conversation.data?.post_title) || "1:1 대화"} right={<TextButton onPress={refresh}>새로고침</TextButton>} footer={<View style={{ gap: 8 }}>
     <Field editable={!action.busy} label={requestId ? "메시지" : "첫 메시지"} value={input} onChangeText={setInput} multiline placeholder="함께 하고 싶은 활동을 이야기해 주세요" />
     {!requestId && <Body small muted>첫 메시지가 전송되면 동행 신청이 함께 생성돼요.</Body>}
     <Button disabled={!sendAllowed || !input.trim()} loading={action.busy} onPress={send}>메시지 보내기</Button>
   </View>}>
     {!readPort && requestId && <Body small muted>개별 메시지 읽음 연결 준비 중이에요.</Body>}
-    <View ref={viewport} collapsable={false} style={{ flex: 1 }} onLayout={measureVisibleBodies}><FlatList data={[...older, ...(messages.data?.items ?? [])]} keyExtractor={row => idOf(row, "messageId")} onScroll={measureVisibleBodies} scrollEventThrottle={16} onContentSizeChange={measureVisibleBodies} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 10, paddingVertical: 16 }}
+    <View ref={viewport} collapsable={false} style={{ flex: 1 }} onLayout={measureVisibleBodies}><FlatList data={canDisplayMessages ? [...older, ...(messages.data?.items ?? [])] : []} keyExtractor={row => idOf(row, "messageId")} onScroll={measureVisibleBodies} scrollEventThrottle={16} onContentSizeChange={measureVisibleBodies} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 10, paddingVertical: 16 }}
       renderItem={({ item: row }) => <Card><View collapsable={false} ref={body => { const id = idOf(row, "messageId"); if (body) messageBodies.current.set(id, body); else messageBodies.current.delete(id); }} onLayout={measureVisibleBodies}><Body>{text(row.content)}</Body></View><Body small muted>{text(row.createdAt)}</Body>{viewer.data && row.senderId !== viewer.data.userId && <RemoteReport targetId={idOf(row, "messageId")} targetType="chat" />}</Card>}
       ListHeaderComponent={<>
     <Status busy={conversation.busy && Boolean(requestId)} error={conversation.error || messages.error || consent.error} reload={refresh} />
-    {pending && <Card><Title>동행 확정 요청</Title><Body>응답 마감 · {text(consent.data?.expiresAt)}</Body>
+    {canDisplayMessages && <>{pending && <Card><Title>동행 확정 요청</Title><Body>응답 마감 · {text(consent.data?.expiresAt)}</Body>
       <ConsentConditions conditions={consent.data?.conditions} />
       {host ? <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "consent/withdraw", version, signal), refresh)}>확정 요청 철회</Button>
         : <><Button disabled={expired || !version || !conditionsValid} loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "accept", version, signal), refresh)}>이 조건으로 동행 확정</Button>
           <TextButton onPress={() => void action.run((s, signal) => s.requestAction(requestId, "consent/decline", version, signal), refresh)}>확정 요청 거절</TextButton></>}
     </Card>}
     {host && !pending && conversation.data?.request_status === "pending" && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "propose", undefined, signal), refresh)}>동행 확정 요청 보내기</Button>}
-    {host && !pending && conversation.data?.request_status === "pending" && <TextButton onPress={() => setConfirmation("decline")}>신청 거절</TextButton>}
+    {host && !pending && conversation.data?.request_status === "pending" && <TextButton onPress={() => setConfirmation("decline")}>신청 거절</TextButton>}</>}
     </>} ListFooterComponent={<>
+    {canDisplayMessages && <>
     {readError && <><Body muted>{readError}</Body><TextButton onPress={() => { readFailed.current = false; flushRead.current(); }}>읽음 다시 시도</TextButton></>}
     {olderCursor && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.messages(requestId, olderCursor, signal), page => { setOlder(items => [...page.items, ...items]); setBefore(page.nextCursor); })}>이전 메시지 보기</Button>}
     {requestId && <Row><TextButton onPress={() => setConfirmation("leave")}>대화방 나가기</TextButton>{!host && <TextButton onPress={() => setConfirmation("withdraw")}>신청 철회</TextButton>}</Row>}
     {text(conversation.data?.appointment_id) && <Button secondary onPress={() => app.navigate("S16", text(conversation.data?.appointment_id))}>확정 약속 보기</Button>}
     {confirmation && <Card><Title>{confirmation === "leave" ? "내 목록에서 이 대화를 숨길까요?" : confirmation === "decline" ? "이 동행 신청을 거절할까요?" : "동행 신청을 철회할까요?"}</Title><Body muted>{confirmation === "leave" ? "약속은 취소되지 않고 상대의 대화방은 유지돼요." : confirmation === "decline" ? "거절 후 상대는 이 공고에 다시 신청할 수 없어요." : "이미 확정된 동행은 약속에서 별도로 취소해야 해요."}</Body>
       <Button loading={action.busy} onPress={() => void action.run((s, signal) => confirmation === "leave" ? s.leave(requestId, signal) : s.requestAction(requestId, confirmation === "decline" ? "decline" : "withdraw", undefined, signal), () => { setConfirmation(null); app.navigate("S10"); })}>확인</Button><TextButton onPress={() => setConfirmation(null)}>계속 대화하기</TextButton></Card>}
-    {host && text(conversation.data?.post_id) && <RemotePostManagement postId={text(conversation.data?.post_id)} onChanged={refresh} />}
+    {host && text(conversation.data?.post_id) && <RemotePostManagement postId={text(conversation.data?.post_id)} onChanged={refresh} />}</>}
     <Status busy={action.busy} error={action.error} />
     </>} /></View>
   </Screen>;
@@ -407,6 +414,7 @@ function RemoteCancel({ id }: { id: string }) {
 export function RemoteReport({ targetType, targetId }: { targetType: MemberReportInput["targetType"]; targetId: string }) {
   const action = useMemberAction(), app = useApp(), ports = useMemberPorts(), [open, setOpen] = useState(false), [description, setDescription] = useState(""), [reasons, setReasons] = useState<string[]>([]);
   const reportId = useIntentId();
+  const [hideTarget, setHideTarget] = useState(false);
   const [capture, setCapture] = useState<{ asset: ImagePicker.ImagePickerAsset; assetId: string } | null>(null);
   const uploaded = useRef(false);
   const pickCapture = async () => {
@@ -420,16 +428,18 @@ export function RemoteReport({ targetType, targetId }: { targetType: MemberRepor
     } catch { app.showToast("캡처를 선택하지 못했어요."); }
   };
   const offline = targetType === "appointment";
-  return <View style={{ gap: 8 }}><TextButton onPress={() => setOpen(!open)}>문제 신고하기</TextButton>{open && <Card>
+  return <View style={{ gap: 8 }}><TextButton onPress={() => { if (!action.busy) setOpen(!open); }}>문제 신고하기</TextButton>{open && <Card>
     <Title>신고 내용</Title><Body muted>접수는 위반 확정과 달라요. 운영자가 제출한 설명과 자료를 검토해요.</Body>
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{[{ value: "sexual_harassment", label: "성희롱" }, { value: "threat", label: "협박·위협" }, { value: "money_or_personal_data", label: "금전·개인정보 요구" }, { value: "impersonation", label: "사칭" }, { value: "spam", label: "스팸" }, { value: "no_show", label: "노쇼" }, { value: "other", label: "기타" }].map(item => <Chip key={item.value} selected={reasons.includes(item.value)} onPress={() => setReasons(items => items.includes(item.value) ? items.filter(value => value !== item.value) : [...items, item.value])}>{item.label}</Chip>)}</View>
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{[{ value: "sexual_harassment", label: "성희롱" }, { value: "threat", label: "협박·위협" }, { value: "money_or_personal_data", label: "금전·개인정보 요구" }, { value: "impersonation", label: "사칭" }, { value: "spam", label: "스팸" }, { value: "no_show", label: "노쇼" }, { value: "other", label: "기타" }].map(item => <Chip key={item.value} selected={reasons.includes(item.value)} disabled={action.busy} onPress={() => setReasons(items => items.includes(item.value) ? items.filter(value => value !== item.value) : [...items, item.value])}>{item.label}</Chip>)}</View>
     <Field editable={!action.busy} label="상황 설명" value={description} onChangeText={setDescription} multiline />
     <Body muted>{offline ? "설명과 제출할 수 있는 자료로 접수해요." : "온라인 신고에는 설명과 캡처가 필요해요."}</Body>
     {!ports.reportCapture && <Body muted>캡처 업로드 연결을 준비 중이에요.</Body>}
-    <Button secondary disabled={!ports.reportCapture || Boolean(capture)} onPress={() => void pickCapture()}>캡처 선택</Button>
+    <Button secondary disabled={action.busy || !ports.reportCapture || Boolean(capture)} onPress={() => void pickCapture()}>캡처 선택</Button>
     {capture && <><Body small>캡처를 선택했어요.</Body><Button secondary disabled={action.busy} onPress={() => void action.run(async (s, signal) => { if (uploaded.current) await s.cancelReportCapture(capture.assetId, signal); }, () => { setCapture(null); uploaded.current = false; })}>선택한 캡처 취소</Button></>}
+    <Chip selected={hideTarget} disabled={action.busy} onPress={() => setHideTarget(value => !value)}>신고한 항목을 내 화면에서 숨기기 (선택)</Chip>
+    <Body small muted>신고와 함께 선택한 항목만 숨겨요. 계정 관리에서 직접 해제할 때까지 유지되며 차단을 해제해도 유지돼요. 확정 약속의 일정·취소·신고·판정 안내는 계속 확인할 수 있어요.</Body>
     <Button disabled={!reasons.length || !description.trim() || (!offline && (!ports.reportCapture || !capture))} loading={action.busy} onPress={() => {
-      const input = { targetType, targetId, context: offline ? "offline" as const : "online" as const, reasonCodes: [...reasons].sort(), description: description.trim(), assetIds: capture ? [capture.assetId] : [], hideTarget: false };
+      const input = { targetType, targetId, context: offline ? "offline" as const : "online" as const, reasonCodes: [...reasons].sort(), description: description.trim(), assetIds: capture ? [capture.assetId] : [], hideTarget };
       const clientRequestId = reportId(input);
       void action.run(async (s, signal) => {
       const assetIds: string[] = [];
@@ -441,7 +451,11 @@ export function RemoteReport({ targetType, targetId }: { targetType: MemberRepor
         assetIds.push(upload.assetId);
       }
       return s.report({ clientRequestId, ...input, assetIds }, signal);
-    }, () => { app.showToast("신고를 접수했어요."); setCapture(null); uploaded.current = false; setOpen(false); }); }}>신고 접수</Button>
+    }, receipt => {
+      app.showToast(receipt.hideTarget ? "신고를 접수하고 선택한 항목을 숨겼어요." : "신고를 접수했어요.");
+      setCapture(null); uploaded.current = false; setOpen(false); setHideTarget(false);
+      if (receipt.hideTarget) app.navigate(targetType === "chat" ? "S10" : targetType === "post" || targetType === "event" ? "S01" : "S13");
+    }); }}>신고 접수</Button>
     <Status error={action.error} />
   </Card>}</View>;
 }
@@ -609,12 +623,12 @@ function RemoteAccount() {
     {withdraw && <Card><Title>이 AI 처리를 철회할까요?</Title><Button loading={action.busy} onPress={() => void action.run((s, signal) => s.withdrawAi(withdraw, signal), () => { setWithdraw(null); app.showToast("AI 처리 철회를 요청했어요."); })}>철회 요청</Button><TextButton onPress={() => setWithdraw(null)}>취소</TextButton></Card>}
     <Title>차단한 회원</Title><Status {...blocks} />{blocks.data?.items.map(row => <Card key={text(row.targetId ?? row.target_id)}><Body>{text(row.displayName ?? row.display_name) || "차단한 회원"}</Body><TextButton onPress={() => void action.run((s, signal) => s.block(text(row.targetId ?? row.target_id), false, signal), blocks.reload)}>차단 해제</TextButton></Card>)}
     {blocks.data?.nextCursor && <Button secondary onPress={() => setBlocksCursor(blocks.data!.nextCursor!)}>다음 차단 목록</Button>}
-    <Body small muted>차단을 해제해도 종료된 신청과 약속은 자동 복원되지 않아요.</Body>
+    <Body small muted>차단을 해제해도 종료된 신청과 약속은 자동 복원되지 않아요. 신고할 때 별도로 선택한 숨김도 유지돼요.</Body>
     <Title>신고 후 숨긴 항목</Title><Status {...hidden} />{hidden.data?.items.map(target => <Card key={`${target.targetType}:${target.targetId}`}>
       <Body>{({ post: "공고", chat: "대화", appointment: "약속", member: "회원", event: "행사" })[target.targetType]}</Body>
-      <TextButton onPress={() => void action.run((s, signal) => s.unhide(target, signal), hidden.reload)}>숨김 해제</TextButton></Card>)}
+      <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.unhide(target, signal), () => { hidden.reload(); app.showToast("숨김을 해제했어요. 현재 공개 권한에 따라 다시 볼 수 있어요."); })}>숨김 해제</Button></Card>)}
     {hidden.data?.nextCursor && <Button secondary onPress={() => setHiddenCursor(hidden.data!.nextCursor!)}>다음 숨김 목록</Button>}
-    <Body small muted>숨김을 해제해도 차단과 신고는 유지돼요.</Body>
+    <Body small muted>숨김을 해제해도 차단과 신고는 유지돼요. 삭제되었거나 현재 권한으로 볼 수 없는 항목은 다시 나타나지 않을 수 있어요.</Body>
     <RemoteNotices kind="decision" /><RemoteNotices kind="cancellation" />
     <Title>내 신고</Title><Status {...reports} />{reports.data?.items.map(row => <Card key={text(row.reportId ?? row.id)} onPress={() => setReportId(text(row.reportId ?? row.id))}><Body>{statusLabel(row.status)}</Body><Body small muted>{text(row.createdAt)}</Body></Card>)}
     {reports.data?.nextCursor && <Button secondary onPress={() => setReportsCursor(reports.data!.nextCursor!)}>이전 신고 목록</Button>}

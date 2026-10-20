@@ -1,0 +1,11 @@
+--- before/RemoteScreens.tsx
++++ after/RemoteScreens.tsx
+@@ -363,7 +363,7 @@
+           return;
+         }
+         setMessages([...next, { role: "assistant", content: answer }]);
+-        setInput("");
++        setInput((current) => current === input ? "" : current);
+       }
+     } catch (error) {
+       if (

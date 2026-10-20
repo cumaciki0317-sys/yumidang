@@ -1,0 +1,47 @@
+{
+  "projectId": "yumidang-jh-test-261019",
+  "account": "ds5305naver@gmail.com",
+  "keyResource": "projects/266524605801/locations/global/keys/7de14ca8-24f3-42c7-a822-dc18cb5fc6cd",
+  "serviceAccount": "yumidang-gemini-test@yumidang-jh-test-261019.iam.gserviceaccount.com",
+  "keyValueStoredLocally": false,
+  "oldLoggedKeyDeleted": true,
+  "keyRestrictions": {
+    "apiTargets": [
+      {
+        "service": "generativelanguage.googleapis.com"
+      }
+    ]
+  },
+  "keyServiceAccount": "yumidang-gemini-test@yumidang-jh-test-261019.iam.gserviceaccount.com",
+  "billingEnabled": true,
+  "oldKeyDeleteTime": "2026-10-19T06:12:51.442704Z",
+  "modelsReadOnlyCheck": {
+    "httpStatus": 200,
+    "returnedModelCount": 1
+  },
+  "date": "2026-10-19",
+  "scope": "jonghyun_test_only",
+  "generationRequests": 3,
+  "memberDataSent": false,
+  "billingLinkedByThisTask": true,
+  "defaultGcloudProjectChanged": false,
+  "runtimeEnvChanged": false,
+  "productionEnabled": false,
+  "requestedMonthlyMaximumKrw": 50000,
+  "budgetConfigured": true,
+  "selectedBillingAccount": "01C854-2D3F7A-796640",
+  "billingAccountCurrency": "KRW",
+  "prepaymentAuthorized": false,
+  "futureOwnerAfterSuccessfulTesting": "대표 유미",
+  "productionTransferCompleted": false,
+  "budgetResource": "billingAccounts/01C854-2D3F7A-796640/budgets/d679c71e-06cb-47ac-b190-1cd58fbd0c99",
+  "monthlyUsageSpendCapKrw": 50000,
+  "strictFinalChargeCapGuaranteed": false,
+  "prepaymentPerformed": false,
+  "autoReloadConfiguredByThisTask": false,
+  "syntheticValidationPassed": 3,
+  "modelTested": "gemini-3.5-flash-lite",
+  "reportedTotalTokens": 590,
+  "actualInvoiceCostVerified": false,
+  "transferPlannedMeetingDate": "2026-10-20"
+}

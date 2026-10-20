@@ -1,0 +1,46 @@
+{
+  "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+  "sha256": "7bf25a2b45442d5f19703104fa897706b808ae6a491264cc61efce62a2050c00",
+  "answers": {
+    "F01": {
+      "choice": "A",
+      "other": "",
+      "note": ""
+    },
+    "F02": {
+      "choice": "A",
+      "other": "",
+      "note": ""
+    },
+    "F03": {
+      "choice": "A",
+      "other": "",
+      "note": ""
+    }
+  },
+  "policy_changed": false,
+  "previous_text_decision": "차례로 a,a,a",
+  "policy_matches": [
+    {
+      "id": "F01",
+      "policy_line": 301,
+      "result": "MATCH"
+    },
+    {
+      "id": "F02",
+      "policy_line": 332,
+      "result": "MATCH"
+    },
+    {
+      "id": "F03",
+      "policy_line": [
+        334,
+        335
+      ],
+      "result": "MATCH"
+    }
+  ],
+  "implementation_warning": "정책 반영 확인이며 날짜 달력 표시·서버 동일행사 통합·공개원천 충돌 계약의 구현 완료가 아님.",
+  "remote_original_pending": false,
+  "remote_verified_commit": "5476f6d3e73d763dd6e7f4a3dac3d7c7344c71cd"
+}

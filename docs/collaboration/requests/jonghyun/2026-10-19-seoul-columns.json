@@ -1,0 +1,444 @@
+[
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "org_name",
+    "meaning": "기관명",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "기타",
+    "nullable": false,
+    "commonField": "organizerName",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 원천 기관명. 기타 등 포괄 값도 있어 실명 주최자·사업자라고 단정하지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "player",
+    "meaning": "출연자정보",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "Piano : Kazumi Tateishi, Contrabass : Shinobu Sato, Drums : Mao Suzuki",
+    "nullable": true,
+    "commonField": "performers",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 17654, 빈문자열 0, 공백만 2. 공개 출연자 설명. 빈값 숨김, 동행 회원 정보와 분리.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "org_link",
+    "meaning": "홈페이지 주소",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "https://tickets.interpark.com/goods/26010350",
+    "nullable": true,
+    "commonField": "externalUrl",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 267, 빈문자열 0, 공백만 0. 주최/예매 등 외부 목적지가 혼재. http를 임의로 https로 치환하지 않고 scheme·자격증명·목적지 검증 후 외부 링크로 표시.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "pro_time",
+    "meaning": "행사시간",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "19:30",
+    "nullable": false,
+    "commonField": "operatingInfo",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "공통 선택필드 저장/DTO 있음; 서울 parser 미매핑",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 자유 서술 운영시간. datetime 시작/종료 순간으로 추정하지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "main_img",
+    "meaning": "대표이미지",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "https://culture.seoul.go.kr/cmmn/file/getImage.do?atchFileId=401a984b98ff4af8a57122219ee0d591&thumb=Y",
+    "nullable": false,
+    "commonField": "posterUrl",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "공통 선택필드 있음; 현재 검증 규칙과 충돌",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 전 행 HTTPS이지만 전 행 query 포함. 현재 source 검증은 KOPIS 업로드 경로만 허용하며 query 금지; 공개 DTO도 query 금지. 서울 이미지 URL 보안 계약 확장 필요, 쿼리 제거·주소 변조 금지.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "themecode",
+    "meaning": "테마분류",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "기타",
+    "nullable": true,
+    "commonField": "theme",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 3043, 빈문자열 0, 공백만 0. 원천 분류를 그대로 보존. 일반 장르와 임의 통합하지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "date",
+    "meaning": "날짜",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "2026-12-24~2026-12-24",
+    "nullable": false,
+    "commonField": null,
+    "screen": [
+      "내부 검증"
+    ],
+    "codeSupport": "직접 저장/DTO 없음; 달력일 쌍은 기존 지원",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 시작~종료 문자열. strtdate/end_date의 KST 달력일과 교차 검증. 독립 행사시간 아님.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "cgg_cd",
+    "meaning": "자치구코드",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "3240000",
+    "nullable": true,
+    "commonField": "districtCode",
+    "screen": [
+      "내부 연결"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 121, 빈문자열 0, 공백만 0. 문자열 코드 보존. 외부 행정동/다른 공급사 지역 코드와 숫자만으로 결합 금지.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "etc_desc",
+    "meaning": "기타내용",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "https://nol.yanolja.com/ticket/products/26010247",
+    "nullable": true,
+    "commonField": "additionalInfo",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 19288, 빈문자열 0, 공백만 0. 내용뿐 아니라 URL도 들어 있어 본문으로 무조건 출력하지 않음. HTML/외부 링크 구분·정제 필요.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "title",
+    "meaning": "공연/행사명",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "2026 카즈미 타테이시 트리오 내한공연-크리스마스, 재즈를 만나다-(서울)",
+    "nullable": false,
+    "commonField": "title",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "공통 저장/DTO 있음; 기존 대문자 TITLE 대응",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 공백·HTML·제어문자 정제, 빈 제목 격리. 현재 소문자 필드는 미지원.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "end_date",
+    "meaning": "종료일",
+    "type": "integer (epoch milliseconds)",
+    "evidence": "observed",
+    "sample": 1798038000000,
+    "nullable": false,
+    "commonField": "endsOn",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "공통 date 정밀도 저장/DTO 있음; 기존 문자열 END_DATE와 형식 다름",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. epoch 밀리초→Asia/Seoul YYYY-MM-DD. 종료일 포함. 시작>종료 54행 격리, 임의 교환 금지.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "inquiry",
+    "meaning": "문의",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "070-8680-8477 / 02-337-3103",
+    "nullable": true,
+    "commonField": "contact",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 3411, 빈문자열 0, 공백만 0. 전화/자유서술 정보. 운영자 고객지원 연락처 및 회원 연락처와 분리.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "codename",
+    "meaning": "분류",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "콘서트",
+    "nullable": false,
+    "commonField": "category",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "공통 저장/DTO 있음; 기존 대문자 CODENAME 대응",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 원천 장르 보존. KOPIS 장르코드/필터와 자동 등치하지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "ticket",
+    "meaning": "시민/기관",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "시민",
+    "nullable": false,
+    "commonField": "submitterType",
+    "screen": [
+      "내부 보존"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. DESCRIPTION 뜻은 시민/기관. 티켓판매수·예약가능·예매상태가 아님.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "use_trgt",
+    "meaning": "이용대상",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "성인, 청소년",
+    "nullable": false,
+    "commonField": "audience",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 자유서술 이용대상이며 유미당 여성·만19세 회원 자격 또는 동행 모집 조건과 별개.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "rgstdate",
+    "meaning": "신청일",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "2026-07-23",
+    "nullable": false,
+    "commonField": "sourceApplicationDate",
+    "screen": [
+      "내부 보존"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. DESCRIPTION=신청일. 신규등록·수정·수집 시각으로 단정하지 않음. 이번 주 신규 조건에 자동 사용 금지.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "place",
+    "meaning": "장소",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "강동아트센터 대극장 한강",
+    "nullable": false,
+    "commonField": "placeName",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "공통 저장/DTO 있음; 기존 대문자 PLACE 대응",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 공개 행사장명. 동행 상세 만남 지점·주소로 대신 쓰지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "strtdate",
+    "meaning": "시작일",
+    "type": "integer (epoch milliseconds)",
+    "evidence": "observed",
+    "sample": 1798038000000,
+    "nullable": false,
+    "commonField": "startsOn",
+    "screen": [
+      "행사 목록",
+      "행사 상세",
+      "공고 연결 행사"
+    ],
+    "codeSupport": "공통 date 정밀도 저장/DTO 있음; 기존 문자열 STRTDATE와 형식 다름",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. epoch 밀리초→Asia/Seoul YYYY-MM-DD. UTC 날짜 절단 금지. 날짜 정밀도를 유지하고 00:00 공연 시작이라고 표시하지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "lat",
+    "meaning": "위도(X좌표)",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "37.5512204558342",
+    "nullable": true,
+    "commonField": "latitude",
+    "screen": [
+      "지도 후보"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 496, 빈문자열 0, 공백만 0. 원천 설명 X/Y는 GIS 관례와 다를 수 있으므로 필드명/수치 확인. 숫자표본 약36~37도는 위도. 도분초·기호 혼재 값은 단순 float 실패하므로 별도 검증.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "hmpg_addr",
+    "meaning": "문화포털상세URL",
+    "type": "string",
+    "evidence": "observed",
+    "sample": "https://culture.seoul.go.kr/culture/culture/cultureEvent/view.do?cultcode=158770&menuNo=200008",
+    "nullable": false,
+    "commonField": "sourceUrl",
+    "screen": [
+      "행사 상세",
+      "공고 연결 행사",
+      "내부 연결"
+    ],
+    "codeSupport": "공통 sourceUrl/sourceId 저장/DTO 있음; 기존 대문자 HMPG_ADDR 대응",
+    "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. https/http 검증, host=culture.seoul.go.kr, path=/culture/culture/cultureEvent/view.do, 자격증명 없음, 양의 정수 cultcode→sourceId. 전행 19631개 고유 ID, 임의 제목해시 금지.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "use_fee",
+    "meaning": "이용요금",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "VIP석 88,000원 / R석 77,000원 / S석 66,000원 / A석 55,000원",
+    "nullable": true,
+    "commonField": "admission.text",
+    "screen": [
+      "행사 상세",
+      "행사 목록"
+    ],
+    "codeSupport": "공통 admission 저장/DTO 있음; 기존 대문자 USE_FEE 대응",
+    "notes": "19631행 기준 키누락 0, null 10635, 빈문자열 0, 공백만 0. 요금 설명은 described 후보. 빈 요금을 0원/무료로 간주 금지; 상세 우선 노출.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "guname",
+    "meaning": "자치구",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "강동구",
+    "nullable": true,
+    "commonField": "districtName",
+    "screen": [
+      "행사 목록",
+      "행사 상세"
+    ],
+    "codeSupport": "현재 지역은 서울특별시 고정; 구 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 121, 빈문자열 0, 공백만 0. 구명이며 상세 주소 아님. region에 시도와 구를 혼합하지 말고 확장 후보로 분리.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "program",
+    "meaning": "프로그램소개",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "Let It Snow, White Christmas 등 크리스마스 캐롤 명곡을 피아노, 콘트라베이스, 드럼의 일본 재즈 트리오 연주로 듣는 공연",
+    "nullable": true,
+    "commonField": "description",
+    "screen": [
+      "행사 상세"
+    ],
+    "codeSupport": "공통 선택필드 저장/DTO 있음; 서울 parser 미매핑",
+    "notes": "19631행 기준 키누락 0, null 17457, 빈문자열 0, 공백만 6. 빈값/공백만 값은 미제공. 공개 본문 정제 및 길이 제한 필요.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "lot",
+    "meaning": "경도(Y좌표)",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "127.157342546961",
+    "nullable": true,
+    "commonField": "longitude",
+    "screen": [
+      "지도 후보"
+    ],
+    "codeSupport": "현재 저장/DTO 없음",
+    "notes": "19631행 기준 키누락 0, null 496, 빈문자열 0, 공백만 0. 숫자표본 약126~127도는 경도. latitude와 뒤집지 않음. 다른 공급사와 결합시 명시 좌표계 확인; 좌표로 주소를 추정하지 않음.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  },
+  {
+    "source": "seoul-open-data",
+    "endpoint": "OA-23041 HTTPS whole JSON",
+    "originalField": "is_free",
+    "meaning": "유무료",
+    "type": "string | null",
+    "evidence": "observed",
+    "sample": "유료",
+    "nullable": true,
+    "commonField": "admission.kind",
+    "screen": [
+      "행사 목록",
+      "행사 상세"
+    ],
+    "codeSupport": "공통 admission 저장/DTO 있음; 기존 대문자 IS_FREE 대응",
+    "notes": "19631행 기준 키누락 0, null 8, 빈문자열 0, 공백만 0. 무료12852/유료6771/null8. 무료 명시만 free; 그 외는 요금설명 있으면 described, 없으면 unknown. 유료이며 설명 누락이면 unknown은 가격정보 미상이지 무료 의미 아님.",
+    "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+  }
+]

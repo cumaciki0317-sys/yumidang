@@ -1,0 +1,812 @@
+{
+  "authorization": "최신 사용자 전체 문서 동기화·원격 반영 승인",
+  "ownership_precheck": "jonghyun은 공통경로에서 거절됨. 검사는 우회하지 않고 원래 owner별 독립 clone에서 검사·commit 후 통합한다.",
+  "changes": [
+    {
+      "path": "AGENTS.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "1ed2c02d301dee05226f74fc662594c87a3906275e94938da4ca83011cbb99c8",
+      "after_sha256": "1544abbf547e8550b2540ecf7e4cf2f747e9ee9230c58494042189b920ec924d"
+    },
+    {
+      "path": "PLAN.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "09a59641bc2328a586a4c81d54e50538a02d63dba2115c9a3ba9eec0d91fb160",
+      "after_sha256": "19f81fbcc2234271323fb9832d5b78cb5a3b0df3866f7914f1bac4e50e8ebccf"
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "813c437821a135e781a61d588095ff872873684db3b786180b0cb9ef038c80fc",
+      "after_sha256": "ee56fe73eefdc4a3c6ebcab2abaecbd3f74452668eb41ad458f57613a18a0585"
+    },
+    {
+      "path": "README.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "00c979f4b8a1ca021b1e621fdf2b41ab0aae185229c955bb6a2d299326b02fb3",
+      "after_sha256": "932b83e6e004aecca14a99f7275e3cf44867804aab5cfccf468684f81b780988"
+    },
+    {
+      "path": "docs/collaboration/README.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "6582b1442cbeaed6b7f3e0658bb4f6d3458c795251e1bd361c4bfe611eaeea2e",
+      "after_sha256": "fb0c5267d050e9a6259a197d632d444018bb563de15bc0fa7cea60675cc426b4"
+    },
+    {
+      "path": "docs/collaboration/team-start.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "e7f0c80cd46066407846f8168575d2f53a23507c55e89b7fbbcd8cae5de0a609",
+      "after_sha256": "50a291c60917e5a1f9d22092ec9e1034475fb373b3b2c8be44590b7b99a4b41c"
+    },
+    {
+      "path": "docs/collaboration/jonghyun.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "4b4e8c710821a869d446d468f2e930341b486c310d3c7405a3445cdaca46cfea",
+      "after_sha256": "ae6c403d3a0905f9fe200c43762005b821b5e5ba4eb79c706f1bbf40c22ad71c"
+    },
+    {
+      "path": "docs/collaboration/minkyu.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "b646d5b5d674e2f03a843c851c177fb1c43af5364996215cc929dc213ea98b0d",
+      "after_sha256": "6b2b6228f42ebc22faa79f40cece2730119c6acf4a39b0d1fef6de84797fea47"
+    },
+    {
+      "path": "docs/planning/requirements/PRD.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "84015e428e07896c15fe32d59841e65f6f2b8977eafc4ae7eb6ab5b61b199fb4",
+      "after_sha256": "769575673c37872f19f1c6d947f4e76d4cce04b39052e4c402f382217d797572"
+    },
+    {
+      "path": "docs/planning/ut/README.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "ca9979369a53297e40a9275f7fb6454370d37aa54001f8980eb25065e3df8b78",
+      "after_sha256": "dba8b0c81e9fc7ac385f29963486563aee9dce29ab2a262836915d174027bb50"
+    },
+    {
+      "path": "tools/local/README.md",
+      "kind": "current-guidance-sync",
+      "before_sha256": "dc5d23d7f5607b48566f86c0d444c9aff59319f6c79ff150d7487c969c05d7b6",
+      "after_sha256": "f88e9e7d802b9f5ca59932c003f98cbddb30060adb8c3a92f60d458973064371"
+    },
+    {
+      "path": "260929_종현담당_PLAN.md",
+      "kind": "historical-evidence-current-boundary",
+      "before_sha256": "5d00b9a415ef5bc7911815d874d01d9a0f4cbb92fa6e2232976158e05e74b47e",
+      "after_sha256": "1a99190cb61566fe2143e4b9aef5cafe2689e7481b81ddbf95ae5d530395ba2f"
+    },
+    {
+      "path": "유미당_출시결정_보류사항_민규전달_20261005.md",
+      "kind": "historical-evidence-current-boundary",
+      "before_sha256": "78dfda876e5e64ff8c05aab070f4ec0c5449f460fce3fe07eba97c6e1dc52120",
+      "after_sha256": "24ea07358df5a5be5080e1ab758edb2d1c46a78bd3b93fb418d0f98cdb2fa1ee"
+    },
+    {
+      "path": "포텐스닷.md",
+      "kind": "historical-evidence-current-boundary",
+      "before_sha256": "0065395de42a10018e23196ef64bddc45054304d0b87e64206f9125fbb6a9cca",
+      "after_sha256": "eb4a68a0e8441d11aea8017202d23fdb765f1ca03b93a71f579573e1d6d8e74b"
+    },
+    {
+      "path": "docs/collaboration/minkyu-progress.md",
+      "kind": "historical-evidence-current-boundary",
+      "before_sha256": "5ba684dd861df9830a66d2e646bcf313fed71d04b29fd21e57c0232033f26157",
+      "after_sha256": "8394492881648114e10a527314b5818ddb7e63876681d1a465e1dba55a84c216"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-ai-cost-and-retention.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "55d746fd0eecaec607745059b7f06798dc121cb4b93c60526d5bbc1e7f72cc4e",
+      "after_sha256": "466b816ac2186c4b54b847cc405b50c368ebfd57010f7a632bd653a58591ac7c"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-connection-contracts.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a1f499af6864380ab0ec95244b07550f558319828dc43517c31a871c877c9239",
+      "after_sha256": "331f23dad2ffcdcf9d56dde3b8b98e7b7e82d541a922008b57fcb16eeb924d66"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "7d5881d40622e2a17196472f8bc8b9cd87aa82a773f387b4846b8e58b327dcc2",
+      "after_sha256": "519f6c1b47d5d9cbae00669d52263c895e3be396efb87906cc73bbe97546ef77"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-potens-api-reference.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "e297508bfc9123444ea59c64166e7019f699092cf070fa7261fde8e176550e16",
+      "after_sha256": "7ea7e5d5759a0b6840f3b70a276fe3a50cb7a62c1e97f9f9858d377ee5b063f4"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-team-ai-retention-review.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "9e49bcd28c49c119d90d0d6c1cdcab1d5198963e2d6d51e5c2e6118b614cf8bd",
+      "after_sha256": "b8b83218d48af8adef5f1a647b5fe1a9c0b1ea1133cf79440c0a617472ebea62"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-28-connection-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "d03fdeefa3b1dc2c22243e015777313229be2db3b4d68db931d03f7f4745f8b6",
+      "after_sha256": "0aa12f579df9b5ad58a17f403e7f2f8c781315ca5262070f586455117124d58f"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "b43b180d8ae51cb5d93fa713395a1cc5c4df3a1a55a2aab44f6c750b938cbb86",
+      "after_sha256": "b150a6573ad5fd73efdb34ae708cece29f3afb570d38f00d33ea5c7837921013"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "4f6d65d9abbd3f3dbc499bb623ac5f7e1fc62da5189b969b5b5dd58ccc9d871f",
+      "after_sha256": "65b4aebea3c36adcad64febe94d60faeb82ae159d7d8fbfc935f679db5b2f1ac"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-questions.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "996f8be345c84f4d3a0d8f1ced17625cb8001cbc956b3fd110a6d356ca9b67ec",
+      "after_sha256": "20d491688aa2ca0c2edc1a4d7383eabb80ed5a45a5ba56209db2163fa075d2ed"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-c-notes.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "6172a0c272fa80a82fca8ad648f25d3e4fa80f23bec3fd67e3d93d23c22e4be3",
+      "after_sha256": "50672e444b1bb8dc086df0d16b05331a1bf0307466550f3c5261bba7580a652f"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "5fd0c13fca72c436b944f09c9fe868687121495867d5e2ea16d1bc4126c45df6",
+      "after_sha256": "347570966b055ce359ff1c8feffcb2cd05f68609bf1b0256a6590fcd074e5109"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "e52d2aeb28d4037430ec59a48711ec3975f3d913020702850215dd977bb876b4",
+      "after_sha256": "ed0147c531107f776ca5b3c05f36e5db387af06c39506b868640ffdf76f3ee5f"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "3e336850f86dd4799e9c7ab83e7e0ea14925011df38817079bd5142b0041f2d6",
+      "after_sha256": "29832b2262a315d37cdad3e481158cc4a6b9006307bd02a8dcffabeb9fa0ed62"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-maintenance-decoupling-request.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "6817db2cc006d2380a8c0f688f217853846d65810359c9ebd3477ef189fbc294",
+      "after_sha256": "fde5d7fdcdc61dcd5436577365e3ec8e696e27c67094994c3da124c062c692aa"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "5492dab55e5b3fe6276f72849afcaf64fdf38384f24598364c9522e84ba72ec4",
+      "after_sha256": "7f66f1c85461dfaf95ae99bb0622c14676b10c47f208d82348ec79ae5ba5f3ca"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "d9276b43efb750dd59cbe549ebc86d89f8fa5edf69815d429024706ea1b15ceb",
+      "after_sha256": "e899e73f1d3bae81c8714a88519695ad12c89d477867b5f07a51f7454ff39950"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "4e2ea2cddea189973f86898ee2871c14810a2f135077b8f63151312020dee0fd",
+      "after_sha256": "97f16f17ad0d2db7266e471834f8d58652455d587573e6f7d63ed3a428c7a8f8"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "57cd32198c562bb6b4172d08b801c47d43eb8afa2f4c0b2892f496fc9d3db598",
+      "after_sha256": "95390172631b58691e081272a7636d1ce60b6c65e90a328363cf1337a3f4a583"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "0f2e6aaa134c029918ed7453152e78203752f25676da7a6c766ce3106d0d02cb",
+      "after_sha256": "4d0954fe368ffe9525fc9d1690ae319bdd299c4961a2761ba02440829300e015"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "8b6c30cb6084c0588e1c145cfbca1ecb5289cb2afda78474c3279d607490dfde",
+      "after_sha256": "bc358bb49c9823c57a3c37fbafc7f070796dbdb7f647f45a67f224ca2acf1b62"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-jonghyun-integration-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "bb9016af112e02c8d17de216e9d9709091da5ab0a18edc0e31305392d5a45177",
+      "after_sha256": "a854f640fbf81f8d0a529e4015f0228ed40f2d7b2917e06d4682fbde706c6511"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "0a7ebabb0d3b888917390ac7c142be3d25787a097252053f136b723d4fc973b9",
+      "after_sha256": "4279589501fd5bcfa6a65a1d6acf9a972d9a2ee653b336dff8d95af3da5d3449"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-resume-todo.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "bcadb327a78b3229d27a0b1e7587d1a6cc2ee69ab4ecf7f45eda8d14c4f1c565",
+      "after_sha256": "520bc1269849436da68c37c163f31a5391981853119b8a5bad4c59e1cb9f4220"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-undecided-questions.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "9d234e0fea933ac18f43a9a1fac5e199c59ca731c17c7835db0d8664f257a1f2",
+      "after_sha256": "1bdf39bb11e66a76f23907b89e02545d121e9942538484c2af3aba74fa291084"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-01-policy-docs-sync.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "331ff0c01f616991e1d465c13eb3a7a9740f2acb7c359aaa57439abe423c463a",
+      "after_sha256": "c679ce6889b12ffc2119530a1f9cf720aee262f472a2af5eb32b9c5f9de2a6e8"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-ai-feedback-connection.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "7344e852ddc25822cfe9d0eb406a6a3dd4e45e384ff2d88484c2ad4fabe5ba54",
+      "after_sha256": "658a35edf983e8fa6d9230cda69095602f3c1a968ab5486c9097cb2ed528dbfa"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "87c81b4f88916d35c2756edb47b2bfa4f3ef6995da4bb6343aa18237eb190045",
+      "after_sha256": "5fd588de493e14c9364fe04292b36f15d114097497b860cb506e3b5bdbbfbea0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "6c2c0509d09ffaa01f710aee03ee5ee358f47a70027eb31f0ed7820a52a6a9cf",
+      "after_sha256": "a8a908c56889f70ebb67573b2540d60ff3d0bb75a02d4defc4ecd86adaa569bc"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-events-implementation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "33fe9b864191539633b9ddcd8f63e8e86e1b973500482def548ba19a9dabf2fd",
+      "after_sha256": "dd214f80d8259adc6201b960517f01142a213346e37d7921f470cbde0a8b89fe"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-full-implementation-plan.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "716f7ee00c8026172cf2d3c4888b94119d868374293ac0ca8fb4da03d84e2830",
+      "after_sha256": "d39af11876b4d135498d477fce94cf7f719f23dff2376a9d393993e53cb58aa0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-mobile-implementation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "c860f1a410ef14692b19ab4bdd45df30df67d9081c518a3d1c31fd6302b35953",
+      "after_sha256": "3a772c80d4e9fb4765d95005a02fbbf16fac82a603b75d96c83e48d1681b96e2"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-mobile-ui-implementation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "3c4f10efb492ecb8b8922b6aa771174612c20aed82a4f9d02a2185041bcb5bdf",
+      "after_sha256": "5ff14f2f3a45c7606caf7c89f7389cac0d07fa5f1775225db58342762b3ef9ac"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-policy-implementation-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "535b4e59b97a4c0bc8a91103a0c43d915b30823a4817a25b474742f7c3f351cc",
+      "after_sha256": "6732510e55308e1c87bdfea209d127d289da2f682e96c13cb6fab5636cd359a0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-queue-integration-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "ecaa63809135f1a5ccc4ab5b76260bb64a5a1d27567f132c2a35f0d6631b7f30",
+      "after_sha256": "96d136b8a9dba9cc152f33c9ab3c792d8ba3d7098f8a46a21fd441ca62176f52"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "8b89c1850d80513a98c8560dd0f68799e9128163b1c5c99040d029868a6de4f6",
+      "after_sha256": "225ceeadf4500f583743938da1a483af13b8e2e78f95db51c60791059f0209d6"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-06-minkyu-policy-and-potens-briefing.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a001e497648df3f51fe3a8c08ef562a29eb5039a231067e2df2a48d9d431f1e6",
+      "after_sha256": "79d6f0d98fb9366279bbba64bb1434b631e29dd4ca130617ff2bc6e89580a16a"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-06-potens-account-pool-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "ab76e9b596bd6066db4eb64fe549be267b1fc376c8cf5593f298acaf79de2b5b",
+      "after_sha256": "476dcfd6ecde01160487ccae389a02d0b5fc4567d72b7d2ca6deb45d8cd68d71"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-07-common-contract-requests.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a8a48bd060eedd1e7146fef44092427e3b8d816ab5cc74328b6415cecb5e2ac9",
+      "after_sha256": "7de36139b83989887c17fd7046bef5ae9f6f251947b463f87c29178b9ba6ba53"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-07-implementation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "0a2ac9480d035880ca46d07f92ca4abf91b8c040e0957019afb6e805221fc2d2",
+      "after_sha256": "f076cba9f94ec3e564c8f5ec102bab5bedb8f58d1f2a4e144c5193f0c317b6d0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-followup-common-contracts.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "867026dd753405d839a94d85049e4f95edb9999eea5d6f6e40b3e96a2f51df57",
+      "after_sha256": "dc649ce0a150154abf29a162a02a4f6de52265252a45a240d4bc1a6c7f2ffc5d"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-followup-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "77f519fc529574cc1faad9e78cc4cb8515de8dea69abea4e353400d104ff0d98",
+      "after_sha256": "09c1742e8552f7e19aedac9ff7c08e95d0876cbca2fbe166173ee6477485a627"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-independent-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "aff1b4d80fa157411f9b5b5e2c79c4966d98b0c3309cccc43150501d088f1a04",
+      "after_sha256": "8fa8b35b7e5abfa4d01a211dc746b220cc01f67c91b0a2ec9a164ef11045667c"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-backend100-request-logging.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "7c439ddf9d500886c7e2bc62516704b8f2f7a7f17750d9101c56e4b3fcd1345e",
+      "after_sha256": "0181fe80462468f7ead2812910087d04d303de3ab28732656a9b05d4ec79f53e"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-isolated-backend100-execution.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "f226f7334b7b0d705147a9f818c5e0514333c79a54dbeac0c386b5585fc5c8da",
+      "after_sha256": "23e16e5e2959fbdabc6ad3fe0f5af07e5b0221bb95f372ce0f6a6d2c3c510baa"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-isolated-backend100-preparation.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "41d86dc01c21aad89ce60e0824384db2ff1e6077d9e307ae2a581c60cd916661",
+      "after_sha256": "c78f90af6aa71aec68beff9fea7508bbb620f9deeef2115c7ab6bca50432fa36"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-isolated-current-ai-validation.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "95295c521ec474251e7edc8f700087a256c2d6fdc784646598f1772cfe8cf33e",
+      "after_sha256": "8118a134db887fba873c7b475e5add955e1be502cd0c17fb586e45d0c65ab7fa"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-11-offline-remainder.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "6ef89c289668a16726b4c48b14b72d446dc0b786d217bf513862467990d8fc4b",
+      "after_sha256": "adeeae0fb2c66c4414173d2ae415a5ae3f35921d20a16a54d9c6a5f3c59abdb4"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-approved-feedback-operator-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "1f3cd5c96ff990e9a037e1e8302227dc7acb6c7e401d32ded4f60499e7c3d100",
+      "after_sha256": "e890189e1d2b28504b7a7fdbbe2513d8179a9f9e216e74411ba839b32767c910"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-followup-commit-review.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "ecc74ca334b21e277cca53861408cebfd9527405471d5c33521b9d5397094356",
+      "after_sha256": "95efc58940c47cc13a04ac67c0f89040ce134a311f72aa50de244466201cf851"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j02-official-contract-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "d31ce7cedf20e72187acbd4fd35c218f6ebab348be096312c67be58e73360c85",
+      "after_sha256": "d5c5b760e1acdeb04e622dcd1aba1920492be27ec425e23dff495ced4d3677b9"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j03-public-ranking-evidence.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "f4a7b2e63d20412b61d629318f540fc3cb99b9d7795d7e5723874dc172b16002",
+      "after_sha256": "dae15a0429edced52647639deea5430865eedd2297a7902b6f1cc7575cbee638"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j03-ranking-transport-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "7c571999233913d97a2f46f867881dd9acd95440a97d8424a5294848b89ebd62",
+      "after_sha256": "2a287a713d2b26a5c3966de59bdbdb59f36f9d19fe4be0db1ce3a99d9dc5d2bf"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j04-model-deadline-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "9eb3a85f119d7fd36fecd3e03b7aad58f07602e0b0ca58643d971ccc703efe7a",
+      "after_sha256": "aa294c4a3e3f4048e7f018156ff35fb5e7b572da86a9d8e58c70fa96824cfec0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-capture-deadline-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a4b7288ac66541f04ba1412dc76f155d81120944fe481bcc09de01d77615d99f",
+      "after_sha256": "3253ef187f008e4e36c9e9f0107b2750e5fe9e11cdb00e2716f38e6305233dcb"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-native-concurrency-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "643db3cb60599ae29ff0d7a1f982608f2f6d4c9d344406839ec3b5abd7d291ce",
+      "after_sha256": "1e985a0552f716fac728e990c59066208685e77511b6242a0d0e3fa847d2fce4"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-operator-retirement-conflict.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "c7611d6d02b6498297249428df2a6c565c023f29ee436b3170a2336ce4ca6787",
+      "after_sha256": "eda0ca0cea5043c1a1ffbc5440d711497f0459ebd54e7780abe5b683dd196cbe"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-result-finalization-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "cceed9e7d2c968f582971ff836757726e175ef14d8eed9713b84a266cf1ebdec",
+      "after_sha256": "a6a331e30c750f79e61a8d117c00f377b7ed16c725a00a8179d72a71dc4760cc"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j08-boundary-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "05311404cf40802e9107bf9e025aca813fddfb35b1604b517a823a16b07b8bdf",
+      "after_sha256": "41deb5f0be02237475db99b7dcd53c4dabe292232b978de0925cdded067d4d07"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j09-budget-deadline-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "3567e83d2d33127833887ef2690e2ed3937901f08fe668e6e32a095e2f81f5b7",
+      "after_sha256": "f277329fa140f7f68bdd0583d5835eaa3fe489d4e990629042f148005403c933"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-live-validation-guard-conflict.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "16696a09b67c84c15ca71210a44e5af71f9ca36a3399ff978d0f1feb5e05c105",
+      "after_sha256": "39f36c3b7f04dbeeb0492775f4c8086a49f01bafabec342667b7a823bb76a742"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-member-read-boundary-correction-review.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "ab3fa688ec8a70590613d46d15549df177aeb7a1e7be21cba6cc0337917d7792",
+      "after_sha256": "d549ac339dcd287acb20211820f7e981beecaf9a102135e25a1f5ff2c8c045da"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-minkyu-final-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "e3619e7c93a5f0c9fa49064b847de01f3a5607339343150601ba071b79efb8e9",
+      "after_sha256": "06222b5a7d489a0ed0fbce892c17a2c940ffb89d88697fb34b0b83bcb3b6002d"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-parallel-implementation.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "c25b181c5c13b9e419ab136a3464e93ac8da4fd30b100e784fe4c2fc6c376985",
+      "after_sha256": "7f443df1831fd19e874dd241e250760d15edbf58648f1eb4140c73a02f127c03"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-remaining-work.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "b1c2b22512f6f627e501eefd8318e7364062b563bb70a141035893df8ff33056",
+      "after_sha256": "5a7e1c37fa45051d45778ddca3ce9db2f354c2356b3fe38648f46bea2288476e"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-commit-review.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "e8aa1da1f9de107e4dd6571ffe11d96d3bc7c62c48f1924d08fec7dde51a6320",
+      "after_sha256": "462cb24b4cc03d7c274a79665c84d0547bd2c2df46fb55f08c870c6f60578e60"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-validation-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "f1b9f5f90f455caa73a8a329d55548f6714cc592e750cbff5a2a1fd338bd1ea8",
+      "after_sha256": "2615bc9b7435543cff673488606757d3c4ee3338370b902247f918e1d26c02d0"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-validation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "404bfb1c68b8fc94a591bd9ffdd16eb4ecd06b88130cbee65f2de53c8b9cae54",
+      "after_sha256": "765e124a78b0eeeac2b817a3f0f4d0f54f5566f88863e5de7ffeba39e5a85ce4"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-rpc-transport-deadline-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "5ed5e7d534c7a26d3ed6a36a1c9674a681c7cf670f62d033c7c112bbac1d3fd3",
+      "after_sha256": "1e9d8174f418a87aeca65b2dd8467b382a10708ba421dbc89377617e2d8a46fd"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-temporary-guard-patch-design.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "60897e882b95bf0c28f8502e3fed50c85cf62c6716483ad355864f56b62c4154",
+      "after_sha256": "0ec9d2566c712d2202173aeb8eb1b9a03a912ecfac540239ff6e4ef73faf6580"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-temporary-validation-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "891a6f76081519eea970211289c8c52172ad1b9f34bcccb19d5e437d89f6948d",
+      "after_sha256": "1e686188fd1e25aa3874a74fe4aec5d16b090da0340ff0676cfaba880658585e"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-17-policy-review.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "15b81cdee7d7add474db17b8912b8eb07bd7200406bb13c4014bbc98002211b1",
+      "after_sha256": "c38d651270ded0bd4d9f8aebd1d0bf5d6ec3052eaeb17559c2e7045bf1095d86"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-ai-consent-examples.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "46c1e6d2acb8f14e9984fc77f4de23bcb078cb7256941177eee4e65fedb73a78",
+      "after_sha256": "94253c0ba2d2fc75f00b56d5fe227331583494e2207bacc8aeb41ded6c6cbf50"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-ai-first-use-decision.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "20e107ba464aaa8e2cefe7fc6ed58fd5a31286f4f409d352ff8c9e507fd42234",
+      "after_sha256": "257d9dd5a29bf503963f5e226f7245447e68b5187e28bad8208d9a1b09233df5"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-ai-optional-signup-decision.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "b11f24df4bb9c6ff3a835028f90316979062a9596fa1e8cbd544852322e5f2a8",
+      "after_sha256": "523f2d128c1805f628f0853d76ebbc726d42bc9e526fe318f7a11d76996a2c74"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-approved-policy-sync.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "5450b0182fe6e71d14c95936ceea658580880c3c4a1bcd3c363980eb4ef6a5cd",
+      "after_sha256": "1a0938fff86107b2145aa3def02d0a9b9824c832272cdddf99d0056631e5bd3e"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-document-sync-summary.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "cd48c00fc7748afaacf4a7bdfaac84b80afbe457268f1e9cb44178df03ab1d4a",
+      "after_sha256": "0779451eb7759db4fb97d88d461f01f06e332e0c171a71a058c18006fa50939d"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-review.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "b1010c47b52f642bd82728808528bb2fc5093f87338aa22ffacb5a380cc0afba",
+      "after_sha256": "345c4fca86e4fa9e46aae840cfc241ca55c0e8c6629a2543f97dcb03f5332f6f"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-screen-mapping.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "28d2ac6ba0497f66dd7752470d1a6921fd74f745c10be12ca656901b23988d91",
+      "after_sha256": "e8caa61588a86b0d71f823ac85d5f4bbdd87219733e0155b4393bbaaeef94f2b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-external-verification.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "2eca721d3efd28bc7e92506ce7ae972fbc5b5c40340bebce350fd604087b6d10",
+      "after_sha256": "f67e25dcf410b0f2a03c8ef5df33741604b1cc082685320ee231dbf80280b942"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-final-selection-and-hide-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "277ce90bd2f990a736696165a5d0287cf5f4602c9980cf29801d72575ec77b80",
+      "after_sha256": "59631e91bc64f4b888a593de0ddbac8acadb382a9bd98b4e0fc622249d617f3b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-monthly-budget.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "bdd8f289dd282a1c4bc66c2e9fcb7cd2d0b09edc4a4ffd75fed7ceeb67661ab3",
+      "after_sha256": "70d5b2841a2cfe8c203b1ab592843d2232b461c1e3971767f925e26ad8694a41"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-registration-and-fallback.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "0cc57fd3f6fdd30f02ba1639e6cf7d75b7e2653c9811d91075c47756a0cff027",
+      "after_sha256": "f3a300db1bfbc069d1c0095b0fac78e6d6b7f645b1e609bc269f146b335839ef"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-synthetic-validation.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a26614438dcd9ac45ca808ce8dad2f82c378ecef0015176f990e62f3270c941b",
+      "after_sha256": "07d9d6a60a04b9312fc2bd067dfd5625e2e2130b48f94bcbef898428ce01db0b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-basic-followup.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "601ee721a16674b3328a11a9da057a3047d41f7d335fb2cc96c1d39a7cdebd8d",
+      "after_sha256": "fa1e6b6b4ea295fe5020d510c917db4ac2edb473121da1596d763722c220d1ae"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-column-audit.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "35562e72336c53804b8a40f18c2187851cef4db6f41655790daa370d9c90b564",
+      "after_sha256": "0381534892f8b4d8dfdec0387444d85b248c1f959c36f9b81a4b1bfff247d01f"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-contract-followup.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "84468af91900e044083de8e9107db4ce7d85788af30dbaa4786cadafec7611b6",
+      "after_sha256": "1d5fe6bd2f6e3f80d7a99e06cc7b8b80044a7441ad0ad4713912fd00b39982c2"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-expanded-category-mapping.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "74c682406bef706bb2b7e400ad4327cdb06990c5aa0c994ce21b21d4c792c40f",
+      "after_sha256": "45d41eae76678cd26b2dbb1774db93ed5b63a88a6bb39349ec2ae9d474988131"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-expanded-ranking-decision.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "bdd99c108f00f3e67e0a960b07cedf7a4c3553e0d1913b2b07bf4a536a34fb4f",
+      "after_sha256": "59efdbba75b934199287faea5e2b0270d38d19ab186a16d61ce0cfc87a50f9f5"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-final-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "41a8f1f833920fc5115d5788509d6fcd2d5d8b7c349f133d1d692e900b749a62",
+      "after_sha256": "e98192ef184243ae96c939f03dfd1856cdf8e39983888eedeea69d14f7a1b4aa"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-policy-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "3e9ec7c9944731f1529dfb426fbd040fed6798f01dd29d69c727ead88bc559e6",
+      "after_sha256": "bf8b07b4ff116b656262d2606e8682693be7ad3aeb8edc59d5be5be02744b781"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-operations-review.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "df5eaf1f19f632a8bcddba5ef8828eba516de12781432aeda61201a13e8e1d67",
+      "after_sha256": "42b25b705d754cc180b174e1f2d98e507d7effb3f4a3332053aa1d7e6848ee57"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-policy-followup.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "8ab629cfdd64a943e7e64fe1a40b55a8a6fdcdb78af65d8c9209f0ce60092db9",
+      "after_sha256": "a0ef0c89db72c4b2edbb3527a1434b115a53291e9129ddc1b9da1b72f7c4fd49"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-privacy-store-verification.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "05f816eecc5579a6134be1885c5fadcbf7a0e540870a42006b0766ec6ecd851f",
+      "after_sha256": "e07ce5bc713224a252ec5c75bd4a1bb271f1a33aadc4709f0d8d1905a16b8773"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-review-consent-signup-decision.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "70955d7cdf78233fee9d3e4b62e2c49d3fa0e5e719d6747988dc1233f8e5e2e3",
+      "after_sha256": "001f760a6446c85f3afcbd425862fa67b1b9359c46d3774eaede57cdd50ec3f1"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-column-audit.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a995df222d4a9dfabe66276cd53ad597c1819dd4b7d0366509004789a11b15c9",
+      "after_sha256": "d4f72be388dbdcc15ae113387e54f4d46e85f2909c20c11aac5f74420494b496"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-https-followup.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "afebbe914aaf634a79edbc53455fe05dfbf6b76a4fe7efca90a1a52c7a38d956",
+      "after_sha256": "934e8e23031480e1e76452d461fba8f7e74d9411dd04c0dfe26de914819a33ad"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-https-security-resolution.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "e4a6de540e8cabd504977723d879964747dbbf79e4d022fad33682fa0f2f9c8d",
+      "after_sha256": "726915834e8623c7571c0ff87b2fc9f2afa6c5d6dfc626b49efa765d10971f35"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-sync-ledger.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "133fce870dc468004e45070a7c92d08c3d3386c6247716ca5a726e0252fb46de",
+      "after_sha256": "fd1aaf4516ccbb2357e86de6c6d2c9983662323c5ccf9e87d4e080c6cf6e3f16"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-tourapi-column-audit.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "909b7c730da1163d5ef0cc192ace843f33520fe37ea176b291658181f0d15287",
+      "after_sha256": "368163858e082924d15989a29b769b562ed06b6c2ca3629ff43110fc1f9ed294"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-commit-push-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "be1549f957063a4bd5c0bd3beb9c03854f97068ef24c1fdfda0853765f975bb8",
+      "after_sha256": "d70bb9fed7c0151a997bc3821ea4d9481f43a3e33c16d48051f941e2b873d917"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-common-docs-integration.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "3fef3a639ea1986156aebca9bf0cf6f9cc5ff4bceb68ee5e501e26266841a7df",
+      "after_sha256": "a88b8d145eb40d87808c3f8f0e0bb41e4f67dab4ec9943678137f51311ffa5c4"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-flow-night-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "a0e85b8c865fc20fd72a25318cc0318365784f45f878ff5ed38a9dea53d7d8ba",
+      "after_sha256": "408261ffda7a5a8246526510b5568100ac540d24304003dbb741d4d1dcf504ac"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-flow-night-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "507795db16f0d7ecfbd41667ac92538481f65d5ea588f6e24e7d2f29ac4f6aa8",
+      "after_sha256": "6f726b6297fa7d5737877380f2b0ef006a284f7c0b79c1401a43e736ef46a614"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-approved-spec.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "3bf77197b80ea3dc05448fb5f244ea23b5b2b431e22126267bb4181890adcbbb",
+      "after_sha256": "50906c495018f69415c2fd1ee27a3f146874f4066683a44305e710940053117c"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-decisions.md",
+      "kind": "decision-evidence-current-policy-linked",
+      "before_sha256": "7089952b53e7a23fea50e74941b136c4f5969c199b52299c2bb6fffd26bc1454",
+      "after_sha256": "e6f82b1680f3c83ff1de903ff7b24288b2a66fbbe5dd6deee874d44f83fc1a2b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-final-review.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "0f8d4fa8cf916026b4bc9cc844c3d4c9d9da7331505c25a5df2fcabd7ebfdb3e",
+      "after_sha256": "01956a9f50abfbafaba59850cbb6c81439212d29da1f6e5d281836697177406b"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-followup-review.html",
+      "kind": "historical-review-visible-boundary",
+      "before_sha256": "b4428e023e79b3a47ca7e37f6b51f69227d53524cec991c8cb8356b1cc2504fa",
+      "after_sha256": "5b390ff7aa2076ebf0bbd0657cdb3441eb6e0f983ae68c4ab6a62dc459c97246"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-minkyu-handoff.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "cbbfc85ad9c8a8fa68cdc455202e59dbf14187d0caa650f0ebec9b5efd894da9",
+      "after_sha256": "659134de100903ff98cbbe6133141992191bb4857c677adc8d9dbdf3722bfaa1"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-selection-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "11f701fcdbc062c94f968157637552c96c72ab45e705a1ea49dd5a3a0059640b",
+      "after_sha256": "20cac0b498135f9ac08975e4de1d41d35ac8d01e9451b6af2a9a1c1dedcba321"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-sync-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "53a7c78fe1953cadae63f4fa1f8e74f7c5fec3d26906aab74ea9de89d25639fd",
+      "after_sha256": "140c2af6b612a8662db6e2dd0697e4dda30a0a1ee9e3c80b85d2a2c86132db49"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-night-error-ai-questions.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "8306cee0d7205a4d5723f9edb56246c8b2da3327e6302dba7351f4819e0568f9",
+      "after_sha256": "e28a43057a45ccc07682009c3ed9c58303e378b70988892ce77f8c77b72e7714"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-night-error-ai-result.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "15bc221c8e760582fa9e69bea7e576be869b5eedd92c2a600b289f2a9254bb50",
+      "after_sha256": "3d244c608017ea1b6c1a9009a60dad525065f23a8bc3c6e8d637177b7493be75"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-overnight-routing-build-audit.md",
+      "kind": "dated-record-current-boundary",
+      "before_sha256": "520436a89165f9d719a1afa6384e9e399888c917c07790be492e5fa725ea71e0",
+      "after_sha256": "4353750c06cc8ed5ab578b25e1b903e64f52daed9ce3fa2e08dca303966879f4"
+    },
+    {
+      "path": "docs/planning/design/유미당 와이어프레임.html",
+      "kind": "prototype-current-boundary",
+      "before_sha256": "edce537535fe6ab2fb24c196e48afb4af12e3e50e2e339af898a3092c4a6f4cb",
+      "after_sha256": "40ef714c0edf3a06c38cb7639965a4b985065007735464de840f6f049b20f5a7"
+    },
+    {
+      "path": "docs/planning/design/행사UX_미리보기.html",
+      "kind": "prototype-current-boundary",
+      "before_sha256": "b4401693ea55cfdcd277e81173efe1b82be0c6964105ee5202e639d8e4e8ff9f",
+      "after_sha256": "7844911a92b547e86b40e130c206a01295806c790d9702c665a16aad37c563aa"
+    }
+  ],
+  "preserved": [
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_운영정보_작성본.html",
+      "kind": "immutable-user-decision-original",
+      "reason": "사용자가 작성한 원본 선택 증거 보존. 최신 정책과 감사 원장에 해석·승계 연결."
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_정책검토_작성본 (1).html",
+      "kind": "immutable-user-decision-original",
+      "reason": "사용자가 작성한 원본 선택 증거 보존. 최신 정책과 감사 원장에 해석·승계 연결."
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_추가확인5항목_작성본.html",
+      "kind": "immutable-user-decision-original",
+      "reason": "사용자가 작성한 원본 선택 증거 보존. 최신 정책과 감사 원장에 해석·승계 연결."
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_최종선택_작성본.html",
+      "kind": "immutable-user-decision-original",
+      "reason": "사용자가 작성한 원본 선택 증거 보존. 최신 정책과 감사 원장에 해석·승계 연결."
+    }
+  ],
+  "parent_clarifications": [
+    "P033: 최신 확정 행사 기반 가입복귀 예외를 일반 홈복귀 문장에 명시",
+    "P246: 기존2026-10-14 사용자 확정 미전송 자동재시도 조건을 포괄 문장에 명시"
+  ]
+}

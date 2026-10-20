@@ -1,0 +1,137 @@
+{
+  "kind": "isolated_candidate_validation",
+  "networkRequests": 0,
+  "sourceBytes": 19466060,
+  "caseCount": 29,
+  "passed": 29,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "real stored 19MB source parses all 19631 raw rows without assigning status",
+      "status": "PASS"
+    },
+    {
+      "name": "exact HTTPS destination fixed public form and no credentials",
+      "status": "PASS"
+    },
+    {
+      "name": "application/json accepted with validated schema",
+      "status": "PASS"
+    },
+    {
+      "name": "redirect rejected without second fetch",
+      "status": "PASS"
+    },
+    {
+      "name": "response destination change rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "redirected response rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "HTML MIME rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "HTML disguised as download rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "provider error JSON rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "truncated JSON rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "malformed UTF8 rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "empty body rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "oversize Content-Length rejected before reading",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid Content-Length rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "chunked oversize rejected and cancelled without Content-Length",
+      "status": "PASS"
+    },
+    {
+      "name": "missing DATA rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "non-array DATA rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "empty snapshot rejected rather than mass deletion input",
+      "status": "PASS"
+    },
+    {
+      "name": "row limit enforced",
+      "status": "PASS"
+    },
+    {
+      "name": "missing field and invalid epoch type rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "unknown schema field rejected for review",
+      "status": "PASS"
+    },
+    {
+      "name": "pre-cancelled signal makes zero requests",
+      "status": "PASS"
+    },
+    {
+      "name": "hanging fetch times out and safely cancels late body",
+      "status": "PASS"
+    },
+    {
+      "name": "late synchronous fetch crossing deadline still cancels response body",
+      "status": "PASS"
+    },
+    {
+      "name": "hanging body times out",
+      "status": "PASS"
+    },
+    {
+      "name": "caller abort interrupts pending fetch",
+      "status": "PASS"
+    },
+    {
+      "name": "network error sanitized without original message",
+      "status": "PASS"
+    },
+    {
+      "name": "429/503 are typed failures without retries",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid limits rejected before fetch",
+      "status": "PASS"
+    }
+  ],
+  "limitations": [
+    "candidate patch not applied to backend",
+    "source snapshot structure only; no date/text/status normalization or DB writes",
+    "no production VM TLS/resource/time measurement",
+    "no new source download"
+  ],
+  "targetFile": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+  "targetBeforeSha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668",
+  "candidateAppendSha256": "698d11aa82e3700226c0f9c9d7b6a7ab2bcef24168b93ca920529f43420868b1",
+  "candidatePatchSha256": "d19697faa0b95bef1d52285227cdae05fc5fe9b4264cd079117d9a92c2fb3feb",
+  "independentReview": "deadline-crossing response cleanup corrected and regression checked"
+}

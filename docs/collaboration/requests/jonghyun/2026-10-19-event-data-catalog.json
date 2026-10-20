@@ -1,0 +1,5114 @@
+{
+  "date": "2026-10-19",
+  "actor": "jonghyun",
+  "scope": "원본 칼럼·현재 공통 구조·화면 매핑 정리. API/DB/코드/배포 변경 없음",
+  "evidenceLabels": {
+    "observed": "저장된 실제 응답에서 관찰",
+    "documented": "공식 명세에서 확인, 실제 원본 미관찰",
+    "code_only": "코드 정의에서만 확인"
+  },
+  "counts": {
+    "kopis": 91,
+    "tour-api": 153,
+    "seoul-open-data": 25
+  },
+  "commonFields": [
+    {
+      "field": "provider + sourceId",
+      "meaning": "원천별 식별",
+      "kopis": "kopis + mt20id",
+      "tourapi": "tour-api + contentid",
+      "seoul": "seoul-open-data + hmpg_addr의 cultcode",
+      "usage": "수집·갱신·상세 연결",
+      "missing": "식별 불가면 해당 행 격리. 다른 공급사끼리 제목으로 자동 병합하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "id",
+      "meaning": "앱 내부 행사 UUID",
+      "kopis": "DB가 부여",
+      "tourapi": "DB가 부여",
+      "seoul": "DB가 부여",
+      "usage": "S09-3 및 S02/S03의 eventId",
+      "missing": "원천 ID를 앱 UUID 대신 넣지 않음",
+      "status": "기존 DB/공개 구조"
+    },
+    {
+      "field": "title",
+      "meaning": "행사명",
+      "kopis": "prfnm",
+      "tourapi": "title",
+      "seoul": "title",
+      "usage": "목록·상세·연결 행사",
+      "missing": "빈 제목은 임의 생성하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "category",
+      "meaning": "원천 분류",
+      "kopis": "genrenm",
+      "tourapi": "현재 고정값 행사/공연/축제; lclsSystm 코드·이름은 추가 연결 후보",
+      "seoul": "codename",
+      "usage": "분류 표시·필터",
+      "missing": "미확인은 분류 정보 없음. 공급사별 분류를 자동 동치 처리하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "performanceGenre",
+      "meaning": "앱 공연 하위 필터",
+      "kopis": "KOPIS 장르에서 concert/musical/play 파생",
+      "tourapi": "현재 KOPIS 전용이므로 대응 없음",
+      "seoul": "현재 KOPIS 전용이므로 대응 없음",
+      "usage": "목록 공연 필터",
+      "missing": "concert는 대중음악·클래식·국악. 14개 순위 분류와 별도",
+      "status": "기존 파생/공개 구조"
+    },
+    {
+      "field": "region",
+      "meaning": "시·도",
+      "kopis": "목록 area",
+      "tourapi": "현재 addr1 첫 단어 정규화",
+      "seoul": "공급사 범위 서울특별시",
+      "usage": "지역 필터·행사 카드 보조",
+      "missing": "서울 guname은 구 이름이며 시·도와 섞지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "placeName",
+      "meaning": "행사 장소명",
+      "kopis": "fcltynm",
+      "tourapi": "Intro.eventplace; 현재 목록 addr2는 상세주소라 의미 차이",
+      "seoul": "place",
+      "usage": "목록·상세·장소 후보",
+      "missing": "장소 미확인. 상세주소를 실제 공연장명으로 단정하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "publicAddress",
+      "meaning": "공개 행사장 주소",
+      "kopis": "시설 mt10id→prfplc.adres 조인 후보; 현재 null",
+      "tourapi": "현재 addr1; addr2 결합은 별도 검토",
+      "seoul": "실제 주소 필드 없음, null",
+      "usage": "행사 상세·작성 장소 후보",
+      "missing": "주소 없음. 구·기관·문의처·좌표로 주소를 만들지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "precision + startsOn/endsOn",
+      "meaning": "행사 개최 기간",
+      "kopis": "prfpdfrom/prfpdto 점 구분→ISO",
+      "tourapi": "eventstartdate/eventenddate 8자리→ISO",
+      "seoul": "strtdate/end_date epoch-ms→한국 날짜",
+      "usage": "목록·상세·작성 일정 겹침",
+      "missing": "날짜 불가/역전은 격리. 행사 기간을 동행 약속 시간으로 대체하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "state",
+      "meaning": "기간상 진행 상태",
+      "kopis": "정규화한 기간과 기준 시각으로 계산",
+      "tourapi": "동일",
+      "seoul": "동일",
+      "usage": "진행 중·예정·종료 표시",
+      "missing": "예약 가능·개최 보증·취소 여부를 뜻하지 않음",
+      "status": "기존 조회 파생값"
+    },
+    {
+      "field": "sourceStatus",
+      "meaning": "원천 취소/정상 상태",
+      "kopis": "현 코드 active 고정; prfstate는 예정/중/완료로 취소와 다름",
+      "tourapi": "현 active 고정; progresstype 실제값 검증·매핑 필요",
+      "seoul": "명시 상태 필드 없음. 기존 active 복사 금지",
+      "usage": "취소 안내·새 동행 연결 가능 여부",
+      "missing": "unknown을 정상으로 바꾸지 않음. 서울은 민규 계약 확인 필요",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "admission",
+      "meaning": "행사 입장료",
+      "kopis": "pcseguidance→described/unknown",
+      "tourapi": "Intro.usetimefestival→described/unknown",
+      "seoul": "is_free 명시 무료/ use_fee 설명/ 미상",
+      "usage": "행사 입장료·무료 필터",
+      "missing": "입장료 미확인. 무료 동행과 행사 무료 입장은 별개",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "operatingInfo",
+      "meaning": "운영 요일·시간 설명",
+      "kopis": "dtguidance",
+      "tourapi": "Intro.playtime",
+      "seoul": "pro_time 후보",
+      "usage": "행사 상세 보조",
+      "missing": "제공된 운영시간 정보가 없어요. 정확한 입장·종료 시각을 추정하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "description",
+      "meaning": "행사·프로그램 설명",
+      "kopis": "sty",
+      "tourapi": "Common.overview",
+      "seoul": "program 후보",
+      "usage": "행사 상세 본문",
+      "missing": "섹션 숨김 또는 설명 미제공. HTML·개행은 현재 검증과 충돌할 수 있음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "posterUrl",
+      "meaning": "대표 이미지",
+      "kopis": "원본 poster 중 HTTPS만 현 코드 사용; HTTP 표본은 null",
+      "tourapi": "firstimage/firstimage2 또는 detailImage2 후보; 현재 null",
+      "seoul": "main_img 후보. HTTPS지만 query 포함으로 현 규칙 거절",
+      "usage": "목록 이미지 후보·상세 포스터",
+      "missing": "이미지 없이 텍스트 카드 유지. 안전 URL/권리/저장/DTO 연결 후 사용",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "sourceUrl",
+      "meaning": "공식 안내 링크",
+      "kopis": "현재 null. 예매처 relateurl은 별도 후보",
+      "tourapi": "현재 null. homepage/eventhomepage는 안전 링크 후보",
+      "seoul": "hmpg_addr 문화포털 상세 링크 후보",
+      "usage": "상세 공식 안내 보기",
+      "missing": "출처명만 표시. API URL·추정 포털 URL·검증 안 된 예매 링크를 넣지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "collectedAt",
+      "meaning": "우리 서버가 수집한 시각",
+      "kopis": "우리 수집 시각",
+      "tourapi": "동일",
+      "seoul": "동일",
+      "usage": "출처·수집 시각 표시",
+      "missing": "원천 수정일이나 순위 집계 종료일로 표시하지 않음",
+      "status": "기존 공통 구조"
+    },
+    {
+      "field": "sourceUpdatedAt",
+      "meaning": "원천 정보 수정 시각",
+      "kopis": "updatedate",
+      "tourapi": "modifiedtime",
+      "seoul": "확인된 대응 없음",
+      "usage": "추가 동기화 메타데이터 후보",
+      "missing": "수집 시각과 분리. 서울 rgstdate를 넣지 않음",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "sourceRegisteredAt",
+      "meaning": "원천 등록 시각",
+      "kopis": "frstregdt",
+      "tourapi": "createdtime",
+      "seoul": "rgstdate는 신청일이므로 대응 확정 불가",
+      "usage": "메타데이터 후보",
+      "missing": "행사 시작일과 다름. 이번 주 신규는 기존 시작일 기준 유지",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "bookingLinks[]",
+      "meaning": "외부 예매 안내",
+      "kopis": "relates.relate의 relatenm/relateurl",
+      "tourapi": "bookingplace/eventhomepage/홈페이지는 실제 URL/성격 검증 필요",
+      "seoul": "org_link/기타내용의 URL은 예매처로 단정 불가",
+      "usage": "행사 상세 확장 후보",
+      "missing": "현재 DTO 없음. 앱 내 예매·잔여석·예약 가능 보장으로 표현하지 않음",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "organizers/contact",
+      "meaning": "주최·주관·문의",
+      "kopis": "entrpsnmP/A/H/S; 시설 telno는 시설 문의",
+      "tourapi": "sponsor1/sponsor2 및 각 tel 계열",
+      "seoul": "org_name/inquiry",
+      "usage": "행사 상세 보조 후보",
+      "missing": "행사 문의·유미당 고객지원·회원 연락처를 분리",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "ageGuide/cast/runtime",
+      "meaning": "관람 대상·출연진·공연 길이",
+      "kopis": "prfage/prfcast/prfcrew/prfruntime",
+      "tourapi": "agelimit은 관람 대상, spendtimefestival은 관람 소요시간. 출연진 전용 필드 미확인(program/subevent는 프로그램·부대행사 설명)",
+      "seoul": "use_trgt/player",
+      "usage": "행사 상세 보조 후보",
+      "missing": "회원 가입 만19세 조건이나 동행 종료 시각과 별개",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "latitude/longitude",
+      "meaning": "행사장 좌표",
+      "kopis": "시설 la/lo 조인 후보",
+      "tourapi": "mapy/mapx",
+      "seoul": "lat/lot",
+      "usage": "주소 확인·장소 정보 후보",
+      "missing": "누락/비숫자=미확인. 현재 지도/거리순·주변검색 범위로 확대하지 않음",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "sourceFlags/amenities",
+      "meaning": "공연 특성·시설 안내",
+      "kopis": "visit/child/daehakro/festival 및 시설 편의 항목",
+      "tourapi": "festivaltype/new classification 등",
+      "seoul": "themecode 및 안내 항목",
+      "usage": "분류·상세 보조 후보",
+      "missing": "N/0/공백을 실시간 사용 가능으로 해석하지 않음",
+      "status": "확장 후보·현재 공통 구조 없음"
+    },
+    {
+      "field": "rankingSnapshot",
+      "meaning": "공식 순위 별도 구조",
+      "kopis": "boxoffice rnum/mt20id + 검증 기간/분류/시각",
+      "tourapi": "해당 없음",
+      "seoul": "해당 없음",
+      "usage": "S09-2 순위 영역",
+      "missing": "Dots 대조 결과 후 판단. 일반 행사 필드·공고 인기순과 합치지 않음",
+      "status": "별도 순위 계약·현재 14분류 미연결"
+    }
+  ],
+  "screens": [
+    {
+      "screen": "S09-2 행사 목록",
+      "priority": "기본",
+      "item": "이름·기간·진행 상태",
+      "fields": "title, precision, startsOn/endsOn, state",
+      "current": "현재 원격 카드에서 표시",
+      "gap": "형식/한국 날짜 검증. 취소 상태와 기간 상태 구분"
+    },
+    {
+      "screen": "S09-2 행사 목록",
+      "priority": "기본",
+      "item": "장소·지역·분류",
+      "fields": "placeName, region, category",
+      "current": "장소는 표시; 지역·분류는 필터로 사용",
+      "gap": "카드의 지역·분류 배치는 디자인 후보. Tour addr2 의미 보완"
+    },
+    {
+      "screen": "S09-2 행사 목록",
+      "priority": "추천",
+      "item": "입장료 요약",
+      "fields": "admission",
+      "current": "무료 필터 있음; 현재 카드에는 입장료 요약 미표시",
+      "gap": "무료 입장/요금 안내 있음/미확인을 구분. 무료 동행 배지와 구분"
+    },
+    {
+      "screen": "S09-2 행사 목록",
+      "priority": "추천",
+      "item": "대표 이미지",
+      "fields": "posterUrl",
+      "current": "현재 원격 목록 카드는 이미지 미표시",
+      "gap": "수집·URL 검증·권리 연결 후 추가. 누락해도 텍스트 카드"
+    },
+    {
+      "screen": "S09-2 행사 목록",
+      "priority": "기본",
+      "item": "출처·수집 시각",
+      "fields": "provider, collectedAt",
+      "current": "현재 공급사 코드·시각 문자열 표시",
+      "gap": "공급사 표시명/한국 시각 정리 후보. 집계 기간으로 오인 금지"
+    },
+    {
+      "screen": "S09-2 행사 목록",
+      "priority": "별도",
+      "item": "공식 Top 10",
+      "fields": "rankingSnapshot",
+      "current": "현재 UI/API all/musical 두 모드와 보류 안내",
+      "gap": "14개/A안 요구와 차이. 대조 결과 대기, 일반 목록 정리는 계속"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "기본",
+      "item": "행사 개요",
+      "fields": "title, category, state, precision, startsOn/endsOn 또는 startsAt/endsAt",
+      "current": "이름/기간/상태 표시",
+      "gap": "새 서버 계약을 이미 제공하는 것처럼 채우지 않음"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "기본",
+      "item": "장소·공개 주소",
+      "fields": "placeName, publicAddress",
+      "current": "현재 표시 또는 미확인",
+      "gap": "KOPIS 시설 join·서울 주소 부재·Tour 상세주소/장소명 의미 구분"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "기본",
+      "item": "입장료",
+      "fields": "admission",
+      "current": "현재 무료/서술/미확인 표시",
+      "gap": "통화·숫자 가격으로 임의 추출하지 않음"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "보조",
+      "item": "설명·운영 안내·포스터",
+      "fields": "description, operatingInfo, posterUrl",
+      "current": "값이 있을 때 표시",
+      "gap": "실제 원본의 개행/HTML/HTTP/query 이미지가 현재 검증 규칙에 걸림"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "보조",
+      "item": "공식 안내 이동",
+      "fields": "sourceUrl",
+      "current": "값이 있을 때 공식 안내 버튼",
+      "gap": "Tour/KOPIS 현재null. 안전한 URL/DTO 연결 필요"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "확장 후보",
+      "item": "출연·대상·소요시간·주최·문의·예매처",
+      "fields": "cast, ageGuide, runtime, organizers, contact, bookingLinks",
+      "current": "현재 공개 DTO/화면 전용 필드 없음",
+      "gap": "원본 제공 여부 확인됨과 지금 노출 가능은 다름. 확장 범위 선택 후 민규 계약"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "기본",
+      "item": "연결 동행 공고",
+      "fields": "행사 UUID와 공고 DB의 eventId 관계",
+      "current": "현재 상세 컴포넌트에서 관련 공고 목록 확인 못함",
+      "gap": "외부 API가 주지 않음. 서버의 권한별 공고 조회 계약·FE 소비 연결 필요"
+    },
+    {
+      "screen": "S09-3 행사 상세",
+      "priority": "기본",
+      "item": "이 행사로 동행 모집",
+      "fields": "id, sourceStatus, state",
+      "current": "현재 active+미종료 조건의 작성 진입 버튼",
+      "gap": "취소/연기·서울 unknown을 정상으로 오인하지 않도록 서버 보완 필요"
+    },
+    {
+      "screen": "S02 공고 연결 행사",
+      "priority": "기본",
+      "item": "연결 행사 요약과 상세 이동",
+      "fields": "linkedEvent.id, linkedEvent.title",
+      "current": "현재 제목과 상세 이동 제공",
+      "gap": "날짜·장소·상태를 요약에 추가하는 것은 표시 설계 후보"
+    },
+    {
+      "screen": "S02 공고 연결 행사",
+      "priority": "표시 설계 후보",
+      "item": "행사 기간·장소·취소/종료 안내",
+      "fields": "linkedEvent.precision, startsOn/endsOn 또는 startsAt/endsAt, placeName, state, sourceStatus",
+      "current": "서버 DTO에는 가능, 현재 연결 카드에는 제목만",
+      "gap": "공고의 동행 약속 기간·만남 장소와 별도 제목/구역으로 구분"
+    },
+    {
+      "screen": "S02 공고 본문",
+      "priority": "앱 자체 데이터",
+      "item": "동행 일정·지역·작성자·희망 상대·신청",
+      "fields": "공고/회원/약속 DTO",
+      "current": "행사 API와 별도",
+      "gap": "어떤 행사 API 칼럼으로도 대체하지 않음. 상세 만남 지점 권한 유지"
+    },
+    {
+      "screen": "S03/S04 행사 선택·확인",
+      "priority": "기본",
+      "item": "행사 선택과 장소 후보",
+      "fields": "eventId, PublicEventItem, draft startsAt/endsAt",
+      "current": "현재 일정과 겹치는 active·미종료 행사 선택",
+      "gap": "행사 선택으로 동행 일정 자동 변경 금지. 장소도 후보로만 전달"
+    },
+    {
+      "screen": "S00/S20 재사용",
+      "priority": "보조",
+      "item": "행사 카드",
+      "fields": "동일 PublicEventItem",
+      "current": "기존 행사 카드 계약을 재사용",
+      "gap": "AI/일반 카드와 동행 공고 카드를 구분. 존재하지 않는 설명/신청 가능 상태 생성 금지"
+    }
+  ],
+  "gaps": [
+    {
+      "id": "G01",
+      "title": "취소·연기와 기간 상태를 분리",
+      "owner": "민규",
+      "impact": "목록/상세/새 동행 연결",
+      "fact": "TourAPI progresstype는 명세에 있으나 현재 버리고 active 고정. 서울은 명시 상태 없음. KOPIS 공연예정/중/완료도 취소와 다름.",
+      "next": "원천 실제값·코드·상태 의미를 확인해 계약 결정. unknown을 정상으로 추정하지 않음.",
+      "decision": "공급사 의미·서버 계약 확인 필요; 이번에 정책을 새로 확정하지 않음"
+    },
+    {
+      "id": "G02",
+      "title": "포스터 URL의 공급사별 안전 규칙",
+      "owner": "민규 → 종현",
+      "impact": "목록/상세 이미지",
+      "fact": "KOPIS HTTP는 null. 서울 HTTPS query 이미지가 KOPIS 전용 SourceEventRecord 및 query 금지 DTO에 거절. TourAPI 현재 미수집.",
+      "next": "고정 공급사 호스트/경로/허용 query/권리를 검토해 서버·DB·DTO를 함께 맞춘 뒤 화면 연결.",
+      "decision": "임의 HTTPS 치환·검증 규칙 완화 없음"
+    },
+    {
+      "id": "G03",
+      "title": "설명·운영 안내의 개행/HTML",
+      "owner": "민규 → 종현",
+      "impact": "상세 본문",
+      "fact": "KOPIS 실제 sty 개행, 서울 제목/설명 꺾쇠·제어문자, Tour 선택 본문에 HTML/제어문자가 포함되면 현재 optionalPlain에서 제외(코드 확인, 실제 원본 미관찰).",
+      "next": "원문 보존과 안전한 표시용 텍스트 변환을 설계. 해당 행 실패와 선택 정보 제외를 구분.",
+      "decision": "HTML 직접 삽입·임의 내용 요약/삭제 없음"
+    },
+    {
+      "id": "G04",
+      "title": "장소명과 주소의 의미를 맞춤",
+      "owner": "민규",
+      "impact": "목록/상세/작성 장소 후보",
+      "fact": "Tour 목록 addr2는 상세주소인데 placeName에 사용. KOPIS 시설주소 join 없음. 서울 실제 주소 없음.",
+      "next": "eventplace/시설 ID 조인과 원천 없는 주소 null 유지. 상세 만남 지점과 분리.",
+      "decision": "주소 추정·좌표 역지오코딩 새 API 도입 없음"
+    },
+    {
+      "id": "G05",
+      "title": "원천 등록/수정/수집 시각 구분",
+      "owner": "민규·종현",
+      "impact": "수집 갱신·출처 표시",
+      "fact": "KOPIS updatedate/등록일, Tour modifiedtime/createdtime, 서울 rgstdate=신청일은 서로 다름.",
+      "next": "collectedAt은 우리 수집 시각만. sourceUpdatedAt 확장 후보와 원천값 분리.",
+      "decision": "이번 주 신규는 기존 행사 시작일 기준 유지; 등록일 기준으로 바꾸지 않음"
+    },
+    {
+      "id": "G06",
+      "title": "TourAPI 새 지역·분류 체계",
+      "owner": "민규 → 종현",
+      "impact": "지역/분류 필터",
+      "fact": "공식 Swagger가 areaCode2/categoryCode2 등 구체계를 미사용·삭제예정으로 표시. ldong/lclsSystm 제공.",
+      "next": "공식 코드/표시명·실제 응답 확인 후 기존 저장 데이터와 호환 계획.",
+      "decision": "코드 문자열을 UI 이름으로 바로 노출하거나 타 공급사 장르와 자동 동치 처리하지 않음"
+    },
+    {
+      "id": "G07",
+      "title": "행사 상세의 관련 공고 목록",
+      "owner": "민규 → 종현",
+      "impact": "행사 → 동행 탐색",
+      "fact": "외부 API에 유미당 공고는 없음. 현재 RemoteEventDetail은 관련 공고 목록을 표시하지 않음.",
+      "next": "내부 eventId 관계·현재 공고 공개 권한을 지키는 조회와 빈 결과/조회 실패 상태 연결.",
+      "decision": "임의 행사명 검색으로 관계를 만들어내지 않음"
+    },
+    {
+      "id": "G08",
+      "title": "부가 정보 확장 범위",
+      "owner": "종현 설계 → 민규 계약",
+      "impact": "상세 보조 섹션",
+      "fact": "예매처·출연진·관람 연령·기관·문의·시설·좌표 등 원본은 있으나 공통 계약 없음.",
+      "next": "필요한 섹션을 선택한 뒤 타입/수집/저장/공개/누락/권리 조건을 함께 확장.",
+      "decision": "확장 후보를 승인·구현 완료로 표시하지 않음"
+    },
+    {
+      "id": "G09",
+      "title": "독립 진행과 기존 담당 유지",
+      "owner": "민규 7.9/7.12, 종현 2.8/3.8",
+      "impact": "작업 순서",
+      "fact": "서울 HTTPS는 민규 인계. KOPIS 순위 집계는 Dots 대조 결과 후 판단. 이번은 데이터·화면 매핑.",
+      "next": "일반 기능 개발/다른 API 정리는 병행. 즉시 추가 호출/주기 폴링 지시 아님.",
+      "decision": "노션 수정·운영·서버 구현·배포 없음"
+    }
+  ],
+  "inventory": [
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "mt20id",
+      "meaning": "공연 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "PF303837",
+      "nullable": false,
+      "commonField": "sourceId",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "prfnm",
+      "meaning": "공연명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "제1202회 하우스콘서트, 강태환 & 게슈탄트 김",
+      "nullable": false,
+      "commonField": "title",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "prfpdfrom",
+      "meaning": "공연 시작일",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026.11.16",
+      "nullable": false,
+      "commonField": "startsOn",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "prfpdto",
+      "meaning": "공연 종료일",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026.11.16",
+      "nullable": false,
+      "commonField": "endsOn",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "fcltynm",
+      "meaning": "공연시설명(공연장명)",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "예술가의 집",
+      "nullable": null,
+      "commonField": "placeName",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "poster",
+      "meaning": "포스터 URL",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "http://www.kopis.or.kr/upload/pfmPoster/PF_PF303837_261019_173208.png",
+      "nullable": null,
+      "commonField": "posterUrl",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; 공통 정규화에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 원천은 HTTP. 표본 1포스터/1소개이미지 canonical HTTPS HEAD200만 확인. 전체 URL 일괄 변환이나 렌더 성공 근거 아님.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "area",
+      "meaning": "공연 지역",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "서울특별시",
+      "nullable": null,
+      "commonField": "region",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "genrenm",
+      "meaning": "공연 장르명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "서양음악(클래식)",
+      "nullable": null,
+      "commonField": "category",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "openrun",
+      "meaning": "오픈런 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; 공통 정규화에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr",
+      "originalField": "prfstate",
+      "meaning": "공연 상태",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "공연예정",
+      "nullable": false,
+      "commonField": "sourceStatus",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "목록 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 예정/중/완료는 sourceStatus=active. 공연 완료를 취소로 바꾸지 않음; 화면 state는 날짜로 계산.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "mt20id",
+      "meaning": "공연 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "PF303837",
+      "nullable": null,
+      "commonField": "sourceId",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "mt13id",
+      "meaning": "공연장 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "FC002634-01",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfnm",
+      "meaning": "공연명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "제1202회 하우스콘서트, 강태환 & 게슈탄트 김",
+      "nullable": null,
+      "commonField": "title",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "frstregdt",
+      "meaning": "공연정보 최초 등록일",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026-10-19 17:32:08",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 메타데이터 날짜이며 순위 갱신일/집계일 아님. 시간대 없는 문자열을 UTC로 추정하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfpdfrom",
+      "meaning": "공연 시작일",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026.11.16",
+      "nullable": null,
+      "commonField": "startsOn",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfpdto",
+      "meaning": "공연 종료일",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026.11.16",
+      "nullable": null,
+      "commonField": "endsOn",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "fcltynm",
+      "meaning": "공연시설명(공연장명)",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "예술가의 집 (예술가의 집)",
+      "nullable": null,
+      "commonField": "placeName",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfcast",
+      "meaning": "출연진",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "강태환 등",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfcrew",
+      "meaning": "제작진",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfruntime",
+      "meaning": "공연 런타임",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfage",
+      "meaning": "관람 연령",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "전체 관람가",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "entrpsnm",
+      "meaning": "기획제작사",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "entrpsnmP",
+      "meaning": "제작사",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "entrpsnmA",
+      "meaning": "기획사",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "entrpsnmH",
+      "meaning": "주최",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "더하우스콘서트",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "entrpsnmS",
+      "meaning": "주관",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "pcseguidance",
+      "meaning": "티켓 가격 안내",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "전석 40,000원",
+      "nullable": null,
+      "commonField": "admission",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 서술값 유지. 숫자만 추출하거나 빈값=무료로 처리 금지. 현 코드는 무료 문구도 described이며 free 자동 판정 없음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "poster",
+      "meaning": "포스터 URL",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "http://www.kopis.or.kr/upload/pfmPoster/PF_PF303837_261019_173208.png",
+      "nullable": null,
+      "commonField": "posterUrl",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음; HTTPS 원본만 출력하므로 이번 HTTP 표본 posterUrl=null",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 원천은 HTTP. 표본 1포스터/1소개이미지 canonical HTTPS HEAD200만 확인. 전체 URL 일괄 변환이나 렌더 성공 근거 아님.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "sty",
+      "meaning": "줄거리/소개 원문",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "[PROGRAM]\n\n파경 (波景 Wavescape) - Session 2\n\n제1202회 하우스콘서트 무대는 색소폰 강태환과 전자음악 게슈탄트 김의 프리뮤직 라이브.\n\n두 아티스트의 장르와 형식, 그리고 표현 방법은 전혀 다르지만 끝없이 탐구하고 새 지평에 도전하는 예술혼은 저 높은, 혹은 저 깊은 어느 곳 같은 지점을 향하고 있을 것이다.\n\n그렇기에 90년대 초반 만남 이후 30년이 훌쩍 넘은 현재까지 세대와 장르를 초월하여 ",
+      "nullable": null,
+      "commonField": "description",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "area",
+      "meaning": "공연 지역",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "서울특별시",
+      "nullable": null,
+      "commonField": "region",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "genrenm",
+      "meaning": "공연 장르명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "서양음악(클래식)",
+      "nullable": null,
+      "commonField": "category",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "openrun",
+      "meaning": "오픈런 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "visit",
+      "meaning": "내한 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "child",
+      "meaning": "아동 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "daehakro",
+      "meaning": "대학로 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "festival",
+      "meaning": "축제 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 분류 플래그. 전체 순위를 사후 필터링해 해당 분류의 공식 순위로 만들 수 없음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "musicallicense",
+      "meaning": "뮤지컬 라이선스 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "musicalcreate",
+      "meaning": "창작 뮤지컬 여부",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "updatedate",
+      "meaning": "공연정보 최종 수정일",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026-10-19 18:00:00.095087",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 메타데이터 날짜이며 순위 갱신일/집계일 아님. 시간대 없는 문자열을 UTC로 추정하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "prfstate",
+      "meaning": "공연 상태",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "공연예정",
+      "nullable": null,
+      "commonField": "sourceStatus",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 예정/중/완료는 sourceStatus=active. 공연 완료를 취소로 바꾸지 않음; 화면 state는 날짜로 계산.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "mt10id",
+      "meaning": "공연시설 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "FC002634",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 허용목록에서 수용하지만 공통 저장/공개 DTO에서 제외",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "dtguidance",
+      "meaning": "공연 요일·시간 안내",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "월요일(20:00)",
+      "nullable": null,
+      "commonField": "operatingInfo",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "상세 파서 수용; SourceEventRecord → 저장 wire → 공개 PublicEventItem 경로 있음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "styurls",
+      "meaning": "소개이미지 목록",
+      "type": "XML nested array/container",
+      "evidence": "observed",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "styurls.styurl",
+      "meaning": "소개이미지 URL",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "http://www.kopis.or.kr/upload/pfmIntroImage/PF_PF303837_202610190532530870.png",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "relates",
+      "meaning": "예매처 목록",
+      "type": "XML nested array/container",
+      "evidence": "observed",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "relates.relate",
+      "meaning": "예매처 항목",
+      "type": "XML nested array/container",
+      "evidence": "observed",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "relates.relate.relatenm",
+      "meaning": "예매처명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "더하우스콘서트",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "pblprfr/{mt20id}",
+      "originalField": "relates.relate.relateurl",
+      "meaning": "홈페이지/예매처 URL",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "https://thehouseconcert.com/sub/concert/schedule_view.php?idx=1511",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "중첩 구조 검사 후 제거; 현재 저장/공개 DTO 미지원",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 외부 사이트 링크는 수신만 확인했고 접속·예약 가능성 미검증. 키 포함 API URL을 sourceUrl로 쓰지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "fcltynm",
+      "meaning": "공연시설명(공연장명)",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "예술가의 집",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt10id",
+      "meaning": "공연시설 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "FC002634",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13cnt",
+      "meaning": "공연장 수",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "3",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "fcltychartr",
+      "meaning": "시설 특성",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "국립",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "opende",
+      "meaning": "개관 연도",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2010",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "seatscale",
+      "meaning": "시설/공연장 좌석 규모",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "110",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "telno",
+      "meaning": "시설 전화번호",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "02-760-4715",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "relateurl",
+      "meaning": "홈페이지/예매처 URL",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "https://arko.or.kr/infra/pm1_01/m2_07/m3_03.do",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 외부 사이트 링크는 수신만 확인했고 접속·예약 가능성 미검증. 키 포함 API URL을 sourceUrl로 쓰지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "adres",
+      "meaning": "시설 주소",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "서울특별시 종로구 동숭길 3 (동숭동)",
+      "nullable": null,
+      "commonField": "publicAddress (후보: 시설 join 필요)",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "la",
+      "meaning": "위도",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "37.580502300000000",
+      "nullable": null,
+      "commonField": "latitude (확장 후보)",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "lo",
+      "meaning": "경도",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "127.00325620000000",
+      "nullable": null,
+      "commonField": "longitude (확장 후보)",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "restaurant",
+      "meaning": "레스토랑",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "cafe",
+      "meaning": "카페",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "Y",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "store",
+      "meaning": "편의점",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "nolibang",
+      "meaning": "놀이방",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "suyu",
+      "meaning": "수유실",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "parkbarrier",
+      "meaning": "장애인 주차시설",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "restbarrier",
+      "meaning": "장애인 화장실",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "runwbarrier",
+      "meaning": "경사로",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "elevbarrier",
+      "meaning": "엘리베이터",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "parkinglot",
+      "meaning": "주차시설",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s",
+      "meaning": "공연장 목록",
+      "type": "XML nested array/container",
+      "evidence": "observed",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13",
+      "meaning": "공연장 항목",
+      "type": "XML nested array/container",
+      "evidence": "observed",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.prfplcnm",
+      "meaning": "공연장명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "예술가의 집",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.mt13id",
+      "meaning": "공연장 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "FC002634-01",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.seatscale",
+      "meaning": "시설/공연장 좌석 규모",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "110",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.stageorchat",
+      "meaning": "오케스트라 피트",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 문서상 Y/N/Z/0 값 허용; 단순 boolean 변환 전 의미 확인 필요.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.stagepracat",
+      "meaning": "연습실",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "Y",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.stagedresat",
+      "meaning": "분장실",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "Y",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.stageoutdrat",
+      "meaning": "야외공연장",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "N",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.disabledseatscale",
+      "meaning": "장애인 객석 규모",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "0",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "prfplc/{mt10id}",
+      "originalField": "mt13s.mt13.stagearea",
+      "meaning": "무대 넓이",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "",
+      "nullable": true,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "시설 XML 실수신; 현재 KOPIS 행사 어댑터에 시설 수집/join/저장 없음",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "cate",
+      "meaning": "공연 장르",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "뮤지컬",
+      "nullable": null,
+      "commonField": "ranking.items.genre",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "rnum",
+      "meaning": "순위",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "1",
+      "nullable": null,
+      "commonField": "ranking.items.rank",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "prfnm",
+      "meaning": "공연명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "스위니토드 (SWEENEY TODD)",
+      "nullable": null,
+      "commonField": "ranking.items.title",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "prfpd",
+      "meaning": "공연 개최 기간",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "2026.12.04~2027.05.02",
+      "nullable": null,
+      "commonField": "ranking.items.performancePeriodText",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 공연 기간이며 순위 집계 기간 아님. 시간 정보 없는 날짜를 실제 공연 시작/종료 시각으로 생성하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "prfdtcnt",
+      "meaning": "상연 횟수",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "22",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 수용 후 출력 제외; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "area",
+      "meaning": "공연 지역",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "서울",
+      "nullable": null,
+      "commonField": "ranking.items.region",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "prfplcnm",
+      "meaning": "공연장명",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "디큐브링크아트센터 디큐브씨어터",
+      "nullable": null,
+      "commonField": "ranking.items.placeName",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "seatcnt",
+      "meaning": "좌석 수",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "1242",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 수용 후 출력 제외; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 좌석 규모이며 잔여좌석·예약 가능성 아님. 0/빈값을 사용 가능 없음으로 임의 해석하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "poster",
+      "meaning": "포스터 URL",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "http://www.kopis.or.kr/upload/pfmPoster/PF_PF303043_261012_171201.gif",
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 수용 후 출력 제외; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정. 원천은 HTTP. 표본 1포스터/1소개이미지 canonical HTTPS HEAD200만 확인. 전체 URL 일괄 변환이나 렌더 성공 근거 아님.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "mt20id",
+      "meaning": "공연 ID",
+      "type": "XML string",
+      "evidence": "observed",
+      "sample": "PF303043",
+      "nullable": null,
+      "commonField": "ranking.items.sourceId",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "전용 순위 파서 출력 대상; basedate 필수 검증 때문에 현재 실응답은 통과하지 못함",
+      "notes": "표본 1건 또는 제한된 페이지에서 관찰. 전체 데이터에서 필수 여부는 미확정.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "kopis",
+      "endpoint": "boxoffice",
+      "originalField": "basedate",
+      "meaning": "순위 집계 기준 기간",
+      "type": "XML string (YYYY-MM-DD~YYYY-MM-DD)",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": true,
+      "commonField": "ranking.responsePeriod",
+      "screen": [
+        "공식 순위 영역"
+      ],
+      "codeSupport": "현재 전용 파서는 필수 검증; 실제 응답에 없어 실패",
+      "notes": "공식 명세에만 있음. Dots 14일 A안 대조 결과 대기. 요청 날짜/공연일/수정일/통계 날짜를 대체 증거로 단정하지 않음.",
+      "sourceUrl": "https://kopis.or.kr/upload/openApi/공연예술통합전산망OpenAPI개발가이드.pdf"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "lclsSystm2",
+      "meaning": "분류체계 2Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "lclsSystm3",
+      "meaning": "분류체계 3Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "tel",
+      "meaning": "전화번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "title",
+      "meaning": "제목",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "title",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.title → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "addr1",
+      "meaning": "주소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "publicAddress",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.publicAddress → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "addr2",
+      "meaning": "상세주소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "placeName",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.placeName → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 상세주소이며 공식 행사장명이 아님. 현재 코드가 placeName에 넣는 의미 차이; 상세 eventplace가 있으면 대체.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "areacode",
+      "meaning": "미사용항목(삭제예정-법정동 시도코드 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "cat1",
+      "meaning": "미사용항목(삭제예정-분류체계 1Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "cat2",
+      "meaning": "미사용항목(삭제예정-분류체계 2Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "cat3",
+      "meaning": "미사용항목(삭제예정-분류체계 3Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "contentid",
+      "meaning": "콘텐츠ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "sourceId",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.sourceId → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "contenttypeid",
+      "meaning": "콘텐츠타입ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "createdtime",
+      "meaning": "등록일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "eventstartdate",
+      "meaning": "행사시작일(형식 : YYYYMMDD)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "startsOn",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.startsOn → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "cpyrhtDivCd",
+      "meaning": "저작권 유형 (Type1:제1유형(출처표시-권장), Type3:제3유형(제1유형+변경금지)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "eventenddate",
+      "meaning": "행사종료일(형식 : YYYYMMDD)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "endsOn",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.endsOn → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "firstimage",
+      "meaning": "대표이미지(원본)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "posterUrl",
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "공통 DTO 자리(posterUrl)는 있으나 이 원천 필드는 현재 미수집·미저장; TourAPI 현재 결과 null",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "firstimage2",
+      "meaning": "대표이미지(썸네일)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "mapx",
+      "meaning": "GPS X좌표",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "mapy",
+      "meaning": "GPS Y좌표",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "mlevel",
+      "meaning": "Map Level",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "modifiedtime",
+      "meaning": "수정일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "sigungucode",
+      "meaning": "미사용항목(삭제예정-법정동 시군구 코드 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "zipcode",
+      "meaning": "우편번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "progresstype",
+      "meaning": "축제형태(취소,행사연기)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 취소·연기 원천 필드이나 현 어댑터는 무시하고 active 고정. 실제값/코드와 취소 상태 매핑 확인 필요.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "festivaltype",
+      "meaning": "진행형태(상시,온라인,격년제)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "lDongRegnCd",
+      "meaning": "법정동 시도코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "lDongSignguCd",
+      "meaning": "법정동 시군구코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "lclsSystm1",
+      "meaning": "분류체계 1Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "lclsSystm3",
+      "meaning": "분류체계 3Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "overview",
+      "meaning": "개요",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "description",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.description → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현재 optionalPlain은 HTML태그/제어문자가 있으면 미채택. 빈 값은 미확인으로 보존.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "contentid",
+      "meaning": "콘텐츠ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "sourceId",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.sourceId → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "sigungucode",
+      "meaning": "미사용항목(삭제예정-법정동 시군구 코드 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "cat1",
+      "meaning": "미사용항목(삭제예정-분류체계 1Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "cat2",
+      "meaning": "미사용항목(삭제예정-분류체계 2Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "cat3",
+      "meaning": "미사용항목(삭제예정-분류체계 3Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "addr1",
+      "meaning": "주소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "publicAddress",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.publicAddress → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "addr2",
+      "meaning": "상세주소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "placeName",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.placeName → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 상세주소이며 공식 행사장명이 아님. 현재 코드가 placeName에 넣는 의미 차이; 상세 eventplace가 있으면 대체.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "zipcode",
+      "meaning": "우편번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "mapx",
+      "meaning": "GPS X좌표",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "mapy",
+      "meaning": "GPS Y좌표",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "mlevel",
+      "meaning": "Map Level",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "cpyrhtDivCd",
+      "meaning": "저작권 유형 (Type1:제1유형(출처표시-권장), Type3:제3유형(제1유형+변경금지)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "contenttypeid",
+      "meaning": "콘텐츠타입ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증; ID/type 일치 확인용",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "createdtime",
+      "meaning": "등록일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "homepage",
+      "meaning": "홈페이지주소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "sourceUrl",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "공통 DTO 자리(sourceUrl)는 있으나 이 원천 필드는 현재 미수집·미저장; TourAPI 현재 결과 null",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 원문 HTML/복수 링크 가능성 실제 검증 후 안전한 URL만 사용; 현 sourceUrl=null, 예매처 존재는 잔여석/예약가능 보장 아님.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "modifiedtime",
+      "meaning": "수정일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "tel",
+      "meaning": "전화번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "telname",
+      "meaning": "전화번호명",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "title",
+      "meaning": "콘텐츠명(제목)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "title",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.title → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "firstimage",
+      "meaning": "대표이미지(원본)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "posterUrl",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "공통 DTO 자리(posterUrl)는 있으나 이 원천 필드는 현재 미수집·미저장; TourAPI 현재 결과 null",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "firstimage2",
+      "meaning": "대표이미지(썸네일)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "areacode",
+      "meaning": "미사용항목(삭제예정-법정동 시도코드 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "lDongRegnCd",
+      "meaning": "법정동 시도코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "lDongSignguCd",
+      "meaning": "법정동 시군구코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "lclsSystm1",
+      "meaning": "분류체계 1Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "lclsSystm2",
+      "meaning": "분류체계 2Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "eventhomepage",
+      "meaning": "행사공연축제(15) : 행사홈페이지",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "sourceUrl",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "공통 DTO 자리(sourceUrl)는 있으나 이 원천 필드는 현재 미수집·미저장; TourAPI 현재 결과 null",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 원문 HTML/복수 링크 가능성 실제 검증 후 안전한 URL만 사용; 현 sourceUrl=null, 예매처 존재는 잔여석/예약가능 보장 아님.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "eventplace",
+      "meaning": "행사공연축제(15) : 행사장소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "placeName",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.placeName → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현재 optionalPlain은 HTML태그/제어문자가 있으면 미채택. 빈 값은 미확인으로 보존.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "eventstartdate",
+      "meaning": "행사공연축제(15) : 행사시작일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "startsOn",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.startsOn → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "festivalgrade",
+      "meaning": "행사공연축제(15) : 축제등급",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "discountinfofestival",
+      "meaning": "행사공연축제(15) : 할인정보",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "eventenddate",
+      "meaning": "행사공연축제(15) : 행사종료일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "endsOn",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.endsOn → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "playtime",
+      "meaning": "행사공연축제(15) : 공연시간",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "operatingInfo",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.operatingInfo → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현재 optionalPlain은 HTML태그/제어문자가 있으면 미채택. 빈 값은 미확인으로 보존.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "placeinfo",
+      "meaning": "행사공연축제(15) : 행사장위치안내",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "contentid",
+      "meaning": "기본정보 : 콘텐츠ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "sourceId",
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.sourceId → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현 코드 필수 검증; 손상/누락이면 정상 행사로 저장하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "contenttypeid",
+      "meaning": "기본정보 : 콘텐츠타입ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증; ID/type 일치 확인용",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "program",
+      "meaning": "행사공연축제(15) : 행사프로그램",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "spendtimefestival",
+      "meaning": "행사공연축제(15) : 관람소요시간",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "sponsor1",
+      "meaning": "행사공연축제(15) : 주최자정보",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "sponsor1tel",
+      "meaning": "행사공연축제(15) : 주최자연락처",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "agelimit",
+      "meaning": "행사공연축제(15) : 관람가능연령",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "bookingplace",
+      "meaning": "행사공연축제(15) : 예매처",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 원문 HTML/복수 링크 가능성 실제 검증 후 안전한 URL만 사용; 현 sourceUrl=null, 예매처 존재는 잔여석/예약가능 보장 아님.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "sponsor2",
+      "meaning": "행사공연축제(15) : 주관사정보",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "sponsor2tel",
+      "meaning": "행사공연축제(15) : 주관사연락처",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "subevent",
+      "meaning": "행사공연축제(15) : 부대행사",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "usetimefestival",
+      "meaning": "행사공연축제(15) : 이용요금",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": "admission",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 어댑터 수집·검증 → SourceEventRecord.admission → 저장/public event DTO 지원",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 현재 optionalPlain은 HTML태그/제어문자가 있으면 미채택. 빈 값은 미확인으로 보존. 이름과 달리 이용요금. 현재는 described/unknown만; 문자열을 자동 무료로 변환하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailInfo2",
+      "originalField": "contentid",
+      "meaning": "기본정보 : 콘텐츠ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailInfo2",
+      "originalField": "contenttypeid",
+      "meaning": "기본정보 : 콘텐츠타입ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailInfo2",
+      "originalField": "fldgubun",
+      "meaning": "숙박/여행코스제외타입 : 일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailInfo2",
+      "originalField": "infoname",
+      "meaning": "숙박/여행코스제외타입 : 제목",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailInfo2",
+      "originalField": "infotext",
+      "meaning": "숙박/여행코스제외타입 : 내용",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailInfo2",
+      "originalField": "serialnum",
+      "meaning": "숙박/여행코스제외타입 : 반복일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailImage2",
+      "originalField": "cpyrhtDivCd",
+      "meaning": "저작권 유형 (Type1:제1유형(출처표시-권장), Type3:제3유형(제1유형+변경금지)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailImage2",
+      "originalField": "contentid",
+      "meaning": "기본정보 : 콘텐츠ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세",
+        "공고 작성 연결 행사 선택",
+        "공고 상세 연결 행사 요약"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailImage2",
+      "originalField": "imgname",
+      "meaning": "이미지명",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailImage2",
+      "originalField": "originimgurl",
+      "meaning": "원본이미지",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailImage2",
+      "originalField": "serialnum",
+      "meaning": "이미지일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailImage2",
+      "originalField": "smallimageurl",
+      "meaning": "썸네일이미지",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaCode2",
+      "originalField": "code",
+      "meaning": "코드 : 지역코드또는시군구코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaCode2",
+      "originalField": "name",
+      "meaning": "코드명 : 지역명또는시군구명",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaCode2",
+      "originalField": "rnum",
+      "meaning": "일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "categoryCode2",
+      "originalField": "name",
+      "meaning": "코드명 : 대,중,소분류코드명",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "categoryCode2",
+      "originalField": "rnum",
+      "meaning": "일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "categoryCode2",
+      "originalField": "code",
+      "meaning": "코드 : 대,중,소분류코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "lDongSignguNm",
+      "meaning": "법정동 시군구명 (lDongListYn : Y일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "name",
+      "meaning": "법정동 : 시도명, 시군구명 (lDongListYn : N일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "rnum",
+      "meaning": "일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "code",
+      "meaning": "법정동 : 시도코드, 시군구코드 (lDongListYn : N일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "lDongRegnCd",
+      "meaning": "법정동 시도코드 (lDongListYn : Y일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "lDongRegnNm",
+      "meaning": "법정동 시도명 (lDongListYn : Y일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "ldongCode2",
+      "originalField": "lDongSignguCd",
+      "meaning": "법정동 시군구코드 (lDongListYn : Y일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "lclsSystm3Nm",
+      "meaning": "분류체계 소분류명(lclsSystmListYn : Y 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "name",
+      "meaning": "코드:1Depth,2Depth,3Depth 코드명(lclsSystmListYn : N 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "rnum",
+      "meaning": "일련번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "code",
+      "meaning": "코드:1Depth,2Depth,3Depth 코드(lclsSystmListYn : N 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "lclsSystm1Cd",
+      "meaning": "분류체계 대분류코드(lclsSystmListYn : Y 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "lclsSystm1Nm",
+      "meaning": "분류체계 대분류명(lclsSystmListYn : Y 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "lclsSystm2Cd",
+      "meaning": "분류체계 중분류코드(lclsSystmListYn : Y 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "lclsSystm2Nm",
+      "meaning": "분류체계 중분류명(lclsSystmListYn : Y 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "lclsSystmCode2",
+      "originalField": "lclsSystm3Cd",
+      "meaning": "분류체계 소분류코드(lclsSystmListYn : Y 일때 표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [
+        "행사 목록 필터 후보"
+      ],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "oldContentid",
+      "meaning": "이전 컨텐츠 ID ( DB 저장 동기화시 이전 KEY 값으로 조회 용도  )",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이전 콘텐츠 ID 연결 후보; 다른 공급사 병합 근거 아님.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "lclsSystm3",
+      "meaning": "분류체계 3Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "mapx",
+      "meaning": "GPS X좌표(WGS84 경도좌표) 응답",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "mapy",
+      "meaning": "GPS Y좌표(WGS84 위도좌표) 응답",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "mlevel",
+      "meaning": "Map Level 응답",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "modifiedtime",
+      "meaning": "콘텐츠수정일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "showflag",
+      "meaning": "표출여부(0:비표출,1:표출)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 비표출 신호이며 누락 페이지를 삭제로 간주하지 않음; 현재 동기화 endpoint 미연결.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "sigungucode",
+      "meaning": "미사용항목(삭제예정-법정동 시군구 코드 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "tel",
+      "meaning": "전화번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "title",
+      "meaning": "콘텐츠제목",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "addr1",
+      "meaning": "주소(예, 서울중구다동)를응답",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "addr2",
+      "meaning": "상세주소",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 상세주소이며 공식 행사장명이 아님. 현재 코드가 placeName에 넣는 의미 차이; 상세 eventplace가 있으면 대체.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "areacode",
+      "meaning": "미사용항목(삭제예정-법정동 시도코드 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "cat1",
+      "meaning": "미사용항목(삭제예정-분류체계 1Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "cat2",
+      "meaning": "미사용항목(삭제예정-분류체계 2Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "cat3",
+      "meaning": "미사용항목(삭제예정-분류체계 3Deth 코드로 대체)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 최신 공식 Swagger에 미사용·삭제예정 명시; 신규 기준으로 채택하지 않음.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "contentid",
+      "meaning": "콘텐츠ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "contenttypeid",
+      "meaning": "관광타입(관광지, 숙박등) ID",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "createdtime",
+      "meaning": "콘텐츠최초등록일",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "cpyrhtDivCd",
+      "meaning": "필수요청파라메터가없음(NO_MANDATORY_REQUEST_PARAMETERS_ERROR)",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null. 공식 설명이 오류코드 문장으로 기재됨. 명세 오기 가능성; 의미 임의 확정 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "firstimage",
+      "meaning": "원본대표이미지 (약 500*333 size) URL 응답",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음; TourAPI 현재 결과 null",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "firstimage2",
+      "meaning": "썸네일대표이미지 (약 150*100 size) URL 응답",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 이미지 host·HTTPS·권리유형 검토 필요. Type3 변경금지 조건 보존. 현 TourAPI 이미지 출력은 null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "zipcode",
+      "meaning": "우편번호",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "lDongRegnCd",
+      "meaning": "법정동 시도코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "lDongSignguCd",
+      "meaning": "법정동 시군구코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "lclsSystm1",
+      "meaning": "분류체계 1Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "areaBasedSyncList2",
+      "originalField": "lclsSystm2",
+      "meaning": "분류체계 2Deth",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "미수집·미저장·DTO 전용 필드 없음",
+      "notes": "공식 응답 명세에서 확인; 실제 원본 응답은 이번 감사에서 확보하지 않아 sample=null. 새 법정동/분류 코드. 코드명 조회 후 원천 코드와 표시명을 구분; KOPIS 장르와 자동 동치 처리 금지.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "response.header.resultCode",
+      "meaning": "공급사 처리 결과 코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "response.header.resultMsg",
+      "meaning": "공급사 처리 결과 메시지",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "response.body.totalCount",
+      "meaning": "전체 결과 건수",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "response.body.pageNo",
+      "meaning": "응답 페이지 번호",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "searchFestival2",
+      "originalField": "response.body.numOfRows",
+      "meaning": "페이지당 건수",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "response.header.resultCode",
+      "meaning": "공급사 처리 결과 코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "response.header.resultMsg",
+      "meaning": "공급사 처리 결과 메시지",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "response.body.totalCount",
+      "meaning": "전체 결과 건수",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "response.body.pageNo",
+      "meaning": "응답 페이지 번호",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailCommon2",
+      "originalField": "response.body.numOfRows",
+      "meaning": "페이지당 건수",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "response.header.resultCode",
+      "meaning": "공급사 처리 결과 코드",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "response.header.resultMsg",
+      "meaning": "공급사 처리 결과 메시지",
+      "type": "string",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "response.body.totalCount",
+      "meaning": "전체 결과 건수",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "response.body.pageNo",
+      "meaning": "응답 페이지 번호",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "tour-api",
+      "endpoint": "detailIntro2",
+      "originalField": "response.body.numOfRows",
+      "meaning": "페이지당 건수",
+      "type": "number",
+      "evidence": "documented",
+      "sample": null,
+      "nullable": null,
+      "commonField": null,
+      "screen": [],
+      "codeSupport": "resultCode/totalCount 검증; pageNo/numOfRows/resultMsg는 별도 화면 미전달",
+      "notes": "프로토콜 필드. 성공 HTTP200이어도 resultCode 실패면 정상0건 아님. 전체원본 응답 미보유.",
+      "sourceUrl": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "org_name",
+      "meaning": "기관명",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "기타",
+      "nullable": false,
+      "commonField": "organizerName",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 원천 기관명. 기타 등 포괄 값도 있어 실명 주최자·사업자라고 단정하지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "player",
+      "meaning": "출연자정보",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "Piano : Kazumi Tateishi, Contrabass : Shinobu Sato, Drums : Mao Suzuki",
+      "nullable": true,
+      "commonField": "performers",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 17654, 빈문자열 0, 공백만 2. 공개 출연자 설명. 빈값 숨김, 동행 회원 정보와 분리.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "org_link",
+      "meaning": "홈페이지 주소",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "https://tickets.interpark.com/goods/26010350",
+      "nullable": true,
+      "commonField": "externalUrl",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 267, 빈문자열 0, 공백만 0. 주최/예매 등 외부 목적지가 혼재. http를 임의로 https로 치환하지 않고 scheme·자격증명·목적지 검증 후 외부 링크로 표시.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "pro_time",
+      "meaning": "행사시간",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "19:30",
+      "nullable": false,
+      "commonField": "operatingInfo",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "공통 선택필드 저장/DTO 있음; 서울 parser 미매핑",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 자유 서술 운영시간. datetime 시작/종료 순간으로 추정하지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "main_img",
+      "meaning": "대표이미지",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "https://culture.seoul.go.kr/cmmn/file/getImage.do?atchFileId=401a984b98ff4af8a57122219ee0d591&thumb=Y",
+      "nullable": false,
+      "commonField": "posterUrl",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "공통 선택필드 있음; 현재 검증 규칙과 충돌",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 전 행 HTTPS이지만 전 행 query 포함. 현재 source 검증은 KOPIS 업로드 경로만 허용하며 query 금지; 공개 DTO도 query 금지. 서울 이미지 URL 보안 계약 확장 필요, 쿼리 제거·주소 변조 금지.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "themecode",
+      "meaning": "테마분류",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "기타",
+      "nullable": true,
+      "commonField": "theme",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 3043, 빈문자열 0, 공백만 0. 원천 분류를 그대로 보존. 일반 장르와 임의 통합하지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "date",
+      "meaning": "날짜",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "2026-12-24~2026-12-24",
+      "nullable": false,
+      "commonField": null,
+      "screen": [
+        "내부 검증"
+      ],
+      "codeSupport": "직접 저장/DTO 없음; 달력일 쌍은 기존 지원",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 시작~종료 문자열. strtdate/end_date의 KST 달력일과 교차 검증. 독립 행사시간 아님.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "cgg_cd",
+      "meaning": "자치구코드",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "3240000",
+      "nullable": true,
+      "commonField": "districtCode",
+      "screen": [
+        "내부 연결"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 121, 빈문자열 0, 공백만 0. 문자열 코드 보존. 외부 행정동/다른 공급사 지역 코드와 숫자만으로 결합 금지.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "etc_desc",
+      "meaning": "기타내용",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "https://nol.yanolja.com/ticket/products/26010247",
+      "nullable": true,
+      "commonField": "additionalInfo",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 19288, 빈문자열 0, 공백만 0. 내용뿐 아니라 URL도 들어 있어 본문으로 무조건 출력하지 않음. HTML/외부 링크 구분·정제 필요.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "title",
+      "meaning": "공연/행사명",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "2026 카즈미 타테이시 트리오 내한공연-크리스마스, 재즈를 만나다-(서울)",
+      "nullable": false,
+      "commonField": "title",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "공통 저장/DTO 있음; 기존 대문자 TITLE 대응",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 공백·HTML·제어문자 정제, 빈 제목 격리. 현재 소문자 필드는 미지원.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "end_date",
+      "meaning": "종료일",
+      "type": "integer (epoch milliseconds)",
+      "evidence": "observed",
+      "sample": 1798038000000,
+      "nullable": false,
+      "commonField": "endsOn",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "공통 date 정밀도 저장/DTO 있음; 기존 문자열 END_DATE와 형식 다름",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. epoch 밀리초→Asia/Seoul YYYY-MM-DD. 종료일 포함. 시작>종료 54행 격리, 임의 교환 금지.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "inquiry",
+      "meaning": "문의",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "070-8680-8477 / 02-337-3103",
+      "nullable": true,
+      "commonField": "contact",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 3411, 빈문자열 0, 공백만 0. 전화/자유서술 정보. 운영자 고객지원 연락처 및 회원 연락처와 분리.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "codename",
+      "meaning": "분류",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "콘서트",
+      "nullable": false,
+      "commonField": "category",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "공통 저장/DTO 있음; 기존 대문자 CODENAME 대응",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 원천 장르 보존. KOPIS 장르코드/필터와 자동 등치하지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "ticket",
+      "meaning": "시민/기관",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "시민",
+      "nullable": false,
+      "commonField": "submitterType",
+      "screen": [
+        "내부 보존"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. DESCRIPTION 뜻은 시민/기관. 티켓판매수·예약가능·예매상태가 아님.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "use_trgt",
+      "meaning": "이용대상",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "성인, 청소년",
+      "nullable": false,
+      "commonField": "audience",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 자유서술 이용대상이며 유미당 여성·만19세 회원 자격 또는 동행 모집 조건과 별개.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "rgstdate",
+      "meaning": "신청일",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "2026-07-23",
+      "nullable": false,
+      "commonField": "sourceApplicationDate",
+      "screen": [
+        "내부 보존"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. DESCRIPTION=신청일. 신규등록·수정·수집 시각으로 단정하지 않음. 이번 주 신규 조건에 자동 사용 금지.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "place",
+      "meaning": "장소",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "강동아트센터 대극장 한강",
+      "nullable": false,
+      "commonField": "placeName",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "공통 저장/DTO 있음; 기존 대문자 PLACE 대응",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. 공개 행사장명. 동행 상세 만남 지점·주소로 대신 쓰지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "strtdate",
+      "meaning": "시작일",
+      "type": "integer (epoch milliseconds)",
+      "evidence": "observed",
+      "sample": 1798038000000,
+      "nullable": false,
+      "commonField": "startsOn",
+      "screen": [
+        "행사 목록",
+        "행사 상세",
+        "공고 연결 행사"
+      ],
+      "codeSupport": "공통 date 정밀도 저장/DTO 있음; 기존 문자열 STRTDATE와 형식 다름",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. epoch 밀리초→Asia/Seoul YYYY-MM-DD. UTC 날짜 절단 금지. 날짜 정밀도를 유지하고 00:00 공연 시작이라고 표시하지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "lat",
+      "meaning": "위도(X좌표)",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "37.5512204558342",
+      "nullable": true,
+      "commonField": "latitude",
+      "screen": [
+        "지도 후보"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 496, 빈문자열 0, 공백만 0. 원천 설명 X/Y는 GIS 관례와 다를 수 있으므로 필드명/수치 확인. 숫자표본 약36~37도는 위도. 도분초·기호 혼재 값은 단순 float 실패하므로 별도 검증.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "hmpg_addr",
+      "meaning": "문화포털상세URL",
+      "type": "string",
+      "evidence": "observed",
+      "sample": "https://culture.seoul.go.kr/culture/culture/cultureEvent/view.do?cultcode=158770&menuNo=200008",
+      "nullable": false,
+      "commonField": "sourceUrl",
+      "screen": [
+        "행사 상세",
+        "공고 연결 행사",
+        "내부 연결"
+      ],
+      "codeSupport": "공통 sourceUrl/sourceId 저장/DTO 있음; 기존 대문자 HMPG_ADDR 대응",
+      "notes": "19631행 기준 키누락 0, null 0, 빈문자열 0, 공백만 0. https/http 검증, host=culture.seoul.go.kr, path=/culture/culture/cultureEvent/view.do, 자격증명 없음, 양의 정수 cultcode→sourceId. 전행 19631개 고유 ID, 임의 제목해시 금지.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "use_fee",
+      "meaning": "이용요금",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "VIP석 88,000원 / R석 77,000원 / S석 66,000원 / A석 55,000원",
+      "nullable": true,
+      "commonField": "admission.text",
+      "screen": [
+        "행사 상세",
+        "행사 목록"
+      ],
+      "codeSupport": "공통 admission 저장/DTO 있음; 기존 대문자 USE_FEE 대응",
+      "notes": "19631행 기준 키누락 0, null 10635, 빈문자열 0, 공백만 0. 요금 설명은 described 후보. 빈 요금을 0원/무료로 간주 금지; 상세 우선 노출.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "guname",
+      "meaning": "자치구",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "강동구",
+      "nullable": true,
+      "commonField": "districtName",
+      "screen": [
+        "행사 목록",
+        "행사 상세"
+      ],
+      "codeSupport": "현재 지역은 서울특별시 고정; 구 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 121, 빈문자열 0, 공백만 0. 구명이며 상세 주소 아님. region에 시도와 구를 혼합하지 말고 확장 후보로 분리.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "program",
+      "meaning": "프로그램소개",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "Let It Snow, White Christmas 등 크리스마스 캐롤 명곡을 피아노, 콘트라베이스, 드럼의 일본 재즈 트리오 연주로 듣는 공연",
+      "nullable": true,
+      "commonField": "description",
+      "screen": [
+        "행사 상세"
+      ],
+      "codeSupport": "공통 선택필드 저장/DTO 있음; 서울 parser 미매핑",
+      "notes": "19631행 기준 키누락 0, null 17457, 빈문자열 0, 공백만 6. 빈값/공백만 값은 미제공. 공개 본문 정제 및 길이 제한 필요.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "lot",
+      "meaning": "경도(Y좌표)",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "127.157342546961",
+      "nullable": true,
+      "commonField": "longitude",
+      "screen": [
+        "지도 후보"
+      ],
+      "codeSupport": "현재 저장/DTO 없음",
+      "notes": "19631행 기준 키누락 0, null 496, 빈문자열 0, 공백만 0. 숫자표본 약126~127도는 경도. latitude와 뒤집지 않음. 다른 공급사와 결합시 명시 좌표계 확인; 좌표로 주소를 추정하지 않음.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    },
+    {
+      "source": "seoul-open-data",
+      "endpoint": "OA-23041 HTTPS whole JSON",
+      "originalField": "is_free",
+      "meaning": "유무료",
+      "type": "string | null",
+      "evidence": "observed",
+      "sample": "유료",
+      "nullable": true,
+      "commonField": "admission.kind",
+      "screen": [
+        "행사 목록",
+        "행사 상세"
+      ],
+      "codeSupport": "공통 admission 저장/DTO 있음; 기존 대문자 IS_FREE 대응",
+      "notes": "19631행 기준 키누락 0, null 8, 빈문자열 0, 공백만 0. 무료12852/유료6771/null8. 무료 명시만 free; 그 외는 요금설명 있으면 described, 없으면 unknown. 유료이며 설명 누락이면 unknown은 가격정보 미상이지 무료 의미 아님.",
+      "sourceUrl": "https://data.seoul.go.kr/dataList/OA-23041/S/1/datasetView.do"
+    }
+  ]
+}

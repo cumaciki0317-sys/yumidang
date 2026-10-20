@@ -1,0 +1,517 @@
+{
+  "date": "2026-10-20",
+  "actor": "jonghyun",
+  "exclusive_edit_scope": [
+    "docs/planning/design/IA.md",
+    "docs/planning/design/USERFLOW.md",
+    "apps/mobile/README.md",
+    "apps/mobile/AGENTS.md",
+    "apps/mobile/design/stitch/S00.html",
+    "apps/mobile/design/stitch/S01.html",
+    "apps/mobile/design/stitch/S02.html",
+    "apps/mobile/design/stitch/S03.html",
+    "apps/mobile/design/stitch/S04.html",
+    "apps/mobile/design/stitch/S05.html",
+    "apps/mobile/design/stitch/S06.html",
+    "apps/mobile/design/stitch/S09.html",
+    "apps/mobile/design/stitch/S10.html",
+    "apps/mobile/design/stitch/S11.html",
+    "apps/mobile/design/stitch/S12.html",
+    "apps/mobile/design/stitch/S13.html",
+    "apps/mobile/design/stitch/S14.html",
+    "apps/mobile/design/stitch/S15.html",
+    "apps/mobile/design/stitch/S16.html",
+    "apps/mobile/design/stitch/S17.html",
+    "apps/mobile/design/stitch/S18.html",
+    "apps/mobile/design/stitch/S19.html",
+    "apps/mobile/design/stitch/S20.html",
+    "apps/mobile/design/stitch/S21.html"
+  ],
+  "ownership_check": {
+    "exit_code": 0,
+    "stdout": "통과: 4개 경로, 작업자 jonghyun, 정책 HEAD:backend/ownership.json",
+    "stderr": ""
+  },
+  "files": [
+    {
+      "path": "docs/planning/design/IA.md",
+      "before_sha256": "503953601e5ba2f3a2aad6efc50576055735ca68f8c9a68637cc129a7fa362c7",
+      "after_sha256": "758f081720578e08d4a74650b4eb5a9ca7a93ac4c76d5412a38bab6bf8c135f2",
+      "changed": true,
+      "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+      "review": "IA/USERFLOW/README: 최신 정책과 구현 미완료 구분 보완"
+    },
+    {
+      "path": "docs/planning/design/USERFLOW.md",
+      "before_sha256": "9077d709b891cd96a05fb0fbc5ecb7109b7f9e67dd651286e9ba85d528ca1933",
+      "after_sha256": "abaff95780ffc276bedbc3ed9ff5522fd250a3e71de98f5226af170b1dbca968",
+      "changed": true,
+      "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+      "review": "IA/USERFLOW/README: 최신 정책과 구현 미완료 구분 보완"
+    },
+    {
+      "path": "apps/mobile/README.md",
+      "before_sha256": "cdca72c30d7ccabf2ab9f50c21590c326d0491563031ac866854440006d35c47",
+      "after_sha256": "91f4a087342f8c0de90f8a8d0f2fb3f59da4449b9a571c528e4e06ca9561ae00",
+      "changed": true,
+      "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+      "review": "IA/USERFLOW/README: 최신 정책과 구현 미완료 구분 보완"
+    },
+    {
+      "path": "apps/mobile/AGENTS.md",
+      "before_sha256": "b7d381dd55800d242252e8bf89a40b026586d254e34908210931bc35582396a3",
+      "after_sha256": "b7d381dd55800d242252e8bf89a40b026586d254e34908210931bc35582396a3",
+      "changed": false,
+      "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+      "review": "현재 역할 및 파일 경계가 이미 최신; 문구 변경 불필요"
+    }
+  ],
+  "validation": {
+    "kind": "정적 문서/JSON/출처 대조; 제품코드/SQL/설정 변경 없음",
+    "new_tests_run": false,
+    "commit_push": "root 통합 담당이 수행; 이 manifest 자체는 원격 반영 증거 아님",
+    "static_checks": {
+      "client_audit_groups": 50,
+      "policy_units_mapped": 305,
+      "structural_units_excluded": [
+        "P262"
+      ],
+      "source_ref_count": 128,
+      "missing_source_or_evidence_refs": 0,
+      "changed_md_missing_links": 0,
+      "changed_md_diff_check": "PASS"
+    },
+    "followup": "가입 완료 안내 후 현재 접근 가능한 보존 목적 화면(행사 작성 포함)/그 외 홈 복귀 예외 명시. AI 자동 재시도는 미전송 확인·같은 요청 전체1회 조건으로 구체화. C03/C36/C44 대조 갱신."
+  },
+  "topics": [
+    "AI 첫 사용 동의/후기 세 선택 독립동의",
+    "Gemini 테스트 예산/대표 전환/실회원 HOLD",
+    "KOPIS14분류 공식대조",
+    "일반신고숨김/AI신고게이트",
+    "행사UX/직접입력저장대기/서비스초안차이",
+    "확정A서버기준",
+    "현재팀역할",
+    "실제구현과프리뷰구분"
+  ],
+  "apps_html": {
+    "checked_count": 20,
+    "ownership_check": {
+      "exit_code": 0,
+      "stdout": "통과: 20개 경로, 작업자 jonghyun, 정책 HEAD:backend/ownership.json",
+      "stderr": ""
+    },
+    "consumption_check": "rg design/stitch|\\.html apps/mobile/src apps/mobile/package.json 결과 실행 HTML 소비 경로 없음. 앱은 Expo Router TSX 화면을 사용한다. 이미지/manifest 원천 증거와 HTML 레이아웃 참고를 구분한다.",
+    "files": [
+      {
+        "path": "apps/mobile/design/stitch/S00.html",
+        "before_sha256": "34d0626d4550dbd5678cbad068679c2c5e6920b1ade19b77a8a4b8869b3ce187",
+        "after_sha256": "f2b93f34f307364c11ca9b78ce722249a858b2c533aa1ee1b950b5b60b928b75",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "안전_신원_보장",
+            "line": 334,
+            "excerpt": "100% 여성 안심 실명 인증"
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S01.html",
+        "before_sha256": "ab64de194e4109e0c5a85066403c7a9dfd9ef17802e86de9bb6e2d9f134f9f67",
+        "after_sha256": "98cbd08fc6124dfcd6642c5d180bbffb5bb95158f5c323b24b05dae174a21483",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "당도_이전표시",
+            "line": 250,
+            "excerpt": "98%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 252,
+            "excerpt": ""
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 313,
+            "excerpt": "99%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 315,
+            "excerpt": ""
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S02.html",
+        "before_sha256": "53a5e0d0843a31454b2ca4414e7f4195dcdf20cc6c8de25ae1990f241f253d18",
+        "after_sha256": "e669f8da54241f4236890b2c1dbd5ea1abe0a0f57ed3e68da0a3b87906e0eb93",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "안전_신원_보장",
+            "line": 240,
+            "excerpt": "후기 칭찬 100%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 219,
+            "excerpt": "당도 지수 99%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 221,
+            "excerpt": ""
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S03.html",
+        "before_sha256": "ee4ca7d3d4608155c8497b59b9e8b3d1c7137c8eda8c0bd1e3d3e4653527ff9e",
+        "after_sha256": "c96500275ea57fa067c50c918d664e71c7acd357ea981ec74aeeac33d1904230",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": []
+      },
+      {
+        "path": "apps/mobile/design/stitch/S04.html",
+        "before_sha256": "e9e7f23b05c07b687f29fa82eacec61bcff18fa78befb5f78a591dba50ac6625",
+        "after_sha256": "5bc340d54c4fcf77ffc8cb2f8b4560ca81908287465720be4c713c5dec2fe3d3",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "당도_이전표시",
+            "line": 238,
+            "excerpt": "당도 지수 98°C"
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S05.html",
+        "before_sha256": "851f5a98e93d04d972cf484df194e143e18a90d849f22769a9bb46ed2bb87140",
+        "after_sha256": "41f5bc5ec61433b79283ed31928adedeeec077851302b37a950a327030c0076f",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": []
+      },
+      {
+        "path": "apps/mobile/design/stitch/S06.html",
+        "before_sha256": "d35b8d665ccfcf50690613ef15d3186d85ecce31cccf97f41cc13087616bffc8",
+        "after_sha256": "2f4ef27f0ebc22b39b73018cf1ac55f46a8bc9bcddca283a7f0226af513f08bc",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "안전_신원_보장",
+            "line": 152,
+            "excerpt": "여성 전용 안전 인증 심사를 통과했습니다."
+          },
+          {
+            "category": "동의_필수방식",
+            "line": 331,
+            "excerpt": "완료 시  동행 서비스 이용약관 에 동의하게 됩니다."
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S09.html",
+        "before_sha256": "34b735af673128b83f9064608d7d25bae4862307dd2a6a0d596e7eecec0be4b6",
+        "after_sha256": "de290f7d32bee55f61fd7c04e8b17c6af73ca4459157600a6a8c0a1c9b8d05f5",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": []
+      },
+      {
+        "path": "apps/mobile/design/stitch/S10.html",
+        "before_sha256": "6d7d1b6f22a96ffa9d4f2484bd8dac1f470e50858bd71659db31fcd183a2557a",
+        "after_sha256": "8b4b61d736be579a7522a2ac4dc368b318c8d50a6a908a3496fba60882bb1f6c",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": []
+      },
+      {
+        "path": "apps/mobile/design/stitch/S11.html",
+        "before_sha256": "bc38738853d421179fec6f0d6310e793bfa4fcb714ea7597f2e004b43bac2c2a",
+        "after_sha256": "6cada6367381936a4480fa63d4ca41b20c4fd7a09cc9bfc384af8ed984479e09",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "당도_이전표시",
+            "line": 149,
+            "excerpt": "당도 99%"
+          },
+          {
+            "category": "연락망_제공",
+            "line": 266,
+            "excerpt": "동의 완료 후 세부 만남 위치와 비상 연락망이 활성화됩니다."
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S12.html",
+        "before_sha256": "a1051c3df819f5cc51fa4d1b4b4676e28eba1ab7e8224ee630e1997853b468d0",
+        "after_sha256": "3c25db328f9a647a4ac22e6f1e0f6e5c1b46d4338fa01752bb30f9d8eeb670cb",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "24시간_응답_공개",
+            "line": 209,
+            "excerpt": "이지은 님이 최종 동행 동의를 요청했습니다. 조건을 확인하고 24시간 내에 응답해 주세요."
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S13.html",
+        "before_sha256": "46e88c6b49649e2fd38250a462791875bf38f0284eec88d5f0d6d3cc85bd0f11",
+        "after_sha256": "2cfd1b8f76e415eb329de2273918bb8cfa2029412af697fab91399b1f0f13293",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "24시간_응답_공개",
+            "line": 303,
+            "excerpt": "24시간 내 동의 필요"
+          },
+          {
+            "category": "안전_신원_보장",
+            "line": 195,
+            "excerpt": "100%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 184,
+            "excerpt": "기준 당도 36.5% 대비 +62.0%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 271,
+            "excerpt": "당도 99%"
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S14.html",
+        "before_sha256": "50e0e6161914a2a8dc0af21fb52ddc2a93c5a4a4931d0b60cde2741163471c3d",
+        "after_sha256": "b25e4e700f6b45b60527c5f262902e58e0e880224d826609aa0bef4550529d84",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "24시간_응답_공개",
+            "line": 314,
+            "excerpt": "유미당의 모든 동행은 100% 무료 1:1 약속으로 진행되며, 24시간 안심 리포팅 센터가 지원됩니다."
+          },
+          {
+            "category": "안전_신원_보장",
+            "line": 270,
+            "excerpt": "“시간 약속 준수율  100% 를 기록 중이며, 작품 관람 시 서로의 독립적 공간을 존중하는  전시 몰입 지향형  메이트입니다.”"
+          },
+          {
+            "category": "안전_신원_보장",
+            "line": 314,
+            "excerpt": "유미당의 모든 동행은 100% 무료 1:1 약속으로 진행되며, 24시간 안심 리포팅 센터가 지원됩니다."
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 165,
+            "excerpt": "98%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 169,
+            "excerpt": ""
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S15.html",
+        "before_sha256": "58c8ec16f13f736047f018377cd83d06346f4d48ea3c48a4a5386b26f13e3979",
+        "after_sha256": "f03824280ea302946c720c872db54131d182023d8cc42025d9b0c97aa15fe39c",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": []
+      },
+      {
+        "path": "apps/mobile/design/stitch/S16.html",
+        "before_sha256": "31cff67efa5808de0911e9bea94ad54390e258b77a16c377ec059898363d5366",
+        "after_sha256": "15842378decc5cc086c6ac1ed9b71c229e54df11119940e6b74d6ba48ae82613",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "안전_신원_보장",
+            "line": 274,
+            "excerpt": "유미당은 100% 무료 1:1 문화 약속으로 어떠한 추가 수수료도 요구하지 않습니다."
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 182,
+            "excerpt": "당도 지수 98%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 184,
+            "excerpt": ""
+          },
+          {
+            "category": "추후체크인",
+            "line": 258,
+            "excerpt": "1:1 안심 체크인 안내"
+          },
+          {
+            "category": "추후체크인",
+            "line": 262,
+            "excerpt": "약속 당일 30분 전부터 1:1 안심 체크인 버튼이 활성화됩니다. 공공장소에서 안전하게 만남을 시작하세요."
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S17.html",
+        "before_sha256": "d8fef86998cc768763e66d4aab03724675923835cd45eab30bc86c2e537b63fe",
+        "after_sha256": "f54ff993e9e3115daad6e6ef449e4c02ef89bf8a12f592ee8c9c92b5588402e9",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "24시간_응답_공개",
+            "line": 305,
+            "excerpt": "서로 남긴 후기는 상대방을 배려하여  양측이 모두 작성하거나 동행 완료 24시간 뒤 에 동시에 상호 공개됩니다."
+          },
+          {
+            "category": "후기_공개_이전정책",
+            "line": 305,
+            "excerpt": "서로 남긴 후기는 상대방을 배려하여  양측이 모두 작성하거나 동행 완료 24시간 뒤 에 동시에 상호 공개됩니다."
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S18.html",
+        "before_sha256": "e54b0d3a48c3fce3923d7d7de60139ed6d4d9415458a315990221872fa1bf8b8",
+        "after_sha256": "3d07fa6fa0bdce4aa9456a14e5721925fa1018307244da6472acf4684d63883d",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": []
+      },
+      {
+        "path": "apps/mobile/design/stitch/S19.html",
+        "before_sha256": "dd8263f5664eb63a4df4f96fdf95d34429b862abb91b2fbeea07dcc56a7a995b",
+        "after_sha256": "466f5708d1c11776c45d6979d4e81a2bd6397218f0e6ff0c24adbe120f8df332",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "24시간_응답_공개",
+            "line": 211,
+            "excerpt": "무료 동행과 별도의 공식 행사 입장료는 별개이며, 안전한 동행을 위해 24시간 모니터링됩니다."
+          },
+          {
+            "category": "안전_신원_보장",
+            "line": 211,
+            "excerpt": "무료 동행과 별도의 공식 행사 입장료는 별개이며, 안전한 동행을 위해 24시간 모니터링됩니다."
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S20.html",
+        "before_sha256": "8f6f63b2a3651df508c4a7b9e3ba2c69f8caa8f6eb589aafdf4e237d3120bd08",
+        "after_sha256": "3d1d72a789ed4590c75733b30960467d08283c45cb749bf0e563756095a73039",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "당도_이전표시",
+            "line": 247,
+            "excerpt": "당도 98%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 250,
+            "excerpt": ""
+          }
+        ]
+      },
+      {
+        "path": "apps/mobile/design/stitch/S21.html",
+        "before_sha256": "ab455d7cdd139aa28860267750f032f51b1f70d5e56d21ab91ae89bce19c37e6",
+        "after_sha256": "4e015236e6c629d4e1887b066784fcdc14010f0719d844d209484345c7d22f24",
+        "changed": true,
+        "ownership": "PASS HEAD:backend/ownership.json actor=jonghyun",
+        "classification": "과거 정적 디자인 참고; 현행 요구/실서비스 완료 증거 아님",
+        "mutation": "기존 디자인/선택/예시/스크립트 원문 보존, 현행 정책/통합 검토판 visible notice만 추가",
+        "old_policy_examples": [
+          {
+            "category": "안전_신원_보장",
+            "line": 340,
+            "excerpt": "유미당은 전 회원 100% 실명 검증 및 이상 징후 자동 탐지 알고리즘을 가동하여 안전한 교류를 전폭 지원합니다."
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 231,
+            "excerpt": "98%"
+          },
+          {
+            "category": "당도_이전표시",
+            "line": 237,
+            "excerpt": ""
+          },
+          {
+            "category": "연락망_제공",
+            "line": 298,
+            "excerpt": ""
+          },
+          {
+            "category": "연락망_제공",
+            "line": 306,
+            "excerpt": "1:1 안심 번호 및 비상 연락망"
+          }
+        ]
+      }
+    ],
+    "validation": "모든 원문은 삽입 notice를 제거하면 원래 바이트와 같음. policy 링크 존재, index.html은 root 통합 산출물. 제품 앱 코드/JSON 설정/manifest/이미지 변경 없음."
+  }
+}

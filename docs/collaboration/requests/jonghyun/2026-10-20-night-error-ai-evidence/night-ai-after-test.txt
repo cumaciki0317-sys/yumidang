@@ -1,0 +1,24 @@
+✔ successful response preserves a newer unsent draft typed during the request (6.900833ms)
+✔ successful response clears only its own submitted draft, including surrounding whitespace (1.279209ms)
+✔ input_privacy preserves input and server notice without pretending that unavailable means zero results (1.6305ms)
+✔ output_privacy preserves input and server notice without pretending that unavailable means zero results (0.974417ms)
+✔ daily_limit preserves input and server notice without pretending that unavailable means zero results (1.366ms)
+✔ concurrent preserves input and server notice without pretending that unavailable means zero results (1.069875ms)
+✔ consent preserves input and server notice without pretending that unavailable means zero results (1.186917ms)
+✔ temporary preserves input and server notice without pretending that unavailable means zero results (1.147958ms)
+✔ verified empty results are rendered separately from an incomplete unavailable result (1.000458ms)
+✔ rapid send attempts issue only one request while the synchronous lock is held (1.05925ms)
+✔ output privacy retry sends the original server request ID once and obeys retryAllowed false (1.3355ms)
+✔ new conversation aborts an old request and late success cannot replace the new draft (1.102583ms)
+✔ leaving the screen discards conversation and ignores a transport that resolves after abort (1.114416ms)
+✔ logout remounts the anonymous screen and cannot restore a previous session's late answer (1.051292ms)
+✔ fixed condition buttons do not call the model or invent local remaining quota (0.843291ms)
+✔ a transport failure preserves the draft and does not automatically retry (1.03575ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 299.2365

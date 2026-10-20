@@ -1,0 +1,104 @@
+--- before/RemoteMemberScreens.tsx
++++ after/RemoteMemberScreens.tsx
+@@ -22,6 +22,8 @@
+ const statusLabel = (value: unknown) => ({ pending: "신청 대기", active: "대화 중", confirmed: "동행 확정", completed: "완료", cancelled: "취소", disputed: "분쟁 검토 중", declined: "거절", rejected: "거절", withdrawn: "철회", expired: "기한 만료", recruiting: "모집 중", closed: "모집 종료", submitted: "신고 접수", received: "신고 접수", reviewing: "신고 검토 중", resolved: "처리 완료", accepted: "수락", awaiting_consent: "확정 응답 대기" } as Record<string, string>)[text(value)] ?? "현재 상태 확인 필요";
+ const failure = (error: unknown) => error instanceof ApiError && error.status === 401
+   ? "다시 로그인해 주세요."
++  : error instanceof ApiError && error.status === 403
++  ? "접근 권한이 없거나 이용할 수 없는 항목이에요. 최신 상태를 다시 확인해 주세요."
+   : error instanceof ApiError && (error.status === 409 || error.status === 410)
+   ? "상태가 바뀌었거나 응답 기한이 지났어요. 새로고침해서 확인해 주세요."
+   : "처리하지 못했어요. 입력한 내용은 유지했으니 상태를 확인하고 다시 시도해 주세요.";
+@@ -55,30 +57,31 @@
+   const service = useMemberService(), session = useServiceSession();
+   const [busy, setBusy] = useState(false), [error, setError] = useState("");
+   const [actionEpoch, setActionEpoch] = useState(session.epoch);
++  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+   const active = useRef<AbortController | null>(null);
+   const lock = useRef(false);
+   const mounted = useRef(true);
+   useFocusEffect(useCallback(() => {
+-    mounted.current = true;
+-    return () => { mounted.current = false; active.current?.abort(); lock.current = false; };
++    mounted.current = true; setBusy(false);
++    return () => { mounted.current = false; active.current?.abort(); active.current = null; lock.current = false; };
+   }, []));
+-  useEffect(() => { active.current?.abort(); lock.current = false; }, [session.epoch]);
++  useEffect(() => { active.current?.abort(); active.current = null; lock.current = false; }, [session.epoch]);
+   const run = async <T,>(task: (s: MemberService, signal: AbortSignal) => Promise<T>, success?: (data: T) => void) => {
+-    if (lock.current || !service || !session.authenticated) return false;
++    if (!mounted.current || lock.current || !service || !session.authenticated) return false;
+     const controller = new AbortController(), epoch = serviceSessionEpoch();
+-    active.current = controller; lock.current = true; setActionEpoch(epoch); setBusy(true); setError("");
++    active.current = controller; lock.current = true; setActionEpoch(epoch); setBusy(true); setError(""); setErrorStatus(null);
+     try {
+       const data = await task(service, controller.signal);
+       if (controller.signal.aborted || epoch !== serviceSessionEpoch() || !mounted.current) return false;
+       success?.(data); return true;
+     } catch (e) {
+-      if (!controller.signal.aborted && epoch === serviceSessionEpoch() && mounted.current) setError(failure(e));
++      if (!controller.signal.aborted && epoch === serviceSessionEpoch() && mounted.current) { setError(failure(e)); setErrorStatus(e instanceof ApiError ? e.status : null); }
+       return false;
+     } finally {
+       if (active.current === controller && epoch === serviceSessionEpoch() && mounted.current) { lock.current = false; setBusy(false); }
+     }
+   };
+-  return { busy: actionEpoch === session.epoch && busy, error: actionEpoch === session.epoch ? error : "", run };
++  return { busy: actionEpoch === session.epoch && busy, error: actionEpoch === session.epoch ? error : "", errorStatus: actionEpoch === session.epoch ? errorStatus : null, clearError: () => { setError(""); setErrorStatus(null); }, run };
+ }
+ 
+ function useIntentId() {
+@@ -125,8 +128,11 @@
+   const consent = useMemberResource(`consent:${requestId}`, async (s, signal) => requestId ? s.consent(requestId, signal) : null);
+   const viewer = useMemberResource("chat-viewer", (s, signal) => s.profile(signal));
+   const [older, setOlder] = useState<Wire[]>([]), [before, setBefore] = useState<string | null | undefined>();
+-  const refresh = () => { conversation.reload(); messages.reload(); consent.reload(); setOlder([]); setBefore(undefined); };
+-  const olderCursor = before === undefined ? messages.data?.nextCursor : before;
++  const refresh = () => { action.clearError(); conversation.reload(); messages.reload(); consent.reload(); setOlder([]); setBefore(undefined); };
++  const canDisplayMessages = Boolean(conversation.data && !conversation.busy && !conversation.error && !messages.busy && !messages.error && action.errorStatus !== 401 && action.errorStatus !== 403);
++  // Received private data has a different lifetime from the member's unsent input.
++  if (!canDisplayMessages && (older.length > 0 || before !== undefined)) { setOlder([]); setBefore(undefined); }
++  const olderCursor = canDisplayMessages ? (before === undefined ? messages.data?.nextCursor : before) : null;
+   const visibleIds = useRef(new Set<string>()), acknowledgedIds = useRef(new Set<string>());
+   const readController = useRef<AbortController | null>(null), readGeneration = useRef(0), focused = useRef(false);
+   const viewport = useRef<View | null>(null), messageBodies = useRef(new Map<string, View>()), measurementGeneration = useRef(0);
+@@ -188,33 +194,34 @@
+   const conditionsValid = conditions?.costType === "free" && conditions.amount === 0 && Boolean(text(conditions.title)) && Boolean(text(conditions.publicArea)) && Number.isFinite(Date.parse(text(conditions.startsAt))) && Number.isFinite(Date.parse(text(conditions.endsAt))) && Date.parse(text(conditions.startsAt)) < Date.parse(text(conditions.endsAt));
+   const expired = !text(consent.data?.expiresAt) || Date.parse(text(consent.data?.expiresAt)) <= app.now;
+   const host = conversation.data?.my_role === "author";
+-  const sendAllowed = requestId ? conversation.data?.can_send === true : Boolean(postId);
++  const sendAllowed = requestId ? canDisplayMessages && conversation.data?.can_send === true : Boolean(postId);
+   return <Screen scroll={false} title={text(conversation.data?.post_title) || "1:1 대화"} right={<TextButton onPress={refresh}>새로고침</TextButton>} footer={<View style={{ gap: 8 }}>
+     <Field editable={!action.busy} label={requestId ? "메시지" : "첫 메시지"} value={input} onChangeText={setInput} multiline placeholder="함께 하고 싶은 활동을 이야기해 주세요" />
+     {!requestId && <Body small muted>첫 메시지가 전송되면 동행 신청이 함께 생성돼요.</Body>}
+     <Button disabled={!sendAllowed || !input.trim()} loading={action.busy} onPress={send}>메시지 보내기</Button>
+   </View>}>
+     {!readPort && requestId && <Body small muted>개별 메시지 읽음 연결 준비 중이에요.</Body>}
+-    <View ref={viewport} collapsable={false} style={{ flex: 1 }} onLayout={measureVisibleBodies}><FlatList data={[...older, ...(messages.data?.items ?? [])]} keyExtractor={row => idOf(row, "messageId")} onScroll={measureVisibleBodies} scrollEventThrottle={16} onContentSizeChange={measureVisibleBodies} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 10, paddingVertical: 16 }}
++    <View ref={viewport} collapsable={false} style={{ flex: 1 }} onLayout={measureVisibleBodies}><FlatList data={canDisplayMessages ? [...older, ...(messages.data?.items ?? [])] : []} keyExtractor={row => idOf(row, "messageId")} onScroll={measureVisibleBodies} scrollEventThrottle={16} onContentSizeChange={measureVisibleBodies} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 10, paddingVertical: 16 }}
+       renderItem={({ item: row }) => <Card><View collapsable={false} ref={body => { const id = idOf(row, "messageId"); if (body) messageBodies.current.set(id, body); else messageBodies.current.delete(id); }} onLayout={measureVisibleBodies}><Body>{text(row.content)}</Body></View><Body small muted>{text(row.createdAt)}</Body>{viewer.data && row.senderId !== viewer.data.userId && <RemoteReport targetId={idOf(row, "messageId")} targetType="chat" />}</Card>}
+       ListHeaderComponent={<>
+     <Status busy={conversation.busy && Boolean(requestId)} error={conversation.error || messages.error || consent.error} reload={refresh} />
+-    {pending && <Card><Title>동행 확정 요청</Title><Body>응답 마감 · {text(consent.data?.expiresAt)}</Body>
++    {canDisplayMessages && <>{pending && <Card><Title>동행 확정 요청</Title><Body>응답 마감 · {text(consent.data?.expiresAt)}</Body>
+       <ConsentConditions conditions={consent.data?.conditions} />
+       {host ? <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "consent/withdraw", version, signal), refresh)}>확정 요청 철회</Button>
+         : <><Button disabled={expired || !version || !conditionsValid} loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "accept", version, signal), refresh)}>이 조건으로 동행 확정</Button>
+           <TextButton onPress={() => void action.run((s, signal) => s.requestAction(requestId, "consent/decline", version, signal), refresh)}>확정 요청 거절</TextButton></>}
+     </Card>}
+     {host && !pending && conversation.data?.request_status === "pending" && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.requestAction(requestId, "propose", undefined, signal), refresh)}>동행 확정 요청 보내기</Button>}
+-    {host && !pending && conversation.data?.request_status === "pending" && <TextButton onPress={() => setConfirmation("decline")}>신청 거절</TextButton>}
++    {host && !pending && conversation.data?.request_status === "pending" && <TextButton onPress={() => setConfirmation("decline")}>신청 거절</TextButton>}</>}
+     </>} ListFooterComponent={<>
++    {canDisplayMessages && <>
+     {readError && <><Body muted>{readError}</Body><TextButton onPress={() => { readFailed.current = false; flushRead.current(); }}>읽음 다시 시도</TextButton></>}
+     {olderCursor && <Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.messages(requestId, olderCursor, signal), page => { setOlder(items => [...page.items, ...items]); setBefore(page.nextCursor); })}>이전 메시지 보기</Button>}
+     {requestId && <Row><TextButton onPress={() => setConfirmation("leave")}>대화방 나가기</TextButton>{!host && <TextButton onPress={() => setConfirmation("withdraw")}>신청 철회</TextButton>}</Row>}
+     {text(conversation.data?.appointment_id) && <Button secondary onPress={() => app.navigate("S16", text(conversation.data?.appointment_id))}>확정 약속 보기</Button>}
+     {confirmation && <Card><Title>{confirmation === "leave" ? "내 목록에서 이 대화를 숨길까요?" : confirmation === "decline" ? "이 동행 신청을 거절할까요?" : "동행 신청을 철회할까요?"}</Title><Body muted>{confirmation === "leave" ? "약속은 취소되지 않고 상대의 대화방은 유지돼요." : confirmation === "decline" ? "거절 후 상대는 이 공고에 다시 신청할 수 없어요." : "이미 확정된 동행은 약속에서 별도로 취소해야 해요."}</Body>
+       <Button loading={action.busy} onPress={() => void action.run((s, signal) => confirmation === "leave" ? s.leave(requestId, signal) : s.requestAction(requestId, confirmation === "decline" ? "decline" : "withdraw", undefined, signal), () => { setConfirmation(null); app.navigate("S10"); })}>확인</Button><TextButton onPress={() => setConfirmation(null)}>계속 대화하기</TextButton></Card>}
+-    {host && text(conversation.data?.post_id) && <RemotePostManagement postId={text(conversation.data?.post_id)} onChanged={refresh} />}
++    {host && text(conversation.data?.post_id) && <RemotePostManagement postId={text(conversation.data?.post_id)} onChanged={refresh} />}</>}
+     <Status busy={action.busy} error={action.error} />
+     </>} /></View>
+   </Screen>;

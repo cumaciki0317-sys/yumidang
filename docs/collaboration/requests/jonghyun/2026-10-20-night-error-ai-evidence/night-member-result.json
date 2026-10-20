@@ -1,0 +1,51 @@
+{
+  "actor": "jonghyun",
+  "paths": [
+    "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+    "tests/mobile/member-failure-state.test.mjs"
+  ],
+  "snapshot": "/private/tmp/night-member-before/RemoteMemberScreens.tsx",
+  "before": {
+    "executed": 2,
+    "failed": 2,
+    "log": "/private/tmp/night-member-before-tests.log",
+    "failures": [
+      "busy stuck after blur/refocus",
+      "paginated private history remains after 403"
+    ]
+  },
+  "after": {
+    "executed": 16,
+    "passed": 16,
+    "failed": 0,
+    "log": "/private/tmp/night-member-after-tests.log"
+  },
+  "evidence": "Actual production hooks/components transpiled and executed with synthetic React/focus/service ports. No implementation copied into tests. Not native/real browser evidence.",
+  "changes": [
+    "focus/session lifecycle detaches abandoned action; reset busy on return; ignore late stale completion",
+    "hide received chat history and confirmation conditions during revalidation or failure; discard prior pagination; retain same-session unsent input",
+    "classify 403 in member error presentation; guard chat send until manual refresh after action permission failure"
+  ],
+  "public_contract": "No HTTP/API/DB change. Internal useMemberAction adds errorStatus and clearError fields.",
+  "ownership": "PASS both paths",
+  "diff_check": "PASS",
+  "full_lint_typecheck_browser": "root agent runs separately",
+  "external_calls": "No member/provider service calls. Read official SDK57 documentation only.",
+  "questions": [],
+  "limitations": [
+    "No real member/OAuth/DB/Storage/native-device validation",
+    "Preserve prior dirty changes; patch is relative to initial snapshot",
+    "No automatic retry/global403logout/commit/push/deploy"
+  ],
+  "source_sha256": "0df08b009ead88b9f7be59a1f5b42afbecd17707bf121dc0ad1821b2c1f65b74",
+  "targeted_eslint": {
+    "status": "PASS",
+    "log": "/private/tmp/night-member-eslint.log",
+    "command": "./node_modules/.bin/eslint src/screens/RemoteMemberScreens.tsx --no-cache"
+  },
+  "lint_followup": "Removed redundant epoch effect state update; render-time conditional adjustment drops stale history/cursor only while access/data is unavailable. No lint rule disabled or async deferral.",
+  "followup_review": {
+    "refresh_pending_regression": "PASS; both access reads deferred, each intermediate render has no history/conditions, same-session input remains",
+    "read_ack_observer": "No observer code changes/new trigger added by this patch; existing visibility IDs/ACK may remain until focus cancellation. No server permission bypass/body leakage evidence. Separate follow-up to consider explicit observer invalidation when access is lost."
+  }
+}

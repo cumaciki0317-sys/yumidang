@@ -1,0 +1,83 @@
+{
+  "verified": true,
+  "verified_at_utc": "2026-10-20T01:54:18.602182+00:00",
+  "local_head": "5476f6d3e73d763dd6e7f4a3dac3d7c7344c71cd",
+  "remote_head": "5476f6d3e73d763dd6e7f4a3dac3d7c7344c71cd",
+  "branch": "jonghyun/policy-review-20261017",
+  "remote_url": "https://github.com/cumaciki0317-sys/yumidang.git",
+  "original_document_paths_checked": 341,
+  "changed_original_document_paths": 293,
+  "document_mismatches": [],
+  "audit_core_files_checked": 8,
+  "source_policy_sha256": "a8a8ee2c67eb3497b859c38beda21334f306491661ba19a8d630f16ad121152e",
+  "user_original_forms_preserved": 5,
+  "owner_commits": [
+    {
+      "actor": "jonghyun",
+      "sha": "a597f68ecd21354e6b9c5d92914d584756bdb9b1",
+      "paths": 161
+    },
+    {
+      "actor": "minkyu",
+      "sha": "650e855187a44d3dded7f0f05b596159b65ad057",
+      "paths": 152
+    },
+    {
+      "actor": "yumi",
+      "sha": "2ab8ab17779ca0f10da8f2852f319eb9536e816d",
+      "paths": 1
+    }
+  ],
+  "ownership_method": "각 원래 owner의 독립 clone·정상 사전/staged 검사 및 hook commit 후 종현 브랜치 fast-forward. actor/hook/ownership 우회 없음. AI 문서 작업이며 실제 팀원 작업으로 기록하지 않음.",
+  "shared_clone_head": "b164021323975c241d7a73145bdd66d9c3e6f097",
+  "unchanged_remote_refs": {
+    "backend-work": "b164021323975c241d7a73145bdd66d9c3e6f097",
+    "main": "472c570ed609753a1d74b7016e5518f6d429213f"
+  },
+  "receipt_scope": "위 commit에서 원래 문서340경로와 핵심원장8파일을 검증한 영수증. 이 영수증과Notion기록은 후속보고commit에추가하며 원래문서내용을변경하지않는다.",
+  "late_event_followup_original": {
+    "source": "docs/collaboration/requests/jonghyun/유미당_행사UX_추가확인_작성본.html",
+    "sha256": "7bf25a2b45442d5f19703104fa897706b808ae6a491264cc61efce62a2050c00",
+    "answers": {
+      "F01": {
+        "choice": "A",
+        "other": "",
+        "note": ""
+      },
+      "F02": {
+        "choice": "A",
+        "other": "",
+        "note": ""
+      },
+      "F03": {
+        "choice": "A",
+        "other": "",
+        "note": ""
+      }
+    },
+    "policy_changed": false,
+    "previous_text_decision": "차례로 a,a,a",
+    "policy_matches": [
+      {
+        "id": "F01",
+        "policy_line": 301,
+        "result": "MATCH"
+      },
+      {
+        "id": "F02",
+        "policy_line": 332,
+        "result": "MATCH"
+      },
+      {
+        "id": "F03",
+        "policy_line": [
+          334,
+          335
+        ],
+        "result": "MATCH"
+      }
+    ],
+    "implementation_warning": "정책 반영 확인이며 날짜 달력 표시·서버 동일행사 통합·공개원천 충돌 계약의 구현 완료가 아님.",
+    "remote_original_pending": false
+  }
+}

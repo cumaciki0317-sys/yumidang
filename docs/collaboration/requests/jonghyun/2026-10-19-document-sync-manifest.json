@@ -1,0 +1,189 @@
+{
+  "actor": "jonghyun",
+  "userApproval": "문서 동기화는 전체 범위 ㄱㄱ. 민규한테는 내가 얘기할게",
+  "followup": "작업완료 후 민규 전달 인수인계 텍스트에 남길 것",
+  "records": [
+    {
+      "path": "AGENTS.md",
+      "sourceSha256": "ce65753a9b4e6bb08c739c9806c5a0c8b6c03157d699f3faff4e180c15bc725e",
+      "targetSha256": "a6a860f84fb2779c64b855291c395dbff97fcb60390dc1df73957ebe29efcdb9",
+      "ownershipException": true
+    },
+    {
+      "path": "PLAN.md",
+      "sourceSha256": "8509f65cd934df7820a19a4f2062a004769c98976323cfa63b79df3321c60e3b",
+      "targetSha256": "5246703e5617099f9cd83fd6fed5612a2603bc9b8f18b8b4cb68774ceef5d9a4",
+      "ownershipException": true
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "sourceSha256": "6f18e96d8be845e9df8c88bb4507e18e6a3605af10a907343a3dd057d9feb477",
+      "targetSha256": "3156520a66a87b86642a5cefe72f0aa5a60a528879293028b3500d5d32829161",
+      "ownershipException": true
+    },
+    {
+      "path": "docs/collaboration/README.md",
+      "sourceSha256": "c08a5b48b377894b4e99da61417f828fe2a031f57e3ea27cb85083863e2380dc",
+      "targetSha256": "6582b1442cbeaed6b7f3e0658bb4f6d3458c795251e1bd361c4bfe611eaeea2e",
+      "ownershipException": true
+    },
+    {
+      "path": "docs/planning/requirements/PRD.md",
+      "sourceSha256": "bea9c991e0727eb7572ade5d190663a399af08eb314d9af518e94da5dd903c09",
+      "targetSha256": "e95f177dfd3d8c2322bffb753a92129e4b111e5b7dea087f74ea177baf290829",
+      "ownershipException": true
+    },
+    {
+      "path": "유미당_출시결정_보류사항_민규전달_20261005.md",
+      "sourceSha256": "8e702e85f9928b0b0990e599808a670f18f3e7f9eebc3186e31b2d9c32a82957",
+      "targetSha256": "6422f9d304a4e78b8b7ced2ac68275d3aa61cbddaaf8bca8b2fef45a470140ff",
+      "ownershipException": true
+    },
+    {
+      "path": "정책.md",
+      "sourceSha256": "b58c74cce4dc71718bfd45e3249d0ca8fa42b2cf6e9fca47b936584233ef386f",
+      "targetSha256": "ae1487c313f90f5fae0120d2124e3c131314961b1ea8da5d140f270a90aee4f7",
+      "ownershipException": true
+    },
+    {
+      "path": "260929_종현담당_PLAN.md",
+      "sourceSha256": "482ed1229ec13244796c5702916623d337e7080783d0b3e91277df1cf79da26c",
+      "targetSha256": "fad8fdc2e3b2a837b63172c4ba3c0486e02bddc6f452d8632d819a8f67300c8d",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/API_INPUT.md",
+      "sourceSha256": "9ee3fd1cfdd51cb7b6874bdf22580ac48e92d8b9cf0a4b5eef5676d94e0b0a33",
+      "targetSha256": "74ca69a2cdf2593ffa8eeaf563ca9613ee6ed5a585b7c3593fe31810d69c6bbe",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/README.md",
+      "sourceSha256": "f02908551487ecc07e73bdb90b7fe238f61ad9aa4083306d8c40ed7a5880fd4d",
+      "targetSha256": "dd1fd2495d742514973dcc3ebf786a704407131da2f05f160d0d00cca4649331",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/ai-chat.md",
+      "sourceSha256": "39fcacd1d8763bc16f8032c4164378002c4bf4d755dc96e2ff1dd2e6b782b996",
+      "targetSha256": "0f98169f13e4fd8d3edbe88688cd8ffb5102a5d30a371d0fb6bc1c38235644db",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/auth-runtime.md",
+      "sourceSha256": "870c3a843974872cdeeeead36a1406b44ecb8257fcda42ab438370cd4a7b13eb",
+      "targetSha256": "9082ce26e1cbe30b344fc20c655432c7aa69e663e8e8675821ef3ae53d689a0a",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/completion-db.md",
+      "sourceSha256": "bda2ef7cbb35126b2a42de9b9e9cfa350db60d6f4b2ff5b9653a51a1cf3e0dd5",
+      "targetSha256": "47eee72c5b17ff7731287afa77a04a62a625d18d9a296f2ea43e46add56ff473",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/db-foundation.md",
+      "sourceSha256": "8a5a28c50e044eeeb4b167e87bd8b51043ada16992636a91613396d8f3cf575a",
+      "targetSha256": "80cde1616fe8070493d06b13022aff88f2e6f33fa0bb621ec1310d6434210dd8",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/review-automation-db.md",
+      "sourceSha256": "1d24c9731e9bcc723fbb702492ebb65b0645b84fdb0492ffa4a21db8f2cb3051",
+      "targetSha256": "505b399fcaf5b9367a18db38a1d0188c02ebf5447f9be4a6ddc874ca80455ac4",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/review-summary-db.md",
+      "sourceSha256": "e3fc6130cd2b811668a236861b3585daff3a3432dbf480cb4aee6274ba4c8f24",
+      "targetSha256": "059422b2535ad9466c57fd7b6f43a650042044941094497e98418b473c09d5e6",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/review-summary.md",
+      "sourceSha256": "ade0e19f24b15fd5303dfaf9b43d734d3c9d10977ac637e671987e4010c3cdf7",
+      "targetSha256": "d8f79e43d9a0d0badee69973940eb84db3da940ade1a6a73826b3d5edac7ad6d",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/reviews.md",
+      "sourceSha256": "f14d3997e1f75a4015e89c66383a63de2518e949a4891dd0b3e1619ea7fbd71b",
+      "targetSha256": "6b6b86051884ed04eb9dbf582802045763840c89fbc8f384efaf763c63b508d5",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/service-api.md",
+      "sourceSha256": "935f4a88dcc5229a2ff16ac75daf5bff7f2733fcd754aaf0a0498199d7e2867f",
+      "targetSha256": "b9f29946ccceb9baf0bced07a7efa03974baf140745b99835b12aff1b9ec8625",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/signup.md",
+      "sourceSha256": "337067b3cf3fd33d15d1604bbee84a184b87ee15ec6d2f356efb98dcb8369d6c",
+      "targetSha256": "8a480866e120bfcd99f94bd55e2d07c06e72aa3f652a1299722bd24171752fb9",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/README.md",
+      "sourceSha256": "103f69267e3773a59c47b0f22d5806000b042ce40a005ef0b0c228e61b7d9ee4",
+      "targetSha256": "a2fe2e8b8402a72c5edd593c8e012aca593734c77b37100ff06fb888a2fa9bd4",
+      "ownershipException": true
+    },
+    {
+      "path": "backend/contracts/search.md",
+      "sourceSha256": "ae4b2bd5aaa45576fa918b49a0a511c17a905eda5d3e178590803880475c297c",
+      "ownershipException": true,
+      "targetSha256": "66a9b1ac0ea09eb07b90b84f1d461fdd79447350c6666a6fa84c7db53a9eccd4"
+    },
+    {
+      "path": "backend/contracts/daily-jobs.md",
+      "sourceSha256": "e27282a264efe0f9c7a957e6482d692da78bb6761c2288c652e279b8bcdd339a",
+      "ownershipException": true,
+      "targetSha256": "ea8bcb0f96f0a9c704f189dbd3ddbf65ab20883e052f807fc7547c3586dc00b9"
+    },
+    {
+      "path": "backend/contracts/event-storage.md",
+      "sourceSha256": "12d410985415ff633242fa387af5559c32a04a259e1d2365ee71ccafae4d80b0",
+      "ownershipException": true,
+      "targetSha256": "d51000caa2aecf48560811863ec7920acf0b4229328e50e032e508e1f7c87078"
+    },
+    {
+      "path": "README.md",
+      "sourceSha256": "bf496c9180e0ac391ac822f55971f5a050eb9d62b95e41f00d957de274cb1ab0",
+      "ownershipException": true,
+      "targetSha256": "385e5ad12dedc4c40abccb3e3c68f9dc9b8fe9083304932540e5fe210c42e6d1"
+    }
+  ],
+  "scope": "current_policy_and_contract_documentation_only",
+  "applied": true,
+  "ownedDocuments": [
+    {
+      "path": "docs/planning/design/IA.md",
+      "sha256": "da3f007d370ed587965920e0f00a1a03bd1d75e932b18bcd22d23e6a3d8a8498"
+    },
+    {
+      "path": "docs/planning/design/USERFLOW.md",
+      "sha256": "7592c7871a6f5edcec6c880ab1ff68449ed6aeab6a99eb027330a26838987deb"
+    },
+    {
+      "path": "docs/collaboration/jonghyun.md",
+      "sha256": "4b4e8c710821a869d446d468f2e930341b486c310d3c7405a3445cdaca46cfea"
+    },
+    {
+      "path": "docs/planning/design/유미당 와이어프레임.html",
+      "sha256": "e09f6d47450ae67cfb86ca9bf1fa6e8bda7094a21559306bf3fe03dc166e1ec4"
+    }
+  ],
+  "verification": {
+    "relativeLinks": "PASS",
+    "oldConflictPhrases": "PASS except explicitly dated historical records",
+    "fencedTechnicalCodeBlocks13BackendDocs": "unchanged",
+    "whitespace": "PASS",
+    "runtime": "not part of document synchronization"
+  },
+  "latestKopisDecision": "A 공식 사이트 대조 공개·14분류·최근7일 유지",
+  "latestAiConsentDecision": "후기 AI 가입 선택·미동의 일반 동행 허용·전체 동의/독립 철회 유지",
+  "latestKopisExecutionDecision": "집계 기간 대조 결과 대기 중에도 일반 기능 개발·다른 API·칼럼 정리 병행. 즉시 추가 호출/주기 폴링 지시가 아님",
+  "latestVerification": "이번 선택 동기화 16개 공통/계약 + IA/USERFLOW/와이어프레임 설명. 기술 코드블록 동일·HTML JS 구문·공백 검사 통과. 실제 코드/DB/운영 변경 없음.",
+  "latestEventMapping": "원본269항목/공통25항목/화면19매핑·관찰/명세/코드지원구분. 서울HTTPS민규인계·KOPIS집계대조와독립"
+}

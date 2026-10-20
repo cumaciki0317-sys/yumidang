@@ -1,0 +1,45 @@
+✖ successful response preserves a newer unsent draft typed during the request (8.798333ms)
+✔ successful response clears only its own submitted draft, including surrounding whitespace (1.828083ms)
+✔ input_privacy preserves input and server notice without pretending that unavailable means zero results (1.998667ms)
+✔ output_privacy preserves input and server notice without pretending that unavailable means zero results (1.034916ms)
+✔ daily_limit preserves input and server notice without pretending that unavailable means zero results (1.038917ms)
+✔ concurrent preserves input and server notice without pretending that unavailable means zero results (0.981291ms)
+✔ consent preserves input and server notice without pretending that unavailable means zero results (0.903584ms)
+✔ temporary preserves input and server notice without pretending that unavailable means zero results (1.03525ms)
+✔ verified empty results are rendered separately from an incomplete unavailable result (0.965541ms)
+✔ rapid send attempts issue only one request while the synchronous lock is held (1.192709ms)
+✔ output privacy retry sends the original server request ID once and obeys retryAllowed false (1.425167ms)
+✔ new conversation aborts an old request and late success cannot replace the new draft (1.089625ms)
+✔ leaving the screen discards conversation and ignores a transport that resolves after abort (1.327625ms)
+✔ logout remounts the anonymous screen and cannot restore a previous session's late answer (1.170625ms)
+✔ fixed condition buttons do not call the model or invent local remaining quota (0.902167ms)
+✔ a transport failure preserves the draft and does not automatically retry (1.036125ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 268.84125
+
+✖ failing tests:
+
+test at tests/mobile/ai-failure-state.test.mjs:84:1
+✖ successful response preserves a newer unsent draft typed during the request (8.798333ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + ''
+  - '응답 중 작성한 다음 질문'
+  
+      at TestContext.<anonymous> (file:///private/tmp/yumidang-jonghyun-policy-review-20261017/tests/mobile/ai-failure-state.test.mjs:89:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: '응답 중 작성한 다음 질문',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

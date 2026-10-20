@@ -1,5 +1,14 @@
 # 일정·장소 변경 제안 철회 연결
 
+## 2026-10-20 현행 기준과 이 문서의 적용 범위
+
+이 문서는 과거 요청·설계·검증 기록이다. 아래 원 관찰·명령·해시·PASS/FAIL은 당시 증거로 보존한다. 재개할 때는 다음 현행 조건을 먼저 적용하며 과거 작업 권한·보류를 현재 지시로 재사용하지 않는다.
+
+- 담당은 현재 민규=BE·AI·검색·행사·서버 운영, 종현=FE·UX/UI·앱 API/세션 소비·빌드, 유미=UT·출시/지원 책임이다. 아래 옛 종현 BE·성호 UI 배정은 당시 기록이며 현재 실행 권한으로 사용하지 않는다. 구체 파일은 현행 소유권 정책을 따른다.
+
+최신 기준: [정책.md](../../../../정책.md). 구현과 남은 조건: [서버·DB 대조 원장](../jonghyun/2026-10-20-policy-implementation-audit/server-audit.json).
+
+
 작업자 minkyu. 최신 변경 정책은 제안자 철회 시 기존 약속을 유지한다. 현재 route/repo에는 propose/accept/decline만 있어 철회 경로를 기존 민규 모듈에 추가했다. 종현 모바일·검색·작업 실행기는 수정하지 않았다.
 
 POST `/appointments/:id/schedule-change/withdraw` 본문은 `{changeId,conditionVersion}` 두 필드다. 경로 약속 ID와 함께 `withdraw_appointment_schedule_change`의 정확한 세 인자로 전달하고 검증된 회원의 원래 JWT를 사용한다. 사용자 ID·역할·상태·접수/만료 시각·장소 입력은 받지 않는다. 기존 수락·거절·약속 취소 경로를 유지한다.

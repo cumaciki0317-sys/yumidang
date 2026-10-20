@@ -1,0 +1,1175 @@
+{
+  "date": "2026-10-20",
+  "scope": "담당자 구분 없는 관련 문서 전체",
+  "status": "completed-for-related-documents",
+  "pending": [],
+  "authorization": "사용자 2026-10-20 문서 전체 동기화 명시 승인. 역할/ownership/hook/서버코드 변경 아님.",
+  "documents": [
+    {
+      "path": "260929_종현담당_PLAN.md",
+      "sha256": "fad8fdc2e3b2a837b63172c4ba3c0486e02bddc6f452d8632d819a8f67300c8d",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "a6a860f84fb2779c64b855291c395dbff97fcb60390dc1df73957ebe29efcdb9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "PLAN.md",
+      "sha256": "5246703e5617099f9cd83fd6fed5612a2603bc9b8f18b8b4cb68774ceef5d9a4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "sha256": "3156520a66a87b86642a5cefe72f0aa5a60a528879293028b3500d5d32829161",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "README.md",
+      "sha256": "385e5ad12dedc4c40abccb3e3c68f9dc9b8fe9083304932540e5fe210c42e6d1",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/README.md",
+      "sha256": "e41650f33341f4228a22b400dc0e34547ecc5c6c635c78579d5df7138104fc3e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S00.html",
+      "sha256": "34d0626d4550dbd5678cbad068679c2c5e6920b1ade19b77a8a4b8869b3ce187",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S01.html",
+      "sha256": "ab64de194e4109e0c5a85066403c7a9dfd9ef17802e86de9bb6e2d9f134f9f67",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S02.html",
+      "sha256": "53a5e0d0843a31454b2ca4414e7f4195dcdf20cc6c8de25ae1990f241f253d18",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S03.html",
+      "sha256": "ee4ca7d3d4608155c8497b59b9e8b3d1c7137c8eda8c0bd1e3d3e4653527ff9e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S09.html",
+      "sha256": "34b735af673128b83f9064608d7d25bae4862307dd2a6a0d596e7eecec0be4b6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S18.html",
+      "sha256": "e54b0d3a48c3fce3923d7d7de60139ed6d4d9415458a315990221872fa1bf8b8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S19.html",
+      "sha256": "dd8263f5664eb63a4df4f96fdf95d34429b862abb91b2fbeea07dcc56a7a995b",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/S20.html",
+      "sha256": "8f6f63b2a3651df508c4a7b9e3ba2c69f8caa8f6eb589aafdf4e237d3120bd08",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "apps/mobile/design/stitch/manifest.json",
+      "sha256": "33938d1c7564e7fabd91c62f767bed60d925bbc9a27f9e92559b4bf1745d7335",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/README.md",
+      "sha256": "dd1fd2495d742514973dcc3ebf786a704407131da2f05f160d0d00cca4649331",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/ai-chat.md",
+      "sha256": "0f98169f13e4fd8d3edbe88688cd8ffb5102a5d30a371d0fb6bc1c38235644db",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/auth-runtime.md",
+      "sha256": "9082ce26e1cbe30b344fc20c655432c7aa69e663e8e8675821ef3ae53d689a0a",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/completion-db.md",
+      "sha256": "47eee72c5b17ff7731287afa77a04a62a625d18d9a296f2ea43e46add56ff473",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/core-service-db.md",
+      "sha256": "a72280535dfeea4460f13d97ccc2739d041b40b462cc39048245e9a505e7d08f",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/daily-jobs.md",
+      "sha256": "ea8bcb0f96f0a9c704f189dbd3ddbf65ab20883e052f807fc7547c3586dc00b9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/db-foundation.md",
+      "sha256": "80cde1616fe8070493d06b13022aff88f2e6f33fa0bb621ec1310d6434210dd8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/event-storage.md",
+      "sha256": "d51000caa2aecf48560811863ec7920acf0b4229328e50e032e508e1f7c87078",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/gateway-cors.md",
+      "sha256": "5ed16d54246f85a8a6c164b7c606a6a1c4aea3ad2cb14dc082ebd607ddb3ab81",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/posts-search.md",
+      "sha256": "365251d83513e0b3555fa461b10d6d4aab012bf88a067379d0ab82a150a894f2",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/public-post-search-db.md",
+      "sha256": "1a6dbd10d1d0e80690cf95c7015f2580775b2b68649204183fc6d49d1ecdbed9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/reports.md",
+      "sha256": "ebd33e042eef493a7e47bc0a54b4aa98850ed91deb272615693f49e7164bb449",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/review-summary.md",
+      "sha256": "d8f79e43d9a0d0badee69973940eb84db3da940ade1a6a73826b3d5edac7ad6d",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/search.md",
+      "sha256": "66a9b1ac0ea09eb07b90b84f1d461fdd79447350c6666a6fa84c7db53a9eccd4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/service-api.md",
+      "sha256": "b9f29946ccceb9baf0bced07a7efa03974baf140745b99835b12aff1b9ec8625",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/contracts/worker-jobs.md",
+      "sha256": "c179c6d95f5fa2945107d239666ba782d189264dd39b4135297f123492fc4eba",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/ownership.json",
+      "sha256": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/README.md",
+      "sha256": "a2fe2e8b8402a72c5edd593c8e012aca593734c77b37100ff06fb888a2fa9bd4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/README.md",
+      "sha256": "6582b1442cbeaed6b7f3e0658bb4f6d3458c795251e1bd361c4bfe611eaeea2e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/jonghyun.md",
+      "sha256": "4b4e8c710821a869d446d468f2e930341b486c310d3c7405a3445cdaca46cfea",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu-event-db-harness.json",
+      "sha256": "e5d16cf30d73f02c14f112dc9fdbeece51d27c930c79ef01841625fd5988ffbf",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu-event-http-harness.json",
+      "sha256": "293164a7705c6d7ff55702157bc3bdaa360bb451dfc4a7418995211fd73c891e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu-gateway-harness.json",
+      "sha256": "b96c5de042a4111a4d3562fdc30d8b336be9e1d812db9ed7ceade971b5c786a9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu-naver-signup-harness.json",
+      "sha256": "be17cbd044044bfb329cd88090fd6d1f250327104a6690781680e698da76f5ed",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu-progress.md",
+      "sha256": "5ba684dd861df9830a66d2e646bcf313fed71d04b29fd21e57c0232033f26157",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu-search-range-harness.json",
+      "sha256": "8c5ff80188eebd7ad1b2d34a7a037fc8bc89a2f22acadb33ccebf44d8aeefe44",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/minkyu.md",
+      "sha256": "b646d5b5d674e2f03a843c851c177fb1c43af5364996215cc929dc213ea98b0d",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-connection-contracts.md",
+      "sha256": "a1f499af6864380ab0ec95244b07550f558319828dc43517c31a871c877c9239",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-23-independent-core-integration.md",
+      "sha256": "7d5881d40622e2a17196472f8bc8b9cd87aa82a773f387b4846b8e58b327dcc2",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-28-connection-handoff.md",
+      "sha256": "d03fdeefa3b1dc2c22243e015777313229be2db3b4d68db931d03f7f4745f8b6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-frontend-contract.md",
+      "sha256": "eb136df06bb16f58767a45e30ca62be58c78e34b2f1fc5895dabe15e8d9e59d6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-handoff.md",
+      "sha256": "7137dfe398bf11322d761bbbc314a1ded57b27f97b0acb7c097b1f2266c8ce4d",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-implementation-harness.json",
+      "sha256": "fee13b355b042bffa8577105f74bcc43d3a275854e1100f27d0ed216f1d6d2a5",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-c-notes.md",
+      "sha256": "6172a0c272fa80a82fca8ad648f25d3e4fa80f23bec3fd67e3d93d23c22e4be3",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-e-notes.md",
+      "sha256": "80dd5166efed6832c2a05e7dd6b7359e6498d8e57ac3fec7cac26a7417f97e70",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-lane-s-notes.md",
+      "sha256": "e52d2aeb28d4037430ec59a48711ec3975f3d913020702850215dd977bb876b4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-claude-minkyu-requests.md",
+      "sha256": "3e336850f86dd4799e9c7ab83e7e0ea14925011df38817079bd5142b0041f2d6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-maintenance-decoupling-request.md",
+      "sha256": "6817db2cc006d2380a8c0f688f217853846d65810359c9ebd3477ef189fbc294",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-review-policy-handoff.md",
+      "sha256": "5492dab55e5b3fe6276f72849afcaf64fdf38384f24598364c9522e84ba72ec4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-search-v2-handoff.md",
+      "sha256": "d9276b43efb750dd59cbe549ebc86d89f8fa5edf69815d429024706ea1b15ceb",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-29-work-design.md",
+      "sha256": "c9720313d8ffbf9e1921583a782396a6c3db91a1cc90f12ae5aeac22224dbe2f",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-implementation-review.md",
+      "sha256": "e1d8bba668fdb26bf54265fcf3f841e1ef4f677dd48de19491cabe8b4b454cc1",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-codex-review-harness.json",
+      "sha256": "0d97fde0fe98d07a95588653d755e90d10dba84894f718117267c5935497bc0d",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-evidence.json",
+      "sha256": "95257a03c5a4d982e424633ebfc13a87a17979aa97d7c9464956f31b168030a8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-five-defects-fixed.md",
+      "sha256": "8b6c30cb6084c0588e1c145cfbca1ecb5289cb2afda78474c3279d607490dfde",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-jonghyun-integration-handoff.md",
+      "sha256": "bb9016af112e02c8d17de216e9d9709091da5ab0a18edc0e31305392d5a45177",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-operational-values-proposal.md",
+      "sha256": "d9a23a865f588c1c4b5dfa80f20232db9be4e6cfc1e7c52833c2baef377fa734",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-09-30-resume-todo.md",
+      "sha256": "bcadb327a78b3229d27a0b1e7587d1a6cc2ee69ab4ecf7f45eda8d14c4f1c565",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-01-policy-docs-review.json",
+      "sha256": "392d613fd5e8e957f8f272ab78f2c0032788ded1fa6a7ddf917fb50ebdd2e890",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-ai-search-implementation-result.md",
+      "sha256": "87c81b4f88916d35c2756edb47b2bfa4f3ef6995da4bb6343aa18237eb190045",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md",
+      "sha256": "6c2c0509d09ffaa01f710aee03ee5ee358f47a70027eb31f0ed7820a52a6a9cf",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-events-implementation-result.md",
+      "sha256": "33fe9b864191539633b9ddcd8f63e8e86e1b973500482def548ba19a9dabf2fd",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-full-implementation-plan.md",
+      "sha256": "716f7ee00c8026172cf2d3c4888b94119d868374293ac0ca8fb4da03d84e2830",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-mobile-implementation-result.md",
+      "sha256": "c860f1a410ef14692b19ab4bdd45df30df67d9081c518a3d1c31fd6302b35953",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-mobile-ui-implementation-result.md",
+      "sha256": "3c4f10efb492ecb8b8922b6aa771174612c20aed82a4f9d02a2185041bcb5bdf",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-policy-implementation-handoff.md",
+      "sha256": "535b4e59b97a4c0bc8a91103a0c43d915b30823a4817a25b474742f7c3f351cc",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md",
+      "sha256": "8b89c1850d80513a98c8560dd0f68799e9128163b1c5c99040d029868a6de4f6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-07-common-contract-requests.md",
+      "sha256": "a8a48bd060eedd1e7146fef44092427e3b8d816ab5cc74328b6415cecb5e2ac9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-07-implementation-result.md",
+      "sha256": "0a2ac9480d035880ca46d07f92ca4abf91b8c040e0957019afb6e805221fc2d2",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-followup-common-contracts.md",
+      "sha256": "867026dd753405d839a94d85049e4f95edb9999eea5d6f6e40b3e96a2f51df57",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-followup-result.md",
+      "sha256": "77f519fc529574cc1faad9e78cc4cb8515de8dea69abea4e353400d104ff0d98",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-08-independent-result.md",
+      "sha256": "6696f52b35281248c1433ec3d6c937dd66d93b105ee2688da3b572d861b60920",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-approved-feedback-operator-design.md",
+      "sha256": "1f3cd5c96ff990e9a037e1e8302227dc7acb6c7e401d32ded4f60499e7c3d100",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j02-official-contract-design.md",
+      "sha256": "d31ce7cedf20e72187acbd4fd35c218f6ebab348be096312c67be58e73360c85",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j03-ranking-transport-design.md",
+      "sha256": "7c571999233913d97a2f46f867881dd9acd95440a97d8424a5294848b89ebd62",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-j07-result-finalization-design.md",
+      "sha256": "cceed9e7d2c968f582971ff836757726e175ef14d8eed9713b84a266cf1ebdec",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-live-validation-guard-conflict.md",
+      "sha256": "16696a09b67c84c15ca71210a44e5af71f9ca36a3399ff978d0f1feb5e05c105",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-member-read-boundary-correction-review.md",
+      "sha256": "ab3fa688ec8a70590613d46d15549df177aeb7a1e7be21cba6cc0337917d7792",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-minkyu-final-handoff.md",
+      "sha256": "e3619e7c93a5f0c9fa49064b847de01f3a5607339343150601ba071b79efb8e9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-parallel-implementation.md",
+      "sha256": "c25b181c5c13b9e419ab136a3464e93ac8da4fd30b100e784fe4c2fc6c376985",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-remaining-work.md",
+      "sha256": "b1c2b22512f6f627e501eefd8318e7364062b563bb70a141035893df8ff33056",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-commit-review.md",
+      "sha256": "e8aa1da1f9de107e4dd6571ffe11d96d3bc7c62c48f1924d08fec7dde51a6320",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-validation-design.md",
+      "sha256": "f1b9f5f90f455caa73a8a329d55548f6714cc592e750cbff5a2a1fd338bd1ea8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-round2-validation-result.md",
+      "sha256": "404bfb1c68b8fc94a591bd9ffdd16eb4ecd06b88130cbee65f2de53c8b9cae54",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-temporary-guard-patch-design.md",
+      "sha256": "60897e882b95bf0c28f8502e3fed50c85cf62c6716483ad355864f56b62c4154",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-temporary-validation-result.md",
+      "sha256": "891a6f76081519eea970211289c8c52172ad1b9f34bcccb19d5e437d89f6948d",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-17-policy-review-data.json",
+      "sha256": "d9731c8e1b1ddfec8afb3af530fbbfb3fbc4d6d50e2a1b9cb738c22b01d613c8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-17-policy-review.html",
+      "sha256": "15b81cdee7d7add474db17b8912b8eb07bd7200406bb13c4014bbc98002211b1",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-ai-consent-examples.md",
+      "sha256": "46c1e6d2acb8f14e9984fc77f4de23bcb078cb7256941177eee4e65fedb73a78",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-catalog.json",
+      "sha256": "e9ac1f92a34bbc1b7d8e547a7a569f9b9a1e91a58ce9e77555a660b68211c280",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-review.html",
+      "sha256": "b1010c47b52f642bd82728808528bb2fc5093f87338aa22ffacb5a380cc0afba",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-event-data-screen-mapping.md",
+      "sha256": "fcde92cd711325e0641c4ca750c0f9d1319dc4c80f4087263a8b56a5bb4a26e4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-external-verification.md",
+      "sha256": "2eca721d3efd28bc7e92506ce7ae972fbc5b5c40340bebce350fd604087b6d10",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-final-selection-and-hide-handoff.md",
+      "sha256": "277ce90bd2f990a736696165a5d0287cf5f4602c9980cf29801d72575ec77b80",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-gemini-synthetic-validation.md",
+      "sha256": "a26614438dcd9ac45ca808ce8dad2f82c378ecef0015176f990e62f3270c941b",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-column-audit.md",
+      "sha256": "35562e72336c53804b8a40f18c2187851cef4db6f41655790daa370d9c90b564",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-kopis-columns.json",
+      "sha256": "4e8ca18f55dee9a97de820c7e8b823e12f0185a004fe3e5aa7229b6a2afe18c4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-final-handoff.md",
+      "sha256": "3c95da721bdbdd6cc312e0eb0b740145792e51e2e9f1785e970d6ed3ff31331b",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-minkyu-policy-handoff.md",
+      "sha256": "c4b91ff091c5d6abd16cb3c36b0f34058391a8a5f0cf60cfbf3a149766532544",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-policy-followup.html",
+      "sha256": "8ab629cfdd64a943e7e64fe1a40b55a8a6fdcdb78af65d8c9209f0ce60092db9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-column-audit.md",
+      "sha256": "d6c4c9f229d7cebe1c551b937518ba898fc611f978f39a279c6bdd1f8c39cfc8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-columns.json",
+      "sha256": "7c5bc0f94581f09b5d937bcf408553e1e4f99508f8306e193062bdfe51d94ac5",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-https-followup.md",
+      "sha256": "afebbe914aaf634a79edbc53455fe05dfbf6b76a4fe7efca90a1a52c7a38d956",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-seoul-https-security-probe.json",
+      "sha256": "531bc88ac6e36242fae55e9505de284ea7c420e1a9d5833ccbc3e425535fccb6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-tourapi-column-audit.md",
+      "sha256": "2b400fb3d05549c956a10d70b749133a7be63b9384aa7df365b82cb214371104",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-19-tourapi-columns.json",
+      "sha256": "b1c65c4340414a0225417c5efe9851327e4a7bba50de97a151da39abf9c036d9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-decisions.md",
+      "sha256": "2026d0b1adcdb59bc873c09735082624d8b474ecc5b1282cbfa74d4a11470ba9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-final-review.html",
+      "sha256": "0f8d4fa8cf916026b4bc9cc844c3d4c9d9da7331505c25a5df2fcabd7ebfdb3e",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-final-review.json",
+      "sha256": "b4d5f331515f57b2fbc5b20ccc924646a27a83dbde9840ef0d5d1f79d2ae9816",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-followup-review.html",
+      "sha256": "b4428e023e79b3a47ca7e37f6b51f69227d53524cec991c8cb8356b1cc2504fa",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-followup-review.json",
+      "sha256": "4aaaf7b93bf4cfe4f2736e4ca158d69c5a7fd527e4777c30b988d54cb4d4c0ad",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-selection-result.md",
+      "sha256": "f6c79c77c72a699713b4d8e515875d6dbb931665bdb75b100301c19bf77bb93e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_정책검토_작성본 (1).html",
+      "sha256": "f9e56064abbb073e26d6e8893ae46ee0ef4c8534214857a20033001fae563f6e",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_추가확인5항목_작성본.html",
+      "sha256": "d713e17bf3802fa264386313344c8e1f131b1baa5c05f9b6fb7ec86a64415186",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/유미당_행사UX_최종선택_작성본.html",
+      "sha256": "de23d0063cdf275bf8c5cf7c0d7426b45e922015c01a61977f4ef4712e29d754",
+      "status": "review-required-after-followup",
+      "handling": "사용자 선택 HTML/원본 데이터는 불변 보존"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-db-rpc-handoff.md",
+      "sha256": "2ffa8529ec7acd6fe489464d2507678d89be533383aa3706ef2bd3837da0ee26",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-foundation-handoff.md",
+      "sha256": "bf0f19e0d3d26fe6dad54a384828934ff522c21eadcfd1351b744d3febb9eb34",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-runtime-handoff.md",
+      "sha256": "b5ebd0c0226bdf9c824e48856e3de9e3f7ec92d06231b1fd223d9315574587b4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-jonghyun-merge-review.md",
+      "sha256": "5c82f5ea3a9568012c1474d8f55ca8978521b063f82029880c6e20dc16ad2dc4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md",
+      "sha256": "8e894eb58be10c8b62ae582823219840da4829662d962ba0ee01c815e680d3c6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md",
+      "sha256": "49cec15fc83c684728ad19ec830e5de856aa147c54d34ef6a76745294591e125",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md",
+      "sha256": "a94e198587de4df85ebb14f2ca40648fef63bc94dd7a7da5c4430cf40867b74b",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-events-live.md",
+      "sha256": "684db7fd4815ee34cccb4773c06f18142452dd2139c9d599ffc845de0fc83cf3",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md",
+      "sha256": "787b876ca7a49a5b2539a0e8bc3c6b7d6f222fc22402002b3baf80365ba980f0",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "sha256": "0ed7e4b34546418f52c2e64ace046bcba08ab00e313487d3ffddae28ee67b20e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "sha256": "06d4ca4750ff6f4ebd093c5352c174065374365721f9199a5b5a9704aea1cc1f",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md",
+      "sha256": "54c0b53182c7d17d1332c6d86012b8cbfdd306782219bdd3486b4df3e3b935f2",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-connected.md",
+      "sha256": "ea601613ca054f49cca6b1b70e0a3f724771e31af76aa7d6db049ea78f673bc1",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-db-handoff.md",
+      "sha256": "9b3bec2518e37894198ef8684d6ebba300206b8ae1c7292bfe76f58742919812",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md",
+      "sha256": "adddadf2bb7d9f4fcff2638319b43e736708a9f7c6bd3325edfc9bf2c5af0de5",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-policy-correction.md",
+      "sha256": "c17d7341b0de2bf8b8b4778f629115d93e2b1e69e1073e3bc5d896982915745e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-tour-live.md",
+      "sha256": "828e9e15f2b35bfa9f1fc24e0a171d4fb0c9bbef016b6dc517fd5e33def2e729",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md",
+      "sha256": "1038f89a763ffafa0cd433378586d9712f3073a628de6f254709c167bcf23a14",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-event-latest-display.md",
+      "sha256": "b5f1cb787c1c24048961c7153d6ce7b4e0056d66bc5011f578bba894295ad597",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-gateway-handoff.md",
+      "sha256": "cb59d48287b2765651ffa2a83d31017a6d219814643d54d5f7433c04e92a9803",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-kopis-top10-contract.md",
+      "sha256": "24e9afd9d92ffa65a1b94c085bfc54adc6335605646101d82271716b3ce5c4c8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-ordered-backend-handoff.md",
+      "sha256": "a5c37d1fc668082cce8804dd25a467c3d5efa27b9c8bd11a2d78ec1b69cb61a1",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-public-client-regression-handoff.md",
+      "sha256": "372a8e176f7b9b163eee01ad1e66f53c8f27000d19b196101aa14f3dfb3f2892",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-remote-deployment-plan.md",
+      "sha256": "b5e4579070eb74db25cce60fdbd444e35cf5ce6c374ae45055ff30858c90935a",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-search-numeric-contract.md",
+      "sha256": "808bd280854aeb540e19eaee6a6bd28f80117111facd94625de4c23d7519302f",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-search-range-handoff.md",
+      "sha256": "adc09acf01371a62251636011da9d949eb6c509c10b4e33296625fc56928795c",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-search-regression-handoff.md",
+      "sha256": "9b8cb43474d6c1c635d692fa497da771f5fb8c10057dcab28457f47f33c8528f",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-completion-role-handoff.md",
+      "sha256": "6b8642e64039494cb29b43239d88cbc697e926d5663fc76047fe5755279f4adb",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-schema-drift-handoff.md",
+      "sha256": "73a0226b971cfbe459da98c86fa13fdac3152b5c5bcaff2240e812cbad106456",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-upgrade-handoff.md",
+      "sha256": "7be751b149864f642ee2ecdeb200938fa4752d6335f7d3721cc44d459dcdea8e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-place-change-draft.md",
+      "sha256": "ade3aecf17725823e6bcd88afb2cdba60ccdc574f4ebe6a2ef2aeb51033cf4d9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-full-goal-evidence.md",
+      "sha256": "67a4dff8e2e60c1da44ebdf596b6d7dee1f85a0e62a9026c0bb2f73a02bede56",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-jonghyun-start-task.md",
+      "sha256": "b1f2e915bb939e51ac6a1b0bb8fb7887289cc23bdc0c9ecd2542bf7d248a3efd",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-cleanup-worker-connection.md",
+      "sha256": "fcc9f7f149c564b220acc2863684008b3c65db3009b9e011f326498447c3a8b9",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-lifecycle-contract.md",
+      "sha256": "168b4668afa6b423b373e837630ad9bf8703612047565d4929de04c8d6db2704",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-parallel-completion-harness.md",
+      "sha256": "b5293b4df1deae3bcf6d651ac8b9667cf898d2fe20459daa8d9e0bd40a68ec70",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-production-drift-preparation.md",
+      "sha256": "9a73c5fe478f0a8f53118121fd5d2b81648aa8e25bff9a5a401c9de120994a17",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-report-ai-evidence-connection.md",
+      "sha256": "94912ff84f53834d155f3e3f272dedf53a1035ba5ab52c03992198baa99c847e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-two-person-next-work.md",
+      "sha256": "abe45af0cf1245c44d68b39835ae86b1d7bd8f17e830df6d6f0c4c4639af81c2",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-40100-integration-plan.md",
+      "sha256": "ed23d95dbb6800978079a3adc956dc7867ddda9433389403286e34e30c881cc3",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-schedule.md",
+      "sha256": "1e2394253b98940ddc2f0711d78514eb159dc1377a365d7914c3f3d90b146539",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-backend-release-work-split.md",
+      "sha256": "602e46f4cc25132b65e784a698a89b8a1f710ed3756df7836f85b562a3b62924",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-jonghyun-release-start.md",
+      "sha256": "a2f9f6498afc9840e080d18ce7630e386ac3a27964fc95147caff7a39044afb6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-privacy-data-inventory.md",
+      "sha256": "d753c458b1db5eade099f73dc2f1a27acb988f74cd53f71ee55f2e28474abd2c",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-remaining-progress.md",
+      "sha256": "f69e12f1762502f42cb8214bc71452313f58ffbbe77895bdbf9337251cdc0aa8",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-runner-consumer-integration.md",
+      "sha256": "97f9df4e0dfc4d9ce669886a4eb564074bc494268eff1a3493bb07c13a634fad",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-07-release-recovery-checklist.md",
+      "sha256": "190b4a4b645efcb8fbcdd8d3552858a03c591e8c209efb31ed8e6d5b36ccef5e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-additional-backend.md",
+      "sha256": "7db9e1e9bde26f695adadb62f215977ceb323359a42bca7298ebc2a7c70899a0",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-product-connection.md",
+      "sha256": "cee26b9cd5cd19f7fa664518804ab5c9af7949a591f96b98bac789bef81202c4",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-100-plan.md",
+      "sha256": "ab39b3655700bd6dd0f96dfd328fcfd9a2e7341bb64bee8d5b5c081a5e1984b0",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md",
+      "sha256": "a42d66a21381adb821aa2041de501dc0363a61ba98e1348ec126c2166b2ce8d6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-content-inspection-draft.md",
+      "sha256": "09dbda8d78152db85235aeef9271cb6730ed11368e2225379ed49b36f09adf89",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-event-collection-lane.md",
+      "sha256": "8a5f8809b891f7514d2c5b289a92d23b1fc2ef928891469e81d865ecc6938c4a",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-member-cleanup-lane.md",
+      "sha256": "f4f636edcc4e5d96146b3e3c59acbbc2fe02265f9d13509a02d7fc8d99655a1e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-closed-production-launcher-plan.md",
+      "sha256": "58ecd5edd9493c211fdcf12d2e5d622d4b5083ab3c76a84bbc7d252981a2bb6a",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-jonghyun-backend100-handoff.md",
+      "sha256": "bc2219252780449f323939ba7d21112239643f9593fe6ead62192c74205a7535",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-seoul-https-transport-followup.md",
+      "sha256": "b437fae2a6ec6b1e48b5762131966bd97809f9471f92957f0b54a9a4f082d7c1",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-supplier-official-evidence-review.md",
+      "sha256": "39936d45d8c919ce4aa9c135ee61f6d022be1dfdb51c82cf86fc0f3fa876f5ce",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-execution.md",
+      "sha256": "ca52d026d0f14fac3a25205179c8447a074a61780d0d34631c71d442fb186dd0",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-jonghyun-parallel-backend.md",
+      "sha256": "61bc994c75fe2c3b6956ce923f0f85f0964076ba3b96d90706ea1b46f8657d67",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-seoul-https-public-tls-proof.md",
+      "sha256": "37cc631c6252745e2d5abdab16b0a5ee58d019cb91d8fd8a3d068a0ef1a76366",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-seoul-successor-contract.md",
+      "sha256": "26a0b8fb12bc3ea6e1db295618164bc0def1cb364671749a06f3e5b61e83b46b",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-jonghyun-start.md",
+      "sha256": "729890330189e3228c039044f010962ed1d0200514f0021d24c88d00de175352",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-minkyu-start.md",
+      "sha256": "b25c9dff7c11fdce4dfcf24a3ba621a785ba5a9e0787123b83d8685b25ce8db5",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md",
+      "sha256": "ddc6b4f23f75a4ec3e1be64a6789de6b32c563e6f315dd4b9944db3ffa8736db",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.json",
+      "sha256": "1166a60b7518d8396b27199d50f1c5e98c71d1eb2767a6b67ac11bc56988f98b",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.md",
+      "sha256": "4e84d6ea8796f384012b80011680a2c8a132fbc2465e16ee704ea5251f96de3e",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/planning/design/IA.md",
+      "sha256": "da3f007d370ed587965920e0f00a1a03bd1d75e932b18bcd22d23e6a3d8a8498",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/planning/design/USERFLOW.md",
+      "sha256": "7592c7871a6f5edcec6c880ab1ff68449ed6aeab6a99eb027330a26838987deb",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "docs/planning/requirements/PRD.md",
+      "sha256": "e95f177dfd3d8c2322bffb753a92129e4b111e5b7dea087f74ea177baf290829",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "tools/local/README.md",
+      "sha256": "dc5d23d7f5607b48566f86c0d444c9aff59319f6c79ff150d7487c969c05d7b6",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "유미당_출시결정_보류사항_민규전달_20261005.md",
+      "sha256": "6422f9d304a4e78b8b7ced2ac68275d3aa61cbddaaf8bca8b2fef45a470140ff",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "정책.md",
+      "sha256": "ae1487c313f90f5fae0120d2124e3c131314961b1ea8da5d140f270a90aee4f7",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    },
+    {
+      "path": "포텐스닷.md",
+      "sha256": "0065395de42a10018e23196ef64bddc45054304d0b87e64206f9125fbb6a9cca",
+      "status": "review-required-after-followup",
+      "handling": "현재 정책/명세는 동기화, 당시 구현/검증 기록은 최신 기준과 역사 구분 후 필요한 안내만 추가"
+    }
+  ],
+  "resultManifest": "2026-10-20-event-ux-sync-manifest.json",
+  "existingDocumentsChanged": 53
+}

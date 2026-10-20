@@ -1,0 +1,126 @@
+--- a/backend/supabase/functions/_shared/integrations/events/seoul.ts
++++ b/backend/supabase/functions/_shared/integrations/events/seoul.ts
+@@ -175,3 +175,123 @@
+     now: options.now,
+   });
+ }
++
++/** 서울 공식 전체 파일 다운로드 후보. 현재 provider/registry에는 연결하지 않는다. */
++export const SEOUL_DOWNLOAD_ENDPOINT = "https://datafile.seoul.go.kr/bigfile/iot/sheet/json/download.do";
++const SEOUL_DOWNLOAD_FIELDS = ["cgg_cd", "codename", "date", "end_date", "etc_desc", "guname", "hmpg_addr", "inquiry", "is_free", "lat", "lot", "main_img", "org_link", "org_name", "place", "player", "pro_time", "program", "rgstdate", "strtdate", "themecode", "ticket", "title", "use_fee", "use_trgt"] as const;
++export interface SeoulDownloadSnapshot {
++  /** 구조 검증만 마친 원천 행. active/취소/삭제/화면 노출 상태를 부여하지 않는다. */
++  rows: readonly Record<string, unknown>[];
++  description: Readonly<Record<string, string>>;
++  receivedBytes: number;
++}
++export function decodeSeoulDownloadSnapshot(value: unknown, maxRows: number): Omit<SeoulDownloadSnapshot, "receivedBytes"> {
++  const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
++  const invalid = () => new EventProviderError("SOURCE_INVALID_RESPONSE");
++  if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > 100000 || !object(value) ||
++    Object.keys(value).length !== 2 || !object(value.DESCRIPTION) || !Array.isArray(value.DATA) ||
++    value.DATA.length === 0 || value.DATA.length > maxRows) throw invalid();
++  const description = value.DESCRIPTION;
++  if (Object.keys(description).length !== SEOUL_DOWNLOAD_FIELDS.length || SEOUL_DOWNLOAD_FIELDS.some(key =>
++    typeof description[key.toUpperCase()] !== "string" || !(description[key.toUpperCase()] as string).trim())) throw invalid();
++  for (const row of value.DATA) {
++    if (!object(row) || Object.keys(row).length !== SEOUL_DOWNLOAD_FIELDS.length) throw invalid();
++    for (const key of SEOUL_DOWNLOAD_FIELDS) {
++      if (!Object.hasOwn(row, key)) throw invalid();
++      const val = row[key];
++      if (key === "strtdate" || key === "end_date") {
++        if (!Number.isSafeInteger(val)) throw invalid();
++      } else if (val !== null && typeof val !== "string") throw invalid();
++    }
++  }
++  return { rows: value.DATA as Record<string, unknown>[], description: description as Record<string, string> };
++}
++/** 고정 HTTPS 주소·인증 없는 공개 폼만 사용. 오류 본문·URL은 외부로 전달하지 않는다. */
++export async function fetchSeoulDownloadSnapshot(options: {
++  fetch?: typeof fetch;
++  signal?: AbortSignal;
++  timeoutMs: number;
++  maxBytes: number;
++  maxRows: number;
++}): Promise<SeoulDownloadSnapshot> {
++  if (!Number.isSafeInteger(options.timeoutMs) || options.timeoutMs < 1 || options.timeoutMs > 60000 ||
++    !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 1 || options.maxBytes > 64 * 1024 * 1024 ||
++    !Number.isSafeInteger(options.maxRows) || options.maxRows < 1 || options.maxRows > 100000) {
++    throw new EventProviderError("INVALID_EVENT_REQUEST");
++  }
++  if (options.signal?.aborted) throw new EventProviderError("CANCELLED");
++  const controller = new AbortController();
++  const signal = AbortSignal.any([controller.signal, ...(options.signal ? [options.signal] : [])]);
++  const deadline = performance.now() + options.timeoutMs;
++  let finished = false, response: Response | undefined, reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
++  let rejectWait!: (error: EventProviderError) => void;
++  const failure = new Promise<never>((_, reject) => { rejectWait = reject; });
++  const aborted = () => rejectWait(new EventProviderError(options.signal?.aborted ? "CANCELLED" : "SOURCE_TIMEOUT"));
++  signal.addEventListener("abort", aborted, { once: true });
++  const timer = setTimeout(() => controller.abort(), options.timeoutMs);
++  const check = () => {
++    if (performance.now() >= deadline) controller.abort();
++    if (signal.aborted) throw new EventProviderError(options.signal?.aborted ? "CANCELLED" : "SOURCE_TIMEOUT");
++  };
++  const cancelBody = (res: Response) => { try { void res.body?.cancel().catch(() => {}); } catch { /* 종료 증거 아님 */ } };
++  const wait = async <T>(task: () => Promise<T>, late?: (value: T) => void): Promise<T> => {
++    check();
++    const pending = Promise.resolve().then(task);
++    void pending.then(value => { if (finished || signal.aborted) late?.(value); }, () => {});
++    let value: T;
++    try { value = await Promise.race([pending, failure]); }
++    catch (error) {
++      if (error instanceof EventProviderError) throw error;
++      throw new EventProviderError("SOURCE_UNAVAILABLE");
++    }
++    try { check(); } catch (error) { late?.(value); throw error; }
++    return value;
++  };
++  try {
++    response = await wait(() => (options.fetch ?? fetch)(SEOUL_DOWNLOAD_ENDPOINT, {
++      method: "POST", redirect: "manual", credentials: "omit", cache: "no-store", signal,
++      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", "Accept": "application/json, application/x-msdownload" },
++      body: new URLSearchParams({ srvType: "S", infId: "OA-23041", serviceKind: "0", pageNo: "1", ssUserId: "SAMPLE_VIEW", strWhere: "", strOrderby: "DATE DESC" }).toString(),
++    }), cancelBody);
++    if (response.status === 429) throw new EventProviderError("SOURCE_RATE_LIMITED");
++    if (response.status >= 500) throw new EventProviderError("SOURCE_UNAVAILABLE");
++    if (response.status !== 200 || response.redirected || (response.url && response.url !== SEOUL_DOWNLOAD_ENDPOINT)) {
++      throw new EventProviderError("SOURCE_REJECTED");
++    }
++    const type = (response.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
++    if (!["application/json", "application/x-msdownload"].includes(type) || !response.body) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
++    const declared = response.headers.get("content-length");
++    if (declared !== null && (!/^[0-9]+$/.test(declared) || !Number.isSafeInteger(Number(declared)) || Number(declared) > options.maxBytes)) {
++      throw new EventProviderError("SOURCE_INVALID_RESPONSE");
++    }
++    reader = response.body.getReader();
++    const chunks: Uint8Array[] = []; let size = 0;
++    while (true) {
++      const chunk = await wait(() => reader!.read());
++      if (chunk.done) break;
++      if (!(chunk.value instanceof Uint8Array)) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
++      size += chunk.value.byteLength;
++      if (size > options.maxBytes) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
++      chunks.push(chunk.value);
++    }
++    if (size === 0) throw new EventProviderError("SOURCE_INVALID_RESPONSE");
++    const bytes = new Uint8Array(size); let offset = 0;
++    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
++    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
++    const value: unknown = JSON.parse(text);
++    check();
++    const decoded = decodeSeoulDownloadSnapshot(value, options.maxRows);
++    check();
++    return { ...decoded, receivedBytes: size };
++  } catch (error) {
++    if (options.signal?.aborted) throw new EventProviderError("CANCELLED");
++    if (signal.aborted) throw new EventProviderError("SOURCE_TIMEOUT");
++    if (error instanceof EventProviderError) throw error;
++    throw new EventProviderError("SOURCE_INVALID_RESPONSE");
++  } finally {
++    finished = true; clearTimeout(timer); signal.removeEventListener("abort", aborted);
++    controller.abort();
++    if (reader) { try { void reader.cancel().catch(() => {}); reader.releaseLock(); } catch { /* 종료 증거 아님 */ } }
++    else if (response) cancelBody(response);
++  }
++}

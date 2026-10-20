@@ -1,5 +1,14 @@
 # 신고 완료 증거 만료 정리 포트
 
+## 2026-10-20 현행 기준과 이 문서의 적용 범위
+
+이 문서는 과거 요청·설계·검증 기록이다. 아래 원 관찰·명령·해시·PASS/FAIL은 당시 증거로 보존한다. 재개할 때는 다음 현행 조건을 먼저 적용하며 과거 작업 권한·보류를 현재 지시로 재사용하지 않는다.
+
+- 담당은 현재 민규=BE·AI·검색·행사·서버 운영, 종현=FE·UX/UI·앱 API/세션 소비·빌드, 유미=UT·출시/지원 책임이다. 아래 옛 종현 BE·성호 UI 배정은 당시 기록이며 현재 실행 권한으로 사용하지 않는다. 구체 파일은 현행 소유권 정책을 따른다.
+
+최신 기준: [정책.md](../../../../정책.md). 구현과 남은 조건: [서버·DB 대조 원장](../jonghyun/2026-10-20-policy-implementation-audit/server-audit.json).
+
+
 민규(`minkyu`) 담당 기존 `report-retention-client.ts`에 `createReportRetentionMaintenancePort`를 추가했다. 새 실행기·종현 파일은 만들거나 수정하지 않았다.
 
 호출자는 기존 공유 실행 토큰·잔여 예산 signal·공유 호출 수에서 배정한1~20개 한도를 제공한다. 한 번만 `purge_report_retention_terminal_receipts`를 서비스 JWT로 호출하고 exact `{purged}`의0~limit 정수만 인정한다. 자체 점유·enqueue·반복·해제·예산 갱신은 하지 않는다. 명확한401/403은 원 거절을 유지하고, 전송 뒤 유실/잘못된 응답/중단/5xx는 `ReportRetentionMaintenanceUnknown`으로 보존한다. 자동 재시도·성공 집계·성공으로 간주한 해제를 금지한다.

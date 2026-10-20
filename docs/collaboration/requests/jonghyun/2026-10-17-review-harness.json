@@ -1,0 +1,37 @@
+{
+  "actor": "jonghyun",
+  "branch": "jonghyun/policy-review-20261017",
+  "mode": "review-artifact-only",
+  "lanes": {
+    "root": [
+      "2026-10-17-policy-review.html",
+      "2026-10-17-policy-review-data.json",
+      "2026-10-17-provider-evidence.json",
+      "2026-10-17-review-harness.json"
+    ],
+    "prd_review": "read-only PRD audit; scratch output only",
+    "kopis_resolution": "read-only official documentation/public website; scratch only",
+    "seoul_resolution": "read-only official HTTPS sources; scratch only"
+  },
+  "boundaries": [
+    "원본 MD 변경 없음",
+    "서버 소유 파일 변경 없음",
+    "Notion 변경 없음",
+    "커밋·푸시·운영 활성화 없음"
+  ],
+  "verification": [
+    "Chrome 실제 렌더 시각 확인",
+    "초기 미정 41개 확인",
+    "추천안 선택 집계 확인",
+    "기타 의견 한글 입력 확인",
+    "새로고침 후 복원 확인",
+    "작성본 HTML 저장·재열기 및 41항목 중복 없음 확인",
+    "검색 필터 R41 확인",
+    "검증용 선택 초기화 0/41 확인",
+    "JavaScript syntax check PASS",
+    "원본 4개 MD SHA256 변경 없음",
+    "현재 root와 독립 clone 기준 MD 동일",
+    "외국어 혼입 검사 PASS",
+    "ownership 4 paths PASS"
+  ]
+}

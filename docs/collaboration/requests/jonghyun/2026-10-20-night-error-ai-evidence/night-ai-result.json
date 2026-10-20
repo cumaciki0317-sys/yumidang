@@ -1,0 +1,56 @@
+{
+  "actor": "jonghyun",
+  "clone": "/private/tmp/yumidang-jonghyun-policy-review-20261017",
+  "modified": [
+    "apps/mobile/src/screens/RemoteScreens.tsx",
+    "tests/mobile/ai-failure-state.test.mjs"
+  ],
+  "beforeSha256": "30375ba0ad63e0e5b91b9103340ebc3657bdf911e5e2365c12b58bea4053cc37",
+  "afterSha256": "c5d4e81fe07c644e06524a343c26d1a0c99a57d6399f8b177df404061c66501a",
+  "testSha256": "0b422750dbfb76f92599f5933199cdfe26a4ce3abcfad0a6c375e334715a4d5d",
+  "ownership": "PASS 2 paths HEAD policy",
+  "before": {
+    "status": "FAIL_REPRODUCED",
+    "tests": 16,
+    "pass": 15,
+    "fail": 1,
+    "failure": "Actual RemoteAiSession cleared a newer unsent input while a previous request succeeded",
+    "log": "/private/tmp/night-ai-before-test.txt"
+  },
+  "after": {
+    "status": "PASS",
+    "tests": 16,
+    "pass": 16,
+    "fail": 0,
+    "log": "/private/tmp/night-ai-after-test.txt"
+  },
+  "sourceChange": "Clear input only when current input still equals the submitted raw input snapshot",
+  "checks": [
+    "recovery six reasons preserve notice/input",
+    "unavailable distinct from confirmed zero results",
+    "synchronous request lock blocks double send",
+    "outputRetryOf uses original request ID; retryAllowed false removes dedicated retry",
+    "new conversation abort and late response suppression",
+    "screen leave abort and late response suppression",
+    "logout session remount prevents old answer restoration",
+    "fixed conditions issue zero model requests",
+    "transport error preserves input without automatic retry"
+  ],
+  "constraints": [
+    "No Expo or React Native API changes",
+    "No daily/consent send enable semantics changes",
+    "No new quota counters, midnight timer, consent storage, API fields or enum values",
+    "No backend/domain/service/feedback edits",
+    "No external requests; no provider, database, OAuth, real-member or device verification",
+    "No commit, push, deployment or Notion mutation"
+  ],
+  "deferredQuestions": [
+    "Whether and how to disable general send after daily-limit/consent denial, including authoritative release/reconsent state; existing behavior retained"
+  ],
+  "validationByRoot": [
+    "full lint",
+    "full typecheck",
+    "browser regression"
+  ],
+  "sourcePatch": "/private/tmp/night-ai-source.patch"
+}
