@@ -59,7 +59,7 @@ flowchart TD
 
 ## 2. 목표 폴더·파일 구조
 
-아래는 기존 파일의 기능 경계다. 모든 파일이 골격이거나 전체 기능이 완료됐다는 뜻이 아니다. [백엔드 안내](backend/README.md)와 [종현 연결 계획](260929_종현담당_PLAN.md)을 읽고 기존 위치에서 필요한 부분을 보완한다. 네이버·무료·새 검색/후기/행사 기준의 실제 적용은 별도 확인한다.
+아래는 기존 파일의 기능 경계다. 모든 파일이 골격이거나 전체 기능이 완료됐다는 뜻이 아니다. [백엔드 안내](backend/README.md)와 [최신 정책·구현 차이 및 담당별 후속](docs/collaboration/requests/jonghyun/2026-10-20-policy-implementation-audit/README.md)을 읽고 기존 위치에서 필요한 부분을 보완한다. 네이버·무료·새 검색/후기/행사 기준의 실제 적용은 별도 확인한다.
 
 AI 실제 작성 위치는 [AI 폴더 안내](backend/supabase/functions/_shared/ai/Agents/README.md)의 `_shared/ai/Agents/chatbot/`·`_shared/ai/Agents/review-summary/`, 모델 연결은 `_shared/ai/providers/`다. 문서 동기화를 이유로 이동·중복 구현하지 않는다.
 
