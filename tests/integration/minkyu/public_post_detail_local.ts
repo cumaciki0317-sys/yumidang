@@ -84,7 +84,7 @@ async function run() {
   const config = { supabaseUrl: API, supabaseAnonKey: cfg.ANON_KEY as string, supabaseServiceRoleKey: cfg.SERVICE_ROLE_KEY as string,
     allowedOrigins: [ORIGIN], maxRequestBytes: 8192, upstreamTimeoutMs: 10000 };
   const env: Record<string, string> = { SUPABASE_URL: API, SUPABASE_ANON_KEY: cfg.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: cfg.SERVICE_ROLE_KEY,
-    ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000" };
+    ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000" };
   const service = createRuntimeHandler(key => env[key]);
   const request = (endpoint: string, token?: string, body?: unknown, headers: Record<string, string> = {}) =>
     new Request(`${API}/functions/v1/service-api/${endpoint}`, { method: body === undefined ? "GET" : "POST",
@@ -136,7 +136,7 @@ async function run() {
     const text = JSON.stringify(value);
     check(![PRIVATE_ADDRESS, PRIVATE_PLACE, PRIVATE_MEETING, author.uid, peer.uid, author.name, peer.name].some(secret => text.includes(secret)));
     check(value.publicArea === "서울특별시 성동구 성수동");
-    check(anonymous ? /^동행-/.test(value.authorDisplayName) : value.authorDisplayName === "가***자");
+    check(anonymous ? value.authorDisplayName === null : value.authorDisplayName === "가***자");
   };
   const full = (value: Row, pair: boolean) => {
     check(value.authorDisplayName === author.name);
@@ -159,7 +159,7 @@ async function run() {
   await fail(await service(request("me")), 401, "AUTH_REQUIRED");
   await fail(await service(request(endpoint + "?caller=member")), 400, "INVALID_REQUEST");
   stage = "pending_request_still_masked";
-  const requested = await post(`${endpoint}/requests`, peer.token, { message: "실제 이용 자료가 아닌 합성 상세 권한 검사입니다." }); check(uuid(requested.id));
+  const requested = await post(`${endpoint}/requests`, peer.token, { messageId: crypto.randomUUID(), message: "실제 이용 자료가 아닌 합성 상세 권한 검사입니다." }); check(uuid(requested.id));
   restricted(await get(endpoint, peer.token), false);
   const consent = await post(`requests/${requested.id}/propose`, author.token, {});
   restricted(await get(endpoint, peer.token), false);

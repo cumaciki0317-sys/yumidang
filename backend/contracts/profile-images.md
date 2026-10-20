@@ -37,3 +37,9 @@ Supabase Auth user 확인 → 같은 사용자 JWT로 private Storage GET → JP
 - finally에서 전체 relation counts·catalog·정책·role/ACL·Auth audit·원본 파일·guard·worker·보호 컨테이너를 정확히 원복했다. 정책 검증 PASS와 원복 PASS를 각각 기록했다.
 
 회원의 네이버 자격/binding은 합성 fixture이며 실제 네이버 OAuth 검증을 뜻하지 않는다. hosted Edge, 모바일 연결·메모리 캐시 해제, 운영 CDN, 기존 발급 URL 회수는 NOT_RUN 또는 NOT_PROVEN이다. SQL/HTTP 모형·로컬 실제 검증·운영 검증을 구분하고 기존 native67 signed URL 정책 FAIL을 유지한다. 위 결과만으로 인증·탈퇴 전체 기능이나 운영 준비가 완료됐다고 판단하지 않는다.
+
+## 2026-10-19 사진 응답의 전체 시간 제한
+
+사진 proxy의 Auth 확인·Storage GET·제한된 bytes 읽기·reader/body 정리·HEAD 재확인은 하나의 `upstreamTimeoutMs` 기한을 공유한다. 전송 포트가 AbortSignal을 무시해도 무응답 read/cancel/HEAD를 계속 기다리지 않는다. 늦게 도착한 GET/body 결과로 HEAD나 사진 응답을 시작하지 않으며 기한 오류는 기존 JSON/no-store 오류로 반환한다. 실패 후 body 정리는 best-effort이고 응답을 무한 대기시키지 않는다. 원 JWT와 RLS·GET 뒤 HEAD 재검사·JPEG2MiB·민감정보 비노출 계약은 유지한다.
+
+사진21개를 포함한 관련70개 회귀와 변경 모듈의 Deno no-remote 검사가 통과했다. 증거는 `/private/tmp/yumidang-profile-deadline-20261019/receipt.json` 및 `typecheck-receipt.json`이다. 이 추가 검사는 합성 I/O 범위이며 현재 소스의 실제 Auth/Storage·배포·모바일 검증으로 확대하지 않는다. 위 기존 native69 실제 검증은 당시 소스의 증거로 보존한다.

@@ -45,7 +45,7 @@ async function run() {
   check(sql("select to_regclass('private.match_consent_lifecycle') is not null;") === "t");
   const env: Record<string, string> = {
     SUPABASE_URL: API, SUPABASE_ANON_KEY: cfg.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: cfg.SERVICE_ROLE_KEY,
-    ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000",
+    ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000",
     NAVER_CLIENT_ID: "synthetic-client", NAVER_CLIENT_SECRET: "synthetic-secret",
     NAVER_REDIRECT_URI: ORIGIN + "/auth/naver/callback", NAVER_STATE_TTL_SECONDS: "600",
   };
@@ -107,8 +107,8 @@ async function run() {
   await post("posts", author.token, { postId, ...initial });
   const detail = await get(`posts/${postId}`, author.token);
   check(Date.parse(detail.recruitmentEndsAt) === Date.parse(initial.startsAt));
-  const r1 = await post(`posts/${postId}/requests`, first.token, { message: "함께 산책하고 싶은 합성 신청입니다." });
-  const r2 = await post(`posts/${postId}/requests`, second.token, { message: "함께 이야기할 합성 신청입니다." });
+  const r1 = await post(`posts/${postId}/requests`, first.token, { messageId: crypto.randomUUID(), message: "함께 산책하고 싶은 합성 신청입니다." });
+  const r2 = await post(`posts/${postId}/requests`, second.token, { messageId: crypto.randomUUID(), message: "함께 이야기할 합성 신청입니다." });
   check(uuid(r1.id) && uuid(r2.id));
   stage = "one_active_consent_withdraw_decline";
   const c1 = await post(`requests/${r1.id}/propose`, author.token, {});
@@ -121,7 +121,7 @@ async function run() {
   check((await get(`requests/${r2.id}/consent`, second.token)).status === "declined");
   stage = "closed_post_preserves_existing_requests";
   await post(`posts/${postId}/close`, author.token, {});
-  await failure(await service(request("service-api", `posts/${postId}/requests`, outsider.token, { message: "수동 마감 이후의 새로운 신청입니다." })), 409, "STATE_CONFLICT");
+  await failure(await service(request("service-api", `posts/${postId}/requests`, outsider.token, { messageId: crypto.randomUUID(), message: "수동 마감 이후의 새로운 신청입니다." })), 409, "STATE_CONFLICT");
   const renewed = await post(`requests/${r2.id}/propose`, author.token, {});
   check(renewed.conditionVersion !== c2.conditionVersion);
   stage = "edit_invalidates_and_optimistic_conflict";
@@ -146,9 +146,12 @@ async function run() {
   await failure(await service(request("service-api", `posts/${postId}/delete`, author.token, {})), 409, "STATE_CONFLICT");
   stage = "withdraw_reapply_soft_delete";
   const otherId = crypto.randomUUID(); await post("posts", author.token, { postId: otherId, ...input() });
-  const initialRequest = await post(`posts/${otherId}/requests`, first.token, { message: "철회 후 다시 신청하는 합성 신청입니다." });
+  const initialRequest = await post(`posts/${otherId}/requests`, first.token, { messageId: crypto.randomUUID(), message: "철회 후 다시 신청하는 합성 신청입니다." });
   await success(await service(request("service-api", `requests/${initialRequest.id}/withdraw`, first.token, {})));
-  const again = await post(`posts/${otherId}/requests`, first.token, { message: "다시 신청하는 합성 메시지입니다." });
+  const reapplyInput = { messageId: crypto.randomUUID(), message: "다시 신청하는 합성 메시지입니다." };
+  await failure(await service(request("service-api", `posts/${otherId}/requests`, first.token, reapplyInput)), 409, "STATE_CONFLICT");
+  await new Promise<void>(resolve => setTimeout(resolve, 61_000));
+  const again = await post(`posts/${otherId}/requests`, first.token, reapplyInput);
   check(again.id !== initialRequest.id && again.status === "pending");
   const previousConversation = await success(await service(request("service-api", `conversations/${initialRequest.id}`, first.token)));
   check(row(Array.isArray(previousConversation) ? previousConversation[0] : previousConversation).can_send === false);

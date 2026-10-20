@@ -89,7 +89,7 @@ def main():
             child_env = {key: os.environ[key] for key in ("PATH", "HOME", "TMPDIR") if key in os.environ}
             child_env.update(SUPABASE_URL=api, SUPABASE_ANON_KEY=anon, SUPABASE_SERVICE_ROLE_KEY=service,
                 INTERNAL_WORKER_SECRET=secret, ALLOWED_ORIGINS='["http://127.0.0.1:5173"]',
-                MAX_REQUEST_BYTES="16384", UPSTREAM_TIMEOUT_MS="5000",
+                MAX_REQUEST_BYTES="65536", UPSTREAM_TIMEOUT_MS="5000",
                 REVIEW_SUMMARY_MODEL_VERSION="integration-fixture", REVIEW_SUMMARY_PROMPT_VERSION="integration-fixture")
             launcher = Path(temp) / "serve.ts"
             launcher.write_text('import {createRuntimeHandler} from ' + json.dumps((ROOT / 'backend/supabase/functions/service-api/index.ts').as_uri()) +

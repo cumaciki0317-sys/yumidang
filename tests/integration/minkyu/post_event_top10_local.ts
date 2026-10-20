@@ -100,7 +100,7 @@ print(json.dumps({'preserved':p,'empty':True}))`;
   const config = { supabaseUrl: API, supabaseAnonKey: cfg.ANON_KEY as string, supabaseServiceRoleKey: cfg.SERVICE_ROLE_KEY as string,
     allowedOrigins: [ORIGIN], maxRequestBytes: 8192, upstreamTimeoutMs: 10000 };
   const env: Record<string, string> = { SUPABASE_URL: API, SUPABASE_ANON_KEY: cfg.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: cfg.SERVICE_ROLE_KEY,
-    INTERNAL_WORKER_SECRET: cfg.INTERNAL_WORKER_SECRET, ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000" };
+    INTERNAL_WORKER_SECRET: cfg.INTERNAL_WORKER_SECRET, ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000" };
   const service = createRuntimeHandler(key => env[key]);
   let gatewayCalls = 0;
   const gateway = async (request: Request) => {

@@ -32,6 +32,26 @@ class ProductionPreparation(unittest.TestCase):
             with self.assertRaises(PreparationError):build_plan(self.reviewed,{'migrations':entries},'ac06f86')
     def test_additional_input_is_rejected(self):
         with self.assertRaises(PreparationError):build_plan(self.reviewed,{**self.remote,'activate':True},'ac06f86')
+    def test_current121_pending_tail_and_full_application_never_activate(self):
+        reviewed = {**preparation.current.edge.GATEWAY_REVIEWED_MIGRATIONS,
+                    **preparation.current.CURRENT_POLICY_REVIEWED}
+        tail = {'backend/supabase/migrations/20261014010000_operator_receipts_retirement.sql': '3ced5ccb5627ae9a2e5c9f3da6d3565af977ec302d390f6cc0bd111c239ac5c5', 'backend/supabase/migrations/20261014020000_ai_result_state.sql': '406d316b51c653d850045a87c4d8e6480c303c5f099a1899f7c1335281856494'}
+        self.assertEqual(len(reviewed), 121)
+        self.assertEqual({path: reviewed[path] for path in tail}, tail)
+        history = [{'version': Path(path).name[:14], 'name': Path(path).name[15:-4]}
+                   for path in sorted(reviewed) if path not in tail]
+        for index in range(3):
+            if index:
+                name = list(tail)[index - 1]
+                history.append({'version': Path(name).name[:14], 'name': Path(name).name[15:-4]})
+            result = build_plan(reviewed, {'migrations': list(history)}, 'synthetic-current121')
+            self.assertEqual((result['reviewedCount'], result['operatingAppliedCount'], result['pendingCount']),
+                             (121, 119 + index, 2 - index))
+            self.assertEqual([entry['path'] for entry in result['pending']], list(tail)[index:])
+            self.assertEqual(result['status'], 'PREPARED_NOT_ACTIVATED')
+            self.assertFalse(result['activationAllowed'])
+            self.assertFalse(result['operatingChanged'])
+
 class ProductSourcePreparation(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)

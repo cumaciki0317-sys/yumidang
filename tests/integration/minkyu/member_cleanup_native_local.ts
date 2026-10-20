@@ -693,7 +693,7 @@ try {
     report.runtimeSourceHashes = Object.fromEntries([runtimePath, servicePath].map(path => [path, createHash("sha256").update(readFileSync(join(source, path))).digest("hex")]));
     const { createRuntimeHandler } = await import(pathToFileURL(join(source, runtimePath)).href);
     const values: Record<string, string> = { SUPABASE_URL: origin, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_ROLE_KEY: service,
-      INTERNAL_WORKER_SECRET: config.internalWorkerSecret, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000" };
+      INTERNAL_WORKER_SECRET: config.internalWorkerSecret, ALLOWED_ORIGINS: "[]", MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000" };
     const internalRequest = (secret = config.internalWorkerSecret) => new Request(origin + "/functions/v1/service-api/internal/member-cleanup", {
       method: "POST", headers: { authorization: `Bearer ${secret}`, "content-type": "application/json", "x-worker-run-token": runToken! }, body: "{}",
     });

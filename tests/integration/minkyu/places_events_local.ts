@@ -143,7 +143,7 @@ async function run() {
   };
   globalThis.fetch = guardedFetch;
   const env: Record<string, string> = { SUPABASE_URL: API, SUPABASE_ANON_KEY: cfg.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: cfg.SERVICE_ROLE_KEY,
-    INTERNAL_WORKER_SECRET: cfg.INTERNAL_WORKER_SECRET, ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "15000",
+    INTERNAL_WORKER_SECRET: cfg.INTERNAL_WORKER_SECRET, ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "15000",
     KAKAO_REST_API_KEY: cfg.KAKAO_REST_API_KEY, KOPIS_API_KEY: cfg.KOPIS_API_KEY, TOUR_API_SERVICE_KEY: cfg.TOUR_API_SERVICE_KEY,
     TOUR_API_KEY_FORMAT: "decoded", PLACES_PAGE_SIZE: "1", EVENT_SYNC_PROVIDERS: "kopis,tour-api", EVENT_SYNC_MAX_PERIOD_DAYS: "1", EVENT_SYNC_MAX_PAGE: "1", EVENT_SYNC_PAGE_ROWS: "1" };
   const places = createPlacesRuntime(key => env[key], guardedFetch), sync = createEventSyncRuntime(key => env[key], guardedFetch), service = createRuntimeHandler(key => env[key]);

@@ -228,7 +228,7 @@ def main():
         values = {
             "INTERNAL_WORKER_SECRET": secret,
             "ALLOWED_ORIGINS": json.dumps([origin], separators=(",", ":")),
-            "MAX_REQUEST_BYTES": "16384", "UPSTREAM_TIMEOUT_MS": "5000",
+            "MAX_REQUEST_BYTES": "65536", "UPSTREAM_TIMEOUT_MS": "5000",
             "REVIEW_SUMMARY_MODEL_VERSION": "edge-fixture",
             "REVIEW_SUMMARY_PROMPT_VERSION": "edge-fixture",
         }

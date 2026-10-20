@@ -1,11 +1,13 @@
 """AI24 영속 계약의 함수 검사. 실제 인증·DB·자정 실행은 하지 않는다."""
 from concurrent.futures import ThreadPoolExecutor
+import ast
 from datetime import datetime, timedelta, timezone
 import hashlib
 import importlib.util
 import json
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -729,6 +731,110 @@ class FinalLiveBoundaryTests(unittest.TestCase):
              patch.object(m.subprocess, 'check_output', return_value=b'committed-safe'):
             with self.assertRaisesRegex(ValueError, 'SOURCE_NOT_COMMITTED'): m.contract_pins()
         self.assertFalse(marker.exists())
+
+    def current_signed_pin_fixture(self):
+        # 커밋 원문에서 순수 파일 읽기 함수 두 개만 평가한다. 실제 포트·JWT는 만들지 않는다.
+        relative = 'tests/integration/jonghyun/isolated_ai_contracts.py'
+        raw = (REPO / relative).read_bytes()
+        self.assertEqual(raw, subprocess.check_output(
+            ['git', '-C', str(REPO), 'show', 'HEAD:' + relative], timeout=15))
+        names = {'product_graph', 'signed_source_pins'}
+        selected = [n for n in ast.parse(raw).body if isinstance(n, ast.FunctionDef) and n.name in names]
+        self.assertEqual({n.name for n in selected}, names)
+        namespace = {'REPO': REPO, 'Path': Path, 'hashlib': hashlib, 're': __import__('re')}
+        exec(compile(ast.Module(body=selected, type_ignores=[]), relative, 'exec'), namespace)
+        auth_pins = namespace['signed_source_pins']()
+        self.assertTrue({'tests/integration/minkyu/member_cleanup_reconcile_local.py',
+                         'tests/integration/minkyu/product_connection_restore108_local.py'} <= set(auth_pins))
+        fixture = self.root / 'committed-source-fixture'
+        fixture.mkdir()
+        paths = set(auth_pins) | {'tests/integration/minkyu/content_inspection_http_local.py',
+            'tests/integration/minkyu/content_inspection_http_local.ts',
+            'tools/local/prepare_isolated_midnight.py'}
+        for name in paths:
+            target = fixture / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            # 후보 모듈의 자기 원문도 임시 fixture에 실제로 커밋한다. 자기 검사를 mock하지 않는다.
+            origin = Path(m.__file__) if name == 'tools/local/prepare_isolated_midnight.py' else REPO / name
+            target.write_bytes(origin.read_bytes())
+        environment = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+        environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+        def git(*arguments):
+            return subprocess.check_output(['git', '-C', str(fixture),
+                '-c', 'user.name=Offline contract fixture',
+                '-c', 'user.email=offline-contract@example.invalid',
+                '-c', 'commit.gpgsign=false', *arguments], env=environment,
+                stderr=subprocess.DEVNULL, timeout=15)
+        git('init', '-q')
+        git('add', '.')
+        git('commit', '-qm', '고정 source 계약 검사 fixture')
+        return auth_pins, fixture, git
+
+    def test_current_auth_source_subset_builds_signed_plan_without_caller_pin_union(self):
+        auth_pins, fixture, _ = self.current_signed_pin_fixture()
+        with patch.object(m, 'ROOT', fixture):
+            pins = m.contract_pins()
+        self.assertEqual({key: pins.get(key) for key in auth_pins}, auth_pins)
+        self.signed['sourcePins'] = auth_pins
+        self.write_input()
+        plan = m.build_signed_plan(
+            {'project': 'own-project', 'id': '1' * 64, 'image': 'sha256:' + 'c' * 64},
+            {'aiRunnerSha256': auth_pins['tests/integration/jonghyun/isolated_ai_contracts.py']},
+            pins, self.now, self.input, self.prepared,
+            [account['userId'] for account in self.signed['accounts'][:3]])
+        self.assertEqual(plan['sourcePins'], pins)
+        self.assertFalse(plan['executionAllowed'])
+        for missing in ('tests/integration/minkyu/member_cleanup_reconcile_local.py',
+                        'tests/integration/minkyu/product_connection_restore108_local.py'):
+            with self.subTest(missing=missing):
+                incomplete = {key: value for key, value in pins.items() if key != missing}
+                with self.assertRaisesRegex(ValueError, 'SIGNED_SOURCE_PINS_CHANGED'):
+                    m.build_signed_plan({'project': 'own-project', 'id': '1' * 64,
+                        'image': 'sha256:' + 'c' * 64}, plan['evidence'], incomplete, self.now,
+                        self.input, self.prepared, plan['ownedIntent']['memberIds'])
+
+    def test_added_auth_helpers_and_midnight_self_still_require_committed_bytes(self):
+        _, fixture, _ = self.current_signed_pin_fixture()
+        for changed in ('tests/integration/minkyu/member_cleanup_reconcile_local.py',
+                        'tests/integration/minkyu/product_connection_restore108_local.py',
+                        'tools/local/prepare_isolated_midnight.py'):
+            with self.subTest(changed=changed):
+                path = fixture / changed
+                original = path.read_bytes()
+                path.write_bytes(original + b'\n# uncommitted source drift\n')
+                try:
+                    with patch.object(m, 'ROOT', fixture):
+                        with self.assertRaisesRegex(ValueError, 'SOURCE_NOT_COMMITTED'):
+                            m.contract_pins()
+                finally:
+                    path.write_bytes(original)
+
+    def test_future_committed_auth_helper_drift_does_not_resume_prior_contract(self):
+        auth_pins, fixture, git = self.current_signed_pin_fixture()
+        with patch.object(m, 'ROOT', fixture):
+            pins = m.contract_pins()
+        self.signed['sourcePins'] = auth_pins
+        self.write_input()
+        plan = m.build_signed_plan(
+            {'project': 'own-project', 'id': '1' * 64, 'image': 'sha256:' + 'c' * 64},
+            {'aiRunnerSha256': auth_pins['tests/integration/jonghyun/isolated_ai_contracts.py']},
+            pins, self.now, self.input, self.prepared,
+            [account['userId'] for account in self.signed['accounts'][:3]])
+        digest = m.persist_live_contract(self.root, plan, self.input, self.prepared, self.now)
+        changed = fixture / 'tests/integration/minkyu/member_cleanup_reconcile_local.py'
+        changed.write_bytes(changed.read_bytes() + b'\n# committed future source drift\n')
+        git('add', str(changed.relative_to(fixture)))
+        git('commit', '-qm', '후속 source 계약 변경 fixture')
+        with patch.object(m, 'ROOT', fixture):
+            current = m.contract_pins()
+        self.assertNotEqual(current, pins)
+        with self.assertRaisesRegex(ValueError, 'CURRENT_SOURCE_PINS_CHANGED'):
+            m.load_live_contract(self.root, digest, current)
+        with self.assertRaisesRegex(ValueError, 'SIGNED_SOURCE_PINS_CHANGED'):
+            m.build_signed_plan({'project': 'own-project', 'id': '1' * 64,
+                        'image': 'sha256:' + 'c' * 64}, plan['evidence'], current, self.now,
+                self.input, self.prepared, plan['ownedIntent']['memberIds'])
+        self.assertFalse((self.root / 'ai24-resume-intent.json').exists())
 
     def test_cancel_covers_prepare_children_and_continues_after_first_failure(self):
         ports = self.bare_adapter(); handles = [object(), object(), object()]; seen = []

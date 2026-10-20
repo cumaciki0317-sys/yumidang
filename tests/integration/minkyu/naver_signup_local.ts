@@ -45,7 +45,7 @@ async function run() {
     typeof cfg.SERVICE_ROLE_KEY === "string" && cfg.SERVICE_ROLE_KEY.length > 30 && cfg.ANON_KEY !== cfg.SERVICE_ROLE_KEY);
   const env: Record<string, string> = {
     SUPABASE_URL: API, SUPABASE_ANON_KEY: cfg.ANON_KEY, SUPABASE_SERVICE_ROLE_KEY: cfg.SERVICE_ROLE_KEY,
-    ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000",
+    ALLOWED_ORIGINS: JSON.stringify([ORIGIN]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000",
     NAVER_CLIENT_ID: "synthetic-local-client", NAVER_CLIENT_SECRET: "synthetic-local-secret",
     NAVER_REDIRECT_URI: `${ORIGIN}/auth/naver/callback`, NAVER_STATE_TTL_SECONDS: "600",
   };
@@ -405,7 +405,7 @@ async function runNative60Qualification(native62 = false, native63 = false, nati
       return transport(input, { ...init, redirect: "error", signal: init?.signal ?? AbortSignal.timeout(15000) });
     };
     globalThis.fetch = guardedFetch;
-    const env: Record<string,string> = { SUPABASE_URL: api, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_ROLE_KEY: serviceKey, ALLOWED_ORIGINS: JSON.stringify([localOrigin]), MAX_REQUEST_BYTES: "8192", UPSTREAM_TIMEOUT_MS: "10000", NAVER_CLIENT_ID: "synthetic-local-client", NAVER_CLIENT_SECRET: "synthetic-local-secret", NAVER_REDIRECT_URI: localOrigin+"/auth/naver/callback", NAVER_STATE_TTL_SECONDS: "600" };
+    const env: Record<string,string> = { SUPABASE_URL: api, SUPABASE_ANON_KEY: anon, SUPABASE_SERVICE_ROLE_KEY: serviceKey, ALLOWED_ORIGINS: JSON.stringify([localOrigin]), MAX_REQUEST_BYTES: "65536", UPSTREAM_TIMEOUT_MS: "10000", NAVER_CLIENT_ID: "synthetic-local-client", NAVER_CLIENT_SECRET: "synthetic-local-secret", NAVER_REDIRECT_URI: localOrigin+"/auth/naver/callback", NAVER_STATE_TTL_SECONDS: "600" };
     const signup = signupFactory((name: string) => env[name], guardedFetch), service = serviceFactory((name: string) => env[name]);
     const request = (ns: string, path: string, token?: string, body?: unknown) => new Request(api+"/functions/v1/"+ns+path, { method: body === undefined ? "GET" : "POST", headers: { origin: localOrigin, ...(token ? { authorization: "Bearer "+token } : {}), ...(body === undefined ? {} : { "content-type": "application/json" }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
     const success = async (response: Response) => data((await parse(response)).data);

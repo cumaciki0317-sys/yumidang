@@ -152,7 +152,7 @@ async function run(){
  check(process.argv.length===3&&process.argv[2]==="--run");const filename=process.env.YUMIDANG_CONVERSATION_LEAVE_LOCAL_CONFIG;check(typeof filename==="string");
  configuration(filename);sourceGuard();targetGuard();zero();guarded=true;groups++;
  globalThis.fetch=guardedFetch;
- const env:Record<string,string>={SUPABASE_URL:API,SUPABASE_ANON_KEY:cfg.ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:cfg.SERVICE_ROLE_KEY,INTERNAL_WORKER_SECRET:cfg.INTERNAL_WORKER_SECRET,ALLOWED_ORIGINS:JSON.stringify([ORIGIN]),MAX_REQUEST_BYTES:"8192",UPSTREAM_TIMEOUT_MS:"10000"};
+ const env:Record<string,string>={SUPABASE_URL:API,SUPABASE_ANON_KEY:cfg.ANON_KEY,SUPABASE_SERVICE_ROLE_KEY:cfg.SERVICE_ROLE_KEY,INTERNAL_WORKER_SECRET:cfg.INTERNAL_WORKER_SECRET,ALLOWED_ORIGINS:JSON.stringify([ORIGIN]),MAX_REQUEST_BYTES:"65536",UPSTREAM_TIMEOUT_MS:"10000"};
  const factory=createRuntimeHandler(k=>env[k]);
  const request=(path:string,token?:string,body?:unknown,method?:string)=>new Request(`${API}/functions/v1/service-api/${path}`,{method:method??(body===undefined?"GET":"POST"),headers:{origin:ORIGIN,...(token?{authorization:`Bearer ${token}`}:{}) ,...(body===undefined?{}:{"content-type":"application/json"})},...(body===undefined?{}:{body:JSON.stringify(body)})});
  const send=async(path:string,token?:string,body?:unknown,method?:string,inProcess=false)=>{
