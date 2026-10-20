@@ -1,0 +1,308 @@
+{
+  "version": 1,
+  "actor": "minkyu",
+  "status": "PAUSED_FOR_TEAM_INTEGRATION",
+  "objective": "민규 활성 WBS44개 전체 완료까지 진행",
+  "workspace": "/private/tmp/yumidang-minkyu-wbs-20261017",
+  "branch": "minkyu/wbs-backend-20261017",
+  "baseHead": "9676cb85736435d742e91283d1c30cff1bd8e609",
+  "scopeCount": 44,
+  "scopeSource": "requests/minkyu/2026-10-14-wbs-task-catalog.json",
+  "ledger": "requests/minkyu/2026-10-19-minkyu-full-scope.json",
+  "projectProgress": "79%(22/28) — 개인 담당 분모와 다름",
+  "completionPolicy": "모든 담당의 실제 완료 근거를 확인해야 COMPLETE. 중간 묶음·준비·이전계획제외로 종료하지 않음. 외부 조건은 개별 잔여로 유지.",
+  "singleEditor": {
+    "root": [
+      "AGENTS.md",
+      "docs/collaboration/team-start.md",
+      "docs/collaboration/requests/minkyu/2026-10-14-minkyu-start.md",
+      "docs/collaboration/2026-10-19-minkyu-full-scope-harness.json",
+      "docs/collaboration/requests/minkyu/2026-10-19-play-readiness.md",
+      "backend/contracts/event-storage.md",
+      "docs/collaboration/requests/minkyu/2026-10-19-operating-readonly.json",
+      "docs/collaboration/requests/minkyu/2026-10-19-operations-runbook.md",
+      "tests/integration/minkyu/public_post_detail_local.ts",
+      "docs/collaboration/requests/minkyu/2026-10-19-local-verification-progress.md",
+      "docs/collaboration/requests/minkyu/2026-10-19-source-manifest.json",
+      "docs/collaboration/requests/minkyu/2026-10-19-github-collaboration-readonly.md",
+      "backend/contracts/profile-images.md"
+    ],
+    "notion_tasks": [
+      "docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.json",
+      "docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.md",
+      "tests/integration/minkyu/conversation_leave_local.ts",
+      "tests/integration/minkyu/matching_lifecycle_local.ts",
+      "tests/integration/minkyu/naver_signup_local.ts",
+      "tests/integration/minkyu/ordered_backend_local.ts",
+      "tests/integration/minkyu/places_events_local.ts",
+      "tests/integration/minkyu/post_event_top10_local.ts",
+      "tests/integration/minkyu/member_cleanup_native_local.ts",
+      "tests/integration/minkyu/runtime_e2e.py",
+      "tests/integration/minkyu/edge_e2e.py",
+      "backend/supabase/functions/service-api/profile-image-http.ts",
+      "tests/functions/minkyu/profile_image_http.test.ts"
+    ],
+    "ownership_review": [
+      "docs/collaboration/requests/minkyu/2026-10-19-collaboration-verification.md",
+      "tools/local/prepare_database_restore.py",
+      "tests/database/minkyu/test_database_restore_preparation.py"
+    ],
+    "role_audit": [
+      "backend/supabase/functions/_shared/jobs/event-collection.ts",
+      "tests/functions/minkyu/event_collection_provider_resume.test.mjs",
+      "backend/supabase/functions/_shared/integrations/events/tourapi.ts",
+      "tests/integration/jonghyun/isolated_ai_factory.ts",
+      "tests/integration/minkyu/ai_positive_discovery_local.py",
+      "tests/database/minkyu/test_ai_positive_discovery.py"
+    ]
+  },
+  "currentWork": "사용자 일시중지 유지. 2026-10-20 새 명시 요청으로 현재 민규 저장소 변경만 커밋·GitHub minkyu/wbs-backend-20261017 브랜치 푸시. 정확3 /me 도구는 b581d12로 로컬 커밋; 기존44 PASS 원바이트 동일. 실제 Auth/me/SQL/배포 재개0. KOPIS 승인된1GET TLS200/파서FAIL, R2중단/intent소비; 초기준비 Notion snapshot 반영 성공.",
+  "preserve": [
+    "기존 미추적자료",
+    "10/17~18 실제Auth/AI/정리 증거",
+    "기존 source7 미커밋",
+    "원본 clone/actor/hook",
+    "기존 C20/C21/summary14/탈퇴복원 PASS"
+  ],
+  "boundaries": [
+    "자동커밋/푸시 없음",
+    "실회원 HOLD 유지",
+    "회원 원문 외부전송 없음",
+    "운영쓰기/배포/추가결제/외부메시지 없음",
+    "다른컨테이너 중지 없음"
+  ],
+  "actualExecutionPending": [
+    "4.8 새 final HEAD/source에서 실제 Auth6·내정보 active/원3600초 자연만료 검증: 사용자 실행 재개 후",
+    "7.14 새 source/target의 DB121 실제 복원·proof-aware dispatcher 연결",
+    "KOPIS 실제 응답기간/basedate와 공급사 의미 검토; 소비된 intent 재사용 금지",
+    "운영 프로젝트 접근·실회원 HOLD·Storage39원본·44개 항목별 남은 acceptance 유지"
+  ],
+  "completedBatches": [
+    {
+      "wbs": "7.12",
+      "change": "목록2페이지cursor연결 및 TourAPI999상한 false complete 수정",
+      "verification": "신규12/전체78 PASS; 독립 source/log검토 PASS",
+      "receipt": "/private/tmp/yumidang-event-pagination-20261019/receipt.json",
+      "actualProvider": "NOT_RUN",
+      "actualDatabase": "NOT_RUN"
+    },
+    {
+      "wbs": [
+        "1.7",
+        "7.10"
+      ],
+      "change": "본인clone/역할/hook/전체소유권/문서링크 검사",
+      "evidence": "requests/minkyu/2026-10-19-collaboration-verification.md"
+    },
+    {
+      "wbs": [
+        "7.18",
+        "8.19"
+      ],
+      "change": "운영감시/중지복구실행표·공식Play조건 준비",
+      "actualOperating": "접근권한거절, 현재상태미확인",
+      "consoleRead": "사용자 명시 허용 후 본인 Console 읽기 완료. 해당 앱 현재 미표시, 앱별 요건 미확인"
+    },
+    {
+      "wbs": "6.3",
+      "change": "공개상세 통합fixture의 현행service-api MAX_REQUEST_BYTES 정정",
+      "file": "tests/integration/minkyu/public_post_detail_local.ts",
+      "verification": "actual factory configuration preflight PASS, fetch0",
+      "receipt": "/private/tmp/yumidang-public-detail-config-20261019.json",
+      "actualPrivacyCases": "NOT_RUN"
+    },
+    {
+      "wbs": "7.12",
+      "verification": "Deno no-remote changed modules typecheck PASS",
+      "receipt": "/private/tmp/yumidang-event-pagination-20261019/typecheck-receipt.json"
+    },
+    {
+      "wbs": [
+        "4.3",
+        "4.4",
+        "4.5",
+        "4.6",
+        "4.7",
+        "6.3"
+      ],
+      "change": "기존integration9파일 factory MAX literal10곳 정합성",
+      "verification": "TS7/Python2 구문·현행factory 구성10/거절2 PASS fetch0",
+      "receipt": "/private/tmp/yumidang-integration-config-20261019/receipt.json",
+      "receiptSha256": "6467845cdf4cd9855db2c753640a05dabe5e2f851214244672875395b7bc0612",
+      "actualNativeIntegration": "NOT_RUN"
+    },
+    {
+      "wbs": [
+        "4.7",
+        "6.3"
+      ],
+      "change": "사진proxy 응답·read/cancel/HEAD 정체시 전체기한 종료/bytes0",
+      "verification": "photo21/관련70 PASS strict unhandled rejection0",
+      "receipt": "/private/tmp/yumidang-profile-deadline-20261019/receipt.json",
+      "receiptSha256": "23851756a48dd8a5ba9353413f24259f33639a729026a2d79932df195bb17b30",
+      "actualAuthStorage": "NOT_RUN"
+    },
+    {
+      "wbs": [
+        "5.2",
+        "5.3"
+      ],
+      "change": "실제 Auth6/RPC와 합성모델을 사용하는 검색·의미필터·재조회 도구 구현",
+      "verification": "신규13·제품31 PASS, 독립검토3 finding 해결 및 새 차단finding 없음",
+      "receipt": "/private/tmp/yumidang-ai-positive-20261019-review1/receipt.json",
+      "signed176": "168 PASS/8 HEAD capsule 오류, 승인 커밋 뒤176 재검증 필수",
+      "actualAuthDatabase": "NOT_RUN"
+    }
+  ],
+  "consoleReadAuthorization": "2026-10-19 사용자: Play Console 해당 화면 읽기 허용",
+  "consoleScope": "현재 민규 계정의 해당 Console 읽기만. 생성/제출/결제/권한변경/업로드/공개 없음.",
+  "consoleReadResult": {
+    "accountType": "personal",
+    "owner": "민규",
+    "contactVerification": "email/phone/developer-email VERIFIED indicators",
+    "creationDate": "NOT_SHOWN",
+    "yumidangApp": "NOT_VISIBLE_IN_HOME_APP_TABLE",
+    "actualAppRequirements": "NOT_VERIFIED",
+    "writes": 0,
+    "initialAutoReviewRejection": "RESOLVED_BY_EXPLICIT_USER_READ_PERMISSION"
+  },
+  "restorationToolReview": {
+    "wbs": "7.14",
+    "authorRegression": "37 PASS",
+    "sourceFiles": {
+      "tools/local/prepare_database_restore.py": "287c457ed07e695da2fec9c65941b8087bbbf548613df82ec6ad3b385066e26d",
+      "tests/database/minkyu/test_database_restore_preparation.py": "34b5128814477e81b244bbc5f1b705e9b99c7319b854ea566533211e1de51095"
+    },
+    "independentReview": "2 findings resolved; no new confirmed blocker",
+    "actualDatabase": "NOT_RUN",
+    "fullRestore": false,
+    "storage39": "UNRESOLVED"
+  },
+  "latestApprovedLocalCommit": {
+    "head": "00e9d17c3eaec1572c3b0319229528dab81ca96c",
+    "files": 20,
+    "approval": "2026-10-20 user commit/push for team integration",
+    "authProfileCommit": "b581d12",
+    "push": "PENDING_FINAL_DOCS_COMMIT",
+    "actualAuthOrDatabaseExecution": "PAUSED_NOT_RUN",
+    "validation": "working bytes match prior reviewed offline receipts; new actual source proof requires explicit execution resume"
+  },
+  "freshRuntimePreflight": {
+    "runtime": "/private/tmp/yumidang-positive-postcommit-20261019/runtime-preflight.json",
+    "collision": "/private/tmp/yumidang-positive-postcommit-20261019/collision-preflight.json",
+    "existingContainers": 423,
+    "memoryAvailableKiB": 2397684,
+    "mutations": 0,
+    "immediateRecheckRequired": true,
+    "typedAuthority": "/private/tmp/yumidang-positive-postcommit-20261019/authority-input-receipt.json",
+    "typedAuthoritySmoke": "/private/tmp/yumidang-positive-postcommit-20261019/typed-authority-smoke.json",
+    "sourceCreated": false
+  },
+  "privateSingleEditor": {
+    "root": [
+      "/private/tmp/yumidang-positive-postcommit-20261019/"
+    ],
+    "role_audit": [
+      "/private/tmp/yumidang-positive-driver-20261019.py",
+      "private driver scoped offline regression artifact"
+    ],
+    "ownership_review": [
+      "/private/tmp/yumidang-restore-driver-20261019.py"
+    ],
+    "notion_tasks": "READ_ONLY independent review"
+  },
+  "sourceInventoryCurrent": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-20-source-manifest-v2.json",
+    "sha256": "1cb736a928c89b01442a61cc45220a9093af9bac6479e79dfb01049c71933124",
+    "files": 782,
+    "migrations": 121,
+    "priorMigrationsExactPreserved": true,
+    "sourceHeadMeaning": "inventory captured at b581d12; explicit per-file working-tree pins verified after source commit",
+    "actualRuntimeProof": "SEPARATE_NOT_RUN"
+  },
+  "freshRuntimeActual": {
+    "root": "/private/tmp/yumidang-positive-source-20261019-a001",
+    "start": "PASS_NEW_4_SERVICES_1_NETWORK_1_VOLUME",
+    "configure": "PASS_121_ALL13_CLOSED",
+    "originalAuth6": "PASS_LOCAL_AUTH6_PROVISION_ONLY",
+    "auth6ReceiptSha256": "f2d422a63baa8e95e4e41f136949ba44902d3f00556282afbe829af990fd2798",
+    "bindingSha256": "baf276eda786f3ec29fb5ef09eb02b2c4bc87e1675eccdb2bb4e0d2eaa6caa70",
+    "positive": "RUNNING_SESSION59583",
+    "restore": "NOT_RUN",
+    "externalProvider": "NOT_RUN",
+    "realMembers": "HOLD",
+    "closure": "PENDING_ROOT_PIPELINE"
+  },
+  "latestActualCheckpoint": {
+    "head": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+    "positive": "PASS_ACTUAL_LOCAL_AUTH_HTTP_RPC_SYNTHETIC_MODEL",
+    "seed": "TWO_PRE_DISPATCH_FAILURES_NO_SQL_NO_REPLAY",
+    "restore": "NOT_RUN",
+    "closure": "A001_OWN4_CLOSE_PASS",
+    "projectProgress": "79%(22/28)",
+    "whole44Complete": false
+  },
+  "a002": {
+    "root": "/private/tmp/yumidang-positive-source-20261019-a002",
+    "databaseId": "7280d4dd851338a236fd0fd31811a1ab3fbe88865ab49e41e0dd2b3814ef9531",
+    "prepare": "PASS",
+    "start": "PASS",
+    "configure121": "PASS",
+    "provision": "PASS",
+    "seed": "PASS_FIRST_WRITE1_UNKNOWN2_SEQ41_TRUE",
+    "restore": "FAIL_CLOSED_PRE_TARGET_CREATE_ICU_LOCALE",
+    "closure": "NOT_RUN",
+    "positive": "PASS",
+    "searchSql": "PASS_SINGLE_ROLLBACK_9_MARKERS_FULL178_PRESERVED",
+    "capture": "PASS_SOURCE_CAPTURED_UNCHANGED"
+  },
+  "nextEvidenceGaps": [
+    "current_public_search.sql 최신 실제 영수증 회수불가: 새 격리 rollback 실행 준비",
+    "this_week 월·연경계→RPC 기간 조합회귀 준비",
+    "현재 첫메시지 messageId와 구형 통합검증기2개 정합화 필요",
+    "서버접수시각과 잠금후 clock_timestamp 마감판정 정적 차이: 후속 재현 필요"
+  ],
+  "technicalAcceptanceClosed": [
+    "5.2",
+    "5.3"
+  ],
+  "notionRecording": "WBS5.2_5.3_FINAL_COMPLETE_EXISTING_BLOCKS_ONLY_VERIFIED",
+  "editingExceptionsDuringIdleSource": [
+    "tools/local/prepare_database_restore.py",
+    "tests/database/minkyu/test_database_restore_preparation.py",
+    "tests/integration/minkyu/public_post_detail_local.ts",
+    "tests/integration/minkyu/matching_lifecycle_local.ts",
+    "tests/functions/minkyu/week_boundary_discovery.test.mjs"
+  ],
+  "latestCompletedWbs": [
+    "1.6",
+    "1.7",
+    "4.2",
+    "5.2",
+    "5.3",
+    "5.7",
+    "6.1",
+    "6.5",
+    "7.10",
+    "7.11"
+  ],
+  "progressBoundary": "79%(22/28) unchanged; whole44 incomplete; implementation PAUSED_FOR_TEAM_INTEGRATION",
+  "currentSourceManifest": "requests/minkyu/2026-10-20-source-manifest-v2.json",
+  "headFreeze": "공유 준비 기준 정확3커밋 b581d12. 다음 커밋에 나머지 검토된 저장소 변경·최신 manifest·인계 포함. 과거1d9/3파일승인대기/No push 지침은 이전 실행 상태이며 이번 사용자 커밋·푸시 요청으로 대체한다. 기존 원본 작업 공간·미추적SQL/FE·pycache·미적용private후보는 제외. 실제 검증 재개 시 최종HEAD로 새 authority/핀 검토 필수.",
+  "nextSequence": [
+    "검토된 민규 변경을 전용브랜치로 커밋·푸시하고 팀 통합에 인계",
+    "명시적 실행 재개 후 최종HEAD/source·actor/ownership·VM/메모리·새 authority를 확인",
+    "실제 Auth/me/원3600초 자연만료→새121복원 순서. 기존 stopped 환경·intent 재사용 금지",
+    "private runner74/retention122/composer26은 미적용 검토후보로 구분하고 별도 실제 SQL/통합 검증 후 정식화"
+  ],
+  "priorApprovedLocalCommit": {
+    "head": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+    "files": 10,
+    "approval": "user exact10 local-only exception",
+    "push": false,
+    "signedAuthRegression": "176 PASS",
+    "sourceGuard": "198 HEAD exact PASS",
+    "evidenceRoot": "/private/tmp/yumidang-positive-postcommit-20261019",
+    "historicalOnly": true
+  }
+}

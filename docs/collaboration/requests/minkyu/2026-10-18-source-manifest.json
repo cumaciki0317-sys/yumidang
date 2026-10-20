@@ -1,0 +1,4208 @@
+{
+  "schema_version": 2,
+  "captured_at": "2026-10-18T01:38:06.105465+00:00",
+  "scope": "WBS4.2 현재 source manifest 후보. 소스 읽기·개별SHA/목록 검산만 수행. 실제Auth 두case 결과확정 전 source snapshot.",
+  "clone": "/private/tmp/yumidang-minkyu-wbs-20261017",
+  "actor": "minkyu",
+  "branch": "minkyu/wbs-backend-20261017",
+  "source_head": "9676cb85736435d742e91283d1c30cff1bd8e609",
+  "hooks_path": ".githooks",
+  "git_status_at_capture": " M tests/database/minkyu/test_ai24_live_binding.py\n M tests/database/minkyu/test_current_policy_preparation.py\n M tests/database/minkyu/test_production_preparation.py\n M tools/local/prepare_current_policy.py\n M tools/local/prepare_isolated_midnight.py\n?? docs/collaboration/2026-10-17-backend-harness.json\n?? docs/collaboration/2026-10-18-backend-completion-harness.json\n?? docs/collaboration/requests/minkyu/2026-10-17-ai24-readiness.json\n?? docs/collaboration/requests/minkyu/2026-10-17-restoration-readiness.json\n?? docs/collaboration/requests/minkyu/2026-10-17-runtime-evidence.json\n?? docs/collaboration/requests/minkyu/2026-10-17-source-manifest.json\n?? docs/collaboration/requests/minkyu/2026-10-17-wbs-execution.md\n?? docs/collaboration/requests/minkyu/2026-10-18-plan-completion.md\n?? tests/database/minkyu/test_restoration_readiness.py\n?? tools/local/__pycache__/\n?? tools/local/verify_restoration_readiness.py",
+  "capture_stage": "FINAL_SOURCE_CANDIDATE_AUTH_PAIR_RUNTIME_PENDING",
+  "migration_count": 121,
+  "expected_migration_count": 121,
+  "migration_count_matches_expected": true,
+  "group_counts": {
+    "migrations": 121,
+    "functions": 187,
+    "tests": 412,
+    "local_tools": 28,
+    "contracts": 26
+  },
+  "group_sha256": {
+    "migrations": "b6eb5f6201a42233719a4aeeefa990ccddcb71ca9f48359272b1c482c63657c3",
+    "functions": "1bd9b46def1acbf80ec9e5fc73a662f15ace82658c3307ed7e257258e8d62912",
+    "tests": "b57313afbe4d6541d8e5289c90bd2c3f092f1ea053a95b2f314802e5ec2cc6b4",
+    "local_tools": "65acfa8eec283f580598c837697c08fd2ece90c02f2860d6f6e3914c746f949d",
+    "contracts": "8d537a366020c50e5d016da2daeb7ac72d1a59a2539c2b26f3f443c292bafb8d"
+  },
+  "files_sha256": "74b079f1d2fc7c8a877f18c968305cdaa573baff1aafe33d5d52f604029ead17",
+  "hash_encoding": "SHA256 of file bytes; group/list digest uses UTF-8 JSON ensure_ascii=false sort_keys=true separators=comma-colon",
+  "source_controls": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "ce65753a9b4e6bb08c739c9806c5a0c8b6c03157d699f3faff4e180c15bc725e"
+    },
+    {
+      "path": "PLAN.md",
+      "sha256": "8509f65cd934df7820a19a4f2062a004769c98976323cfa63b79df3321c60e3b"
+    },
+    {
+      "path": "PLAN_상세설계.md",
+      "sha256": "6f18e96d8be845e9df8c88bb4507e18e6a3605af10a907343a3dd057d9feb477"
+    },
+    {
+      "path": "정책.md",
+      "sha256": "b58c74cce4dc71718bfd45e3249d0ca8fa42b2cf6e9fca47b936584233ef386f"
+    },
+    {
+      "path": "backend/ownership.json",
+      "sha256": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3"
+    },
+    {
+      "path": "docs/collaboration/README.md",
+      "sha256": "c08a5b48b377894b4e99da61417f828fe2a031f57e3ea27cb85083863e2380dc"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-execution.md",
+      "sha256": "0eff30ff4992a4041c15747cbf46bf9d639bfe4f4f546bea1d8a604a6a2e66eb"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-coverage.json",
+      "sha256": "67427da3e9eb27d8f438d8d2170ace95e45d6ae768c2d1470fd25f6ad9bec8bd"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md",
+      "sha256": "ddc6b4f23f75a4ec3e1be64a6789de6b32c563e6f315dd4b9944db3ffa8736db"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.json",
+      "sha256": "1166a60b7518d8396b27199d50f1c5e98c71d1eb2767a6b67ac11bc56988f98b"
+    }
+  ],
+  "files": {
+    "migrations": [
+      {
+        "path": "backend/supabase/migrations/20260916080335_create_profiles.sql",
+        "sha256": "da19b1a471feeb92279b95e37c71cd6b337657639da803a807e7b1bff9514de2",
+        "size_bytes": 3079,
+        "version": "20260916080335"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916081429_remove_profiles_neighborhood.sql",
+        "sha256": "61a12907ee1d3c5a338d9de0e37b30b19afb422d31e9eee427a8504252c9b9d2",
+        "size_bytes": 280,
+        "version": "20260916081429"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916081750_restrict_profiles_column_writes.sql",
+        "sha256": "f88de84f8b85bef01d312003ee3827226e65d8b1b9258eb6e061e547efa30427",
+        "size_bytes": 363,
+        "version": "20260916081750"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916101123_profiles_real_name_contract.sql",
+        "sha256": "7dfc98ef2db697246e814a10d68ef0f3761c9f7bdbf43f7d39949c5632aa6673",
+        "size_bytes": 2479,
+        "version": "20260916101123"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916105220_feature03_posts.sql",
+        "sha256": "e8765b87bc2f37a95086f74f2273cfdb0a0e1137f21066f6a89794c655440709",
+        "size_bytes": 9731,
+        "version": "20260916105220"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916105738_feature04_post_author_profile.sql",
+        "sha256": "2321bc7328f946281312a7dae13c3538d12a97a1ab13a5de31146feaf17db25a",
+        "size_bytes": 1200,
+        "version": "20260916105738"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916105916_feature05_join_requests.sql",
+        "sha256": "09c13dd6ead99c4d7d92edfa754761758fbb22065be0a66e11f36ab06d385a01",
+        "size_bytes": 9369,
+        "version": "20260916105916"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916110052_feature06_matching_chat.sql",
+        "sha256": "30943796bb28009963d2ae68f7674ef3eb6a4c50808f6916b340e6f034a760ec",
+        "size_bytes": 5594,
+        "version": "20260916110052"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916110758_feature07_final_match.sql",
+        "sha256": "344f2909fcf075084e78a42325388bccf2092f4073975aff61fbc3d266e49f64",
+        "size_bytes": 9865,
+        "version": "20260916110758"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916110943_feature08_completion.sql",
+        "sha256": "57995918ad709cbb6ac6f011eaa5f156db88d6b67ed9d5d10882d3a825907d64",
+        "size_bytes": 6081,
+        "version": "20260916110943"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916111030_feature09_mutual_review.sql",
+        "sha256": "dd4ef8e0c1ec10111ac872283b77f8f2cc6c19f77574ed14183388d31e4be879",
+        "size_bytes": 6892,
+        "version": "20260916111030"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916111437_appointments_request_post_fk_index.sql",
+        "sha256": "8faeb187b204aa81d2a8c2248931440ec631eed6a6b9822049d8f9fe70a0fb40",
+        "size_bytes": 311,
+        "version": "20260916111437"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916114036_rpc_unavailable_errors_as_404.sql",
+        "sha256": "bf5f8e62e668f777ff8774ae3239775ef8dd4c84ac23722db746c2430926c21e",
+        "size_bytes": 904,
+        "version": "20260916114036"
+      },
+      {
+        "path": "backend/supabase/migrations/20260916131906_existing_ui_gender_category_author_cards.sql",
+        "sha256": "7fec3aee4a304eefe00e3153b85c4890c4e12486951210d92e5fb49de0fa2ca0",
+        "size_bytes": 7106,
+        "version": "20260916131906"
+      },
+      {
+        "path": "backend/supabase/migrations/20260917005621_retry_completion_dispute_review_policy.sql",
+        "sha256": "9dc9f8b9f9d259cc38a8d9f18450b29822565f112864050f7e3cd4fd4a543487",
+        "size_bytes": 26357,
+        "version": "20260917005621"
+      },
+      {
+        "path": "backend/supabase/migrations/20260917043418_signup_eligibility_author_demographics.sql",
+        "sha256": "12b9decaead249eadad008cf9131244b5a1620544a3a4fc8344d924c3cd74c9e",
+        "size_bytes": 13818,
+        "version": "20260917043418"
+      },
+      {
+        "path": "backend/supabase/migrations/20260917052827_profile_images_required.sql",
+        "sha256": "0797f8e416ca2a6b56e3fdd4a0cadc2d713349416a685ee14949c13bcdd69a8f",
+        "size_bytes": 11279,
+        "version": "20260917052827"
+      },
+      {
+        "path": "backend/supabase/migrations/20260917094753_disable_legacy_signup_without_avatar.sql",
+        "sha256": "75b2765d9fd426104b50eb9f12ef4a30d0797a6c30943fa839c8b3336575d24d",
+        "size_bytes": 498,
+        "version": "20260917094753"
+      },
+      {
+        "path": "backend/supabase/migrations/20260917122744_ut_notifications_and_discovery.sql",
+        "sha256": "cfc1e00de60da0f953843a3dcc86467cb0f515520da855dd0ab0b5be64bd74b8",
+        "size_bytes": 4238,
+        "version": "20260917122744"
+      },
+      {
+        "path": "backend/supabase/migrations/20260917141449_notifications_join_request_index.sql",
+        "sha256": "978376c0c1d725441b474886df72ffe590ccc803894d12d0e8a2aa9d3c6059c9",
+        "size_bytes": 266,
+        "version": "20260917141449"
+      },
+      {
+        "path": "backend/supabase/migrations/20260923090000_worker_jobs.sql",
+        "sha256": "35cc37ed31145fc59ec5ee0580db3f49ccfd36ca19abe2208eccc5f9fe7bee5f",
+        "size_bytes": 8617,
+        "version": "20260923090000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260923091000_public_post_search.sql",
+        "sha256": "3d95413693ed39cccf4c40c9a4c642f8d75cf9c53590c35495a7c0f1cd0a5822",
+        "size_bytes": 6045,
+        "version": "20260923091000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260923092000_review_summary_storage.sql",
+        "sha256": "71c58e1587d2949ed7292d591a5505cbc33b53fab2a9ae5ac38a77f68e6d5d52",
+        "size_bytes": 13446,
+        "version": "20260923092000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260923100000_bilateral_completion.sql",
+        "sha256": "d49cd183f46738412f2fb5fff8737dee5bac30431011c18f939671ba3d7a8cd2",
+        "size_bytes": 9575,
+        "version": "20260923100000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260923101000_review_automation.sql",
+        "sha256": "499a5f5867540179301f34ec82d5d6f15934e026febeaf267781c62fe5543e5b",
+        "size_bytes": 17241,
+        "version": "20260923101000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260923102000_core_service_api.sql",
+        "sha256": "17039dccff591f32e05f8fd8af83cea729cd1b51721f8ac8ad9a6b388e045133",
+        "size_bytes": 24611,
+        "version": "20260923102000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260929090000_public_search_v2.sql",
+        "sha256": "7291d87a34c6cdef707d97af502f7097ac6edf6ff2fd6fe34023116959683525",
+        "size_bytes": 9461,
+        "version": "20260929090000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260929100000_event_storage.sql",
+        "sha256": "8b853ab4af4311552126bbf66f073a9b2baeaad2371fabb2d0afc1ee2196931c",
+        "size_bytes": 10677,
+        "version": "20260929100000"
+      },
+      {
+        "path": "backend/supabase/migrations/20260929120000_review_release_and_completion_reservations.sql",
+        "sha256": "8cd13df2cfa9e92a8a3ea0e21d2917cdc32d03441cb5a2957665fbbee60366b2",
+        "size_bytes": 20889,
+        "version": "20260929120000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002090000_naver_signup.sql",
+        "sha256": "835cedd273fbb901a8ecc1aff538bbb9f89c3f1ea49aa6e18fbfdc4d61722338",
+        "size_bytes": 22525,
+        "version": "20261002090000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002100000_matching_lifecycle.sql",
+        "sha256": "58e175eb4af6fd3e551c23c22c6a2d8b50c6d420d5c91389e460c39be29ec977",
+        "size_bytes": 34786,
+        "version": "20261002100000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+        "sha256": "4b9ee69e4230dd62f70d2fa711a69b857b93d6bf17afa297192543389fc57615",
+        "size_bytes": 15710,
+        "version": "20261002110000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002120000_appointment_changes.sql",
+        "sha256": "dec9b0753ff6b8da4db33c1044615ed7cd82f47c37170eff2bf3293ded7d3f86",
+        "size_bytes": 20379,
+        "version": "20261002120000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002130000_ai_budget_worker.sql",
+        "sha256": "ea61b1d1d8b0ea1b57e44f97c56c32ab3121b6273ef83f6364d64c5b979e30e6",
+        "size_bytes": 40770,
+        "version": "20261002130000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002131000_events_public_profile.sql",
+        "sha256": "8ac1eb3857d29ecbbccd543bbd0f58a440043234c086f734860d664562a0eb0b",
+        "size_bytes": 21983,
+        "version": "20261002131000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002140000_public_search_age_range.sql",
+        "sha256": "b9b7d00e6f6fd2af10252e30e371e635a55bcce00f2ee29b3f872eec974a14d0",
+        "size_bytes": 10882,
+        "version": "20261002140000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+        "sha256": "0d436dc31e8483603d8751ca25f7d50e79660f613c220aa220ab5a514b03475a",
+        "size_bytes": 23771,
+        "version": "20261002150000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002160000_event_rankings.sql",
+        "sha256": "a59ef5cdd304a5361f21b7e81d4cb3add630fedc0ebe6f51fd020ecf6dda203b",
+        "size_bytes": 7539,
+        "version": "20261002160000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002170743_profile_image_access.sql",
+        "sha256": "933597ecfa225eefbc9fb51eeee5f71c239f5cdc63c524325dbd7b9bb55404b0",
+        "size_bytes": 2541,
+        "version": "20261002170743"
+      },
+      {
+        "path": "backend/supabase/migrations/20261002174755_conversation_visibility.sql",
+        "sha256": "e476d098e82c52352b484b724b0f041b209b077821ca9d9642c69aca5a0999c6",
+        "size_bytes": 2947,
+        "version": "20261002174755"
+      },
+      {
+        "path": "backend/supabase/migrations/20261003090000_completion_runner_role.sql",
+        "sha256": "98425e7c855914bf49899b4a68704686e615fdfeac6a2852e9674f4ecd5e65fc",
+        "size_bytes": 5255,
+        "version": "20261003090000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005001429_current_completion_consent_policy.sql",
+        "sha256": "22312f4333a4676a654a02a2802d63ebf6c7304923172a9dea6bf0de877df275",
+        "size_bytes": 12421,
+        "version": "20261005001429"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005001456_global_worker_lease.sql",
+        "sha256": "427c665cbe0686d6b70b33d5dc9b4546f7947fa9b5731a15670f1fd45f0fe6e9",
+        "size_bytes": 2865,
+        "version": "20261005001456"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005001538_current_public_search.sql",
+        "sha256": "f9b27ec0c373cf8264a6c0e7e7768a52c7bd4730c1644f8cb384391178d06d54",
+        "size_bytes": 15512,
+        "version": "20261005001538"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005002006_first_chat_application.sql",
+        "sha256": "46a7be5550c2a4e6c901899b06db4b7ebc7c833ef820b117cfbed24d43eef191",
+        "size_bytes": 6728,
+        "version": "20261005002006"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+        "sha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+        "size_bytes": 18501,
+        "version": "20261005002528"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005003000_worker_job_fences.sql",
+        "sha256": "ce31ec87b09a40174b1ed6d277bb4abbc1cd8865e6855498a94686caccb12c90",
+        "size_bytes": 7791,
+        "version": "20261005003000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005003159_current_summary_fences.sql",
+        "sha256": "e3796267685e641cc3aa0257bf2410ff4abec12c0ef5d52225ff14ba54fd4cbc",
+        "size_bytes": 9270,
+        "version": "20261005003159"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+        "sha256": "af2c94c092e757765aef5745ce73bd83a146842875cf93b29a933102127c875e",
+        "size_bytes": 23076,
+        "version": "20261005005459"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+        "sha256": "28ad42ff14cae65bd6b984667119113753d04cf78b79c969b05d9a3fe675de69",
+        "size_bytes": 30299,
+        "version": "20261005005855"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+        "sha256": "6db41b47a2f469d1370f2589f9a1daedc854275eac65f220fcb37909002a891e",
+        "size_bytes": 20942,
+        "version": "20261005013901"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005014629_appointment_place_change_draft.sql",
+        "sha256": "a3c2284bf1b2fbf19c3a4404c1deea2eaa6314c9faee51894c3b5c30e4e4904c",
+        "size_bytes": 14563,
+        "version": "20261005014629"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005014630_appointment_location_validation.sql",
+        "sha256": "93d7ab1d413a6e46425218798925f26440e8f1a674e2c3830e60394b862fa0c7",
+        "size_bytes": 2663,
+        "version": "20261005014630"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005015709_member_reports.sql",
+        "sha256": "317fbb34f1e07bf37976b3d9ec809f0ca6bfabf787006aad737e6552aeffc07c",
+        "size_bytes": 21929,
+        "version": "20261005015709"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005020135_current_member_lifecycle.sql",
+        "sha256": "d24d3e338e9a8876c3d34c761f3fe9c863095faa95d93bf0055c471a81ab266d",
+        "size_bytes": 113998,
+        "version": "20261005020135"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005020136_member_cleanup_dependencies.sql",
+        "sha256": "a5a5827f1d79887d36d3e22bba5d42a45f93702ae770f9a20822da7eea39259b",
+        "size_bytes": 16309,
+        "version": "20261005020136"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005021810_sanction_adjudication_draft.sql",
+        "sha256": "b3c56b87385b5bf835f7ae52390b80b963d50b9308dc3878b8645a756905120f",
+        "size_bytes": 26763,
+        "version": "20261005021810"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005021811_member_activity_sanction_gates.sql",
+        "sha256": "cf30480c6254060fbaef2bba375260d611ed17059ac200aee2af93d90da80255",
+        "size_bytes": 5938,
+        "version": "20261005021811"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005030100_member_retention_batches.sql",
+        "sha256": "c7877762ca88df738a991b35fc65ae4144e1de6eaf7fca44b623caadaa7a1e60",
+        "size_bytes": 43088,
+        "version": "20261005030100"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040100_worker_queue_schedule.sql",
+        "sha256": "71e18556baf27779a68fb209fb5b1cb51310ef5e6511c5cd5d65402de397aee5",
+        "size_bytes": 8098,
+        "version": "20261005040100"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040300_worker_queue_runner_role.sql",
+        "sha256": "49d7d72b47b33e5fee407498e6c09882c3e929de06c815240f10781d4c11917c",
+        "size_bytes": 5105,
+        "version": "20261005040300"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040500_member_profile_preferences.sql",
+        "sha256": "98ce66ffc50229a6713266197b315a1eeec2e69bbdd5fe1908c1c45cb70bd278",
+        "size_bytes": 2760,
+        "version": "20261005040500"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040600_appointment_change_withdrawal.sql",
+        "sha256": "80d58914f8db461c9e5d961b4a5ebcc8c51aaa6a0ce76fd843333e2079d5a10b",
+        "size_bytes": 3253,
+        "version": "20261005040600"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040700_member_safety_state.sql",
+        "sha256": "39f2cabe90cc137252be7953f5c0078f087f78f8ce7a2fbeda469a7309e555cf",
+        "size_bytes": 2183,
+        "version": "20261005040700"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040800_appointment_safety_result_sync.sql",
+        "sha256": "afc727a109454d430ab2b39b7d8000c2f7f49638c4351200454827c8a2c1ab80",
+        "size_bytes": 12931,
+        "version": "20261005040800"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040900_appointment_review_holds.sql",
+        "sha256": "b13e5ade5891e49b049a7243ba3cbe161d8e64545212bc72d8865638a6992fe6",
+        "size_bytes": 17854,
+        "version": "20261005040900"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005041000_appointment_review_no_show_lifecycle.sql",
+        "sha256": "b780d364f0d614a160934bd57bb2c1347f24d6a9321275baadbbaf632db3ed50",
+        "size_bytes": 16719,
+        "version": "20261005041000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005135215_member_sanction_history.sql",
+        "sha256": "c6dfa91e15bf8b97c1878b53ec62d887e18061fa5704aeee8f946a5ea5cc3b8c",
+        "size_bytes": 4829,
+        "version": "20261005135215"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005143045_profile_image_authenticated_access.sql",
+        "sha256": "c191b5808a970c7649edd1ba9b221a444d686ae3342c49b765629f0543f4f83e",
+        "size_bytes": 2470,
+        "version": "20261005143045"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+        "sha256": "296cc4fc48fce2f66f1ad72d10b39b3a12d2f7a225033a61fb8ab2b56a4486fd",
+        "size_bytes": 10981,
+        "version": "20261005143318"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005150558_assigned_report_capture_access.sql",
+        "sha256": "ead3e529ce957748af590d82339f6c9c0589680b8cf465c4f5975285d994699c",
+        "size_bytes": 7024,
+        "version": "20261005150558"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005155136_assigned_report_review_start.sql",
+        "sha256": "c1083e452b284ed66edaa11bb4e075914e6f93ce64ab918a1c266f62ad470b71",
+        "size_bytes": 8246,
+        "version": "20261005155136"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005161352_assigned_report_review_state.sql",
+        "sha256": "4c497604f20db4708f65750697fe8bc4f51ea5e1afe6d81d95c2e119a63f0846",
+        "size_bytes": 4340,
+        "version": "20261005161352"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005171606_assigned_report_adjudication.sql",
+        "sha256": "d2e3b141ea5ad7048d075f1568f7afd6fc1320e3daa4f71163b252a91b825133",
+        "size_bytes": 23486,
+        "version": "20261005171606"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005180340_assigned_report_notice_receipts.sql",
+        "sha256": "880e62099cbb2f405da1e9035bcba2bdb0ff19c2f5a4d5222c63586240fbfc6b",
+        "size_bytes": 18491,
+        "version": "20261005180340"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005190311_appointment_cancel_appeal_intake.sql",
+        "sha256": "359a8093c3a32bf7d547a17df98173de677307933780a8e78db323bc4c26fcd8",
+        "size_bytes": 14750,
+        "version": "20261005190311"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005195033_appointment_cancel_appeal_atomic_report.sql",
+        "sha256": "53750fc93d7edf48ff863807ccfa267c3e759213d55385b3d0d28103ec71f745",
+        "size_bytes": 8102,
+        "version": "20261005195033"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005203258_appointment_cancel_resolution_and_due.sql",
+        "sha256": "542d2efcc3c44e45e4d3cd1f7caeb2f22e5649615a22ff547f319267a45b3efa",
+        "size_bytes": 63613,
+        "version": "20261005203258"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005225107_report_retention_purge.sql",
+        "sha256": "c5b801c0f31dd8f058aafd844f90b5531cd582c7f668cc6703b0b01b3ce14a91",
+        "size_bytes": 34776,
+        "version": "20261005225107"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005225951_worker_supported_claim.sql",
+        "sha256": "bbe43a5adaef287145d832a37353c9c32991a813663b28975f8c1d5ad532fa8b",
+        "size_bytes": 9629,
+        "version": "20261005225951"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005232700_report_retention_dispatch_fence.sql",
+        "sha256": "4283b5d85a18404409db5828885576c091b8e4525a0f884a849f1d17bcdac2c5",
+        "size_bytes": 11427,
+        "version": "20261005232700"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005233511_cancellation_due_guard_closed.sql",
+        "sha256": "85aec069961a72d9ea0bd1cc23324c8c2c93800fba23896cd26eb4777df831b6",
+        "size_bytes": 6382,
+        "version": "20261005233511"
+      },
+      {
+        "path": "backend/supabase/migrations/20261005235230_worker_queue_retention_schedule.sql",
+        "sha256": "8a1a0f10ad95ea1ca02569057a97ddf544cf65304d72d5a6ac0d55f094886f2e",
+        "size_bytes": 16861,
+        "version": "20261005235230"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006021419_cancellation_next_due_generation.sql",
+        "sha256": "b65932fbad39bd12064b0d53f8aa2b66106fb9f4418741b7a692137c91eee0fc",
+        "size_bytes": 3108,
+        "version": "20261006021419"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006123430_member_report_hidden_targets.sql",
+        "sha256": "4aa5af4aa88a53481c1bf52f3ce67f9ff5d3155e7cf215bd8b6d224ec219927b",
+        "size_bytes": 4848,
+        "version": "20261006123430"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006123447_member_report_hidden_targets_bridge.sql",
+        "sha256": "35ab1a696319c970cb16d5f4846e61ede7907a3ac5703271112554b7da34bf19",
+        "size_bytes": 1913,
+        "version": "20261006123447"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006130041_general_sanction_notice_delivery.sql",
+        "sha256": "31526ba209a742449233cad1f52d024f471fb2de12864a53e4d15065226f676a",
+        "size_bytes": 8904,
+        "version": "20261006130041"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006141000_general_sanction_appeal_intake.sql",
+        "sha256": "07e23309cf979e74aff46d20787233f5a0d112bcf54bdf032c8e441e21a25106",
+        "size_bytes": 7732,
+        "version": "20261006141000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006150000_general_sanction_appeal_resolution.sql",
+        "sha256": "718da5f5d8ccf27908190fd8d2511c1712d2af0fc7cd2d3518c46bae8b1ba50e",
+        "size_bytes": 8563,
+        "version": "20261006150000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006151000_historical_safety_episode.sql",
+        "sha256": "8d4866ee9fa60321927109fa880cdf10d1d37e9d0a77f9a18892d66ba3dccb8a",
+        "size_bytes": 3271,
+        "version": "20261006151000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006160000_assigned_report_final_closure.sql",
+        "sha256": "e52220edd8be14b753c17a1b53a6816342de3aa85f5ef0d9aee1e66bff5c885b",
+        "size_bytes": 7606,
+        "version": "20261006160000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261006170000_ai_account_budget.sql",
+        "sha256": "3b8e5f523a077ee699505cda61835c3a082d4fdca7475e1b27db761b6e671ce8",
+        "size_bytes": 15539,
+        "version": "20261006170000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261007010000_cancellation_report_final_closure.sql",
+        "sha256": "d0f360ef470033757cfc409d27440ff29383c254e78a0c7cd2ad5f83a2f9db22",
+        "size_bytes": 6553,
+        "version": "20261007010000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261007020000_cancellation_clock_lineage.sql",
+        "sha256": "4f88fa9f16c1106ed4f56de580ed8e800ef9e6bddfa022a7ce048ca341c9fdbd",
+        "size_bytes": 17831,
+        "version": "20261007020000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008010000_member_own_posts.sql",
+        "sha256": "8d38e1ffbba8a4764438372b66f263c0d6cb3875b0411094d0706d53057d636c",
+        "size_bytes": 1927,
+        "version": "20261008010000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008011000_conversation_read_state.sql",
+        "sha256": "689475372776c2c85254cb7c895694607ef6157ff335b778400e922c972ab286",
+        "size_bytes": 5000,
+        "version": "20261008011000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+        "sha256": "f264a46e13c39deaabcff7d548bea7f51c4de9301d9e2ff35ae5db670a46f84e",
+        "size_bytes": 27664,
+        "version": "20261008012000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008013000_public_event_detail.sql",
+        "sha256": "931c3c4f6578e7e8d88910a84419102a1c00dc22a44ce2621f63f37056926d41",
+        "size_bytes": 1264,
+        "version": "20261008013000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008014000_ai_feedback_receipts.sql",
+        "sha256": "d8ed7f0a2738d59ccf3a5e77185ee75454f16d0ae8e9e75285353e2c39e66d9a",
+        "size_bytes": 11888,
+        "version": "20261008014000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008020000_worker_owned_schedule.sql",
+        "sha256": "141e6e0b755c354b79360ee671adaf530ba2e96784c36b34a8c9336752472b4c",
+        "size_bytes": 2938,
+        "version": "20261008020000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008021000_worker_runtime_journal.sql",
+        "sha256": "cef102978d33e8009567e95508750e9a23c34ac2788438f7536d1a75ff446df8",
+        "size_bytes": 8128,
+        "version": "20261008021000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008022000_worker_runtime_atomic.sql",
+        "sha256": "d3c9ebed9c370d561a18f92a230fa395c2d0efa0780d88cb3785fd86b8bb6bc3",
+        "size_bytes": 14129,
+        "version": "20261008022000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008023000_worker_runtime_retention.sql",
+        "sha256": "014f04fdde6c2a01edee99d36f0e3521529af29c25746f86af4cea200c5abea6",
+        "size_bytes": 4138,
+        "version": "20261008023000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008024000_runtime_recovery_schedule.sql",
+        "sha256": "41f41622a173edc150104d85b467f8b9c55531dc08eb4e257e8cd7e012a2f1e2",
+        "size_bytes": 2068,
+        "version": "20261008024000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008025000_scoped_feedback_maintenance.sql",
+        "sha256": "b9b3fa6a71ed54f60eb502f20d2187c3fea340c6d110dbc4cdf9efa17e3df38a",
+        "size_bytes": 4696,
+        "version": "20261008025000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008026000_message_read_receipts.sql",
+        "sha256": "b613a5fe40b3a342b2a980c33595777094705bc1df91103667e5fffe254d6b2e",
+        "size_bytes": 4584,
+        "version": "20261008026000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008027000_member_cleanup_dispatch.sql",
+        "sha256": "bf1a56ea440bda071bf88ffde76b71ba3fa32925b4e5810cdd46009fa1b56128",
+        "size_bytes": 3009,
+        "version": "20261008027000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261008083002_member_cleanup_ack_recovery.sql",
+        "sha256": "b930cfe057b48050dcb275473d3a7af2bfb5117c5af0185ce3929d60674d9213",
+        "size_bytes": 4567,
+        "version": "20261008083002"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009010900_worker_invocation_audit.sql",
+        "sha256": "5de1f86e7937cef02f2f7dd3a2691afe0663effdbfa49a2af1490d6221836288",
+        "size_bytes": 27039,
+        "version": "20261009010900"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011000_member_cleanup_invocation.sql",
+        "sha256": "8cda95503183c2784c6e56cf4904b34eae67824fd310a1452c7001d7f1f52125",
+        "size_bytes": 16943,
+        "version": "20261009011000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011100_event_collection_lane.sql",
+        "sha256": "f9e6026400a3a7b8d6e3a0c929f9c13e65cc41ff991180fd4fb4f17e921cc34c",
+        "size_bytes": 41578,
+        "version": "20261009011100"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011200_event_invocation_audit.sql",
+        "sha256": "d63015b7a9ef4988f5520ee25a4d8b87b7a03b7b152472e48d33ca7edf81fc61",
+        "size_bytes": 22246,
+        "version": "20261009011200"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011400_worker_intent_confirmation.sql",
+        "sha256": "7ba321e924e02bfea41a244435a21a5fc52d71e049421e178ca72a91358065ed",
+        "size_bytes": 34486,
+        "version": "20261009011400"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011500_member_cleanup_reconcile.sql",
+        "sha256": "74a0d3b2af807310f76dd77d8769f3177ca8f47cef2161ca4b44f194bbb73081",
+        "size_bytes": 19735,
+        "version": "20261009011500"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011600_content_inspection_tickets.sql",
+        "sha256": "a3a7abf169d4edd2d86556def9823f5f56a2072796c3a9adcc1b46e1d23b58ec",
+        "size_bytes": 28732,
+        "version": "20261009011600"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011700_member_retirement_receipt.sql",
+        "sha256": "bfa60e1169dc3752c54a53c5a4be462af5a40ef87ccd4e8477f724230fd41456",
+        "size_bytes": 4435,
+        "version": "20261009011700"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009024414_member_cleanup_unknown_discovery.sql",
+        "sha256": "7d96eb284ff8d71685c6d3fe0379e7c3310a7dca89912bf855020920c3012e9c",
+        "size_bytes": 2166,
+        "version": "20261009024414"
+      },
+      {
+        "path": "backend/supabase/migrations/20261009031628_event_detail_projection.sql",
+        "sha256": "8b5b4af91067276fdfd27cd7340d30ff04f94ba632b029fa274885fde0be636c",
+        "size_bytes": 7137,
+        "version": "20261009031628"
+      },
+      {
+        "path": "backend/supabase/migrations/20261010030000_hidden_message_read_receipts.sql",
+        "sha256": "74653943bae50901d50c72b1f4ccd66502f2799fc8ea7a5115e73fde270fe6ef",
+        "size_bytes": 2492,
+        "version": "20261010030000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261014010000_operator_receipts_retirement.sql",
+        "sha256": "3ced5ccb5627ae9a2e5c9f3da6d3565af977ec302d390f6cc0bd111c239ac5c5",
+        "size_bytes": 10661,
+        "version": "20261014010000"
+      },
+      {
+        "path": "backend/supabase/migrations/20261014020000_ai_result_state.sql",
+        "sha256": "406d316b51c653d850045a87c4d8e6480c303c5f099a1899f7c1335281856494",
+        "size_bytes": 2448,
+        "version": "20261014020000"
+      }
+    ],
+    "functions": [
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/README.md",
+        "sha256": "103f69267e3773a59c47b0f22d5806000b042ce40a005ef0b0c228e61b7d9ee4",
+        "size_bytes": 2161
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/context.ts",
+        "sha256": "ef47cee00cd48ca184fe1d00221b25954aa34da589d777b2b7012fe167146b07",
+        "size_bytes": 2008
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/date-range.ts",
+        "sha256": "a70282ade9cdfad26a69e3fe63d8049feb96b6f5664a45b9925b4065f67771e7",
+        "size_bytes": 1248
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/discovery.ts",
+        "sha256": "4986e91b96f52c0d001edbdfd6aa8b5f3c7bb52c3e078ca66062fc73e0714448",
+        "size_bytes": 12530
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/event-discovery.ts",
+        "sha256": "b82b6ad1710d85206c28208ee19d58d2933319d9d83e313982e4fe13807e7a69",
+        "size_bytes": 6082
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/feedback.ts",
+        "sha256": "6c140b4ff2960ea3d1e4f984a7bc3cdf36d11d02e30f561e9611c433c98943b7",
+        "size_bytes": 4906
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/intent.ts",
+        "sha256": "55cb417ba7241ccd73a9bf59eeb6eb007253e620e77b70227e015e655435744a",
+        "size_bytes": 8762
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/orchestrator.ts",
+        "sha256": "9aae4050bf2d40abcd260e55eed86277470d2d5bd92d2ae3b8e3c359fbd88645",
+        "size_bytes": 9970
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/output-check.ts",
+        "sha256": "76d8414dd5c7b5d8d10f293edf0538558a30643e2f37fa33e6732093e5bd65ac",
+        "size_bytes": 2069
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/preference-match.ts",
+        "sha256": "48385957b8c4991bf2fd44ed3fd57c8de4dbe7792404256155f2a25beacb93ec",
+        "size_bytes": 6850
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/prompts.ts",
+        "sha256": "83aaa95ed9e880c4843b29abbe7e4ba462a4e6ff5e6f4d2c40a5c163e7cf2d2b",
+        "size_bytes": 4841
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/result-builder.ts",
+        "sha256": "ddf97498707222cfa7d297d4db92486ec17d9f9a702167e8e347a41926e901fd",
+        "size_bytes": 3284
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/settings.ts",
+        "sha256": "19f24e6112dafe0906c04fa8dfeac498d17e67cdfa36b074d0e1a4a09b1f4839",
+        "size_bytes": 2244
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/tools.ts",
+        "sha256": "b5144c02cf27fc7ca6ef1da3bfebf568520718491a1347400ed848eb5612c9d9",
+        "size_bytes": 2035
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/traits.ts",
+        "sha256": "d0ff94e9e1b4fb2249ca45fa421a97b8cc70f2664c75cf0ae417b2fa791019ba",
+        "size_bytes": 4040
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/eligibility.ts",
+        "sha256": "655213747d630d45e971af6389ca2376e676d34683dd7328036ccd65f08a1ad3",
+        "size_bytes": 1013
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/evidence-check.ts",
+        "sha256": "7b6405891c1ebf1a04b22735ec51677fd6c2d6db95649dd873e360920ffdad01",
+        "size_bytes": 1150
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/orchestrator.ts",
+        "sha256": "fbfc07358667c7ba06adbc2a087650ae1e29063e3b41f803db84367203bae438",
+        "size_bytes": 13863
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/output-check.ts",
+        "sha256": "044e82ad1318309d69da826e8dbd1f31d92a4715b423c9b3e54d74942bfd0020",
+        "size_bytes": 3983
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/prompts.ts",
+        "sha256": "30595f0b5d4b94fc49529ff8288740e21da8a1bb03e880585e23beba4cec5370",
+        "size_bytes": 940
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/publisher.ts",
+        "sha256": "a85ecee4446782bf1c68885d83c902731df0237f3c06ea5d433110b002043505",
+        "size_bytes": 1128
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/source-loader.ts",
+        "sha256": "683f0b4485d8ac6259925d8669fc28abf6222c070bf51f9a825863ca362159de",
+        "size_bytes": 1268
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/account-pool.ts",
+        "sha256": "f46c10cb3377ae5298b327bfed6bc9e889a4502f4d085b998c82cca68012bc74",
+        "size_bytes": 9687
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/budget.ts",
+        "sha256": "ffe28161a501ef3d7864c6e5015f9408b5f9edfa1aea947d77af7cb233db8259",
+        "size_bytes": 5681
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/member-request.ts",
+        "sha256": "2d62854772e624b40b743b57b8d02ebea2a3427cde379a439444a5f8db271c71",
+        "size_bytes": 3043
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/model-port.ts",
+        "sha256": "d9e145146e7ef81a18a5fffecd45c9c2a9a37f5303b21a6ee124cdb822d7347b",
+        "size_bytes": 1726
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/observability.ts",
+        "sha256": "249d896d36713744550ae7da9e34a77f79d731a3b4c483435b66f99027bff7c2",
+        "size_bytes": 2222
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/potens-adapter.ts",
+        "sha256": "79dd179425aef939b0385fe1430417e6f38cf16fbf88d90730ef5467a8449f13",
+        "size_bytes": 9737
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/privacy.ts",
+        "sha256": "ac301aad68c5cc16f782d696ef174933a238b6498ab0ead012626aaad6b73e64",
+        "size_bytes": 3970
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/provider-adapter.ts",
+        "sha256": "795aaa2c2f397665d3eb4f4b033044c7fd1035052aa025b892e2e65dd4061e5b",
+        "size_bytes": 5692
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/provider-errors.ts",
+        "sha256": "d2db471c5516281531a79338c3b747e3b7feebb06083be2b62f316d8c48f1b50",
+        "size_bytes": 3289
+      },
+      {
+        "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+        "sha256": "6daf67ccf0c85d87831eb488de697ead056559547381559a21da4d4ba9b8a568",
+        "size_bytes": 5525
+      },
+      {
+        "path": "backend/supabase/functions/_shared/auth/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/auth/eligibility.ts",
+        "sha256": "96eecc6e872e93ea581551cbbf87a20b5cfc84d1afebe072376130aa2af20ad6",
+        "size_bytes": 1270
+      },
+      {
+        "path": "backend/supabase/functions/_shared/auth/internal-caller.ts",
+        "sha256": "88d86eb50a74d5792103de1ee25cd0cafd383a336cbda90d08f5b82872753903",
+        "size_bytes": 894
+      },
+      {
+        "path": "backend/supabase/functions/_shared/auth/member-cleanup.ts",
+        "sha256": "51937528b1f3a0e783e9eda25f951730790833d9bfd423cf28a601362ff72c94",
+        "size_bytes": 24523
+      },
+      {
+        "path": "backend/supabase/functions/_shared/auth/principal.ts",
+        "sha256": "cafce32258e83060cbc9490cf0ffaec972b59550d1768de224d24725e84b009a",
+        "size_bytes": 2618
+      },
+      {
+        "path": "backend/supabase/functions/_shared/auth/session-bridge.ts",
+        "sha256": "7f7717eae325e014f3354da099e561db9fb7c30e82f6f0db285bd6411757a81b",
+        "size_bytes": 5944
+      },
+      {
+        "path": "backend/supabase/functions/_shared/config/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/config/env.ts",
+        "sha256": "2d1ae0717e4f0aacd64dc521875ba9550dc692d293b79a8eda87a424bd280666",
+        "size_bytes": 7244
+      },
+      {
+        "path": "backend/supabase/functions/_shared/config/naver.ts",
+        "sha256": "546dfde7541534aad54769fdfa4dd1f6d9d639005b1c50d432deb9701cf1817e",
+        "size_bytes": 2446
+      },
+      {
+        "path": "backend/supabase/functions/_shared/config/providers.ts",
+        "sha256": "221e59449399965e734fcca1974558d81bbd4a836bb3adaf3e72beab272796c9",
+        "size_bytes": 4360
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/ai.ts",
+        "sha256": "619909f47a333d3828d39225e714bf6467913283572bdc716c2bb829a95c82f8",
+        "size_bytes": 7427
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/common.ts",
+        "sha256": "eea4763f6e0c8931daf8dc09d613fc48ccb9e0d9c84552021067a1256e5ca7db",
+        "size_bytes": 864
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/matching.ts",
+        "sha256": "78d174b3e9deb347b2e3ebc151345eca521bcdd42ee9d9ba60042145c4b40b02",
+        "size_bytes": 1326
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+        "sha256": "caf64d5be42db7966ed1bd22d15955e8feed86c56d02aeb25264b27bde57bf90",
+        "size_bytes": 785
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/reports.ts",
+        "sha256": "08d4dad616cb026340b05e0f8827314bcfe5d78be7e7354b7b1ec2dc58d9fbe3",
+        "size_bytes": 5005
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/reviews.ts",
+        "sha256": "b66fe49df32189cb2b96a4b0fbbb7553444b9eadc75e42305bbe1cbf08245edd",
+        "size_bytes": 255
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/search.ts",
+        "sha256": "bc1d9ebbd2a5f0d59eb55ab0963193b771a6059ab2fd00f66344968e2734bbd4",
+        "size_bytes": 11785
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/signup.ts",
+        "sha256": "683b9db8d9ecf7bcb80e3c1cef6b5c3c7868378fbaa72b98dae1bbac6a39e173",
+        "size_bytes": 4615
+      },
+      {
+        "path": "backend/supabase/functions/_shared/contracts/verification.ts",
+        "sha256": "ae714907f13e05fbad0e2748c402e71d0bd2a5f25dce4fbacf5a4c30ba43fe36",
+        "size_bytes": 485
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/ai-account-budget-client.ts",
+        "sha256": "1e4e3ea048bbc8f20840b0939c1515b7a12175fe598db45c4c9db2f1e97fed79",
+        "size_bytes": 5317
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/ai-feedback-client.ts",
+        "sha256": "666da927344990c1d78441a35fad829440b684ae1f4a1abcaedcf14543c585b4",
+        "size_bytes": 3356
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/content-inspection-client.ts",
+        "sha256": "2c3f9d39d2a1e599c180bf84efad7f51c52771eda02777816d24fe0b056e8d44",
+        "size_bytes": 7077
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/internal-client.ts",
+        "sha256": "c8783432038f445f3766bc23e5e22052ef7f9f86dec0f907be424d45c90be45e",
+        "size_bytes": 4363
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/member-cleanup-finalization.ts",
+        "sha256": "175270b1e384d3c890858524864706e8ab46ebd84967bea6b2a3a6a12c94b3c7",
+        "size_bytes": 6708
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/public-client.ts",
+        "sha256": "27f1ad9cc0611a0b19756adf62a90751fbbf124e916511fb7223547286e5d68f",
+        "size_bytes": 677
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/report-operator-client.ts",
+        "sha256": "cd809aff277d07276a669612d044321866385a7f2d1f2a9f03ebe79c38c34b50",
+        "size_bytes": 16966
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/report-retention-client.ts",
+        "sha256": "e3690e1384ab62d1947b18181f489c0f92fc438a854a628784a161a74f581e67",
+        "size_bytes": 8896
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/completion.ts",
+        "sha256": "65ce51d12d2923f475e462965382f424f37adf05a882ad7c113edaef66a67604",
+        "size_bytes": 7713
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/conversations.ts",
+        "sha256": "44ab8119b18a897f5ff2cca29881346f87e08ffa5f2b756826d5ebc53b263359",
+        "size_bytes": 1255
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/events.ts",
+        "sha256": "876d87fb08486a2110970611e552b79222221ba66a7c445d4f58e8991fc4977e",
+        "size_bytes": 22662
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/jobs.ts",
+        "sha256": "1d85f3e591b5a53c27ea20447485c87baa35c5be977ecbd2480fe965d05d98b7",
+        "size_bytes": 19169
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/matching.ts",
+        "sha256": "6b56a5c88d10b72594ace1c9223a3cf89c4cd1e177fa8c7439ee127db9619bd3",
+        "size_bytes": 1674
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/member-cleanup.ts",
+        "sha256": "af8969012ba671a9a6f6ca31f83df9039511f9ac9c551b31638247a119c1dcad",
+        "size_bytes": 12134
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/notifications.ts",
+        "sha256": "efe9ee83d69308ef0eb8534742bee9dcdbd38b3a4ecbdec393f468c744814bb7",
+        "size_bytes": 541
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/posts.ts",
+        "sha256": "fe8190d050cccf483aad0dcd8521a36d0e18dafae2cc2c1e9264272d2dabac45",
+        "size_bytes": 1216
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/profiles.ts",
+        "sha256": "1f1121e87506616d00d57128837f18657cbb04e5cf5d6058ee7be475ed2c6b3d",
+        "size_bytes": 1143
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/reports.ts",
+        "sha256": "16bd4fb95a3e1ef766fc43b31348a6e6a6626bc027e5dd106c2e0372bfd40ed3",
+        "size_bytes": 19864
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/review-summaries.ts",
+        "sha256": "d6b8ede68f9a78b9a4491f3d107484fb76f2e6bf56cbadeb55aa8cf3a75544e4",
+        "size_bytes": 14979
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/reviews.ts",
+        "sha256": "587968606996f316e71655d6e579573e07a57c8c82df21d5882483fb280a14ff",
+        "size_bytes": 2423
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/search.ts",
+        "sha256": "83385ced182d8b184e19ac109196a804236b15a3c40b06da4c2dfa857b3b4c10",
+        "size_bytes": 11449
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/repositories/verifications.ts",
+        "sha256": "102d732e6b1e1ae677e2c55529603f58d508ee6acf46c725ff4f13e658dc5ada",
+        "size_bytes": 475
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/transport.ts",
+        "sha256": "ecc47220b1f0c094c68139e882f6fed662c47452b104fdc616b7f26cabd07733",
+        "size_bytes": 5309
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/user-client.ts",
+        "sha256": "815084a03a736efc851f0f0e20fd6553bea7a3b1fdd574053d299e8ded4be16d",
+        "size_bytes": 4461
+      },
+      {
+        "path": "backend/supabase/functions/_shared/db/worker-runtime-client.ts",
+        "sha256": "3e9ee8aefed6418f54d14499233513d5d7c71d3e49d1cffc0ccac347efc64b8a",
+        "size_bytes": 23543
+      },
+      {
+        "path": "backend/supabase/functions/_shared/http/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/http/cors.ts",
+        "sha256": "3e5df751763eecaa1a3720f7913320895a194b89f15ebd23fce0ac5d3d8f1cde",
+        "size_bytes": 3879
+      },
+      {
+        "path": "backend/supabase/functions/_shared/http/errors.ts",
+        "sha256": "8239a09ce20bf7b9d8500cfdafc2ad905a673c210ead99f60dba6542e77df025",
+        "size_bytes": 1850
+      },
+      {
+        "path": "backend/supabase/functions/_shared/http/request.ts",
+        "sha256": "c2aefeb7d5e88fa03da4dd5e2ad438afd5318b31e735a870a69b403bd2fed630",
+        "size_bytes": 2506
+      },
+      {
+        "path": "backend/supabase/functions/_shared/http/response.ts",
+        "sha256": "924eab0b9d18580d6da8fc0ef5fb5c34264f29d3cc4d2dd8947e19e8bb959b08",
+        "size_bytes": 1494
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/bank/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/bank/adapter.ts",
+        "sha256": "2631b235372adf7b76e4147a43df95c1ceb0c6bd034ca0938308a132a3dc4a67",
+        "size_bytes": 492
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/bank/port.ts",
+        "sha256": "aef9a2bdf85bd4ca0dd136fb7eaab197871bf88a2e52f19822acf9f34ef19a0d",
+        "size_bytes": 504
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/email/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/email/adapter.ts",
+        "sha256": "3f733a7b671053ebb3ea184ca7db821f6080c27aac3423c441e8fe79e70b63d2",
+        "size_bytes": 442
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/email/port.ts",
+        "sha256": "8f544f2be0d8711ba0411a378adfd7b8b5bc786ab15250d83f4d59ab6db70c4a",
+        "size_bytes": 454
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/adapter.ts",
+        "sha256": "458eb04cf1e58842c5101ad4aef99d9ba8b93f8dd3927e03747d6c0404dc2d60",
+        "size_bytes": 1928
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/detail.ts",
+        "sha256": "d09f1671a4b2f9b4c44252966c552b2454e29bf1b3ea599e0d29ea4de3cb0cca",
+        "size_bytes": 8523
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts",
+        "sha256": "34ec2160e0d6d1924713931510924c681a6b251c1367c5f7d14eb00888724a69",
+        "size_bytes": 11948
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/kopis.ts",
+        "sha256": "7b7b30e6f102d2f8899863664b7dfea5a4ff31b0e548c4e11ba52abbfae112e9",
+        "size_bytes": 14680
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/normalize.ts",
+        "sha256": "d32c7c95ac55843fece7b55d07953ed099fd23a2895eab9aa7260dd5475fb1a7",
+        "size_bytes": 9437
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+        "sha256": "8ea3a34e317f817d4b332936bc438c2716cf662ccdfc59e8b9e9051f136ea546",
+        "size_bytes": 4276
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+        "sha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668",
+        "size_bytes": 6796
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/events/tourapi.ts",
+        "sha256": "134a4faab53625cec925838a8eff7b43ba3a590197a9461fb7a55727a70b8f9f",
+        "size_bytes": 18003
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/identity/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/identity/adapter.ts",
+        "sha256": "2a3076600d4d8b9658f6f76c8912f5ead78a24ce10989628812ba2ef128653ee",
+        "size_bytes": 5729
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/identity/port.ts",
+        "sha256": "cd7a4855f19cfa83cc16a3d76712641e581b27338cd96249ff6cde6c1e5ab104",
+        "size_bytes": 631
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/phone/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/phone/adapter.ts",
+        "sha256": "eec8c599f5a8699d6c718216d3e662d1c6b20610ae763054c6b4c94213e3a15e",
+        "size_bytes": 456
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/phone/port.ts",
+        "sha256": "82c8f561b82d520d243c6ffca0e43acc7d2ac99fe2cbfff4cb0261b102cdac67",
+        "size_bytes": 468
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/places/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/places/adapter.ts",
+        "sha256": "d7f9e5c848df01b339479536a752968cd38b5536d4019a63c7f488c8c3d8fced",
+        "size_bytes": 7116
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/places/port.ts",
+        "sha256": "54459d3af752af8bc79294bc062988bd0decfbbe14393049f43bac4e7c494600",
+        "size_bytes": 2079
+      },
+      {
+        "path": "backend/supabase/functions/_shared/integrations/places/postal.ts",
+        "sha256": "d576bcd1d9360be69f4eefd29f07a9c7feb4855486a63693068c22899d0daa4e",
+        "size_bytes": 2307
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+        "sha256": "d3cacb813564a3b276a5cf20235d09738fab91b34658dc52e953d30087ae9dea",
+        "size_bytes": 8114
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/background.mjs",
+        "sha256": "0bb0f0b6092e3559dd1daaccbe5e91235cbf0d45e83e5c2b0147d814438433f7",
+        "size_bytes": 25548
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/completion-scheduler.mjs",
+        "sha256": "159794276b3c175ccb976619b02e1fb0bbd867ed05de823bc5f7b1b19a344250",
+        "size_bytes": 3301
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+        "sha256": "20d7ea22d0a7ced423cfcd81c9627efcc6d69c6f73b76940570c740176ce6486",
+        "size_bytes": 11346
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/enqueue.ts",
+        "sha256": "4271df5d851acae90baf9254a81bcedba3a6f0571911535822a800cea8ad46a2",
+        "size_bytes": 5318
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/event-collection.ts",
+        "sha256": "c61257217933727038f17c1995dbdcbe45fa9b43ae1f3c752e7eae1b559cf2f4",
+        "size_bytes": 10272
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/event-runtime.ts",
+        "sha256": "408ff66a424c14d8de6a5daa4b6894aec462403fd4ca92b11dd2878e9202a779",
+        "size_bytes": 31858
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/lease.ts",
+        "sha256": "9f9acfdacbc6e897a330d9970fc1fd4dd9be36e9364c4f9ad5f542702f40c763",
+        "size_bytes": 5061
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/registry.ts",
+        "sha256": "1a736d63ae6a393323b6547f4256d5a3f4158dff106668de005c5183861132cd",
+        "size_bytes": 5149
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/retry.ts",
+        "sha256": "8251f99dcb9113f3de6c5df819cdecc006139221b9b0e98a6a6f2801ecd611a6",
+        "size_bytes": 3382
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/runtime.ts",
+        "sha256": "d97fce44c16849dabf52328ef5c3860c98d130fef79ca5c8bbca876bed27bd08",
+        "size_bytes": 28028
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/safety-consumers.ts",
+        "sha256": "13dd53b191c823ef0c54d2a69f8a34329c2cee255143be42862ab615f92caa32",
+        "size_bytes": 34309
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/settings.ts",
+        "sha256": "d617fb3de85c161875762978b6b38b6c9eb852f0493b77c4cd96426300aecdde",
+        "size_bytes": 1432
+      },
+      {
+        "path": "backend/supabase/functions/_shared/jobs/worker-run.ts",
+        "sha256": "683b9a6a8a0f1ce0484450eeb76ff7f30da8655125044935fccf62d91c7faf1e",
+        "size_bytes": 2325
+      },
+      {
+        "path": "backend/supabase/functions/_shared/observability/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/observability/logger.ts",
+        "sha256": "d156d5a3270b1612fea3fe7584ea2d5ed6f3f0fd3b2a87e19582faf6333739c5",
+        "size_bytes": 1533
+      },
+      {
+        "path": "backend/supabase/functions/_shared/observability/metrics.ts",
+        "sha256": "a1ac90382dfb7d973692bdd98abfab624667dd9b74bd97e39c0e5259bf18f4cd",
+        "size_bytes": 7115
+      },
+      {
+        "path": "backend/supabase/functions/_shared/observability/redaction.ts",
+        "sha256": "0f1774442f2b2d28aa82b3c24c6928ca17291c630c3891ac9a8a13c84f9dae67",
+        "size_bytes": 2790
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/completion-service.ts",
+        "sha256": "c39f9595918919a27b7c3a237d45ab2336e1f224ed3a0c30d22d67902ce28971",
+        "size_bytes": 604
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/content-inspection.ts",
+        "sha256": "86552a41dbf1936ca99a47eb20ba7da0e266cfe505af25846cbd4cc9f973f0c2",
+        "size_bytes": 8655
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/conversation-service.ts",
+        "sha256": "4a245a60654c9b7023441a344c60c229411ad64645f881650ad43ee78a4124b3",
+        "size_bytes": 352
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/event-service.ts",
+        "sha256": "03647676f900f1a332dd7a009f7a3d17ce582e255dc3d181e3c00adc283aed9c",
+        "size_bytes": 4084
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/matching-service.ts",
+        "sha256": "5e3b01a4e1bff5bf63172c04421cacc1dbe85175ea55b77bd01ad9acb2ee18ae",
+        "size_bytes": 409
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/member-lifecycle-service.ts",
+        "sha256": "379286175c77d45848c74b49875d97095aecbb0cb95e00bc8609d60df1f6e7e2",
+        "size_bytes": 8896
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/notification-service.ts",
+        "sha256": "02650b04af3254683cb5080f3f7b2b47e9f72dd44d7fa307fbef1f551cf14471",
+        "size_bytes": 277
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/post-service.ts",
+        "sha256": "1dd58bb3b1959f2831c4a5580f4a61d012d9aabf4e0fb1d66b6328e86f3458c8",
+        "size_bytes": 225
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/profile-service.ts",
+        "sha256": "f5e82bedda35c42d421617ab1d78a3ac927cfd2bf03f3741304ab1b574bb348e",
+        "size_bytes": 329
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/report-retention-storage.ts",
+        "sha256": "5a29b4545311f53cb1dad656685f2feca6240ae2ffd1ec5990b5bdcff725b85a",
+        "size_bytes": 10688
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/report-service.ts",
+        "sha256": "bbca2f8761ea3d17e9db015094d763e77c85698a0ef51e2aa13e401fc74f9ea0",
+        "size_bytes": 590
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/review-service.ts",
+        "sha256": "392247e9df66b0fd4a7f5d93fdab917b1c3abcf2ba232dd7a687dc8b9db9a387",
+        "size_bytes": 356
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/search-service.ts",
+        "sha256": "4be9b97d6decaa537d6e9cb6f0f6770db33d51944d4eea9d2a0735cfea39b098",
+        "size_bytes": 7488
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+        "sha256": "7cb3173f75a012641401d5411a7c90c865c86b702b89e3cb7dc79a99efc46d5a",
+        "size_bytes": 5469
+      },
+      {
+        "path": "backend/supabase/functions/_shared/services/verification-service.ts",
+        "sha256": "090c5f8248973fb099a8aa0e77b94d9ce47a34d0dcf2f23aa589dfe072891f94",
+        "size_bytes": 410
+      },
+      {
+        "path": "backend/supabase/functions/ai-chat/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/ai-chat/handler.ts",
+        "sha256": "d6c928b9bc217142278a35acb6abcad3e230b0ec6307a63802dc4c3da862eb74",
+        "size_bytes": 20021
+      },
+      {
+        "path": "backend/supabase/functions/ai-chat/index.ts",
+        "sha256": "409c8cd9d546a2b5138805809d4ac480886ef48d435aa92057cdb93ad59a8984",
+        "size_bytes": 7214
+      },
+      {
+        "path": "backend/supabase/functions/deno.json",
+        "sha256": "111ff841375a544d9165daff3a6ff012ffa67005f48edaed15ee9238c37d7af3",
+        "size_bytes": 317
+      },
+      {
+        "path": "backend/supabase/functions/event-sync/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/event-sync/handler.ts",
+        "sha256": "a82a5840afcd959856ded3e335a0b8d5c313c2a091b4ef13f14ccdedde7b6857",
+        "size_bytes": 6676
+      },
+      {
+        "path": "backend/supabase/functions/event-sync/index.ts",
+        "sha256": "9187905f6110f2ec359da43776e6994d90ffcd3802be85264f01750424f0aa19",
+        "size_bytes": 11100
+      },
+      {
+        "path": "backend/supabase/functions/event-sync/operations.ts",
+        "sha256": "d796a14be95dc8681744fbffb561cfdf6b287e9fc879ec832935da9c53e17809",
+        "size_bytes": 7185
+      },
+      {
+        "path": "backend/supabase/functions/places/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/places/handler.ts",
+        "sha256": "2c285562623126741cb8abfdabe491979c969e8fc6fe81978852f200650d9f92",
+        "size_bytes": 4560
+      },
+      {
+        "path": "backend/supabase/functions/places/index.ts",
+        "sha256": "01f12ca0bb2f9fc7090ff994f7bb673f29607a293090c4c156b8645e44e139a7",
+        "size_bytes": 2952
+      },
+      {
+        "path": "backend/supabase/functions/review-summary-worker/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/review-summary-worker/handler.ts",
+        "sha256": "9aaf24f3914e6f04408f02f19079b3231a519668aaa7d8335f488d2c00be1012",
+        "size_bytes": 12323
+      },
+      {
+        "path": "backend/supabase/functions/review-summary-worker/index.ts",
+        "sha256": "933246942cbaf9c7a94f96fddd51ff7a2c198860eff3a127c75e098168ca4e06",
+        "size_bytes": 16630
+      },
+      {
+        "path": "backend/supabase/functions/scheduled-jobs/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/scheduled-jobs/completion-runner.mjs",
+        "sha256": "b07007db2f44c0673efdc7af74bba92df531df191b23ac482d2cfb32b3569484",
+        "size_bytes": 4977
+      },
+      {
+        "path": "backend/supabase/functions/scheduled-jobs/handler.ts",
+        "sha256": "f70c352a207a65921bd62bc16d9e8884a10cf937a367055fa680c3a2df32316f",
+        "size_bytes": 3014
+      },
+      {
+        "path": "backend/supabase/functions/scheduled-jobs/index.ts",
+        "sha256": "f0c76964f599bd2785febb66e1eba5a2d74b83d9ddceaf9914d9786bea98c594",
+        "size_bytes": 9778
+      },
+      {
+        "path": "backend/supabase/functions/scheduled-jobs/queue-runner.mjs",
+        "sha256": "15a2ae9f4de95231d02000874305c66e5983015257f5441cb4000ab86e4db837",
+        "size_bytes": 18542
+      },
+      {
+        "path": "backend/supabase/functions/service-api/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/service-api/content-inspection-http.ts",
+        "sha256": "8011c63cd0cff08aa154c71400e2eaf8c506adbaf5e3d4ae0d7fa8ce829e1934",
+        "size_bytes": 3422
+      },
+      {
+        "path": "backend/supabase/functions/service-api/events-http.ts",
+        "sha256": "fadf5a167d0154170e18946489980d514c70b1ab86998fd19d1057cda03af2fc",
+        "size_bytes": 3953
+      },
+      {
+        "path": "backend/supabase/functions/service-api/handler.ts",
+        "sha256": "2f200eb1a90599c59b677ceb19591e6f87a991db5df24e2f0ab34eeb1a262c1c",
+        "size_bytes": 20472
+      },
+      {
+        "path": "backend/supabase/functions/service-api/index.ts",
+        "sha256": "e08ae4c6331a6aae3c466eb5b19042604985b8823c0467a7bdec1d6cf5667cb6",
+        "size_bytes": 7762
+      },
+      {
+        "path": "backend/supabase/functions/service-api/member-cleanup-reconcile-http.ts",
+        "sha256": "c8f58173df1a81f7ea6d146a1bc5b2312b490664ee887493ad221615bbe8d5cb",
+        "size_bytes": 10679
+      },
+      {
+        "path": "backend/supabase/functions/service-api/profile-image-http.ts",
+        "sha256": "116405074648456a04c9365078657342f322602ddd09660fd717bdf812f2652c",
+        "size_bytes": 4915
+      },
+      {
+        "path": "backend/supabase/functions/service-api/report-operator-http.ts",
+        "sha256": "71756bb1be993d2f27dee00de7b32a7e5018357d116233114b0a07483ab07df4",
+        "size_bytes": 24451
+      },
+      {
+        "path": "backend/supabase/functions/service-api/routes.ts",
+        "sha256": "3d8c576158ae7212bf539685b39f9493b2e1f2954b90a821da18037b75e05112",
+        "size_bytes": 28674
+      },
+      {
+        "path": "backend/supabase/functions/service-api/search-http.ts",
+        "sha256": "77778f71b976662c0722fa467005dd54d66c573750dc373c1e7ddc790b51e2ab",
+        "size_bytes": 4927
+      },
+      {
+        "path": "backend/supabase/functions/signup/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/signup/handler.ts",
+        "sha256": "7ecbe5d11939dec29badcaa364c57ca5faa374f7bcf414d1db95ebc83fac5aad",
+        "size_bytes": 2855
+      },
+      {
+        "path": "backend/supabase/functions/signup/index.ts",
+        "sha256": "e72f5c410cc233edf872129033eb4f74d8fedf3c3d3f903d7d62048bdd7f67fb",
+        "size_bytes": 2927
+      },
+      {
+        "path": "backend/supabase/functions/test-institutional-email-auth/README.md",
+        "sha256": "a0f4ba6c580f9fe8579df8e09d4532d091f72081571b83272b94fb406d1c43df",
+        "size_bytes": 1222
+      },
+      {
+        "path": "backend/supabase/functions/test-institutional-email-auth/handler.ts",
+        "sha256": "47f0955c0990592b7ff1b25b197308827b0dcf7b61e81bf3a391bfa8d91ac8b0",
+        "size_bytes": 5581
+      },
+      {
+        "path": "backend/supabase/functions/test-institutional-email-auth/index.ts",
+        "sha256": "3645781c0f8a02b4d1a02871ca5f3b7562e08129a675b5a9ad3d254d72dccd2e",
+        "size_bytes": 523
+      },
+      {
+        "path": "backend/supabase/functions/test-phone-auth/README.md",
+        "sha256": "5d2868051c8d9e23fdd4faef5a1e7a1334c288ba48857dff87bccb000a6e3e7a",
+        "size_bytes": 983
+      },
+      {
+        "path": "backend/supabase/functions/test-phone-auth/handler.ts",
+        "sha256": "78d69e3996911080f99817dedde13ef4b46dc001b06fe8bd02b6fcd2e5a9b4fc",
+        "size_bytes": 6637
+      },
+      {
+        "path": "backend/supabase/functions/test-phone-auth/index.ts",
+        "sha256": "b1652bfdc64b7a0570a767ad03dc547b73ee832c2840f5e4094f7a8f17681848",
+        "size_bytes": 630
+      },
+      {
+        "path": "backend/supabase/functions/verification/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/supabase/functions/verification/handler.ts",
+        "sha256": "463f5cfafbf37428e83a3e2ff18fbe675981f3980219f17e8c93468dacc750ba",
+        "size_bytes": 495
+      },
+      {
+        "path": "backend/supabase/functions/verification/index.ts",
+        "sha256": "1292eb072dcb76f49e1acd927c0fb20b5c6f1ac3aa8b9e05b4786004407b0527",
+        "size_bytes": 514
+      }
+    ],
+    "tests": [
+      {
+        "path": "tests/ai/jonghyun/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/ai/jonghyun/budget-runtime.test.mjs",
+        "sha256": "b6f5912187537650eb5c68ff3ea82ea6a23912b7bf348daeabc13ec694c23524",
+        "size_bytes": 7500
+      },
+      {
+        "path": "tests/ai/jonghyun/chatbot-semantic.test.mjs",
+        "sha256": "9f2cddb47f5ccb52620b16b15ca76d4ddfe3a8ab69822d36f50aad2d8270ee76",
+        "size_bytes": 29181
+      },
+      {
+        "path": "tests/ai/jonghyun/chatbot.test.mjs",
+        "sha256": "a9ccbebc59c5844e95563fdddd659387f06c8fd5c9aab7858f0a4feac02f767d",
+        "size_bytes": 9041
+      },
+      {
+        "path": "tests/ai/jonghyun/event-discovery.test.mjs",
+        "sha256": "110a1b7a4a6dc8f15eb8ed2f5c08e03421bb131e54c44ad84fd4b9431baedd42",
+        "size_bytes": 7020
+      },
+      {
+        "path": "tests/ai/jonghyun/model-router.test.mjs",
+        "sha256": "f29d5c08ccef31e546dc12085ee5d2041b90a5e52dff4717d59b5ae08cefb87c",
+        "size_bytes": 7109
+      },
+      {
+        "path": "tests/ai/jonghyun/policy-guards.test.mjs",
+        "sha256": "cd2de8ccc220fdfe0d548984bcae31f5ca99575aebbe6a80985adaf9eb1443ec",
+        "size_bytes": 26098
+      },
+      {
+        "path": "tests/ai/jonghyun/policy-settings.test.mjs",
+        "sha256": "3ad19fefb9056a474c1faa0900760fc5790a8cb0db2a9339a28bb112201279d5",
+        "size_bytes": 5201
+      },
+      {
+        "path": "tests/ai/jonghyun/potens-adapter.test.mjs",
+        "sha256": "510045b6993b1249b16b8a6665f0e8f076b13923536d7e2b86e1abdcfcd3e63d",
+        "size_bytes": 8528
+      },
+      {
+        "path": "tests/ai/jonghyun/potens-deadline.test.mjs",
+        "sha256": "c2be73778adb328f5d881838dc3a68f563c53a91a937d783b5ba9cae3191567d",
+        "size_bytes": 12935
+      },
+      {
+        "path": "tests/ai/jonghyun/review-summary.test.mjs",
+        "sha256": "fe97cbcb83d72049fa1b9b4a3a52722c6e81f06399f39d8cc6a141f5661d9def",
+        "size_bytes": 15357
+      },
+      {
+        "path": "tests/ai/jonghyun/synthetic-eval.mjs",
+        "sha256": "a814caaba33b2faa72a1a44341a337ac8e36cab7ebe58b51fd8491e60fdc345d",
+        "size_bytes": 11063
+      },
+      {
+        "path": "tests/ai/jonghyun/synthetic-eval.test.mjs",
+        "sha256": "1f4ebe28e42315f500821498c3e11d31ebd76c6f836ca8979c36fe43f23a9d8f",
+        "size_bytes": 4301
+      },
+      {
+        "path": "tests/ai/minkyu/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/contracts/jonghyun/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/contracts/minkyu/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/contracts/minkyu/test_db_foundation.py",
+        "sha256": "79af7d3473c45634f588d367815ded3dff7bdbb1a805ff84a8bf51623a880fe0",
+        "size_bytes": 9989
+      },
+      {
+        "path": "tests/database/jonghyun/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/database/jonghyun/ai_budget.sql",
+        "sha256": "ca41ffe9a4a6f8212ee711f9288f1238f1f2b8df03b0fd0c9c621380f80d97fe",
+        "size_bytes": 3261
+      },
+      {
+        "path": "tests/database/jonghyun/ai_result_state.sql",
+        "sha256": "c8b9843bb3603243e762d2caa55f4fb18a0aa3155ab97a5d1913ec213c851c77",
+        "size_bytes": 6126
+      },
+      {
+        "path": "tests/database/jonghyun/current_summary_invocation.sql",
+        "sha256": "3b845bbf25901f0779470267da6cdb36159af0af8eea5dfde61cde6c262f6175",
+        "size_bytes": 4760
+      },
+      {
+        "path": "tests/database/jonghyun/event_filter_values.sql",
+        "sha256": "37c3f6699ad48ee4f14d5287228a311a57d32e43dce78c7f3ed699de4200d102",
+        "size_bytes": 2556
+      },
+      {
+        "path": "tests/database/jonghyun/events.sql",
+        "sha256": "525070bf3b6d4d194a5e561877f7fa698790564e2b563990c07a3b13f449318c",
+        "size_bytes": 16261
+      },
+      {
+        "path": "tests/database/jonghyun/operator_receipts_retirement.sql",
+        "sha256": "09c1374109a25e0500eba8528a63b99d10c4a45651cf1a01bd7de99e9add999c",
+        "size_bytes": 13691
+      },
+      {
+        "path": "tests/database/jonghyun/profile_traits.sql",
+        "sha256": "e1056d687f29fb1c40e19ecfc6f2f6472a78de92e99e7028b4cff871561cc62f",
+        "size_bytes": 8695
+      },
+      {
+        "path": "tests/database/jonghyun/review_summary_worker.sql",
+        "sha256": "93959722ec48d90d5bd03888e60ec5ed470f89fdc7e900f34efa89b41cd98416",
+        "size_bytes": 23674
+      },
+      {
+        "path": "tests/database/jonghyun/run_minkyu_regression.py",
+        "sha256": "15b9544a55f94d0842e74ff98fb5d78372fab914ca9aecfde3f1cb219162ac83",
+        "size_bytes": 2012
+      },
+      {
+        "path": "tests/database/jonghyun/run_proposals.py",
+        "sha256": "75683be418b1b8c89f5dbfb9b94b5caa65b5df3c1d85ff6d6bcc6dada80616d3",
+        "size_bytes": 5014
+      },
+      {
+        "path": "tests/database/jonghyun/test_isolated_database_preparation.py",
+        "sha256": "11634b13970fa5f8f5b5d0aaf92f2c0f02be40a4ce373f5553ce6468df5df080",
+        "size_bytes": 6267
+      },
+      {
+        "path": "tests/database/jonghyun/test_isolated_database_runner.py",
+        "sha256": "513f80c7afdae0b910a282a7e38e6ec67d136b2cf5f7334bdb49f37986052f43",
+        "size_bytes": 12303
+      },
+      {
+        "path": "tests/database/jonghyun/test_isolated_midnight_preparation.py",
+        "sha256": "1a64f59c8774c6e7054bf46e0972d3ad020754d7721989f8221cf70e2ecaae48",
+        "size_bytes": 23042
+      },
+      {
+        "path": "tests/database/jonghyun/test_isolated_observer.py",
+        "sha256": "c787824c954daf82c32dd8180d58c2b21770b2d440477724743a15798185e3c8",
+        "size_bytes": 13801
+      },
+      {
+        "path": "tests/database/jonghyun/test_j01_root_boundary.py",
+        "sha256": "a6d2ae092872c53b3728a81c29fc8beeb12d0eb91fbfb970a31cecdbf993a6fa",
+        "size_bytes": 3724
+      },
+      {
+        "path": "tests/database/jonghyun/test_member_root_boundary.py",
+        "sha256": "808a19e74f86d4b64c304587ed129f9f2a43131009682f11f813dfb268b1812f",
+        "size_bytes": 68384
+      },
+      {
+        "path": "tests/database/jonghyun/test_operator_receipts_retirement.py",
+        "sha256": "ccca9e188e0fda19814ad84d30e446ab2da653f4b220aae7a3173263e38db5c6",
+        "size_bytes": 8151
+      },
+      {
+        "path": "tests/database/jonghyun/test_operator_retirement_concurrency.py",
+        "sha256": "6cc7bf8ba9156924b9ff9bdfc908cf08161112dc80bd4eca51176fa075373351",
+        "size_bytes": 23382
+      },
+      {
+        "path": "tests/database/jonghyun/test_owned_storage_receipt.py",
+        "sha256": "23963220ca2fdbc3b6ec2473e29ac054c73222725aeecef7c2a8c884183f00a5",
+        "size_bytes": 9036
+      },
+      {
+        "path": "tests/database/jonghyun/test_preserved_resource_guard.py",
+        "sha256": "c0f956dd3fe6fe6f2a6352690d45ccf7eeeb8a167e6e63323f40c69dbc7fc9cb",
+        "size_bytes": 19871
+      },
+      {
+        "path": "tests/database/minkyu/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/database/minkyu/ai_account_budget.sql",
+        "sha256": "26983e8beee60e871b1da67e152dce59c3bf726b05cc064834f305ae83762369",
+        "size_bytes": 4116
+      },
+      {
+        "path": "tests/database/minkyu/ai_account_scopes.sql",
+        "sha256": "246df54c427c0eb00aa4aba8f9db488bb0760f3e0f1ac24a8741dddd45b87778",
+        "size_bytes": 3718
+      },
+      {
+        "path": "tests/database/minkyu/ai_atomic_requests.sql",
+        "sha256": "689713977bfa2c5e822ec40544fefdb273084a28084f4ad2429588ff9dfdbedc",
+        "size_bytes": 16501
+      },
+      {
+        "path": "tests/database/minkyu/ai_feedback_receipts.sql",
+        "sha256": "59332da6e8a50c99e6ccec11d6c11fcf33319567e3aa0eccefb67e2cdef81fb6",
+        "size_bytes": 4532
+      },
+      {
+        "path": "tests/database/minkyu/appointment_cancel_appeal_atomic_report.sql",
+        "sha256": "acc206f3dfdee35064e08ad3b04498c3b307e65415ecd4f8aa6662f1ec1e9730",
+        "size_bytes": 21409
+      },
+      {
+        "path": "tests/database/minkyu/appointment_cancel_appeal_intake.sql",
+        "sha256": "b4cf7fc3a45cbd4b27f761e7c61717bcf323e5f6d56e239216ac1e550cd3da5e",
+        "size_bytes": 22021
+      },
+      {
+        "path": "tests/database/minkyu/appointment_cancel_resolution_and_due.sql",
+        "sha256": "b4582b7f0f51b69c5393fffa25aa1e089e6fd13f1eea50cc2d7c2cbb81e2ab67",
+        "size_bytes": 48876
+      },
+      {
+        "path": "tests/database/minkyu/appointment_change_withdrawal.sql",
+        "sha256": "0c52f0e7fefc5f4cc584022e5643ce4b25763f8b8c8a1466644e578c15bc4edd",
+        "size_bytes": 15078
+      },
+      {
+        "path": "tests/database/minkyu/appointment_changes.sql",
+        "sha256": "d605746cc9fde20ed272093ba6800567fd65f4ddd823eefaf3e46a979355c82d",
+        "size_bytes": 20169
+      },
+      {
+        "path": "tests/database/minkyu/appointment_location_validation.sql",
+        "sha256": "3bc1ecb9fd7b9f0ae7fcc73977d188815c12038338823f3eae0a512e83140ec7",
+        "size_bytes": 2059
+      },
+      {
+        "path": "tests/database/minkyu/appointment_place_change_draft.sql",
+        "sha256": "5da189d972413d7564362cdadebddcdfd30f5227ac29b7263b7a322c9c8ab319",
+        "size_bytes": 19064
+      },
+      {
+        "path": "tests/database/minkyu/appointment_review_holds.sql",
+        "sha256": "face8edd11c76d86a8ea3887e645fc55e287b226a80218588b9a105b29132dcf",
+        "size_bytes": 32818
+      },
+      {
+        "path": "tests/database/minkyu/appointment_review_no_show_lifecycle.sql",
+        "sha256": "0fdb83c04dadaa9bac4d2e428d6948785c4eee2e31b128e8142b204a4d8a913b",
+        "size_bytes": 27754
+      },
+      {
+        "path": "tests/database/minkyu/appointment_safety_result_sync.sql",
+        "sha256": "0ad40162c97d02bc75d3c345c10afa1a49565e14a2bbbcf2953aaf22cbdd81f9",
+        "size_bytes": 37809
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_adjudication.sql",
+        "sha256": "0a369a7fa799400ee5c95678c5a1a91f49d821170ac99a0f558a894294b02b2b",
+        "size_bytes": 26959
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_capture_access.sql",
+        "sha256": "c1764263cfe43e80541218a1dd33125c742f5db7ff5c072bbb7b065c1b53bd74",
+        "size_bytes": 18597
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_final_closure.sql",
+        "sha256": "a8f5fc5d9e83803c7fabcc73f464709c9a84130451d8cd0da05f74c263ea45ef",
+        "size_bytes": 1878
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_notice_receipts.sql",
+        "sha256": "f67e71b4239aedff1c7241edb1b7afda89e1c9cf7ba6828d140a43d16e86f42d",
+        "size_bytes": 28052
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_operator_access.sql",
+        "sha256": "f5aa5c17e1723b49573df40f66303cf13ecfe6c41f68209bff35fb847587b182",
+        "size_bytes": 12592
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_review_start.sql",
+        "sha256": "3315c11ad4436e06990bed1add9a4df62a6f036522888378bed9eabbe8bfea87",
+        "size_bytes": 22570
+      },
+      {
+        "path": "tests/database/minkyu/assigned_report_review_state.sql",
+        "sha256": "41e75580c03d3d99b3810f0b43e069c19081d7fa2d984dc8bc3c442f2f3d8e59",
+        "size_bytes": 14384
+      },
+      {
+        "path": "tests/database/minkyu/bilateral_completion.sql",
+        "sha256": "481ed65ecb42081fd7647a931c7bfc3ad2933891740ea215637395d5bff52fd5",
+        "size_bytes": 5447
+      },
+      {
+        "path": "tests/database/minkyu/cancellation_clock_lineage.sql",
+        "sha256": "93b912fdbb94b0c3a1ffb7d97aeb8f89b56bce16239d35e334123d688920d215",
+        "size_bytes": 23430
+      },
+      {
+        "path": "tests/database/minkyu/cancellation_due_guard_closed.sql",
+        "sha256": "42e246228591371220904c2682c24cc5a0200487fa4b39af5818018f904f0951",
+        "size_bytes": 2283
+      },
+      {
+        "path": "tests/database/minkyu/cancellation_next_due_generation.sql",
+        "sha256": "9b3741183fe10662a395498c41554ad33a897434bef3dda8c45ca86c96b4d5ba",
+        "size_bytes": 4408
+      },
+      {
+        "path": "tests/database/minkyu/cancellation_report_final_closure.sql",
+        "sha256": "f5d71e7299dd94f297bff3ba9fedbea224e1e3e3185f7e6c97409deab9e477d1",
+        "size_bytes": 8481
+      },
+      {
+        "path": "tests/database/minkyu/common_connections.sql",
+        "sha256": "73eec8ac83c7440fc62887757e9ebb6166c55f85bbfa1c260e155c28d2d30c83",
+        "size_bytes": 18718
+      },
+      {
+        "path": "tests/database/minkyu/completion_review_policy.sql",
+        "sha256": "072ef9e2db823efee43a5760df8dcf8c9af7f1a187b17f7060c3f26f48de9295",
+        "size_bytes": 23182
+      },
+      {
+        "path": "tests/database/minkyu/completion_runner_role.sql",
+        "sha256": "409380e3cd7e574e948408604d7cb26525784d564d45050a1920403592215f51",
+        "size_bytes": 7829
+      },
+      {
+        "path": "tests/database/minkyu/content_inspection_tickets.sql",
+        "sha256": "4ff5e110e7ae30adf0a3c1b08a586432539bc2747b3a97d46375d67f5428bbf5",
+        "size_bytes": 24267
+      },
+      {
+        "path": "tests/database/minkyu/conversation_read_state.sql",
+        "sha256": "34d45b6a4c1a8baf3cfc9f1a353c25b4aded642be123a02110d123773a13503d",
+        "size_bytes": 2343
+      },
+      {
+        "path": "tests/database/minkyu/conversation_visibility.sql",
+        "sha256": "4af074dc2faa460a8ba2e950e02dbf34d222916c88b2f6377be7ea279b316594",
+        "size_bytes": 13587
+      },
+      {
+        "path": "tests/database/minkyu/core_service_api.sql",
+        "sha256": "41d5e9c73a7c7e369cdb51ee6978b9678666d50565093a96360dd6b2a1dd2d62",
+        "size_bytes": 9382
+      },
+      {
+        "path": "tests/database/minkyu/current_completion_consent_policy.sql",
+        "sha256": "8d4cd69ad17135ff436eef7f0a889b12081e2840229a5b51b6b27aa9a0c39022",
+        "size_bytes": 16023
+      },
+      {
+        "path": "tests/database/minkyu/current_member_blocks.sql",
+        "sha256": "f81519848f6598c110822e056a749c20bb72e00cd8680e4f61a395e3284159d6",
+        "size_bytes": 16183
+      },
+      {
+        "path": "tests/database/minkyu/current_member_lifecycle.sql",
+        "sha256": "c32077c6ba0fbad3ddd734e791bc95a950c040a403015375bb943a9875da6d15",
+        "size_bytes": 23721
+      },
+      {
+        "path": "tests/database/minkyu/current_public_search.sql",
+        "sha256": "f7f1a3ab0514f5f7e882e426f179aa22ac6ad7286a25670aba4dc4026cd41829",
+        "size_bytes": 18505
+      },
+      {
+        "path": "tests/database/minkyu/current_recruitment_reopen.sql",
+        "sha256": "c122269f7bcf300b28e6ef0ab5b4d67ace90bbc35b09cf2bf9a8cca2900c0b09",
+        "size_bytes": 19499
+      },
+      {
+        "path": "tests/database/minkyu/current_summary_fences.sql",
+        "sha256": "ad4e95fbc88155e511e29b8ebe7183c2a8b0487ca530935dd36beb23487edaf6",
+        "size_bytes": 14986
+      },
+      {
+        "path": "tests/database/minkyu/current_sweetness_ledger.sql",
+        "sha256": "a539e8cc98fc575d6c5e40d6f1c1dec47670274e0647577c3d42feb77fac321b",
+        "size_bytes": 12475
+      },
+      {
+        "path": "tests/database/minkyu/event_collection_lane.sql",
+        "sha256": "265ae02b5bbf62d189cbd68b49a487f1c9d78d8974dc3ac86e36b69394c1e5c2",
+        "size_bytes": 19371
+      },
+      {
+        "path": "tests/database/minkyu/event_detail_post_projection.sql",
+        "sha256": "f41e2739744bb4b1e662f25b5eae2e786b24eae3d5b341916fc67168bacaf588",
+        "size_bytes": 15351
+      },
+      {
+        "path": "tests/database/minkyu/event_detail_projection.sql",
+        "sha256": "17b5536f7a7d4f2bdd2ba8bb6cd490b2f24609498d4662922b74ee92143ab05f",
+        "size_bytes": 14653
+      },
+      {
+        "path": "tests/database/minkyu/event_invocation_audit.sql",
+        "sha256": "1b7abc20bf666ecd09d3cf128eb89b732571b779bd807c8401232dc0a5c7f463",
+        "size_bytes": 21014
+      },
+      {
+        "path": "tests/database/minkyu/event_rankings.sql",
+        "sha256": "9314e19827c4bff737da719cf2589871af90e7d3336e5c51a854c2c6ee2f952f",
+        "size_bytes": 9018
+      },
+      {
+        "path": "tests/database/minkyu/event_storage.sql",
+        "sha256": "336eba911cd0f776d8524aa4b9f29b57c07c9b25f52d45ec28b5a0f73bf9ede2",
+        "size_bytes": 11314
+      },
+      {
+        "path": "tests/database/minkyu/first_chat_application.sql",
+        "sha256": "535e6364c0e074f919b05c156fcf09edac60bad224231bb795afd54c71e7bffd",
+        "size_bytes": 8577
+      },
+      {
+        "path": "tests/database/minkyu/general_sanction_appeal_intake.sql",
+        "sha256": "96b53887d05d8bb7ed1f1fb46c9ba2647f22e22781b29faac62837ac4a0bc48f",
+        "size_bytes": 2860
+      },
+      {
+        "path": "tests/database/minkyu/general_sanction_appeal_resolution.sql",
+        "sha256": "c810c257cd5f56080cf01e995c8a22872f636e148e559299bc37ac6ed149e836",
+        "size_bytes": 3067
+      },
+      {
+        "path": "tests/database/minkyu/general_sanction_notice_delivery.sql",
+        "sha256": "271aa2c98be77be74c8d5a8d45d9b21100e6f9a6ee3e7bd45be8df5a725b93da",
+        "size_bytes": 3754
+      },
+      {
+        "path": "tests/database/minkyu/global_worker_lease.sql",
+        "sha256": "f82407bd6a576178135000d7cafd35b167b322b9ac099bec97a3b6abf9143d30",
+        "size_bytes": 3692
+      },
+      {
+        "path": "tests/database/minkyu/historical_safety_episode.sql",
+        "sha256": "0e6bb7d706c4a25611c50fe8e56fb2dbab1cc9361b670936330129f31b881549",
+        "size_bytes": 4563
+      },
+      {
+        "path": "tests/database/minkyu/legacy_upgrade_assertions.sql",
+        "sha256": "a9aed6136bf0c2f16f8bfc0c301f1a2676ea815eb8eac49ca37b203dcc9c6cd3",
+        "size_bytes": 12474
+      },
+      {
+        "path": "tests/database/minkyu/legacy_upgrade_fixture.sql",
+        "sha256": "0db76e6d0105b7b99105c3d3c0a0c8b3fa94c647157686da5b0b58fc2954408c",
+        "size_bytes": 14807
+      },
+      {
+        "path": "tests/database/minkyu/matching_lifecycle.sql",
+        "sha256": "06355451d4f3acac0f6c3383d336c9d7af7851d333c76d2fb8f91936f0920d48",
+        "size_bytes": 21660
+      },
+      {
+        "path": "tests/database/minkyu/member_activity_sanction_gates.sql",
+        "sha256": "bff0bbb2b624a5cf8908c9c62625c513ac5e1acda2ec2d48d3cd4668b0049385",
+        "size_bytes": 16634
+      },
+      {
+        "path": "tests/database/minkyu/member_cleanup_ack_recovery.sql",
+        "sha256": "867d64689b59752d82ed2c94a180f04b956885823fbe11a185cc626c6dd3fbe6",
+        "size_bytes": 10755
+      },
+      {
+        "path": "tests/database/minkyu/member_cleanup_dependencies.sql",
+        "sha256": "99fffc407af370461c311de4ab176b85e1b5ef28e771279b8f26684688650c7a",
+        "size_bytes": 13759
+      },
+      {
+        "path": "tests/database/minkyu/member_cleanup_invocation.sql",
+        "sha256": "7b0da1088ba40ec418ffc229640df5cf10363d5c2ed6b1bde44de7f529995964",
+        "size_bytes": 11514
+      },
+      {
+        "path": "tests/database/minkyu/member_cleanup_reconcile.sql",
+        "sha256": "9c570376c88e104d0944540f006cab6f119530dc5e2e3dda2cd6756f8e233ddd",
+        "size_bytes": 18686
+      },
+      {
+        "path": "tests/database/minkyu/member_cleanup_unknown_discovery.sql",
+        "sha256": "aa7aa81a983b8b1b65a23b87189b0f184456366bc80f2dc4e4f89cc3ca30ad5f",
+        "size_bytes": 13910
+      },
+      {
+        "path": "tests/database/minkyu/member_own_posts.sql",
+        "sha256": "9386038b3695df7d1f23503cd4133e9d85d7c800e29f2b39cd0611a04bdd4cd3",
+        "size_bytes": 2025
+      },
+      {
+        "path": "tests/database/minkyu/member_profile_preferences.sql",
+        "sha256": "b5e5d0e54350e748a43d259078515e2ff87d1c7fe4cb9673b6a8cf72dfa37ed1",
+        "size_bytes": 7334
+      },
+      {
+        "path": "tests/database/minkyu/member_reports.sql",
+        "sha256": "d1130dddbe6c63b3dad34c2fcc60dd2b6d9a363fce317554087ee1d2e5e30732",
+        "size_bytes": 16719
+      },
+      {
+        "path": "tests/database/minkyu/member_retention_batches.sql",
+        "sha256": "ec505dbca3b12edd4e88e3f3b03d7aa616ad64980578d7274c021ca8e254b081",
+        "size_bytes": 33210
+      },
+      {
+        "path": "tests/database/minkyu/member_retirement_receipt.sql",
+        "sha256": "d1f002824d11f0ca8f03577a9021be313a40a9da466b21d9230ecbe3c725f05d",
+        "size_bytes": 1775
+      },
+      {
+        "path": "tests/database/minkyu/member_safety_state.sql",
+        "sha256": "9967c68bfcde25c2ecfbae4f75b21f0d9d3f1f77a4feb705305d238ba8519d52",
+        "size_bytes": 16074
+      },
+      {
+        "path": "tests/database/minkyu/member_sanction_history.sql",
+        "sha256": "18f2add1fc6bd2370fa049aa2a7d16703ab2a3c4fa9180db5b733f83eee8ae82",
+        "size_bytes": 12937
+      },
+      {
+        "path": "tests/database/minkyu/naver_signup.sql",
+        "sha256": "233623fa79d4e171f79ca29555ee990078d7c439e5b6c34984b8de6447e4544a",
+        "size_bytes": 16221
+      },
+      {
+        "path": "tests/database/minkyu/post_event_links.sql",
+        "sha256": "641f603223e58528eb0f77bbaa009ef89b6cb528cfb467f130ccf6a7e21d0749",
+        "size_bytes": 26800
+      },
+      {
+        "path": "tests/database/minkyu/product_connection_v2.sql",
+        "sha256": "6b00ab39bee3f04d29a0dc211aa4982e5a3c4e82878a6f6d3fe3acec40c1ea59",
+        "size_bytes": 9561
+      },
+      {
+        "path": "tests/database/minkyu/profile_image_access.sql",
+        "sha256": "598d9e16d99f1755be8cfb57b259960fa143546500f6765e8585188919dda24c",
+        "size_bytes": 10342
+      },
+      {
+        "path": "tests/database/minkyu/profile_image_authenticated_access.sql",
+        "sha256": "5c7f2ee6570bf9b17e21536d55c5da47cb18d4d9ed97ad9491a2e02e5cb97381",
+        "size_bytes": 8876
+      },
+      {
+        "path": "tests/database/minkyu/public_post_search.sql",
+        "sha256": "704ce543489a4d018fa63dd50f17757baa73271bcbe8b7e89aeca69bd2e555e4",
+        "size_bytes": 8969
+      },
+      {
+        "path": "tests/database/minkyu/public_search_age_range.sql",
+        "sha256": "0b14299e3c4b41c9c6d77b47fc6bfbf11d26ad662922943b47d01b6aebcbee3d",
+        "size_bytes": 22258
+      },
+      {
+        "path": "tests/database/minkyu/public_search_v2.sql",
+        "sha256": "7eeaa84002d180619f6c5cb68075f2dfe8adf9c84207069fa1ee6232c33078d6",
+        "size_bytes": 20329
+      },
+      {
+        "path": "tests/database/minkyu/report_hidden_targets.sql",
+        "sha256": "5704fe34b834e8031895be2452c3c44e94c30f9199d3230ce1c15fcbdf2cb02f",
+        "size_bytes": 3598
+      },
+      {
+        "path": "tests/database/minkyu/report_retention_dispatch_fence.sql",
+        "sha256": "cbe256d0aa7df46045dde9ed30686ea2197ca531424b72fec8bd1ff50fb65181",
+        "size_bytes": 23814
+      },
+      {
+        "path": "tests/database/minkyu/report_retention_purge.sql",
+        "sha256": "f1fcbe5a967addec547634ef55346f5af0191326bb045bab4fe73f745f26ad8c",
+        "size_bytes": 18605
+      },
+      {
+        "path": "tests/database/minkyu/review_automation.sql",
+        "sha256": "bee0089675b07dbb944238ea69427f64d6ca92175678b19a18bfbd8d1d4c10b3",
+        "size_bytes": 7719
+      },
+      {
+        "path": "tests/database/minkyu/review_release_policy.sql",
+        "sha256": "f895d2c759e308062a3cd415df363868dafdba715f6ae90f3caada47e143bd7e",
+        "size_bytes": 11849
+      },
+      {
+        "path": "tests/database/minkyu/review_summary_storage.sql",
+        "sha256": "3cee39ffb3ff1b1df2bd924e9e0406e9c9e6233dc057a60a550394ad4fc21a27",
+        "size_bytes": 11733
+      },
+      {
+        "path": "tests/database/minkyu/sanction_adjudication_draft.sql",
+        "sha256": "63e157d0b79fe309dd47be1cfc076d4f476d8831e7ac21bac909fd10679c0968",
+        "size_bytes": 35294
+      },
+      {
+        "path": "tests/database/minkyu/test_ai24_live_binding.py",
+        "sha256": "90d4433292ac17fdf816e90003558751f2fef97b39160555f4599ed85a62ea18",
+        "size_bytes": 59232
+      },
+      {
+        "path": "tests/database/minkyu/test_auth_negative_preparation.py",
+        "sha256": "757979d41ebdabf83dc90bfcf176c0b3e88bea48afc070f54b2d80ab5f03765a",
+        "size_bytes": 40157
+      },
+      {
+        "path": "tests/database/minkyu/test_current_policy_preparation.py",
+        "sha256": "fdc31a37258be58e121511b15008146524d3de11db59b12605c007ee8282c4df",
+        "size_bytes": 88340
+      },
+      {
+        "path": "tests/database/minkyu/test_database_runner.py",
+        "sha256": "0cfbc8b6041e7459a17630785f18ffeb167fc28fd987a0c185fefbd27db8473c",
+        "size_bytes": 10566
+      },
+      {
+        "path": "tests/database/minkyu/test_edge_tools.py",
+        "sha256": "23db703e2ae0be0d0a9189c7a3d013646d6c72aab47cdb10fe7f181f7a7cea03",
+        "size_bytes": 8377
+      },
+      {
+        "path": "tests/database/minkyu/test_event_database_runner.py",
+        "sha256": "05f9beef0b6a81866c61beb5dbc2798bbe37f54491b42e562119dda6a4a6b2d0",
+        "size_bytes": 6792
+      },
+      {
+        "path": "tests/database/minkyu/test_gateway_preparation.py",
+        "sha256": "047f04e094dea41ce7a95096106e83b4772835e4a0bce097f3942ccf77f48317",
+        "size_bytes": 16771
+      },
+      {
+        "path": "tests/database/minkyu/test_local_gateway_config.py",
+        "sha256": "e2fadca3aad56b30958eec8cae4f5181ed96c99a8baf57910473f50f2884a64a",
+        "size_bytes": 11143
+      },
+      {
+        "path": "tests/database/minkyu/test_local_tools.py",
+        "sha256": "516c5e8ff443b5f14f6c9e6b0a3b4de4e9ec980a86eb287704ee7067492f4f39",
+        "size_bytes": 9598
+      },
+      {
+        "path": "tests/database/minkyu/test_production_preparation.py",
+        "sha256": "4ce2c52370b1b4ffc2faae91eb2e176db0f07e3db382527efa308ce4261554a6",
+        "size_bytes": 36061
+      },
+      {
+        "path": "tests/database/minkyu/test_remote_baseline_preparation.py",
+        "sha256": "1db353174f431fb8279c5d0ee496cf47c1184f35e5b38a6429b47b53dd9c4f87",
+        "size_bytes": 11552
+      },
+      {
+        "path": "tests/database/minkyu/test_restoration_readiness.py",
+        "sha256": "9fc38a09f7aab06a508fc4bb35478ec22b926a506adc29acd832660d74c2137d",
+        "size_bytes": 25802
+      },
+      {
+        "path": "tests/database/minkyu/test_schema_catalog_comparison.py",
+        "sha256": "c4e0f44553ca9640a72ec3cb3c9d996f556d0880569284a96177266d5016f536",
+        "size_bytes": 13991
+      },
+      {
+        "path": "tests/database/minkyu/test_signed_auth_binding.py",
+        "sha256": "d6a2d6c46a58515d999357f270c52b147cbfb832a511be3dbb5c4412f3653557",
+        "size_bytes": 217890
+      },
+      {
+        "path": "tests/database/minkyu/worker_intent_confirmation.sql",
+        "sha256": "0520d83c5f61c9334a69ae913847f174847fc869222631f022461dd5c2021e3b",
+        "size_bytes": 24247
+      },
+      {
+        "path": "tests/database/minkyu/worker_invocation_audit.sql",
+        "sha256": "ebc568e0913a98a998f0f8afa2321ef1f5b642df3f173bd0ba0ecdcf8269614e",
+        "size_bytes": 6971
+      },
+      {
+        "path": "tests/database/minkyu/worker_job_fences.sql",
+        "sha256": "ba0b9c2e121ce9473bdb7744169ed35fdcbd5d4282339e4aac7bea32c8bbb5eb",
+        "size_bytes": 13497
+      },
+      {
+        "path": "tests/database/minkyu/worker_jobs.sql",
+        "sha256": "d873ae33d67a7b69c4bb949f44ff890aa42ee8ed34cce276a1107527cd4e3b8a",
+        "size_bytes": 8749
+      },
+      {
+        "path": "tests/database/minkyu/worker_queue_retention_schedule.sql",
+        "sha256": "c4e30fa544c769be7ec4d00e5e2645835d65127b2b4a3ca678445a6152157cb0",
+        "size_bytes": 21591
+      },
+      {
+        "path": "tests/database/minkyu/worker_queue_runner_role.sql",
+        "sha256": "f81063116285681e5f1a3346cc010edbe09c87ecc58833f86b63bf3df02b7161",
+        "size_bytes": 5526
+      },
+      {
+        "path": "tests/database/minkyu/worker_queue_schedule.sql",
+        "sha256": "995ad58695dcb736557dce3538e1f0155f0da1352a773230a50e6819f3af4247",
+        "size_bytes": 11664
+      },
+      {
+        "path": "tests/database/minkyu/worker_runtime_atomic.sql",
+        "sha256": "b669ce840b1de135391345e8904c35f83de34c69247b76eff6fe28a0f99c2ad3",
+        "size_bytes": 9915
+      },
+      {
+        "path": "tests/database/minkyu/worker_runtime_journal.sql",
+        "sha256": "cea40e69a9268562577f3ba929a608a34ecfec50fe696c2413afa84dc17c2e17",
+        "size_bytes": 2638
+      },
+      {
+        "path": "tests/database/minkyu/worker_runtime_ports.sql",
+        "sha256": "e3ec09a40bfac5926ec7f3fbe69b3842263e548a766ccadb8c2a34f4a278b453",
+        "size_bytes": 2511
+      },
+      {
+        "path": "tests/database/minkyu/worker_supported_claim.sql",
+        "sha256": "de05e67454e3bc9851013af1d8bbbfcfd3cf4fd26f22f38227df779c228706f8",
+        "size_bytes": 12470
+      },
+      {
+        "path": "tests/fixtures/jonghyun/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/fixtures/jonghyun/contract-cases.json",
+        "sha256": "4f7d917f5b87101506b992ac3295e92c7e9e19def71abc319b0f8b5b8532dbdc",
+        "size_bytes": 18470
+      },
+      {
+        "path": "tests/fixtures/jonghyun/synthetic-eval-cases.json",
+        "sha256": "61bf04df12455d55bb1225cab5681769c8bba51bfa1520f9db74e033e4e0cd98",
+        "size_bytes": 6513
+      },
+      {
+        "path": "tests/fixtures/minkyu/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/fixtures/minkyu/content-inspection-cases.json",
+        "sha256": "00f06e42e04fd8c3043bb21c4d5e95f4c1f16dcabd697b9291b234458f47bc76",
+        "size_bytes": 7062
+      },
+      {
+        "path": "tests/fixtures/minkyu/db-foundation.json",
+        "sha256": "88cb0571cb2cef89e5b6d726a7e2facb7b0f634e5c58a340a8577e9c6512a016",
+        "size_bytes": 23738
+      },
+      {
+        "path": "tests/functions/jonghyun/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-ai-conservative-checks.test.ts",
+        "sha256": "73210e646238e15b82833d1a07809404ac42270178264dec53111253cf70d966",
+        "size_bytes": 6593
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-ai-observability.test.ts",
+        "sha256": "bc85703c716c03f0afd74b178fc9551d70e31408d8decd07e1827f8bf304e117",
+        "size_bytes": 6126
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-ai-runtime.test.ts",
+        "sha256": "f14d40764ab5287ea1bac354424671d148318d0c0c4340c9f54f08a071ca40da",
+        "size_bytes": 10177
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-ai-shared-summary.test.ts",
+        "sha256": "ca4eff9b8f44b2d9a9e77df9c4c3b627e14fd4253f0b1fea00b9505d285bcbcb",
+        "size_bytes": 6416
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-integration-mobile.test.ts",
+        "sha256": "ad0222b2e4e18b5913e20725aa0099315ccb9943e5f386e0d9f1a27ac29036fe",
+        "size_bytes": 11819
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-shared-event-budget.test.ts",
+        "sha256": "591005d27593e6ec37acdac58a7b0e88b716e3baea687291a75cf2f901308caf",
+        "size_bytes": 3780
+      },
+      {
+        "path": "tests/functions/jonghyun/20261007-shared-queue.test.mjs",
+        "sha256": "12e09dc1bb493623633f8bfa58541d650e499ea77f48898d452d67075dce19c7",
+        "size_bytes": 10132
+      },
+      {
+        "path": "tests/functions/jonghyun/20261008-ai-result-receipt.test.ts",
+        "sha256": "f4078433ac4796c388b5c8495f2a8c1a1a75bb47951bd5cdde43761267a33ffe",
+        "size_bytes": 17415
+      },
+      {
+        "path": "tests/functions/jonghyun/20261008-feedback-maintenance.test.ts",
+        "sha256": "3f3283dee4ef0e9998b6ebe59bbb9c99f615820ff74877b7ebe4a8d32915d4fd",
+        "size_bytes": 4240
+      },
+      {
+        "path": "tests/functions/jonghyun/20261008-followup-runner.test.mjs",
+        "sha256": "99d4f94ebb7f718c96ccb2035a22192eac93aa1eeacf6a7fe6dbf7df0311ace9",
+        "size_bytes": 9024
+      },
+      {
+        "path": "tests/functions/jonghyun/20261008-followup-safety.test.ts",
+        "sha256": "fa8bda31bbf4ba4716284c8a36696a4ccf338631e78669412eaeed8151f432a0",
+        "size_bytes": 11170
+      },
+      {
+        "path": "tests/functions/jonghyun/20261008-mobile-connections.test.ts",
+        "sha256": "aa0731d53326bab7a29efe0cb6fc3a69baa674c4faa07706144d03d234735ef2",
+        "size_bytes": 7256
+      },
+      {
+        "path": "tests/functions/jonghyun/ai-account-pool.test.ts",
+        "sha256": "32d61efaa8a493167000dfe6e8b36715d2c6e4867cde764f76228471277f46ab",
+        "size_bytes": 13517
+      },
+      {
+        "path": "tests/functions/jonghyun/ai-chat-http.test.mjs",
+        "sha256": "8dcba778ffe9efaba83383e9aad0aff99239e5eb1b3defecfacfdb60388061eb",
+        "size_bytes": 11601
+      },
+      {
+        "path": "tests/functions/jonghyun/ai-feedback.test.mjs",
+        "sha256": "d4d535c27934ed9947111af9b08303ffcc261b1fab3aae60ef4db695adca358a",
+        "size_bytes": 8132
+      },
+      {
+        "path": "tests/functions/jonghyun/ai-result-state-db.test.mjs",
+        "sha256": "9378bcbb100c99b11838aa4c17e554122eba4d2d0083f4ed30373d303fc80922",
+        "size_bytes": 6973
+      },
+      {
+        "path": "tests/functions/jonghyun/ai-result-state-http.test.mjs",
+        "sha256": "1d2eedc7b15b1c643b1e7368386e890f2db8fcc8791cf78aa17d5e84439cfb23",
+        "size_bytes": 8484
+      },
+      {
+        "path": "tests/functions/jonghyun/ai-result-state-service.test.mjs",
+        "sha256": "78712cdab9087823560803086c29cb0c685ca2105880f10668273d4640ade217",
+        "size_bytes": 5004
+      },
+      {
+        "path": "tests/functions/jonghyun/background-runner.test.mjs",
+        "sha256": "675583c2d8a8546630bc6e43b492f7c415a825fcb347b5955cdf329dc0ca0863",
+        "size_bytes": 33324
+      },
+      {
+        "path": "tests/functions/jonghyun/completion-scheduler.test.mjs",
+        "sha256": "fd58f02e82ae671c443a19cc8e4b3abf1f17ea3e5015d4683dc1834ec91da929",
+        "size_bytes": 6155
+      },
+      {
+        "path": "tests/functions/jonghyun/daily-run.test.mjs",
+        "sha256": "9e842b9cbe07e2d3f4a1f7a3bfeccb1c68f087f60f5a3b386f5b8c2f9b27361b",
+        "size_bytes": 8477
+      },
+      {
+        "path": "tests/functions/jonghyun/event-collection.test.mjs",
+        "sha256": "465af083503ff18a1ed9b37ed43ee467e0f3c32b254eb4d12cc2c558fdf4e53e",
+        "size_bytes": 4902
+      },
+      {
+        "path": "tests/functions/jonghyun/event-detail.test.mjs",
+        "sha256": "a95bfa04fc00e9ecc8ccdca9bb19053f83a312bf0a2672ff861157997a118407",
+        "size_bytes": 3326
+      },
+      {
+        "path": "tests/functions/jonghyun/event-policy.test.mjs",
+        "sha256": "f242ba7aa7eac0a59dbd7d71dff94bd310923064ed94ab14d0e21cbea5b5a2b9",
+        "size_bytes": 9553
+      },
+      {
+        "path": "tests/functions/jonghyun/event-provider-kopis-ranking.test.mjs",
+        "sha256": "ac38f709ee2df284593587219259d5209d9ce4184e7d82f5f697bef28ed51e7b",
+        "size_bytes": 12310
+      },
+      {
+        "path": "tests/functions/jonghyun/event-provider-seoul.test.mjs",
+        "sha256": "b7a9168c5fff6f3bad567cd708fa59e0662f3e653ffa4dbf945847e9345e99b8",
+        "size_bytes": 5237
+      },
+      {
+        "path": "tests/functions/jonghyun/event-provider-tourapi.test.mjs",
+        "sha256": "7d1819c04e1d5802f119bdedaa1ae3c45ed5a6f27050108c038ab7a4339b486b",
+        "size_bytes": 22154
+      },
+      {
+        "path": "tests/functions/jonghyun/event-provider.test.mjs",
+        "sha256": "9b0d059ee1d2a3474589abe67aa19a46179cb2eb679038dfc95e726281c93591",
+        "size_bytes": 12622
+      },
+      {
+        "path": "tests/functions/jonghyun/event-runtime.test.mjs",
+        "sha256": "b223ca35e29669b48070a9a0625363877989363b2802ce1e8c220f3bd1e3ad94",
+        "size_bytes": 25290
+      },
+      {
+        "path": "tests/functions/jonghyun/event-service.test.mjs",
+        "sha256": "51d027910d8c3b549f69dc0dfb154de4fb7be773388d92d84ce127fc75a8bf76",
+        "size_bytes": 17731
+      },
+      {
+        "path": "tests/functions/jonghyun/event-sync.test.mjs",
+        "sha256": "60aa3fc88b2c39ba4e1535893a0a2d6f3ca20bcc136ae543e05ae1164595f4e9",
+        "size_bytes": 30490
+      },
+      {
+        "path": "tests/functions/jonghyun/j1-consumers.test.ts",
+        "sha256": "f683c078755e9811bfc49f85f985101bc685ec74a9f1e8d004b425ec12c2abdf",
+        "size_bytes": 39919
+      },
+      {
+        "path": "tests/functions/jonghyun/jobs.test.mjs",
+        "sha256": "2933660d16bcb64943842d5876f10532ec1eeed9d253c047bb7e8ce98d4cd8ad",
+        "size_bytes": 19704
+      },
+      {
+        "path": "tests/functions/jonghyun/member-budget-deadline.test.mjs",
+        "sha256": "a9cb6050cf7ccfb0b7aeb457ece20a576a304bf3be31445c8baa36bab713b314",
+        "size_bytes": 5811
+      },
+      {
+        "path": "tests/functions/jonghyun/member-connections-runtime.test.mjs",
+        "sha256": "62e4df8bb16da95de2e354ec1b90cabfd3bda431649f359596cdd9401d5cb3a5",
+        "size_bytes": 31437
+      },
+      {
+        "path": "tests/functions/jonghyun/metrics.test.mjs",
+        "sha256": "feb44b002408342aaa0e695ce42be01266cb6b8bb773c45e97caf4ede9489bcb",
+        "size_bytes": 6981
+      },
+      {
+        "path": "tests/functions/jonghyun/mobile-avatar-service.test.ts",
+        "sha256": "fd4b377db83b7c7c8c576d6fcd9e3eb166935dc2bca5b9a446404af3441394ca",
+        "size_bytes": 8363
+      },
+      {
+        "path": "tests/functions/jonghyun/mobile-member-service.test.ts",
+        "sha256": "9fd658be3ceb445f35a03a681029bee9b3ff8134076e3d0e4b129f0ba492bd30",
+        "size_bytes": 5309
+      },
+      {
+        "path": "tests/functions/jonghyun/mobile-policy.test.ts",
+        "sha256": "7df34a1ce83d2ec0ed64f3537f393b7ff3a6e97e6e7c0e6ac4506ae776aa7f89",
+        "size_bytes": 11651
+      },
+      {
+        "path": "tests/functions/jonghyun/mobile-service.test.ts",
+        "sha256": "81d6801816b7a7fac902c679eec053b02b102f817ee926a25bdf11f3016016e6",
+        "size_bytes": 28840
+      },
+      {
+        "path": "tests/functions/jonghyun/mobile-session.test.ts",
+        "sha256": "9cc41342e69d0b6334024f0ee0370ae2aae067a2afc7973e36433d7e5256208e",
+        "size_bytes": 1728
+      },
+      {
+        "path": "tests/functions/jonghyun/mobile-web-session.test.ts",
+        "sha256": "e76e01f6164cc4850fadb80833da0f59211221b48a3afad0e07242e85fbbd01f",
+        "size_bytes": 6187
+      },
+      {
+        "path": "tests/functions/jonghyun/places-http.test.mjs",
+        "sha256": "40455a1701c4a14c7a67dc229a66c0954fd8b0ea40397b25813765ade375ab0f",
+        "size_bytes": 10801
+      },
+      {
+        "path": "tests/functions/jonghyun/places.test.mjs",
+        "sha256": "89a35ecee585b4c4220e97cd830a68b7215f2dd18b413bcf1fcb744f827e192c",
+        "size_bytes": 8808
+      },
+      {
+        "path": "tests/functions/jonghyun/postcode-picker.test.ts",
+        "sha256": "f561bf592b99a8ed74fc6099536c9ab76cc6ef1f1d5349c1042486409e1da3c9",
+        "size_bytes": 5466
+      },
+      {
+        "path": "tests/functions/jonghyun/report-capture-deadline.test.mjs",
+        "sha256": "83b34c6c83da85a5cb4d3c36700b6291d160214cf5fb11a91290e0a2a978c02b",
+        "size_bytes": 8782
+      },
+      {
+        "path": "tests/functions/jonghyun/request-logging.test.ts",
+        "sha256": "84a8036c3dc16075879931ba1aac6b658bb97a7dde99e1327df309bbbacb87f4",
+        "size_bytes": 10140
+      },
+      {
+        "path": "tests/functions/jonghyun/review-summary-worker.test.mjs",
+        "sha256": "754bf172364b7230a0a95384e62499365f9346f6a2e110cddaffd679df02eb3b",
+        "size_bytes": 12905
+      },
+      {
+        "path": "tests/functions/jonghyun/rpc-transport-deadline.test.mjs",
+        "sha256": "7a9fa4a7f41d2b229630155592e69f342bf36c03a14a42ad09cb17e0c83c0cf5",
+        "size_bytes": 9855
+      },
+      {
+        "path": "tests/functions/jonghyun/scheduled-jobs.test.mjs",
+        "sha256": "530a1a8d187f70962da432f593d70f4cb3bafe90f87f092c57c611602a8d6e17",
+        "size_bytes": 7872
+      },
+      {
+        "path": "tests/functions/jonghyun/search-policy.test.mjs",
+        "sha256": "586fda305b83c64f2cfed4a001613441ca1c370d9acc451f25298cb004c7827d",
+        "size_bytes": 6025
+      },
+      {
+        "path": "tests/functions/jonghyun/search-repository.test.mjs",
+        "sha256": "f77cb8da8dae7700106f9f15acf034c0ff3e2b2a3183a985271f21c04eaa9004",
+        "size_bytes": 17423
+      },
+      {
+        "path": "tests/functions/jonghyun/search-response-errors.test.mjs",
+        "sha256": "080b7b87db0d37c7e31a8446cc33d09aa1bd6f067ff80d1b5a98073a0c8a0e53",
+        "size_bytes": 4027
+      },
+      {
+        "path": "tests/functions/jonghyun/search-service.test.mjs",
+        "sha256": "2dfe43f20339ddb5b19c7cb12d5d00b114cf74edce695bbb26c79e4c3dbc66d9",
+        "size_bytes": 16971
+      },
+      {
+        "path": "tests/functions/jonghyun/summary-repository.test.mjs",
+        "sha256": "d8996010ac4e738296e8f18c4a521bb42f1d895da06559a90011c2ba17b32ebd",
+        "size_bytes": 14225
+      },
+      {
+        "path": "tests/functions/minkyu/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/functions/minkyu/ai_account_budget_client.test.ts",
+        "sha256": "96203976ea9ea31b5305caf7d9c065c6e39a723d00c533d9168c4e6236bc46e9",
+        "size_bytes": 2667
+      },
+      {
+        "path": "tests/functions/minkyu/ai_feedback_client.test.ts",
+        "sha256": "dffcce293cf17153168fab6b67e617c1082e07f99434627aa8bb46f05b9d3eac",
+        "size_bytes": 1447
+      },
+      {
+        "path": "tests/functions/minkyu/ai_withdrawal_http.test.ts",
+        "sha256": "4a5291c53a9e1efa17faa445bbc16cd97428cdb5576b6fcf4af3ab2a50376f10",
+        "size_bytes": 2741
+      },
+      {
+        "path": "tests/functions/minkyu/appointment_cancel_appeals_http.test.ts",
+        "sha256": "ab8b002a89fbcc38504d4628ff37f260d72bbdda453fd65aa0d834ed0ec90adc",
+        "size_bytes": 16723
+      },
+      {
+        "path": "tests/functions/minkyu/appointment_changes.test.ts",
+        "sha256": "7cbfd5d2181a45f39117a41c96a1ec6f196a2f80f2e108482b37488282c478de",
+        "size_bytes": 21445
+      },
+      {
+        "path": "tests/functions/minkyu/assigned_report_final_closure_http.test.ts",
+        "sha256": "21f537a33e12a864b5c14e5879ea34c0526b52eab58a88d24f4b01208d042e6f",
+        "size_bytes": 2657
+      },
+      {
+        "path": "tests/functions/minkyu/auth_db.test.ts",
+        "sha256": "86f2f7795bb5c194aeb9402ed05ecd59532f0474dfcd1ff5fe4525ecace66ae8",
+        "size_bytes": 20635
+      },
+      {
+        "path": "tests/functions/minkyu/backend_connection_v2.test.ts",
+        "sha256": "cf84ea0ebf1e540fa67766261e0cea6ed563f4d2fe46d37bb7cb26150c87b9df",
+        "size_bytes": 2889
+      },
+      {
+        "path": "tests/functions/minkyu/cancellation_clock_http.test.ts",
+        "sha256": "67fb6a1dbd52e6e32fd1b5c2c98933adeb14f8674acbf8a1253e0c550af93593",
+        "size_bytes": 3556
+      },
+      {
+        "path": "tests/functions/minkyu/cancellation_due_internal_client.test.ts",
+        "sha256": "fed6186313ce00bb3c349b25a07d87a64a3da527b7ed971175e0aacf82da1575",
+        "size_bytes": 8761
+      },
+      {
+        "path": "tests/functions/minkyu/common_connections.test.ts",
+        "sha256": "d4b3311f140b791b3b9705a82ede535df623296bec442e3f5096f64f82886cbe",
+        "size_bytes": 27930
+      },
+      {
+        "path": "tests/functions/minkyu/completion_review_policy.test.ts",
+        "sha256": "210849dc1eaab32e892198c7d1143ac90020df080f90e0830adea6bf4241aee8",
+        "size_bytes": 10648
+      },
+      {
+        "path": "tests/functions/minkyu/completion_runner_tls.test.mjs",
+        "sha256": "04f96bd187e0df612a1271b75aebcab509d3fb81912e35146a4a05c3dac18cef",
+        "size_bytes": 1782
+      },
+      {
+        "path": "tests/functions/minkyu/content_inspection.test.ts",
+        "sha256": "da469b6375d57c6974d62804a2ccfd15407fcfd54d26dd072d905764f1a6c73f",
+        "size_bytes": 7336
+      },
+      {
+        "path": "tests/functions/minkyu/content_inspection_client.test.ts",
+        "sha256": "fb323a56957286252f811190fa0bcd3e532c1b1453e89496fdc1b42e29b5041d",
+        "size_bytes": 8121
+      },
+      {
+        "path": "tests/functions/minkyu/content_inspection_http.test.ts",
+        "sha256": "d7ac2d3c6c8e98e8180eae2059efa1a4c4ff1d1e457ad98958a2110af014750f",
+        "size_bytes": 5633
+      },
+      {
+        "path": "tests/functions/minkyu/content_inspection_runtime.test.ts",
+        "sha256": "f0c3dd8fea6fb0892dbaa165bc2e8b408292510b128134954644ea5aaa31a024",
+        "size_bytes": 5425
+      },
+      {
+        "path": "tests/functions/minkyu/conversation_leave.test.ts",
+        "sha256": "bdad8ba7613018712d38d5dd84cf6926be88c18e3488ee68d3f83731b3a59c8c",
+        "size_bytes": 12491
+      },
+      {
+        "path": "tests/functions/minkyu/conversation_read_http.test.ts",
+        "sha256": "1025e62918e957825e9b9dfab1d4d9a98fc8255979726c4cf548b964532b93bd",
+        "size_bytes": 2658
+      },
+      {
+        "path": "tests/functions/minkyu/decision_notices_http.test.ts",
+        "sha256": "90f712ebc9f1a24f207f3723067bd8880a36e3f19db4ee48a5468207cf771add",
+        "size_bytes": 14649
+      },
+      {
+        "path": "tests/functions/minkyu/event_db_client.test.ts",
+        "sha256": "2e61353d065dbc9774a30cc80f0939de07390b6db8cbf5c6d1c9ae150457330e",
+        "size_bytes": 5102
+      },
+      {
+        "path": "tests/functions/minkyu/event_worker_execution.test.ts",
+        "sha256": "e59a537530ad94de271e8bbb5e5005f814a92df50278b669865e54beacb5623d",
+        "size_bytes": 5102
+      },
+      {
+        "path": "tests/functions/minkyu/feedback_invocation_http.test.ts",
+        "sha256": "0c5e86271bbf699482041e2b6f2575d74d4251d57a32e602b428d865209338ca",
+        "size_bytes": 3151
+      },
+      {
+        "path": "tests/functions/minkyu/first_chat_application.test.ts",
+        "sha256": "a0cc41175d525df99557b074b6924d32dd7e8c937fff37cc8303cb0a54ce63ad",
+        "size_bytes": 2228
+      },
+      {
+        "path": "tests/functions/minkyu/general_notice_delivery.test.ts",
+        "sha256": "65a297dad917eecaeaa59b7b974feda7e2ffa98ba643df432a7bedfcee6ffb06",
+        "size_bytes": 3874
+      },
+      {
+        "path": "tests/functions/minkyu/general_sanction_appeal.test.ts",
+        "sha256": "138e51225f6f5ad8f6603601b3bc72fe215dd4dcf0d404d551a2b161b980225f",
+        "size_bytes": 3642
+      },
+      {
+        "path": "tests/functions/minkyu/general_sanction_resolution_http.test.ts",
+        "sha256": "10a1c71e034f976a7d7b6cd41f060bccecfd415294a5d667eea775038f97ac4b",
+        "size_bytes": 3698
+      },
+      {
+        "path": "tests/functions/minkyu/http.test.ts",
+        "sha256": "b199378d60714c6994be3eef2441ce909010b007aff9197843b4d9cc57445d59",
+        "size_bytes": 9462
+      },
+      {
+        "path": "tests/functions/minkyu/internal_rpc_client.test.ts",
+        "sha256": "b3feac222ffbfd76b64dd7f6fd1e0793bc3cc057c7f86ba4277c7830e67ec1d8",
+        "size_bytes": 7380
+      },
+      {
+        "path": "tests/functions/minkyu/matching_lifecycle.test.ts",
+        "sha256": "154d472525121ce93beb3ff0be24c5a3f263ded55839147cc16c95118f158d70",
+        "size_bytes": 15136
+      },
+      {
+        "path": "tests/functions/minkyu/member_blocks_http.test.ts",
+        "sha256": "0731a48071969d1dfd2023497a59ea0875b625619ca44c0fd864ff063c6dba23",
+        "size_bytes": 3716
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup.test.ts",
+        "sha256": "50146f23d7836c9e79ececcf29d5cdd74174cad4bce77475d993b3359b952195",
+        "size_bytes": 24405
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_allocation.test.ts",
+        "sha256": "f6636915499cbb495a5e64a76d17e44fa5d726cee6bfd817ddaea2a798a0579c",
+        "size_bytes": 2180
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_batch.test.ts",
+        "sha256": "dccbf57818f2d8039848ade9b18966d9aa0a2c84d80b5b5b07d6a24f7e996258",
+        "size_bytes": 11718
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_budget.test.ts",
+        "sha256": "46218c56c310052b8be93198848ba1da74070f35d94a5c640f0a6feecc6d62ba",
+        "size_bytes": 5960
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_deadline.test.ts",
+        "sha256": "9efd545783602aeeaf91d50ddae51adf52ba3cd1af14926592c91762f1e6a86d",
+        "size_bytes": 8611
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_finalization_http.test.ts",
+        "sha256": "8e10257f9f1ea393c12b6414b1943cc8f2b5ab4700a66ab873e0c61ccbbad88c",
+        "size_bytes": 12849
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_finalization_scan.test.ts",
+        "sha256": "631aa0451a47200974797fdf2f236fb29a3cd5ae7a792cc92f0d83df67e9aebd",
+        "size_bytes": 8606
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_http.test.ts",
+        "sha256": "0e215b470bbee53de3afaa457fdbf8c8967ecc2a4078eb892dd60342bace643a",
+        "size_bytes": 5163
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_invocation_http.test.ts",
+        "sha256": "d40044b8cc67d2c100017bf889b0abc8d952628915cb39f4eae59805911dfd62",
+        "size_bytes": 12844
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_reconcile.test.ts",
+        "sha256": "c03617afc7d1a50609a0cacea55bbe3a90dd1aff2c7f255f1b381a5b6c7c3baf",
+        "size_bytes": 16429
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_reconcile_http.test.ts",
+        "sha256": "6e94e7c140e61d40ffd99ed8fd62150a3941456b26bd8872a4d14d37f2f7e870",
+        "size_bytes": 10550
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_rpc.test.ts",
+        "sha256": "7129b62affbc394c7c06da15a532c1fc8f43387591da3a6f481570f671ec0fb4",
+        "size_bytes": 5625
+      },
+      {
+        "path": "tests/functions/minkyu/member_cleanup_runtime.test.ts",
+        "sha256": "27dc9f7225bb22ac864c8a4a0e6404729e6df30c4b36abdd7712179d1755b676",
+        "size_bytes": 4234
+      },
+      {
+        "path": "tests/functions/minkyu/member_lifecycle_http.test.ts",
+        "sha256": "d19d09fe0201f7dbae8d35a40d6496ef2b156c903c85021216fef93aa6af1b91",
+        "size_bytes": 8918
+      },
+      {
+        "path": "tests/functions/minkyu/member_message_read_consumer.test.ts",
+        "sha256": "1332ae3ec44598d3c90c078ba63591387a2b405f86560ae64d718a094c2fc91f",
+        "size_bytes": 3099
+      },
+      {
+        "path": "tests/functions/minkyu/member_own_posts_http.test.ts",
+        "sha256": "743bbdf5364099e4299b7b7af5f344bfda2b4e140a98989c1ca2d94c5419401c",
+        "size_bytes": 2272
+      },
+      {
+        "path": "tests/functions/minkyu/member_report_hide_consumer.test.ts",
+        "sha256": "8452fe170e0434307f73f54ae3138c5345b82f2f74cb1fab43140f1e0dc0924f",
+        "size_bytes": 2298
+      },
+      {
+        "path": "tests/functions/minkyu/member_retirement_auth_retry.test.ts",
+        "sha256": "a707c475197f007f8e69d1cae0c2b2d26787481e23d0bd5f4439eb6f33a2d512",
+        "size_bytes": 10221
+      },
+      {
+        "path": "tests/functions/minkyu/mobile_retirement_adapter.test.ts",
+        "sha256": "a107d66840bc7de02c48f686028677b5ea879abd55cdc1853284270dd47381ea",
+        "size_bytes": 11633
+      },
+      {
+        "path": "tests/functions/minkyu/mobile_retirement_consumer.test.ts",
+        "sha256": "063a0f740f433e0372c024092721973d421f9c362ef92444d703e034c11ac932",
+        "size_bytes": 14482
+      },
+      {
+        "path": "tests/functions/minkyu/mobile_retirement_fixture.ts",
+        "sha256": "f5068a0e9fdb0fa24413c1b7e7cf246c5e7745460d698cd21310bd313a9e2694",
+        "size_bytes": 4341
+      },
+      {
+        "path": "tests/functions/minkyu/naver_oauth_local.test.ts",
+        "sha256": "d1133e14ddeb238142860c995b247696876345900c5ceca2d3e62f1d24294d01",
+        "size_bytes": 46441
+      },
+      {
+        "path": "tests/functions/minkyu/naver_provider.test.ts",
+        "sha256": "8560f1e68b60e235090616c332244a3ba604ef2335bfaa37ed4e353be1631846",
+        "size_bytes": 9964
+      },
+      {
+        "path": "tests/functions/minkyu/naver_session_bridge.test.ts",
+        "sha256": "90a52f11a8728cca48f8ecdfb047b521b7887717c4dc75662defe3889fca866c",
+        "size_bytes": 8925
+      },
+      {
+        "path": "tests/functions/minkyu/naver_signup.test.ts",
+        "sha256": "3ec62b253fc63bb25ef23999b9f75a566e57d18385ab0e6ae8917b8634eb895e",
+        "size_bytes": 12021
+      },
+      {
+        "path": "tests/functions/minkyu/post_event_top10.test.ts",
+        "sha256": "162bd1dcd60e9b4a32860c7c53eca6c9e61e0e39b26bb055295a117b2cc2ec9b",
+        "size_bytes": 13177
+      },
+      {
+        "path": "tests/functions/minkyu/potens_account_config.test.ts",
+        "sha256": "db303d42aa86d775cc612d8c6035e18914e544377fb7aec521a942a4e8c181ad",
+        "size_bytes": 2625
+      },
+      {
+        "path": "tests/functions/minkyu/production_runtime_config.test.mjs",
+        "sha256": "3378ddaed2e8f09cb863d7e3049ee01d8c910c3b40079faf83b836d2589c3190",
+        "size_bytes": 3612
+      },
+      {
+        "path": "tests/functions/minkyu/profile_image_http.test.ts",
+        "sha256": "84a216b3d4cc4db7a03847d7efc122813d93bb4b14d27fee86003d2791319460",
+        "size_bytes": 8226
+      },
+      {
+        "path": "tests/functions/minkyu/provider_config.test.ts",
+        "sha256": "720c774a15d4232972f9e8a7d5cf1c4481140c27723af736d1586aca0f173e61",
+        "size_bytes": 6295
+      },
+      {
+        "path": "tests/functions/minkyu/public_event_detail_http.test.ts",
+        "sha256": "4b6e787c5b5e8c38dc0680148f445f22b42cc5ba648cd566f987ec3bf4e204f1",
+        "size_bytes": 1613
+      },
+      {
+        "path": "tests/functions/minkyu/public_post_detail.test.ts",
+        "sha256": "edad3cac674fd7c90aa07b1ed80d1f2b6217ce085370e0e248bbd10bac77cd73",
+        "size_bytes": 13027
+      },
+      {
+        "path": "tests/functions/minkyu/public_review_summary_http.test.ts",
+        "sha256": "7d603b8e7428c1394d8b498d2d6a506b68b83f39432d73a543e082123e879b18",
+        "size_bytes": 1437
+      },
+      {
+        "path": "tests/functions/minkyu/queue_cli_entry.test.mjs",
+        "sha256": "cd14320e1619581f8a26bda5952b83694e1206b4cca65834b24787d82557b8ff",
+        "size_bytes": 6068
+      },
+      {
+        "path": "tests/functions/minkyu/queue_member_finalization.test.ts",
+        "sha256": "278e027b4c06d717e68ddbd077f7afdf330d3627d9d4db9787414b005c9bef09",
+        "size_bytes": 7542
+      },
+      {
+        "path": "tests/functions/minkyu/queue_runtime_consumers.test.ts",
+        "sha256": "4476160f9c3073f594b2e224b8abcf49894371f1a76d0b10e63b6d1769f32d5f",
+        "size_bytes": 18242
+      },
+      {
+        "path": "tests/functions/minkyu/queue_runtime_safety_scoped.test.ts",
+        "sha256": "346d2fdc837049fecbfa342ea54a30b3a92a16a8dc1c9bf80285c4cea3a1416e",
+        "size_bytes": 11167
+      },
+      {
+        "path": "tests/functions/minkyu/queue_runtime_scheduler.test.mjs",
+        "sha256": "ad8ff7d1041a406c65af45ea0c8956b14735bde09d4c6c8ff44d56572f4a2aa3",
+        "size_bytes": 11503
+      },
+      {
+        "path": "tests/functions/minkyu/recovery_archive.test.py",
+        "sha256": "eb9168ed8598c39d665568e2c7fc70d7eebbc0b45c3d15d162ea696ce68b8311",
+        "size_bytes": 1652
+      },
+      {
+        "path": "tests/functions/minkyu/recruitment_reopen_http.test.ts",
+        "sha256": "1bc02a3d128de15abb71044c88d6e6f173a32560a79f2b6c5f434e79921746ec",
+        "size_bytes": 2977
+      },
+      {
+        "path": "tests/functions/minkyu/report_hidden_targets.test.ts",
+        "sha256": "581f86fde991b35c4346384ffe7dda8a90ba6a40a1c8c7320f2155c8a7a52497",
+        "size_bytes": 3537
+      },
+      {
+        "path": "tests/functions/minkyu/report_operator_client.test.ts",
+        "sha256": "20191b17c2b20cafbd66eb72b9aa324c87f72d84e87a7c57bbb4fce7a88fa08e",
+        "size_bytes": 21830
+      },
+      {
+        "path": "tests/functions/minkyu/report_operator_http.test.ts",
+        "sha256": "7920f4817f3f484036590c91e24b2bd9c2160f69a61a967b9901c85fe8ffc575",
+        "size_bytes": 36459
+      },
+      {
+        "path": "tests/functions/minkyu/report_retention_maintenance.test.ts",
+        "sha256": "d45dd1059a98917a1412b4e05423637c71c8592a6ced3f8b75634c84a8bc8836",
+        "size_bytes": 4176
+      },
+      {
+        "path": "tests/functions/minkyu/report_retention_rpc.test.ts",
+        "sha256": "93aa5391a3e026459dec6c4581e870e76f12441ee907a7570986c9865a011608",
+        "size_bytes": 15506
+      },
+      {
+        "path": "tests/functions/minkyu/report_retention_storage.test.ts",
+        "sha256": "8ac327098e55adfe46798b03b103e280f930e241b9948d38e666449094f8cabb",
+        "size_bytes": 13451
+      },
+      {
+        "path": "tests/functions/minkyu/reports_http.test.ts",
+        "sha256": "55b1289861fdfa4063ccf2aca542dc30535d19f7fc5d494ddad459c9d5af6422",
+        "size_bytes": 12843
+      },
+      {
+        "path": "tests/functions/minkyu/review_summary_dispatch_probe.test.ts",
+        "sha256": "d71e84f5b8cbbede90784ae6d9125a4efc7475cb3a2c6329f0ab95862ba54aab",
+        "size_bytes": 3631
+      },
+      {
+        "path": "tests/functions/minkyu/review_worker_execution.test.ts",
+        "sha256": "d48805b0f86792d18c94a14694d092cf6ac44c95e96246e56d445e05e03092aa",
+        "size_bytes": 5251
+      },
+      {
+        "path": "tests/functions/minkyu/review_worker_probe.test.ts",
+        "sha256": "7e2195031312d1b3c669e634ec1849db15a558ed418b38d8034b7656a4e19c5d",
+        "size_bytes": 2288
+      },
+      {
+        "path": "tests/functions/minkyu/safety_atomic_invocation.test.ts",
+        "sha256": "378196824de5a9414c5ab3ec216899ee24cb6f3ad4e4fc0267b53ac1bc06f828",
+        "size_bytes": 13298
+      },
+      {
+        "path": "tests/functions/minkyu/sanction_history_http.test.ts",
+        "sha256": "a48941f25075dc31efa20a611aed2b40bc8d6700039f15db30f65a71ed734ecf",
+        "size_bytes": 5981
+      },
+      {
+        "path": "tests/functions/minkyu/search_core_gate.test.ts",
+        "sha256": "4db526d3810352744cebc36e995f3c208598316ae5aca3dc1d7d893aadc474c6",
+        "size_bytes": 2895
+      },
+      {
+        "path": "tests/functions/minkyu/search_http.test.ts",
+        "sha256": "d19f5641ce1d6a91a2eb7b1f6179779564e307eea3f89e06cfcee6da6c1dc661",
+        "size_bytes": 11971
+      },
+      {
+        "path": "tests/functions/minkyu/search_runtime.test.ts",
+        "sha256": "6685337b33353ad9aa29194060e06bd007ffeffc8283fd2c1bcddc2da8717a2b",
+        "size_bytes": 16055
+      },
+      {
+        "path": "tests/functions/minkyu/service_api.test.ts",
+        "sha256": "5207748ba7045bb8f43cdf8d2970ae22d53babcbb6d2b695c6ad553c7c52eab4",
+        "size_bytes": 33424
+      },
+      {
+        "path": "tests/functions/minkyu/signup_content_inspection.test.ts",
+        "sha256": "0d22d51f6ad345c588a01ecbec33654494499b0be13b9fc53631b54b5cfc1b3a",
+        "size_bytes": 5825
+      },
+      {
+        "path": "tests/functions/minkyu/test_api_env.py",
+        "sha256": "06ea0e18a74630a006f799be5356c36bd6d0a9f8dfd4051d133d6927b00ee259",
+        "size_bytes": 7649
+      },
+      {
+        "path": "tests/functions/minkyu/test_event_apis.py",
+        "sha256": "a742ab02263619ddfbe11ca2b4a1001db2c1927d225b315be2409b6c8f85b47d",
+        "size_bytes": 6407
+      },
+      {
+        "path": "tests/functions/minkyu/test_harness.py",
+        "sha256": "21d1113a4adbac92f84b4a4122ecf717329f250a97dae9a6ce9a5581eac6442d",
+        "size_bytes": 3671
+      },
+      {
+        "path": "tests/functions/minkyu/test_kakao_api.py",
+        "sha256": "fb22ff3e881750f717d84a28eb9542fa81d83a4b6ffe99d7ff95ef22758dc5bb",
+        "size_bytes": 5431
+      },
+      {
+        "path": "tests/functions/minkyu/test_sungho_guard.py",
+        "sha256": "218b3fca7d682ec31f308dbb2616d7be9b8136b55e19a771bb861a34028f6722",
+        "size_bytes": 7533
+      },
+      {
+        "path": "tests/functions/minkyu/test_tour_api.py",
+        "sha256": "d61e01ba42925f74cecfe06ffe80a2a8bae5207e8db557006e1a1866651c6799",
+        "size_bytes": 7210
+      },
+      {
+        "path": "tests/functions/minkyu/worker_intent_scoped_client.test.ts",
+        "sha256": "fabda53d729d3ec9fa8969b6cfacbfb0f48ee1f3465d7fc343955fd8d5708c57",
+        "size_bytes": 7434
+      },
+      {
+        "path": "tests/functions/minkyu/worker_invocation_client.test.ts",
+        "sha256": "930844c242cad10cc9cd9d7fa050dcd0cddfe8d6ef4c694f71033d155c3de477",
+        "size_bytes": 4527
+      },
+      {
+        "path": "tests/functions/minkyu/worker_runtime_atomic_client.test.ts",
+        "sha256": "43267a9e92bc88a5230ced5901f11b98ef7ee75cf5fa0723da5920fd0b417e67",
+        "size_bytes": 2484
+      },
+      {
+        "path": "tests/functions/minkyu/worker_runtime_client.test.ts",
+        "sha256": "1e9d04886d00a3a74b84072041659562656a338264a7c13a5fcce97c873aa192",
+        "size_bytes": 1844
+      },
+      {
+        "path": "tests/integration/jonghyun/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/integration/jonghyun/20261008-followup-browser.mjs",
+        "sha256": "466f8be08ff89056694876e974215b0b90dd5814b32191534d91c54e4604cd32",
+        "size_bytes": 8941
+      },
+      {
+        "path": "tests/integration/jonghyun/20261008-independent-browser.mjs",
+        "sha256": "6b12034998e8529ac8fbc5e8f84ede7e658184d6fc1dee36d2800dfbcd74c320",
+        "size_bytes": 10054
+      },
+      {
+        "path": "tests/integration/jonghyun/ai-budget-concurrency.mjs",
+        "sha256": "6a4ac77d4f52ad2dd093df7768ccd5b4f46a6809cdb09e72f86c3ceb44516919",
+        "size_bytes": 4171
+      },
+      {
+        "path": "tests/integration/jonghyun/ai-discovery-rest.mjs",
+        "sha256": "1df0438107bd4d64ee1ba38e17bb42002d97cbd45f075650474665fdbf06643d",
+        "size_bytes": 7409
+      },
+      {
+        "path": "tests/integration/jonghyun/ai-event-discovery-rest.mjs",
+        "sha256": "6a156b7c542ba894954dc568f2d6b2783878ac1d5fc1947184c8a64e98fdcc44",
+        "size_bytes": 5628
+      },
+      {
+        "path": "tests/integration/jonghyun/android-runtime-validation.mjs",
+        "sha256": "fcef24b44aef17388cbb5505daa045b07849cf9507bb6aa9f9ec991466f0f455",
+        "size_bytes": 5772
+      },
+      {
+        "path": "tests/integration/jonghyun/discovery-flow.test.mjs",
+        "sha256": "7748079cbee981bcd715c77162cb47c7a82102d22e67c1665e870b29f7d07c5e",
+        "size_bytes": 11571
+      },
+      {
+        "path": "tests/integration/jonghyun/edge-functions-e2e.mjs",
+        "sha256": "0817e8f488ba0be391a6006874973ad98d74e070a5e72140d7fb07f9b5447a35",
+        "size_bytes": 6414
+      },
+      {
+        "path": "tests/integration/jonghyun/events-rest.mjs",
+        "sha256": "cd0eebe28c5e187cb0d968c1ff3a238663d6c45e2b3b12a5d57949cb0e077ba6",
+        "size_bytes": 35013
+      },
+      {
+        "path": "tests/integration/jonghyun/isolated_ai_contracts.py",
+        "sha256": "1cdaa0c1b7c62a210284489ad643f6cc0bed2be7403ba62ecea58636e44723b2",
+        "size_bytes": 233861
+      },
+      {
+        "path": "tests/integration/jonghyun/isolated_ai_factory.ts",
+        "sha256": "bd0b74b7b021d107d9e453353938d9351e3dd4e2b33cfb90763aab9ee15ac2fb",
+        "size_bytes": 70269
+      },
+      {
+        "path": "tests/integration/jonghyun/isolated_summary_contracts.py",
+        "sha256": "e95358ce940033567258a18c6fcb4ea6c2cb17cb8674a6fee4efa55ce0b94dc7",
+        "size_bytes": 37895
+      },
+      {
+        "path": "tests/integration/jonghyun/isolated_summary_factory.ts",
+        "sha256": "d2fbd61a383efd54fbafeba89c29e6548ad3d8e21083ab6bcde99e400605c442",
+        "size_bytes": 10057
+      },
+      {
+        "path": "tests/integration/jonghyun/j01-root-boundary.py",
+        "sha256": "1a0225d533d31c0d4f6496c29aa5da5c2ca933c185e20c42b7bcb49b1305d8ad",
+        "size_bytes": 39746
+      },
+      {
+        "path": "tests/integration/jonghyun/member-connections-rest.mjs",
+        "sha256": "24bcead5ce02ac961bb9f98e75cbcd6b77434f10e774cd4e83c1f0ae925fde1b",
+        "size_bytes": 78204
+      },
+      {
+        "path": "tests/integration/jonghyun/member-root-boundary.py",
+        "sha256": "e73c06dc2c92edad908cf6362fd63c4d7d395f879e73a366057d1a834777d8d2",
+        "size_bytes": 141896
+      },
+      {
+        "path": "tests/integration/jonghyun/mobile-ai-browser.mjs",
+        "sha256": "d17bffeed1b2f1e8a2bc118499a58426396e8aacf1816e645fca74859e64d579",
+        "size_bytes": 12534
+      },
+      {
+        "path": "tests/integration/jonghyun/mobile-browser.mjs",
+        "sha256": "f7aaaa0a21924daee7a937a29b3d78ca3453c58e403e4b67c7aac3637c41cd2b",
+        "size_bytes": 11579
+      },
+      {
+        "path": "tests/integration/jonghyun/mobile-member-browser.mjs",
+        "sha256": "914ad4d286553831d3242c124619a48e8ddda74ff246842563f0e02a4a8b9351",
+        "size_bytes": 13054
+      },
+      {
+        "path": "tests/integration/jonghyun/mobile-member-writes-browser.mjs",
+        "sha256": "1a7d44a4c4cacc2268a509e40fe40177b57629aa45d95bd1525cdbdf6596609a",
+        "size_bytes": 9578
+      },
+      {
+        "path": "tests/integration/jonghyun/mobile-service-browser.mjs",
+        "sha256": "8374cfc9a0858b7186c23216314c780ab896ac7d79a3c4e4c3295c24e64d0dea",
+        "size_bytes": 7612
+      },
+      {
+        "path": "tests/integration/jonghyun/operator-retirement-concurrency.py",
+        "sha256": "f194eb658a37a77a97133ac08ee7b5818b403172a6dfcf8ba0015a577a0df2fc",
+        "size_bytes": 25280
+      },
+      {
+        "path": "tests/integration/jonghyun/public-providers-live.ts",
+        "sha256": "da5a0ddacdaca01a17bae85a2016b5984e5f6a7352687bf8ff678320763e8d14",
+        "size_bytes": 15222
+      },
+      {
+        "path": "tests/integration/jonghyun/review-policy-e2e.mjs",
+        "sha256": "792b0c011cc216d45172439947ca46a4d45f7b40ca4a2123a3b16dbe3b304bc4",
+        "size_bytes": 11475
+      },
+      {
+        "path": "tests/integration/jonghyun/summary-lock-regression.mjs",
+        "sha256": "1bd8f5ef26173d5ca36590b2eb2c56a413d998e5465f6a2c91f20faa0a5114a2",
+        "size_bytes": 8665
+      },
+      {
+        "path": "tests/integration/jonghyun/summary-worker-concurrency.mjs",
+        "sha256": "1b23e51017a8318e2f377acec1858c9efe643b774b215d47a1f62773f89d4931",
+        "size_bytes": 8776
+      },
+      {
+        "path": "tests/integration/jonghyun/summary-worker-rest.mjs",
+        "sha256": "b4ba2b13a0c78bf2aba20b847217a47f11e2d2e1c469846c3737ed6a6f5fc10b",
+        "size_bytes": 9091
+      },
+      {
+        "path": "tests/integration/minkyu/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "tests/integration/minkyu/additional_backend_local.py",
+        "sha256": "22ce502250e81ef560df840be9aa2d139132dba0bdecbcaddc187a16b8883faa",
+        "size_bytes": 21550
+      },
+      {
+        "path": "tests/integration/minkyu/ai_atomic_concurrency_local.py",
+        "sha256": "b852e064233cdfd6b918d7993ca3e18ccfb78d8e23ff7c818b3120a9fe51e779",
+        "size_bytes": 9960
+      },
+      {
+        "path": "tests/integration/minkyu/ai_feedback_maintenance_local.ts",
+        "sha256": "3a1a319dd1e42a61926ce2b817151d6e9b2eff77683b98f54ac8b0a211130b07",
+        "size_bytes": 2659
+      },
+      {
+        "path": "tests/integration/minkyu/appointment_change_withdrawal_concurrency_local.py",
+        "sha256": "85c66f20fa010c66b4ddad08140f10fdec0ac39833fd9a912c69df24eb1127c1",
+        "size_bytes": 25294
+      },
+      {
+        "path": "tests/integration/minkyu/appointment_changes_races.py",
+        "sha256": "9e4b805872162e0e66defa6a4f3f9525cbc38c8416db53c6f31fc5731c2d8c89",
+        "size_bytes": 9175
+      },
+      {
+        "path": "tests/integration/minkyu/appointment_place_change_concurrency_local.py",
+        "sha256": "213985afdbabd5b316a566bb90ed6947fc7e6d5b2bc732f1f1c42af6b4047024",
+        "size_bytes": 7118
+      },
+      {
+        "path": "tests/integration/minkyu/appointment_review_hold_concurrency_local.py",
+        "sha256": "e66499ef8f91c068a5bb254eca4d4f677daac11d6506b9466873cbbb1786e10c",
+        "size_bytes": 38074
+      },
+      {
+        "path": "tests/integration/minkyu/appointment_review_normal_retirement_concurrency_local.py",
+        "sha256": "769c7c5cf385e2422da6c2b1b84269e8673cbd74cf218c4097af760fa1507ef8",
+        "size_bytes": 44547
+      },
+      {
+        "path": "tests/integration/minkyu/appointment_safety_result_concurrency_local.py",
+        "sha256": "fede35fe64f52d200e1c573e70a7ccef816c08d4cce89b11e13e40dda5d9743b",
+        "size_bytes": 37697
+      },
+      {
+        "path": "tests/integration/minkyu/assigned_report_review_concurrency_local.py",
+        "sha256": "aba4244eada0911bf08436fef12eb04612f659537d70a35fb65be3b605e859c3",
+        "size_bytes": 178707
+      },
+      {
+        "path": "tests/integration/minkyu/backend_faults_local.py",
+        "sha256": "1707f00e35ca4065bdadd29f34744301af528f76e69b6214d9ea49395d820114",
+        "size_bytes": 20175
+      },
+      {
+        "path": "tests/integration/minkyu/common_connections_races.py",
+        "sha256": "5968b77b410608c69524a654a60478f3ad499b79f3d3a5b237bea861a016e977",
+        "size_bytes": 10979
+      },
+      {
+        "path": "tests/integration/minkyu/completion_runner_current_local.mjs",
+        "sha256": "9836a877c56e052f48367097ffc3048eee19330c7fa9b9ca0fd309b604d8aafc",
+        "size_bytes": 80198
+      },
+      {
+        "path": "tests/integration/minkyu/completion_runner_local.mjs",
+        "sha256": "8f2dd40ec18ca07d94f22ddf3b4011101c710035491facd99cdbc4e049b8c15f",
+        "size_bytes": 16157
+      },
+      {
+        "path": "tests/integration/minkyu/completion_runner_privileges_local.mjs",
+        "sha256": "1f4c12d0a7f4d58705d64d1224befbbd8db103b889bd45e5540442d4c38223fa",
+        "size_bytes": 27860
+      },
+      {
+        "path": "tests/integration/minkyu/content_inspection_concurrency_local.py",
+        "sha256": "d57abeeb67cb3043dc4d00aad7de8e403ae0fc65340f908ec7ad7a2e1e920ede",
+        "size_bytes": 13490
+      },
+      {
+        "path": "tests/integration/minkyu/content_inspection_http_local.py",
+        "sha256": "02f548f6029fa082f1163e268032242074161a6fa27bc9beb34c1de67b757a30",
+        "size_bytes": 152165
+      },
+      {
+        "path": "tests/integration/minkyu/content_inspection_http_local.ts",
+        "sha256": "a1ba2e8a7160dafd3ef3be6a358dcea6c6347428a68bbfa5c8b4ad09678cc44d",
+        "size_bytes": 86627
+      },
+      {
+        "path": "tests/integration/minkyu/content_inspection_tickets_local.py",
+        "sha256": "e2d9fd6ee9d890f57c18ec6e0f14b14a91d39ea27f8072a2f5e35e37a6aa7bc1",
+        "size_bytes": 5025
+      },
+      {
+        "path": "tests/integration/minkyu/conversation_leave_local.ts",
+        "sha256": "47c0ea4df08ef6a13fc8f39afc09fbdacbdff4821926f2b66b52ff42a00abfde",
+        "size_bytes": 22860
+      },
+      {
+        "path": "tests/integration/minkyu/current_policy_native_edge_local.py",
+        "sha256": "2d6e87b72a54fdf47f0502e21ff75e73dc77d346aa84d559d4017c95a2fcafc9",
+        "size_bytes": 25608
+      },
+      {
+        "path": "tests/integration/minkyu/edge_e2e.py",
+        "sha256": "fa703868c6a05d168b378d35273de7eec9152b9d43ecc2c6ddb8e2185da7250f",
+        "size_bytes": 26536
+      },
+      {
+        "path": "tests/integration/minkyu/event_collection_lane_local.py",
+        "sha256": "aa9718a719da597598f3ceb902602dfb6f222bcfba8edc93f37e224b5228c7f7",
+        "size_bytes": 5385
+      },
+      {
+        "path": "tests/integration/minkyu/event_detail_projection_local.py",
+        "sha256": "94c4c7b35c1145b0ff5ce8f59dea86e2eba5241f0ef8820fe2222a62b69f0d91",
+        "size_bytes": 31151
+      },
+      {
+        "path": "tests/integration/minkyu/event_invocation_audit_local.py",
+        "sha256": "f152c00c03053f347d665d4ce5dd7d77fc3252fc40fd4b02a159a4a000133181",
+        "size_bytes": 6038
+      },
+      {
+        "path": "tests/integration/minkyu/first_chat_concurrency_local.py",
+        "sha256": "9decc7e1cfc3481f088f1305ea7f614b4c570f5b39d0af9b746b2dbbb5069c6a",
+        "size_bytes": 6186
+      },
+      {
+        "path": "tests/integration/minkyu/gateway_cors_local.py",
+        "sha256": "f6707957c5470d8555fbb466cf639b0db54de6f9d9bba059fd8fc4851dfd2edf",
+        "size_bytes": 22862
+      },
+      {
+        "path": "tests/integration/minkyu/general_sanction_http_local.py",
+        "sha256": "1762cab6f95cbed73e6f4c859e67722edf3d53894b16c83e68702113487c2fa7",
+        "size_bytes": 6670
+      },
+      {
+        "path": "tests/integration/minkyu/matching_lifecycle_local.ts",
+        "sha256": "b5d7e1e8b4cd8a39be80d374fe1cba0174a4cc33aed1e8113a8ef93f2af3157d",
+        "size_bytes": 14087
+      },
+      {
+        "path": "tests/integration/minkyu/matching_races.py",
+        "sha256": "1293ec9f1ad0903197f59807804961e9649dca99804c044edda4a3823a9dbadc",
+        "size_bytes": 12812
+      },
+      {
+        "path": "tests/integration/minkyu/member_activity_sanction_concurrency_local.py",
+        "sha256": "80592a548668adc1f2c236d844f58d43f36d2743a255087d919e55c9d014eac9",
+        "size_bytes": 27049
+      },
+      {
+        "path": "tests/integration/minkyu/member_block_concurrency_local.py",
+        "sha256": "2a310172d45193f858be29f5ab967eaddcd90cc5b8c8b1792748092c37760cc2",
+        "size_bytes": 7770
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_ack_recovery_http.ts",
+        "sha256": "d148f84e4a931eddec9e375a06db95a90441f71e24b0cac835eaaed18a277c92",
+        "size_bytes": 4274
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_ack_recovery_local.py",
+        "sha256": "f9916ab9cdd8d883f80f05b535d3fae34e519946c97292822ba7efc4df181e65",
+        "size_bytes": 10192
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_invocation_local.py",
+        "sha256": "2a32186ed7d42321af9c2429f53674e96ea69cc8230e96c1115e8c8b1cbb12b0",
+        "size_bytes": 9248
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_native_local.ts",
+        "sha256": "3d892d005f4f2a1eb45476b532e15290fc832ae2c9cec76e860a2f86611c5848",
+        "size_bytes": 92762
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_provider_local.ts",
+        "sha256": "450019d21d978c3e02a663c9f1b2360c897d322de8a7b59651cbde492516731f",
+        "size_bytes": 11620
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_reconcile_http_local.py",
+        "sha256": "5ab59cc0b610cb34b67bfb1d0f8428bb21e2f3309a57e122752027359d93b9ad",
+        "size_bytes": 52748
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_reconcile_http_local.ts",
+        "sha256": "0c6b5f6baaf4a244356407e5968b85acae15a6c83a34cd73c356a6800d7ee119",
+        "size_bytes": 14897
+      },
+      {
+        "path": "tests/integration/minkyu/member_cleanup_reconcile_local.py",
+        "sha256": "86ef272728d4f0e4cd8150cce6733944ba95bb69ef0a7563c580db3145133cbb",
+        "size_bytes": 29283
+      },
+      {
+        "path": "tests/integration/minkyu/member_lifecycle_concurrency_local.py",
+        "sha256": "1cd4e46c9a372864ddc225baa60e9abf999c99ef1d01ef70dcb9918e16e11341",
+        "size_bytes": 9739
+      },
+      {
+        "path": "tests/integration/minkyu/member_retirement_auth_local.py",
+        "sha256": "44708062daa8e6c80a391fde9f4001e5d3148c7005821ab8908a03a4ee1a6f3a",
+        "size_bytes": 35383
+      },
+      {
+        "path": "tests/integration/minkyu/member_retirement_auth_local.ts",
+        "sha256": "7e4e9f49ac2f85cd9bb140a2b28030cf007610d3f5e1c5c599320a68c6d4cd29",
+        "size_bytes": 6600
+      },
+      {
+        "path": "tests/integration/minkyu/naver_signup_local.ts",
+        "sha256": "eb78280467db6972a098ec162a139832b8ef20cbe8c86ddec354428bb49ddd75",
+        "size_bytes": 97560
+      },
+      {
+        "path": "tests/integration/minkyu/ordered_backend_local.ts",
+        "sha256": "ce0d043132365fcea00624bedfdbcb4bf4853ffb2111bd9b350eb90569cf67c2",
+        "size_bytes": 28035
+      },
+      {
+        "path": "tests/integration/minkyu/places_events_local.ts",
+        "sha256": "4b4cf6624ed700a33de6e6b315b9ec1554c9873d2f198602f058a23e8754d079",
+        "size_bytes": 16177
+      },
+      {
+        "path": "tests/integration/minkyu/post_event_top10_local.ts",
+        "sha256": "521a09adb13347766b7b1ebb3af924eb5677adb9f0d348b9978d4611cb0357f4",
+        "size_bytes": 26368
+      },
+      {
+        "path": "tests/integration/minkyu/product_connection_http.ts",
+        "sha256": "34a6805a2b381e03129deff4b39dc24fa5d43c6699d4116d7661acd201b45abe",
+        "size_bytes": 9421
+      },
+      {
+        "path": "tests/integration/minkyu/product_connection_local.py",
+        "sha256": "3ca4776cf02e1c9c7f568a9f938f9a1bf881d41a83cd25e7d24b36ecb781a3cd",
+        "size_bytes": 5377
+      },
+      {
+        "path": "tests/integration/minkyu/product_connection_restore108_local.py",
+        "sha256": "ed3b78364b7a1868332da212b2f78ddb94197aa974f233240233b85faec533e2",
+        "size_bytes": 252327
+      },
+      {
+        "path": "tests/integration/minkyu/product_connection_restore_local.py",
+        "sha256": "19f13385b7a6cf4e84e8a5e38646407b7e15b260ed777e88b44dfa411d5d1b9b",
+        "size_bytes": 5003
+      },
+      {
+        "path": "tests/integration/minkyu/profile_image_access_local.ts",
+        "sha256": "843e0105805c475cc06ca1990d410a4c178c585112bdeb4cf80bb4eaa09a2bb1",
+        "size_bytes": 20347
+      },
+      {
+        "path": "tests/integration/minkyu/profile_preferences_concurrency_local.py",
+        "sha256": "b42bcb0eb9061f0eba842a42ee6c732eea925e43f00e2dbc7063e3c8d1de9413",
+        "size_bytes": 19427
+      },
+      {
+        "path": "tests/integration/minkyu/public_post_detail_local.ts",
+        "sha256": "1bc8cacd937d1e7e1f62331b3daa93d49259f5c16ccb1dc665d58a835d1689fe",
+        "size_bytes": 16106
+      },
+      {
+        "path": "tests/integration/minkyu/queue_runtime_http.py",
+        "sha256": "a536b7ce668714db8fa375c13510dd17a412bf6691ed3eec1cad1fb7dc292ffd",
+        "size_bytes": 7070
+      },
+      {
+        "path": "tests/integration/minkyu/queue_tls_environment.py",
+        "sha256": "807448169be8228636f6091e3fee96d31c47be47a16a21457a2e7d4318d31ea6",
+        "size_bytes": 8166
+      },
+      {
+        "path": "tests/integration/minkyu/queue_tls_http.ts",
+        "sha256": "988448b541dd3de8b11df2545e0f1c9ce5f0a1225e81248b5142868eda0ece43",
+        "size_bytes": 3334
+      },
+      {
+        "path": "tests/integration/minkyu/recovery99_local.py",
+        "sha256": "243ac94a2adc3a8ab3c73cb8cf6100cbb08c0505d1daae54ebcde29e306ea64c",
+        "size_bytes": 12227
+      },
+      {
+        "path": "tests/integration/minkyu/recruitment_reopen_concurrency_local.py",
+        "sha256": "f70562c64cdc3dee56df4b36c99183a0863e1cfb3921e998c8553643e1a83435",
+        "size_bytes": 6237
+      },
+      {
+        "path": "tests/integration/minkyu/report_operator_native_local.ts",
+        "sha256": "9d8fe8ac8b8f7e4ae8ff8c9860836d536ecf05e408193a4816bf275e4957b85b",
+        "size_bytes": 162396
+      },
+      {
+        "path": "tests/integration/minkyu/review_summary_worker_local.ts",
+        "sha256": "8d9e97941d28b532fb29d9377a6cadbfc67f0fc2e108b2bab22920ab68eb0459",
+        "size_bytes": 20872
+      },
+      {
+        "path": "tests/integration/minkyu/runtime_e2e.py",
+        "sha256": "b9012bfb27db4e1b5cfc369db859753611044e68df879645815481da51ea3983",
+        "size_bytes": 16376
+      },
+      {
+        "path": "tests/integration/minkyu/safety_consumers_local.ts",
+        "sha256": "45ed80e05b76122b3ebe6856169ab6fdd042e678ad3316071f07d1c3b273854a",
+        "size_bytes": 4914
+      },
+      {
+        "path": "tests/integration/minkyu/search_rpc_e2e.py",
+        "sha256": "dbc25768a3323053ab30e850f60954bbe60c8ae1b30bed4c22aa5c92ab735876",
+        "size_bytes": 10511
+      },
+      {
+        "path": "tests/integration/minkyu/sweetness_concurrency_local.py",
+        "sha256": "82483bc11703142d980a219d4f4ea2ab25ea48a30d11c527f130068421b21834",
+        "size_bytes": 7038
+      },
+      {
+        "path": "tests/integration/minkyu/worker_intent_confirmation_local.py",
+        "sha256": "8c48160d5038fc3341f6afe415a7f46b3a47ba4864c5fb42a071514376e43aeb",
+        "size_bytes": 5559
+      },
+      {
+        "path": "tests/integration/minkyu/worker_invocation_audit_local.py",
+        "sha256": "b9caa18bc32406f380808738052257ff349c6719c792a358787969ab6fe02430",
+        "size_bytes": 4691
+      },
+      {
+        "path": "tests/integration/minkyu/worker_invocation_http.ts",
+        "sha256": "3c5c5659396d74a190cc14ea27d4f86daef6e366ae103b09c7f9ec75c15768cb",
+        "size_bytes": 34145
+      },
+      {
+        "path": "tests/integration/minkyu/worker_invocation_http_local.py",
+        "sha256": "91f058ce2be26adf56568aee363a77a6e015f76755148846b0974641a8a247e8",
+        "size_bytes": 46414
+      },
+      {
+        "path": "tests/integration/minkyu/worker_runtime_atomic_local.py",
+        "sha256": "c0e470042e843b4dfdca0d8608a7d97f2bf6ca438bc58effe513b7fcb4df2994",
+        "size_bytes": 6544
+      },
+      {
+        "path": "tests/integration/minkyu/worker_runtime_restore_local.py",
+        "sha256": "0274ccfe56236d543256ddfaa1e7b668a96151432d8d2acf36e8ed67d2256369",
+        "size_bytes": 4413
+      },
+      {
+        "path": "tests/integration/minkyu/worker_runtime_retention_local.py",
+        "sha256": "f489e9975ec54afe441f501972a743e6444316d7b2b0b91a9ffb30597ad2e7cc",
+        "size_bytes": 4362
+      },
+      {
+        "path": "tests/integration/minkyu/worker_runtime_storage_local.py",
+        "sha256": "84abe9340a84005eb7385c9f3a484a6987b2dfe620a02cafbd93170b4d02175f",
+        "size_bytes": 13720
+      },
+      {
+        "path": "tests/integration/minkyu/worker_safety_http.ts",
+        "sha256": "4d7ed86ae10a2807b2b66e2bed7bc02b82c4bdf8d8cb95237d5e4c830d0390e1",
+        "size_bytes": 143331
+      },
+      {
+        "path": "tests/integration/minkyu/worker_safety_http_local.py",
+        "sha256": "b3e34e0d07b495aece4548a427d245f09d756d6e85dbeb1500f49d98bf10218c",
+        "size_bytes": 142031
+      }
+    ],
+    "local_tools": [
+      {
+        "path": "tools/local/README.md",
+        "sha256": "dc5d23d7f5607b48566f86c0d444c9aff59319f6c79ff150d7487c969c05d7b6",
+        "size_bytes": 18930
+      },
+      {
+        "path": "tools/local/check_api_env.py",
+        "sha256": "b820e96ada9a1d3cfcb4aedc7d4300c82fbc5970f6b220aa93d7ef26b6854d04",
+        "size_bytes": 7313
+      },
+      {
+        "path": "tools/local/check_environment.py",
+        "sha256": "10f4fe57f62ca8c12f24e3307c484dd75c235db4121d5896d331b7a61126be75",
+        "size_bytes": 3345
+      },
+      {
+        "path": "tools/local/check_event_apis.py",
+        "sha256": "d9c91507ad6c2ed46b37d25147b5281fe92aa7c4fb82c6c0e58515a238de3e3b",
+        "size_bytes": 7460
+      },
+      {
+        "path": "tools/local/check_kakao_api.py",
+        "sha256": "7ca74f6ba7c50f41273bb54eb1de9bb700adf03dd6f35c0bdb9f5d72e430bddc",
+        "size_bytes": 5384
+      },
+      {
+        "path": "tools/local/check_production_runtime.mjs",
+        "sha256": "ce750000236c3c22c15252a5813452024af784cb4701e1e8269b8e0a95790315",
+        "size_bytes": 3374
+      },
+      {
+        "path": "tools/local/check_search_core.ts",
+        "sha256": "ff92a5e4e66b7200606d8622742f89dea07cc7ca748aaf85845fe77a53279b7f",
+        "size_bytes": 7723
+      },
+      {
+        "path": "tools/local/check_tour_api.py",
+        "sha256": "cd485f700df47ca7d899851ebf47f30a1d8977afe1f49f5547405982192f36e5",
+        "size_bytes": 7561
+      },
+      {
+        "path": "tools/local/compare_schema_catalog.py",
+        "sha256": "e3b4eb7eaa55f10b1c764d2840e12f5c85629605166bb93538f8b81ca29c06a4",
+        "size_bytes": 12048
+      },
+      {
+        "path": "tools/local/configure_local_gateway.py",
+        "sha256": "2ed4c260a2bd6455013bc5ad1b44d7f7534b22f0a35755b5008166dea9203256",
+        "size_bytes": 14244
+      },
+      {
+        "path": "tools/local/observe_isolated.py",
+        "sha256": "4066e892fd4132bae080bd5997c9369ad552e4c04486a065d4e8878f813e1264",
+        "size_bytes": 12808
+      },
+      {
+        "path": "tools/local/prepare_auth_negative.py",
+        "sha256": "04365f075de08e3d65be7a46d1b407f2c49563a184af87f5b827cae8fd9480c9",
+        "size_bytes": 74000
+      },
+      {
+        "path": "tools/local/prepare_current_policy.py",
+        "sha256": "79ab091fe8a47189a949ca717d5b051340a1518ac148502adcb0edae19467111",
+        "size_bytes": 43834
+      },
+      {
+        "path": "tools/local/prepare_database.py",
+        "sha256": "e097fdb32af5eb10cdc44e801682761e92b946a1c8adf22378af9ec2af7f82c9",
+        "size_bytes": 7737
+      },
+      {
+        "path": "tools/local/prepare_edge.py",
+        "sha256": "e3f9d3c7760eef4d8cb0eb1de557f6e89c58e5b80f01936209612ebf42613748",
+        "size_bytes": 27219
+      },
+      {
+        "path": "tools/local/prepare_isolated_midnight.py",
+        "sha256": "c77a06377984a261adb09fad91c061ace03ed52d2670fd54785ec303561b0f26",
+        "size_bytes": 90766
+      },
+      {
+        "path": "tools/local/prepare_migrations.py",
+        "sha256": "be07feeff30eeb61e34b6741b1636cea675b43a368404c99c4d7205ec3d93fcc",
+        "size_bytes": 6160
+      },
+      {
+        "path": "tools/local/prepare_production_backend.py",
+        "sha256": "cc2108bc22d65ee8bdd1aeab9248f47dc624874e9b7051faa3df2983135cf7af",
+        "size_bytes": 26149
+      },
+      {
+        "path": "tools/local/prepare_remote_baseline.py",
+        "sha256": "5ab92b841f96e6b239f100a7d0493c7f27186b79b4a83c8f64657d2e4d417037",
+        "size_bytes": 9545
+      },
+      {
+        "path": "tools/local/remote_schema_catalog.sql",
+        "sha256": "4405360718ce6f5f5c3c249964390ed1dfba156369b55ab52982d800f4614772",
+        "size_bytes": 11138
+      },
+      {
+        "path": "tools/local/run_database_tests.py",
+        "sha256": "0cfc6cfb00276047ed502f8bb461b5e6e742ed18880ea6c0157d10bbb6e19f5a",
+        "size_bytes": 45832
+      },
+      {
+        "path": "tools/local/run_event_database_tests.py",
+        "sha256": "2112ae5e2c9474839707a210626abc8d5fa82ae6bb054365a192cd7c9cc7b42c",
+        "size_bytes": 8241
+      },
+      {
+        "path": "tools/local/run_matching_database_tests.py",
+        "sha256": "967fb862951acc7034cfb003c5cba9efd90b65c577cd7342f247cd0164f284a7",
+        "size_bytes": 7040
+      },
+      {
+        "path": "tools/local/run_naver_database_tests.py",
+        "sha256": "d5f292c5ff1228614ac3f22709168226a6fa36c4a6d10cbe5b8837cf472016c3",
+        "size_bytes": 3834
+      },
+      {
+        "path": "tools/local/run_naver_oauth_local.ts",
+        "sha256": "c50b631e2f32cb86c534f1d63b57d8693405e9de135fd91dafb840bc0dbe8623",
+        "size_bytes": 36105
+      },
+      {
+        "path": "tools/local/run_ordered_database_tests.py",
+        "sha256": "4cd3dbf2c532965dad4d14ad35f0310fc7f000afc5933cfea8d822bd679ad6f4",
+        "size_bytes": 16540
+      },
+      {
+        "path": "tools/local/start_owned_validation.py",
+        "sha256": "75cfa09f69e491f82827134b62f8bc45c7ab0cd39acb359a7aab0ecb6e5f0632",
+        "size_bytes": 20217
+      },
+      {
+        "path": "tools/local/verify_restoration_readiness.py",
+        "sha256": "741b2eb4e6e6a320f1f0959fe514ae4c462224cdef9588a5d56e4881dd93520f",
+        "size_bytes": 36136
+      }
+    ],
+    "contracts": [
+      {
+        "path": "backend/contracts/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size_bytes": 0
+      },
+      {
+        "path": "backend/contracts/ai-chat.md",
+        "sha256": "39fcacd1d8763bc16f8032c4164378002c4bf4d755dc96e2ff1dd2e6b782b996",
+        "size_bytes": 28592
+      },
+      {
+        "path": "backend/contracts/auth-runtime.md",
+        "sha256": "870c3a843974872cdeeeead36a1406b44ecb8257fcda42ab438370cd4a7b13eb",
+        "size_bytes": 13407
+      },
+      {
+        "path": "backend/contracts/completion-db.md",
+        "sha256": "bda2ef7cbb35126b2a42de9b9e9cfa350db60d6f4b2ff5b9653a51a1cf3e0dd5",
+        "size_bytes": 16278
+      },
+      {
+        "path": "backend/contracts/content-inspection.md",
+        "sha256": "6a9cfb5efbe10f0de139a79fea2d517ea2d21206f0800d00c4e2efe43597b488",
+        "size_bytes": 6616
+      },
+      {
+        "path": "backend/contracts/conventions.md",
+        "sha256": "971778d101ab4f64be4bd2d84fc3c17ec086d1a3d94fb07e42489ce7b8787baf",
+        "size_bytes": 9392
+      },
+      {
+        "path": "backend/contracts/core-service-db.md",
+        "sha256": "a72280535dfeea4460f13d97ccc2739d041b40b462cc39048245e9a505e7d08f",
+        "size_bytes": 15653
+      },
+      {
+        "path": "backend/contracts/daily-jobs.md",
+        "sha256": "e27282a264efe0f9c7a957e6482d692da78bb6761c2288c652e279b8bcdd339a",
+        "size_bytes": 2835
+      },
+      {
+        "path": "backend/contracts/db-foundation.md",
+        "sha256": "8a5a28c50e044eeeb4b167e87bd8b51043ada16992636a91613396d8f3cf575a",
+        "size_bytes": 14665
+      },
+      {
+        "path": "backend/contracts/event-storage.md",
+        "sha256": "12d410985415ff633242fa387af5559c32a04a259e1d2365ee71ccafae4d80b0",
+        "size_bytes": 19873
+      },
+      {
+        "path": "backend/contracts/gateway-cors.md",
+        "sha256": "5ed16d54246f85a8a6c164b7c606a6a1c4aea3ad2cb14dc082ebd607ddb3ab81",
+        "size_bytes": 8352
+      },
+      {
+        "path": "backend/contracts/matching.md",
+        "sha256": "3a65d901a721c825bc24cb5af77f5bb419bcd92879e6fa26dc50735c6e8f4ad7",
+        "size_bytes": 20950
+      },
+      {
+        "path": "backend/contracts/member-activity-sanctions.md",
+        "sha256": "a25d54fc3fddf21ad15b8fafd1c566785c1ce2f3c75f9c2254d02e7a97fbb846",
+        "size_bytes": 18080
+      },
+      {
+        "path": "backend/contracts/posts-search.md",
+        "sha256": "365251d83513e0b3555fa461b10d6d4aab012bf88a067379d0ab82a150a894f2",
+        "size_bytes": 10553
+      },
+      {
+        "path": "backend/contracts/profile-images.md",
+        "sha256": "920c36ddddfb3aa354c1f0a401b8b66fd72ab05ec1efe52884ca24adb75899a7",
+        "size_bytes": 6442
+      },
+      {
+        "path": "backend/contracts/public-post-search-db.md",
+        "sha256": "1a6dbd10d1d0e80690cf95c7015f2580775b2b68649204183fc6d49d1ecdbed9",
+        "size_bytes": 12655
+      },
+      {
+        "path": "backend/contracts/reports.md",
+        "sha256": "ebd33e042eef493a7e47bc0a54b4aa98850ed91deb272615693f49e7164bb449",
+        "size_bytes": 47956
+      },
+      {
+        "path": "backend/contracts/review-automation-db.md",
+        "sha256": "1d24c9731e9bcc723fbb702492ebb65b0645b84fdb0492ffa4a21db8f2cb3051",
+        "size_bytes": 11921
+      },
+      {
+        "path": "backend/contracts/review-summary-db.md",
+        "sha256": "e3fc6130cd2b811668a236861b3585daff3a3432dbf480cb4aee6274ba4c8f24",
+        "size_bytes": 14972
+      },
+      {
+        "path": "backend/contracts/review-summary.md",
+        "sha256": "ade0e19f24b15fd5303dfaf9b43d734d3c9d10977ac637e671987e4010c3cdf7",
+        "size_bytes": 26989
+      },
+      {
+        "path": "backend/contracts/reviews.md",
+        "sha256": "f14d3997e1f75a4015e89c66383a63de2518e949a4891dd0b3e1619ea7fbd71b",
+        "size_bytes": 8488
+      },
+      {
+        "path": "backend/contracts/search.md",
+        "sha256": "ae4b2bd5aaa45576fa918b49a0a511c17a905eda5d3e178590803880475c297c",
+        "size_bytes": 19223
+      },
+      {
+        "path": "backend/contracts/service-api.md",
+        "sha256": "935f4a88dcc5229a2ff16ac75daf5bff7f2733fcd754aaf0a0498199d7e2867f",
+        "size_bytes": 51269
+      },
+      {
+        "path": "backend/contracts/signup.md",
+        "sha256": "337067b3cf3fd33d15d1604bbee84a184b87ee15ec6d2f356efb98dcb8369d6c",
+        "size_bytes": 12371
+      },
+      {
+        "path": "backend/contracts/verification.md",
+        "sha256": "ae0fe4233a70afb4fe9ff9cb8f3c02ad50e4a71b6bf8bc014faf077364b18220",
+        "size_bytes": 1196
+      },
+      {
+        "path": "backend/contracts/worker-jobs.md",
+        "sha256": "c179c6d95f5fa2945107d239666ba782d189264dd39b4135297f123492fc4eba",
+        "size_bytes": 29504
+      }
+    ]
+  },
+  "baseline770": {
+    "path": "/private/tmp/yumidang-minkyu-wbs-20261017/docs/collaboration/requests/minkyu/2026-10-17-source-manifest.json",
+    "sha256": "5759758315e424ca244d82b0a61dd09cddc15d6fc51dbec428c5f75269b08a59",
+    "sourceHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+    "fileCount": 770,
+    "filesSha256": "b45f5b5d731bdbd52b4719bdfaa37c5ee6ff634a387c4af3561c91f2f6367010",
+    "groupCounts": {
+      "migrations": 121,
+      "functions": 187,
+      "tests": 410,
+      "local_tools": 26,
+      "contracts": 26
+    },
+    "allMissing": [],
+    "addedPaths": [
+      "tests/database/minkyu/test_auth_negative_preparation.py",
+      "tests/database/minkyu/test_restoration_readiness.py",
+      "tools/local/prepare_auth_negative.py",
+      "tools/local/verify_restoration_readiness.py"
+    ],
+    "changedExistingPaths": [
+      {
+        "path": "tools/local/prepare_database.py",
+        "beforeSha256": "13a387eebe2f7fba6219229080818b668d2449b15f4b377a679a232511a37781",
+        "afterSha256": "e097fdb32af5eb10cdc44e801682761e92b946a1c8adf22378af9ec2af7f82c9"
+      }
+    ],
+    "unchangedExistingCount": 769,
+    "productFunctions187Unchanged": true,
+    "canonicalMigrations121Unchanged": true,
+    "existingTests410Unchanged": true,
+    "contracts26Unchanged": true,
+    "previousFiveWorkingTreeSupplementBytesPreserved": true
+  },
+  "source_state": {
+    "currentHead": "9676cb85736435d742e91283d1c30cff1bd8e609",
+    "priorActualRuntimeHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+    "approvedLocalCommits": [
+      "37921cfe312ea7f5ba35a2d38ad76d04426de6b8",
+      "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+      "794648fae0b28a28ae9f558342c74d684dcc9e68",
+      "9676cb85736435d742e91283d1c30cff1bd8e609"
+    ],
+    "newAuthThreePathsCommittedAndHeadBytesExact": {
+      "tests/database/minkyu/test_auth_negative_preparation.py": "757979d41ebdabf83dc90bfcf176c0b3e88bea48afc070f54b2d80ab5f03765a",
+      "tools/local/prepare_auth_negative.py": "04365f075de08e3d65be7a46d1b407f2c49563a184af87f5b827cae8fd9480c9",
+      "tools/local/prepare_database.py": "e097fdb32af5eb10cdc44e801682761e92b946a1c8adf22378af9ec2af7f82c9"
+    },
+    "uncommittedSourcePaths": [
+      "tests/database/minkyu/test_ai24_live_binding.py",
+      "tests/database/minkyu/test_current_policy_preparation.py",
+      "tests/database/minkyu/test_production_preparation.py",
+      "tools/local/prepare_current_policy.py",
+      "tools/local/prepare_isolated_midnight.py"
+    ],
+    "newRestorationSourcePathsNotCommitted": [
+      "tests/database/minkyu/test_restoration_readiness.py",
+      "tools/local/verify_restoration_readiness.py"
+    ],
+    "allUncommittedSourcePaths": [
+      "tests/database/minkyu/test_ai24_live_binding.py",
+      "tests/database/minkyu/test_current_policy_preparation.py",
+      "tests/database/minkyu/test_production_preparation.py",
+      "tests/database/minkyu/test_restoration_readiness.py",
+      "tools/local/prepare_current_policy.py",
+      "tools/local/prepare_isolated_midnight.py",
+      "tools/local/verify_restoration_readiness.py"
+    ],
+    "indexHasChanges": false,
+    "push": "NOT_RUN_BY_AUDIT",
+    "sourceWorkingTreeChangedByAudit": false,
+    "originalManifestChangedByAudit": false,
+    "runtimeSourceBoundary": "과거 source521의472회귀/실제영수증과 후속Auth전용 source794648f/9676cb8 실행은 별도source범위다. source774개는 현재HEAD+보존된미커밋5개+신규복원2개의 작업트리 스냅샷이며 전774개가 HEAD커밋되었다는 뜻이 아니다."
+  },
+  "inventory_checks": {
+    "expectedTotalFiles": 774,
+    "actualTotalFiles": 774,
+    "inventoryEqualsBaselinePlusExactlyFourNew": true,
+    "missingBaselineFiles": [],
+    "unexpectedNewFiles": [],
+    "changedExistingFilesOnlyPrepareDatabase": true,
+    "currentProductFunctionFiles": 187,
+    "productFunctionBytesAllMatchBaseline": true,
+    "canonicalVersionsUniqueAndOrdered": true,
+    "sourceControlFilesAllMatchBaseline": true,
+    "headAndGitStatusUnchangedDuringCapture": true,
+    "cacheFilesExcluded": true,
+    "excludedCachePattern": [
+      "**/__pycache__/**",
+      "**/*.pyc"
+    ],
+    "docsNotCountedInFiveSourceGroups": "문서 원문은 source controls 또는 별도감사/증거SHA로 고정하며 소스5개그룹에 포함하지 않는다."
+  },
+  "validation": {
+    "sourceFileByteHashRecalculated": 774,
+    "sourceControlByteHashesRecalculated": 10,
+    "fileGroupAndCombinedDigestsRecalculated": true,
+    "actualAuthPairResult": "PENDING_FINAL_READONLY_SOURCE_CANDIDATE_ONLY",
+    "actualAi24Midnight": "NOT_RUN",
+    "operatingChanged": false,
+    "externalQueriesOrMessagesByAudit": false
+  },
+  "evidenceReferences": {
+    "previousPlanAudit": {
+      "path": "/private/tmp/20261018-plan-completion-audit-notion.json",
+      "sha256": "dc113ada15838fd26df30fd8dff04edf1afa5d15cd76f2a6affe0a3883dec62c"
+    },
+    "afterRestorationAudit": {
+      "path": "/private/tmp/20261018-plan-completion-audit-after-restoration.json",
+      "sha256": "70e1fe95f10948021d8c6400c5fe271893d22750e696154e82d8d0109c96fc4c"
+    },
+    "priorSource770RegressionReceipt": {
+      "path": "/private/tmp/yumidang-plan-baseline-20261018/receipt.json",
+      "sha256": "e78f4aa2351654b02583d38ffa9e1b4125ee324304eef67352fdadd45381bc4c"
+    },
+    "newRestoration25Receipt": {
+      "path": "/private/tmp/yumidang-restoration-applied-20261018/receipt.json",
+      "sha256": "409f0857d6a933e08b594fcc43fdfc725202ce139902b1e75bdbc191eb55449e"
+    }
+  },
+  "execution_boundaries": {
+    "sourceReadOnlyByAuditor": true,
+    "runtimeResourceCallsByAuditor": 0,
+    "runtimeResourcesChangedByAuditor": false,
+    "credentialOrJwtContentsIncluded": false,
+    "actualResultNotPromotedFromSourceChecks": true,
+    "baselineProgress": {
+      "percent": 79,
+      "completed": 22,
+      "total": 28
+    }
+  }
+}

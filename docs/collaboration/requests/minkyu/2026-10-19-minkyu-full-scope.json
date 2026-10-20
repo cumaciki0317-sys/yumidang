@@ -1,0 +1,3174 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-19T21:25:00.396749+09:00",
+  "actor": "minkyu",
+  "objective": "민규 담당 전체44개 WBS를 실제완료기준으로100%까지 이어가는 업무대장. 이전좁은계획의완료/제외는전체담당완료/제외가아님.",
+  "scope": "카탈로그기반전체44개와최신Notion본문44개/저장소증거대조.이문서작성중코드수정·실제런타임·외부쓰기0.",
+  "workspace": "/private/tmp/yumidang-minkyu-wbs-20261017",
+  "source_catalog": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.json",
+    "sha256": "1166a60b7518d8396b27199d50f1c5e98c71d1eb2767a6b67ac11bc56988f98b",
+    "captured_at": "2026-10-14T23:42:07+09:00"
+  },
+  "live_notion_read": {
+    "data_source": "collection://987a6def-75f8-8338-9785-07f248cc9096",
+    "read_at": "2026-10-19T21:25:00.396749+09:00",
+    "schema_fetched_first": true,
+    "exact_person_value": "user://140d872b-594c-813d-8193-0002d9e26226",
+    "filtered_rows": 44,
+    "has_more": false,
+    "pages_fetched": 44,
+    "fetch_failures": 0,
+    "truncation_or_unknown_warning_reported": false,
+    "warning_metadata_note": "경고가반환되지않았음.일부fetch의truncated/unknown기계필드자체는미노출이며0확정으로소급하지않음.",
+    "remote_writes": 0,
+    "status_or_assignee_changes_vs_saved_catalog": 0
+  },
+  "counts": {
+    "tasks": 44,
+    "notion_status": {
+      "작업 중": 22,
+      "배포 완료": 2,
+      "최종 완료": 2,
+      "대기": 18
+    },
+    "assessment": {
+      "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN": 34,
+      "RECORDED_DEPLOYMENT_MILESTONE_ONLY": 2,
+      "RECORDED_FINAL_COMPLETE_PRESERVED": 2,
+      "LOCAL_ACCEPTANCE_EVIDENCE_READY": 3,
+      "EVIDENCE_AVAILABLE_ACCEPTANCE_RECONCILE": 3
+    },
+    "action_class": {
+      "READY_LOCAL_EVIDENCE_AND_FIXES": 16,
+      "PRESERVE_MILESTONE_TRACK_SUCCESSOR": 2,
+      "PRESERVE_RECORDED_FINAL_COMPLETE": 2,
+      "READY_READONLY_EXTERNAL_IF_ACCESS": 2,
+      "NEEDS_MEMBERS_AND_NATIVE_AUTH": 1,
+      "NEEDS_PROVIDER_OR_LEGAL_INPUT": 1,
+      "NEEDS_NATURAL_WINDOW_RUNTIME": 2,
+      "NEEDS_PROVIDER_INPUT_AND_APPROVED_CALL": 1,
+      "NEEDS_MEMBERS_AND_DEVICE": 1,
+      "READY_LOCAL_SERVER_QA": 1,
+      "NEEDS_BUILD_AND_DEVICE": 1,
+      "NEEDS_IOS_ACCOUNT_SIGNING_DEVICE": 1,
+      "NEEDS_TEAM_BETA_PREREQUISITES": 1,
+      "NEEDS_PUBLIC_RELEASE": 1,
+      "READY_LOCAL_PREPARATION_THEN_OPERATING": 2,
+      "NEEDS_PROVIDER_CONTRACT_AND_KEY_TRANSMISSION": 1,
+      "NEEDS_OFFICIAL_HTTPS_RESPONSE_CONTRACT": 1,
+      "READY_LOCAL_PIPELINE_AND_TEAM_COMPARISON": 1,
+      "READY_LOCAL_PIPELINE_AND_FIXES": 1,
+      "NEEDS_ORIGINAL_BYTES_AND_RESTORE_SLOT": 1,
+      "READY_READONLY_CONSOLE_IF_ACCESS": 1,
+      "NEEDS_TESTING_AND_RELEASE_APPROVAL": 1,
+      "NEEDS_SUBMISSION_PREREQUISITES": 1,
+      "NEEDS_PUBLIC_RELEASE_APPROVAL": 1
+    }
+  },
+  "completion_guard": {
+    "all44_complete": false,
+    "full_scope_percentage": null,
+    "no_new_actual_completion_percentage_claimed": true,
+    "last_explicit_project_baseline": {
+      "percent": 79,
+      "completed": 22,
+      "total": 28,
+      "meaning": "과거명시기준일뿐44Task의완료비율이아니다.새실제완료단위근거로만갱신."
+    },
+    "old_narrow_plan_status": "COMPLETE_REQUESTED_PLAN_SCOPE_WITH_VERIFICATION_LIMIT_ONLY",
+    "old_plan_exclusions_still_full_scope_remainders": [
+      "AI24자연자정",
+      "실회원/Naver전체흐름",
+      "실제공급사/모델/사용량·보관조건",
+      "현재운영연결·적용·복구",
+      "Storage39원바이트·전체복원",
+      "베타/스토어제출·공개"
+    ],
+    "old_narrow_plan_exclusions_are_not_full_scope_exclusions": true
+  },
+  "baseline28_remaining_units": [
+    {
+      "unit": "핵심10",
+      "remaining": "적격실회원2계정전체흐름",
+      "evidence_refs": [
+        "backend100"
+      ],
+      "current_condition": "실회원HOLD를전체담당잔여로유지"
+    },
+    {
+      "unit": "추가6",
+      "remaining": "현재HTTP·화면소비·외부활성화전체연결",
+      "evidence_refs": [
+        "backend100",
+        "jonghyun_handoff"
+      ]
+    },
+    {
+      "unit": "운영4",
+      "remaining": "실제Auth/AI후속·자연자정·주기파기및공급조건의전체연결",
+      "evidence_refs": [
+        "backend100",
+        "runtime18"
+      ],
+      "note": "실제localAuth/AI22·23의완료부분은10/18증거로보존;wholeunit완료는아님"
+    },
+    {
+      "unit": "운영5",
+      "remaining": "실회원운영전과정",
+      "evidence_refs": [
+        "backend100"
+      ]
+    },
+    {
+      "unit": "운영6",
+      "remaining": "원본39·전체복원·권한/sequence/삭제재적용/UNKNOWN·지원백업조건",
+      "evidence_refs": [
+        "backend100",
+        "restoration"
+      ]
+    },
+    {
+      "unit": "운영7",
+      "remaining": "선행충족후현재운영적용·복구검증",
+      "evidence_refs": [
+        "backend100"
+      ]
+    }
+  ],
+  "start_order_candidates": [
+    {
+      "order": 1,
+      "ids": [
+        "4.2",
+        "1.6",
+        "1.7",
+        "7.10",
+        "7.11"
+      ],
+      "action": "증거가있는완료범위를실제acceptance로확정하고공백을파일별실행단위로연결.대장작성이나감사만으로전체완료를선언하지않음."
+    },
+    {
+      "order": 2,
+      "ids": [
+        "4.4",
+        "4.5",
+        "4.6",
+        "4.7",
+        "4.8",
+        "5.2",
+        "5.3",
+        "5.7",
+        "7.12",
+        "7.13"
+      ],
+      "action": "기존완료/회귀/원증거를보존한채실제서버공백을닫는다.5.7의기존14사례를재구현하지않고증거연결부터확인한다."
+    },
+    {
+      "order": 3,
+      "ids": [
+        "6.1",
+        "6.3",
+        "6.5"
+      ],
+      "action": "현재서버TC/위험/실패복구·blocker와종현UI·유미UT의독립산출물을대조한다."
+    },
+    {
+      "order": 4,
+      "ids": [
+        "4.1",
+        "7.1",
+        "8.19",
+        "5.1",
+        "5.6",
+        "7.8",
+        "7.9"
+      ],
+      "action": "현재접근가능한read-only사실/공식계약을확인하면서로컬구현은병행한다.실제key전송·호출·외부메시지·운영쓰기조건은해당경계에서해소한다."
+    },
+    {
+      "order": 5,
+      "ids": [
+        "5.4a",
+        "5.5",
+        "7.14"
+      ],
+      "action": "AI24자연창과전체복원원본/슬롯조건을준비후실제완료증거까지이어간다.이전준비완료를전체완료로승격하지않는다."
+    },
+    {
+      "order": 6,
+      "ids": [
+        "4.3",
+        "6.2",
+        "6.4a",
+        "6.4b",
+        "6.6",
+        "6.7",
+        "7.2",
+        "7.18",
+        "8.22",
+        "8.23",
+        "8.25"
+      ],
+      "action": "실회원·기기/빌드·운영·팀출시선행과실행조건이충족되는순서대로실제결과를닫는다.담당목록에서제외하지않는다."
+    }
+  ],
+  "evidence": {
+    "role": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md",
+      "sha256": "ddc6b4f23f75a4ec3e1be64a6789de6b32c563e6f315dd4b9944db3ffa8736db",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "start": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-minkyu-start.md",
+      "sha256": "13fb717eb80c6bd53c409fa8d2eec4e451b7f53db9d5e3d3e2b5db4824fd37d6",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "wbs17": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-17-wbs-execution.md",
+      "sha256": "d8f7c0948c53a4a4d8bb37cad5e36598a50e4fe38af61f0679d60a2ccd19eee6",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "completion18": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-18-plan-completion.md",
+      "sha256": "d1b6838cde843550b4589b7332bd81167a6aa1922ed5b13ae122e461b72978df",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "runtime18": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-18-runtime-evidence.json",
+      "sha256": "8fa886a56a0c89eeea8e9d359a5bb66f67c0a78ff4f467baed788b04dcfa0305",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "source18": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-18-source-manifest.json",
+      "sha256": "2b799c17602991c625722921e334bfe2cd37902f0ae5390bff0480c193f50e13",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "ai24": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-17-ai24-readiness.json",
+      "sha256": "63811e0ce22d3672e7d33d70e0c1906a8feacc45e84766d2bc67e7c072eede35",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "restoration": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-17-restoration-readiness.json",
+      "sha256": "3b5b8adc7c5d1cf7227a1d9f6b3d6601915a856ff3b3176b6f701c64a9ed5fa5",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "backend100": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-execution.md",
+      "sha256": "ca52d026d0f14fac3a25205179c8447a074a61780d0d34631c71d442fb186dd0",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "auth_history": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-execution.md",
+      "sha256": "0eff30ff4992a4041c15747cbf46bf9d639bfe4f4f546bea1d8a604a6a2e66eb",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "kopis": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-kopis-provider-read-gates.json",
+      "sha256": "422c80be0b555aa91120c1137cf05c4bc673342f023088514f06c8029fbf2607",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "seoul": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-seoul-successor-contract.md",
+      "sha256": "26a0b8fb12bc3ea6e1db295618164bc0def1cb364671749a06f3e5b61e83b46b",
+      "scope": "기록된 시점과 검증 범위만 사용; 과거 현재/NOT_RUN 문구는10/18 후속결과와 대조"
+    },
+    "jonghyun_handoff": {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-14-minkyu-final-handoff.md",
+      "sha256": "e3619e7c93a5f0c9fa49064b847de01f3a5607339343150601ba071b79efb8e9"
+    },
+    "policy": {
+      "path": "정책.md",
+      "sha256": "b58c74cce4dc71718bfd45e3249d0ca8fa42b2cf6e9fca47b936584233ef386f"
+    },
+    "ownership": {
+      "path": "backend/ownership.json",
+      "sha256": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3"
+    },
+    "collaboration": {
+      "path": "docs/collaboration/README.md",
+      "sha256": "c08a5b48b377894b4e99da61417f828fe2a031f57e3ea27cb85083863e2380dc"
+    },
+    "operations19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-operations-runbook.md",
+      "sha256": "0a51cecc0b269b38bd458af3e48a437d970c8b85674b451aada141ab57045d42",
+      "scope": "10/19 자료·로컬검사 또는 실제읽기 범위만; 운영/제출/공급사 완료 아님"
+    },
+    "play19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-play-readiness.md",
+      "sha256": "c1e2bddabe4bf0b9990cd1c064a0924784a67ad7166cbb962d5b95710f800078",
+      "scope": "10/19 자료·로컬검사 또는 실제읽기 범위만; 운영/제출/공급사 완료 아님"
+    },
+    "operating_access19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-operating-readonly.json",
+      "sha256": "ffb47d5aefe926f81542ca8e9d261f180a6dd113091074c6b5fb460242a14b42",
+      "scope": "10/19 자료·로컬검사 또는 실제읽기 범위만; 운영/제출/공급사 완료 아님"
+    },
+    "collaboration19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-collaboration-verification.md",
+      "sha256": "34001e81c7eb84027618bce38485c1640ece2120a98f923b60e649ca1638fe27",
+      "scope": "10/19 자료·로컬검사 또는 실제읽기 범위만; 운영/제출/공급사 완료 아님"
+    },
+    "event_resume78": {
+      "path": "/private/tmp/yumidang-event-pagination-20261019/receipt.json",
+      "sha256": "3490a1fb87a8dce9f1679439b1c4c903be32e4e4272770630d40c01583d01a7d",
+      "private_reference": true,
+      "scope": "로컬 제품factory/합성포트78회귀PASS, 실제외부HTTP/provider/DB/앱/운영 검증 아님",
+      "source": {
+        "backend/supabase/functions/_shared/jobs/event-collection.ts": "1e7471e0f75f47d6680b4453a60876503b542575429b4881c6519d57448a9e5f",
+        "backend/supabase/functions/_shared/integrations/events/tourapi.ts": "45eab8295b598206c37a44ecec85fc2af9f4927d69d62df417a7c9efce31e04d",
+        "tests/functions/minkyu/event_collection_provider_resume.test.mjs": "daee90193efe06e8a266b7604d1487a3861bd21a38a174337c420eeaadb18dec"
+      },
+      "green_log_sha256": "5ace046efc14a192d8aaafde42f95310eeb9df16a2a7d162f4aad293af6e1b6b",
+      "independent_review": "IN_PROGRESS_AT_LEDGER_CAPTURE"
+    },
+    "runtime19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-runtime-evidence.json",
+      "sha256": "c5d1f28583836e2b4b266472518a0be0d63d2157fbc59b38c928f711c7d21200",
+      "scope": "현재 로컬 실제/합성 경계와 읽기 관측만; 전체완료 아님"
+    },
+    "github19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-github-collaboration-readonly.md",
+      "sha256": "f565c3fb8d16b45338adc86257560b303302616a446e6c550bd856afd704821b",
+      "scope": "현재 로컬 실제/합성 경계와 읽기 관측만; 전체완료 아님"
+    },
+    "search_acceptance19": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-search-acceptance.md",
+      "sha256": "5b7aa4d0b026d234328beb01ea2696054c940b5a3af737eff77d95326106284c",
+      "scope": "명시된 합성 자료 서버검증 완료; Notion기록은무료블록한도로미반영"
+    },
+    "source19v2": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-source-manifest-v2.json",
+      "sha256": "d52bede2b4f6eadd13ed8f87d52427c6ef9c4f530b756ef9bef0f9118380a3ce",
+      "scope": "780 source inventory only;121SQL unchanged"
+    },
+    "budget_docs": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-19-ai-budget-policy-document-sync.md",
+      "sha256": "9eb34d16b561cbcf2cbf6a84220cd926c60dca45e812c2f66c5e0f1e051588c0",
+      "scope": "1.6 Mdoc applied/J request only"
+    },
+    "environment20": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-verification-environment-handoff.md",
+      "sha256": "1489a19d668e765d49aa52d3ff88c2eb1865f68b720cb62c88c702edfe07d8a7",
+      "scope": "새환경증거/인계정리;복원RUNNING별도"
+    },
+    "summary20": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-summary14-acceptance.md",
+      "sha256": "b5b0392cddf803960364323272287b3c8f943456473c59c7afba81bc66f92362",
+      "scope": "명시Task완료범위만;제품전체완료아님"
+    },
+    "defects20": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-defect-release-blockers.md",
+      "sha256": "d11b542fde7e771cd7128b0953bd37b89de77ae9d294e9ba0096c256a6475efa",
+      "scope": "명시Task완료범위만;제품전체완료아님"
+    },
+    "qa20": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-qa-case-evidence-matrix.md",
+      "sha256": "1fc3589e879665b32b6916d67575516f3653113fbd1cea1c40498789e14de808",
+      "scope": "정의완료/실행별도"
+    },
+    "gapmap20": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-policy-api-rpc-gap-map.md",
+      "sha256": "71dc9a24ae707d7d00cf7b24407123298d62c8d4d677ea34a9ee63d794d907be",
+      "scope": "검토목록/담당연결완료;개별갭미해결유지"
+    },
+    "source20": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-source-manifest.json",
+      "sha256": "9913f8a3a858e74cb345c8b4a74a32a13e44319a9a5c16631b400874cc55688b",
+      "scope": "780inventory/121SQLsame/targettool61offline actualnewcodeNOTRUN"
+    },
+    "source_closure_review20": {
+      "path": "/private/tmp/yumidang-a002-failure-closure-review-20261020/receipt.json",
+      "sha256": "633115bd1dd0787864264ad94d0dab037d14b1342b44a8d99d90450a9228e6c7",
+      "scope": "독립read-only metadata delta PASS; originalAuth/rest/gatewayStartedAt동일성NOTPROVEN;현재시각봉인"
+    }
+  },
+  "tasks": [
+    {
+      "ledger_id": "LEGACY-ME",
+      "wbs_id": null,
+      "page_id": "b92a6def75f88348899901be76df77d9",
+      "title": "내 정보 조회 API",
+      "area": "BE",
+      "url": "https://app.notion.com/b92a6def75f88348899901be76df77d9",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:26:07.570Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "",
+      "notion_predecessors_verbatim": "",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "본인정보 API 원작업은 작업중이며현재권한검증4.8과별도다.",
+      "remaining_acceptance": "원작업구현·응답·검사근거를4.8에연결하고기존API미완료가있으면해결.",
+      "immediate_next_action": "기존 contract/core service 코드와본인조회테스트를4.8과중복없이대조한다.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "wbs17",
+        "runtime18"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "LEGACY-ENV",
+      "wbs_id": null,
+      "page_id": "9dfa6def75f8824790b581cd025de4f2",
+      "title": "배포 환경 설정",
+      "area": "BE",
+      "url": "https://app.notion.com/9dfa6def75f8824790b581cd025de4f2",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "배포 완료",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:30:41.456Z",
+      "catalog_status": "배포 완료",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "",
+      "notion_predecessors_verbatim": "",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "RECORDED_DEPLOYMENT_MILESTONE_ONLY",
+      "preserved_coverage": "유미 수행 Railway결제/GitHub연결의배포단계완료만보존한다.",
+      "remaining_acceptance": "원완료범위는보존;현재운영연결/복구/runner는7.1/7.2에남음.",
+      "immediate_next_action": "완료수행자·증빙을보존하고현재운영잔여는후속WBS로연결한다.",
+      "action_class": "PRESERVE_MILESTONE_TRACK_SUCCESSOR",
+      "evidence_refs": [
+        "wbs17",
+        "runtime18"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "LEGACY-REQ",
+      "wbs_id": null,
+      "page_id": "706a6def75f88248b33c019daf76864c",
+      "title": "요구사항 명세서 작성",
+      "area": "AI",
+      "url": "https://app.notion.com/706a6def75f88248b33c019daf76864c",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "최종 완료",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:25:15.571Z",
+      "catalog_status": "최종 완료",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "",
+      "notion_predecessors_verbatim": "",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "RECORDED_FINAL_COMPLETE_PRESERVED",
+      "preserved_coverage": "Notion최종완료의요구사항문서작성을보존한다.",
+      "remaining_acceptance": "없음:문서작성완료를제품전체/운영완료로확대하지않음.",
+      "immediate_next_action": "기존완료근거를보존하고새정책차이는1.6에서처리한다.",
+      "action_class": "PRESERVE_RECORDED_FINAL_COMPLETE",
+      "evidence_refs": [
+        "wbs17",
+        "runtime18"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "LEGACY-SIGNUP",
+      "wbs_id": null,
+      "page_id": "c8ea6def75f88383b1e481cc54debd2d",
+      "title": "회원가입 API",
+      "area": "BE",
+      "url": "https://app.notion.com/c8ea6def75f88383b1e481cc54debd2d",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "배포 완료",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:26:15.102Z",
+      "catalog_status": "배포 완료",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "",
+      "notion_predecessors_verbatim": "",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "RECORDED_DEPLOYMENT_MILESTONE_ONLY",
+      "preserved_coverage": "기존회원가입API배포단계완료를보존한다.",
+      "remaining_acceptance": "원배포범위는보존;현재Naver적격/필수정보/계정1개/세션통합은4.3에남음.",
+      "immediate_next_action": "배포원증거를재작성하지않고현재4.3의통합증거와분리연결한다.",
+      "action_class": "PRESERVE_MILESTONE_TRACK_SUCCESSOR",
+      "evidence_refs": [
+        "wbs17",
+        "runtime18"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "1.6",
+      "wbs_id": "1.6",
+      "page_id": "c85a6def75f883af940901663676f842",
+      "title": "[1.6] 최신 정책·계획·협업 문서의 승인된 차이 반영",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/c85a6def75f883af940901663676f842",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P1",
+      "notion_last_edited_at": "2026-10-14T12:33:34.314Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 변경 목록·근거·검토 기록; 정책 선택을 임의 변경하지 않음\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/099a6def75f883a2af55012cf217b65a\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_MANAGED_DOCUMENTS_AND_OWNER_REQUEST",
+      "preserved_coverage": "10/14 역할·정책 담당 동기화와10/18 실행 문서가 존재한다. 10/19 담당/문서/hook/HEAD검사와9기존회귀·10경로양방향검사·현재owner전수/미커밋7보존을 새대장에 연결했다.",
+      "remaining_acceptance": "USERFLOW실제반영은종현요청잔여;1.2전체/제품운영완료미주장",
+      "immediate_next_action": "종현USERFLOW요청반영결과연결",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "role",
+        "policy",
+        "completion18",
+        "wbs17",
+        "collaboration19"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": true,
+      "local_acceptance_verified": true,
+      "verification_scope": "Notion의 해당 문서·담당 매핑·로컬 검사 증거 요구. 원격 CI 실행/타인 clone 검사는 요구 범위 밖이며 수행으로 표시하지 않음.",
+      "final_local_evidence": [
+        "2026-10-19-collaboration-verification.md",
+        "2026-10-19-local-verification-progress.md",
+        "/private/tmp/yumidang-positive-postcommit-20261019/collaboration-final-links.json"
+      ],
+      "remote_notion_update": "NOT_RUN",
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "선행1.2 확정예산차이 본인PRD/상세설계반영+종현USERFLOW요청연결",
+      "evidence_document": "2026-10-19-ai-budget-policy-document-sync.md"
+    },
+    {
+      "ledger_id": "1.7",
+      "wbs_id": "1.7",
+      "page_id": "526a6def75f882d0a511014db6697359",
+      "title": "[1.7] 담당·소유권·작업 환경 인계 정합성 확인",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/526a6def75f882d0a511014db6697359",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P1",
+      "notion_last_edited_at": "2026-10-14T08:24:33.777Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 담당 매핑표·충돌 목록·확인 근거; 역할 재배정 자체는 새 승인 없이 하지 않음\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/e0ba6def75f88225a6580192a539e7f1\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_WITHIN_EXPLICIT_INSPECTION_SCOPE",
+      "preserved_coverage": "민규 actor·전용clone·소유권·단독편집 및10/14 재배정 증거를 보존한다. 10/19 담당/문서/hook/HEAD검사와9기존회귀·10경로양방향검사·현재owner전수/미커밋7보존을 새대장에 연결했다.",
+      "remaining_acceptance": "원격 실행/설정 변경 및 다른 팀원 실제clone은 이 점검 Task 완료범위 밖; 별도 조건 유지",
+      "immediate_next_action": "개선 요청과 후속 작업 추적",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "role",
+        "ownership",
+        "collaboration",
+        "start",
+        "collaboration19"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": true,
+      "local_acceptance_verified": true,
+      "verification_scope": "Notion의 해당 문서·담당 매핑·로컬 검사 증거 요구. 원격 CI 실행/타인 clone 검사는 요구 범위 밖이며 수행으로 표시하지 않음.",
+      "final_local_evidence": [
+        "2026-10-19-collaboration-verification.md",
+        "2026-10-19-local-verification-progress.md",
+        "/private/tmp/yumidang-positive-postcommit-20261019/collaboration-final-links.json"
+      ],
+      "remote_notion_update": "NOT_RUN",
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "담당/인계 또는 협업검사 증거·미확인·개선요청 정리 완료; 제품운영 완료 아님"
+    },
+    {
+      "ledger_id": "4.1",
+      "wbs_id": "4.1",
+      "page_id": "68ba6def75f88253a107017eede551d6",
+      "title": "[4.1] 목표 운영 DB 식별과 실제 구조 확인",
+      "area": "BE",
+      "url": "https://app.notion.com/68ba6def75f88253a107017eede551d6",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:28.060Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 대상·적용 SQL·catalog 근거; 비밀값 제외\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "지정 없음. 병렬 수행 가능 여부를 담당자가 확인한다.",
+      "notion_evidence_verbatim": "- `backend/contracts/completion-db.md`\n- `docs/collaboration/requests/minkyu/2026-10-07-release-recovery-checklist.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "10/12 운영 이력20/catelog14테이블/Storage2는 당시 읽기 관측이며 현재 운영 구조가 아니다. 10/19운영project identity/get_project·migration metadata읽기2건은permission denied.현재상태/이력수미확인,쓰기/회원행조회0.",
+      "remaining_acceptance": "현재 목표DB identity·적용 SQL·catalog와121 source의 실제 차이 근거.",
+      "immediate_next_action": "현재Supabase연결의해당project metadata읽기권한이회복되면같은대상을재확인한다.과거운영20/Storage2를현재로쓰지않고독립서버구현을계속한다.",
+      "action_class": "READY_READONLY_EXTERNAL_IF_ACCESS",
+      "evidence_refs": [
+        "backend100",
+        "restoration",
+        "source18",
+        "operating_access19"
+      ],
+      "external_or_shared_conditions": [
+        "현재 운영 대상 접근·읽기 범위 확인; 운영 쓰기/회원 원문 조회로 확대하지 않음",
+        "현재확인된Supabase metadata접근2건permission denied;권한우회없음"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "4.2",
+      "wbs_id": "4.2",
+      "page_id": "8e9a6def75f882848e5c019c7cad8c1b",
+      "title": "[4.2] 최신 정책·API 계약·DB 구현 차이 검토",
+      "area": "BE",
+      "url": "https://app.notion.com/8e9a6def75f882848e5c019c7cad8c1b",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:30:13.481Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] RPC/응답/정책 갭 및 담당별 연결 목록\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.1",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `정책.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_POLICY_API_RPC_GAP_REVIEW",
+      "preserved_coverage": "10/18 snapshot774 source/SQL121/함수187/실행후 불변 감사는 완료됐으며 과거 J01~J09/현재 Auth 증거가 존재한다.",
+      "remaining_acceptance": "각갭의구현·실제검증은원후속Task유지",
+      "immediate_next_action": "target전이/실패종료계약·deadline실제재현·직접권한증거",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "policy",
+        "source18",
+        "runtime18",
+        "jonghyun_handoff",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": true,
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "18영역/6갭/담당·후속연결;갭수정/실제전체실행아님"
+    },
+    {
+      "ledger_id": "4.3",
+      "wbs_id": "4.3",
+      "page_id": "d8aa6def75f8833cb20701769ca5e118",
+      "title": "[4.3] 실제 네이버 인증·가입 서버 통합 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/d8aa6def75f8833cb20701769ca5e118",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:33:45.379Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 여성/성인·필수정보 누락·계정1개·세션 응답 증거; 과거 가입 API 배포 상태와 분리\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.2",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "실제 로컬 GoTrue 정상·만료·회수·ban·익명·다른 문맥 검증은 해당 합성회원 범위 PASS다.",
+      "remaining_acceptance": "실제 Naver 여성/성인·필수정보 누락·계정1개·세션 응답의 서버 통합 증거.",
+      "immediate_next_action": "현재 인증 계약/필수정보·중복계정 실패 TC를 닫고 실회원 재개 조건이 충족되면 실제 Naver 통합을 검증한다.",
+      "action_class": "NEEDS_MEMBERS_AND_NATIVE_AUTH",
+      "evidence_refs": [
+        "runtime18",
+        "completion18",
+        "policy",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [
+        "실회원 HOLD 재개·적격 계정/팀 직접 로그인; synthetic GoTrue로 Naver 완료를 대체하지 않음"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "4.4",
+      "wbs_id": "4.4",
+      "page_id": "a50a6def75f8825eade20138b6009554",
+      "title": "[4.4] 행사·공고 조회/작성/수정·공개 DTO 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/a50a6def75f8825eade20138b6009554",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:31:00.858Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 실 DB 응답·소유권·익명 개인정보0·정확한 위치 권한 검증\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.2",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `backend/supabase/functions/service-api/search-http.ts`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "J01 실제 Auth→REST/DB→HTTP→SDK 필터·정렬·페이지 PASS와 기존 BE 검증을 보존한다.",
+      "remaining_acceptance": "현재소스의 실DB 응답·소유권·익명 개인정보0·상세 위치 권한 전체 acceptance 매핑.",
+      "immediate_next_action": "기존 DTO/조회·작성·수정/권한 회귀와 원증거를 대조해 빠진 서버 case만 보완한다.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "jonghyun_handoff",
+        "wbs17",
+        "policy",
+        "source18"
+      ],
+      "external_or_shared_conditions": [
+        "실화면 소비는 종현 영역; 실제 공급 행사 데이터와 별도"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "4.5",
+      "wbs_id": "4.5",
+      "page_id": "80da6def75f88269be2c8103f82bf4c5",
+      "title": "[4.5] 첫 메시지 신청·확정·변경·만료 동시성 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/80da6def75f88269be2c8103f82bf4c5",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:46.915Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 재시도ID·기존방 재사용·만료와 동일시각 수락거부·조건버전\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.2",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `정책.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "기존 매칭/메시지·읽음 경쟁 증거를 보존하며10/18 Auth 거절을 매칭 경쟁 PASS로 확대하지 않는다.",
+      "remaining_acceptance": "재시도ID·기존방 재사용·만료동일시각 수락거부·조건버전의 현재 DB/HTTP 증거.",
+      "immediate_next_action": "matching 계약·기존 동시성 회귀에서 acceptance별 증거를 연결하고 실패/미확인 case만 보완한다.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "wbs17",
+        "backend100",
+        "policy",
+        "source18"
+      ],
+      "external_or_shared_conditions": [
+        "추가 실제 합성 격리는 새대상·슬롯·메모리/보존 조건을 먼저 확인"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "4.6",
+      "wbs_id": "4.6",
+      "page_id": "5f2a6def75f88367878d014b1e35e5ea",
+      "title": "[4.6] 실제 완료·분쟁 보류·후기 공개 시점 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/5f2a6def75f88367878d014b1e35e5ea",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:12.479Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 실제 완료+7일 한쪽 공개·양쪽 제출 즉시 공개·보류/재개·당도/횟수 반영\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.2",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `backend/contracts/completion-db.md`\n- `정책.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "과거 핵심 완료/후기 및 실제 stockCLI 경쟁·복구 PASS를 기록된 범위로 보존한다.",
+      "remaining_acceptance": "실제 완료+7일/양쪽 제출·분쟁 보류/재개·당도/횟수의 현재 acceptance 연결; 운영 실행과 구분.",
+      "immediate_next_action": "completion/reviews 계약과 기존 실제 결과를 case별로 대조해 종료/공개/점수 시계의 남은 공백만 닫는다.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "wbs17",
+        "backend100",
+        "policy",
+        "source18"
+      ],
+      "external_or_shared_conditions": [
+        "실제 회원·운영 자동완료는6.2/7.2 조건"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "4.7",
+      "wbs_id": "4.7",
+      "page_id": "ecba6def75f882fead1681432f030dd3",
+      "title": "[4.7] 신고·차단·탈퇴·제재 승계·사진 파기·RLS 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/ecba6def75f882fead1681432f030dd3",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:34:09.811Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 서버 권한과 실제 파기·자료 보존·재가입 제재 승계 증거\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.2",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `정책.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "J07 직원 native7·J09 합성 Auth/사진 삭제·ACK 유실 복구/UNKNOWN 보존을 유지한다.",
+      "remaining_acceptance": "권한/RLS·제재승계·실제 파기/보관·직원 전체업무·신고캡처 ACL/감사·최종파기 증거의 부족분.",
+      "immediate_next_action": "기존 보고/탈퇴·재가입/Storage 흐름에서 현재 완료기준별 미검증 case를 확인하고 서버 소유 경계만 보완한다.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "jonghyun_handoff",
+        "wbs17",
+        "auth_history",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "실회원/운영·외부AI 원사본 삭제는 별도 실제 조건; 신고 비활성 선결조건 유지"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "4.8",
+      "wbs_id": "4.8",
+      "page_id": "58ca6def75f88217980a010dda12b177",
+      "title": "[4.8] 내 정보 조회 서버 권한·응답 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/58ca6def75f88217980a010dda12b177",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:49.960Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 본인 조회·세션 만료·공개 DTO와 사적 정보 분리 증거; 기존 API 작업과 별도 검증\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.3",
+      "notion_evidence_verbatim": "- `backend/contracts/service-api.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "내정보 API 기존 작업과 공통 세션/DTO 구현은 존재하나10/17 표는 검증확정을 하지 않았다.",
+      "remaining_acceptance": "본인/타인·만료세션·공개 DTO/사적 정보 분리의 현재 서버 결과.",
+      "immediate_next_action": "정확3파일로컬커밋예외승인후최종HEAD고정→새Auth6/positive→내정보active4→원3,600초자연만료. 실회원HOLD·운영조건유지.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "wbs17",
+        "source18",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "앱 표시/세션 소비 수정은 종현"
+      ],
+      "full_task_complete_claimed": false,
+      "latest_local_preparation": {
+        "activeOfflineRegression": 31,
+        "actualDockerSqlHttp": 0,
+        "candidateReceiptSha256": "49f539d6d20c1178daca76901c7e7f901f385b7fcafa4d85e1a30819fd6142d6",
+        "independentReviewSha256": "309b03c3dd1f7d28c8c962546589182d34527183f073a9cfe1371347dc22cd3f",
+        "originalExpiredMe": "IMPLEMENTED_REVIEWED_OFFLINE_ONLY_ACTUAL_NOT_RUN",
+        "notionWorkingAndUncheckedVerified": true,
+        "repositoryCandidateApplied": true,
+        "document": "2026-10-20-service-profile-verification.md",
+        "activeAndExpiredOfflineRegression": 44,
+        "repositoryRegressionReceiptSha256": "1b363c58a54afb22124f7994af439262b8ad7c2f3d01e6bd79e1a747f884c7ec",
+        "exactThreeLocalCommit": "APPROVAL_PENDING"
+      }
+    },
+    {
+      "ledger_id": "5.1",
+      "wbs_id": "5.1",
+      "page_id": "7a5a6def75f883068a69814c5c7a9edf",
+      "title": "[5.1] AI 외부전송·동의·공급사 조건 확인",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/7a5a6def75f883068a69814c5c7a9edf",
+      "assignees": [
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        },
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:53.677Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 공급사 회신·법적 검토·승인/보류 근거; 회원 원문 전송은 보류\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "지정 없음. 병렬 수행 가능 여부를 담당자가 확인한다.",
+      "notion_evidence_verbatim": "- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "유미 산출물은 UT 또는 requests/yumi 경로에 작성한다. 공통 정책·요구사항은 읽기 대조 후 민규에게 연결하고 UI 설계·앱 구현은 종현에게 연결한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "외부전송 guard/동의·철회 계약과 공급사 검토자료가 존재한다.",
+      "remaining_acceptance": "공급사 회신·법적 검토·보관/학습/삭제/공유 조건·승인/보류 원근거.",
+      "immediate_next_action": "이미 수집한 공식 조건과 미회신 목록을 먼저 대조하고 실제 회신/검토 증거가 필요한 질문만 남긴다.",
+      "action_class": "NEEDS_PROVIDER_OR_LEGAL_INPUT",
+      "evidence_refs": [
+        "policy",
+        "backend100",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [
+        "유미 정책/운영 협업·공급사 공식 조건/회신·원문전송 승인; 외부 메시지는 명시 지시 전 발송하지 않음"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "5.2",
+      "wbs_id": "5.2",
+      "page_id": "512a6def75f88249afbb81226a0a0043",
+      "title": "[5.2] 자연어 조건과 실제 DB 검색 연동 검증",
+      "area": "AI",
+      "url": "https://app.notion.com/512a6def75f88249afbb81226a0a0043",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:38.650Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] DB 카드만 반환·조건 수치·주차/기간·나이19\\~99·비검색필드 제외\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.4",
+      "notion_evidence_verbatim": "- `backend/supabase/functions/_shared/ai/Agents/chatbot/`\n- `backend/contracts/search.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "ACCEPTANCE_VERIFIED_SYNTHETIC_SERVER_SCOPE",
+      "preserved_coverage": "자연어/검색 구현 및 기존 합성/실DB 증거를 보존한다. 현재 HEAD1d9 실제 로컬 Auth·HTTP·RPC·제품factory semantic/recheck_change PASS. DB 카드·needs_check·작성자 변경 후 제외 확인. 모델만 합성.",
+      "remaining_acceptance": "명시된 합성 자료·서버검증 완료. Notion 증거/체크/최종 완료 반영을 재조회 확인했다.",
+      "immediate_next_action": "완료 근거 보존 후 다른 미완료 담당 작업 계속. 실회원/공급사/자정/운영은 해당 다른 업무에 유지.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "policy",
+        "jonghyun_handoff",
+        "wbs17",
+        "source18",
+        "runtime19",
+        "search_acceptance19"
+      ],
+      "external_or_shared_conditions": [
+        "실제 공급사 모델의 효과·비용은5.6과 분리; 회원 원문전송 보류"
+      ],
+      "full_task_complete_claimed": true,
+      "completion_scope": "Notion 원문에 명시된 합성 자료·서버검증",
+      "notion_recording": {
+        "status": "APPLIED_EXISTING_BLOCKS_ONLY_VERIFIED",
+        "remote_content_changed": true,
+        "remote_status_changed": true,
+        "new_blocks_added": false,
+        "payment": false,
+        "assignee_preserved": true,
+        "historical_content_preserved": true,
+        "verified_last_edited_at": "2026-10-19T14:48:58.083Z"
+      },
+      "latest_notion_status": "최종 완료"
+    },
+    {
+      "ledger_id": "5.3",
+      "wbs_id": "5.3",
+      "page_id": "c3ba6def75f8837b80e9818c1542538f",
+      "title": "[5.3] 모델 설명·개인정보 필터·0건/실패 검증",
+      "area": "AI",
+      "url": "https://app.notion.com/c3ba6def75f8837b80e9818c1542538f",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:33:28.753Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 허용된 합성 데이터로 시나리오 증거; 회원 원문 보류 유지\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "5.2",
+      "notion_evidence_verbatim": "- `backend/supabase/functions/_shared/ai/providers/`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "ACCEPTANCE_VERIFIED_SYNTHETIC_SERVER_SCOPE",
+      "preserved_coverage": "실제 로컬Auth와 합성모델 AI factory/개인정보·실패 경계의 기존 결과를 보존한다. 현재 semantic/judgment_failure/output_privacy/recheck_change PASS. 요청4·합성모델/예약/정산11·정산22, Auth6 원행·비예산173 bag 보존. unavailable를 정상0건 결과로 계산하지 않음.",
+      "remaining_acceptance": "명시된 합성 자료·서버검증 완료. Notion 증거/체크/최종 완료 반영을 재조회 확인했다.",
+      "immediate_next_action": "완료 근거 보존 후 다른 미완료 담당 작업 계속. 실회원/공급사/자정/운영은 해당 다른 업무에 유지.",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "runtime18",
+        "jonghyun_handoff",
+        "policy",
+        "wbs17",
+        "runtime19",
+        "search_acceptance19"
+      ],
+      "external_or_shared_conditions": [
+        "실회원 원문은 외부전송하지 않음; 실제 공급사 비용측정과 구분"
+      ],
+      "full_task_complete_claimed": true,
+      "completion_scope": "Notion 원문에 명시된 합성 자료·서버검증",
+      "notion_recording": {
+        "status": "APPLIED_EXISTING_BLOCKS_ONLY_VERIFIED",
+        "remote_content_changed": true,
+        "remote_status_changed": true,
+        "new_blocks_added": false,
+        "payment": false,
+        "assignee_preserved": true,
+        "historical_content_preserved": true,
+        "verified_last_edited_at": "2026-10-19T14:49:00.518Z"
+      },
+      "latest_notion_status": "최종 완료"
+    },
+    {
+      "ledger_id": "5.4a",
+      "wbs_id": "5.4a",
+      "page_id": "ef7a6def75f882af9eb681080a111ae7",
+      "title": "[5.4a] 회원 하루20회·동시1개 서버 한도 검증",
+      "area": "BE",
+      "url": "https://app.notion.com/ef7a6def75f882af9eb681080a111ae7",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:34:16.412Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] KST자정·모델처리시작1회·재시도 중복차감0·같은 회원 동시1개\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.3",
+      "notion_evidence_verbatim": "- `정책.md`\n- `backend/contracts/service-api.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/",
+          "backend/supabase/migrations/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "AI22 한도·동시성/정산의 합성모델 실제 연결과 AI24 비실행57+33 준비검증 PASS를 보존한다.",
+      "remaining_acceptance": "자연KST 자정 D/D+1·모델처리시작1회·재시도 중복차감0·동시1개의 실제 경계 증거.",
+      "immediate_next_action": "기존 AI24 준비/실행기 계약을 재사용해 current source·새 원6세션/선택3·원날짜·UNKNOWN·정리를 고정하고 자연 경계 실제검증을 이어간다.",
+      "action_class": "NEEDS_NATURAL_WINDOW_RUNTIME",
+      "evidence_refs": [
+        "ai24",
+        "runtime18",
+        "completion18",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "실행 직전 현재source commit/바이트·target·메모리·clock/headroom·새6세션·선택3·원만료/준비창/정리 확인; 이전 준비범위 제외를 전체담당 제외로 사용하지 않음"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "5.5",
+      "wbs_id": "5.5",
+      "page_id": "acca6def75f88212a93281641203618f",
+      "title": "[5.5] 다중 계정 예산·원장 런타임 연결 검증",
+      "area": "AI",
+      "url": "https://app.notion.com/acca6def75f88212a93281641203618f",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:31:03.828Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 계정당KST320만·전체합계·원자 예약/정산·미확인량 보존·자정 늦은정산; 출력 상한미완료 구분\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.1;5.4a",
+      "notion_evidence_verbatim": "- `backend/supabase/functions/_shared/config/env.ts:103`\n- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "d017a004 실제 로컬Auth/HTTP/PostgREST/RPC·합성모델 AI22 28·AI23 6/계정·전체예산·UNKNOWN2 PASS와10/18 새Auth 거절PASS를 보존한다.",
+      "remaining_acceptance": "자정 늦은 정산·원자 예약/정산/UNKNOWN의 자연 D/D+1 연결. 실제 공급사 출력상한과 구분.",
+      "immediate_next_action": "AI22/23 완료 증거를 재작성하지 않고 AI24의 자연 날짜 늦은정산·공유 원장/UNKNOWN 남은 case에 집중한다.",
+      "action_class": "NEEDS_NATURAL_WINDOW_RUNTIME",
+      "evidence_refs": [
+        "runtime18",
+        "ai24",
+        "completion18",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "5.4a 자연 경계·새세션/현재소스 조건;5.6 공급사 상한 미완료를 별도 유지"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "5.6",
+      "wbs_id": "5.6",
+      "page_id": "6f7a6def75f8827f956a01d6837b5e24",
+      "title": "[5.6] 출력 상한·실제 모델·공급사 사용량 측정 검증",
+      "area": "AI",
+      "url": "https://app.notion.com/6f7a6def75f8827f956a01d6837b5e24",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:37.928Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 공식 필드/응답 증거·800토큰 초과 해결·보고토큰과 비용 구분\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "5.3",
+      "notion_evidence_verbatim": "- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`\n- `정책.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "공급사 adapter/전송·자동재시도/응답유실 보존 계약이 구현돼 있다.",
+      "remaining_acceptance": "실제 공식 model/output/usage 응답·800토큰 초과 해결·보고 토큰과 비용의 구분/측정.",
+      "immediate_next_action": "확인된 공식 필드와 계정별 과금 단위를 기존 adapter에 대조하고 승인된 비회원 합성 요청의 실제 측정 조건을 닫는다.",
+      "action_class": "NEEDS_PROVIDER_INPUT_AND_APPROVED_CALL",
+      "evidence_refs": [
+        "policy",
+        "backend100",
+        "jonghyun_handoff",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [
+        "공식 모델·output cap·usage/청구 조건·키전송/실제호출 범위; 회원 원문/추가결제 임의 진행 금지"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "5.7",
+      "wbs_id": "5.7",
+      "page_id": "990a6def75f882c0afd281cef4c7e203",
+      "title": "[5.7] 후기 AI 요약의 경쟁·철회·숨김·삭제 통합 검증",
+      "area": "AI",
+      "url": "https://app.notion.com/990a6def75f882c0afd281cef4c7e203",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:30:29.533Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 14사례별 실제 결과·실패/미실행 기록; 회원 원문 외부 전송 보류 유지\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/0e3a6def75f882c3968281d2ea300005\"/> · <mention-page url=\"https://app.notion.com/p/5f2a6def75f88367878d014b1e35e5ea\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+          "backend/supabase/functions/_shared/ai/Agents/review-summary/",
+          "backend/supabase/functions/_shared/ai/providers/",
+          "backend/supabase/functions/ai-chat/",
+          "backend/supabase/functions/review-summary-worker/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_EXPLICIT_EVIDENCE_MAPPING_SCOPE",
+      "preserved_coverage": "J06 실제 DB/RPC의 경쟁8+후기부족6=14 PASS가 인계돼 있다. 인증/모델/privacy/safety는 합성 범위다.",
+      "remaining_acceptance": "기존실제기록원바이트현재부재;신규실행/194재검증아님",
+      "immediate_next_action": "독립미완료진행/자료확보시원SHA검산",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "jonghyun_handoff",
+        "wbs17",
+        "source18"
+      ],
+      "external_or_shared_conditions": [
+        "회원 원문 외부전송 보류 유지; 전부 실제Naver/실제모델 PASS로 확대 금지"
+      ],
+      "full_task_complete_claimed": true,
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "기존실제요약14결과연결/원자료현부재명시"
+    },
+    {
+      "ledger_id": "6.1",
+      "wbs_id": "6.1",
+      "page_id": "2eea6def75f88245b5dd810ae8e7117f",
+      "title": "[6.1] 출시 필수 QA 케이스와 증빙 방식 정의",
+      "area": "QA",
+      "url": "https://app.notion.com/2eea6def75f88245b5dd810ae8e7117f",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:27.163Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] TC·검증환경·합성/회원통합/실기기 구분\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "1.4",
+      "notion_evidence_verbatim": "- `docs/planning/design/USERFLOW.md`\n- `정책.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_QA_CASE_AND_EVIDENCE_DEFINITION",
+      "preserved_coverage": "WBS·실제/합성/준비 범위를 나눈 현재 runtime 자료가 존재한다.",
+      "remaining_acceptance": "개별TC실행/기기/회원/운영·팀출시판정은후속Task",
+      "immediate_next_action": "담당별실행원자료연결",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "wbs17",
+        "runtime18",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "QA3인 공통; 서버민규/클라이언트종현/UT유미 단독파일 수정"
+      ],
+      "full_task_complete_claimed": true,
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "23TC입력/기대/환경/담당/증빙정의;실제전체실행아님"
+    },
+    {
+      "ledger_id": "6.2",
+      "wbs_id": "6.2",
+      "page_id": "553a6def75f88276be33011a751fca59",
+      "title": "[6.2] 로그인→후기 실제 회원 회귀 QA",
+      "area": "QA",
+      "url": "https://app.notion.com/553a6def75f88276be33011a751fca59",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:42.017Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 적격 회원2명·API 흐름과 실패/복구 결과; 로컬검사 수치 합산 금지\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "3.2a;3.2b;3.4;3.5",
+      "notion_evidence_verbatim": "- `docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "로컬 synthetic Auth/AI/DB 검증을 보존하며 실회원 회귀로 합산하지 않는다.",
+      "remaining_acceptance": "적격 실제Naver 회원2명의 로그인→후기 전과정·실패/복구 증거.",
+      "immediate_next_action": "서버 준비와 기존 TC를 유지한 채 HOLD 재개·실제 두계정 조건에서 팀 전과정을 검증한다.",
+      "action_class": "NEEDS_MEMBERS_AND_DEVICE",
+      "evidence_refs": [
+        "runtime18",
+        "wbs17",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "실회원 HOLD 재개·적격 두계정·종현 앱/유미 UT 협업"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "6.3",
+      "wbs_id": "6.3",
+      "page_id": "47ea6def75f8827fab90814de9fd15b6",
+      "title": "[6.3] 신고·차단·비로그인·AI 위험 케이스 QA",
+      "area": "QA",
+      "url": "https://app.notion.com/47ea6def75f8827fab90814de9fd15b6",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:32.976Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 권한·DOM 개인정보·원문 보류·보류 기능 숨김 검증\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "3.5;3.6;5.3",
+      "notion_evidence_verbatim": "- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "실제Auth 거절·원행보존 및 기존 위험회귀 결과를 보존한다.",
+      "remaining_acceptance": "서버권한·DOM 개인정보0·AI원문 보류·보류기능 숨김의 현재 전체 QA evidence.",
+      "immediate_next_action": "민규 서버 위험case를 기존 결과에 연결하고 DOM/UI·앱 case는 종현 산출물과 대조한다.",
+      "action_class": "READY_LOCAL_SERVER_QA",
+      "evidence_refs": [
+        "runtime18",
+        "policy",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [
+        "DOM/UI 파일은 종현;UT 관찰은 유미; 실제기기 결과와 서버회귀 분리"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "6.4a",
+      "wbs_id": "6.4a",
+      "page_id": "ef6a6def75f8820483f601c0b48dc19b",
+      "title": "[6.4a] Android 독립 설치 앱 QA",
+      "area": "QA",
+      "url": "https://app.notion.com/ef6a6def75f8820483f601c0b48dc19b",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:34:13.554Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 실제 APK 설치·독립실행·예시/회원모드 구분·기존 데이터 보존\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "7.3a",
+      "notion_evidence_verbatim": "- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "과거 번들/export와 Android 준비 기록은 실제 APK QA의 대체증거가 아니다.",
+      "remaining_acceptance": "실제 APK 설치·독립실행·예시/회원모드 구분·기존 데이터 보존.",
+      "immediate_next_action": "종현 최신 독립 빌드/기기 증거를 확인하고 민규 서버 acceptance와 연결해 실제 Android QA를 수행한다.",
+      "action_class": "NEEDS_BUILD_AND_DEVICE",
+      "evidence_refs": [
+        "wbs17",
+        "start",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "종현 APK/서명/앱 인증 계약·실기기;실회원모드는HOLD 조건"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "6.4b",
+      "wbs_id": "6.4b",
+      "page_id": "46ca6def75f883788dae818db298fce0",
+      "title": "[6.4b] iPhone 독립 설치 앱 QA 준비",
+      "area": "QA",
+      "url": "https://app.notion.com/46ca6def75f883788dae818db298fce0",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P3",
+      "notion_last_edited_at": "2026-10-14T12:24:29.927Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 계정/서명 준비 후 설치·실행 증거; Expo Go 결과와 구분\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "7.3b",
+      "notion_evidence_verbatim": "- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "P3의 기존 준비 상태를 유지하며 Expo Go/export를 독립설치로 표시하지 않는다.",
+      "remaining_acceptance": "계정/서명 준비와 iPhone 독립 설치·실행 증거.",
+      "immediate_next_action": "현재 계정·서명·독립 바이너리 준비 현황을 종현과 대조하고 미확보 조건을 명시한다.",
+      "action_class": "NEEDS_IOS_ACCOUNT_SIGNING_DEVICE",
+      "evidence_refs": [
+        "wbs17",
+        "start"
+      ],
+      "external_or_shared_conditions": [
+        "Apple 계정/서명·종현 바이너리·iPhone;P3는 담당제외/완료 아님"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "6.5",
+      "wbs_id": "6.5",
+      "page_id": "c22a6def75f883caa733014eb5c55a38",
+      "title": "[6.5] 수정 재검증과 출시 차단 후보 정리",
+      "area": "QA",
+      "url": "https://app.notion.com/c22a6def75f883caa733014eb5c55a38",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:33:23.116Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 미해결 이슈·재현·담당·검증/보류 근거\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "6.2;6.3;6.4a",
+      "notion_evidence_verbatim": "- `docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_EXPLICIT_EVIDENCE_MAPPING_SCOPE",
+      "preserved_coverage": "10/18 실행 실패·수정·회귀·미실행/제외를 나눈 기록을 보존한다.",
+      "remaining_acceptance": "모든결함해결·실회원·운영출시승인별도",
+      "immediate_next_action": "target전이정식화와실제deadline재현준비",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "completion18",
+        "runtime18",
+        "wbs17",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "공동QA와 출시판정 협업; 다른 owner파일 직접 수정 금지"
+      ],
+      "full_task_complete_claimed": true,
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "7결함/8근거/담당/수정·검증잔여·출시후보정리"
+    },
+    {
+      "ledger_id": "6.6",
+      "wbs_id": "6.6",
+      "page_id": "ccba6def75f88371a1e8014fc312844f",
+      "title": "[6.6] Android 비공개 베타 운영·결함 분류·수정 재검증",
+      "area": "QA",
+      "url": "https://app.notion.com/ccba6def75f88371a1e8014fc312844f",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:33:37.029Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 베타 회차 결과·결함 담당·수정 후 검증·출시 차단 후보; 기존6.2/6.5 결과 재사용\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/9c3a6def75f88363aa11812912a0f1c5\"/> · <mention-page url=\"https://app.notion.com/p/030a6def75f882c4ab3681a22e9fb3f5\"/> · <mention-page url=\"https://app.notion.com/p/2eea6def75f88245b5dd810ae8e7117f\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "베타 운영·실제회차의 최종완료 증거는 현재 인계에서 확인되지 않았다.",
+      "remaining_acceptance": "베타회차·결함 담당·수정후 검증·출시 차단 후보;6.2/6.5 결과 재사용.",
+      "immediate_next_action": "종현 빌드/유미 베타운영 일정과 현재 TC를 연결해 실제 회차 결과를 수집한다.",
+      "action_class": "NEEDS_TEAM_BETA_PREREQUISITES",
+      "evidence_refs": [
+        "wbs17",
+        "start"
+      ],
+      "external_or_shared_conditions": [
+        "8.20/7.17/6.1 선행·참여자/배포·유미운영/종현빌드;실회원 HOLD 조건"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "6.7",
+      "wbs_id": "6.7",
+      "page_id": "09ea6def75f88379a9cf8192a6898e79",
+      "title": "[6.7] 정식 공개 후 Play 설치·로그인·핵심 흐름 확인",
+      "area": "QA",
+      "url": "https://app.notion.com/09ea6def75f88379a9cf8192a6898e79",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        },
+        {
+          "user_id": "23640cf3-5245-4c8b-8c51-317470e29635",
+          "actor": "jonghyun",
+          "name": "종현"
+        },
+        {
+          "user_id": "38fd872b-594c-8163-8e2f-0002b4c8783b",
+          "actor": "yumi",
+          "name": "유미"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:24.877Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 배포 버전·기기·설치/주요 흐름 결과·결함 연결; 실회원 승인 조건 유지\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/b7fa6def75f883698dfb0100390d273e\"/> · <mention-page url=\"https://app.notion.com/p/c22a6def75f883caa733014eb5c55a38\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "tests/database/minkyu/",
+          "tests/functions/minkyu/",
+          "tests/frontend/",
+          "tests/functions/jonghyun/",
+          "docs/planning/ut/"
+        ],
+        "scope_note": "공통 QA 판정과 파일 owner를 구분한다. 테스트 경로 이름과 실제 owner가 다를 수 있으므로 가장 구체적인 ownership 규칙을 확인한다. 유미는 UT 관찰 자료만 직접 수정한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "정식공개/Play 설치 후 실제회귀는10/18에 실행하지 않았다.",
+      "remaining_acceptance": "공개배포 버전·기기·설치/로그인/핵심 흐름·결함 evidence.",
+      "immediate_next_action": "공개 전 재사용 TC를 준비하고8.25 실제공개 후 지정 버전/기기 결과를 연결한다.",
+      "action_class": "NEEDS_PUBLIC_RELEASE",
+      "evidence_refs": [
+        "completion18",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [
+        "8.25 공개·실기기/로그인·실회원 승인 조건"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "7.1",
+      "wbs_id": "7.1",
+      "page_id": "566a6def75f883f0a413011071b40c71",
+      "title": "[7.1] 현재 Railway·운영 DB 연결 재검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/566a6def75f883f0a413011071b40c71",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:47.436Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 실제 대상/브랜치·최소권한·연결 성공/복구 증거; 과거 배포 완료 Task 보존\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.1",
+      "notion_evidence_verbatim": "- `docs/collaboration/requests/minkyu/2026-10-07-release-recovery-checklist.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "과거 환경 결제/GitHub 연결 완료와10/12 운영 읽기 관측을 보존한다. 10/19운영project identity/get_project·migration metadata읽기2건은permission denied.현재상태/이력수미확인,쓰기/회원행조회0.",
+      "remaining_acceptance": "현재 Railway 대상/브랜치·최소권한·연결 성공/복구와 운영 DB 연결.",
+      "immediate_next_action": "현재Supabase연결의해당project metadata읽기권한이회복되면같은대상을재확인한다.과거운영20/Storage2를현재로쓰지않고독립서버구현을계속한다.",
+      "action_class": "READY_READONLY_EXTERNAL_IF_ACCESS",
+      "evidence_refs": [
+        "backend100",
+        "completion18",
+        "wbs17",
+        "operating_access19"
+      ],
+      "external_or_shared_conditions": [
+        "현재 Railway/DB 접근·운영 변경/재시작은 해당 구체적 승인 범위에서만",
+        "현재확인된Supabase metadata접근2건permission denied;권한우회없음"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "7.2",
+      "wbs_id": "7.2",
+      "page_id": "af8a6def75f882e4b49e81a03a577568",
+      "title": "[7.2] 자동완료 실행기 DB 권한·실제 처리·복구 검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/af8a6def75f882e4b49e81a03a577568",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:35:34.649Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 전용LOGIN/CA/ACL·기한처리·누락복구·cron전환 증거\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.6;7.1",
+      "notion_evidence_verbatim": "- `backend/contracts/completion-db.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-current-connection-requests.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "기존 완료 실행기 실제 로컬 최소권한/8그룹·stockCLI 경쟁/재등록 증거를 기록 범위로 보존한다.",
+      "remaining_acceptance": "대상 운영 전용LOGIN/CA/ACL·기한 실제처리·누락복구·cron 전환.",
+      "immediate_next_action": "기존로컬 실행기 증거와 현재 운영 이력/권한 차이를 매핑한 뒤 필요한 운영 포트/전환만 준비한다.",
+      "action_class": "READY_LOCAL_PREPARATION_THEN_OPERATING",
+      "evidence_refs": [
+        "backend100",
+        "wbs17",
+        "policy",
+        "operations19"
+      ],
+      "external_or_shared_conditions": [
+        "7.1 실제대상·역할/CA/ACL·기존cron/중복전환·운영변경/복구 승인"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "7.6",
+      "wbs_id": "7.6",
+      "page_id": "0d1a6def75f8829e8701016c568cbf03",
+      "title": "[7.6] J1 취소·신고 소비자 로컬 구현·가상 검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/0d1a6def75f8829e8701016c568cbf03",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "최종 완료",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:22.056Z",
+      "catalog_status": "최종 완료",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 5종 지원종류·점유/UNKNOWN·유지관리·재시작 가상검증; 운영작업별도\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.2",
+      "notion_evidence_verbatim": "- `backend/supabase/functions/scheduled-jobs/queue-runner.mjs:190`\n- `docs/collaboration/requests/minkyu/2026-10-06-jonghyun-release-start.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "RECORDED_FINAL_COMPLETE_PRESERVED",
+      "preserved_coverage": "Notion 최종완료와 J1 5종 지원/점유·UNKNOWN·유지관리·재시작 로컬/가상증거를 보존한다.",
+      "remaining_acceptance": "없음: 등록된 로컬·가상 완료범위를 유지; 운영배포/실회원/AI후속 완료로 확대하지 않음.",
+      "immediate_next_action": "기존 완료를 재구현하지 않고 원근거를 연결해 보존한다.",
+      "action_class": "PRESERVE_RECORDED_FINAL_COMPLETE",
+      "evidence_refs": [
+        "wbs17",
+        "backend100"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "7.8",
+      "wbs_id": "7.8",
+      "page_id": "562a6def75f882ddb5f2817590b37a16",
+      "title": "[7.8] KOPIS 공식 순위 기간·표기 검증 준비",
+      "area": "Ops",
+      "url": "https://app.notion.com/562a6def75f882ddb5f2817590b37a16",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "작업 중",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:44.665Z",
+      "catalog_status": "작업 중",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 공급사 회신 후 basedate/실제기간·정렬/동률·전국/뮤지컬·출처 검증\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "지정 없음. 병렬 수행 가능 여부를 담당자가 확인한다.",
+      "notion_evidence_verbatim": "- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "KOPIS 공식문서·요청/파서 준비와 TLS 관측은 있으나 공식 API GET0 기록이다.",
+      "remaining_acceptance": "공식회신/실응답 basedate·실제기간·정렬/동률·전국/뮤지컬·출처 검증.",
+      "immediate_next_action": "기존 official-read gate와 최신 공식계약의 차이를 확인하고 정확한 key전송/호출 범위 충족 후 실제응답을 검증한다.",
+      "action_class": "NEEDS_PROVIDER_CONTRACT_AND_KEY_TRANSMISSION",
+      "evidence_refs": [
+        "kopis",
+        "wbs17",
+        "policy"
+      ],
+      "external_or_shared_conditions": [
+        "이전 자동검토는 정확한 KOPIS 키전송 승인 부재로 거절;그 사실을 우회하지 않고 실제승인 조건을 해소"
+      ],
+      "full_task_complete_claimed": false,
+      "latest_local_preparation": {
+        "document": "docs/collaboration/requests/minkyu/2026-10-20-kopis-read-preparation.md",
+        "privateRunnerSha256": "09e4dfc2f9f1795ca808b882a37f01d62ab591fb309b640f96fe19ea89998078",
+        "receiptSha256": "fc99362f68bdd1f6022e26e5573f80a3daca6af4713fd866ccd7a0f1143f74a7",
+        "offlineCases": 22,
+        "actualKeyReads": 0,
+        "actualApiGets": 0,
+        "independentReview": "PASS_FROZEN_SOURCE_AND_EVIDENCE_ONLY",
+        "explicitKeyTransmissionApproval": "NOT_GRANTED_FOR_NEW_RUNNER",
+        "peerReceiptSha256": "7976b70666c9df65003a88da912238813aedd882dd25bfc5015ec9d77450bcb5",
+        "notionUpdate": "REJECTED_EXPLICIT_TECHNICAL_DATA_SHARING_APPROVAL_PENDING"
+      }
+    },
+    {
+      "ledger_id": "7.9",
+      "wbs_id": "7.9",
+      "page_id": "b17a6def75f8829ca8408158830e21e0",
+      "title": "[7.9] 서울 행사 안전 HTTPS 자동 수집 검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/b17a6def75f8829ca8408158830e21e0",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:33:18.481Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] HTTPS 경로·페이지재개·진행중갱신·3개 공급사 목표 유지\n- [ ] 위 조건을 확인한 검증 기록 또는 증빙 링크를 연결한다.",
+      "notion_predecessors_verbatim": "4.4",
+      "notion_evidence_verbatim": "- `정책.md`\n- `docs/collaboration/requests/jonghyun/2026-10-05-real-environment-validation.md`",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "서울 후속 aiViewCulture 공식문서만 HTTPS로 확인; 실제 데이터 HTTPS와 응답계약은 미확인이다.",
+      "remaining_acceptance": "공식HTTPS 데이터경로·envelope/필드/total·페이지재개·진행중갱신·3공급사 목표.",
+      "immediate_next_action": "현재 seoul adapter와 공식 후속계약 차이를 확인해 safe endpoint/응답 입력을 확보하고 해당 기존파일만 보완한다.",
+      "action_class": "NEEDS_OFFICIAL_HTTPS_RESPONSE_CONTRACT",
+      "evidence_refs": [
+        "seoul",
+        "jonghyun_handoff",
+        "wbs17"
+      ],
+      "external_or_shared_conditions": [
+        "문서HTTPS를 데이터API HTTPS로 간주하지 않음;HTTP 우회/검증완화 금지;실제key전송 조건"
+      ],
+      "full_task_complete_claimed": false,
+      "latest_official_check": {
+        "document": "docs/collaboration/requests/minkyu/2026-10-20-seoul-official-contract.md",
+        "officialDomSha256": "bc8344ea125fef48559fa7b5ab4328c37c634932213b064ae06b59d3e9e6278f",
+        "newService": "aiViewCulture",
+        "officialFieldCount": 25,
+        "publicSampleHttps443Attempts": 1,
+        "privateKeyReads": 0,
+        "transportResult": "CONNECT_TIMEOUT_NOT_TLS_VERIFIED",
+        "receiptSha256": "cccdb1526b976ec3d7ddf6c1c2464d21dd03d89c8446d42df144d84bfbba1e39",
+        "productActivation": false
+      }
+    },
+    {
+      "ledger_id": "7.10",
+      "wbs_id": "7.10",
+      "page_id": "621a6def75f883f1a8fa81255cf24217",
+      "title": "[7.10] 출시 전 협업 변경 검사 체계 점검",
+      "area": "Ops",
+      "url": "https://app.notion.com/621a6def75f883f1a8fa81255cf24217",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P1",
+      "notion_last_edited_at": "2026-10-14T08:24:40.490Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 검사 증거·미설정 항목·개선 요청; 원격 설정 변경은 별도 승인\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/526a6def75f882d0a511014db6697359\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_WITHIN_EXPLICIT_INSPECTION_SCOPE",
+      "preserved_coverage": "현재 HEAD ownership/hook·단독편집 및 기존 회귀검사가 존재한다. 10/19 담당/문서/hook/HEAD검사와9기존회귀·10경로양방향검사·현재owner전수/미커밋7보존을 새대장에 연결했다. 현재 main/backend-work protected:false·rulesets200 빈목록·Actions runs0, backend-work ownership workflow존재/main미존재 관측. 보호상세403은 미확인으로 유지.",
+      "remaining_acceptance": "원격 실행/설정 변경 및 다른 팀원 실제clone은 이 점검 Task 완료범위 밖; 별도 조건 유지",
+      "immediate_next_action": "개선 요청과 후속 작업 추적",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "ownership",
+        "collaboration",
+        "role",
+        "completion18",
+        "collaboration19",
+        "github19"
+      ],
+      "external_or_shared_conditions": [
+        "원격CI/보호규칙 쓰기는 별도 구체적 승인"
+      ],
+      "full_task_complete_claimed": true,
+      "local_acceptance_verified": true,
+      "verification_scope": "로컬 hook·담당 검사 및 현재 원격 설정 읽기 대조 완료. 원격 설정 쓰기·실제 ownership CI 실행·타인clone 검사는 미실행.",
+      "final_local_evidence": [
+        "2026-10-19-collaboration-verification.md",
+        "2026-10-19-local-verification-progress.md",
+        "/private/tmp/yumidang-positive-postcommit-20261019/collaboration-final-links.json"
+      ],
+      "remote_notion_update": "NOT_RUN",
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "담당/인계 또는 협업검사 증거·미확인·개선요청 정리 완료; 제품운영 완료 아님"
+    },
+    {
+      "ledger_id": "7.11",
+      "wbs_id": "7.11",
+      "page_id": "0e3a6def75f882c3968281d2ea300005",
+      "title": "[7.11] 백엔드·AI 검증 환경과 기존 인계 자료 정리",
+      "area": "Ops",
+      "url": "https://app.notion.com/0e3a6def75f882c3968281d2ea300005",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:15.907Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 새 환경 manifest·사전 확인·실행 가능/불가 근거; 기존 데이터 보존\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/526a6def75f882d0a511014db6697359\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "COMPLETE_ENVIRONMENT_MANIFEST_AND_HANDOFF",
+      "preserved_coverage": "774 manifest·새대상 사전확인·actualAuth/AI·기존데이터/자원보존·정리가10/18 완료됐다.",
+      "remaining_acceptance": "제품/복원/운영잔여각Task유지",
+      "immediate_next_action": "b003결과와새업무환경개별기록",
+      "action_class": "READY_LOCAL_EVIDENCE_AND_FIXES",
+      "evidence_refs": [
+        "source18",
+        "runtime18",
+        "completion18",
+        "start"
+      ],
+      "external_or_shared_conditions": [],
+      "full_task_complete_claimed": true,
+      "latest_notion_status": "최종 완료",
+      "completion_scope": "새환경입력/identity/사전확인/실행가능불가/보존·정리대응;복원성공아님",
+      "evidence_document": "2026-10-20-verification-environment-handoff.md"
+    },
+    {
+      "ledger_id": "7.12",
+      "wbs_id": "7.12",
+      "page_id": "a68a6def75f8825c98c801dfb46c1f1c",
+      "title": "[7.12] 행사 일일 수집·갱신·재개와 앱·AI 표시 일치 검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/a68a6def75f8825c98c801dfb46c1f1c",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:30:57.257Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 일일 실행·중단 재개·표시 대조 증거; 서울/KOPIS 순위 보류는 별도 유지\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/a50a6def75f8825eade20138b6009554\"/> · <mention-page url=\"https://app.notion.com/p/3dba6def75f8836bb29401f78cd39506\"/> · <mention-page url=\"https://app.notion.com/p/0e3a6def75f882c3968281d2ea300005\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "J01/기존행사 CLI 경쟁·재개/UNKNOWN 증거를 보존한다. 10/19collector2쪽cursor/transport충돌·TourAPI999상한false-complete를3파일수정.로컬제품factory합성포트78회귀PASS,독립리뷰진행중.",
+      "remaining_acceptance": "수정독립리뷰·실제일일실행/중단재개·저장/앱/AI대조증거.78합성회귀는실제공급사/DB/앱/운영완료가아님.",
+      "immediate_next_action": "red재현과78회귀/상한partial·다음page재개수정을독립검토하고공급사호출없이가능한DB/실행기/표시연결공백을계속검증한다.",
+      "action_class": "READY_LOCAL_PIPELINE_AND_TEAM_COMPARISON",
+      "evidence_refs": [
+        "jonghyun_handoff",
+        "wbs17",
+        "policy",
+        "operations19",
+        "event_resume78"
+      ],
+      "external_or_shared_conditions": [
+        "실제서울/KOPIS feed는7.8/7.9;앱표시 파일은종현"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "7.13",
+      "wbs_id": "7.13",
+      "page_id": "695a6def75f882e19c97818193aa1d46",
+      "title": "[7.13] 개인정보·AI 피드백·신고 자료의 주기 파기 연결 검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/695a6def75f882e19c97818193aa1d46",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:30.928Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 자료별 파기 증거·접근 통제·재시도/누락 기록; 신고 비활성 선결조건 유지\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/ecba6def75f882fead1681432f030dd3\"/> · <mention-page url=\"https://app.notion.com/p/0e3a6def75f882c3968281d2ea300005\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "J07 평가 보관정리/탈퇴권한·J09 삭제/UNKNOWN과 기존jobs 계약이 존재한다.",
+      "remaining_acceptance": "자료별 실제파기·접근통제·재시도/누락·직원/캡처ACL/최종파기의 전체연결; 신고 비활성선결조건.",
+      "immediate_next_action": "자료별기한·claim/dispatch/ACK/UNKNOWN·Storage권한 체인의 기존 구현/증거를 대조하고 로컬 합성범위의 빈 연결만 보완한다.",
+      "action_class": "READY_LOCAL_PIPELINE_AND_FIXES",
+      "evidence_refs": [
+        "jonghyun_handoff",
+        "wbs17",
+        "policy",
+        "source18",
+        "operations19"
+      ],
+      "external_or_shared_conditions": [
+        "미확정 보관조건 임의확정금지; 실제원문 외부사본/운영활성화·회원자료는 기존조건 유지"
+      ],
+      "full_task_complete_claimed": false,
+      "latest_private_implementation": {
+        "document": "docs/collaboration/requests/minkyu/2026-10-20-retention-pipeline.md",
+        "scope": "50_OFFLINE_3_TYPECHECK_PRODUCER_ONLY_SQL_NOT_RUN_PREFLIGHT_VARIANT_OPEN",
+        "repositoryApplied": false,
+        "actualOperatingExecution": false,
+        "preflightVariant": {
+          "offlineCases": 19,
+          "receiptSha256": "8f0d01d6af19abde8c722487e2347a8f2ed47b16a74aba2f1b8cf5f656bf917f",
+          "actualSql": false,
+          "peer": "PASS_SOURCE_CONTRACT_ONLY",
+          "peerSha256": "7b2a1070f8456838354c8baef0720f1cf10e793abbe5e843a0330f574da83bc9"
+        }
+      }
+    },
+    {
+      "ledger_id": "7.14",
+      "wbs_id": "7.14",
+      "page_id": "5b8a6def75f88204be8e01a4c193d12a",
+      "title": "[7.14] 최종 DB·권한·Storage 원본 백업과 격리 복원 검증",
+      "area": "Ops",
+      "url": "https://app.notion.com/5b8a6def75f88204be8e01a4c193d12a",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:24:52.657Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 백업/복원 일관성·실제 바이트·권한·삭제 재적용 증거; 운영 작업 승인 별도\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/0e3a6def75f882c3968281d2ea300005\"/> · <mention-page url=\"https://app.notion.com/p/ecba6def75f882fead1681432f030dd3\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "current121 reviewed/artifact/source16/runtime42 연결·25회귀 준비PASS만 완료됐다.",
+      "remaining_acceptance": "일관된 최종DB/roles·ACL·membership/grantor·sequence·Storage 실bytes·known삭제재적용·UNKNOWN 전체복원.",
+      "immediate_next_action": "기존 준비검증기로 입력/원본재고와 부재18개·Storage39를 추적하고 가능한 보존원본 위치/접근부터 대조한다.",
+      "action_class": "NEEDS_ORIGINAL_BYTES_AND_RESTORE_SLOT",
+      "evidence_refs": [
+        "restoration",
+        "completion18",
+        "runtime18",
+        "backend100",
+        "operations19"
+      ],
+      "external_or_shared_conditions": [
+        "역사18 원자료 현재부재·45metadata중6매칭/39원bytes미확보;새빈121/모형으로대체불가;원복원대상·일관백업/정리·운영변경 별도"
+      ],
+      "full_task_complete_claimed": false,
+      "latest_adapter_composition": {
+        "document": "docs/collaboration/requests/minkyu/2026-10-20-restore-adapter-composition.md",
+        "offlineCases": 26,
+        "receiptSha256": "5d492d0e2427fcb608cfc5866df5831ccf0b572e9566a29d671e532ec77f4459",
+        "executionAllowed": false,
+        "actualExecutor": "NOT_IMPLEMENTED"
+      }
+    },
+    {
+      "ledger_id": "7.18",
+      "wbs_id": "7.18",
+      "page_id": "e84a6def75f88262a2240108488cf18d",
+      "title": "[7.18] 출시 후 서버·수집·AI·오류 감시와 긴급 복구 준비",
+      "area": "Ops",
+      "url": "https://app.notion.com/e84a6def75f88262a2240108488cf18d",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:34:02.556Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 운영 점검 기록·장애 대응/복구 절차·이상 상태 담당 연결; 신규 외부 도구/결제 별도 승인\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/566a6def75f883f0a413011071b40c71\"/> · <mention-page url=\"https://app.notion.com/p/a68a6def75f8825c98c801dfb46c1f1c\"/> · <mention-page url=\"https://app.notion.com/p/5b8a6def75f88204be8e01a4c193d12a\"/> · <mention-page url=\"https://app.notion.com/p/acca6def75f88212a93281641203618f\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "backend/contracts/",
+          "backend/supabase/functions/scheduled-jobs/",
+          "backend/supabase/functions/_shared/jobs/",
+          "tools/local/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "관측/복구 소스·runbook은 있으나 현재운영 감시·복구 실제PASS는 없다. 10/19정형관측·중지/복구·자료보존·담당연결runbook작성.실제sink/보관·파기/알림수신·운영heartbeat는미증명.",
+      "remaining_acceptance": "현재운영점검·실제sink/보관·알림수신/파기·복구실행근거.runbook작성만으로운영감시완료처리하지않음.",
+      "immediate_next_action": "runbook과기본entrypoint의실제sink연결·자료보관/삭제/수신증거를대조하고현서버소유범위의공백부터보완한다.",
+      "action_class": "READY_LOCAL_PREPARATION_THEN_OPERATING",
+      "evidence_refs": [
+        "wbs17",
+        "completion18",
+        "backend100",
+        "operations19"
+      ],
+      "external_or_shared_conditions": [
+        "7.1/7.12/7.14/5.5 선행;현재운영관측/승인된복구범위·신규유료도구/외부메시지조건"
+      ],
+      "full_task_complete_claimed": false,
+      "latest_private_implementation": {
+        "document": "docs/collaboration/requests/minkyu/2026-10-20-runner-observation-isolation.md",
+        "scope": "74_OFFLINE_REPORT_CLEANUP_STOP_READY_AND_SYNTHETIC_PG_CLI_VERIFIED_NOT_APPLIED",
+        "repositoryApplied": false,
+        "actualOperatingExecution": false,
+        "cleanupFollowup": {
+          "offlineCases": 54,
+          "receiptSha256": "1f2d0a134b950ee8ade77e2789562d1b3a2ee7a718b110da494af97fed25339e",
+          "accepted": false,
+          "blockingFinding": "READY_REPORTED_AFTER_STOP_REQUEST",
+          "findingReceiptSha256": "374bdc3441a5ac187a81114c1079a8cd425b572e7c79b3cf39d7572278fbdba2",
+          "next": "SEPARATE_STOP_READY_AND_SIGNAL_VARIANT"
+        },
+        "finalPatchSha256": "7c842536e5d75c91334ac5f8e0c44a5738954eeb1e4995a7455f944f4578eb08",
+        "peerReceiptSha256": "08ef5007cd1b30664e11da8d219558273b16ee8be05cac2bcbc3f7dc9a032880"
+      }
+    },
+    {
+      "ledger_id": "8.19",
+      "wbs_id": "8.19",
+      "page_id": "ef4a6def75f882418105812cc66bbe0b",
+      "title": "[8.19] 개인 Play 개발자 계정의 검증·생성 시점·테스트 요건 확인",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/ef4a6def75f882418105812cc66bbe0b",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T08:24:04.406Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 계정별 요구 체크리스트·12명14일 적용 여부 근거; 새 계정/가입 결제 자동 진행 안함; 계정 소유자 민규 확인 및 유미 실행 승인 기록\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "지정 없음. 다른 준비 작업과 병렬 진행 가능.\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "Task의 민규Console 소유책임을 유지한다. 지역별/계정별 요구는 실제 Console/공식조건 확인이 필요하다. 10/19공식조건확인.초기화면읽기거절후명시허용으로Console읽기완료:개인계정/민규소유·이메일/전화/개발자메일인증완료표시.홈에다른앱1개만있고유미당없음.외부쓰기0.",
+      "remaining_acceptance": "계정생성일·신원/기기정확인증·유미당앱별12명14일적용/충족·신청/결과미확인.확인된계정/소유/연락인증사실과분리.",
+      "immediate_next_action": "허용된Console화면에서남은생성일·신원/기기표시를읽고유미당앱부재/앱별조건미확인을기록한다.새앱생성/결제/제출쓰기는실행하지않는다.",
+      "action_class": "READY_READONLY_CONSOLE_IF_ACCESS",
+      "evidence_refs": [
+        "wbs17",
+        "start",
+        "role",
+        "play19"
+      ],
+      "external_or_shared_conditions": [
+        "초기Console화면읽기거절은명시허용후해소됨;추가읽기는허용된Play계정범위",
+        "유미당앱부재·계정생성일/기기정확인증·앱별요건미확인",
+        "민규소유·유미실행승인·종현빌드/서명선행;새앱/신청/제출/공개쓰기는구체적범위별로분리"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "8.22",
+      "wbs_id": "8.22",
+      "page_id": "17aa6def75f882f58328814711fa46b8",
+      "title": "[8.22] 비공개 테스트 요건 충족 확인·정식 출시 권한 신청",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/17aa6def75f882f58328814711fa46b8",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T08:42:14.145Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 참여 조건·개선 요약·신청/결과 기록; 요건 비적용이면 근거와 해당없음 기록; 계정 소유자 민규 확인 및 유미 실행 승인 기록\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/ef4a6def75f882418105812cc66bbe0b\"/> · <mention-page url=\"https://app.notion.com/p/76ba6def75f88219b8f4016075899901\"/> · <mention-page url=\"https://app.notion.com/p/ccba6def75f88371a1e8014fc312844f\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "테스트충족/출시권한신청을 이번좁은계획에서 실행하지 않았다. 10/19공식조건확인.초기화면읽기거절후명시허용으로Console읽기완료:개인계정/민규소유·이메일/전화/개발자메일인증완료표시.홈에다른앱1개만있고유미당없음.외부쓰기0.",
+      "remaining_acceptance": "참여조건 충족·개선요약·신청/결과 또는 요건비적용의 실제근거.",
+      "immediate_next_action": "8.19 계정별요구와 베타실제회차를 대조해 누락증거를 채운 뒤 승인된 권한신청을 진행한다.",
+      "action_class": "NEEDS_TESTING_AND_RELEASE_APPROVAL",
+      "evidence_refs": [
+        "wbs17",
+        "start",
+        "play19"
+      ],
+      "external_or_shared_conditions": [
+        "8.19/8.13/6.6·민규계정·유미 실행승인;테스터/기간 요건을 임의완료로표시하지않음"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "8.23",
+      "wbs_id": "8.23",
+      "page_id": "6f5a6def75f883b88856013b84464959",
+      "title": "[8.23] Android 제출 자료 최종 대조·심사 제출",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/6f5a6def75f883b88856013b84464959",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T12:29:34.741Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 제출 버전·자료·접수 상태 증거; 실제 제출 별도 승인; 계정 소유자 민규 확인 및 유미 실행 승인 기록\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/5c9a6def75f882128ae70141ce4ba47b\"/> · <mention-page url=\"https://app.notion.com/p/6eda6def75f88230ab1901cf5bccb26c\"/> · <mention-page url=\"https://app.notion.com/p/f51a6def75f8832da0fc018439d947d9\"/> · <mention-page url=\"https://app.notion.com/p/5f6a6def75f882f9b7ad01323e3956de\"/> · <mention-page url=\"https://app.notion.com/p/9b2a6def75f883759ef781c4012832f9\"/> · <mention-page url=\"https://app.notion.com/p/17aa6def75f882f58328814711fa46b8\"/> · <mention-page url=\"https://app.notion.com/p/f69a6def75f883dda9b70192edcb0f0a\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "Android 제출자료/심사제출은10/18 미실행이다. 10/19공식조건확인.초기화면읽기거절후명시허용으로Console읽기완료:개인계정/민규소유·이메일/전화/개발자메일인증완료표시.홈에다른앱1개만있고유미당없음.외부쓰기0.",
+      "remaining_acceptance": "실제제출 버전·정책/자료·접수상태 evidence.",
+      "immediate_next_action": "서버 데이터/권한/AI·탈퇴실제상태와 유미제출자료·종현빌드를 대조해 제출가능 묶음을 만든다.",
+      "action_class": "NEEDS_SUBMISSION_PREREQUISITES",
+      "evidence_refs": [
+        "wbs17",
+        "completion18",
+        "policy",
+        "play19"
+      ],
+      "external_or_shared_conditions": [
+        "7.16/8.16/8.21/2.12/2.13/8.22/7.5·민규계정·유미 실제제출승인"
+      ],
+      "full_task_complete_claimed": false
+    },
+    {
+      "ledger_id": "8.25",
+      "wbs_id": "8.25",
+      "page_id": "b7fa6def75f883698dfb0100390d273e",
+      "title": "[8.25] Android 정식 공개 실행·스토어 노출 확인",
+      "area": "PM/기획",
+      "url": "https://app.notion.com/b7fa6def75f883698dfb0100390d273e",
+      "assignees": [
+        {
+          "user_id": "140d872b-594c-813d-8193-0002d9e26226",
+          "actor": "minkyu",
+          "name": "민규"
+        }
+      ],
+      "notion_status": "대기",
+      "notion_priority": "P0",
+      "notion_last_edited_at": "2026-10-14T08:23:57.899Z",
+      "catalog_status": "대기",
+      "catalog_status_changed": false,
+      "catalog_assignees_equal_live": true,
+      "notion_acceptance_verbatim": "- [ ] 공개 버전·시각·스토어URL·실제 노출 확인; 첫 출시 단계적 배포를 임의 전제하지 않음; 계정 소유자 민규 확인 및 유미 실행 승인 기록\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notion_predecessors_verbatim": "<mention-page url=\"https://app.notion.com/p/acda6def75f883de8f500196e84f1639\"/> · <mention-page url=\"https://app.notion.com/p/f69a6def75f883dda9b70192edcb0f0a\"/> · <mention-page url=\"https://app.notion.com/p/566a6def75f883f0a413011071b40c71\"/> · <mention-page url=\"https://app.notion.com/p/5b8a6def75f88204be8e01a4c193d12a\"/> · <mention-page url=\"https://app.notion.com/p/0e7a6def75f883e4a031012d55e96328\"/>\n선행 목록은 준비·연결 관계이며 병렬 가능한 설계와 구현까지 일괄 차단하지 않는다.",
+      "notion_evidence_verbatim": "",
+      "notion_fetch_warnings": {
+        "truncation_reported": false,
+        "unknown_blocks_reported": false,
+        "warning_metadata_exposed": false
+      },
+      "catalog_repo_entrypoints": {
+        "mapping": "candidate",
+        "paths": [
+          "docs/collaboration/requests/yumi/",
+          "정책.md",
+          "PLAN.md",
+          "docs/planning/requirements/"
+        ],
+        "scope_note": "영역별 기존 경로의 진입 후보다. 세부 Task 파일을 확정한 목록이 아니며 실제 소스와 ownership 사전 검사로 단독 수정 경계를 확인한다.",
+        "not_yet_created_paths": [
+          "docs/collaboration/requests/yumi/"
+        ],
+        "deleted_task": false
+      },
+      "entrypoint_authority": "카탈로그영역별후보일뿐수정허가아님.특히Console PM작업의generic requests/yumi 후보를민규수정경로로사용하지않음.",
+      "assessment": "PARTIAL_EVIDENCE_FULL_ACCEPTANCE_OPEN",
+      "preserved_coverage": "정식공개/스토어실제노출은10/18 미실행이다. 10/19공식조건확인.초기화면읽기거절후명시허용으로Console읽기완료:개인계정/민규소유·이메일/전화/개발자메일인증완료표시.홈에다른앱1개만있고유미당없음.외부쓰기0.",
+      "remaining_acceptance": "공개버전·시각·URL·실제노출과공개후QA.",
+      "immediate_next_action": "8.24 심사와운영/백업/서버 선행이충족된정확버전의 공개절차를 승인근거와 묶는다.",
+      "action_class": "NEEDS_PUBLIC_RELEASE_APPROVAL",
+      "evidence_refs": [
+        "wbs17",
+        "completion18",
+        "role",
+        "play19"
+      ],
+      "external_or_shared_conditions": [
+        "8.24/7.5/7.1/7.14/8.26·민규계정·유미 실행승인;첫출시 단계적배포를임의전제하지않음"
+      ],
+      "full_task_complete_claimed": false
+    }
+  ],
+  "editing_boundary": {
+    "only_files": [
+      "docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.json",
+      "docs/collaboration/requests/minkyu/2026-10-19-minkyu-full-scope.md"
+    ],
+    "ownership_precheck": "PASS2paths actor=minkyu HEAD ownership",
+    "actual_db_http_docker_provider_calls": 0,
+    "notion_reads": "schema+SQL44+page44",
+    "notion_writes": 0,
+    "code_modified": false,
+    "commit_push": false
+  },
+  "limitations": [
+    "이대장은기존구현전체를새로실행한결과가아니다.현증거와미확인acceptance를구분하며미확인을미구현으로단정하지않는다.",
+    "기존PRIVATE원영수증의현재존재는10/18고정증거/감사범위로참조한다.이Task에서수백원해시를다시전수실행하지않는다.",
+    "최초미추적파일사전byte증거부재·역사복원원자료18부재/원39바이트미확보한계는그대로다.",
+    "Notion체크박스템플릿/현재상태가실제검증결과를자동증명하지않으며이Task는원격상태를바꾸지않았다."
+  ],
+  "status": "PAUSED_FOR_TEAM_INTEGRATION",
+  "updated_at": "2026-10-19T15:30:11.192844+00:00",
+  "latest_work_added": {
+    "event_pagination": "FIXED_3_SOURCE_FILES_78_LOCAL_FACTORY_TESTS_PASS_REVIEW_PENDING",
+    "operating_metadata_read": "TWO_PERMISSION_DENIED_NO_CURRENT_STATE_INFERRED",
+    "operations_runbook": "PREPARED_ACTUAL_MONITORING_AND_RECOVERY_OPEN",
+    "play_console": "INITIAL_READ_REJECTION_RESOLVED_THEN_READ_ONLY_FACTS_CAPTURED_NO_YUMIDANG_APP",
+    "collaboration": "LOCAL_EVIDENCE_READY_CURRENT44_METADATA_AND_LEDGER_LINKED"
+  },
+  "root_acceptance_review": {
+    "verified_local_requirement_ids": [
+      "1.6",
+      "1.7",
+      "7.10"
+    ],
+    "evidence": "/private/tmp/yumidang-positive-postcommit-20261019/collaboration-final-links.json",
+    "links": "11 documents /253 relative links / missing0",
+    "projectProgress": "79%(22/28) unchanged",
+    "personalPercentage": "NOT_COMPUTED",
+    "remoteNotionState": "1.6/1.7/7.10 existing-block evidence and final statuses re-fetched verified",
+    "approved_document_diff": "PRD+상세설계 반영; USERFLOW J요청 연결, 실제미반영"
+  },
+  "latest_notion_changes": {
+    "5.2": "최종 완료",
+    "5.3": "최종 완료",
+    "initial44SnapshotPreserved": true,
+    "project28Progress": "79%(22/28) unchanged",
+    "1.7": "최종 완료",
+    "7.10": "최종 완료",
+    "1.6": "최종 완료",
+    "7.11": "최종 완료",
+    "5.7": "최종 완료",
+    "6.5": "최종 완료",
+    "6.1": "최종 완료",
+    "4.2": "최종 완료"
+  },
+  "latest_publication_context": {
+    "request": "2026-10-20 사용자 팀통합용 커밋·푸시 요청",
+    "branch": "minkyu/wbs-backend-20261017",
+    "exact3LocalCommit": "b581d12",
+    "implementationGoal": "PAUSED",
+    "actualAuthMe": "NOT_RUN",
+    "kopisActualGets": 1,
+    "kopisResult": "TLS_HTTP200_PRODUCT_PARSER_FAILED_NO_BASEDATE",
+    "kopisRetryOrSecondGet": 0,
+    "notion78": "APPROVED_INITIAL_PREPARATION_SNAPSHOT_UPDATED",
+    "privateCandidatesApplied": false
+  }
+}

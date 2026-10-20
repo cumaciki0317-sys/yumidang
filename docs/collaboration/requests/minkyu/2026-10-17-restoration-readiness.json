@@ -1,0 +1,1151 @@
+{
+  "version": 1,
+  "status": "PREPARED_CURRENT121_FULL_RESTORE_CONDITIONS_REMAIN",
+  "preparedAt": "2026-10-17T22:53:57.608702+09:00",
+  "actor": "minkyu",
+  "sourceHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+  "activationAllowed": false,
+  "operatingChanged": false,
+  "execution": "CURRENT121_FILE_PREPARATION_ONLY_NO_FULL_RESTORE_OR_OPERATING_ACTIVATION",
+  "baselineProgress": "79%(22/28) unchanged",
+  "wbsIds": [
+    "4.1",
+    "4.2",
+    "7.11",
+    "7.14",
+    "7.18"
+  ],
+  "sourceInputs": [
+    {
+      "path": "tools/local/prepare_production_backend.py",
+      "sha256": "cc2108bc22d65ee8bdd1aeab9248f47dc624874e9b7051faa3df2983135cf7af",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/prepare_current_policy.py",
+      "sha256": "79ab091fe8a47189a949ca717d5b051340a1518ac148502adcb0edae19467111",
+      "origin": "WORKING_TREE_SUPPLEMENT_NOT_COMMITTED"
+    },
+    {
+      "path": "tools/local/prepare_edge.py",
+      "sha256": "e3f9d3c7760eef4d8cb0eb1de557f6e89c58e5b80f01936209612ebf42613748",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/prepare_migrations.py",
+      "sha256": "be07feeff30eeb61e34b6741b1636cea675b43a368404c99c4d7205ec3d93fcc",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/compare_schema_catalog.py",
+      "sha256": "e3b4eb7eaa55f10b1c764d2840e12f5c85629605166bb93538f8b81ca29c06a4",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tests/integration/minkyu/product_connection_restore108_local.py",
+      "sha256": "ed3b78364b7a1868332da212b2f78ddb94197aa974f233240233b85faec533e2",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tests/integration/minkyu/member_cleanup_reconcile_local.py",
+      "sha256": "86ef272728d4f0e4cd8150cce6733944ba95bb69ef0a7563c580db3145133cbb",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tests/integration/minkyu/queue_tls_environment.py",
+      "sha256": "807448169be8228636f6091e3fee96d31c47be47a16a21457a2e7d4318d31ea6",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "backend/ownership.json",
+      "sha256": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-readonly.json",
+      "sha256": "dba3049d2279cb9242aa09d0f43b1eb8c40b0ff1ae951e1fa701568c34e92c08",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-roles-proof.json",
+      "sha256": "54dd954e329162fe6221e19c696c31525fafc282af7b8acca5d44fddfabf6caf",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-catalog-proof.json",
+      "sha256": "26d51d1f4927204c0429ef10ce5403ceaba10ffe60a33915fbeeeb4be7abf223",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-application-diff.json",
+      "sha256": "4e81955e355fd6df20b2e727e0de4fcc994536179c2d5cb2e1aad204458dc033",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-coverage.json",
+      "sha256": "67427da3e9eb27d8f438d8d2170ace95e45d6ae768c2d1470fd25f6ad9bec8bd",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-execution.md",
+      "sha256": "0eff30ff4992a4041c15747cbf46bf9d639bfe4f4f546bea1d8a604a6a2e66eb",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-final-schema-storage-restore-static.md",
+      "sha256": "88f4397892617f771d796fdcaf6db8bd03d398def7e76c8e25af9f415d48c4a0",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    }
+  ],
+  "currentMigrationInventory": {
+    "count": 121,
+    "manifestSha256": "3e7a3b35df08323fa0818d1b9cc473781cfcaced26cfbce53988e1f73bc5f4fd",
+    "hashEncoding": "SHA256 of UTF-8 JSON ensure_ascii=false sort_keys=true separators=comma-colon of path-to-byte-SHA256 mapping",
+    "migrations": [
+      {
+        "path": "backend/supabase/migrations/20260916080335_create_profiles.sql",
+        "version": "20260916080335",
+        "sha256": "da19b1a471feeb92279b95e37c71cd6b337657639da803a807e7b1bff9514de2",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916081429_remove_profiles_neighborhood.sql",
+        "version": "20260916081429",
+        "sha256": "61a12907ee1d3c5a338d9de0e37b30b19afb422d31e9eee427a8504252c9b9d2",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916081750_restrict_profiles_column_writes.sql",
+        "version": "20260916081750",
+        "sha256": "f88de84f8b85bef01d312003ee3827226e65d8b1b9258eb6e061e547efa30427",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916101123_profiles_real_name_contract.sql",
+        "version": "20260916101123",
+        "sha256": "7dfc98ef2db697246e814a10d68ef0f3761c9f7bdbf43f7d39949c5632aa6673",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916105220_feature03_posts.sql",
+        "version": "20260916105220",
+        "sha256": "e8765b87bc2f37a95086f74f2273cfdb0a0e1137f21066f6a89794c655440709",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916105738_feature04_post_author_profile.sql",
+        "version": "20260916105738",
+        "sha256": "2321bc7328f946281312a7dae13c3538d12a97a1ab13a5de31146feaf17db25a",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916105916_feature05_join_requests.sql",
+        "version": "20260916105916",
+        "sha256": "09c13dd6ead99c4d7d92edfa754761758fbb22065be0a66e11f36ab06d385a01",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916110052_feature06_matching_chat.sql",
+        "version": "20260916110052",
+        "sha256": "30943796bb28009963d2ae68f7674ef3eb6a4c50808f6916b340e6f034a760ec",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916110758_feature07_final_match.sql",
+        "version": "20260916110758",
+        "sha256": "344f2909fcf075084e78a42325388bccf2092f4073975aff61fbc3d266e49f64",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916110943_feature08_completion.sql",
+        "version": "20260916110943",
+        "sha256": "57995918ad709cbb6ac6f011eaa5f156db88d6b67ed9d5d10882d3a825907d64",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916111030_feature09_mutual_review.sql",
+        "version": "20260916111030",
+        "sha256": "dd4ef8e0c1ec10111ac872283b77f8f2cc6c19f77574ed14183388d31e4be879",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916111437_appointments_request_post_fk_index.sql",
+        "version": "20260916111437",
+        "sha256": "8faeb187b204aa81d2a8c2248931440ec631eed6a6b9822049d8f9fe70a0fb40",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916114036_rpc_unavailable_errors_as_404.sql",
+        "version": "20260916114036",
+        "sha256": "bf5f8e62e668f777ff8774ae3239775ef8dd4c84ac23722db746c2430926c21e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260916131906_existing_ui_gender_category_author_cards.sql",
+        "version": "20260916131906",
+        "sha256": "7fec3aee4a304eefe00e3153b85c4890c4e12486951210d92e5fb49de0fa2ca0",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260917005621_retry_completion_dispute_review_policy.sql",
+        "version": "20260917005621",
+        "sha256": "9dc9f8b9f9d259cc38a8d9f18450b29822565f112864050f7e3cd4fd4a543487",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260917043418_signup_eligibility_author_demographics.sql",
+        "version": "20260917043418",
+        "sha256": "12b9decaead249eadad008cf9131244b5a1620544a3a4fc8344d924c3cd74c9e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260917052827_profile_images_required.sql",
+        "version": "20260917052827",
+        "sha256": "0797f8e416ca2a6b56e3fdd4a0cadc2d713349416a685ee14949c13bcdd69a8f",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260917094753_disable_legacy_signup_without_avatar.sql",
+        "version": "20260917094753",
+        "sha256": "75b2765d9fd426104b50eb9f12ef4a30d0797a6c30943fa839c8b3336575d24d",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260917122744_ut_notifications_and_discovery.sql",
+        "version": "20260917122744",
+        "sha256": "cfc1e00de60da0f953843a3dcc86467cb0f515520da855dd0ab0b5be64bd74b8",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260917141449_notifications_join_request_index.sql",
+        "version": "20260917141449",
+        "sha256": "978376c0c1d725441b474886df72ffe590ccc803894d12d0e8a2aa9d3c6059c9",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260923090000_worker_jobs.sql",
+        "version": "20260923090000",
+        "sha256": "35cc37ed31145fc59ec5ee0580db3f49ccfd36ca19abe2208eccc5f9fe7bee5f",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260923091000_public_post_search.sql",
+        "version": "20260923091000",
+        "sha256": "3d95413693ed39cccf4c40c9a4c642f8d75cf9c53590c35495a7c0f1cd0a5822",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260923092000_review_summary_storage.sql",
+        "version": "20260923092000",
+        "sha256": "71c58e1587d2949ed7292d591a5505cbc33b53fab2a9ae5ac38a77f68e6d5d52",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260923100000_bilateral_completion.sql",
+        "version": "20260923100000",
+        "sha256": "d49cd183f46738412f2fb5fff8737dee5bac30431011c18f939671ba3d7a8cd2",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260923101000_review_automation.sql",
+        "version": "20260923101000",
+        "sha256": "499a5f5867540179301f34ec82d5d6f15934e026febeaf267781c62fe5543e5b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260923102000_core_service_api.sql",
+        "version": "20260923102000",
+        "sha256": "17039dccff591f32e05f8fd8af83cea729cd1b51721f8ac8ad9a6b388e045133",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260929090000_public_search_v2.sql",
+        "version": "20260929090000",
+        "sha256": "7291d87a34c6cdef707d97af502f7097ac6edf6ff2fd6fe34023116959683525",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260929100000_event_storage.sql",
+        "version": "20260929100000",
+        "sha256": "8b853ab4af4311552126bbf66f073a9b2baeaad2371fabb2d0afc1ee2196931c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20260929120000_review_release_and_completion_reservations.sql",
+        "version": "20260929120000",
+        "sha256": "8cd13df2cfa9e92a8a3ea0e21d2917cdc32d03441cb5a2957665fbbee60366b2",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002090000_naver_signup.sql",
+        "version": "20261002090000",
+        "sha256": "835cedd273fbb901a8ecc1aff538bbb9f89c3f1ea49aa6e18fbfdc4d61722338",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002100000_matching_lifecycle.sql",
+        "version": "20261002100000",
+        "sha256": "58e175eb4af6fd3e551c23c22c6a2d8b50c6d420d5c91389e460c39be29ec977",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+        "version": "20261002110000",
+        "sha256": "4b9ee69e4230dd62f70d2fa711a69b857b93d6bf17afa297192543389fc57615",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002120000_appointment_changes.sql",
+        "version": "20261002120000",
+        "sha256": "dec9b0753ff6b8da4db33c1044615ed7cd82f47c37170eff2bf3293ded7d3f86",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002130000_ai_budget_worker.sql",
+        "version": "20261002130000",
+        "sha256": "ea61b1d1d8b0ea1b57e44f97c56c32ab3121b6273ef83f6364d64c5b979e30e6",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002131000_events_public_profile.sql",
+        "version": "20261002131000",
+        "sha256": "8ac1eb3857d29ecbbccd543bbd0f58a440043234c086f734860d664562a0eb0b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002140000_public_search_age_range.sql",
+        "version": "20261002140000",
+        "sha256": "b9b7d00e6f6fd2af10252e30e371e635a55bcce00f2ee29b3f872eec974a14d0",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+        "version": "20261002150000",
+        "sha256": "0d436dc31e8483603d8751ca25f7d50e79660f613c220aa220ab5a514b03475a",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002160000_event_rankings.sql",
+        "version": "20261002160000",
+        "sha256": "a59ef5cdd304a5361f21b7e81d4cb3add630fedc0ebe6f51fd020ecf6dda203b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002170743_profile_image_access.sql",
+        "version": "20261002170743",
+        "sha256": "933597ecfa225eefbc9fb51eeee5f71c239f5cdc63c524325dbd7b9bb55404b0",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261002174755_conversation_visibility.sql",
+        "version": "20261002174755",
+        "sha256": "e476d098e82c52352b484b724b0f041b209b077821ca9d9642c69aca5a0999c6",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261003090000_completion_runner_role.sql",
+        "version": "20261003090000",
+        "sha256": "98425e7c855914bf49899b4a68704686e615fdfeac6a2852e9674f4ecd5e65fc",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005001429_current_completion_consent_policy.sql",
+        "version": "20261005001429",
+        "sha256": "22312f4333a4676a654a02a2802d63ebf6c7304923172a9dea6bf0de877df275",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005001456_global_worker_lease.sql",
+        "version": "20261005001456",
+        "sha256": "427c665cbe0686d6b70b33d5dc9b4546f7947fa9b5731a15670f1fd45f0fe6e9",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005001538_current_public_search.sql",
+        "version": "20261005001538",
+        "sha256": "f9b27ec0c373cf8264a6c0e7e7768a52c7bd4730c1644f8cb384391178d06d54",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005002006_first_chat_application.sql",
+        "version": "20261005002006",
+        "sha256": "46a7be5550c2a4e6c901899b06db4b7ebc7c833ef820b117cfbed24d43eef191",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+        "version": "20261005002528",
+        "sha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005003000_worker_job_fences.sql",
+        "version": "20261005003000",
+        "sha256": "ce31ec87b09a40174b1ed6d277bb4abbc1cd8865e6855498a94686caccb12c90",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005003159_current_summary_fences.sql",
+        "version": "20261005003159",
+        "sha256": "e3796267685e641cc3aa0257bf2410ff4abec12c0ef5d52225ff14ba54fd4cbc",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+        "version": "20261005005459",
+        "sha256": "af2c94c092e757765aef5745ce73bd83a146842875cf93b29a933102127c875e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+        "version": "20261005005855",
+        "sha256": "28ad42ff14cae65bd6b984667119113753d04cf78b79c969b05d9a3fe675de69",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+        "version": "20261005013901",
+        "sha256": "6db41b47a2f469d1370f2589f9a1daedc854275eac65f220fcb37909002a891e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005014629_appointment_place_change_draft.sql",
+        "version": "20261005014629",
+        "sha256": "a3c2284bf1b2fbf19c3a4404c1deea2eaa6314c9faee51894c3b5c30e4e4904c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005014630_appointment_location_validation.sql",
+        "version": "20261005014630",
+        "sha256": "93d7ab1d413a6e46425218798925f26440e8f1a674e2c3830e60394b862fa0c7",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005015709_member_reports.sql",
+        "version": "20261005015709",
+        "sha256": "317fbb34f1e07bf37976b3d9ec809f0ca6bfabf787006aad737e6552aeffc07c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005020135_current_member_lifecycle.sql",
+        "version": "20261005020135",
+        "sha256": "d24d3e338e9a8876c3d34c761f3fe9c863095faa95d93bf0055c471a81ab266d",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005020136_member_cleanup_dependencies.sql",
+        "version": "20261005020136",
+        "sha256": "a5a5827f1d79887d36d3e22bba5d42a45f93702ae770f9a20822da7eea39259b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005021810_sanction_adjudication_draft.sql",
+        "version": "20261005021810",
+        "sha256": "b3c56b87385b5bf835f7ae52390b80b963d50b9308dc3878b8645a756905120f",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005021811_member_activity_sanction_gates.sql",
+        "version": "20261005021811",
+        "sha256": "cf30480c6254060fbaef2bba375260d611ed17059ac200aee2af93d90da80255",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005030100_member_retention_batches.sql",
+        "version": "20261005030100",
+        "sha256": "c7877762ca88df738a991b35fc65ae4144e1de6eaf7fca44b623caadaa7a1e60",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040100_worker_queue_schedule.sql",
+        "version": "20261005040100",
+        "sha256": "71e18556baf27779a68fb209fb5b1cb51310ef5e6511c5cd5d65402de397aee5",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040300_worker_queue_runner_role.sql",
+        "version": "20261005040300",
+        "sha256": "49d7d72b47b33e5fee407498e6c09882c3e929de06c815240f10781d4c11917c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040500_member_profile_preferences.sql",
+        "version": "20261005040500",
+        "sha256": "98ce66ffc50229a6713266197b315a1eeec2e69bbdd5fe1908c1c45cb70bd278",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040600_appointment_change_withdrawal.sql",
+        "version": "20261005040600",
+        "sha256": "80d58914f8db461c9e5d961b4a5ebcc8c51aaa6a0ce76fd843333e2079d5a10b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040700_member_safety_state.sql",
+        "version": "20261005040700",
+        "sha256": "39f2cabe90cc137252be7953f5c0078f087f78f8ce7a2fbeda469a7309e555cf",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040800_appointment_safety_result_sync.sql",
+        "version": "20261005040800",
+        "sha256": "afc727a109454d430ab2b39b7d8000c2f7f49638c4351200454827c8a2c1ab80",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005040900_appointment_review_holds.sql",
+        "version": "20261005040900",
+        "sha256": "b13e5ade5891e49b049a7243ba3cbe161d8e64545212bc72d8865638a6992fe6",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005041000_appointment_review_no_show_lifecycle.sql",
+        "version": "20261005041000",
+        "sha256": "b780d364f0d614a160934bd57bb2c1347f24d6a9321275baadbbaf632db3ed50",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005135215_member_sanction_history.sql",
+        "version": "20261005135215",
+        "sha256": "c6dfa91e15bf8b97c1878b53ec62d887e18061fa5704aeee8f946a5ea5cc3b8c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005143045_profile_image_authenticated_access.sql",
+        "version": "20261005143045",
+        "sha256": "c191b5808a970c7649edd1ba9b221a444d686ae3342c49b765629f0543f4f83e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+        "version": "20261005143318",
+        "sha256": "296cc4fc48fce2f66f1ad72d10b39b3a12d2f7a225033a61fb8ab2b56a4486fd",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005150558_assigned_report_capture_access.sql",
+        "version": "20261005150558",
+        "sha256": "ead3e529ce957748af590d82339f6c9c0589680b8cf465c4f5975285d994699c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005155136_assigned_report_review_start.sql",
+        "version": "20261005155136",
+        "sha256": "c1083e452b284ed66edaa11bb4e075914e6f93ce64ab918a1c266f62ad470b71",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005161352_assigned_report_review_state.sql",
+        "version": "20261005161352",
+        "sha256": "4c497604f20db4708f65750697fe8bc4f51ea5e1afe6d81d95c2e119a63f0846",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005171606_assigned_report_adjudication.sql",
+        "version": "20261005171606",
+        "sha256": "d2e3b141ea5ad7048d075f1568f7afd6fc1320e3daa4f71163b252a91b825133",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005180340_assigned_report_notice_receipts.sql",
+        "version": "20261005180340",
+        "sha256": "880e62099cbb2f405da1e9035bcba2bdb0ff19c2f5a4d5222c63586240fbfc6b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005190311_appointment_cancel_appeal_intake.sql",
+        "version": "20261005190311",
+        "sha256": "359a8093c3a32bf7d547a17df98173de677307933780a8e78db323bc4c26fcd8",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005195033_appointment_cancel_appeal_atomic_report.sql",
+        "version": "20261005195033",
+        "sha256": "53750fc93d7edf48ff863807ccfa267c3e759213d55385b3d0d28103ec71f745",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005203258_appointment_cancel_resolution_and_due.sql",
+        "version": "20261005203258",
+        "sha256": "542d2efcc3c44e45e4d3cd1f7caeb2f22e5649615a22ff547f319267a45b3efa",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005225107_report_retention_purge.sql",
+        "version": "20261005225107",
+        "sha256": "c5b801c0f31dd8f058aafd844f90b5531cd582c7f668cc6703b0b01b3ce14a91",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005225951_worker_supported_claim.sql",
+        "version": "20261005225951",
+        "sha256": "bbe43a5adaef287145d832a37353c9c32991a813663b28975f8c1d5ad532fa8b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005232700_report_retention_dispatch_fence.sql",
+        "version": "20261005232700",
+        "sha256": "4283b5d85a18404409db5828885576c091b8e4525a0f884a849f1d17bcdac2c5",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005233511_cancellation_due_guard_closed.sql",
+        "version": "20261005233511",
+        "sha256": "85aec069961a72d9ea0bd1cc23324c8c2c93800fba23896cd26eb4777df831b6",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261005235230_worker_queue_retention_schedule.sql",
+        "version": "20261005235230",
+        "sha256": "8a1a0f10ad95ea1ca02569057a97ddf544cf65304d72d5a6ac0d55f094886f2e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006021419_cancellation_next_due_generation.sql",
+        "version": "20261006021419",
+        "sha256": "b65932fbad39bd12064b0d53f8aa2b66106fb9f4418741b7a692137c91eee0fc",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006123430_member_report_hidden_targets.sql",
+        "version": "20261006123430",
+        "sha256": "4aa5af4aa88a53481c1bf52f3ce67f9ff5d3155e7cf215bd8b6d224ec219927b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006123447_member_report_hidden_targets_bridge.sql",
+        "version": "20261006123447",
+        "sha256": "35ab1a696319c970cb16d5f4846e61ede7907a3ac5703271112554b7da34bf19",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006130041_general_sanction_notice_delivery.sql",
+        "version": "20261006130041",
+        "sha256": "31526ba209a742449233cad1f52d024f471fb2de12864a53e4d15065226f676a",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006141000_general_sanction_appeal_intake.sql",
+        "version": "20261006141000",
+        "sha256": "07e23309cf979e74aff46d20787233f5a0d112bcf54bdf032c8e441e21a25106",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006150000_general_sanction_appeal_resolution.sql",
+        "version": "20261006150000",
+        "sha256": "718da5f5d8ccf27908190fd8d2511c1712d2af0fc7cd2d3518c46bae8b1ba50e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006151000_historical_safety_episode.sql",
+        "version": "20261006151000",
+        "sha256": "8d4866ee9fa60321927109fa880cdf10d1d37e9d0a77f9a18892d66ba3dccb8a",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006160000_assigned_report_final_closure.sql",
+        "version": "20261006160000",
+        "sha256": "e52220edd8be14b753c17a1b53a6816342de3aa85f5ef0d9aee1e66bff5c885b",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261006170000_ai_account_budget.sql",
+        "version": "20261006170000",
+        "sha256": "3b8e5f523a077ee699505cda61835c3a082d4fdca7475e1b27db761b6e671ce8",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261007010000_cancellation_report_final_closure.sql",
+        "version": "20261007010000",
+        "sha256": "d0f360ef470033757cfc409d27440ff29383c254e78a0c7cd2ad5f83a2f9db22",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261007020000_cancellation_clock_lineage.sql",
+        "version": "20261007020000",
+        "sha256": "4f88fa9f16c1106ed4f56de580ed8e800ef9e6bddfa022a7ce048ca341c9fdbd",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008010000_member_own_posts.sql",
+        "version": "20261008010000",
+        "sha256": "8d38e1ffbba8a4764438372b66f263c0d6cb3875b0411094d0706d53057d636c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008011000_conversation_read_state.sql",
+        "version": "20261008011000",
+        "sha256": "689475372776c2c85254cb7c895694607ef6157ff335b778400e922c972ab286",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+        "version": "20261008012000",
+        "sha256": "f264a46e13c39deaabcff7d548bea7f51c4de9301d9e2ff35ae5db670a46f84e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008013000_public_event_detail.sql",
+        "version": "20261008013000",
+        "sha256": "931c3c4f6578e7e8d88910a84419102a1c00dc22a44ce2621f63f37056926d41",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008014000_ai_feedback_receipts.sql",
+        "version": "20261008014000",
+        "sha256": "d8ed7f0a2738d59ccf3a5e77185ee75454f16d0ae8e9e75285353e2c39e66d9a",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008020000_worker_owned_schedule.sql",
+        "version": "20261008020000",
+        "sha256": "141e6e0b755c354b79360ee671adaf530ba2e96784c36b34a8c9336752472b4c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008021000_worker_runtime_journal.sql",
+        "version": "20261008021000",
+        "sha256": "cef102978d33e8009567e95508750e9a23c34ac2788438f7536d1a75ff446df8",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008022000_worker_runtime_atomic.sql",
+        "version": "20261008022000",
+        "sha256": "d3c9ebed9c370d561a18f92a230fa395c2d0efa0780d88cb3785fd86b8bb6bc3",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008023000_worker_runtime_retention.sql",
+        "version": "20261008023000",
+        "sha256": "014f04fdde6c2a01edee99d36f0e3521529af29c25746f86af4cea200c5abea6",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008024000_runtime_recovery_schedule.sql",
+        "version": "20261008024000",
+        "sha256": "41f41622a173edc150104d85b467f8b9c55531dc08eb4e257e8cd7e012a2f1e2",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008025000_scoped_feedback_maintenance.sql",
+        "version": "20261008025000",
+        "sha256": "b9b3fa6a71ed54f60eb502f20d2187c3fea340c6d110dbc4cdf9efa17e3df38a",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008026000_message_read_receipts.sql",
+        "version": "20261008026000",
+        "sha256": "b613a5fe40b3a342b2a980c33595777094705bc1df91103667e5fffe254d6b2e",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008027000_member_cleanup_dispatch.sql",
+        "version": "20261008027000",
+        "sha256": "bf1a56ea440bda071bf88ffde76b71ba3fa32925b4e5810cdd46009fa1b56128",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261008083002_member_cleanup_ack_recovery.sql",
+        "version": "20261008083002",
+        "sha256": "b930cfe057b48050dcb275473d3a7af2bfb5117c5af0185ce3929d60674d9213",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009010900_worker_invocation_audit.sql",
+        "version": "20261009010900",
+        "sha256": "5de1f86e7937cef02f2f7dd3a2691afe0663effdbfa49a2af1490d6221836288",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011000_member_cleanup_invocation.sql",
+        "version": "20261009011000",
+        "sha256": "8cda95503183c2784c6e56cf4904b34eae67824fd310a1452c7001d7f1f52125",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011100_event_collection_lane.sql",
+        "version": "20261009011100",
+        "sha256": "f9e6026400a3a7b8d6e3a0c929f9c13e65cc41ff991180fd4fb4f17e921cc34c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011200_event_invocation_audit.sql",
+        "version": "20261009011200",
+        "sha256": "d63015b7a9ef4988f5520ee25a4d8b87b7a03b7b152472e48d33ca7edf81fc61",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011400_worker_intent_confirmation.sql",
+        "version": "20261009011400",
+        "sha256": "7ba321e924e02bfea41a244435a21a5fc52d71e049421e178ca72a91358065ed",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011500_member_cleanup_reconcile.sql",
+        "version": "20261009011500",
+        "sha256": "74a0d3b2af807310f76dd77d8769f3177ca8f47cef2161ca4b44f194bbb73081",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011600_content_inspection_tickets.sql",
+        "version": "20261009011600",
+        "sha256": "a3a7abf169d4edd2d86556def9823f5f56a2072796c3a9adcc1b46e1d23b58ec",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009011700_member_retirement_receipt.sql",
+        "version": "20261009011700",
+        "sha256": "bfa60e1169dc3752c54a53c5a4be462af5a40ef87ccd4e8477f724230fd41456",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009024414_member_cleanup_unknown_discovery.sql",
+        "version": "20261009024414",
+        "sha256": "7d96eb284ff8d71685c6d3fe0379e7c3310a7dca89912bf855020920c3012e9c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261009031628_event_detail_projection.sql",
+        "version": "20261009031628",
+        "sha256": "8b5b4af91067276fdfd27cd7340d30ff04f94ba632b029fa274885fde0be636c",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261010030000_hidden_message_read_receipts.sql",
+        "version": "20261010030000",
+        "sha256": "74653943bae50901d50c72b1f4ccd66502f2799fc8ea7a5115e73fde270fe6ef",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261014010000_operator_receipts_retirement.sql",
+        "version": "20261014010000",
+        "sha256": "3ced5ccb5627ae9a2e5c9f3da6d3565af977ec302d390f6cc0bd111c239ac5c5",
+        "includedInCurrentProductionReviewedMapping": true
+      },
+      {
+        "path": "backend/supabase/migrations/20261014020000_ai_result_state.sql",
+        "version": "20261014020000",
+        "sha256": "406d316b51c653d850045a87c4d8e6480c303c5f099a1899f7c1335281856494",
+        "includedInCurrentProductionReviewedMapping": true
+      }
+    ]
+  },
+  "productionPreparationMapping": {
+    "entrypoint": "tools/local/prepare_production_backend.py",
+    "assembly": "prepare_edge.GATEWAY_REVIEWED_MIGRATIONS + prepare_current_policy.CURRENT_POLICY_REVIEWED",
+    "gatewayCount": 41,
+    "policyCount": 80,
+    "reviewedCount": 121,
+    "reviewedManifestSha256": "3e7a3b35df08323fa0818d1b9cc473781cfcaced26cfbce53988e1f73bc5f4fd",
+    "reviewedByteMismatches": [],
+    "reviewedMissingFromCurrent": [],
+    "currentMissingFromReviewed": [],
+    "current121PreparationReady": true,
+    "inspectionResult": "READY_CURRENT121_FILES_PREPARED_SQL_AND_EDGE_NOT_RUN",
+    "historical108Unchanged": true,
+    "followupCount": 13,
+    "actualArtifactReceipt": "/private/tmp/yumidang-wbs-current121-preparation-result.json",
+    "artifactReceiptSha256": "3a7e5b461c0cb55c3e2d6c26c03182d5eb3ddd30fa0112d705cdeeb1c444cbce",
+    "activationAllowed": false,
+    "operatingChanged": false,
+    "reason": "추가2개SQL의고정SHA/의미/권한을검토하여명시목록과순차후속tuple만보완했다. 실제canonical121/pending0 파일준비PASS, SQL/Edge실행없음. 이미적용된DB에SQL재적용하지않는다."
+  },
+  "historicalOperatingInputs": {
+    "freshExternalQueryPerformed": false,
+    "currentOperatingState": "NOT_OBSERVED_ON_2026_10_17",
+    "metadata": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-readonly.json",
+      "scope": "OPERATING_METADATA_READ_ONLY",
+      "observedAtUtc": "2026-10-11T16:20:09.74986+00:00",
+      "observedAtKst": "2026-10-12T01:20:09.749860+09:00",
+      "appliedVersionsAtObservation": 20,
+      "storageObjectsAtObservation": 2,
+      "workerRolePresentAtObservation": false,
+      "completionRolePresentAtObservation": false,
+      "dataRowsRead": false,
+      "storageBytesRead": false
+    },
+    "roles": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-roles-proof.json",
+      "observedAtUtc": "2026-10-11T16:28:30.540778+00:00",
+      "observedAtKst": "2026-10-12T01:28:30.540778+09:00",
+      "roleCountAtObservation": 31,
+      "membershipCountAtObservation": 25,
+      "hashNormalization": "DATABASE_LOCAL_OIDS_NOT_PORTABLE",
+      "crossEnvironmentComparison": "NOT_RUN",
+      "rolePasswordsRead": false
+    },
+    "catalog": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-catalog-proof.json",
+      "collectedAtKstDate": "2026-10-12",
+      "counts": {
+        "tables": 14,
+        "columns": 93,
+        "indexes": 35,
+        "schemas": 2,
+        "policies": 10,
+        "triggers": 6,
+        "functions": 46,
+        "constraints": 80,
+        "tableGrants": 201,
+        "columnGrants": 7,
+        "schemaGrants": 10,
+        "defaultGrants": 96,
+        "storagePolicies": 3,
+        "migrationVersions": 20
+      },
+      "comparison": "NOT_RUN",
+      "rowsAndStorageBytes": "NOT_READ"
+    },
+    "historyComparison": {
+      "oldCommittedDiff": {
+        "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-application-diff.json",
+        "sourceHead": "ffce766fdfde6f5f45570b232bcb9fe2b974a6d2",
+        "localCount": 119,
+        "appliedAtObservation": 20,
+        "pendingThen": 99
+      },
+      "comparisonAtCurrentSourceAgainstHistoricalInputOnly": {
+        "currentSourceCount": 121,
+        "historicalObservedAppliedCount": 20,
+        "versionsAndNamesMatch": true,
+        "sourceNotRepresentedInHistoricalInputCount": 101,
+        "serverAppliedByteEquivalence": "NOT_VERIFIED",
+        "currentOperatingPendingCount": "NOT_OBSERVED"
+      },
+      "interpretation": "역사20개이력과현재121소스의차이101은정적대조일뿐현재운영pending101개관측이아니다.서버원SQL바이트동등성·현재catalog·현재role상태를추정하지않는다."
+    }
+  },
+  "restorationRequirements": [
+    {
+      "id": "source_and_target_custody",
+      "status": "PREPARATION_ONLY_NOT_EXECUTED_BY_THIS_LANE",
+      "requiredEvidence": [
+        "현재121canonical순서/개별SHA·플랫폼immutable image/config·DB ID/socket/project·닫힌원guard를하나의승인graph에고정",
+        "기존소스/Storage대상은읽기전용,확정identity·quiescence·실행슬롯·메모리기준검사",
+        "원행/자료/권한/sequence/UNKNOWN을검증전원자료로저장;source전체dump를새121위에덮어써freshreplay증거를없애지않음"
+      ]
+    },
+    {
+      "id": "roles_and_privileges",
+      "status": "PREPARATION_ONLY_NOT_EXECUTED_BY_THIS_LANE",
+      "requiredEvidence": [
+        "role속성·LOGIN/NOLOGIN·membership/GRANTED BY·owner·SECURITY DEFINER owner를정확히복원/대조",
+        "rawACL/defaultACL·실효권한·schema/table/column grants·RLS/policies/functions/triggers/constraints대조",
+        "로컬OID의MD5를환경간직접비교하지않고안정된이름/서명으로정규화;원값도보존",
+        "BOOT/superuser로대체하거나임의ALTER OWNER/권한보정으로검사를통과시키지않음;암호·비밀출력금지"
+      ]
+    },
+    {
+      "id": "sequence_and_physical_state",
+      "status": "PREPARATION_ONLY_NOT_EXECUTED_BY_THIS_LANE",
+      "requiredEvidence": [
+        "모든대상sequence의last_value/is_called및증가영향을별도원자료로저장/복원/비교",
+        "트랜잭션rollback·행digest동일만으로sequence/물리바이트보존을선언하지않음",
+        "dump/archiveSHA·정규파일종류·경로관계·소유권·전체복원후자료검산근거필요"
+      ]
+    },
+    {
+      "id": "confirmed_deletion_reapplication",
+      "status": "PREPARATION_ONLY_NOT_EXECUTED_BY_THIS_LANE",
+      "requiredEvidence": [
+        "오래된백업에서살아나는새합성파일을저장된확정성공목록만으로재파기",
+        "Storage API DELETE성공/GET부재/메타데이터부재/실파일부재를별도증거로묶음",
+        "원제품task→DELETE→ACK성공증거는직접fixture삭제와분리;원객체를임의재삭제하지않음",
+        "삭제성공시각/원요청/응답영수증/재파기목록SHA를복원graph에결합"
+      ]
+    },
+    {
+      "id": "unknown_and_ledger_preservation",
+      "status": "PREPARATION_ONLY_NOT_EXECUTED_BY_THIS_LANE",
+      "requiredEvidence": [
+        "기존UNKNOWN·dispatch·ACK·task·budget·원멱등키/점유행을정확한전체대조로보존",
+        "미확정삭제/응답유실은원영수증조회·정해진복구계약을사용;새멱등키로재전송하거나원UNKNOWN삭제금지",
+        "실패시원자료·실패판정·부분PASS를보존하고새자기ID만승인된정리절차로닫음;기존중지승인재사용금지"
+      ]
+    },
+    {
+      "id": "current121_mapping_and_full_restore",
+      "status": "CURRENT121_MAPPING_READY_FULL_RESTORE_NOT_PROVEN",
+      "requiredEvidence": [
+        "current121 production 명시 mapping공백은정식검토/소스/회귀로닫음; 실제전범위복원증거는별도잔여",
+        "fresh121 schemareplay/SQL7rollback의범위를원행/native119/Storage전체복원증거와구분",
+        "동일최종graph에현재제품/closedbundle/121SQL·원dump/role/sequence/storagearchive·복원후검산·knownsuccess재파기·UNKNOWN·정리영수증연결",
+        "운영적용·실제공급사/실회원·공개지원실접수·최종roleactivation은각각별도조건"
+      ]
+    }
+  ],
+  "storageScopes": {
+    "originalSql108": {
+      "metadataObjects": 45,
+      "matchedPreservedOriginalFiles": 6,
+      "missingOriginalBytesObjects": 39,
+      "mappingStatus": "HISTORICAL_PASS_OFFLINE_MAPPING_ONLY",
+      "missingBytesStatus": "HOLD_NOT_RECOVERED",
+      "fullRestore": "NOT_PROVEN",
+      "privateObjectPathsIncluded": false,
+      "lastMappingReceiptSha256": "348824ecfc55daed238f8c3e322c9b50b2f30f526e79e5f4d0f0869beec5fa0e",
+      "missingListSha256": "8c822c58f65426f1b724d86165e249f0f7aff50e3ed4197de4b5682cfa03ef5a",
+      "lastNamedCandidateAuditReceiptSha256": "110d8fb4ffc4c5ab92d5bf860f033095488b3d235b87fb15156b931522e85e2d",
+      "interpretation": "39는보존된원tar에서바이트가확인되지않은정확한객체보수.외부저장소전체부재가증명된것아님.추가원본위치/원바이트없이는전체복원완료로승격하지않음."
+    },
+    "syntheticNative119": {
+      "storageMetadataRowsInHistoricalSource": 0,
+      "scope": "원SQL10845개와다른합성원본.0행을원45개복원성공으로대체금지."
+    },
+    "historicalOperating": {
+      "storageMetadataObjectsAt20261012Observation": 2,
+      "currentCount": "NOT_OBSERVED",
+      "scope": "원SQL10845/6/39및native119Storage0과혼합금지."
+    }
+  },
+  "parallelRuntimeBoundary": {
+    "actualNaturalExpiryCase": "PASS_ORIGINAL_3600_SECONDS_ONLY",
+    "actualSignedAi22Ai23": "PASS",
+    "actualAuthLogoutBan": "PASS_TWO_ORIGINAL_AUTH6_CASES_ONLY",
+    "ownAllNewContainersStopped": true,
+    "existingMetadataPreserved": true,
+    "naturalMidnightAi24": "NOT_RUN",
+    "sourceRuntimeHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+    "fullTypedLifecycle": "NOT_RUN",
+    "anonymous": "NOT_RUN",
+    "foreign": "NOT_RUN",
+    "unknownRetainedByRun": {
+      "d017a002": 2,
+      "d017a004": 2
+    }
+  },
+  "nextAction": "현재121준비mapping은갱신했다. 실제전범위복원은원Storage39개 원본 바이트/역할·권한의안정된이름대조/sequence/원dump/knownsuccess재파기/UNKNOWN및정리graph를충족한뒤별도실행조건으로유지한다. 운영activation없음.",
+  "initialProductionMapping119": {
+    "entrypoint": "tools/local/prepare_production_backend.py",
+    "assembly": "prepare_edge.GATEWAY_REVIEWED_MIGRATIONS + prepare_current_policy.CURRENT_POLICY_REVIEWED",
+    "gatewayCount": 41,
+    "policyCount": 78,
+    "reviewedCount": 119,
+    "reviewedManifestSha256": "32e9b5f4aa4c6f72d1111139ba6184ac2149c1cf6937de89b7f06755fc9aea3f",
+    "reviewedByteMismatches": [],
+    "reviewedMissingFromCurrent": [],
+    "currentMissingFromReviewed": [
+      {
+        "path": "backend/supabase/migrations/20261014010000_operator_receipts_retirement.sql",
+        "sha256": "3ced5ccb5627ae9a2e5c9f3da6d3565af977ec302d390f6cc0bd111c239ac5c5"
+      },
+      {
+        "path": "backend/supabase/migrations/20261014020000_ai_result_state.sql",
+        "sha256": "406d316b51c653d850045a87c4d8e6480c303c5f099a1899f7c1335281856494"
+      }
+    ],
+    "current121PreparationReady": false,
+    "inspectionResult": "STATIC_FAIL_CLOSED_EXPECTED_FOR_CURRENT121_HEAD_NOT_EXECUTED",
+    "reason": "현재 HEAD SQL은 reviewed 목록에 있고 해시가 같아야 한다. 현119 mapping 밖10/14 두 SQL이 현재121에 있다. 이 lane은 목록·해시 검토 확대나 도구 수정을 하지 않았다.",
+    "nextAction": "두 추가SQL·대응역할/자료/테스트·최종catalog를별도검토한뒤정식매핑/closedartifact연결갱신.개수만121로바꾸거나검사우회금지."
+  },
+  "initialDocumentSourceInputs": [
+    {
+      "path": "tools/local/prepare_production_backend.py",
+      "sha256": "cc2108bc22d65ee8bdd1aeab9248f47dc624874e9b7051faa3df2983135cf7af",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/prepare_current_policy.py",
+      "sha256": "4237db5846d2f2d6db83ad288aefb7af6802a2349d13cdde3fcaa736485626d9",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/prepare_edge.py",
+      "sha256": "e3f9d3c7760eef4d8cb0eb1de557f6e89c58e5b80f01936209612ebf42613748",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/prepare_migrations.py",
+      "sha256": "be07feeff30eeb61e34b6741b1636cea675b43a368404c99c4d7205ec3d93fcc",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tools/local/compare_schema_catalog.py",
+      "sha256": "e3b4eb7eaa55f10b1c764d2840e12f5c85629605166bb93538f8b81ca29c06a4",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tests/integration/minkyu/product_connection_restore108_local.py",
+      "sha256": "ed3b78364b7a1868332da212b2f78ddb94197aa974f233240233b85faec533e2",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tests/integration/minkyu/member_cleanup_reconcile_local.py",
+      "sha256": "86ef272728d4f0e4cd8150cce6733944ba95bb69ef0a7563c580db3145133cbb",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "tests/integration/minkyu/queue_tls_environment.py",
+      "sha256": "807448169be8228636f6091e3fee96d31c47be47a16a21457a2e7d4318d31ea6",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "backend/ownership.json",
+      "sha256": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-readonly.json",
+      "sha256": "dba3049d2279cb9242aa09d0f43b1eb8c40b0ff1ae951e1fa701568c34e92c08",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-roles-proof.json",
+      "sha256": "54dd954e329162fe6221e19c696c31525fafc282af7b8acca5d44fddfabf6caf",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-operating-catalog-proof.json",
+      "sha256": "26d51d1f4927204c0429ef10ce5403ceaba10ffe60a33915fbeeeb4be7abf223",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-application-diff.json",
+      "sha256": "4e81955e355fd6df20b2e727e0de4fcc994536179c2d5cb2e1aad204458dc033",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-coverage.json",
+      "sha256": "67427da3e9eb27d8f438d8d2170ace95e45d6ae768c2d1470fd25f6ad9bec8bd",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-execution.md",
+      "sha256": "0eff30ff4992a4041c15747cbf46bf9d639bfe4f4f546bea1d8a604a6a2e66eb",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-final-schema-storage-restore-static.md",
+      "sha256": "88f4397892617f771d796fdcaf6db8bd03d398def7e76c8e25af9f415d48c4a0",
+      "origin": "COMMITTED_AT_SOURCE_HEAD"
+    }
+  ],
+  "integrationUpdatedAt": "2026-10-17T15:10:22.822287+00:00",
+  "actualRuntimeSourceFrozenAt": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+  "workingTreeSupplementsAppliedAfterActualRuntime": true,
+  "initialDocumentLaneActions": {
+    "codeChanged": false,
+    "executionRecordChanged": false,
+    "sourceManifestChanged": false,
+    "runtimeResourceCreation": 0,
+    "externalQueries": 0,
+    "actualDbCalls": 0,
+    "notionWrites": 0,
+    "commitPush": false
+  },
+  "rootIntegration": {
+    "sourceMappingChanged": true,
+    "actualFullRestore": "NOT_RUN",
+    "operatingActivation": false,
+    "runtimeEvidence": "2026-10-17-runtime-evidence.json",
+    "offlineIndependentRegressionPassed": 153,
+    "currentCloneRegression": {
+      "currentPolicy": 119,
+      "productionPreparation": 34,
+      "status": "PASS"
+    },
+    "currentSourceSupplementCommitted": false
+  }
+}

@@ -1,0 +1,626 @@
+{
+  "version": 1,
+  "capturedAt": "2026-10-18T01:54:30.643915+00:00",
+  "actor": "minkyu",
+  "status": "PASS_ACTUAL_AUTH_NEGATIVE_AND_CLEANUP",
+  "sourceHead": "9676cb85736435d742e91283d1c30cff1bd8e609",
+  "rawTokensOrCredentialsIncluded": false,
+  "baselineProgress": {
+    "percent": 79,
+    "done": 22,
+    "total": 28
+  },
+  "wbsIds": [
+    "4.2",
+    "7.11",
+    "5.5",
+    "AI24",
+    "7.14"
+  ],
+  "priorActualAuthAiEvidence": {
+    "path": "/private/tmp/yumidang-minkyu-wbs-20261017/docs/collaboration/requests/minkyu/2026-10-17-runtime-evidence.json",
+    "sha256": "d5e49ad404a4dcbe020c16ccba68d8ba647c8a1215d04eefb01c8e469e72a022",
+    "bytes": 32568,
+    "rawContentIncluded": false
+  },
+  "sourceManifest": {
+    "path": "/private/tmp/yumidang-minkyu-wbs-20261017/docs/collaboration/requests/minkyu/2026-10-18-source-manifest.json",
+    "sha256": "2b799c17602991c625722921e334bfe2cd37902f0ae5390bff0480c193f50e13",
+    "bytes": 173257,
+    "rawContentIncluded": false
+  },
+  "sourceAfterActual": {
+    "path": "/private/tmp/20261018-source-after-actual-auth.json",
+    "sha256": "2cfb5e004ac808bf10916a9891a854c8fcf6b2d134b0c3f20bf0ce6025cab3e7",
+    "bytes": 350,
+    "rawContentIncluded": false
+  },
+  "normalAuth6": {
+    "accounts": 6,
+    "status": "PASS_LOCAL_AUTH6_PROVISION_ONLY",
+    "originalRowsPreserved": true,
+    "actualGoTrueAndDatabaseSessions": true,
+    "actualNaver": "NOT_RUN"
+  },
+  "anonymousIssuance": {
+    "accounts": 1,
+    "originalTtlSeconds": 3600,
+    "exactAddedRows": {
+      "auth.users": 1,
+      "auth.sessions": 1,
+      "auth.refresh_tokens": 1,
+      "auth.mfa_amr_claims": 1
+    },
+    "addedIdentityAuditProfileRows": 0
+  },
+  "cases": {
+    "anonymousBearer": {
+      "status": "PASS",
+      "case": "anonymousBearer",
+      "httpStatus": 401,
+      "authHttpStatus": 200,
+      "actualAuthReads": 1,
+      "rpcCalls": 0,
+      "providerCalls": 0,
+      "nativeExternalAttempts": 0
+    },
+    "differentOriginalContext": {
+      "status": "PASS",
+      "case": "differentOriginalContext",
+      "httpStatus": 401,
+      "authHttpStatus": 403,
+      "actualAuthReads": 1,
+      "rpcCalls": 0,
+      "providerCalls": 0,
+      "nativeExternalAttempts": 0
+    }
+  },
+  "preservation": {
+    "bothContextFullRowBags": 178,
+    "authorityConstraintsCatalogPreserved": true,
+    "budgetReservationDelta": 0,
+    "existingResourceScope": "METADATA_ONLY_STORED_DB_BYTES_NOT_VERIFIED",
+    "existingContainerRecords": 415,
+    "existingCustomNetworks": 158,
+    "existingVolumes": 57,
+    "priorUnknown2": "PRESERVED_PRIOR_PINNED_RUN_SCOPE_NOT_REOPENED"
+  },
+  "phaseMonitors": {
+    "prepare": {
+      "status": "PASS",
+      "samples": 0,
+      "minimumKiB": null,
+      "ownedChildClosed": true
+    },
+    "create": {
+      "status": "PASS",
+      "samples": 44,
+      "minimumKiB": 1959116,
+      "ownedChildClosed": true
+    },
+    "issue": {
+      "status": "PASS",
+      "samples": 179,
+      "minimumKiB": 1904324,
+      "ownedChildClosed": true
+    },
+    "dispatch": {
+      "status": "PASS",
+      "samples": 77,
+      "minimumKiB": 1918000,
+      "ownedChildClosed": true
+    },
+    "close": {
+      "status": "PASS",
+      "samples": 0,
+      "minimumKiB": null,
+      "ownedChildClosed": true
+    }
+  },
+  "cleanup": {
+    "status": "PASS_OWN_CREATED_STOPPED_EXISTING_METADATA_PRESERVED",
+    "stoppedOwnContainers": 8,
+    "remainingIds": [],
+    "ownNetworksRetained": 2,
+    "ownVolumesRetained": 2,
+    "vmStopped": false,
+    "existingStoredBytes": "NOT_VERIFIED"
+  },
+  "independentAudits": {
+    "create": {
+      "path": "/private/tmp/20261018-auth-pair-create-evidence-audit.json",
+      "sha256": "2fa2387df9bf12dc17fe79d1e991f7891e663cded4e7608ac567a7d426859d49",
+      "bytes": 245026,
+      "rawContentIncluded": false
+    },
+    "issue": {
+      "path": "/private/tmp/20261018-auth-pair-issue-evidence-audit.json",
+      "sha256": "75f56a50a2404765b602c0bf1855a17a88de98ee102270846b099ed1e5512d0d",
+      "bytes": 26950,
+      "rawContentIncluded": false
+    },
+    "final": {
+      "path": "/private/tmp/20261018-auth-pair-final-evidence-audit.json",
+      "sha256": "9bf99258a5845a03caa528011064a7ba5a7a57fd633dec65be26903799c6a761",
+      "bytes": 117969,
+      "rawContentIncluded": false
+    },
+    "finalChecks": 317,
+    "failedChecks": 0
+  },
+  "offlineEvidence": {
+    "baseline472": {
+      "path": "/private/tmp/yumidang-plan-baseline-20261018/receipt.json",
+      "sha256": "e78f4aa2351654b02583d38ffa9e1b4125ee324304eef67352fdadd45381bc4c",
+      "bytes": 2340,
+      "rawContentIncluded": false
+    },
+    "restoration25": {
+      "path": "/private/tmp/yumidang-restoration-applied-20261018/receipt.json",
+      "sha256": "409f0857d6a933e08b594fcc43fdfc725202ce139902b1e75bdbc191eb55449e",
+      "bytes": 965,
+      "rawContentIncluded": false
+    },
+    "auth31": {
+      "path": "/private/tmp/yumidang-auth-capsule-fix-applied-20261018/receipt.json",
+      "sha256": "4e6251ed7bd9cf9a7ce8587a8c765b87faa77488a2d1507638d77686f43a8169",
+      "bytes": 558,
+      "rawContentIncluded": false
+    },
+    "existingPreparation16": {
+      "path": "/private/tmp/yumidang-auth-negative-applied-20261018/receipt.json",
+      "sha256": "62b9c6da737ac32bfd767f810e93aaf8c57f1b3bf9e639db97130941b276f8ac",
+      "bytes": 1463,
+      "rawContentIncluded": false
+    },
+    "signedAuth176DependencyRecheck": {
+      "path": "/private/tmp/yumidang-auth-committed-binding-20261018/receipt.json",
+      "sha256": "bfb018716054d6d0ceb9234149967c81b78f99502926ee54ad5a5cca72e19e76",
+      "bytes": 290,
+      "rawContentIncluded": false
+    },
+    "ai24Preparation90DependencyRecheck": {
+      "path": "/private/tmp/yumidang-ai24-final-dependency-20261018/receipt.json",
+      "sha256": "811ad954fe7d811eb6bded278b81130a56a6feae087f6f3c5525c6fa8ea0ceb0",
+      "bytes": 740,
+      "rawContentIncluded": false
+    },
+    "distinctTestCasesAcrossRecordedSuites": 544,
+    "repeatedRunsNotAddedToDistinctCount": true
+  },
+  "boundaries": {
+    "fullTypedLifecycleDispatch": "NOT_RUN_SEPARATE_ORIGINAL_CASE_RECEIPTS_PRESERVED",
+    "oldCasesReplayed": false,
+    "actualNaverAndRealMembers": "HOLD_NOT_RUN",
+    "providerRealCalls": "NOT_RUN_SYNTHETIC_AI_PRIOR_SCOPE_ONLY",
+    "actualAi24Midnight": "EXCLUDED_NOT_RUN",
+    "ai24OfflinePreparation": "DONE_LIVE_NOT_READY_REISSUE_REQUIRED",
+    "fullRestoration": "NOT_RUN_PREPARATION_ONLY",
+    "storageOriginals": {
+      "metadataObjects": 45,
+      "historicallyMatchedFiles": 6,
+      "missingOriginalObjects": 39,
+      "currentMatchedBytesRevalidated": false
+    },
+    "operatingWritesDeployment": "NOT_RUN",
+    "push": "NOT_RUN"
+  },
+  "privateRawEvidenceReferences": [
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/after-issuance-private.json",
+      "sha256": "deda7086281a5ed95459970573861ccbd96078a3c626fd8682946895b366fa66",
+      "bytes": 42601,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/database-manifest.json",
+      "sha256": "48edb735b7a03f7038e026e64fe54bee3e8bcc6df0f8cd46471c2b5c84cde762",
+      "bytes": 25097,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/execution-intent.json",
+      "sha256": "3fdb5f6a94606e7d99a3ecc9e63868bf1d997fda7be16550ce04ee06c9e63194",
+      "bytes": 76171,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/owned-containers.json",
+      "sha256": "29538bd91b946fa3a715bb47eb43f9aca0dfb58b90daecf031a257eafbe99bfb",
+      "bytes": 831,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/owned-networks.json",
+      "sha256": "7953850fa742e3c3dcb7bb6f22db8b3d34f78afc7556407df1e8b1b42ef5bc90",
+      "bytes": 130,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/owned-volumes.json",
+      "sha256": "1eb75f14c1185d981013f75e7a5f594fbf27bf4ceed6500a5cd7eaf2f8b309c2",
+      "bytes": 53,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/protected-resource-baseline.json",
+      "sha256": "47397ff083bb8697f273d6c43fad59c756a39ddf3827769e5d0bc5f8e8079964",
+      "bytes": 298131,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous/reviewed-runtime-private.json",
+      "sha256": "7f81c0c8c0e64c9ae59a1ae732382101e72c02636c3e957ea22c8b3439d0b720",
+      "bytes": 9612,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous-issued-response-private.json",
+      "sha256": "d4788f3ce5f69decb2fc4edf64200bad13e42c82c11bc200087aed44262be9f3",
+      "bytes": 1312,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous-issued.json",
+      "sha256": "ac283a743400131f3b10a9217e17a568eb4ff92b2402dad8d9cb739374466f3e",
+      "bytes": 664,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymous-signup-intent.json",
+      "sha256": "0b1d917d359895ee9685dbdcaca0da9f572a3ff3a79edca307d592b9b0540463",
+      "bytes": 279,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymousbearer-factory-closed.json",
+      "sha256": "10e94d13a4a4faf10cd2127507689ee407c3cd29e3f46e414d24bebc658405da",
+      "bytes": 144,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymousbearer-factory-intent.json",
+      "sha256": "26870c175c55cf29db827205f9137d601b1e50edfbc4e0773630f96c05aaf78e",
+      "bytes": 202,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymousbearer-factory-outcome.json",
+      "sha256": "dfac6a6f0cd0c4573c3c66cedb91786c78f606614d5d16731da2d521a4cdc8fb",
+      "bytes": 236,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymousbearer-factory-private.json",
+      "sha256": "5ca0b690baae1d5dfbeda856c420b8d31d6b6064ff36f03636b10d28132f74b0",
+      "bytes": 7943,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/anonymousbearer-proof.json",
+      "sha256": "fbd461de2440e59c271ae7975b1d06d65548190134dee03adac66b7207eb68c4",
+      "bytes": 368,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/before-cases-private.json",
+      "sha256": "d6e3ec1fd411297a6b9c99ab6f1938b80f62254ddb35f903b8247157760c65e9",
+      "bytes": 40163,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/before-issuance-private.json",
+      "sha256": "8018495892b317a08a3dae03e4ae167b9edb5077350fa00393db0aa0528454fc",
+      "bytes": 36173,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/capsule-review.json",
+      "sha256": "3e78fc4c62763e6e383702bb7975a414d7aba631920c15b5839815bb73f8524b",
+      "bytes": 7024,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/case-receipt.json",
+      "sha256": "c08669a3c3c2a6ac3df2dbabf3e285bf505e139f67af03aada322fa55fdac680",
+      "bytes": 1150,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/close-attempt.json",
+      "sha256": "be7499633c3dabde1a9ec3d5c4be0c909b702c3e505d39ba5de08777cf82f42b",
+      "bytes": 229,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/close-monitor.json",
+      "sha256": "3458a18d836d8dbd0d1c36c3bfa15c490c395d8e5237dddf803f76563835b875",
+      "bytes": 389,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/create-attempt.json",
+      "sha256": "a78b51d2bb5b3f0bf2e97588edc6fa0048bf4590eb7557e3020111df4e392f97",
+      "bytes": 230,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/create-final-private.json",
+      "sha256": "8e76c4be8678b011d48296dfd3217336d71317dd19dd0c9be0ee767682407536",
+      "bytes": 306670,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/create-monitor.json",
+      "sha256": "4acdc3166578426203d94d55a6d6ab0ce9d97d04ed5346ae22350b0209e47103",
+      "bytes": 715,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/differentoriginalcontext-factory-closed.json",
+      "sha256": "10e94d13a4a4faf10cd2127507689ee407c3cd29e3f46e414d24bebc658405da",
+      "bytes": 144,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/differentoriginalcontext-factory-intent.json",
+      "sha256": "96b4dc549e74302a59e51c5c842f4030aac14f4fd7f55deef74d99bc052c6ace",
+      "bytes": 211,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/differentoriginalcontext-factory-outcome.json",
+      "sha256": "6d4b3c302ac9e09477acf133e436752d975df15563ad81189f3f6a099fa044a0",
+      "bytes": 236,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/differentoriginalcontext-factory-private.json",
+      "sha256": "78f18e9d3da23f86e432145aaf41e8c48c5069d8ab4460ba608a27b9f47a42ca",
+      "bytes": 8002,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/differentoriginalcontext-proof.json",
+      "sha256": "46cb6f808158bcf36acc84d3a6126c877351bad432715459e94c2c57140b25a9",
+      "bytes": 377,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/dispatch-attempt.json",
+      "sha256": "f095b36824bd08a45a2731fc66baf1775b7ce5cffdccac11447e9cd3e000eb3d",
+      "bytes": 232,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/dispatch-intent.json",
+      "sha256": "33a593e5a91588efbca0a8f6c8e7e75ba42584fd3bcd94a7b4102125c71c866c",
+      "bytes": 267,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/dispatch-monitor.json",
+      "sha256": "51945014f93d4b662243d6128e3366fe7700cdcbb56a8c611e8c99ced46f8b61",
+      "bytes": 981,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/driver-review.json",
+      "sha256": "93d30c39472c7043235d89083548a6643ad694a76b80dfbe646633bac9d817d6",
+      "bytes": 396,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/final-private.json",
+      "sha256": "bedd3d1cf59da6ac34ace6b7f4f435c4bdcbb9c283914748aabc42afa2e5be53",
+      "bytes": 40272,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/auth-provision-686a4822b3a74f2dbe19f1174f529bde/baseline-private.json",
+      "sha256": "010de8633e2820a71afb8e1cecabbed1eef850ffd98a988c552a4872be44041b",
+      "bytes": 18512,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/auth-provision-686a4822b3a74f2dbe19f1174f529bde/final-private.json",
+      "sha256": "67465661838906f2963ec3d5a796b5d36be612da301c7a3f20042ecae39d459c",
+      "bytes": 22330,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/auth-provision-686a4822b3a74f2dbe19f1174f529bde/receipt.json",
+      "sha256": "1e8c7bd8125409742cde40ffc4101753f155381920f48c705d612dd5f9379c42",
+      "bytes": 876,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/database-manifest.json",
+      "sha256": "be787f1715086e8f8e6f6cbdc845bcf9ba11420f6d9d6dfdd63575b5a73bb119",
+      "bytes": 30131,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/execution-intent.json",
+      "sha256": "46ae4143cdabb2af7dec8118e7098363aaf0cb5ecf737dc6acbac55b3df29a46",
+      "bytes": 76171,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/owned-containers.json",
+      "sha256": "7a28d333c382a5a2ee41edc9519b93b85170e0d4ffbef2df3ad60ed5264d3854",
+      "bytes": 831,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/owned-networks.json",
+      "sha256": "fa12a584ea57e32bcc1cbe55f382c6ec3f5e4e4c4555f0d914f01c3d9f2491d0",
+      "bytes": 130,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/owned-volumes.json",
+      "sha256": "d7608d31855466701fb79377bc4cb6cf544106b059a1fbdfdc55b09ecd516154",
+      "bytes": 53,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/protected-resource-baseline.json",
+      "sha256": "1f3eb660dae0d7f3cccf07b14bc3e4731ab7c7a2ef83a7f3b9df064651226b80",
+      "bytes": 298131,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/reviewed-runtime-private.json",
+      "sha256": "a3bc6a1df99fa2fea93b75d7107179d7556e388e1ffd1abb44016950458a8bdc",
+      "bytes": 9612,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/foreign/signed-ai-binding-private.json",
+      "sha256": "e3ca7c6b4a83b8d871a21af9530b17777f1720f798daa15546d9097b7391144c",
+      "bytes": 16650,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/issuance-final-private.json",
+      "sha256": "e8b58cc339bcdfef31a6f6908107d933018d079149ca718551f357f12cdc381c",
+      "bytes": 40265,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/issuance-receipt.json",
+      "sha256": "0b2a435d773b09b98b62d91c273f268924b3f72b28fa4da26a78300f661867e2",
+      "bytes": 257,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/issue-attempt.json",
+      "sha256": "686d49b5a9fbb6b343afad559e6324b49be3bd675488aefe7abae0764e23ab3e",
+      "bytes": 229,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/issue-intent.json",
+      "sha256": "3284446493a317fcbcb0cc3dda59911d33e9b19b795e83798d1bb56d69cea8d9",
+      "bytes": 192,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/issue-monitor.json",
+      "sha256": "f20c98d14dd97d1bef9c15b79879d493485f4f4f890b2ff10c4fd6c71d3d5068",
+      "bytes": 1794,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/negative-input-private.json",
+      "sha256": "d7bda05dc2ffed5cf2dc3d6d12b014aded32088157700301acb312c75facd5b3",
+      "bytes": 43510,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-after-close-private.json",
+      "sha256": "fece79d0ab8b143787aa383cf4110e4f6c98c5aa46627ce4dddde6ff62f020c6",
+      "bytes": 300961,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-before-close-private.json",
+      "sha256": "18ee5b5fb0c185649712f6a0468125ae0f172a2535ab95c0708e45eacb6080b3",
+      "bytes": 306580,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-before-private.json",
+      "sha256": "abc134e439a5ca01e4c85e46bbd4b4352c23739919662b6215f818407f74a266",
+      "bytes": 295372,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-close-intent.json",
+      "sha256": "8ce19f72570aaa67c97c9fd408aea3c5e1d2f88d9cbe0e3d0eb916c7356f68fe",
+      "bytes": 647,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-closure.json",
+      "sha256": "b1819ec17c0ca39511900f818fa96fbc664c883c24357cddc7db158ee0143728",
+      "bytes": 1324,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-create-intent.json",
+      "sha256": "70edf9bf8046e9caf78191a6a2dad6e061b0a0ad04e255b9c0095ac1c927e47c",
+      "bytes": 744,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-created-private.json",
+      "sha256": "750572ef3d6bc3b0a9a761f864605d79cc2746cac8771fab54f4b0ae7da62b8e",
+      "bytes": 601914,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-history.json",
+      "sha256": "c2a1feb6e1bede7cb6ec2a2af2de051e83ec6b9212eca468f76b9372bfe34aff",
+      "bytes": 480,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-prepared.json",
+      "sha256": "c7ed93d24e76cd0258cb0023b1dc923d7e6a81fe64498801cc57ab7269ae772b",
+      "bytes": 8374,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pair-ready.json",
+      "sha256": "d8773e20fb8c10715bc0eeae51e676a1939e17d04d44da30c2cb0efcb22b7f67",
+      "bytes": 237,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/pre-create-identity-memory.json",
+      "sha256": "afda0d815fb24cd5c9884c4fed26cf655b67825f0c2413328967695a2f01433a",
+      "bytes": 438,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/prepare-attempt.json",
+      "sha256": "fb283e9f995f046e63f745f9e8071e3690b95599fa40ebf0285847e2e8ceb052",
+      "bytes": 231,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/prepare-monitor.json",
+      "sha256": "f9250b347ba37eabd49670c9608c6dff94ad9020e904b4dff66fae38cbaca8ca",
+      "bytes": 391,
+      "rawContentIncluded": false
+    },
+    {
+      "path": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy/reviewed-root-descriptor.json",
+      "sha256": "c7b620e7e777dcd2433d432c3e6bb012be0652502fcee6a64154b59c478a36c7",
+      "bytes": 9150,
+      "rawContentIncluded": false
+    }
+  ],
+  "preExecutionPathFailure": {
+    "path": "/private/tmp/yumidang-auth-pair-preexecution-failure-20261018.json",
+    "sha256": "bcf4d1a89ad824e6475b8b2bc11c562b792fef803881e9452a132603f756cdf9",
+    "actualAuthDockerMutationCalls": 0,
+    "oldAttemptArtifactsRetained": true,
+    "fixedBy": "9676cb85736435d742e91283d1c30cff1bd8e609",
+    "guardNotWeakened": true
+  },
+  "localCommitException": {
+    "approvedPaths": [
+      "tools/local/prepare_database.py",
+      "tools/local/prepare_auth_negative.py",
+      "tests/database/minkyu/test_auth_negative_preparation.py"
+    ],
+    "commits": [
+      "794648fae0b28a28ae9f558342c74d684dcc9e68",
+      "9676cb85736435d742e91283d1c30cff1bd8e609"
+    ],
+    "push": "NOT_RUN"
+  }
+}

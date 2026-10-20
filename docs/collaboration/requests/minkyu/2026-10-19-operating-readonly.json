@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-19",
+  "wbs": [
+    "4.1",
+    "7.1"
+  ],
+  "projectId": "bndguguarijmghnkenvt",
+  "scope": "EXISTING_PROJECT_IDENTITY_AND_MIGRATION_METADATA_READ_ONLY",
+  "attempts": [
+    {
+      "tool": "supabase_get_project",
+      "outcome": "PERMISSION_DENIED",
+      "message": "MCP error -32600: You do not have permission to perform this action"
+    },
+    {
+      "tool": "supabase_list_migrations",
+      "outcome": "PERMISSION_DENIED",
+      "message": "MCP error -32600: You do not have permission to perform this action"
+    }
+  ],
+  "currentProjectStatus": "NOT_VERIFIED",
+  "currentMigrationCount": null,
+  "operatingWrites": 0,
+  "userRowsRead": 0,
+  "storageBytesRead": 0,
+  "credentialsRead": 0,
+  "permissionBypass": false,
+  "historicalEvidence": "2026-10-12-operating-catalog-proof.json",
+  "historicalCountsAreCurrent": false,
+  "nextAction": "소유자가 민규 Supabase 계정을 적정 역할로 초대하고 민규가 수락 후 연결을 갱신한다. 연결 전 독립 구현 계속.",
+  "projectDiscovery": {
+    "tool": "supabase_list_projects",
+    "outcome": "SUCCESS",
+    "targetProjectVisible": false,
+    "unrelatedProjectsInspected": false
+  },
+  "userClarification": "운영 프로젝트가 등록된 계정은 민규 본인 계정이 아님",
+  "latestTargetMetadataRecheck": {
+    "capturedAt": "2026-10-19T14:38:08.827633+00:00",
+    "projectId": "bndguguarijmghnkenvt",
+    "operation": "get_project",
+    "status": "PERMISSION_DENIED",
+    "sqlCalls": 0,
+    "memberRowsRead": 0,
+    "writes": 0,
+    "ownerInviteAndReconnectConfirmed": false
+  }
+}

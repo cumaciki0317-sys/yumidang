@@ -1,0 +1,358 @@
+{
+  "version": 1,
+  "captured_at": "2026-10-19T13:36:38.294838+00:00",
+  "actor": "minkyu",
+  "branch": "minkyu/wbs-backend-20261017",
+  "sourceHead": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+  "scope": "민규44개 전체 진행 중 현재 소스의 새 로컬 Auth·검색 실제 검증 증거",
+  "projectProgress": "79%(22/28) unchanged",
+  "sourceInventory": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-19-source-manifest.json",
+    "sha256": "53d068dd7bcb16b1599f45aed55790bb17efd294471a8de31670e0423f01a694"
+  },
+  "freshSource": {
+    "root": "/private/tmp/yumidang-positive-source-20261019-a001",
+    "database": {
+      "id": "3ac3be0fc370bf9a6e0fb9386ee6564ca610c14cc55dbd2c1c3984b9273c3709",
+      "preparedRoot": "/private/tmp/yumidang-positive-source-20261019-a001",
+      "project": "jonghyun-backend100-d019a001"
+    },
+    "start": {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a001/root-start-receipt.json",
+      "sha256": "1bb21dbbe976cec29ef52b9de859a9fffb3c655c386360c7afa1df75a77acebb"
+    },
+    "configure": {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a001/root-configure-receipt.json",
+      "sha256": "7a93b2d118f060b41b18080c7f300c5461e6d27281a88d47db3e53d08584ab6c"
+    },
+    "originalAuth6": {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a001/root-provision-receipt.json",
+      "sha256": "8a59d99b38b69bc02bb420f28529f53f426c681e676abc7043f046d370cbe32c"
+    },
+    "originalAuth6ReceiptSha256": "f2d422a63baa8e95e4e41f136949ba44902d3f00556282afbe829af990fd2798",
+    "originalBindingSha256": "baf276eda786f3ec29fb5ef09eb02b2c4bc87e1675eccdb2bb4e0d2eaa6caa70"
+  },
+  "wbs5_2_5_3": {
+    "status": "PASS_ACTUAL_LOCAL_AUTH_HTTP_RPC_SYNTHETIC_MODEL",
+    "receipt": {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a001/signed-auth-6ecd9307e7af4c01891d13dc6b233ff8/positive-receipt.json",
+      "sha256": "44bf4a98065bf93dfbb604f8d8bf2d3222ef3f8b32328b99c228312c38c7ad6f"
+    },
+    "factoryProof": {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a001/signed-auth-6ecd9307e7af4c01891d13dc6b233ff8/positive-factory-proof.json",
+      "sha256": "315e686a95245cd871ac6c9c0943107ea87477f48d08dc6f1ca46d36480318d1"
+    },
+    "rootFinal": {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a001/root-positive-final.json",
+      "sha256": "aaf8fffdd51576b9285613d1dd8cbad22c97690c90bf9fe567e56ef6d064453e"
+    },
+    "cases": [
+      {
+        "case": "semantic",
+        "resultStatus": "results",
+        "cardCount": 2,
+        "viewerAuthReads": 1,
+        "modelCalls": 4,
+        "reservations": 4,
+        "settled": 4,
+        "searchPageCalls": 6
+      },
+      {
+        "case": "judgment_failure",
+        "resultStatus": "unavailable",
+        "cardCount": 0,
+        "viewerAuthReads": 1,
+        "modelCalls": 2,
+        "reservations": 2,
+        "settled": 2,
+        "searchPageCalls": 2
+      },
+      {
+        "case": "output_privacy",
+        "resultStatus": "unavailable",
+        "cardCount": 0,
+        "viewerAuthReads": 1,
+        "modelCalls": 1,
+        "reservations": 1,
+        "settled": 1,
+        "searchPageCalls": 0
+      },
+      {
+        "case": "recheck_change",
+        "resultStatus": "results",
+        "cardCount": 1,
+        "viewerAuthReads": 1,
+        "modelCalls": 4,
+        "reservations": 4,
+        "settled": 4,
+        "searchPageCalls": 6
+      }
+    ],
+    "authorTraitsMutationCount": 1,
+    "syntheticSettledUsage": 22,
+    "minimumAvailableKiB": 2092256,
+    "ownedChildClosed": true,
+    "fixtureCleanup": {
+      "baselineReservationsSha256": "3624796db2b293a7cd7ebf33cc87323917c2870f836bb17fd112d4ca4cc575ea",
+      "beforeSnapshotSha256": "1fd6e1ac3ec4f65968fc5dd7746f5c118000208f74264727b9ad3bcd8e1d3417",
+      "finalReservationsSha256": "bc22785fc00d5bec99a09ab04121c4ec5f6a45c0f302bd0df7be8dd256d3f952",
+      "finalSnapshotPath": "/private/tmp/yumidang-positive-source-20261019-a001/signed-auth-6ecd9307e7af4c01891d13dc6b233ff8/final-after-cleanup-private.json",
+      "finalSnapshotSha256": "4ce80ac26e11aaf0b2f4d59248830cd30aad8184458ee7c28cad019797c626c3",
+      "status": "PASS"
+    },
+    "originalRowsPreserved": {
+      "beforeSnapshotSha256": "1fd6e1ac3ec4f65968fc5dd7746f5c118000208f74264727b9ad3bcd8e1d3417",
+      "finalSnapshotSha256": "4ce80ac26e11aaf0b2f4d59248830cd30aad8184458ee7c28cad019797c626c3",
+      "status": "PASS"
+    },
+    "auth6RowsRetained": "PASS",
+    "budgetRowsRetained": "PASS",
+    "baselineRelationBags": 178,
+    "nonBudgetExactRelationBags": 173,
+    "freshBaselineUnknown": 0,
+    "afterPositiveUnknown": 0,
+    "originalUnknown2Restoration": "NOT_COVERED_BY_THIS_POSITIVE_RUN",
+    "modelScope": "SYNTHETIC_IN_MEMORY_ONLY",
+    "priorNegativeCasesReplayed": false,
+    "rawContentLogged": false,
+    "nativeExternalAttempts": 0,
+    "independentFileEvidenceReview": "PASS_NO_NEW_FINDING"
+  },
+  "wbs7_14": {
+    "status": "PRE_SEED_FAILURE_FIRST_WRITE_NOT_DISPATCHED",
+    "seedPlan": {
+      "path": "/private/tmp/yumidang-db121-20261019-a001/seed-plan/seed-plan.json",
+      "sha256": "2dfb29f3bc595cf5e1faf12fba006e1515c66e578fbb8a31f5b51eb9868e0014"
+    },
+    "actualDatabaseRestore": "NOT_RUN",
+    "fullRestore": false,
+    "storageMissingOriginals": 39,
+    "firstAttempt": {
+      "receipt": {
+        "path": "/private/tmp/yumidang-db121-20261019-a001/seed-execution/seed-executor-receipt.json",
+        "sha256": "251b384cf91b2c0217d2414eac7330ae65f6575e8139200343997a51da02d16e"
+      },
+      "status": "UNKNOWN_NO_REPLAY_NOT_BOUND",
+      "seedStarted": false,
+      "seedExitCode": null,
+      "readOnlyChildClosed": true,
+      "full178BeforeFinalExact": true,
+      "originalIntentPreserved": true,
+      "continuation": "SEPARATE_FIRST_DISPATCH_AUTHORITY_UNDER_REVIEW"
+    },
+    "continuationAttempt": {
+      "path": "/private/tmp/yumidang-db121-20261019-a001/first-seed-dispatch/seed-continuation-receipt.json",
+      "sha256": "ac94bbdf754dbe4c5c82587a171aaefb810a2e4f97dbd0c9363f47fd14e5b862",
+      "status": "UNKNOWN_NO_REPLAY_NOT_BOUND",
+      "seedStarted": false,
+      "commands": 0,
+      "reason": "ROOT_SANDBOX_PERMISSION_OMITTED_MEMORY_PROBE_DENIED",
+      "replay": false
+    }
+  },
+  "notRun": [
+    "실제네이버 OAuth",
+    "실회원",
+    "외부모델 공급사 품질·실비용",
+    "운영쓰기·배포",
+    "AI24 자연자정",
+    "Storage 전체복원"
+  ],
+  "closure": "A001_OWN4_NORMAL_CLOSE_PASS",
+  "whole44Complete": false,
+  "nextFreshSource": "NOT_PREPARED: review /me candidates and required exact local-commit exception before finalHEAD newsource; sourcea002 stopped and retained",
+  "a002": {
+    "root": "/private/tmp/yumidang-positive-source-20261019-a002",
+    "databaseId": "7280d4dd851338a236fd0fd31811a1ab3fbe88865ab49e41e0dd2b3814ef9531",
+    "configure121": "PASS",
+    "originalAuth6": "PASS",
+    "positive": {
+      "status": "PASS_ACTUAL_LOCAL_AUTH_HTTP_RPC_SYNTHETIC_MODEL",
+      "rootReceipt": {
+        "path": "/private/tmp/yumidang-positive-source-20261019-a002/root-positive-receipt.json",
+        "sha256": "4e7d74de9f0ba335c26523d76e452966fc91b6f8c25a61d4abc523c405b5ad31"
+      },
+      "receipt": {
+        "path": "/private/tmp/yumidang-positive-source-20261019-a002/signed-auth-315769d6cfb4420cbbd421ea1e06406d/positive-receipt.json",
+        "sha256": "764cfd0ae581beab3811d0614fc1bfef7dacc1c32e05e5bb71e9d15935dcb233"
+      },
+      "cleanup": "PASS",
+      "ownedChildClosed": true
+    },
+    "searchSql": {
+      "status": "PASS_CURRENT_PUBLIC_SEARCH_ROLLBACK_ONLY",
+      "receipt": {
+        "path": "/private/tmp/yumidang-db121-20261019-a002/search-sql-execution/current-public-search-receipt.json",
+        "sha256": "1d6649c17bc8a6e4295238c5b2c6f3e9f0d1a33468d93e98ea8d6378dce81e2d"
+      },
+      "markers": 9,
+      "full178AndAuthorityPreserved": true,
+      "allFixturesRolledBack": true,
+      "minimumAvailableKiB": 2117124,
+      "sequenceState": "NOT_VERIFIED",
+      "modelCalls": 0,
+      "providerCalls": 0,
+      "sourceUnknownCountNote": "source descriptor의 unknownCount2는 복원 seed 예정값이며 현재 관측값으로 사용하지 않는다"
+    },
+    "seed": {
+      "status": "PASS_SINGLE_SEED_ONLY",
+      "receipt": {
+        "path": "/private/tmp/yumidang-db121-20261019-a002/seed-execution/seed-executor-receipt.json",
+        "sha256": "a70f5fa2e41b00abc59bce48406810c183f9110c8b2df2fb3e509e104de22d3a"
+      },
+      "bundle": {
+        "path": "/private/tmp/yumidang-db121-20261019-a002/seed-execution/seed-execution-bundle.json",
+        "sha256": "646997cc7f595a4bbac728d55a68d9cd680c6bf6f4ce5bf2b0a464e08e898fc7"
+      },
+      "unknownOrigin": "SYNTHETIC_DB_SEED_NOT_PRODUCT_TRANSMISSION",
+      "unknownCount": 2,
+      "sequence": [
+        41,
+        true
+      ],
+      "singleWrite": true,
+      "oldRowsPreserved": true,
+      "minimumAvailableKiB": 2094144
+    },
+    "restore": {
+      "status": "FAIL_CLOSED",
+      "ownedTargetId": null,
+      "sourceUnchanged": true,
+      "existingMetadataPreserved": true,
+      "ownChildProcessesClosed": true,
+      "minimumAvailableKiB": 2064956,
+      "reason": "DATABASE_LOCALE_UNSUPPORTED_ICU_SOURCE",
+      "replay": false
+    },
+    "closure": {
+      "path": "/private/tmp/yumidang-source4-failure-closure-20261020/execution-a002/closure-receipt.json",
+      "sha256": "1f9be22040e99e531ecd1f439843e9eba4931622aac6ae8a47a59e8a94bb71d5"
+    },
+    "capture": {
+      "status": "SOURCE_CAPTURED_NOT_RESTORED",
+      "receipt": {
+        "path": "/private/tmp/yumidang-db121-20261019-a002/capture-execution/capture-receipt.json",
+        "sha256": "a3ccf9b749d3ea2d0c70779b89e0b720df5361ac4f5452cf57e5a21d908fd7c8"
+      },
+      "finalization": {
+        "path": "/private/tmp/yumidang-db121-20261019-a002/capture-execution/capture-finalization.json",
+        "sha256": "b541cbe2a76fb5b5d1188bc19ed45186e63e6afeef1901b14f40b5df80ddd0cf"
+      },
+      "sourceUnchanged": true,
+      "completePacket": true,
+      "ownChildProcessesClosed": true,
+      "minimumAvailableKiB": 2077688,
+      "fullRestore": false
+    },
+    "closure_previous_snapshot": "OWN4_RUNNING"
+  },
+  "latest_b003": {
+    "updated_at": "2026-10-19T15:15:05.886760+00:00",
+    "state": "RESTORE_FAIL_CLOSED_EXACT_TARGET_CLEANUP_PASS",
+    "session": null,
+    "approved_graph_sha256": "0420d6b08676a4382866b8af98068c8a22302a669525cc89697eb9be949c500c",
+    "core_sha256": "488fb1b2cad07a0a78fd01aab5fa3273834df8921d755d205be6711a978931b5",
+    "regression": "47 PASS",
+    "independent_review": "PASS",
+    "fresh_packet_required": true,
+    "restore_actual": "FAIL_CLOSED",
+    "previous_b002": "FAIL_CLOSED before target creation; immutable packet and reservation preserved",
+    "source": "a002 unchanged; synthetic UNKNOWN2 preserved; no replay/reseed",
+    "fullRestore": false,
+    "storage39": "UNRESOLVED",
+    "capture_receipt": {
+      "path": "/private/tmp/yumidang-db121-20261019-b003/capture-execution/capture-receipt.json",
+      "sha256": "329e726a8e8f11da08af38b4f71823c75097e75bcd0b314abbeae63f00c98509"
+    },
+    "capture_summary": {
+      "sourceUnchanged": true,
+      "completePacket6": true,
+      "allChildClosed": true,
+      "commands1659AllExit0": true,
+      "minimumAvailableKiB": 2084472
+    },
+    "restore_graph_sha256": "2945c5c96295b12ca24f9768dd6b1e6266f107571f76c3b061d1caadfe6b7027",
+    "ownedTargetId": "5149bc31d50ae33322bfd3e46319f8553cf89db5f575c68baa0742f46257bba3",
+    "restore_receipt": {
+      "path": "/private/tmp/yumidang-db121-20261019-b003/restore-execution/restore-receipt.json",
+      "sha256": "5e8397bbef87fbad37b1a468535939c231ff236c065b3d422b9112e98fd3abcf"
+    },
+    "failureCode": "TARGET_CONFIGURATION_CHANGED",
+    "sourceUnchanged": true,
+    "existingMetadataPreserved": true,
+    "restoreWriteSent": false,
+    "remainingIds": [],
+    "observedExactDelta": "HostConfig.OomKillDisable false→null; reverse yields exact original full SHA; Config unchanged",
+    "cleanup_script_sha256": "1df8c7d917488e921b6b5c4d18f73b4a8d108367c0f30af505696f0fd14465f3",
+    "cleanup_receipt": {
+      "path": "/private/tmp/yumidang-b003-cleanup-review-20261020/execution/cleanup-receipt.json",
+      "sha256": "951c242f03763a0c924a12e19621fad6f1689af35ac8c81780742954b8445f6a"
+    },
+    "cleanup_summary": {
+      "ownTargetStopped": true,
+      "stopAttempts": 1,
+      "resends": 0,
+      "otherStop": 0,
+      "sourceMutation": false,
+      "removed": false,
+      "minimumAvailableKiB": 2125208,
+      "metadataCommands32AllExit0Closed": true,
+      "stopGroupClosed": true
+    },
+    "next": "strict new-target runtime transition fix; next source/guard authority must explicitly preserve stopped b003"
+  },
+  "source_manifest_v2": "2026-10-19-source-manifest-v2.json",
+  "target_tool_current": {
+    "coreSha256": "015f5692666c7f690029da7871769cc794e1860c2fad742d26dc6322a573f66c",
+    "testSha256": "8aa75847d5ace36c4396fe4a113173244c80bcc397692802e1932e56c990dfe9",
+    "regression": "61 PASS",
+    "independentReview": "PASS; future consumers must verify all config/start proof",
+    "receipt": {
+      "path": "/private/tmp/yumidang-db121-target-incarnation-20261020/receipt.json",
+      "sha256": "14dd17f1ec535a85b1549316ad721942749d1606f71e51b8bface525f1307d85"
+    },
+    "actualNewCode": "new target transition/incarnation branches NOT_RUN; current core read/guard helpers used by shutdown",
+    "sourceAndExistingGuard": "UNCHANGED"
+  },
+  "source_manifest_current": "2026-10-20-source-manifest.json",
+  "a002_source4_shutdown": {
+    "status": "PASS_SHUTDOWN_ONLY",
+    "session": null,
+    "output": "/private/tmp/yumidang-source4-failure-closure-20261020/execution-a002",
+    "driverSha256": "cc7079394bdddb09b29a08acb54acfeecd3c809a811469deb14bc529fdbe3b39",
+    "rootReview": {
+      "path": "/private/tmp/yumidang-a002-failure-closure-inputs-20261020/root-execution-review.json",
+      "sha256": "3f77b94a0c45a7370ce79a9a02e26d21e58286462662c0740a81d8f3be9fce84"
+    },
+    "fakes18": "PASS",
+    "independentReview": "PASS",
+    "stopOnlyOwn4": true,
+    "protectStoppedB003": true,
+    "sqlWrites": false,
+    "historicalRestoreSuccess": false,
+    "actualFinal": "VERIFIED_FROM_SAVED_RECEIPT",
+    "sourceThreeOldStartupIdentity": "NOT_PROVEN; current observation pinned",
+    "receipt": {
+      "path": "/private/tmp/yumidang-source4-failure-closure-20261020/execution-a002/closure-receipt.json",
+      "sha256": "1f9be22040e99e531ecd1f439843e9eba4931622aac6ae8a47a59e8a94bb71d5"
+    },
+    "own4StoppedExit0": true,
+    "remainingIds": [],
+    "oldMetadataAndStoppedB003Preserved": true,
+    "full178PostSeedExact": true,
+    "authorityConstraintsCatalogExact": true,
+    "unknown2Preserved": true,
+    "sequence": [
+      41,
+      true
+    ],
+    "minimumAvailableKiB": 2091616,
+    "commands376AllExit0Closed": true,
+    "rootWrapper": {
+      "exitCode": 1,
+      "error": "KeyError historicalRestoreStatus in final display after successful run returned",
+      "actualReplay": false,
+      "savedReceiptStatus": "PASS_SHUTDOWN_ONLY"
+    }
+  }
+}

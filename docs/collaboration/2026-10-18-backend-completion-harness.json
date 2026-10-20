@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "actor": "minkyu",
+  "status": "COMPLETE_REQUESTED_PLAN_SCOPE_WITH_VERIFICATION_LIMIT",
+  "objective": "민규 담당 즉시 실행 계획 1~4 및 검증·협업·완료 보고 기준 전체 완료",
+  "startedAt": "2026-10-18T01:12:31.290083+00:00",
+  "workspace": "/private/tmp/yumidang-minkyu-wbs-20261017",
+  "branch": "minkyu/wbs-backend-20261017",
+  "baseRuntimeHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+  "priorTurnClassification": "NO_PROGRESS_STATUS_ONLY",
+  "scopeBoundaries": {
+    "actualAI24Midnight": "EXCLUDED",
+    "realMembers": "HOLD",
+    "providerOriginalTransmission": "HOLD",
+    "operatingWritesDeployment": "EXCLUDED",
+    "commitPush": "LOCAL_COMMIT_APPROVAL_PRIOR_FIVE_AND_CURRENT_EXACT_THREE_ONLY_PUSH_EXCLUDED",
+    "storage39Recovery": "EXCLUDED_EXTERNAL_INPUT_REQUIRED"
+  },
+  "baselineProgress": {
+    "percent": 79,
+    "done": 22,
+    "total": 28
+  },
+  "team": {
+    "root": {
+      "role": "요구사항 통합·실행조율·검증/최종감사",
+      "editingPaths": [
+        "docs/collaboration/2026-10-18-backend-completion-harness.json",
+        "docs/collaboration/requests/minkyu/2026-10-18-plan-completion.md",
+        "tools/local/verify_restoration_readiness.py",
+        "tests/database/minkyu/test_restoration_readiness.py",
+        "tools/local/prepare_database.py",
+        "tools/local/prepare_auth_negative.py",
+        "tests/database/minkyu/test_auth_negative_preparation.py",
+        "docs/collaboration/requests/minkyu/2026-10-18-source-manifest.json",
+        "docs/collaboration/requests/minkyu/2026-10-18-runtime-evidence.json"
+      ]
+    },
+    "notion_tasks": {
+      "role": "현재 소스774 manifest와 최종 요구사항 읽기감사",
+      "editingPaths": [
+        "/private/tmp/20261018-plan-completion-audit-notion.json",
+        "/private/tmp/20261018-plan-completion-audit-after-restoration.json",
+        "/private/tmp/20261018-source-manifest-final-candidate.json",
+        "/private/tmp/20261018-plan-completion-final-audit.json"
+      ]
+    },
+    "role_audit": {
+      "role": "익명·다른Auth문맥 전용 도구 private 후보 구현·회귀",
+      "editingPaths": [
+        "/private/tmp/20261018-auth-negative-completion-audit.json",
+        "PRIVATE_CANDIDATE/tools/local/prepare_auth_negative.py",
+        "PRIVATE_CANDIDATE/tools/local/prepare_database.py",
+        "PRIVATE_CANDIDATE/tests/database/minkyu/test_auth_negative_preparation.py"
+      ],
+      "status": "PRIVATE_V2_FROZEN"
+    },
+    "ownership_review": {
+      "role": "실제거절·정리 원증거 최종 독립감사",
+      "editingPaths": [
+        "/private/tmp/20261018-auth-pair-create-evidence-audit.json",
+        "/private/tmp/20261018-auth-pair-issue-evidence-audit.json",
+        "/private/tmp/20261018-auth-pair-final-evidence-audit.json"
+      ],
+      "status": "FINAL_AUDIT_FROZEN"
+    }
+  },
+  "singleEditor": true,
+  "sourceFrozenUntilBaselineComplete": false,
+  "verifiedBaselineProcess": {
+    "toolSessionId": 98246,
+    "root": "/private/tmp/yumidang-plan-baseline-20261018",
+    "status": "COMPLETED_PASS",
+    "receiptPath": "/private/tmp/yumidang-plan-baseline-20261018/receipt.json",
+    "receiptSha256": "e78f4aa2351654b02583d38ffa9e1b4125ee324304eef67352fdadd45381bc4c",
+    "suites": 8,
+    "tests": 472,
+    "sourcePreserved": true
+  },
+  "remainingOriginalPlanRequirements": [],
+  "ai24Preparation": {
+    "offline": "DONE",
+    "live": "NOT_READY",
+    "actualMidnight": "EXCLUDED_NOT_RUN",
+    "auditSha256": "dc113ada15838fd26df30fd8dff04edf1afa5d15cd76f2a6affe0a3883dec62c",
+    "currentDependencyRecheck": "PASS_57_PLUS_33_AFTER_SHARED_PREPARE_DATABASE_CHANGE"
+  },
+  "restorationPreparation": {
+    "status": "PREPARATION_VERIFIED_WITH_HOLDS",
+    "tests": 25,
+    "receiptPath": "/private/tmp/yumidang-restoration-applied-20261018/receipt.json",
+    "receiptSha256": "409f0857d6a933e08b594fcc43fdfc725202ce139902b1e75bdbc191eb55449e",
+    "fullRestore": "NOT_RUN",
+    "historicalMissingInputs": 18,
+    "missingStorageOriginals": 39
+  },
+  "latestRequirementAudit": {
+    "path": "/private/tmp/20261018-plan-completion-final-audit.json",
+    "sha256": "1caa2c507791f7478afe1dffa703a6c61b968603406515fb2abad681d45afc94",
+    "counts": {
+      "DONE": 36,
+      "WEAK": 1,
+      "EXCLUDED": 4,
+      "MISSING": 0
+    },
+    "newRequiredActions": [],
+    "verificationLimit": "최초 미추적 파일의 사전 바이트 증거 부재. 소급하여 바이트 보존을 주장하지 않는다."
+  },
+  "authNegativeLocalCommits": {
+    "approvedPaths": [
+      "tools/local/prepare_database.py",
+      "tools/local/prepare_auth_negative.py",
+      "tests/database/minkyu/test_auth_negative_preparation.py"
+    ],
+    "commits": [
+      "794648fae0b28a28ae9f558342c74d684dcc9e68",
+      "9676cb85736435d742e91283d1c30cff1bd8e609"
+    ],
+    "pushed": false
+  },
+  "activeActualAuthRun": {
+    "root": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-auth-pair-v2-20261018-dvmg4aoy",
+    "sourceHead": "9676cb85736435d742e91283d1c30cff1bd8e609",
+    "sourcePins": 60,
+    "capsuleFiles": 51,
+    "prepare": "PASS",
+    "preCreateAvailableKiB": 2433148,
+    "create": "PASS",
+    "createSession": 9848,
+    "issue": "PASS",
+    "dispatch": "PASS",
+    "close": "PASS_OWN_CREATED_STOPPED_EXISTING_METADATA_PRESERVED",
+    "createdContainers": 8,
+    "createdNetworks": 2,
+    "createdVolumes": 2,
+    "createMinimumKiB": 1959116,
+    "issueSession": 69788,
+    "issueMinimumKiB": 1904324,
+    "dispatchSession": 18704,
+    "dispatchMinimumKiB": 1918000,
+    "closeSession": 20456
+  },
+  "sourceFrozenDuringActualRun": false,
+  "currentSourceManifest": {
+    "path": "/private/tmp/20261018-source-manifest-final-candidate.json",
+    "sha256": "2b799c17602991c625722921e334bfe2cd37902f0ae5390bff0480c193f50e13",
+    "files": 774,
+    "sourceFilesSha256": "74b079f1d2fc7c8a877f18c968305cdaa573baff1aafe33d5d52f604029ead17",
+    "actualProductFunctionsUnchanged": 187
+  },
+  "createIndependentAudit": {
+    "path": "/private/tmp/20261018-auth-pair-create-evidence-audit.json",
+    "sha256": "2fa2387df9bf12dc17fe79d1e991f7891e663cded4e7608ac567a7d426859d49",
+    "checks": 426,
+    "failures": 0,
+    "existingStoredBytes": "NOT_VERIFIED"
+  },
+  "actualFinalAudit": {
+    "path": "/private/tmp/20261018-auth-pair-final-evidence-audit.json",
+    "sha256": "9bf99258a5845a03caa528011064a7ba5a7a57fd633dec65be26903799c6a761",
+    "checks": 317,
+    "failures": 0
+  },
+  "runtimeEvidence": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-18-runtime-evidence.json",
+    "sha256": "8fa886a56a0c89eeea8e9d359a5bb66f67c0a78ff4f467baed788b04dcfa0305"
+  }
+}

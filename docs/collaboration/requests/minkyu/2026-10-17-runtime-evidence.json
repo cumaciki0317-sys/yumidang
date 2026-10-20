@@ -1,0 +1,834 @@
+{
+  "version": 1,
+  "capturedAt": "2026-10-17T15:17:48.382625+00:00",
+  "actor": "minkyu",
+  "sourceRuntimeHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+  "baselineProgress": "79%(22/28) unchanged",
+  "rawTokensOrCredentialsIncluded": false,
+  "actualAi24Midnight": "NOT_RUN",
+  "operatingChanged": false,
+  "runs": {
+    "d017a001": {
+      "privateRoot": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-wbs-20261017-live-olhyjpj6",
+      "evidence": [
+        {
+          "file": "startup-result.json",
+          "sha256": "93634d34a04811eb75ac9c24a52b676274720e77e985781114262d66973937cc",
+          "bytes": 331,
+          "summary": {
+            "createdContainers": 0,
+            "status": "FAILED_STARTUP",
+            "createdNetworks": 0,
+            "createdVolumes": 0,
+            "initialMemoryKiB": 2454076,
+            "exitCode": 1
+          }
+        },
+        {
+          "file": "subnet-readiness.json",
+          "sha256": "752048795b4e33b8155ce0e2c5c01c15a4204478192ddec407d1531fed1bcc48",
+          "bytes": 69,
+          "summary": {}
+        }
+      ]
+    },
+    "d017a002": {
+      "privateRoot": "/private/var/folders/tp/_t18zyx52jn7sb6bg_9tjczc0000gn/T/yumidang-wbs-20261017-live2-fkn2x5ft",
+      "evidence": [
+        {
+          "file": "ai-signed-observer-1792244158908211000.json",
+          "sha256": "fd95b4dc525c99efc4b7abf31977286bd8dedd7730e1183f5596de5cfbcdc3be",
+          "bytes": 2621,
+          "summary": {
+            "sourceSha256": "28bdda382658e5117d6bb02ad536040fb23b5001f916cf98fbf0baa9f4aad414",
+            "mode": "ai-signed",
+            "status": "FAIL",
+            "observerFailure": "OBSERVER_FIXED_FAILURE",
+            "publicLogSha256": "03a366f70c0179594244bf241827fe5a19ae5087a338b7e01fa5b297171e92f5",
+            "childExitCode": 1,
+            "naturalMidnight": "NOT_RUN"
+          }
+        },
+        {
+          "file": "auth-provision-a4d4b8a88e3046198fdc2fc460c0b744/receipt.json",
+          "sha256": "78d070d46a64b1fb33c00aba9f5d6b158b51ff9d7f16d50023ce9f7692052064",
+          "bytes": 854,
+          "summary": {
+            "actualAI22AI23AI24": "NOT_RUN",
+            "status": "PASS_LOCAL_AUTH6_PROVISION_ONLY",
+            "actualNaver": "NOT_RUN",
+            "scopeId": "a4d4b8a88e3046198fdc2fc460c0b744",
+            "actualGoTrueAndDatabaseSessions": true,
+            "finalSha256": "0b7afe2d04f08464adf22d34a39f6ee25fd79ca36900c2dddfd7a86934278736",
+            "accounts": 6,
+            "originalRowsPreserved": true,
+            "authAccountsRetained": true,
+            "baselineSha256": "b16da1be097d86eda53237d00e10cd2c48e0ad28baa76c630b543149a2d010ad",
+            "bindingSha256": "648a77201e3cf5d13a747d9445b884d87acf0257da6edc92b4e4c8da17200a57"
+          }
+        },
+        {
+          "file": "auth6-driver-result.json",
+          "sha256": "78d070d46a64b1fb33c00aba9f5d6b158b51ff9d7f16d50023ce9f7692052064",
+          "bytes": 854,
+          "summary": {
+            "actualAI22AI23AI24": "NOT_RUN",
+            "status": "PASS_LOCAL_AUTH6_PROVISION_ONLY",
+            "actualNaver": "NOT_RUN",
+            "scopeId": "a4d4b8a88e3046198fdc2fc460c0b744",
+            "actualGoTrueAndDatabaseSessions": true,
+            "finalSha256": "0b7afe2d04f08464adf22d34a39f6ee25fd79ca36900c2dddfd7a86934278736",
+            "accounts": 6,
+            "originalRowsPreserved": true,
+            "authAccountsRetained": true,
+            "baselineSha256": "b16da1be097d86eda53237d00e10cd2c48e0ad28baa76c630b543149a2d010ad",
+            "bindingSha256": "648a77201e3cf5d13a747d9445b884d87acf0257da6edc92b4e4c8da17200a57"
+          }
+        },
+        {
+          "file": "before-stop-synthetic-state.json",
+          "sha256": "c8fea64e5404a56971276ea2f0067fc86b11a2e91033897e8ced28211f7d5e3b",
+          "bytes": 137,
+          "summary": {
+            "cron": "off",
+            "unknownReservations": 2,
+            "pendingReservations": 2,
+            "externalGuard": false,
+            "authUsers": 6,
+            "profiles": 6,
+            "requests": 0
+          }
+        },
+        {
+          "file": "current-ai-sql-result.json",
+          "sha256": "b49bfbcc13f9a9d4d87633b9f3aa289c4c6571f43355236846de2b913a76ffcc",
+          "bytes": 544,
+          "summary": {
+            "cron": "OFF",
+            "status": "PASS_ISOLATED_CURRENT_AI_SQL_ONLY",
+            "checks": [
+              "ai_atomic_requests",
+              "ai_account_budget",
+              "ai_account_scopes",
+              "current_summary_fences",
+              "current_summary_invocation",
+              "ai_result_state",
+              "operator_receipts_retirement"
+            ],
+            "externalGuard": "CLOSED",
+            "sourceHead": "37921cf",
+            "migrationCount": 121
+          }
+        },
+        {
+          "file": "fresh121-readiness.json",
+          "sha256": "7c0f2b33826aa5dee551f56d4d7888fec2cad3296d61edd3e5feb1d0a5234af5",
+          "bytes": 742,
+          "summary": {
+            "status": "PASS_FRESH_121_CLOSED_LOCAL_ONLY",
+            "controls": {
+              "ai_feedback_maintenance_control": false,
+              "ai_processing_guard": false,
+              "ai_report_handling_control": false,
+              "cancellation_due_control": false,
+              "content_inspection_control": false,
+              "cronLaunchActiveJobs": "off",
+              "event_collection_control": false,
+              "member_cleanup_guard": false,
+              "member_retirement_receipt_control": false,
+              "report_purge_control": false,
+              "worker_intent_confirmation_control": false,
+              "worker_invocation_control": false,
+              "worker_runtime_atomic_control": false,
+              "worker_runtime_journal_control": false
+            },
+            "migrationCount": 121
+          }
+        },
+        {
+          "file": "own4-closure.json",
+          "sha256": "96eb918ef9db51c0b73edd40bad482945b077fd40a7c252f8aacd5c2dddc51b1",
+          "bytes": 954,
+          "summary": {
+            "ownDataVolumesRetained": true,
+            "status": "PASS_OWN4_STOPPED_EXISTING_METADATA_PRESERVED",
+            "existingStoredBytes": "NOT_VERIFIED",
+            "vmStopped": false,
+            "unknownReservationsRetained": 2,
+            "containers": [
+              {
+                "exitCode": 0,
+                "id": "a060a15ccff27eaebcc91bdd56bb83925a635caf80206fb0225e3d83bf0ae04c",
+                "name": "supabase_rest_jonghyun-backend100-d017a002",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "5cffc863ed85cb923ba27984c7ba5772eeb78fb08ce11135a8a0627b58ae9b57",
+                "name": "supabase_auth_jonghyun-backend100-d017a002",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "e2ea62ece1bde9c0e56a3573111ef3afb4ea126d625323841f7d668ece6063f2",
+                "name": "supabase_kong_jonghyun-backend100-d017a002",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "a54bc242cb7d444e70f586d2a2730ab02ff5e769347e371f918242fb65853e1c",
+                "name": "supabase_db_jonghyun-backend100-d017a002",
+                "oomKilled": false,
+                "stopped": true
+              }
+            ],
+            "ownNetworkRetained": true
+          }
+        },
+        {
+          "file": "signed-ai-root-review.json",
+          "sha256": "ec57573a7e903d977fbc9d65fc79295d133a9618ed338737b9307f743b3d7811",
+          "bytes": 325,
+          "summary": {
+            "reviewedBindingSha256": "cb6c051e44fab104eb7bd70cd26124741d585f8a04e4d751257aa06906df235a",
+            "scope": "LOCAL_AUTH_HTTP_RPC_SYNTHETIC_MODEL_ONLY",
+            "externalProvider": "NOT_RUN",
+            "naturalMidnight": "NOT_RUN",
+            "originalBindingSha256": "648a77201e3cf5d13a747d9445b884d87acf0257da6edc92b4e4c8da17200a57",
+            "sourceHead": "37921cf"
+          }
+        },
+        {
+          "file": "signed-auth-a4d4b8a88e3046198fdc2fc460c0b744/cleanup.json",
+          "sha256": "b5f4220f38271ca580e20f680e9342646dcf3ca5a2a622dcd4e6e7dd5093d063",
+          "bytes": 236,
+          "summary": {
+            "authLifecycleMutation": false,
+            "originalProtectedRowsPreserved": true,
+            "status": "PASS",
+            "protectedBudgetDelta": "COMMITTED_NOT_ROLLED_BACK",
+            "sequence": "NOT_VERIFIED",
+            "fixedFailureTypes": []
+          }
+        },
+        {
+          "file": "signed-auth-a4d4b8a88e3046198fdc2fc460c0b744/failure.json",
+          "sha256": "650513390695b8b8cb0c1b5bdd8dde6886d4b40024e7102d32e1fa4cd2d31fa5",
+          "bytes": 125,
+          "summary": {
+            "fixedCode": "SIGNED_OWN_PROCESS_TERMINATED",
+            "status": "FAIL",
+            "retryAllowed": false,
+            "scope": "SIGNED_LOCAL_AUTH_AI22_23"
+          }
+        },
+        {
+          "file": "startup-result.json",
+          "sha256": "7a3bb6b5cd5cf50ad457e9d7d448aded5d109e347751a8bfecf0112bce98834f",
+          "bytes": 325,
+          "summary": {
+            "createdContainers": 4,
+            "status": "STARTED",
+            "createdNetworks": 1,
+            "createdVolumes": 1,
+            "initialMemoryKiB": 2475524,
+            "exitCode": 0
+          }
+        }
+      ]
+    },
+    "d017a003": {
+      "privateRoot": "/private/tmp/yumidang-wbs-lifecycle-20261017-d017a003",
+      "evidence": [
+        {
+          "file": "auth-lifecycle-provision-b23d04e49b2044a5997eaf67bf2acece/failure-late.json",
+          "sha256": "159f89af5ec639d089cb0c1ca5829e51ad3f05fb4616199c263b8bdb559c81e1",
+          "bytes": 13004,
+          "summary": {
+            "actualLifecycle": "NOT_RUN",
+            "status": "FAIL_RETAINED_OWNED",
+            "code": "LCP_FAILED",
+            "noResend": true,
+            "baselineSha256": "ec1941ac7a3ef13a417d170b1dca94f9e9b25bd153dce12ba61d45aebdda924b"
+          }
+        },
+        {
+          "file": "before-stop-synthetic-state.json",
+          "sha256": "f7648f029654fba21945cfb70e320b1ed4560f2a7887d80720348ddcf2621db9",
+          "bytes": 137,
+          "summary": {
+            "cron": "off",
+            "unknownReservations": 0,
+            "pendingReservations": 0,
+            "externalGuard": false,
+            "authUsers": 1,
+            "profiles": 1,
+            "requests": 0
+          }
+        },
+        {
+          "file": "focused-natural-expiry/factory-outcome.json",
+          "sha256": "55a4a124cd2876b1f91205c3dd5d047400e7518f3215e0f5d9770a4fc9021ae8",
+          "bytes": 178,
+          "summary": {
+            "exitCode": 0
+          }
+        },
+        {
+          "file": "focused-natural-expiry/factory-proof.json",
+          "sha256": "11cce6e2a1456c153d3e2a686feba3c0bb3e0fcb76ca74760af4975f8988cb15",
+          "bytes": 298,
+          "summary": {
+            "actualAuthReads": 1,
+            "httpStatus": 401,
+            "nativeExternalAttempts": 0,
+            "status": "PASS",
+            "actualNaver": "NOT_RUN",
+            "case": "expiredBearer",
+            "providerCalls": 0,
+            "originalTokenSha256": "1556c9adf24024c1e031d899701b6050c7f6ce5d1dcb0a8209e7b2cf820a0e99",
+            "rpcCalls": 0,
+            "externalProvider": "NOT_RUN",
+            "authHttpStatus": 403
+          }
+        },
+        {
+          "file": "focused-natural-expiry/independent-monitor.json",
+          "sha256": "5b9dc19d1c4b5cbf3cec1f1cac0db7e659a02361a178f25106e544abe7fb7df9",
+          "bytes": 22847,
+          "summary": {
+            "status": "PASS",
+            "errors": [],
+            "sourceCapsuleAndNodeFinal": "PASS",
+            "minimumKiB": 2191896
+          }
+        },
+        {
+          "file": "focused-natural-expiry/normal-auth-proof.json",
+          "sha256": "5aa9df52303fa5d1f95c00036f333ca7d949bd10dc9f16d6ae47cc9df15976db",
+          "bytes": 190,
+          "summary": {
+            "actualAuthHttp": 200,
+            "status": "PASS",
+            "originalUserSessionMetadataVerified": true,
+            "observedBeforeExpiry": true,
+            "tokenSha256": "1556c9adf24024c1e031d899701b6050c7f6ce5d1dcb0a8209e7b2cf820a0e99"
+          }
+        },
+        {
+          "file": "focused-natural-expiry/receipt.json",
+          "sha256": "7e63177bd33f366950429e01921d4a94478a141c97c30b96f56f020de69bbe00",
+          "bytes": 8252,
+          "summary": {
+            "status": "PASS_ORIGINAL_NATURAL_EXPIRY_CASE_ONLY",
+            "sequence": "NOT_VERIFIED",
+            "fullLifecycleCoverage": "NOT_RUN",
+            "fullOriginalRowsAndAuthorityPreserved": true,
+            "scope": "INDEPENDENT_ORIGINAL_NATURAL_EXPIRY_CASE_ONLY",
+            "naturalMidnight": "NOT_RUN",
+            "fixedFailures": [],
+            "tokenSha256": "1556c9adf24024c1e031d899701b6050c7f6ce5d1dcb0a8209e7b2cf820a0e99",
+            "sourceHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+            "typedDispatch": "NOT_RUN",
+            "noReplay": true,
+            "physical": "NOT_VERIFIED",
+            "factoryProof": {
+              "actualAuthReads": 1,
+              "actualNaver": "NOT_RUN",
+              "authHttpStatus": 403,
+              "case": "expiredBearer",
+              "externalProvider": "NOT_RUN",
+              "httpStatus": 401,
+              "nativeExternalAttempts": 0,
+              "originalTokenSha256": "1556c9adf24024c1e031d899701b6050c7f6ce5d1dcb0a8209e7b2cf820a0e99",
+              "providerCalls": 0,
+              "rpcCalls": 0,
+              "status": "PASS"
+            }
+          }
+        },
+        {
+          "file": "fresh121-readiness.json",
+          "sha256": "7c0f2b33826aa5dee551f56d4d7888fec2cad3296d61edd3e5feb1d0a5234af5",
+          "bytes": 742,
+          "summary": {
+            "status": "PASS_FRESH_121_CLOSED_LOCAL_ONLY",
+            "controls": {
+              "ai_feedback_maintenance_control": false,
+              "ai_processing_guard": false,
+              "ai_report_handling_control": false,
+              "cancellation_due_control": false,
+              "content_inspection_control": false,
+              "cronLaunchActiveJobs": "off",
+              "event_collection_control": false,
+              "member_cleanup_guard": false,
+              "member_retirement_receipt_control": false,
+              "report_purge_control": false,
+              "worker_intent_confirmation_control": false,
+              "worker_invocation_control": false,
+              "worker_runtime_atomic_control": false,
+              "worker_runtime_journal_control": false
+            },
+            "migrationCount": 121
+          }
+        },
+        {
+          "file": "late-read-only-diagnosis.json",
+          "sha256": "343448556504da8a7f81afd0c33e90b52ca4ecb2b0d1dac39c1514873e3c916f",
+          "bytes": 1199,
+          "summary": {}
+        },
+        {
+          "file": "late-scheduler-result.json",
+          "sha256": "18044fe8a49b2991822261cb0fea3e86739712b99d902d5415dc7912705de159",
+          "bytes": 69,
+          "summary": {
+            "action": "late",
+            "returncode": 1,
+            "finishedAt": 1792246901.9926221
+          }
+        },
+        {
+          "file": "lifecycle-capsule-review.json",
+          "sha256": "720968c7ee2fce3d8b4c24391062cff4f1b6889daa403826dace97375aa0b2fb",
+          "bytes": 6923,
+          "summary": {}
+        },
+        {
+          "file": "own4-closure.json",
+          "sha256": "1cba4e717763bfc9aa57a5cec16c8a655d4dedb8797505c744ce70978da2a468",
+          "bytes": 954,
+          "summary": {
+            "ownDataVolumesRetained": true,
+            "status": "PASS_OWN4_STOPPED_EXISTING_METADATA_PRESERVED",
+            "existingStoredBytes": "NOT_VERIFIED",
+            "vmStopped": false,
+            "unknownReservationsRetained": 0,
+            "containers": [
+              {
+                "exitCode": 0,
+                "id": "7b021e40f4cbc977f6241bf2ece52b10df062e7f79ca849c7abc5a835e6c42a9",
+                "name": "supabase_rest_jonghyun-backend100-d017a003",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "4fe48beca6e8b767509a7350983b378b5aeb1cd40cb59a0e5b43705ed074481f",
+                "name": "supabase_auth_jonghyun-backend100-d017a003",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "f795e1296a2ba72ded811f9d36fdbce9c20b6e9ffc147835b65d4a09747f659b",
+                "name": "supabase_kong_jonghyun-backend100-d017a003",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "046c61f142f5001b6c0e8a1e67cbc08ddc3b85f7be8f0b969a51779c80f4876d",
+                "name": "supabase_db_jonghyun-backend100-d017a003",
+                "oomKilled": false,
+                "stopped": true
+              }
+            ],
+            "ownNetworkRetained": true
+          }
+        },
+        {
+          "file": "stage-root-result.json",
+          "sha256": "30efe7a8be17d3291ea001e770deb2cb604d7c9c3ce794651a6765cacf49e96e",
+          "bytes": 368,
+          "summary": {
+            "actualLifecycle": "NOT_RUN",
+            "status": "STAGED_ORIGINAL_TOKEN_NOT_EXECUTED",
+            "actualNaver": "NOT_RUN",
+            "scopeId": "b23d04e49b2044a5997eaf67bf2acece"
+          }
+        },
+        {
+          "file": "startup-result.json",
+          "sha256": "3264790bc0857916e01ad4fe21663d835b0ec9244e49251f58fc0f743b97f802",
+          "bytes": 285,
+          "summary": {
+            "createdContainers": 4,
+            "status": "STARTED",
+            "createdNetworks": 1,
+            "createdVolumes": 1,
+            "initialMemoryKiB": 2448936,
+            "exitCode": 0
+          }
+        }
+      ]
+    },
+    "d017a004": {
+      "privateRoot": "/private/tmp/yumidang-wbs-ai-20261017-d017a004",
+      "evidence": [
+        {
+          "file": "ai-signed-observer-1792249217843824000.json",
+          "sha256": "038ebf4bcd1e7418a309b4cc747f98ff7c5155161cffcd3d413d893e03a8042d",
+          "bytes": 1765,
+          "summary": {
+            "sourceSha256": "1cdaa0c1b7c62a210284489ad643f6cc0bed2be7403ba62ecea58636e44723b2",
+            "mode": "ai-signed",
+            "status": "PASS",
+            "observerFailure": null,
+            "actualNaver": "NOT_RUN",
+            "publicLogSha256": "f1b1938d6afa1b4e9975b0648c7e1f0a2f86f5249a5f813dc9280b62a26d2758",
+            "externalProvider": "NOT_RUN",
+            "childExitCode": 0,
+            "naturalMidnight": "NOT_RUN",
+            "actualAuthPostgrest": "PASS"
+          }
+        },
+        {
+          "file": "ai24-final-preparation-check.json",
+          "sha256": "71e9629ce5048004b8fe7c59e55fcb3a407a14f0bac8b608d3e935f663cbfdb9",
+          "bytes": 1225,
+          "summary": {
+            "status": "PREPARATION_TOOL_REGRESSION_PASS_EXECUTION_CLOSED",
+            "actualOriginalAuthSixIssued": 6,
+            "executionAllowed": false,
+            "currentCloneAi24RegressionPassed": 57,
+            "midnightPreparationRegressionPassed": 33,
+            "actualStoreGuard": "SOURCE_NOT_COMMITTED",
+            "workingTreeMidnightToolSha256": "c77a06377984a261adb09fad91c061ace03ed52d2670fd54785ec303561b0f26",
+            "targetContainers": "OWN4_STOPPED",
+            "explicitSelectedThree": 3,
+            "requiredBeforeActualExecution": [
+              "reviewed source committed under separate commit authorization",
+              "fresh actual six sessions and explicit three selection",
+              "natural next-boundary expiry plus300 and all preparation windows",
+              "current source/target/memory/clock/headroom/UNKNOWN review",
+              "persistent intent and receipt-owned cleanup review",
+              "separate actual AI24 execution authorization"
+            ]
+          }
+        },
+        {
+          "file": "ai24-source-custody-gap-before-fix.json",
+          "sha256": "6893e7cfcadd3b89adb7ec4e478dccea2ec0e9fc1eca9ed4f35bfd6f0d8f36e0",
+          "bytes": 411,
+          "summary": {
+            "status": "REFUSED_SIGNED_SOURCE_PINS_CHANGED",
+            "executionAllowed": false,
+            "sourceHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54"
+          }
+        },
+        {
+          "file": "auth-provision-7be00986bede4a1e9669a3039f9fb6db/receipt.json",
+          "sha256": "9cc6ca97a0a79eecb397d9aaafbb1dd6cd1d18346fc8db83327b80e1844b13c7",
+          "bytes": 760,
+          "summary": {
+            "actualAI22AI23AI24": "NOT_RUN",
+            "status": "PASS_LOCAL_AUTH6_PROVISION_ONLY",
+            "actualNaver": "NOT_RUN",
+            "scopeId": "7be00986bede4a1e9669a3039f9fb6db",
+            "actualGoTrueAndDatabaseSessions": true,
+            "finalSha256": "b1dd13335bd4dd937b2b7f4e81e9d3eb19ab98a75dc8647656d2e8753862973f",
+            "accounts": 6,
+            "originalRowsPreserved": true,
+            "authAccountsRetained": true,
+            "baselineSha256": "a8c8263b0509578ae0b180a8c3dd794c80434afe2b893f73af32bc780e6f857f",
+            "bindingSha256": "7ecbe3e306f28628cc18c60cc2ae57eaf1c75ec72dc8c1ff3e8eb248eaf8c59b"
+          }
+        },
+        {
+          "file": "auth6-driver-result.json",
+          "sha256": "9cc6ca97a0a79eecb397d9aaafbb1dd6cd1d18346fc8db83327b80e1844b13c7",
+          "bytes": 760,
+          "summary": {
+            "actualAI22AI23AI24": "NOT_RUN",
+            "status": "PASS_LOCAL_AUTH6_PROVISION_ONLY",
+            "actualNaver": "NOT_RUN",
+            "scopeId": "7be00986bede4a1e9669a3039f9fb6db",
+            "actualGoTrueAndDatabaseSessions": true,
+            "finalSha256": "b1dd13335bd4dd937b2b7f4e81e9d3eb19ab98a75dc8647656d2e8753862973f",
+            "accounts": 6,
+            "originalRowsPreserved": true,
+            "authAccountsRetained": true,
+            "baselineSha256": "a8c8263b0509578ae0b180a8c3dd794c80434afe2b893f73af32bc780e6f857f",
+            "bindingSha256": "7ecbe3e306f28628cc18c60cc2ae57eaf1c75ec72dc8c1ff3e8eb248eaf8c59b"
+          }
+        },
+        {
+          "file": "auth6-post-ai-rejections/receipt.json",
+          "sha256": "4241cf2697da46bb0e5151b12292f61a99b107c8fcf52630262d2c6d3f47462b",
+          "bytes": 2284,
+          "summary": {
+            "status": "PASS",
+            "mutationAttempts": [
+              "memberChanged",
+              "revokedSession"
+            ],
+            "authMutationsRetained": [
+              "memberChanged",
+              "revokedSession"
+            ],
+            "actualNaver": "NOT_RUN",
+            "unknownBudgetPreserved": true,
+            "sequence": "NOT_VERIFIED",
+            "fullLifecycleCoverage": "NOT_RUN",
+            "scope": "NORMAL_AUTH6_POST_AI_LOGOUT_BAN_REJECTION_ONLY",
+            "externalProvider": "NOT_RUN",
+            "naturalMidnight": "NOT_RUN",
+            "noResend": true,
+            "fixedFailures": [],
+            "fullOriginalRowsExactAllowedDeltaPreserved": true,
+            "originalAuth6AndAiProofsPreserved": true,
+            "sourceHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+            "cases": {
+              "memberChanged": {
+                "actualAuthReads": 1,
+                "actualNaver": "NOT_RUN",
+                "authHttpStatus": 403,
+                "case": "memberChanged",
+                "externalProvider": "NOT_RUN",
+                "httpStatus": 401,
+                "nativeExternalAttempts": 0,
+                "originalTokenSha256": "b3a19b19adb673a1f430f4233278d75ded3c93bdf5ec80a649031db890c69d1a",
+                "providerCalls": 0,
+                "rpcCalls": 0,
+                "status": "PASS"
+              },
+              "revokedSession": {
+                "actualAuthReads": 1,
+                "actualNaver": "NOT_RUN",
+                "authHttpStatus": 403,
+                "case": "revokedSession",
+                "externalProvider": "NOT_RUN",
+                "httpStatus": 401,
+                "nativeExternalAttempts": 0,
+                "originalTokenSha256": "344d3279bc73a109fcf9654a933aa9394d7e01013ea02c517f02d2e979a8fcbe",
+                "providerCalls": 0,
+                "rpcCalls": 0,
+                "status": "PASS"
+              }
+            },
+            "typedDispatch": "NOT_RUN",
+            "noReplay": true,
+            "physical": "NOT_VERIFIED",
+            "httpObserved": [
+              "memberChanged",
+              "revokedSession"
+            ]
+          }
+        },
+        {
+          "file": "before-stop-synthetic-state.json",
+          "sha256": "c8fea64e5404a56971276ea2f0067fc86b11a2e91033897e8ced28211f7d5e3b",
+          "bytes": 137,
+          "summary": {
+            "cron": "off",
+            "unknownReservations": 2,
+            "pendingReservations": 2,
+            "externalGuard": false,
+            "authUsers": 6,
+            "profiles": 6,
+            "requests": 0
+          }
+        },
+        {
+          "file": "fresh121-readiness.json",
+          "sha256": "7c0f2b33826aa5dee551f56d4d7888fec2cad3296d61edd3e5feb1d0a5234af5",
+          "bytes": 742,
+          "summary": {
+            "status": "PASS_FRESH_121_CLOSED_LOCAL_ONLY",
+            "controls": {
+              "ai_feedback_maintenance_control": false,
+              "ai_processing_guard": false,
+              "ai_report_handling_control": false,
+              "cancellation_due_control": false,
+              "content_inspection_control": false,
+              "cronLaunchActiveJobs": "off",
+              "event_collection_control": false,
+              "member_cleanup_guard": false,
+              "member_retirement_receipt_control": false,
+              "report_purge_control": false,
+              "worker_intent_confirmation_control": false,
+              "worker_invocation_control": false,
+              "worker_runtime_atomic_control": false,
+              "worker_runtime_journal_control": false
+            },
+            "migrationCount": 121
+          }
+        },
+        {
+          "file": "lifecycle-capsule-review.json",
+          "sha256": "3c18823f52c16b0df76115fe6a66597228b7cc588ca7c8bb667f62b369c5826f",
+          "bytes": 6916,
+          "summary": {}
+        },
+        {
+          "file": "own4-closure.json",
+          "sha256": "cbd3e060b8bc311cef815bb9a0e49a4e7fc91720ec5fa525b455ba67342f0d14",
+          "bytes": 954,
+          "summary": {
+            "ownDataVolumesRetained": true,
+            "status": "PASS_OWN4_STOPPED_EXISTING_METADATA_PRESERVED",
+            "existingStoredBytes": "NOT_VERIFIED",
+            "vmStopped": false,
+            "unknownReservationsRetained": 2,
+            "containers": [
+              {
+                "exitCode": 0,
+                "id": "a207d9aee232a5110fc485ad34f65d3affa9b5f28fb2390bcd8b8ebef0b6f3e0",
+                "name": "supabase_rest_jonghyun-backend100-d017a004",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "b4d37178e6e0055cb9f4572651194b2da72418a964a723126b2af71007543dbe",
+                "name": "supabase_auth_jonghyun-backend100-d017a004",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "11e262cc1a8108875763e77d69585d9e71b2c3233f86f9cb4174791a4ce8a332",
+                "name": "supabase_kong_jonghyun-backend100-d017a004",
+                "oomKilled": false,
+                "stopped": true
+              },
+              {
+                "exitCode": 0,
+                "id": "ae8524aa225472d8e41798086494094635a472d0538eb08eebefe25a4236bd6c",
+                "name": "supabase_db_jonghyun-backend100-d017a004",
+                "oomKilled": false,
+                "stopped": true
+              }
+            ],
+            "ownNetworkRetained": true
+          }
+        },
+        {
+          "file": "signed-ai-root-review.json",
+          "sha256": "b4458192834c42d4c5e0fc2a235018d292d37d708e523b42209d9d61f3edcb72",
+          "bytes": 358,
+          "summary": {
+            "reviewedBindingSha256": "9b3edc07266d58ba97ffd28b82c3c0d4431ba431040d337fb194fc6d56de0108",
+            "scope": "LOCAL_AUTH_HTTP_RPC_SYNTHETIC_MODEL_ONLY",
+            "externalProvider": "NOT_RUN",
+            "naturalMidnight": "NOT_RUN",
+            "originalBindingSha256": "7ecbe3e306f28628cc18c60cc2ae57eaf1c75ec72dc8c1ff3e8eb248eaf8c59b",
+            "sourceHead": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54"
+          }
+        },
+        {
+          "file": "signed-auth-7be00986bede4a1e9669a3039f9fb6db/cleanup.json",
+          "sha256": "b5f4220f38271ca580e20f680e9342646dcf3ca5a2a622dcd4e6e7dd5093d063",
+          "bytes": 236,
+          "summary": {
+            "authLifecycleMutation": false,
+            "originalProtectedRowsPreserved": true,
+            "status": "PASS",
+            "protectedBudgetDelta": "COMMITTED_NOT_ROLLED_BACK",
+            "sequence": "NOT_VERIFIED",
+            "fixedFailureTypes": []
+          }
+        },
+        {
+          "file": "signed-auth-7be00986bede4a1e9669a3039f9fb6db/receipt.json",
+          "sha256": "a922282b25bb321d3cad1d143fa9e84e80096b86acad147e01e42b8dc3849737",
+          "bytes": 1153,
+          "summary": {
+            "originalProtectedRowsPreserved": true,
+            "status": "PASS",
+            "checks": [
+              {
+                "anonymousBearer": "NOT_RUN",
+                "cases": [
+                  {
+                    "actualAuthReads": 0,
+                    "case": "missing",
+                    "httpStatus": 401,
+                    "providerCalls": 0,
+                    "rpcCalls": 0,
+                    "status": "PASS"
+                  },
+                  {
+                    "actualAuthReads": 0,
+                    "case": "malformed",
+                    "httpStatus": 401,
+                    "providerCalls": 0,
+                    "rpcCalls": 0,
+                    "status": "PASS"
+                  },
+                  {
+                    "actualAuthReads": 1,
+                    "case": "invalid_signature",
+                    "httpStatus": 401,
+                    "providerCalls": 0,
+                    "rpcCalls": 0,
+                    "status": "PASS"
+                  },
+                  {
+                    "actualAuthReads": 0,
+                    "case": "service_principal",
+                    "httpStatus": 401,
+                    "providerCalls": 0,
+                    "rpcCalls": 0,
+                    "status": "PASS"
+                  }
+                ],
+                "differentOriginalContext": "NOT_RUN",
+                "expiredBearer": "NOT_RUN",
+                "fullLifecycleCoverage": "NOT_RUN",
+                "memberChanged": "NOT_RUN",
+                "nativeExternalAttempts": 0,
+                "revokedSession": "NOT_RUN",
+                "scenario": "SIGNED_AUTH_NEGATIVE"
+              },
+              {
+                "dailyCounts": [
+                  3,
+                  20,
+                  3
+                ],
+                "observations": 28,
+                "scenario": "AI22"
+              },
+              {
+                "observations": 6,
+                "scenario": "AI23"
+              }
+            ],
+            "actualNaver": "NOT_RUN",
+            "authFixtureBaselinePreserved": true,
+            "scope": "SIGNED_LOCAL_AUTH_AI22_23",
+            "externalProvider": "NOT_RUN",
+            "naturalMidnight": "NOT_RUN",
+            "actualAuthPostgrest": "PASS"
+          }
+        },
+        {
+          "file": "startup-result.json",
+          "sha256": "075722f34e32fe48e8f83c59fc3fb9102100cd701e0176d259c3e093cd12d24b",
+          "bytes": 278,
+          "summary": {
+            "createdContainers": 4,
+            "status": "STARTED",
+            "createdNetworks": 1,
+            "createdVolumes": 1,
+            "initialMemoryKiB": 2437052,
+            "exitCode": 0
+          }
+        },
+        {
+          "file": "subnet-readiness.json",
+          "sha256": "f8f59fed40f406c604b2a0ed42f3b7a901b310c62571e2749707ad86749c4db6",
+          "bytes": 147,
+          "summary": {
+            "status": "PASS_READ_ONLY_NO_OVERLAP"
+          }
+        }
+      ]
+    }
+  }
+}

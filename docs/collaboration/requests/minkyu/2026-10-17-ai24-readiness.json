@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "status": "PREPARATION_TOOL_REGRESSION_PASS_EXECUTION_CLOSED",
+  "executionAllowed": false,
+  "actualMidnight": "NOT_RUN",
+  "actualSignedSixSessions": "ORIGINAL_AUTH6_ISSUED_AND_PINNED; TWO_MUTATED_AFTER_AI; TARGET_STOPPED; FRESH_SIX_REQUIRED",
+  "selectedThreeMembers": "EXPLICIT_INDICES_2_3_4_PRIVATE_DESCRIPTOR",
+  "tokensIncluded": false,
+  "contract": {
+    "timezone": "Asia/Seoul",
+    "initialPreparation": "23:00~23:40",
+    "fixturePreparation": "23:00~23:50;23:55까지 완료",
+    "resume": "23:58 포함~23:59:55 미포함",
+    "minimumTokenExpiry": "목표 자정+300초",
+    "startupMinimumKiB": 1048576,
+    "runningMinimumKiB": 786432,
+    "maximumProbeSeconds": 3
+  },
+  "requiredBeforeExecution": [
+    "현재 HEAD와 실제 바이트가 같은 source pins",
+    "새 실제 GoTrue 발급6세션과 0600 binding",
+    "6명중 검증대상3명 명시",
+    "대상DB ID/image/socket 및 원 manifest 고정",
+    "해당 자연 날짜 예산 여유·UNKNOWN 원행 고정",
+    "단일영속실행의도·재개/응답유실시 조회 복구",
+    "정리 영수증과 기존자원 보존",
+    "세션만료/실행시간창 재검사"
+  ],
+  "offlineChecks": {
+    "ai24LiveBinding": {
+      "passed": 57
+    },
+    "midnightPreparation": {
+      "passed": 33
+    },
+    "productionPreparation": {
+      "passed": 34
+    }
+  },
+  "restoration": {
+    "regularMigrations": 121,
+    "storageMetadataObjects": 45,
+    "matchedOriginalFiles": 6,
+    "missingOriginalBytesObjects": 39,
+    "fullRestore": "NOT_PROVEN",
+    "operatingActivation": false
+  },
+  "note": "AI24 준비 도구와 원입력후보/선택3명/정리·시간조건을 검증했다. source 보완은 미커밋이므로 실제 저장소 준비는 SOURCE_NOT_COMMITTED로 닫힌다. 원6세션중2개 회수/차단 및 대상중지 상태를 보존했으며 다음 실제 실행전 검토코드 커밋·새6세션 발급·목표자정/시간창·예산/UNKNOWN·메모리 재검사가 필요하다. 실제 자정 실행과 영속실행의도/fixture 생성은 없다.",
+  "currentSourceCommit": "5210230a854dd2e4ece38e9c5d8b5a9b648efc54",
+  "naturalAuthLifecycle": {
+    "status": "PASS_ORIGINAL_3600_SECOND_NATURAL_EXPIRY_CASE_ONLY",
+    "fullTypedLifecycle": "NOT_RUN_LATE_FAILED_BEFORE_ISSUANCE",
+    "anonymous": "NOT_RUN",
+    "foreign": "NOT_RUN",
+    "actualAuthBeforeExpiry": 200,
+    "actualAuthAfterExpiry": 403,
+    "productHttpAfterExpiry": 401,
+    "rpcCalls": 0,
+    "providerCalls": 0,
+    "fullOriginalRowsAndAuthorityPreserved": true,
+    "countsAsAI24": false
+  },
+  "originalInputCandidates": {
+    "privateDescriptor": "/private/tmp/yumidang-wbs-ai-20261017-d017a004/ai24-selected-original-members-private.json",
+    "sha256": "20fc298ce6806d54b72e08f0981ec6ef2753ccbb2bc7b142cfe478d9308b0631",
+    "bindingSha256": "7ecbe3e306f28628cc18c60cc2ae57eaf1c75ec72dc8c1ff3e8eb248eaf8c59b",
+    "sessionCount": 6,
+    "selectedCount": 3,
+    "initialWindowOpen": false,
+    "sixDeclaredExpiriesCoverCapturedNextBoundaryPlus300": true,
+    "capturedAt": "2026-10-17T23:58:13.383589+09:00",
+    "singlePersistentIntent": "NOT_CREATED_PREPARATION_ONLY",
+    "fixtureRows": "NOT_CREATED"
+  },
+  "currentWorkingTreeToolSha256": "c77a06377984a261adb09fad91c061ace03ed52d2670fd54785ec303561b0f26",
+  "sourceCustodySupplement": {
+    "addedFixedPaths": [
+      "tests/integration/minkyu/member_cleanup_reconcile_local.py",
+      "tests/integration/minkyu/product_connection_restore108_local.py"
+    ],
+    "newRegressions": 3,
+    "ai24RegressionPassed": 57,
+    "midnightPreparationRegressionPassed": 33,
+    "actualCurrentSourceGuard": "SOURCE_NOT_COMMITTED",
+    "committed": false,
+    "freshSixRequired": true,
+    "privateCheck": "/private/tmp/yumidang-wbs-ai-20261017-d017a004/ai24-final-preparation-check.json",
+    "sha256": "71e9629ce5048004b8fe7c59e55fcb3a407a14f0bac8b608d3e935f663cbfdb9"
+  },
+  "actualSignedAi22Ai23": "PASS_LOCAL_AUTH_HTTP_RPC_SYNTHETIC_MODEL",
+  "authLogoutBan": "PASS_SEPARATE_TWO_ORIGINAL_AUTH6_CASES"
+}
