@@ -1,0 +1,1671 @@
+{
+  "date": "2026-10-20",
+  "scope": [
+    "backend/**/*.md",
+    "docs/collaboration/requests/minkyu/**/*.md"
+  ],
+  "read_count": 180,
+  "updated_count": 138,
+  "read_preserved_count": 42,
+  "authorization": "사용자 전체 문서 동기화 예외 승인. 역할 재배정/제품코드 변경 승인이 아님.",
+  "ownership_check": {
+    "actor": "jonghyun",
+    "result": "DENIED for backend and Minkyu files as expected",
+    "command": "python3 tools/collaboration/check_ownership.py --actor jonghyun --paths backend/README.md backend/contracts/ai-chat.md docs/collaboration/requests/minkyu/2026-10-06-privacy-data-inventory.md",
+    "commit_handling": "root가 독립 owner별 clone에서 정상 ownership/hook 검사 후 반영. actor/hook/ownership 변경·검사 우회 없음.",
+    "all_changed_files_recheck": {
+      "path_count": 138,
+      "exit_code": 1,
+      "denied_count": 138,
+      "note": "수정전 대표3경로 검사는 거절됐고 사용자 전체문서 예외에 따라 준비. 전 변경경로 재검사도 동일 actor에서 거절. 원격반영은 root의 담당별 독립 clone 정상검사에 의존하며 본 agent는 commit/정책변경하지 않음."
+    }
+  },
+  "files": [
+    {
+      "path": "backend/API_INPUT.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결",
+        "현재 계약 본문의 Potens 프로토타입/공개 서비스 공급사 선택·기술 토큰/Gemini 원화 예산 구분 및 확정 A안 후속 연결 순서 정정"
+      ],
+      "before_sha256": "f9031feb6a430d4dda38ff0065f00f04c916fe71a4ffe9917d425338fbc6012f",
+      "after_sha256": "a2942ef8f2a408a0fc3e8ad979b24379099a658ed85c44e8597985358c0e359f"
+    },
+    {
+      "path": "backend/README.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "각각 필수 체크로 받는 제품 의도 → 각각 선택 체크로 받는 제품 의도",
+        "필수 동의의 법적 정합성 → 선택 동의의 법적 정합성",
+        "공급사 회신 대기/검토 문구를 수신된 회신과 남은 API별 확인 조건으로 구체화",
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결",
+        "현재 계약 본문의 Potens 프로토타입/공개 서비스 공급사 선택·기술 토큰/Gemini 원화 예산 구분 및 확정 A안 후속 연결 순서 정정"
+      ],
+      "before_sha256": "3ba36ada983dbd2dd401feb5c53a552bb0c4faeb484505734f45c99265318d6c",
+      "after_sha256": "b2f0530da82c97c0f22b073966153ab7b213695b5ab980bb05a37786a935c309"
+    },
+    {
+      "path": "backend/contracts/ai-chat.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결",
+        "현재 계약 본문의 Potens 프로토타입/공개 서비스 공급사 선택·기술 토큰/Gemini 원화 예산 구분 및 확정 A안 후속 연결 순서 정정"
+      ],
+      "before_sha256": "53fde24b31e1f3474ea97116a54305e3317adeb456a5a9c139bb934f831a56fd",
+      "after_sha256": "5a0e51b4d4404a51d9452ed8a4bf82a9a227f11da1ad827290f763546cd09eb8"
+    },
+    {
+      "path": "backend/contracts/auth-runtime.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "2b75d42e4d38b46b938ffaff422190cc536f645b3e617127eb659709a8f6e4a9",
+      "after_sha256": "c909167e00647f89023d1ac15018ade4a22d5365fb552990222b4af3f2d815b2"
+    },
+    {
+      "path": "backend/contracts/completion-db.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "47eee72c5b17ff7731287afa77a04a62a625d18d9a296f2ea43e46add56ff473",
+      "after_sha256": "4a3015628670a3783061709878a1255fe2df9bd7b65e930290b43f18755e493e"
+    },
+    {
+      "path": "backend/contracts/content-inspection.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "6a9cfb5efbe10f0de139a79fea2d517ea2d21206f0800d00c4e2efe43597b488",
+      "after_sha256": "dc938a2bff134f4fa1e1d785ff223d32680aaf39faaa87f4fa186104b18f16d0"
+    },
+    {
+      "path": "backend/contracts/conventions.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "971778d101ab4f64be4bd2d84fc3c17ec086d1a3d94fb07e42489ce7b8787baf",
+      "after_sha256": "4ed84abccee9ad515eceaecc45672cb4f280a6b306dc956d572f119e9dc0d633"
+    },
+    {
+      "path": "backend/contracts/core-service-db.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "5d8a0a16a4f851e8aa6d108c429e2d6675426a3d092ed8116818dd1b58f53bbb",
+      "after_sha256": "a9e726f821ecb8433ce159adcacca34f50b769127d027891218e709b462aad0a"
+    },
+    {
+      "path": "backend/contracts/daily-jobs.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "공급사 회신 대기/검토 문구를 수신된 회신과 남은 API별 확인 조건으로 구체화",
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "3d1815d3d0790abc6b7e4f70138a7d6d6c90f22104705c5e9bcfa5d27bc22857",
+      "after_sha256": "ec7016d4c4447c3adc40039194b98b36d9719c40d45ebb019bcc1d583e345c01"
+    },
+    {
+      "path": "backend/contracts/db-foundation.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "11c86996ebc4063894819466c25907ff764c74aca888bb8088cceddeefb52b2b",
+      "after_sha256": "78894c3f38a1b9e1b8a55452814f5ed539d10cf4e60467c13d2f94f734dcb56d"
+    },
+    {
+      "path": "backend/contracts/event-storage.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "4b9778e9bed8559be83a37a777050cffebed95099937d8775ff85c8e252e15ff",
+      "after_sha256": "88e656ac1372ab4114979cc2f07c9e4b757271c61cbca0160c35a51db5798846"
+    },
+    {
+      "path": "backend/contracts/gateway-cors.md",
+      "action": "read_preserved",
+      "reason": "현재 기준과 충돌 미검출/기존 현행 연결 있음",
+      "sha256": "5ed16d54246f85a8a6c164b7c606a6a1c4aea3ad2cb14dc082ebd607ddb3ab81"
+    },
+    {
+      "path": "backend/contracts/matching.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "90408aad9ab3677cb8d6bafa80781a778a29da7b40175a10566a44e7324c3147",
+      "after_sha256": "5fdf1594109ef815c32609279a5afa02730e7c63773db75c62e396edaeeb1503"
+    },
+    {
+      "path": "backend/contracts/member-activity-sanctions.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "a25d54fc3fddf21ad15b8fafd1c566785c1ce2f3c75f9c2254d02e7a97fbb846",
+      "after_sha256": "6fb4ccf01d4e281868425b73f7fd0b664ec13eed4c8b00b6a07d0c222def023c"
+    },
+    {
+      "path": "backend/contracts/posts-search.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "599837729412f5ed3891f65435b16affcb466bc5337adbfad462e842f8a63c27",
+      "after_sha256": "0fa84c522a4f47fb0f67a23ab27deb711926bc6186ef5584b96b3e89dfe6a972"
+    },
+    {
+      "path": "backend/contracts/profile-images.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "920c36ddddfb3aa354c1f0a401b8b66fd72ab05ec1efe52884ca24adb75899a7",
+      "after_sha256": "38a664311ea8ab5de73b11ff0048cd086a322ec2b4deb1963b42db5126680695"
+    },
+    {
+      "path": "backend/contracts/public-post-search-db.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "211244f99cbee2417f7e97ceff4e6a5f9271d43742a33c6b96f1e13af661e659",
+      "after_sha256": "ba9b43cd72decd741942e5f54433ecee816fbcb4951306554dbb2242c9a284d8"
+    },
+    {
+      "path": "backend/contracts/reports.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "219db59c79ab7a3bb5298d0729d64a5cb54980b6bbec0c281f2387823fa2869f",
+      "after_sha256": "c6658b77ca8b984b5610967b0a6e2c4f4cd175eb9374cd931fe1f2681f813c26"
+    },
+    {
+      "path": "backend/contracts/review-automation-db.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "505b399fcaf5b9367a18db38a1d0188c02ebf5447f9be4a6ddc874ca80455ac4",
+      "after_sha256": "6fff3c35a28de7c689960e991727801522d0e8d253a5f581571abb3e691c046b"
+    },
+    {
+      "path": "backend/contracts/review-summary-db.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "059422b2535ad9466c57fd7b6f43a650042044941094497e98418b473c09d5e6",
+      "after_sha256": "20ced2027a990ae8df195b3e02f650d5b5d0c6eb62bf4728b39a7c74e8acb519"
+    },
+    {
+      "path": "backend/contracts/review-summary.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결",
+        "현재 계약 본문의 Potens 프로토타입/공개 서비스 공급사 선택·기술 토큰/Gemini 원화 예산 구분 및 확정 A안 후속 연결 순서 정정"
+      ],
+      "before_sha256": "d8f79e43d9a0d0badee69973940eb84db3da940ade1a6a73826b3d5edac7ad6d",
+      "after_sha256": "fa27b32bf3042bb691d04357b06ca9fa5dca665f9fc662fac0eae802473249c4"
+    },
+    {
+      "path": "backend/contracts/reviews.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "6b6b86051884ed04eb9dbf582802045763840c89fbc8f384efaf763c63b508d5",
+      "after_sha256": "583233e991662afd917518f45524e380a5b7d7c09f709afc670590fe74ee10b5"
+    },
+    {
+      "path": "backend/contracts/search.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "1cd3121011a8079419ad0709a144aa99060cb3844a65e2f22a64d6556c2d2948",
+      "after_sha256": "88743a8f7afabc265e30933c97a917ba1f4bb990badaee9768fd3baf7f5caa95"
+    },
+    {
+      "path": "backend/contracts/service-api.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "e6a44be0f1748b097fc829130579e5f8bdc5e1a7598b97ff593ef7420adb47d6",
+      "after_sha256": "b58525d07fa22de01cbad1bfc00ea4d4daca848ff596c784dd5838b22eb6d584"
+    },
+    {
+      "path": "backend/contracts/signup.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "8a480866e120bfcd99f94bd55e2d07c06e72aa3f652a1299722bd24171752fb9",
+      "after_sha256": "205185ea44dfc5ac1ad32e75f3df4da7d4afd9eaf93747a4da04af1f1d8b3fe8",
+      "parent_followup": "최신 행사기반 가입복귀 예외를 일반 홈복귀 규칙에 명시"
+    },
+    {
+      "path": "backend/contracts/verification.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ae0fe4233a70afb4fe9ff9cb8f3c02ad50e4a71b6bf8bc014faf077364b18220",
+      "after_sha256": "b33ebf85a676b2a9c018b7c754d6c697b4cb9cf2aec70d5bdcabca9351ac383b"
+    },
+    {
+      "path": "backend/contracts/worker-jobs.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "공급사 회신 대기/검토 문구를 수신된 회신과 남은 API별 확인 조건으로 구체화",
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결",
+        "현재 계약 본문의 Potens 프로토타입/공개 서비스 공급사 선택·기술 토큰/Gemini 원화 예산 구분 및 확정 A안 후속 연결 순서 정정"
+      ],
+      "before_sha256": "840adfb4035a1aa15753045dfd9d518c287a5bc15b6efefe77220b35213cc39d",
+      "after_sha256": "ff14136e9f65cdcf560ebd50c99538f97175dc0d341928a7f4993cccee0d6ff5"
+    },
+    {
+      "path": "backend/supabase/functions/_shared/ai/Agents/README.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결",
+        "현재 계약 본문의 Potens 프로토타입/공개 서비스 공급사 선택·기술 토큰/Gemini 원화 예산 구분 및 확정 A안 후속 연결 순서 정정"
+      ],
+      "before_sha256": "2a16a9030435325ef58875e2aba294c2d775639d119c23ee91e7a8613b8ad84d",
+      "after_sha256": "4db7974cacea993ec9b1aa035d97fb61bf1a5a6c8770f40421d902edf2523238"
+    },
+    {
+      "path": "backend/supabase/functions/test-institutional-email-auth/README.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "a0f4ba6c580f9fe8579df8e09d4532d091f72081571b83272b94fb406d1c43df",
+      "after_sha256": "3f39dfd5f692e69c7e7d5f9d50664af6fe51f090ae90fadad78a816d4e005603"
+    },
+    {
+      "path": "backend/supabase/functions/test-phone-auth/README.md",
+      "action": "read_preserved",
+      "reason": "현재 기준과 충돌 미검출/기존 현행 연결 있음",
+      "sha256": "5d2868051c8d9e23fdd4faef5a1e7a1334c288ba48857dff87bccb000a6e3e7a"
+    },
+    {
+      "path": "backend/supabase/seeds/README.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "8f2174d72b95b2cdf06fef26a1d01f395b727ccff2e2ed8c982c40d805e23d07",
+      "after_sha256": "bf6db7d5909389ecbde74fa603e4b29bed3a52ac10e9a167846f4407d6d22119"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-db-rpc-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "2ffa8529ec7acd6fe489464d2507678d89be533383aa3706ef2bd3837da0ee26",
+      "after_sha256": "2a3b615d778422eee417a2f7a53f96d8068d5c89c7dae3e2ad9ec893bfe34713"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-foundation-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "bf0f19e0d3d26fe6dad54a384828934ff522c21eadcfd1351b744d3febb9eb34",
+      "after_sha256": "31d50eeaed4f1b2a3b606c3bf400c7cdf26cdeeca5389477ac23229fc6952ffb"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-23-runtime-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b5ebd0c0226bdf9c824e48856e3de9e3f7ec92d06231b1fd223d9315574587b4",
+      "after_sha256": "1c119a060296a7d553c53a8416845e47a05badbc5ca49cd62ec3a9360753dbba"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-jonghyun-merge-review.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "fc2381db15b29a18b90e8586ff3ea468cc1aa4d90a1431a9ab25c3f94567b161",
+      "after_sha256": "fcf8efb8db561b365becbcbd01dce0150ca89773ade4acbfe3fa018a6c54f917"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-28-local-refresh.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "8e894eb58be10c8b62ae582823219840da4829662d962ba0ee01c815e680d3c6"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-cors-followup.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "d6fb4255029b77091e9a7a8f713ee456e3a7dcb2a569c5e8542e7d4f330f2c1d"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-edge-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "49cec15fc83c684728ad19ec830e5de856aa147c54d34ef6a76745294591e125"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-edge-review.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "7c20d93c0a36b940f025b373fa4c346bbddaf3c39ac379280db74a4f3491dc86"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-event-db-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ecaca9bd949de9a753456a5fa9183adde621d951a7833890d30326da4e283484",
+      "after_sha256": "0d827ef8fe4e57990ca1dc6237fab1e83eed552c64d3776f8aab8c68188ca7db"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-events-live.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "e8211a3757480d9de2ef3d6670bdac991ddab9482d2671f3d0676c588a41a48f",
+      "after_sha256": "e28aaa8178a2ea4a11f657517c0f1eab965f65156b5093d0fb2c74451b3c3b90"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-kakao-live.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "62ef841d94c4c64e87e40566fd902114574eb38072a90e9ce1d1b4479f48926c"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-live-api-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "9fd25aca4c813aee31588aa717e1750c01a99a29c56b641927675670187b7605",
+      "after_sha256": "a364717e3981068831a3f4eadee2cf656ce14abd7742d001c17b18a6a1ca6111"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-api-review.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "57c8072f6607971494392a6fe2ac15f14626e79c308e03525b97ab17ac142e59",
+      "after_sha256": "0c63c245ecf0de7256d852485d595627a1723835ddcea3eec69368bbea1803e9"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-provider-config-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "0a5cddf95834406d81874210c2bfed35fefa08f3d2574c3ee1062464c7c8f2cc",
+      "after_sha256": "623fee5a18dedd8b1a3d9faafdc727deb44031931c154fa6ff8d932d96695a00"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-connect-review.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "54c0b53182c7d17d1332c6d86012b8cbfdd306782219bdd3486b4df3e3b935f2"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-connected.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ea601613ca054f49cca6b1b70e0a3f724771e31af76aa7d6db049ea78f673bc1",
+      "after_sha256": "bdb42adeb59226146bceee4cfb812f8577241f1803aad3e0fe5394ba9bc74743"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-db-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "9b3bec2518e37894198ef8684d6ebba300206b8ae1c7292bfe76f58742919812",
+      "after_sha256": "a110d680c329fa8e0db47873ff8db5f64ba7a4464760b93f0ab82adda788d750"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-http-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "adddadf2bb7d9f4fcff2638319b43e736708a9f7c6bd3325edfc9bf2c5af0de5"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-search-policy-correction.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "c17d7341b0de2bf8b8b4778f629115d93e2b1e69e1073e3bc5d896982915745e",
+      "after_sha256": "e13da7f12966fd59f321355e9e6798acbd6382473b39e937f3c362454ddec387"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-09-29-tour-live.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "bf995c4dae39fdfb383a0a77191e058ecd80c9fb832ef4cce388605c5b008c3b",
+      "after_sha256": "d29f0d0db457b792fc30010e1ae31f5539b08f3d250965a9acde97027517dd6f"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-event-http-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "3d6eaa622b36519f8457ce9e21b42d352e33ae9dd4e5ed5f534e5ff8e98be0ef",
+      "after_sha256": "29265609484cb5d05e15aed081cd67e3a6884de82158b2ceb6b286adf0d06f17"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-event-latest-display.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "1563b4be6423b850c81294dda0fc9b2b3b4547939f34face9e8989dee02942b7",
+      "after_sha256": "062b72c2826f80faac88194699916fa66916c456cc935e3af6db320779299773"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-gateway-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "cb59d48287b2765651ffa2a83d31017a6d219814643d54d5f7433c04e92a9803"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-kopis-top10-contract.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "34f663e13e4e1de91bb4addf0ae11d3f81169c665d22b3a1652b49024d0b17bd",
+      "after_sha256": "29df0e7782c917db3b2876ea07e7473a000715441e3388ddf73988ad0c813871"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-matching-lifecycle-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "d6babc44582861aa1bb134837196cf030607e245bab4a772c54f796a10e4123b",
+      "after_sha256": "bb978135dc90fb7dfd7e722c70b3b8a65c6973b536a08a2596da745902b361d3"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-naver-live-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "05c0ef6081c089082d9a8c337c8933ef1b86bb65169ebf1e810db1dbbc26e5f0",
+      "after_sha256": "55fe90a52b51b6425d88dac1f8d229d25aa155ee36fa59c9ca7a8eee1d8f0279"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-naver-signup-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "618f37119c2cd5c95b3d43958e249c799182e952559c623a52ae54193e3238cf"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-ordered-backend-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "a5c37d1fc668082cce8804dd25a467c3d5efa27b9c8bd11a2d78ec1b69cb61a1",
+      "after_sha256": "95cd61bf7d4ae3c1d6bb45435b9acbe61d07d3611fb168ed4685f92227732583"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-public-client-regression-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "372a8e176f7b9b163eee01ad1e66f53c8f27000d19b196101aa14f3dfb3f2892"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-public-detail-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "d42a6c48cde5aca6d27e47cec2019b283d8010fb8df9026c03033c2009e12e4f"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-remote-deployment-plan.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "b5e4579070eb74db25cce60fdbd444e35cf5ce6c374ae45055ff30858c90935a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-search-numeric-contract.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "808bd280854aeb540e19eaee6a6bd28f80117111facd94625de4c23d7519302f"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-search-range-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "adc09acf01371a62251636011da9d949eb6c509c10b4e33296625fc56928795c"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-02-search-regression-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "9b8cb43474d6c1c635d692fa497da771f5fb8c10057dcab28457f47f33c8528f"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-completion-role-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "6b8642e64039494cb29b43239d88cbc697e926d5663fc76047fe5755279f4adb"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-conversation-visibility-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "7c6663070e1d31094611bc6a9c91962361142dfd01d0ffe8f959a7e04cd328d4",
+      "after_sha256": "9893e2a21d454450bbb57b7b2432e56bb013c22d4410c3b5f07f7572a37b8da0"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-photo-access-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "f1852cde53a9e85eee26efe7718497ded5854eb4bc0d279fbd28218463475101",
+      "after_sha256": "12c4e5e92e9324cdb73ca6db4d7ccdce0148e7689d8a5446e43bba5f2a7f3567"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-schema-drift-handoff.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "73a0226b971cfbe459da98c86fa13fdac3152b5c5bcaff2240e812cbad106456"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-03-upgrade-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "7be751b149864f642ee2ecdeb200938fa4752d6335f7d3721cc44d459dcdea8e",
+      "after_sha256": "5a2de573ae4ff83e1ec12067956df5ed4de19d6faf94e4d56d77759f8b0a7a79"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-change-withdrawal.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "82cef57dcf488b80e3e1887df2ea200c732a702da86cf5b2499b03a8ed508d1c",
+      "after_sha256": "acd5842513d68c5cef7cccbeffe12fb2f5d747fa7528ebcc9ca2df55b41c6570"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-place-change-draft.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ade3aecf17725823e6bcd88afb2cdba60ccdc574f4ebe6a2ef2aeb51033cf4d9",
+      "after_sha256": "2c708244b514a615a034ae293347e03c9ea4b9bbd5988c3d785def93f332adce"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-review-holds.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b75a680b158979eee2aae818e666e09622e2166514fbfc7fa1c7314e07709b30",
+      "after_sha256": "1fdfb15e125baeadb89c3424050dbec96eab988c844334c09e33a711ad5e2be6"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-review-no-show-lifecycle.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "3bf7704554348e27a884165bdd2453b090ee88a2fd252b273e19ba9ccfb626da"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-appointment-safety-result-sync.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "6a6ad8c143fe6141a4f47851302f4b6082ff9b50f912a81c6906d7d2158bc0be",
+      "after_sha256": "321d161af073e0d01a046f8d809af3e7e3f9202c589ee84dba34c13a20045a05"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-assigned-report-operator-access.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ee5cffaf4445cc21148d9541107f2c7885c86fbd3e40e715bcea98403122f6e4",
+      "after_sha256": "1e2314432095840b9dc0c5155aaefc110d214363e3ac85cfd90f78a6ae505d1e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-block-reopen-mobile-contract.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "8e853cb1b7dca3480cc3e295c99ad8778d702d8a682242a2c3cc72bee02a16aa",
+      "after_sha256": "901dc62178223c377e611e550949fe25856a05aa3d7b57e2be6daba858a10dd0"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-cleanup-queue-timeout-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "15a0e091ded14b92bd7c8fcfddde9aabbf037ebf0abc7b2f9b1e3ea176b506a0",
+      "after_sha256": "21c60435e69f22570dfd9f25b1e9e449b450ee7c25cc90ad1ed9ac310db63836"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-current-policy-integration.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "a3366fd891d934c95974114124546d11822d99ed0dde9b0519def91e459cacae",
+      "after_sha256": "278e6bd076ca35fa2c957bfc6d954b9e7a1eaaf1c947d6926347d69cb0d5b4ff"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-deadline-receipt-design.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "4925437344ea3df3e8d66e9c41fbe9900014b6501fc7340ed3b1c596a453b05c",
+      "after_sha256": "16ebff5afdefd2bc771d8623480adfd485c717ce7fa86862c2c4bf1e122afabc"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-full-goal-evidence.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "67a4dff8e2e60c1da44ebdf596b6d7dee1f85a0e62a9026c0bb2f73a02bede56",
+      "after_sha256": "13943d5793018b6ac3492791e61fc2ad43e86137daca9e11ce9fb957af78b4ca"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-hosted60-runtime-driver.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "e3bd077f9e251fb7594adfb1d91f5f70c5a7df942fc472f1d421438dcaed22b5"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-jonghyun-start-task.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b1f2e915bb939e51ac6a1b0bb8fb7887289cc23bdc0c9ecd2542bf7d248a3efd",
+      "after_sha256": "681b5f62f9c7b1e4be1ffd7dd8a346667ab092eea9d59a11f32a58073ff85323"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-jonghyun-start.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "36983cabf41389dcc69458bd371a0176ebb58407a81028f319221abb1db286ef",
+      "after_sha256": "1cbb4c1f56d1a49ab4bcc49b302e6b4a02c7e93d85bd2f4340075efd2a5ba6ff"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-cleanup-adapter.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "5644b4f435bbc826de2ee4ec8a23c05ab07e5298491e54813ff8d5454c1463a8",
+      "after_sha256": "c3b9ccd5392725d0e19585319ec3f32091390b0eb1041bc06a8dc51efbb46599"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-cleanup-dependencies.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "910338b63b937cb74cfb0c8d3a9bd9fc24016a456054009b5cc9a2dd5c8671a5"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-cleanup-local-budget.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "6a97a8636b7e7558363d2f7decf500eb8899bc9547e930b6ecf716581d2e0d79"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-cleanup-lost-delete-response-research.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "b5c2882dd2a32a826134a42af9c0b7d0fb0a9396031706b44d2b24ef72699a61"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-cleanup-worker-connection.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "fcc9f7f149c564b220acc2863684008b3c65db3009b9e011f326498447c3a8b9",
+      "after_sha256": "3a38a28dc980a9025a8465659fcaf1cce3397268745ebec18dea0f06f8b59bca"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-lifecycle-contract.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "168b4668afa6b423b373e837630ad9bf8703612047565d4929de04c8d6db2704",
+      "after_sha256": "f21ff4c4c8fdadebcef8f8555b7d361feaf05dd3d3b61cb2afeb2a714949978a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-retention-batches.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "c7f7590de1fe807c82edac3b50bf316fd1fac36eaa84a6f8f5e1fde85492b706",
+      "after_sha256": "068191a2a092f3715dd8fbdee1bce9370fbdab40c61ca68ee759701493e4c109"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-member-safety-state.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "1cfe06be67de0b18220af1bfe05f8c86aabd5bbbd54200109adff350e31e6f3a",
+      "after_sha256": "e1e9d897e5c0707ce4261c3c0c17cd7657726143f618b8a79ae1f2722c22b2e7"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-mobile-avatar-traits-connection.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "93bf61bbac5b8a86cc8a4a520de2bc338f4dd1b5e69a72f1978a83a395876bce",
+      "after_sha256": "e17a51aa9ed1bb0780271acfd3bf934a8ee4952a1f3ecf8b28f8dbdcd83061ba"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-mobile-place-change-decoder.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "808b81c45351522259dd709b1ac75d0e9d798e29805ba653c759634845e7832f",
+      "after_sha256": "f20e1e5d0c06d038c577784d23198efcf7f49e70f8bc55eb8bb2b0f8c6e0d10a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-native-user-api-validation.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "6d2cfcaa561bc75b0dcfd69c532fb80780f23124cf96986023c10a479e2e0b47",
+      "after_sha256": "55d39e34920edfb4b5f162db99c13b64c56077a5115958e07788015d2bb21510"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-native60-cleanup-preparation.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "9c1c46c387ea0bd81c71de83264eb041c7f5da809012c99304f616a965c75c1b"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-native60-runtime-driver.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "3efb5d8d175917f506367ed8b44c9e3e9e192e842b38ee1f064a639d4017bf9e",
+      "after_sha256": "1a5d96daa3111de4cac78c7f7507048132ee71be1b4e95728a602592416e301e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-naver-native60-qualification.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "dd24e071e3217faac9c2891db59ac28d5fee72490a85f85a4eb83c6ff938c4bb",
+      "after_sha256": "eaac19097b9aa2a6723542ac289eb559d4dd1954f0188e0e9523777b1e9f45ee"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-parallel-completion-harness.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b5293b4df1deae3bcf6d651ac8b9667cf898d2fe20459daa8d9e0bd40a68ec70",
+      "after_sha256": "604306f6cdbcf95fa417cffd91c6b132c8c5fb772fa35ad33ef863c2ec79e9e6"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-production-drift-preparation.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "9a73c5fe478f0a8f53118121fd5d2b81648aa8e25bff9a5a401c9de120994a17",
+      "after_sha256": "dae3d29fd85076497314565f5194a88442eeb6f3cd5271ee167ed1a7473a64df"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-profile-photo-access-revocation.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "80da1fac8eda76ad31c551cb4f41a0fdf827125cba0fdab1babffb8a4e4902bf",
+      "after_sha256": "66066e560a8a781e0aed09711ee441078db9d965f7fbd57fa611d3ba5c8562c7"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-profile-preferences-atomic-save.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "6d196818f1d1bb3e720f5c7f8a428c8b8d68d194b77907311df9ceaa8b84efa8",
+      "after_sha256": "97f7e858c88b28d252b0f102be1b75260cc2ed26763d319d1d52407055714f58"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-public-deletion-page.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "76d9bbc83bedcf95a3cc71cb8d5fa42422a0e8a852518277088be1dfe5f1c7a4",
+      "after_sha256": "3472d22ab10beac5cb3bf37de4fae07aa3e94fc2f8e891b3e1094da981780982"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-report-ai-evidence-connection.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "94912ff84f53834d155f3e3f272dedf53a1035ba5ab52c03992198baa99c847e",
+      "after_sha256": "31b9930f0b5a08f69a9b4808db0cb04b13881f911be0f257dd20ae85168f4701"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sanction-adjudication-draft.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "abda04ed2f68bbed0c97b0746a9bd663de687ada1eee63aa18cc631f5fb29549",
+      "after_sha256": "ba4df4ae4a6bcb80fbe329d5a83935aad4c3dc631b7cccd3ac52cf9295890ef0"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-schema-catalog-comparison.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "be5e5217ce1916dc30f85b7f5a829dfffd5a8fd25a69d9f68a2fbf4c62007198"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sungho-start.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "9cdcd7b2e31ef33f9b0a1f587b8a76f5f17d03db8de5767ee360fac47f4416f6",
+      "after_sha256": "1f975fdb9ea30a9e388dc7942a2c8ee334fa697a3443d913072833b528a0c84f"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sweetness-implementation-audit.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "88ffbaa3a772b250bcc948f9124122acb33a6099d740b8fc24423f47f5f9c34a",
+      "after_sha256": "3b94cf8c2961d870eda7a1545452ef9a39496274c37e69010700e493f92dcb60"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-sweetness-ledger-contract.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "1e92b987bfac4882b73158fc833a4dfd74c69b9c5a9b4b80d18c3fa6d0f05ae7",
+      "after_sha256": "153f8bc1265e47917b2a76e2b927a14ff71515f5bfd0a601d22f4454c8b3bd25"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-two-person-next-work.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "abe45af0cf1245c44d68b39835ae86b1d7bd8f17e830df6d6f0c4c4639af81c2",
+      "after_sha256": "8f5f77577cc8a6a256f3fbd27856600861325eae981d856ac594cd799029bbe3"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-40100-integration-plan.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ed23d95dbb6800978079a3adc956dc7867ddda9433389403286e34e30c881cc3",
+      "after_sha256": "329c021cde16b00387d132018cac3a681a23818042fecc97dc80785ebdd1fc27"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-isolated-source60.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "3ee83d2edd9f9fc434ad1456c67ae92f2bcc4caf0590eced13d4fc83c2e7b76b"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-login-runner-connection.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b5f6442921b2eac76d49d0441bfce54d33a20f95c13090b1361d75c2e518220f",
+      "after_sha256": "b4c3f38833d4ef25b62dab5cb2c44a22a7695416d4cd5e13c5469cccd8c68714"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-role-provisioning.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "7a60f04b76e27a3bb484083965f1f97972be63c7011a712cae9b8539398ea2ce"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-05-worker-queue-schedule.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "1e2394253b98940ddc2f0711d78514eb159dc1377a365d7914c3f3d90b146539",
+      "after_sha256": "8ccb7f984bbd72a05cdd8bd8d33e5af83b3dc5198c5d974d5b1ecedf4564c29e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-ai-account-call-gate.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b7e090dd9b4ac3d3c21692c74d642830053d96c3ff5b6529f75cfef45a24e0a7",
+      "after_sha256": "22db573bc1d8038a3a13d5548a582864d0c9e1b47284335c1f30a5c47d329fb4"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-appeal-atomic-report.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "a70b66cdfd2ee774e9434756a52414d83c9cdc58eb27269e0a6c1d34b829e299"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-appeal-intake.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b6035067e32b8b2fe94bef794de448636f033eb386562b70e465216596d60616",
+      "after_sha256": "9e12421d0b64feeb6cd4e76214a8f6f9768566420250634150e5b21a78bd34de"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-appointment-cancel-resolution-and-due.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "5402fa563f61543252abd1093b5f0f5cd175b8d29a2b568a93086d53a419eed3",
+      "after_sha256": "6afbcf1173f5135e4da663393a154737f67c858ce0faa3ac1d71dbf1d877bc09"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-adjudication.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "f1e82bd29d43bdec15a538eb769974114ea670817b0c2b5ec2748670074dba87",
+      "after_sha256": "557fe362adbda96328ed4d69b33e5031aa3ffe18f6043242257eb8bcf3101456"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-capture-access.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b58927d49fb341902b4047904e70c9d966e69c42843b97de6a8aed039aa85fa7",
+      "after_sha256": "b46a78252f894afb50e8282b78a78438508af24e2578090cf5d98d32c40a680b"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-notice-receipts.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "cfc3b468a6ac7cdbf46556280c11bce08c8d372187c0469ae553b8cb14ad91a9"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-concurrency.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "d988e98c6f6daf118e91466ba79a553dc12ea8d48f921c4a89b9bddf51c0a3a8",
+      "after_sha256": "eca73f19db07b2c7391e57535d4414268ced7b3d583ffd666dfca152a6b1378d"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-start.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b9db16ff4b4052f8e021e2fbc3b93de116775880fd29256bd8d2671dfcb8a131",
+      "after_sha256": "69810404da2344bf89825a6195e6d146ecbc0ea20bbbd777f8c27f4ca55219d5"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-assigned-report-review-state.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "a015591ba058983e7fbc52c76de6726ee6077f48e52de08bc8e10469f4f4b361",
+      "after_sha256": "122c45095f6f205761bf33704bd981db7553595c569c41083bb3dbcce044f30d"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-backend-release-work-split.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "602e46f4cc25132b65e784a698a89b8a1f710ed3756df7836f85b562a3b62924",
+      "after_sha256": "86cdb5102cb2c138fa4bc1448d0ca80a50dc8195f43b67f6559e75b22b261836"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-cancellation-due-guard-closed.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "317a132ca91ea5fdf7f387293e1b0f78a760e025724d9cb6d567a49d34002ccd"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-cancellation-due-worker-connection.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "4e5631c1b03ba5b3a8d5a4ec202f3775e2682d52483e0a1eeb0a041c8d3c0105",
+      "after_sha256": "d948d6866352ed2015543795e471124f3bb4af33ec984e65a6a75cce1d93b2db"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-general-notice-delivery.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "55b6d7100135b9df1742fcfa61d23058f76559e27c4735202eec9ae1ed2b46ee"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-jonghyun-release-start.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "a2f9f6498afc9840e080d18ce7630e386ac3a27964fc95147caff7a39044afb6",
+      "after_sha256": "346c48989b5348c62ccb1c8f40b7947a99b6f8c1dc036a5f64f79fa02acb816b"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-privacy-data-inventory.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결",
+        "개인정보 인벤토리의 공급사 회신 대기·AI 가입필수 원문을 최신 확정 선택으로 구체 정정"
+      ],
+      "before_sha256": "d753c458b1db5eade099f73dc2f1a27acb988f74cd53f71ee55f2e28474abd2c",
+      "after_sha256": "539ec8fde192b7c0b25d289c667f8cb894b738562fe19f840c39cf3d86d141c5"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-remaining-progress.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "f69e12f1762502f42cb8214bc71452313f58ffbbe77895bdbf9337251cdc0aa8",
+      "after_sha256": "99b16bfc4aea6632d7efc85ab41cb25359f40c462cf1bbe2c7a22cb9df5d0e8e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-remote-queue-integration.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "4d4617f22e43250dd191484aa6162bcf7dfe8bc2cc1babd55497b735af00e8a6",
+      "after_sha256": "b409fa62b1a46f4f14c53a1b6feca92b5574e4756254f2df7e6bfee197614cdc"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-report-hidden-targets.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "6f4727fd02b3bf85441da369e2bc7f85a0cb48ffe00e46bd02580fde3b691c7e",
+      "after_sha256": "3d37e6475eaeef5ad770843b0f7f56402681bc97966a8e2f443da41e160f8b0a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-report-retention-backup-verification.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "ba2c968a0b47d2537f3c89096dda2d69a8a09ab4bac8b96151d37e57ca167ae6"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-report-retention-dispatch-fence.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "957546ae10fc3123cbc1cdc156e71c607c0ac2ea83cfc554c6fcc2cffcbcd3c2"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-report-retention-maintenance-port.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ee776edc359ae196662e12b36e94033fd46989cbf809c99db02036eb5d764962",
+      "after_sha256": "4d873a8646566aa712aba7df74d4237b155f774accadd8197b846815fc71fb35"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-report-retention-purge-contract.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "7a43df9415735dac6107be704aa8ca81d29613e447793949f12a0656a962baba",
+      "after_sha256": "7a9d0c03c38ca0ea1954f2e801808efebf1a51b1c8c01bcc2db269e45f3d21e2"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-report-retention-purge.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "eb73ab3917c2468a981f9729ed0b726b9cc7cf92fdf72b6f11b86f500295fb06"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-runner-consumer-integration.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "97f9df4e0dfc4d9ce669886a4eb564074bc494268eff1a3493bb07c13a634fad",
+      "after_sha256": "9afeb8bc5d04e6e81664c61b16e785a49c753d9f9fd61b2f57a6554641cd519c"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-worker-queue-retention-schedule.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "71a57cbafd10423e5b4db031c5c9b89b29397c65e381468b4a2bbf8d7f4055c4"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-06-worker-supported-claim.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "9d3040cefb9d22128749511b73b041e16eeacb41e038b321fe226d5e322cdaf4",
+      "after_sha256": "60618e7283dc9f45e5bdc60f834b7cf8441237bfbafdd52798e178d54259a3e6"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-07-release-recovery-checklist.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "190b4a4b645efcb8fbcdd8d3552858a03c591e8c209efb31ed8e6d5b36ccef5e",
+      "after_sha256": "3ef33621b2a331935b3cb0b3c079afbb61522650cbf218352bf4e877cd4af069"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-additional-backend.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "d633aa170eaa91c389259994e977c477abc6357a706cba19eb46253b4fd5916d",
+      "after_sha256": "f98701df0b80be82c5dd83d2e7bb2e733ff2d0bc09bc914fab961667793e2bea"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-common-runtime.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "97b4e8694690baabe91b0b6cbf6f27f3216f8655259ead6d867d1f3ba324c460",
+      "after_sha256": "5b7bcfd8e57f7758f6b68dae079d4b69129a862e037df802b9b5c33bccae22c9"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-independent-runtime.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "95f78ef1012ff38f36856a8d5621112dc4c521c1a037fd953c8f5f1568bb2b4d",
+      "after_sha256": "a750e97b989f0970760fde1af45c55ec4a041ed4c9bd89358ed844f611d01e50"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-jonghyun-next.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "747e73b38c19d25815c504921392a60e8e65cb1f299b08200f4440fa115ce1ad",
+      "after_sha256": "ceb36ee27fbef000a90dee1bbcc318510f1c58ff54a2a56cc60f1669adfe310c"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-product-connection.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "cee26b9cd5cd19f7fa664518804ab5c9af7949a591f96b98bac789bef81202c4",
+      "after_sha256": "b7e466d7d08888d12ceaa0bf48106e8563c08b7dbab58e7a40db5b00c373814b"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-production-completion.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "de8a84111673b0df2da914f612a1de43ce1c5f7c88bbc438c028053bf9ea764b",
+      "after_sha256": "bd7e2971f223a03c07d32fb88131bafeb3bae183e2da984bd91244ff2d3924cd"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-08-runner-recovery.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "5dc7b6a5ca87df658bb01ce2f758581bd8255384179cdb268805ba2d36ff2161",
+      "after_sha256": "f267e4e23b87454204dfaa55f3fcd8379c5f38370fa4cc36d3074b939ded525e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-100-plan.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ab39b3655700bd6dd0f96dfd328fcfd9a2e7341bb64bee8d5b5c081a5e1984b0",
+      "after_sha256": "6c2838972c4f35726b17f5a07e153440d04febfee802ec16da17568afd855180"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-backend-execution.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 7개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "5fd698d20deecee67e5a9a178960fcf02836aaad61d2822bb32bb9a3ecaccd37",
+      "after_sha256": "1f07c2d9bd2e9a5047585e3ed9ab509ca55118d3a228fb373e1b98a48c9e192c"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-content-inspection-draft.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "09dbda8d78152db85235aeef9271cb6730ed11368e2225379ed49b36f09adf89",
+      "after_sha256": "457f254d430ff06103e1d0d1700ee9e8d20dfe24ef457341abd11c9a8655c4d9"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-event-collection-lane.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "8a5f8809b891f7514d2c5b289a92d23b1fc2ef928891469e81d865ecc6938c4a",
+      "after_sha256": "571708060d01d1635ccb680676e54ece7ed46b7cd6b38f72f184f21fba359005"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-member-cleanup-lane.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "f4f636edcc4e5d96146b3e3c59acbbc2fe02265f9d13509a02d7fc8d99655a1e",
+      "after_sha256": "61770564e89acdd651bfe17bd64f4c3240f6cd483669656116a5d3e364853946"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-member-cleanup-reconcile.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "2225a1ed7b15d01ad1260b589228248c8f64de4f8264785a3332268da25c597c"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-member-retirement-receipt.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "f609237695d91f88d5b7caf9660c6fc4bc797114a3d132ed67108abb2c9a265a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-operating-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "2af7988e93c56690427689857d23ffe7db451cada9cfc8077a52829cc451b381",
+      "after_sha256": "078f83d60390cf5e9184ef95e708844db7805af94121d073a5e1efeb21d4d0ba"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-resume-sql108.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "5e2d06e9b15168a6e93af3fcb766c658c02083f2711d44a66a2627176bd787c4",
+      "after_sha256": "071c7812f56f377c3f7f87cedc712eabb28fe00c708ffe63aee004d2d3c2caf9"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-sungho-frontend-access.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "7db4cc283ca17110c79a596f0de88bebed735bbbf891269e0dbebde50771f665",
+      "after_sha256": "2ac99ed2243529bbcf85ee6182672d19a21e9d443759fdde01fd1de8f018c11b"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-sungho-retirement-consumer.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "be235351c55f71d0bc661eb807f8afb63caa7d0f40462225d47e471965eb7f1b",
+      "after_sha256": "f9aab1dda3170cc1511e28cfa3f77f3dc49217bca283a6168cef45fbdfefaa34"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-09-worker-intent-confirmation.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "4097d500a69a22201a7b1f9d7aff50d0236145f6e4e349b147deb64ab35fd994"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-closed-artifact-review.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "e84714a74c9f5ef51344b2604a5488abd0b4fbef0c885829e8bc17561efc4ceb"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-closed-production-launcher-plan.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "58ecd5edd9493c211fdcf12d2e5d622d4b5083ab3c76a84bbc7d252981a2bb6a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-final-schema-storage-restore-static.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "88f4397892617f771d796fdcaf6db8bd03d398def7e76c8e25af9f415d48c4a0",
+      "after_sha256": "4237ce3202b76d74a0fc250061ed245323062cea991091acdae197fa5296e8ff"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-jonghyun-backend100-handoff.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "bc2219252780449f323939ba7d21112239643f9593fe6ead62192c74205a7535",
+      "after_sha256": "146406ab528371fb7debe89bdac8bc8ac9979e4d24053dcf4b8a54c4c28fdd67"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-retirement-worker-e2e-plan.md",
+      "action": "read_preserved",
+      "reason": "역사/기술 검증 자료. 현재 결정과 충돌하는 지시 문구 없음.",
+      "sha256": "82b8dbdb071f20df71aa67a7f45aec0f916a7b4a83cd0bcf098aa7e8e4e6fbc3"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-seoul-https-transport-followup.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b437fae2a6ec6b1e48b5762131966bd97809f9471f92957f0b54a9a4f082d7c1",
+      "after_sha256": "a197a07e65bf2d45f40c25fdf074c0dc81465339a96fe07e25f6d326fa3426fe"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-10-supplier-official-evidence-review.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 4개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "39936d45d8c919ce4aa9c135ee61f6d022be1dfdb51c82cf86fc0f3fa876f5ce",
+      "after_sha256": "07fc41714486c2353e3db4e3c8fabd337582ccf0bd9d84cd497cfaadd1434786"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-12-backend100-execution.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ca52d026d0f14fac3a25205179c8447a074a61780d0d34631c71d442fb186dd0",
+      "after_sha256": "1e1a9b7a84e4996cb32e3e77f817f60f365be7a212e37c3d0e2c509487a2194e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-auth-lifecycle-execution.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 3개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "0eff30ff4992a4041c15747cbf46bf9d639bfe4f4f546bea1d8a604a6a2e66eb",
+      "after_sha256": "63b0667723da0c56aa687da91d31c81ceeea0a47a15549633bc8da1d73398a0a"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-jonghyun-parallel-backend.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 6개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "61bc994c75fe2c3b6956ce923f0f85f0964076ba3b96d90706ea1b46f8657d67",
+      "after_sha256": "5849f7a44b64541216defcf4ce11d2e16625c713820ba222c3b647b22bd7bbe4"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-seoul-https-public-tls-proof.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "37cc631c6252745e2d5abdab16b0a5ee58d019cb91d8fd8a3d068a0ef1a76366",
+      "after_sha256": "c2fa55b359cca1e1658da01a4634c3327071562cec4c0f38d412823c822eabe0"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-13-seoul-successor-contract.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "26a0b8fb12bc3ea6e1db295618164bc0def1cb364671749a06f3e5b61e83b46b",
+      "after_sha256": "4e9fe6e06a50ae353bf028300dc7a0cd1b1de1f0709cc5b9c30f54656a7bcbcb"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-jonghyun-start.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "729890330189e3228c039044f010962ed1d0200514f0021d24c88d00de175352",
+      "after_sha256": "c2c0c0590a9174456edaf1a942bfea6005ea3dbe988232376f0bd7b1cd650b00"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-minkyu-start.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "b25c9dff7c11fdce4dfcf24a3ba621a785ba5a9e0787123b83d8685b25ce8db5",
+      "after_sha256": "482f0d83743d9f425cfdf352a1bb04619aea19e5d8226653f411ad850d33cb76"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-role-reassignment.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "ddc6b4f23f75a4ec3e1be64a6789de6b32c563e6f315dd4b9944db3ffa8736db",
+      "after_sha256": "e556fab1d400ddce422df9ff5d82809b3786ccecd0851d07451532e602676aac"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-temporary-tool-round2-closure.md",
+      "action": "updated",
+      "historical_body_preserved": true,
+      "changes": [
+        "문서 주제별 현행 조건 1개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "f3066deaffca561398c91076baa1aa2f5e25069df44084f381d5955525192151",
+      "after_sha256": "b62e858438e85ed6ad80e82e5d720b2844112fe982917fb218ebac0e5cc7407d"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-wbs-task-catalog.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 5개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "4e84d6ea8796f384012b80011680a2c8a132fbc2465e16ee704ea5251f96de3e",
+      "after_sha256": "5fbe016a8f9e5397655657f0a66ea9313ee03d3fe5ec230c3e0ff8edb514a05e"
+    },
+    {
+      "path": "docs/collaboration/requests/minkyu/2026-10-14-yumi-start.md",
+      "action": "updated",
+      "historical_body_preserved": false,
+      "changes": [
+        "문서 주제별 현행 조건 2개와 역사/실행 범위 연결"
+      ],
+      "before_sha256": "521ac97e8e706b6d271a905372bf2c098a874e61ba00aef1e0cc5dbb92372c76",
+      "after_sha256": "35d920161301cefff64d0854ef1217b66e7155741a5bafea5111c815b6de088f"
+    }
+  ],
+  "validation": "원문 실제 검증/소스/SQL/환경/원격 요청/commit 변경 없음. 역사 문서는 원본문 보존+문서 주제별 최신 조건 연결. 현재 계약의 직접 충돌 문구는 본문 정정."
+}

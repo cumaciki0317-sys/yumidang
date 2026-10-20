@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-20",
+  "scope": "실제 Chrome의 문서 검토판 검증; 제품 앱 QA/운영 검증 아님",
+  "verified": [
+    "개요 실제 렌더·레이아웃",
+    "구현103항목 표시",
+    "구현C20검색1건 및정확한신고분기설명",
+    "민규필터59건",
+    "정책306항목과P033복귀예외",
+    "문서340개표시",
+    "QA70건과TC001의사전조건/행동/기대/금지",
+    "실제새정책질문0개",
+    "합성질문추천3안+기타4안",
+    "기타한국어·태그문자입력",
+    "새로고침뒤기타선택/문장복원",
+    "HTML다운로드의saved-answers동일검증"
+  ],
+  "download_sha256": "fc9a6755a6b2e2cc5ca58d09a08ac89c424ae1e24bf16989687d4b3c8e19ebcf",
+  "synthetic_only": true,
+  "download_event_tool": "다운로드 대기 도구는 지연 후 timeout. 실제 Chrome 다운로드파일과 현재 UI를 읽어 저장 성공·값을 확인했다. 중복 다운로드하지 않음.",
+  "new_product_test_runs": 0,
+  "synthetic_download_cleaned": true,
+  "runtime_errors": 0,
+  "final_preview": "review-preview.png"
+}

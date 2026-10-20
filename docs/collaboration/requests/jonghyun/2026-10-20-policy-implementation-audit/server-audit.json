@@ -1,0 +1,1996 @@
+{
+  "version": 1,
+  "date": "2026-10-20",
+  "scope": "306개 정책의 서버/DB 정적 대조. 계약만으로 완료 판정하지 않음. 신규 실행/외부호출/SQL 적용/제품수정 없음.",
+  "groups": [
+    {
+      "id": "B01",
+      "title": "KOPIS 공식 대조·14분류 공개",
+      "policy_ids": [
+        "P001",
+        "P201",
+        "P202",
+        "P203",
+        "P232"
+      ],
+      "policy_summary": "전체 공연과 13개 세부 분류를 어제까지 최근7일 기준으로 매일 갱신한다. 분류마다 공식 사이트의 실제 기간·조건·공연ID·순위·순서를 대조해 일치한 목록만 공개한다. basedate가 없어도 이 대조를 통과하면 공개할 수 있으나 내부 집계 기간을 증명했다고 설명하지 않는다. 동률은 공식 순서를 유지하고 10개 미만이면 확인된 개수만 제공한다. 갱신 실패 때 마지막 검증 기간을 유지하며 자체 주간 순위로 대체하지 않는다.",
+      "actual": "실제 parser 는 basedate XML 이 요청한 최근7일과 같아야만 수락한다. all/musical 두 mode 만 있고 공개 RPC 는 not_enabled 고정이다. 최신 A 안의 공식 사이트 대조 증거·분류별14항목·성공/실패 독립 원장은 아직 연결되지 않았다. 기존 코드의 verified 는 최신 공식 사이트 대조를 뜻하지 않는다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts",
+          "line": 67,
+          "note": "응답 기간 필수 parser"
+        },
+        {
+          "path": "backend/supabase/migrations/20261008013000_public_event_detail.sql",
+          "line": 14,
+          "note": "공개 HTTP가 부르는 DB는 미활성 고정"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.1",
+        "1.2",
+        "4.2",
+        "6.1",
+        "7.8"
+      ],
+      "owner": "minkyu",
+      "next_action": "공식 사이트 대조 증거 계약→14조건 매핑→검증 snapshot 저장→조회 투영을 민규가 구현. 일반 수집과 분리.",
+      "acceptance": "각 분류의 공식 실제기간·조건·ID/순서·확인시각 보존, 10개 미만·동률·갱신실패·최초미검증을 독립 검증."
+    },
+    {
+      "id": "B02",
+      "title": "신고 본인 숨김 실제 서버 확인",
+      "policy_ids": [
+        "P002"
+      ],
+      "policy_summary": "일반 신고의 본인 숨김 구현·운영 검증: 본인 숨김의 범위·수명·해제 정책과 클라이언트 연결 구현은 승인됐다. 신고 선택값 기록만으로 실제 숨김을 완료했다고 안내하지 않으며 서버의 일치하는 처리 확인 뒤 화면을 이동·갱신한다. 실제 목록·상세·숨김 관리·필수 약속 관리 접근을 통합 검증하기 전 운영 완료로 표시하지 않는다. AI 문제 신고의 별도 비활성 조건은 유지한다.",
+      "actual": "서비스 report repository 와 member_hidden_content_filters 마이그레이션, 본인 숨김 목록/해제 RPC 가 존재한다. 숨김은 공고/행사/프로필 등 해당 조회 경로의 필터와 연결되며 필수 약속 접근과 구분된다. 운영 통합 실행은 이번 감사에서 하지 않았다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/user-client.ts",
+          "line": 9,
+          "note": "허용 RPC"
+        },
+        {
+          "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+          "line": 3,
+          "note": "실제 조회 필터"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "현재 클라이언트와 실제 회원 서버를 연결해 목록/상세/필수 관리 접근을 대조.",
+      "acceptance": "숨김 선택 응답 성공 후만 숨김 완료 안내; 해제 후 다른 숨김/차단 유지."
+    },
+    {
+      "id": "B03",
+      "title": "플랫폼 설치·실행 증거 경계",
+      "policy_ids": [
+        "P003",
+        "P004",
+        "P005"
+      ],
+      "policy_summary": "Android 내부 설치 앱 검증 — 사용자 승인: iPhone 배포 보류와 별도로 Android 내부 설치용 APK의 빌드·설치·독립 실행 검증을 진행한다. 시험용 앱 식별자와 설정은 운영 앱과 구분하며 기존 앱·데이터를 보존한다. 예시 모드 APK 검증은 실제 회원 서버 연결·스토어 배포 완료를 뜻하지 않는다. Apple Developer 계정 생성·iPhone 배포 검증 보류 — 사용자 확정: 현재 Apple Developer 계정은 없으며 계정 생성은 추후로 미룬다.",
+      "actual": "Android/iPhone 배포·실기기·스토어는 서버 소스만으로 확인할 수 없다. service-api 는 회원/공개 경로를 나누지만 원격 DB 적용·native 세션은 이번 읽기 감사에서 NOT_RUN 이다.",
+      "classification": "확인 불가",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/service-api/handler.ts",
+          "line": 66,
+          "note": "실제 API 진입 조립"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "jonghyun",
+      "next_action": "종현 설치/연동 증거와 민규 서버 적용 증거를 별도로 연결.",
+      "acceptance": "예시 APK·Expo Go·합성 검사·실제 회원·실기기 증거를 각각 표시."
+    },
+    {
+      "id": "B04",
+      "title": "서울 평문 수집 차단과 HTTPS 연결 대기",
+      "policy_ids": [
+        "P006"
+      ],
+      "policy_summary": "서울 열린데이터는 API 키와 응답이 평문 HTTP를 통과하는 수집을 활성화하지 않는다. 공식 HTTPS 홈페이지를 볼 수 있다는 사실은 API 수집 경로의 보안을 입증하지 않는다. 검토된 HTTPS 자동 수집 경로와 실제 응답 규격, 페이지 재개 및 진행 중 행사 갱신을 확인한 뒤 연결한다. 서울의 보류와 별개로 세 공급사의 공통 데이터 정리·화면 연결 준비는 계속하고, 안전하지 않은 경로를 임의 대안으로 선택하지 않는다.",
+      "actual": "정적 소스 범위에서 정책과 일치한다. 실제 배포·운영 검증은 NOT_RUN 이다. Seoul provider 는 검토된 HTTPS endpoint·decisionId 가 없으면 EVENT_PROVIDER_UNCONFIGURED. culturalEventInfo 정규화는 있으나 aiViewCulture 신규 envelope 는 거절한다. 평문 HTTP 자동 수집을 켜는 구현은 아니다. 확인된 일치는 평문/미설정 차단에 한정된다. HTTPS 자동 수집 전체·재개·진행 중 갱신 완료를 뜻하지 않으며 B36과 함께 추적한다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "line": 151,
+          "note": "미설정 수집 차단"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "line": 111,
+          "note": "신규 envelope 미확인 차단"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "4.2",
+        "7.12",
+        "7.9"
+      ],
+      "owner": "minkyu",
+      "next_action": "민규가 안전한 endpoint/실제 신규 envelope/진행 중 갱신 검증 후 별도 연결.",
+      "acceptance": "키 포함 HTTP 호출 0, HTTPS 실응답·페이지 재개·진행 중 갱신 입증."
+    },
+    {
+      "id": "B05",
+      "title": "공급사 조건·Gemini 예산과 제품 런타임",
+      "policy_ids": [
+        "P007",
+        "P008",
+        "P009"
+      ],
+      "policy_summary": "포텐스닷은 교육·프로토타입 범위로 구분하며 공급사가 공유한 제한·기능 축소·보안 우려를 반영한다. 실회원 대화·후기는 다른 API의 보관·학습·삭제·공동 사용 조건을 확인한 후 연결한다. Gemini는 종현의 테스트 프로젝트에 결제와 월50,000원 사용중단 예산을 준비하되 선충전이나 최종 청구 상한 보장으로 설명하지 않는다. 대표 계정 전환과 제품 연결은 별도로 확인하며 공급사별 비용 원장을 분리한다.",
+      "actual": "제품 createConfiguredModel 은 Potens 단일/다계정 포트만 조립하고 보관·비용·법적검토·회원 전송·출력 상한 근거가 없으면 disabled 다. Gemini 테스트 프로젝트 결제/5만원 사용중단 준비와 제품 adapter 연결은 별개이며 이 런타임에 Gemini adapter 는 없다. 공급사 회신이 온 사실을 회신 대기로 되돌릴 수 없다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "line": 32,
+          "note": "제품 Potens 조립과 fail-closed"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/account-pool.ts",
+          "line": 43,
+          "note": "등록계정 전환 구현"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4a",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "next_action": "Gemini 는 공급사별 원장/회원 전송 조건을 확인한 뒤 별도 제품 연결; 대표 계정 전환은 회의 때.",
+      "acceptance": "테스트 합성 호출과 실제 회원 전송 분리, 원화청구/기술토큰 분리, 지연으로 최종청구 상한 보장하지 않음."
+    },
+    {
+      "id": "B06",
+      "title": "운영·공개 정보와 실제 권한",
+      "policy_ids": [
+        "P010",
+        "P011",
+        "P012",
+        "P013"
+      ],
+      "policy_summary": "일반 신고 운영 체계: 일반 신고 실무·책임자는 대표 유미(조유미)다. 운영 목표는 평일 09~18시, 영업일 2일 이내 첫 확인이며 사건별 완료 예정은 별도 안내한다. 대체자는 별도로 지정되지 않았고 운영 배정·처리 목표가 실제 접근권한 설정·운영 준수 검증 완료를 뜻하지 않는다. 공개 운영 정보: 서비스명은 유미당, 실제 개인 운영자·책임자는 대표 조유미(유미), 공개 문의·고객지원·안전 메일은 cumaciki0317@gmail.com이다.",
+      "actual": "담당자별 배정 ACL 과 감사·삭제 RPC 는 있으나 조유미 계정의 실제 승인/배정·공개메일 수신·공급사 법률 근거는 코드만으로 증명할 수 없다. 정책의 운영 목표는 제품 선택이며 실제 응답시간 보장이 아니다.",
+      "classification": "확인 불가",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+          "line": 18,
+          "note": "사건별 운영자 권한"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/report-operator-client.ts",
+          "line": 41,
+          "note": "운영자 요청 전송"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "대표 조유미 실제 계정 ACL·접수메일·삭제처리·감사·대체 미지정 상태의 실행 절차 확인.",
+      "acceptance": "비승인/비배정 접근 거절, 허용 증거 접근 감사, 회원 채팅 DB 직접 열람 없음."
+    },
+    {
+      "id": "B07",
+      "title": "무료 동행 쓰기 계약과 제외 기능의 실행 경계",
+      "policy_ids": [
+        "P014",
+        "P015",
+        "P016",
+        "P017",
+        "P018",
+        "P019",
+        "P268",
+        "P269",
+        "P270",
+        "P271",
+        "P272",
+        "P273"
+      ],
+      "policy_summary": "유미당은 여성·만 19세 이상 사용자를 위한 무료 1:1 동행 서비스다. 현재 유료 동행, 결제, 정산, 수수료, 환불, 수고비 거래를 제공하지 않는다. 동행 모집과 신청 과정에 금액 입력이나 계좌 인증 단계가 없다. 합의 밖 금전 거래, 대가성 요구, 계좌 비밀번호·인증번호 공유는 금지한다. 서비스의 로그인과 자격 확인은 네이버 연동을 기준으로 한다. 학교·직장 이메일 인증과 1원 계좌 인증은 현재 화면과 이용 흐름에서 제외한다.",
+      "actual": "정적 소스 범위에서 정책과 일치한다. 실제 배포·운영 검증은 NOT_RUN 이다. 무료 공고 입력은 costType free/amount0으로 고정돼 있고 네이버 가입 경로가 있다. 과거 test-phone-auth·기관메일 함수는 저장소에 남아 있지만 파일 존재를 현재 제공 기능으로 간주하지 않는다. 유료/학교직장/계좌/관심친구/관리자행사수동/외부캘린더는 현재 제외·보류다. 정적 쓰기 계약 확인 범위이며, 배포된 모든 화면/API의 제외 기능 접근 차단 검증은 NOT_RUN이다.",
+      "classification": "일치",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "line": 8,
+          "note": "무료 공고 타입"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+          "line": 62,
+          "note": "네이버 자격 경로"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "next_action": "기존 테스트 함수가 운영 라우팅에 노출되지 않도록 출시 설정 확인.",
+      "acceptance": "현재 진입/쓰기 API 에서 유료·계좌·기관 인증 사용 불가, 기존 기록 보존."
+    },
+    {
+      "id": "B08",
+      "title": "네이버 자격·단일계정·복귀",
+      "policy_ids": [
+        "P020",
+        "P021",
+        "P022",
+        "P023",
+        "P024",
+        "P025",
+        "P026",
+        "P027"
+      ],
+      "policy_summary": "초기 로그인 수단은 네이버 간편 로그인만 제공한다. 다른 수단은 추후 검토한다. 가입 자격은 네이버 인증정보만으로 확인하며 별도 휴대폰 본인인증은 추가하지 않는다. 네이버에서 이름·성별·생일·출생연도를 받아 여성·만 19세 이상 여부를 확인한다. 필수 정보가 누락되거나 확인할 수 없으면 가입을 보류하고 네이버 정보 확인과 재시도를 안내한다. 만 19세 미만 또는 대상 자격을 충족하지 않으면 가입할 수 없다.",
+      "actual": "start→일회성 state 저장/소비→Naver exchange→resolve_naver_account→session bridge→record_naver_session 경로가 있다. status information_required/ineligible 은 session 없이 반환하고 returnTo 검증을 수행한다. 실제 네이버 필수항목·운영 OAuth 는 읽기 감사에서 NOT_RUN.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+          "line": 57,
+          "note": "일회성state 검증"
+        },
+        {
+          "path": "backend/supabase/migrations/20261002090000_naver_signup.sql",
+          "line": 84,
+          "note": "단일subject 계정/자격DB"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.2",
+        "3.1",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 네이버 앱·리다이렉트·여성/19세/누락정보 경계와 복귀 검증.",
+      "acceptance": "18/19생일·누락·위조 state·중복콜백·기존계정 목적복귀를 실제 연결로 확인."
+    },
+    {
+      "id": "B09",
+      "title": "사진 필수·성향 선택 가입",
+      "policy_ids": [
+        "P028",
+        "P029",
+        "P030",
+        "P031",
+        "P032",
+        "P033"
+      ],
+      "policy_summary": "프로필 사진은 필수다. 사진 선택만으로 가입이 완료되지 않으며 가입 완료를 눌러야 한다. 사진 형식은 JPG·JPEG·PNG, 원본 크기는 10MB 이하로 안내한다. 관심사와 대화 방식은 선택이며 기본 선택지와 직접 입력을 지원한다. 관심사·대화 방식은 각각 최대 20개, 항목당 40자까지로 표현한다. MBTI는 E/I, S/N, T/F, J/P 네 쌍으로 선택하며 비워둘 수 있다.",
+      "actual": "complete 는 avatarPath 와 선택 interests/conversationStyles/mbti 를 complete_naver_signup 로 전달한다. 형식·개수 검증과 사진 저장 경로 경계를 두지만 사진 선택 UI 만으로 가입 완료하지 않는다. 실제 Storage 업로드·가입 완료는 별도.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/signup.ts",
+          "line": 62,
+          "note": "사진/성향 입력 검증"
+        },
+        {
+          "path": "backend/supabase/migrations/20260917052827_profile_images_required.sql",
+          "line": 34,
+          "note": "DB사진 요구"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.1",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 사진 업로드·권한·10MB/JPG PNG UX 와 signup final commit 연결검증.",
+      "acceptance": "사진미선택/업로드실패/선택만한상태 가입완료거절, 선택성향 공란 허용."
+    },
+    {
+      "id": "B10",
+      "title": "계정·제재 상태 표시",
+      "policy_ids": [
+        "P034",
+        "P035",
+        "P046"
+      ],
+      "policy_summary": "S21에서 네이버 본인·성인 확인 상태, 실명과 마스킹 이름, 성별·나이, 가입일, 제재 내역을 확인한다. 계정 상태는 정상, 경고, 이용 정지로 구분한다. S21에서 사유·이의 마감·검토 상태·실제 제한 종료를 보여주며 대기·적용·해제 상태 변경을 알린다.",
+      "actual": "get_my_safety_state/list_my_sanctions/cancellation notices 와 사용자 JWT allowlist 가 있다. 이름·가입정보/상태·마감·제한종료의 화면 실제 소비와 운영 자료 정확성은 별도다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/user-client.ts",
+          "line": 9,
+          "note": "상태조회 허용목록"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005135215_member_sanction_history.sql",
+          "line": 3,
+          "note": "제재이력 실제 SQL"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "계정 화면의 경고/검토/해제 상태를 실제 응답에 연결.",
+      "acceptance": "사유·이의마감·실제 제한종료 표시, 안내 제공·읽음과 분리."
+    },
+    {
+      "id": "B11",
+      "title": "연속취소·24시간 이의·제재 정정",
+      "policy_ids": [
+        "P036",
+        "P037",
+        "P038",
+        "P039",
+        "P040",
+        "P041",
+        "P042",
+        "P043",
+        "P044",
+        "P045",
+        "P047",
+        "P048"
+      ],
+      "policy_summary": "확정된 동행을 연속 3번 취소한 사용자에게 첫 경고를 적용한다. 취소·완료 결과 확정 직전 양쪽이 합의한 최신 예정 시작 시각 순서로 결과를 집계한다. 시작 시각이 같으면 동행 확정 시각이 빠른 순서, 그것도 같으면 내부 고유번호 순서로 고정한다. 중간 동행의 결과가 미정이면 그 뒤 연속 판정을 보류한다. 취소 버튼을 누른 순서로 제재를 판정하지 않는다. 정상 완료하면 연속 취소 횟수를 0으로 초기화한다.",
+      "actual": "cancellation_sanction_plan 은 합의 시작/확정/ID 순서와 pending 보류·정상완료 reset·3회 경고/제한을 계산한다. 후속 clock_lineage 와 historical_safety_episode 가 종료회차 최초 제재 및 정정시 시작 시각 승계를 확장한다. 초기 draft 의 unresolved 문구만 보고 현재 미구현이라고 판정하면 안 된다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005021810_sanction_adjudication_draft.sql",
+          "line": 140,
+          "note": "순서/횟수/보류"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006151000_historical_safety_episode.sql",
+          "line": 3,
+          "note": "탈퇴회차 최초효과 확장"
+        },
+        {
+          "path": "backend/supabase/migrations/20261007020000_cancellation_clock_lineage.sql",
+          "line": 72,
+          "note": "시작시각 정정 lineage"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 서버에 최신 migration 적용과 이의24h 경계·동시취소·정정 재계산 검증.",
+      "acceptance": "마감 동일 시각 거절, 경고이력 보존, 기존제재시작 유지·신규만 새시작, 중간미정 뒤판정보류."
+    },
+    {
+      "id": "B12",
+      "title": "탈퇴·재가입·후기와 삭제 완료",
+      "policy_ids": [
+        "P049",
+        "P050",
+        "P051",
+        "P052",
+        "P053",
+        "P054",
+        "P055",
+        "P056",
+        "P057"
+      ],
+      "policy_summary": "탈퇴 시 작성 공고와 진행 중 신청을 취소한다. 진행 중인 확정 약속이 있으면 탈퇴할 수 없다. 후기 작성 기간만 남거나 진행 확정 약속 없이 분쟁만 남았다면 탈퇴할 수 있고 분쟁 처리는 별도로 유지한다. 일반·경고·제재 중 모두 재가입을 즉시 허용한다. 기간제 제재는 원래 종료 시각까지 동일 기능 제한을 승계한다. 영구 이용 제한은 종료 시각 없이 승계하며 재가입이 활동 재개를 뜻하지 않는다.",
+      "actual": "retire_my_account 와 Storage/Auth cleanup executor·receipt 경로가 있다. 처리 중/완료와 memberAccessRevoked 를 구분하며 동일 withdrawalId 를 보존한다. 동일 네이버 identity 와 회원 회차를 나눠 새당도15/완료 0, 과거 제재 승계를 설계한 SQL 이 있다. 실제 외부삭제·재가입은 NOT_RUN.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/member-lifecycle-service.ts",
+          "line": 21,
+          "note": "탈퇴요청/응답 검증"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005020135_current_member_lifecycle.sql",
+          "line": 178,
+          "note": "약속/프로필/회차 처리"
+        },
+        {
+          "path": "backend/supabase/migrations/20261009011700_member_retirement_receipt.sql",
+          "line": 18,
+          "note": "동일요청 완료조회"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 Auth/Storage/DB·상대후기·재가입·제재 회차 통합 검증.",
+      "acceptance": "진행확정약속만 탈퇴보류; 후기/분쟁만은 허용; 미삭제 processing·실제삭제후 completed."
+    },
+    {
+      "id": "B13",
+      "title": "AI 선택 동의 세종·전체동의",
+      "policy_ids": [
+        "P058",
+        "P059",
+        "P060",
+        "P061",
+        "P062"
+      ],
+      "policy_summary": "후기 요약 동의는 가입 화면에서 열람·내 프로필 생성/노출·작성 후기 활용을 각각 선택할 수 있게 한다. 기본값은 미선택이고 개별 자세히 보기와 전체 동의를 제공한다. 미동의해도 가입과 일반 동행은 이용할 수 있다. 전체 동의는 개별 항목을 함께 선택하는 편의 기능이며 서로 다른 처리의 동의를 하나로 합치는 뜻이 아니다. 테스트 계정의 동의 완료 가정을 실제 회원 동의 기록 생성이나 원문 전송 승인으로 사용하지 않는다.",
+      "actual": "서버 signup complete 에는 세분화한 AI 동의 입력이 없다. ai_member_processing 은 exploration_allowed/summary_allowed 두 boolean 이며 요약 열람·프로필 생성·작성후기활용을 각각 저장하지 않는다. 테스트 계정 간주를 DB 동의 생성으로 적용한 증거는 없다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+          "line": 86,
+          "note": "가입완료 현재 인자"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "line": 11,
+          "note": "요약 동의 단일 boolean"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.2",
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "독립3동의와 탐색 첫 사용 동의의 저장/열람/철회 계약을 민규가 명시 설계·구현; 일반가입 차단 금지.",
+      "acceptance": "기본 미선택으로 가입성공, 항목별 증거와 독립철회, 전체동의는 UI 선택일뿐 하나의동의로 저장하지 않음."
+    },
+    {
+      "id": "B14",
+      "title": "관계별 개인정보 공개·취소 회수",
+      "policy_ids": [
+        "P063",
+        "P064",
+        "P065",
+        "P066",
+        "P067",
+        "P068",
+        "P069",
+        "P072"
+      ],
+      "policy_summary": "본인   홈과 계정 화면에서 본인 실명, 계정 정보, 현재 당도, 활동 내역 로그인·미확정   마스킹 이름, 만 나이, 공개 지역, 허용된 성향·후기·현재 당도 동행 확정 완료   상대 전체 이름, 정확한 주소와 상세 만남 지점, 확정 약속 정보 확정 공고의 제3자   확정 상태만 확인하며 상대 실명과 상세 위치는 볼 수 없음 취소 성립 후   전체 이름을 다시 마스킹하고 정확한 주소·상세 지점을 즉시 숨김",
+      "actual": "JWT 별 get_service_post/author profile 와 matching 조건 투영이 분리돼 있다. 취소 뒤 관계가 확정이 아닌 상태로 재조회되면 실명/상세가 회수되는 SQL 경로가 있다. 이미 받은 화면캐시·진행읽음 ACK 의 즉시 무효화는 종현 별도 점검이다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "line": 407,
+          "note": "관계/차단 공개 경계"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005001538_current_public_search.sql",
+          "line": 192,
+          "note": "공고 상세 공개 투영"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "서버 권한투영과 클라이언트 취소즉시 회수·후발응답을 함께 검증.",
+      "acceptance": "비로그인 응답/DOM 민감정보 0, 제3자 실명/상세 0, 취소직후 저장응답 재사용 불가."
+    },
+    {
+      "id": "B15",
+      "title": "공고 검색·정렬·필터·페이지",
+      "policy_ids": [
+        "P070",
+        "P071",
+        "P073",
+        "P074",
+        "P075",
+        "P076",
+        "P077",
+        "P078",
+        "P079",
+        "P080",
+        "P081"
+      ],
+      "policy_summary": "공고 검색은 제목·등록 장소명·등록 주소·연결 행사명을 대상으로 한다. 소개글, 후기, 비공개 상세 지점은 검색 대상이 아니다. 둘러보기 기본 정렬은 등록일 최신순이며 시작일 빠른순으로 전환할 수 있다. 필터는 카테고리, 지역(시·도), 일정, 작성자 만 나이 19~99세 범위를 제공한다. 비로그인은 일정과 나이 상세 필터를 사용하지 못하고 전체 범위만 본다. 기본 목록은 모집 상태와 관계없이 전부 노출한다.",
+      "actual": "search_public_posts_v2 최신 wrapper 에서 차단·숨김을 거른다. 검색 필드/나이/일정/정렬과 익명 제한은 DB 와 search contract 경로가 있으며 오류를 빈배열로 대체하지 않는 서비스 경계가 있다. 최근검색기록/적용버튼은 클라이언트 영역.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "line": 196,
+          "note": "차단 검색 wrapper"
+        },
+        {
+          "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+          "line": 14,
+          "note": "본인숨김 검색 wrapper"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/search-service.ts",
+          "line": 23,
+          "note": "검색서비스 실제 경로"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "최신 SQL/클라이언트 입력 조합 검증; 전체검색 상한99 오적용 금지.",
+      "acceptance": "제목/장소/주소/연결행사 검색, 소개/후기/상세미검색, 10개추가조회·실패/0건구분."
+    },
+    {
+      "id": "B16",
+      "title": "공고 입력·장소·검사·초안",
+      "policy_ids": [
+        "P082",
+        "P083",
+        "P084",
+        "P085",
+        "P086",
+        "P088",
+        "P089",
+        "P090",
+        "P091"
+      ],
+      "policy_summary": "필수 항목은 카테고리, 제목, 소개, 장소, 시작 일시, 종료 일시다. 모집 마감은 선택이며 미설정 시 동행 시작 시각에 마감한다. 장소는 Kakao Local 기반 장소명 검색 또는 우편번호 기반 주소 검색으로 선택한다. 같은 이름의 장소는 주소와 우편번호로 구분한다. 공개 지역과 상세 만남 지점을 분리한다. 제목·본문에서 연락처·계좌·비공개 상세 위치 등 개인정보가 감지되면 등록을 차단하고 수정 또는 오탐 문의를 안내한다.",
+      "actual": "FreePostInput 에 필수 일시/공개지역/등록주소/상세지점이 분리되며 HTTP→create_service_post 가 전달한다. 콘텐츠 검사 티켓은 입력 전체와 결합하나 classifier 준비값 없으면 닫힌다. 초안/글자수 UX 와 장소 실제키는 별도 연결검증.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "line": 2,
+          "note": "현재 쓰기 계약"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/content-inspection.ts",
+          "line": 63,
+          "note": "검사 승인/분류 연결"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/posts.ts",
+          "line": 5,
+          "note": "실제 RPC쓰기"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "Kakao/우편번호·검사 classifier·DB ticket consume 와 등록화면 통합 검증.",
+      "acceptance": "오래된입력 충돌·연락처차단·오탐경로·길이경계·장소동명이인·입력보존 확인."
+    },
+    {
+      "id": "B17",
+      "title": "직접 입력 행사와 공고 저장",
+      "policy_ids": [
+        "P087",
+        "P205",
+        "P206",
+        "P208",
+        "P209",
+        "P210"
+      ],
+      "policy_summary": "행사 연결은 선택이며 연결·교체가 작성 중인 동행 일정을 자동으로 바꾸지 않는다. 직접 입력 행사는 행사명만 필수이고 공개 행사장 장소명·주소는 선택이다. 주소는 기존 검색으로 선택하고 개인 주소를 금지한다. 직접 입력한 정보는 해당 공고에만 보관·표시하며 공통 목록이나 별도 행사 상세로 생성하지 않는다. 변경·삭제 버튼을 제공하고 삭제는 공고의 행사 연결만 제거한다. 작성 진입 경로별 행사 영역 위치는 화면 기준을 따른다.",
+      "actual": "현재 공고 계약은 eventId?: UUID|null 뿐이다. SQL 은 source_event_id 를 저장하며 manual 행사명/선택장소·주소·공개확인 저장 인자와 직접입력 투영이 없다. FE 직접입력 상태 존재는 실제 서버 저장 완료가 아니다.",
+      "classification": "미구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "line": 10,
+          "note": "UUID/null 계약"
+        },
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "line": 5,
+          "note": "선택 UUID 컬럼"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.2",
+        "3.6",
+        "4.2"
+      ],
+      "owner": "minkyu",
+      "next_action": "manual 저장/응답·검사·핵심변경·검색 계약을 민규가 추가하되 공용행사 생성하지 않음.",
+      "acceptance": "직접 입력 행사 등록→재조회/수정/재시도에 유지, API 행사와상호배타, 삭제는연결만삭제."
+    },
+    {
+      "id": "B18",
+      "title": "공고 상태·마감·삭제·핵심변경",
+      "policy_ids": [
+        "P092",
+        "P093",
+        "P094",
+        "P095",
+        "P096"
+      ],
+      "policy_summary": "공고 상태는 모집 중, 수동 마감, 최종 동의 대기, 확정, 완료, 삭제 등으로 구분한다. 수동 마감은 새 신청만 막고 기존 유효 신청자와의 대화는 보존한다. 기존 와이어프레임의 시작 전 최종 동의 재요청 흐름을 유지한다. 확정 전 핵심 조건 변경 시 신청자에게 알리고 기존 최종 동의 요청을 무효화한다. 새 조건으로 다시 요청하고 동의받는다. 확정 전 삭제 시 공개 목록에서 숨기고 미확정 요청을 종료하며 기존 대화는 읽기 전용으로 보존한다.",
+      "actual": "현재 RPC close/update/delete/reopen 가 분리돼 있고 확정취소와 delete 는 다른 경로다. update 는 condition fingerprint 로 최종동의를 무효화하고 모집재개를 독립처리한다. 새로운 직접 입력 행사 필드 핵심변경은 기존 fingerprint 확장 필요.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/posts.ts",
+          "line": 8,
+          "note": "별도 삭제 요청"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "line": 132,
+          "note": "조건변경/동의 무효화"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "line": 269,
+          "note": "모집재개 독립RPC"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "직접 입력 행사/통합관계가 추가될때 핵심조건 fingerprint/변경합의를 함께 확장.",
+      "acceptance": "마감후기존채팅유지, 삭제후읽기전용, 확정중삭제가취소대체못함."
+    },
+    {
+      "id": "B19",
+      "title": "첫 메시지 신청·재신청",
+      "policy_ids": [
+        "P097",
+        "P098",
+        "P099",
+        "P100",
+        "P101",
+        "P102",
+        "P103",
+        "P104",
+        "P105"
+      ],
+      "policy_summary": "별도 신청 메시지 입력·제출 화면을 없앤다. 공고의 신청 버튼을 누르면 작성자와의 1:1 S11 채팅 화면으로 바로 이동한다. 첫 채팅이 성공적으로 전송된 시점에 신청이 성립한다. 그 전에는 신청 처리하지 않고 작성자에게 알림을 보내지 않으며 작성자 측 채팅방도 생성하지 않는다. 첫 채팅 없이 이탈하면 미신청 상태다. 첫 전송 실패 시에도 신청이 성립하지 않는다. 재신청은 동일 공고·상대의 기존 채팅방과 이력을 재사용하며 새 메시지 전송 성공 시 성립한다.",
+      "actual": "request_service_post 는 messageId/message 를 받고 신청·첫메시지·알림을 한 트랜잭션으로 수행한다. withdraw 기록과1분 재신청/작성자거절 차단은 DB 경로다. 전송전 draft 는 서버신청으로 만들지 않는다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005002006_first_chat_application.sql",
+          "line": 29,
+          "note": "최초신청 원자SQL"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "line": 84,
+          "note": "차단pair guard"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/matching.ts",
+          "line": 3,
+          "note": "HTTP서비스 전달"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "첫전송 응답유실/동일 ID 재시도·재신청·거절·서버적용 검증.",
+      "acceptance": "전송실패 신청 0·알림 0, 재시도 중복 0, 철회후60초 경계, 거절후재신청거절."
+    },
+    {
+      "id": "B20",
+      "title": "확정 요청·만료·일정충돌·모집재개",
+      "policy_ids": [
+        "P106",
+        "P107",
+        "P108",
+        "P109",
+        "P110",
+        "P111"
+      ],
+      "policy_summary": "여러 신청자와 대화·합의한 뒤 작성자가 확정 요청을 보내고 신청자가 수락하면 확정한다. 작성자 버튼만으로 즉시 확정되지 않는다. 기존 와이어프레임과 같이 한 번에 한 명에게 요청한다. 대기 중인 요청을 철회한 뒤 다른 신청자에게 요청할 수 있다. 확정 요청은 요청 후 6시간과 동행 시작 시각 중 빠른 때 만료된다. 만료 시 미확정으로 돌아가고 신청·대화는 유지한다. 한 명이 확정되면 다른 신청은 모집 종료로 처리하고 해당 채팅을 읽기 전용으로 전환한다.",
+      "actual": "propose/accept 함수는 한 요청·조건버전·6시간/시작중빠른만료·동시확정/일정충돌을 DB 가 판정한다. 다른신청 모집종료와 reopen 복원은 후속 migration 에 구현됐다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005001429_current_completion_consent_policy.sql",
+          "line": 101,
+          "note": "6시간 요청만료"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "line": 77,
+          "note": "원자확정/모집종료"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "line": 269,
+          "note": "이전 유효신청복원"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 DB 동시요청·만료동일 시각·기존일정충돌·복원 분기검증.",
+      "acceptance": "한명만확정, 만료동일 시각거절, 취소만으로자동재개없음, 거절/철회복원없음."
+    },
+    {
+      "id": "B21",
+      "title": "채팅 전송·읽기전용·나가기",
+      "policy_ids": [
+        "P112",
+        "P113",
+        "P114"
+      ],
+      "policy_summary": "메시지 전송 실패 시 내용을 유지하고 재전송을 제공한다. 종료된 대화는 읽기 전용으로 보존한다. 대화방 나가기는 본인 목록에서만 숨기며 상대방 기록을 삭제하지 않는다.",
+      "actual": "conversation repository 와 read_state/message_read_receipts·retention 조회가 연결된다. 나가기는 본인 visibility 로 분리한다. 자동 재전송/입력보존은 FE 경계이며 실제 native realtime 은 이번 감사에서 NOT_RUN.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/conversations.ts",
+          "line": 5,
+          "note": "본인나가기 RPC"
+        },
+        {
+          "path": "backend/supabase/migrations/20261008026000_message_read_receipts.sql",
+          "line": 15,
+          "note": "읽음 실SQL"
+        },
+        {
+          "path": "backend/supabase/migrations/20261010030000_hidden_message_read_receipts.sql",
+          "line": 13,
+          "note": "숨김메시지 읽음가드"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 양쪽계정·권한상실·메시지순서·응답유실 연결검증.",
+      "acceptance": "동일 messageId 중복 0, 종료방쓰기거절/읽기유지, 나가기가상대기록삭제안함."
+    },
+    {
+      "id": "B22",
+      "title": "일정·장소 변경 합의와 경계시각",
+      "policy_ids": [
+        "P115",
+        "P116",
+        "P117",
+        "P118"
+      ],
+      "policy_summary": "양쪽 누구나 일정·장소 변경을 제안하고 상대 수락·일정 충돌 확인 후 변경한다. 변경 제안은 제안 후 6시간, 기존 시작 시각, 새 시작 시각 중 가장 빠른 때 만료된다. 거절·철회·미응답이면 기존 약속을 유지한다. 상대 수락 전에는 변경을 반영하지 않는다. 수락·후기 제출·이의 신청 등 마감이 있는 요청은 서버 접수 시각으로 판단한다. 마감 시각보다 빠를 때만 허용하고 같거나 늦으면 만료다.",
+      "actual": "제안/수락/거절/철회 RPC 가 있고 p_location 검증·조건 fingerprint·기존/새시작/6시간 중 빠른 만료를 SQL 이 계산한다. 클라이언트 시계가 승인 근거가 아니다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005014629_appointment_place_change_draft.sql",
+          "line": 87,
+          "note": "장소·일정 제안"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005014630_appointment_location_validation.sql",
+          "line": 4,
+          "note": "장소최신검증"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005040600_appointment_change_withdrawal.sql",
+          "line": 8,
+          "note": "철회실제함수"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "최신 조건/변경버전·겹침·마감/동일 시각·동시수락거절 통합검증.",
+      "acceptance": "수락 전원약속유지, 종료/변경시작동일 시각거절, 응답유실동일제안재확인."
+    },
+    {
+      "id": "B23",
+      "title": "확정 취소·시작후 불발/중단",
+      "policy_ids": [
+        "P119",
+        "P120",
+        "P121",
+        "P122",
+        "P123",
+        "P124"
+      ],
+      "policy_summary": "확정 전 신청 철회와 확정 후 시작 전 취소를 구분한다. 확정 전 철회는 연속 확정 취소 제재에 포함하지 않는다. 재신청은 철회 후 1분 경과 시 횟수 제한 없이 허용하되 작성자 거절 이력이 있으면 차단한다. 확정 후 시작 전 취소는 사유를 선택해 처리하고 상대에게 알림을 보낸다. 취소 성립 즉시 전체 이름을 다시 마스킹하고 상세 주소를 숨긴다. 시작 이후에는 일방 취소 대신 중단·불발 신고로 접수한다.",
+      "actual": "cancel_appointment 와 cancellation appeal/report bridge 가 분리된다. 취소마감과 실명 회수는 서버시간/관계의존이며 시작후 취소 대신 설명포함 신고 경로를 사용한다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/completion.ts",
+          "line": 22,
+          "note": "취소 RPC"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005195033_appointment_cancel_appeal_atomic_report.sql",
+          "line": 13,
+          "note": "이의/신고 원자경로"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 시작전/동일 시각/시작후 및 취소후 재조회/알림 확인.",
+      "acceptance": "시작후일방취소거절, 설명없는신고거절, 취소확정시관계권한즉시회수."
+    },
+    {
+      "id": "B24",
+      "title": "차단과 본인 숨김 분리",
+      "policy_ids": [
+        "P125",
+        "P126",
+        "P127",
+        "P128"
+      ],
+      "policy_summary": "차단한 두 사람 사이의 신규 메시지·신청·확정 요청·수락을 막는다. 로그인 상태에서 서로의 공고·프로필을 숨기되 기존 약속 관리에 필요한 정보는 유지한다. 비로그인 공개 접근까지 완전히 막는다고 안내하지 않는다. 기존 대화는 읽기 전용으로 두고 기록 확인·신고·나가기를 제공한다. 차단은 즉시 처리하며 확정 약속의 취소는 별도 확인과 기존 취소 규칙을 따른다. 차단은 언제든 해제할 수 있으나 종료 신청·취소 약속을 자동 복원하지 않는다.",
+      "actual": "member pair guard 는 신규신청/메시지/확정수락을 막고 프로필/공고 탐색을 숨긴다. unblock 과 report unhide 는 독립 RPC 다. 기존약속 취소와 차단을 합치지 않는다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "line": 40,
+          "note": "차단입력과 pair guard"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006123430_member_report_hidden_targets.sql",
+          "line": 4,
+          "note": "독립 콘텐츠숨김"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "6.3",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "차단→해제와 별도숨김 수명/필수약속 관리 매트릭스 실행.",
+      "acceptance": "차단해제로신고숨김복원안함, 기존약속관리유지, 종료신청/취소약속자동복원 0."
+    },
+    {
+      "id": "B25",
+      "title": "신고 접수·증거·상태와 숨김",
+      "policy_ids": [
+        "P129",
+        "P130",
+        "P131",
+        "P132",
+        "P133",
+        "P134",
+        "P135"
+      ],
+      "policy_summary": "운영자는 DB의 회원 채팅 원문을 직접 읽지 않는다. 온라인 신고는 상황 설명과 캡처를 필수로 받는다. 대면 위협·노쇼는 설명과 제출 가능한 자료로 접수하며 캡처가 없다는 이유만으로 접수를 막지 않는다. 접수 자체를 사실 인정으로 취급하지 않는다. 공고·채팅·AI 결과는 전용 신고 양식, 다른 대상은 대상이 연결된 공통 양식으로 접수한다. 성희롱·협박·금전/개인정보 요구·사칭·스팸·노쇼·기타를 복수 선택하고 설명할 수 있다.",
+      "actual": "submit_member_report/capture 예약·업로드완료 확인·상태조회가 있으며 운영자가 임의 채팅 DB 를 조회하는 포트를 제공하지 않는다. 허용 증거의 ownership/assigned access·retention 감사가 분리된다. 운영 목표2영업일은 실제서비스보장 아님.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005015709_member_reports.sql",
+          "line": 151,
+          "note": "설명/증거/접수검증"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+          "line": 86,
+          "note": "사건별배정조회"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/report-service.ts",
+          "line": 2,
+          "note": "회원신고 호출경로"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "6.3",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 Storage ownership·담당 ACL·신고상태·접수/위반확정 분리검증.",
+      "acceptance": "타인캡처재사용거절, 접수만으로제재 0, 신고자/당사자노출차등, 필수경로유지."
+    },
+    {
+      "id": "B26",
+      "title": "일반 위반·반복·영구제재·7일 이의",
+      "policy_ids": [
+        "P136",
+        "P137",
+        "P138",
+        "P139",
+        "P140"
+      ],
+      "policy_summary": "경미 위반은 위협·성희롱·개인정보 노출 없는 낮은 위험의 규칙 위반이다. 반복은 안내·경고 후 같은 유형 또는 같은 피해자 대상 위반의 재발이다. 중대 위반은 성희롱·협박·폭력·스토킹·신상 노출·성적 착취 등 안전·권리 침해다. 정당한 비판과 증거 부족 신고 자체는 위반이 아니다. 경미한 첫 인정은 경고, 그 뒤 첫 재발은 신규 공고 작성·신청·확정 7일 제한, 두 번째 재발부터는 매번 30일 제한한다.",
+      "actual": "일반 단계·12개월 reset·7/30일·중대영구와 앱안내 제공 시각 receipt/appeal RPC 가 있다. draft 의 복수사슬 unresolved 는 policy 에서 이미 정하지 않은 운영판단을 요구하는 경우 닫힌다. 유효하게 적용된 제재는 원시각을 유지한다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005021810_sanction_adjudication_draft.sql",
+          "line": 183,
+          "note": "12개월·단계계산"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006130041_general_sanction_notice_delivery.sql",
+          "line": 57,
+          "note": "안내성공기산"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006150000_general_sanction_appeal_resolution.sql",
+          "line": 11,
+          "note": "이의정정 연결"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "적용된 migration 과 운영사건/안내제공 실패/7일동일 시각/정정 검증.",
+      "acceptance": "접수와최종위반분리, 안내실패기산 0, 잘못된이력/당도정정, 기존제한시작재초기화 0."
+    },
+    {
+      "id": "B27",
+      "title": "금지콘텐츠·애매한 채팅 확인",
+      "policy_ids": [
+        "P141",
+        "P142"
+      ],
+      "policy_summary": "공고·공개 프로필·후기는 개인정보와 금지 콘텐츠를 등록 전에 검사한다. 채팅은 정상 약속 안내를 일괄 차단하지 않고 명확한 고위험을 차단한다. 애매한 위험 표현은 전송 전 확인 안내를 하고 수정하거나 그대로 전송할 수 있게 한다. 자동 검사와 운영자의 원문 직접 열람은 다르다. 자동 검사 때문에 원문 로그 보관·외부 AI 전송·DB 직접 열람을 추가하지 않는다. 오탐 문의와 신고 경로를 제공한다.",
+      "actual": "분류기 port 는 public allow/block, chat highrisk block·ambiguous confirm_required 로 제한한다. ticket 은 입력 digest·operation·action·기한과 결합한다. 실제 classifier readiness 는 신뢰된 조립 옵션이고 기본 runtime 자동승인이 아니다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/content-inspection.ts",
+          "line": 5,
+          "note": "분류결정"
+        },
+        {
+          "path": "backend/supabase/migrations/20261009011600_content_inspection_tickets.sql",
+          "line": 7,
+          "note": "DB소비/기한결합"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 분류기·동의확인·쓰기8경로·오탐안내를 승인된 설정으로 연결.",
+      "acceptance": "공개개인정보차단, 정상약속채팅허용, 애매한채팅확인후전송, ticket 다른입력재사용거절."
+    },
+    {
+      "id": "B28",
+      "title": "완료·자동24시간·불발정정",
+      "policy_ids": [
+        "P143",
+        "P144",
+        "P145",
+        "P146",
+        "P147",
+        "P148",
+        "P149",
+        "P150"
+      ],
+      "policy_summary": "예상 종료 전에는 완료 확인을 할 수 없다. 종료 후 각 사용자는 본인의 동행 완료를 확인할 수 있다. 한쪽만 확인한 상태는 개인 확인 완료일 뿐 동행 실제 완료가 아니다. 양쪽이 확인하거나 예상 종료 시각 +24시간이 지나면 동행을 실제 완료 처리한다. 취소·노쇼 건은 자동 완료에서 제외하고 신고·분쟁 검토 중에는 자동 완료를 보류한다. 정상 동행으로 인정되면 두 사람이 합의한 최신 종료 시각 +24시간이 지났을 때 즉시 완료한다.",
+      "actual": "본인완료/양쪽완료/예약자동완료가 분리되고 review_no_show_lifecycle 가 불발/정상정정·탈퇴회차를 확장한다. 완료횟수는 실제완료와 현재회차를 기준으로 계산한다. 작업배치00:01을 기다리는 설계가 아니다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20260923100000_bilateral_completion.sql",
+          "line": 55,
+          "note": "양쪽완료"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005041000_appointment_review_no_show_lifecycle.sql",
+          "line": 47,
+          "note": "노쇼/정상정정"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "line": 194,
+          "note": "회차별완료횟수"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "6.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 예약 runner·재접속·분쟁보류·탈퇴후정정 상태 검증.",
+      "acceptance": "종료전거절, 한쪽완료만으로실제완료 0, 최신종료+24h, 불발/미결보류, 탈퇴자진행복원 0."
+    },
+    {
+      "id": "B29",
+      "title": "후기 기한·분쟁보류·공개시각",
+      "policy_ids": [
+        "P151",
+        "P152",
+        "P153",
+        "P154",
+        "P161",
+        "P162",
+        "P163"
+      ],
+      "policy_summary": "이의 검토 중 리뷰 작성·기한 진행·공개를 보류한다. 동행 인정 후 남은 리뷰 기간을 재개하되 최소 24시간을 보장한다. 실제 완료 전에는 리뷰 작성 기한이 시작되지 않는다. 검토 후 처음 완료되었다면 실제 완료 시점부터 7일을 시작한다. 이미 완료된 동행은 검토 직전의 남은 리뷰 기간을 재개하며 최소 24시간을 보장한다. 검토 중에는 양쪽 제출을 포함해 새로운 리뷰 공개를 보류한다.",
+      "actual": "최신 current_completion_consent_policy 는 한쪽후기를 review_deadline_at 에 공개한다. review_holds 는 보류시 잔여기간과 최소24h 회복을 다루며 이미 공개된후기는 접수만으로 감추지 않는 함수와 trigger 가 있다. 초기 SQL 의24h 한쪽공개는 후속정의로 대체됐다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005001429_current_completion_consent_policy.sql",
+          "line": 16,
+          "note": "최신 한쪽기한공개"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005040900_appointment_review_holds.sql",
+          "line": 69,
+          "note": "최소재개시간"
+        },
+        {
+          "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+          "line": 27,
+          "note": "선제제출자격"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "6.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "next_action": "정의 순서·실제 DB 함수·분쟁중신규공개/기한정지·재개를 확인.",
+      "acceptance": "실제완료전기한시작 0, 양쪽제출은완료후즉시, 한쪽은7일마감, 기존공개는운영결정만숨김."
+    },
+    {
+      "id": "B30",
+      "title": "후기 입력·칭찬·중복방지",
+      "policy_ids": [
+        "P155",
+        "P156",
+        "P157",
+        "P158",
+        "P159",
+        "P160"
+      ],
+      "policy_summary": "평가 경험은 좋아요, 보통이에요, 별로예요 중 하나다. 별점 1~5점은 필수, 한마디는 선택이다. 좋아요일 때만 공식 칭찬을 최대 3개 선택할 수 있다. 공식 칭찬 6종은 시간을 잘 지켜요, 약속한 내용을 지켜요, 소통이 원활해요, 배려심이 있어요, 대화가 즐거워요, 함께하니 편안해요다. 제출 성공 후 수정과 중복 제출은 불가능하다. 후기 작성 화면에 동의한 공개 후기는 상대방의 AI 후기 요약에 활용될 수 있어요를 짧게 안내한다.",
+      "actual": "submit_appointment_review 는 경험3종·별점1~5·긍정일때칭찬최대3·6종카탈로그·동일요청중복반환과 다른내용재제출거절을 구현한다. 작성후기 AI 활용 안내/세분동의는 서버현재모델 부족과 별개다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+          "line": 81,
+          "note": "칭찬조건과입력검증"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/reviews.ts",
+          "line": 7,
+          "note": "후기쓰기RPC"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "6.1",
+        "1.2"
+      ],
+      "owner": "minkyu",
+      "next_action": "원문활용동의 세분화 전까지 후기서버기능과 AI 활용표시를 분리.",
+      "acceptance": "동일요청재전송기존성공·내용변경거절, 부정칭찬거절, 활용미동의후기도일반제출허용."
+    },
+    {
+      "id": "B31",
+      "title": "프로필·칭찬·AI 요약 공개",
+      "policy_ids": [
+        "P164",
+        "P165",
+        "P166",
+        "P167",
+        "P168",
+        "P169",
+        "P170",
+        "P171",
+        "P172"
+      ],
+      "policy_summary": "공개 프로필은 사진, 관계에 따른 이름, 만 나이, 선택 성향, 현재 당도, 칭찬 차트, 후기 원문을 보여준다. 칭찬은 누적 상위 5개와 횟수를 표시한다. 프로필 대상자의 요약 생성·노출 동의와 원문 작성자의 후기 활용 동의를 구분한다. 현재 활용이 허용된 한마디가 있는 공개 후기 3개 이상일 때만 AI 요약을 생성·제공한다. 열람 회원의 요약 열람 동의도 확인한다. 비공개 후기·텍스트 없는 평가·원문 작성자가 AI 활용을 철회한 후기는 AI 요약 근거에서 제외한다.",
+      "actual": "공개 profile/reviews·summary source/revision/eligibleTextReviews>=3 및 현재공개검사가 있다. 다만 summary_allowed 하나로 저자와대상동의를 함께 판단하며 viewer 열람동의를별도검사하지않아 최신3동의 정책 전체를 만족하지 못한다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "line": 244,
+          "note": "원문/대상 단일동의"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/eligibility.ts",
+          "line": 3,
+          "note": "공개텍스트3개"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005003159_current_summary_fences.sql",
+          "line": 6,
+          "note": "revision/lease공개검사"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "3동의 DB·요약열람 차단·원문동의영향 revision 을 연결한후 공개.",
+      "acceptance": "남은허용텍스트3개/2개, 대상철회/저자철회/viewer 철회 독립, 실패중원문/칭찬유지."
+    },
+    {
+      "id": "B32",
+      "title": "AI 동의 독립철회·사본삭제",
+      "policy_ids": [
+        "P173",
+        "P174",
+        "P175",
+        "P176",
+        "P177"
+      ],
+      "policy_summary": "세 요약 동의는 서로 독립적으로 철회할 수 있다. 열람 철회는 본인의 열람만, 프로필 생성·노출 철회는 본인 요약 공개와 새 생성을, 원문 활용 철회는 본인이 쓴 기존·향후 후기의 AI 활용을 중단한다. 영향을 받은 기존 요약은 우선 숨기고 남은 허용 공개 텍스트 후기3개와 대상자 동의가 확인될 때만 재생성한다. 일반 후기·별점·당도·계정은 AI 동의 철회만으로 바꾸지 않으며 외부 사본 삭제는 실제 확인 전 완료로 표시하지 않는다.",
+      "actual": "withdraw_my_ai_processing 은 exploration/review_summary 두 kind 이며 review_summary false 시 영향프로필의 visible_summary/checkpoint 를 비운다. 열람/대상생성/원문활용의 독립3철회 API 와 공급사사본 삭제 receipt 가 없다. 이미있는일괄철회를 최신독립철회라고표시하면안됨.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "line": 192,
+          "note": "2종철회현재함수"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "line": 12,
+          "note": "요약일괄철회"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "세 동의 독립철회와 영향요약우선숨김·안전재생성·외부삭제추적 계약 구현.",
+      "acceptance": "다른두동의유지·일반후기/당도유지·철회후전송 0·실제삭제확인 전완료표시 0."
+    },
+    {
+      "id": "B33",
+      "title": "당도 산식·정정·회차",
+      "policy_ids": [
+        "P178",
+        "P179",
+        "P180",
+        "P181",
+        "P182",
+        "P183",
+        "P184",
+        "P185"
+      ],
+      "policy_summary": "초기값은 15, 표시는 0~100의 정수다. 아직 평가가 없는 초기값임을 안내한다. 완료 횟수와 칭찬은 당도에 가산하지 않는다. 후기 반응은 좋아요 +1·보통 0·별로 −2, 별점은 1~2점 −2·3점 0·4~5점 +1로 각각 계산해 합산한다. 미작성 평가는 0이다. 확정된 운영 감점은 취소 제재 1회 −2, 노쇼 1건 −3, 중대 위반 1건 −10이다. 같은 사건에 여러 운영 위반이 겹치면 가장 큰 운영 감점 하나만 적용한다.",
+      "actual": "sweetness ledger 는 초기15·후기경험/별점 기여·사건감점·회차와 최종0~100 clamp 를 구현한다. historical patch 는 종료회차 감점을 새회차에 이전하지 않는다. 실제운영데이터 결과는 이번감사에서생성하지않았다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "line": 127,
+          "note": "최종합산/clamp"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "line": 76,
+          "note": "후기산식"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006151000_historical_safety_episode.sql",
+          "line": 23,
+          "note": "탈퇴회차새감점차단"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "6.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 DB 초기/최댓값/최솟값/후기임시숨김/최종무효/사건중복/정정 검증.",
+      "acceptance": "15→17/11 예시·운영감점최대하나·최종 clamp·완료/칭찬가산 0·재가입15."
+    },
+    {
+      "id": "B34",
+      "title": "행사 기간·주차·정렬·작성선택",
+      "policy_ids": [
+        "P186",
+        "P187",
+        "P188",
+        "P189",
+        "P190",
+        "P191",
+        "P192",
+        "P193",
+        "P194",
+        "P197",
+        "P198",
+        "P207"
+      ],
+      "policy_summary": "홈 배너·기본 행사 목록은 이번 주 신규 중 미종료 행사만 제공하고 화면에 이 기준을 안내한다. 이번 주에 시작했어도 이미 끝났으면 기본 목록에서 제외하며 과거 기간 조회에서 찾을 수 있다. 진행 중 포함을 선택하면 이전 주에 시작해 아직 진행 중인 행사도 포함한다. 한 주는 한국시간 월요일 00:00부터 다음 월요일 00:00 미만으로 본다. 행사 배너·목록의 ○월 ○주차는 그 주의 목요일이 속한 달에 귀속한다.",
+      "actual": "selectEvents 는 new_this_week 에서 미종료·includeOngoing 과 post_selection 종료제외를 수행하고 진행→예정→종료 그룹정렬을 한다. SQL list_public_events 경로도있다. 작성선택 검색기간을 동행일정으로 강제하는 기능과 일반검색은 구분한다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/event-service.ts",
+          "line": 42,
+          "note": "주간미종료정책"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/normalize.ts",
+          "line": 35,
+          "note": "한국시간월요일주차"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/events.ts",
+          "line": 116,
+          "note": "DB목록RPC"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제수집일자/월귀속/작성선택 전체기간과 일반검색 라우팅검증.",
+      "acceptance": "9/1화·금 경계예시, 월요일00시 경계, 종료일포함 date-only, 정렬동률 stable."
+    },
+    {
+      "id": "B35",
+      "title": "세공급사 공통 행사 정보·표시",
+      "policy_ids": [
+        "P195",
+        "P196",
+        "P199",
+        "P200",
+        "P211",
+        "P212",
+        "P213",
+        "P214",
+        "P215",
+        "P216"
+      ],
+      "policy_summary": "행사 유형은 공연·전시·축제·팝업 등 제공처의 실제 분류를 따른다. 공연은 콘서트·뮤지컬·연극 하위 장르 필터를 제공한다. 행사 상세는 명칭, 기간, 장소, 입장료, 출처, 운영 안내, 연결 공고를 제공한다. KOPIS·TourAPI·서울 데이터는 기존 공통 행사 계약에 맞춰 정규화하되 원천 ID·출처·누락·날짜 정밀도를 보존한다. 실제 확보한 값만 표시하고 미제공 요금을 무료로, 행사 기간을 동행 약속으로 대신하지 않는다.",
+      "actual": "정규화 port·KOPIS/TourAPI 상세·canonical detail projection 이 존재한다. 빈요금 unknown 과 free 를 분리하고 poster/description/operatingInfo 를투영한다. 서울신규수집미연결, 이미지없으면텍스트·줄수·날짜표기순서는 FE 영역이다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+          "line": 46,
+          "note": "공통원천타입"
+        },
+        {
+          "path": "backend/supabase/migrations/20261009031628_event_detail_projection.sql",
+          "line": 24,
+          "note": "상세가격투영"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "line": 90,
+          "note": "서울자료누락보존"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "1.2"
+      ],
+      "owner": "minkyu",
+      "next_action": "원천칼럼별 null/출처와화면매핑을검증; TourAPI 관광타입15를축제만으로축소금지.",
+      "acceptance": "빈가격무료오인 0, 원천구분/공개주소/공식링크보존, 비이미지기본그림 0, 각정보누락안내."
+    },
+    {
+      "id": "B36",
+      "title": "행사 수집 기간·진행중갱신·재개",
+      "policy_ids": [
+        "P204"
+      ],
+      "policy_summary": "초기 과거 수집은 최근 1개월, 미래 수집은 오늘부터 31일이며 이미 진행 중인 행사도 별도 갱신한다. 처리 한도에 도달하면 진행 위치를 보존해 다음 실행에 이어 수집하고 미수집 범위를 운영 상태에 표시한다.",
+      "actual": "event_collection_lane/invocation_audit 와 event-collection worker 가 페이지 checkpoint·원천 revision·진행 중수집 lane 을다룬다. 실제서울보류/공급사키·스케줄준비는 코드존재와별개다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261009011100_event_collection_lane.sql",
+          "line": 4,
+          "note": "수집영속제어"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/event-collection.ts",
+          "line": 16,
+          "note": "실제수집조립"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+          "line": 27,
+          "note": "기간한도"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "최근1개월/미래31일·진행 중 장기행사 재개를 실제수집과 DB 로 검증.",
+      "acceptance": "실패영역만재시도·원래 checkpoint 보존·5쪽상한후다음실행재개·수집실패0건대체없음."
+    },
+    {
+      "id": "B37",
+      "title": "연결 공고·행사작성 복귀",
+      "policy_ids": [
+        "P217",
+        "P218",
+        "P219"
+      ],
+      "policy_summary": "연결 공고는 내부 행사 관계로 조회해 전체 상태·등록 최신순 기본, 모집 중 필터,10개씩 더보기. 삭제/차단/본인 숨김/비로그인 개인정보 등 기존 권한 유지.0건이면 아직 이 행사에 등록된 동행 공고가 없어요 안내. 행사 상세에서 이 행사로 동행 구하기는 해당 행사를 미리 연결한다. 비로그인은 로그인/가입 완료 후 원래 행사 연결 작성으로 복귀하고 현재 연결 가능 상태를 확인한다.",
+      "actual": "공고 source_event_id 와 공고상세 latest event projection 은 있다. 최신 동일행사통합관계 전체공고조회·연결가능 재검증·직접입력표시는 계약확장 필요다. 로그인복귀는 signup returnTo 와 FE 라우팅을함께검증해야함.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "line": 38,
+          "note": "공고행사최신투영"
+        },
+        {
+          "path": "backend/supabase/functions/service-api/handler.ts",
+          "line": 108,
+          "note": "독립행사상세 API"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "3.6"
+      ],
+      "owner": "minkyu",
+      "next_action": "관계기반 연결공고목록·10개/최신순/모집중필터와복귀현재상태 확인 연결.",
+      "acceptance": "동명이름문자검색으로연결공고추정 0, 직접 입력 행사독립상세 0, 차단/숨김/익명권한유지."
+    },
+    {
+      "id": "B38",
+      "title": "행사 취소/연기·등록전확인·조건변경알림",
+      "policy_ids": [
+        "P220",
+        "P221",
+        "P222",
+        "P223",
+        "P224",
+        "P225"
+      ],
+      "policy_summary": "새 연결은 예정/진행 중 가능, 종료/공식취소 불가, 연기 일정 미정 불가, 변경 일정 확인 뒤 조건에 맞으면 가능. 공식 취소 시 취소된 행사예요 안내. 확인된 비표출은 새 선택에서 제외한다. 취소·연기는 의미가 검증된 공식 원천 값만 표시한다. 취소·연기·원천 일정 변경으로 기존 동행을 자동 취소/변경하지 않는다. 단순 검색 누락은 취소/삭제/비표출의 근거가 아니다. 취소 여부 미제공은 별도 보존하고 정상 수집·유효 기간 등 기본 조건을 충족하면 연결 허용.",
+      "actual": "현재 sourceStatus 는 active/cancelled/unknown 모델이고 새로운 postponed/연기 일정 미정/취소 여부 미제공의 세부 표현·행사별최신연결가능 상태·변경이벤트중복방지알림은 부족하다. 기존 eventId 선택은 active/미종료로검사하지만 최신 UX 세부상태를대체못한다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+          "line": 8,
+          "note": "현재상태모델"
+        },
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "line": 30,
+          "note": "새연결기본검사"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "공식검증된상태·unknown 구분·등록 전재확인응답·확정후변경합의·앱안알림 계약추가.",
+      "acceptance": "단순누락취소승격 0, 취소/연기미정새 연결거절, 실패입력보존, 기존동행자동취소/변경 0."
+    },
+    {
+      "id": "B39",
+      "title": "원천 비표출·재표출",
+      "policy_ids": [
+        "P226",
+        "P227"
+      ],
+      "policy_summary": "제공기관 비표출이 확인되면 해당 원천의 행사명·이미지·설명·주소와 상세 진입을 숨기고 안내 카드로 바꾼다. 비표출은 행사 취소를 뜻하지 않는다. 기존 공고의 일반 본문과 독립적으로 정한 만남 장소는 유지하며, 다른 유효한 공개 원천의 정보도 유지한다. 명시적인 재표출 상태·공개 조건과 최신 자료를 확인한 뒤에만 정보를 복원한다. 종료 행사의 기존 공고 열람은 가능하되 새 행사 연결은 막는다.",
+      "actual": "현재공통 원천모델에정책의비표출증거/재표출검증·행사정보차단카드가없다. 일반 member_content_hidden 은사용자본인숨김이며제공기관비표출을대체하지않는다.",
+      "classification": "미구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+          "line": 46,
+          "note": "현재원천모델"
+        },
+        {
+          "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+          "line": 3,
+          "note": "본인숨김과다른개념"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "provider 단위표출상태·검증근거·공개필드투영/깊은링크차단·재표출최신검증구현.",
+      "acceptance": "비표출원천이름/이미지/주소노출 0, 취소뜻아님안내, 공고본문/독립만남장소유지."
+    },
+    {
+      "id": "B40",
+      "title": "공식 동일개최 원천 통합·되돌리기",
+      "policy_ids": [
+        "P228",
+        "P229",
+        "P230",
+        "P231"
+      ],
+      "policy_summary": "공식 공통 식별자나 정확한 공식 상세 링크 등 확실한 근거로 같은 개최 단위임을 확인한 원천만 통합한다. 제목·기간·장소가 비슷하다는 이유만으로 합치지 않는다. 원천별ID·공고 관계·통합 근거·필드 출처와 통합/분리 기록을 보존해 되돌릴 수 있게 한다. 먼저 확인된 공개 원천을 대표로 유지하고 빈 항목만 보완한다. 핵심 정보가 충돌하면 알리고 새 연결을 제한하며 다른 유효 공개 원천은 유지한다.",
+      "actual": "source_events 는 provider+sourceId 단위유일성을보존한다. 정책의공식공통식별근거·대표/보완필드출처·원천별관계·통합/분리 journal·충돌시새 연결제한은현재통합엔티티로구현돼있지않다. source_event_id 하나가통합행사와같지않다.",
+      "classification": "미구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20260929100000_event_storage.sql",
+          "line": 110,
+          "note": "원천별식별저장"
+        },
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "line": 5,
+          "note": "현재단일원천연결"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "4.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "공식근거만통합·가역관계·필드출처·대표전환·핵심충돌상태설계/구현.",
+      "acceptance": "유사제목자동통합 0, 기존링크보존, 분리후공고관계유실 0, 다른공개원천유지."
+    },
+    {
+      "id": "B41",
+      "title": "AI 탐색 동의·개인정보·일반검색",
+      "policy_ids": [
+        "P233",
+        "P234",
+        "P235",
+        "P236",
+        "P237",
+        "P238",
+        "P239",
+        "P240",
+        "P241",
+        "P242"
+      ],
+      "policy_summary": "S20 AI 탐색은 로그인 회원만 이용할 수 있다. AI 탐색은 첫 사용 시 기능별 동의를 받고 동의 확인 전 모델 처리·질문 외부 전송을 시작하지 않는다. 거절하면 일반 검색·일반 동행·계정을 유지한다. 가입 화면의 후기 요약 세 선택 동의·전체 동의와 분리한다. AI 화면의 설명 영역과 함께 첫 사용 동의 안내를 제공한다. 철회 요청 시 AI 탐색의 새 전송을 중단하며 일반 검색·일반 동행·계정은 유지한다.",
+      "actual": "ai-chat 는인증 principal 과서버동의 guard·개인정보검사·public discovery 포트를거친다. 모델런타임사전근거없으면 disabled 다. 탐색동의 수락저장/버전관리의회원 API 는현재부족하며동의철회경로만존재한다. 기기메모리보존은클라이언트증거가필요하다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/ai-chat/handler.ts",
+          "line": 27,
+          "note": "인증AI진입"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "line": 11,
+          "note": "서버동의검사"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/privacy.ts",
+          "line": 2,
+          "note": "개인정보필터"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "첫 사용동의의서버저장·철회·일반검색유지와모델전송전검사를연결.",
+      "acceptance": "미동의모델전송 0/일반검색허용·개인식별필터·GPS 미사용·카드종류구분·원문로그 0."
+    },
+    {
+      "id": "B42",
+      "title": "AI 입력한도·검색검증·복구",
+      "policy_ids": [
+        "P243",
+        "P244",
+        "P245",
+        "P246"
+      ],
+      "policy_summary": "현재 대화는 사용자·AI 메시지 합계 20개, 메시지별 500자, 전체 4,000자로 제한하는 설계다. 초과 전에 알리고 사용자가 확인한 필터로 새 탐색한다. 원문을 몰래 잘라내거나 영구 저장하지 않는다. 실제 검색 후보는 10개씩 최대 3쪽(30개) 확인하고 최대 5개를 표시한다. 반환 직전 현재 정보를 재조회한다. 공개 정보만 바뀐 카드는 최신 정보와 함께 낡은 설명을 제거하고, 성향 근거가 바뀌거나 권한을 잃은 카드는 제외한다.",
+      "actual": "settings 는20메시지/500자/4000자 및10개 x3쪽/최대5카드/출력 상한을명시환경값으로읽는다. discovery 는반환직전현재정보재검증·일부미완료상태를만들고신뢰성없는설명을사실처럼채우지않는다. 실제 공급사출력강제는추가근거필요.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/settings.ts",
+          "line": 12,
+          "note": "명시한도"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/discovery.ts",
+          "line": 27,
+          "note": "반환전재검증"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/orchestrator.ts",
+          "line": 17,
+          "note": "해석/검색/출력흐름"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4b",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제설정·모델출력 상한·오류/응답유실/PII 복구를합성/실공급사구분검증.",
+      "acceptance": "확인0개=확인미완료, 부분결과안내·조건요약대체·전송확실실패1재시도/유실자동중복 0."
+    },
+    {
+      "id": "B43",
+      "title": "AI 평가·문제신고 보류·90일",
+      "policy_ids": [
+        "P247",
+        "P248",
+        "P249",
+        "P250"
+      ],
+      "policy_summary": "AI 결과에 도움이 됐어요를 제공하며 문제 있어요의 실제 접수는 아래 준비 조건 충족 전 비활성화한다. AI helpful 평가와 중복 접수 기록은 접수 후 90일 또는 회원 탈퇴 중 먼저 발생한 때 삭제한다. 만료된 AI 요청의 새 helpful 접수는 거절한다. AI 신고는 이의 절차를 포함한 최종 종결+90일 파기를 따른다. AI 신고 증거는 회원이 확인해 제출한 답변 일부 최대 500자 또는 본인 업로드 완료 캡처 하나다.",
+      "actual": "helpful feedback receipt 와90일보관/파기 maintenance 가있다. AI 결과500자또는캡처·운영 ACL·증거/파기준비없는실신고는닫힘조건을유지해야하며 코드만으로운영활성화증명안된다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/feedback.ts",
+          "line": 7,
+          "note": "helpful/신고포트"
+        },
+        {
+          "path": "backend/supabase/migrations/20261008014000_ai_feedback_receipts.sql",
+          "line": 72,
+          "note": "receipt보관"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+          "line": 6,
+          "note": "파기작업"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4b",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제 ACL/소유권·최종응답제공증거·파기준비·보류 UI 를통합대조.",
+      "acceptance": "준비미완료문제신고비활성·helpful 중복/만료거절·원문전체전송 0·90일/탈퇴빠른삭제."
+    },
+    {
+      "id": "B44",
+      "title": "AI회원20회·동시1개·중단후보내기",
+      "policy_ids": [
+        "P251",
+        "P252",
+        "P253",
+        "P254",
+        "P255"
+      ],
+      "policy_summary": "공급사 예산은 공급사별 계약과 원장을 분리한다. 기존 포텐스닷 프로토타입의 계정별 한국시간 하루320만 토큰·등록 계정 상한 합계는 기술 토큰 예산이며 Gemini의 원화 월 예산으로 환산하지 않는다. 다계정 전환은 공급사 공동 사용 조건 확인·전송 전 계정별/전체 원자 예약·미확인 사용량 보존을 전제로 하며 운영 활성화는 미완료다. 종현 Gemini 테스트는 월50,000원 사용중단 예산을 별도로 적용하고 대표 계정 전환 전 총예산을 늘리지 않는다.",
+      "actual": "AI 원자 RPC 는모델 reserve 첫시작에한국시간일자별20차감·회원진행1개·내부호출추가차감0을관리한다. 중단후가용상태전용조회계약은없고서버재판단을유지하는 A 선택이최신 정책이다. Potens 기술토큰과 Gemini 원화한도는분리해야한다.",
+      "classification": "부분 구현",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "line": 95,
+          "note": "모델시작차감"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "line": 27,
+          "note": "회원하루20"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/member-request.ts",
+          "line": 5,
+          "note": "중단상태"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4b",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "민규가가용상태확인계약을먼저설계·연결, 이후종현버튼제어. 기존동작즉시교체금지.",
+      "acceptance": "동시요청1·KST 자정·내부 retry 추가 0·모델없는조건버튼 0·안내/입력유지·자동재전송 0."
+    },
+    {
+      "id": "B45",
+      "title": "알림·최신상태·안내 성공기산",
+      "policy_ids": [
+        "P256",
+        "P257",
+        "P258",
+        "P259",
+        "P260"
+      ],
+      "policy_summary": "알림은 첫 채팅 도착, 확정 요청, 동행 확정, 조건 변경, 취소, 완료·평가 요청 등을 제공한다. 전체/읽지 않음 필터와 모두 읽음을 제공한다. 알림 클릭 시 대상 화면의 최신 상태를 다시 확인한다. 알림 클릭만으로 동의·확정·완료가 실행되지 않는다. 기존 S12 알림 진입의 공통 상태 영역에서 대상 없음·접근 제한·일시 실패와 안전한 다음 행동을 안내한다. 서버가 확인하지 않은 원인을 403/404만으로 단정하지 않으며 사유 미확인은 중립 안내와 목록·현재 허용 경로를 제공한다.",
+      "actual": "notifications repository 는목록/읽음/모두읽음을제공한다. 알림은이동정보이며상태수락명령이아니다. 일반제재의앱안내성공 receipt 와 read 는분리돼있다. 실제 S12오류문구/안전행동은 FE 연결검증필요.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/notifications.ts",
+          "line": 3,
+          "note": "알림읽음RPC"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006130041_general_sanction_notice_delivery.sql",
+          "line": 10,
+          "note": "안내제공시각"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "next_action": "대상삭제/권한상실/일시오류와구체원인단정없는복구를실제화면으로대조.",
+      "acceptance": "클릭만으로확정 0, 최신상태조회·403/404원인추측 0·모두읽음타인영향 0."
+    },
+    {
+      "id": "B46",
+      "title": "안심수칙·외부연동 현재증거",
+      "policy_ids": [
+        "P261",
+        "P262",
+        "P263",
+        "P264",
+        "P265",
+        "P266",
+        "P267"
+      ],
+      "policy_summary": "안심 수칙은 공공장소 첫 만남, 강요 금지, 금전·민감정보 요구 주의, 일정·귀가 공유, 위급 시 도움 요청을 포함한다. 연동   목적   현재 상태 네이버   로그인·성인/본인 정보   화면 예시, 실제 OAuth·필수 정보 수신 검증 필요 Kakao Local·우편번호   장소명·주소 검색   화면 예시, 실제 키·검색 결과·실패 처리 검증 필요 KOPIS·TourAPI·서울 열린데이터   행사·공식 순위   출시 시 실제 연동 목표.",
+      "actual": "안심수칙/IndexedDB/공급사상태표의제품안내는실제 운영성공을증명하지않는다. 로그인·장소·행사·AI 모델각각별도실제키/권한/조건검증이필요하며현재서버포트존재와외부연결성공은분리한다.",
+      "classification": "확인 불가",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "line": 16,
+          "note": "AI전송준비차단"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "line": 155,
+          "note": "서울수집보류"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.1",
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "기존실제환경결과를버전·시점별연결하고현재 미검증은 NOT_RUN 표시.",
+      "acceptance": "공급사호출/합성/실제 회원/기기/배포증거구분·과거 PASS 현재성공승격없음."
+    },
+    {
+      "id": "B47",
+      "title": "자료별 보관·삭제·네이버 최소기록",
+      "policy_ids": [
+        "P274",
+        "P275",
+        "P276",
+        "P277",
+        "P278",
+        "P279",
+        "P280"
+      ],
+      "policy_summary": "프로필·사진   탈퇴 처리 때 즉시 비공개·접근 회수와 활성 저장소 삭제 완료. 7일 유예 없음 탈퇴 공고   공개 목록에서 숨기고 작성자 영역을 탈퇴한 사용자입니다.로 표시. 기존 당사자용 일반 본문은 탈퇴 시점부터 1년, 사진·연락처·비공개 상세 위치 등 식별정보는 삭제·가림 채팅   마지막 활동·관련 절차 종료 중 늦은 시점부터 1년. 상대방의 읽기 권한은 이 기간 내 유지하고 종료 시 삭제",
+      "actual": "member_retention_batches 와 report_retention_purge 는채팅/공고보관의절차종료·세대·기한과사건증거90일을다룬다. 탈퇴 cleanup 은활성사진/Auth 삭제를처리한다. 네이버최소연결기록의목적종료검토/정기검토·공급사원문/백업은전체기계적파기완료라고단정할수없다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005030100_member_retention_batches.sql",
+          "line": 5,
+          "note": "공고/채팅세대별보관"
+        },
+        {
+          "path": "backend/supabase/migrations/20261005225107_report_retention_purge.sql",
+          "line": 39,
+          "note": "사건종결후파기"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/auth/member-cleanup.ts",
+          "line": 5,
+          "note": "활성본삭제연결"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제스토리지/DB/회차/신고절차종료·최소연결목적정기검토를운영절차와검증.",
+      "acceptance": "즉시삭제7일유예 0·채팅늦은종료+1년·신고숨김별도유지·종료제재상세90일·최소기록목적보존."
+    },
+    {
+      "id": "B48",
+      "title": "진단·원장·백업과 복구삭제",
+      "policy_ids": [
+        "P281",
+        "P282",
+        "P283",
+        "P284"
+      ],
+      "policy_summary": "진단·보안 기록   원문·비밀값을 제외한 일반 진단 30일, 보안 90일 작업 처리 세부 내역   작업 종료 후 30일. 중복방지 최소키는 재요청 가능기간에 맞춘 별도 삭제 조건을 개발 검증 AI 비용·사용량 원장   공급사 한도 기간 종료 후 90일. 미정산 건은 해결할 때까지 접근을 제한해 별도 보관 삭제된 자료를 새 백업에 넣지 않는다. 기존 백업의 실제 만료·파기 조건은 제공처에서 확인해 안내하고, 백업 복구 시 삭제 처리를 다시 적용한다.",
+      "actual": "worker/runtime retention 및 AI 원장분리테이블이있지만진단30/보안90·공급사기간+90·미정산보류·백업만료/복원삭제전체운영을이번감사로입증하지않았다. 소스의보존함수존재는정기실행증거가아니다.",
+      "classification": "확인 불가",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261008023000_worker_runtime_retention.sql",
+          "line": 1,
+          "note": "작업상세보관"
+        },
+        {
+          "path": "backend/supabase/migrations/20261006170000_ai_account_budget.sql",
+          "line": 12,
+          "note": "미정산예산기록"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "운영보관 job/감사/백업만료·격리복원·삭제목록재적용증거를수집.",
+      "acceptance": "삭제자료새백업제외·복구재삭제·미정산예약보존·비밀값/원문로그 0."
+    },
+    {
+      "id": "B49",
+      "title": "운영자·삭제요청 지원체계",
+      "policy_ids": [
+        "P285",
+        "P286",
+        "P287",
+        "P288",
+        "P289",
+        "P290"
+      ],
+      "policy_summary": "신고 증거·제재 최소 기록의 책임 열람자는 대표 유미(조유미)이며 허용된 제출 증거에만 접근하고 접근 기록을 남긴다. 추가·대체 담당은 지정·승인 전 접근하지 않는다. 이름·사진·신고 캡처·채팅 원문을 최소 연결 기록에 포함하지 않으며 최종 무효 판정의 제재 기여는 즉시 제거한다. 필요한 무효·정정 감사 기록은 별도 기준을 따른다. 기술 운영 민규의 역할 배정은 회원 DB 채팅 원문 열람 허용을 뜻하지 않는다.",
+      "actual": "대표조유미/공개메일/2영업일첫답변·본인확인후3영업일목표는정책결정이다. assignedreportACL 은있지만실제운영자권한·메일접수·영업일달력·삭제결과회신자동화는현재서버코드로확인되지않는다.",
+      "classification": "확인 불가",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+          "line": 18,
+          "note": "실제배정전제ACL"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/member-lifecycle-service.ts",
+          "line": 10,
+          "note": "탈퇴처리상태"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "공개방침삭제직접링크·메일접수·최소본인확인·처리목표·지연안내를실행증거와연결.",
+      "acceptance": "비로그인삭제구역접근·메일도착확인·본인확인실패보존·진행약속조건·활성삭제즉시."
+    },
+    {
+      "id": "B50",
+      "title": "출시조건·법적적합성·플랫폼 요건",
+      "policy_ids": [
+        "P291",
+        "P292",
+        "P293",
+        "P294",
+        "P295",
+        "P296"
+      ],
+      "policy_summary": "네이버 단독 로그인은 iOS 공식 요구와 예외를 먼저 확인한다. 충돌하면 iOS 출시를 보류한 채 대안을 설계하며 다른 로그인 수단을 임의로 추가하지 않는다. 후기 요약의 가입 시 선택하는 세 동의와 AI 탐색 첫 사용 동의는 제품 선택이며 적합성 검토를 대신하지 않는다. 개인정보 동의 항목 구분과 선택 사항 거부에 따른 서비스 제한, 동의 철회 권리·법정 예외를 함께 검토한다.",
+      "actual": "네이버단독 iOS 예외·법적동의·공급사전송조건·스토어실제양식은서버정적소스로확정불가다. 본감사는요구와구현차이/증거를제공할뿐출시승인/법적판정을대신하지않는다.",
+      "classification": "확인 불가",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "line": 16,
+          "note": "법적검토전닫힘"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "line": 16,
+          "note": "회원전송전닫힘"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "종현/민규기술검증·유미운영/출시확인과현재공식조건증거를분리연결.",
+      "acceptance": "미검증 PASS 승격 0·필수접근/신고/차단/탈퇴/제재/후기/요약·외부삭제실제검증."
+    },
+    {
+      "id": "B51",
+      "title": "일일작업·요약분할·재시도",
+      "policy_ids": [
+        "P297",
+        "P298",
+        "P299"
+      ],
+      "policy_summary": "행사 수집과 후기 요약은 매일 한국시간 00:01에 등록한 뒤 분리 실행하고 실패 영역만 재시도한다. 자동 완료·후기 공개는 이 배치를 기다리지 않는다. 요약 작업의 실제 실패는 최대 3회, 재시도 간격은 10분부터 늘려 최대 6시간이다. 예산 부족은 실패로 세지 않고 1시간 뒤 확인한다. 요약 실행은 최대 10작업·60초, 점유 시간 180초, 입력 12,000자·후기 20개씩, 중간 요약 4개 병합, 단계당 최대 3호출·출력 800토큰이다.",
+      "actual": "daily settings/worker orchestration 과 summary 출력검증·checkpoint·revision/leasefence 가존재한다. 최대3실패·예산부족 yield·전체 근거분할처리의상수는명시환경설정과함께검증해야한다. 현재스케줄등록상태는 NOT_RUN.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+          "line": 5,
+          "note": "일일작업분리"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/retry.ts",
+          "line": 25,
+          "note": "지수retry"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/orchestrator.ts",
+          "line": 66,
+          "note": "입력분할/병합"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "00:01등록과각 job 독립실행·전체 근거분할·실패3/예산 yield 를실제 환경설정으로검증.",
+      "acceptance": "자동완료배치대기 0·요약10작업/60초·lease180·12000자/20후기/병합4·800토큰강제."
+    },
+    {
+      "id": "B52",
+      "title": "비용원장·호출상한·timeout",
+      "policy_ids": [
+        "P300",
+        "P301",
+        "P302",
+        "P303",
+        "P304",
+        "P305"
+      ],
+      "policy_summary": "탐색 해석은 출력 800토큰, 성향 비교는 5후보씩 최대 3호출·호출당 출력 600토큰이다. 합성 검증 예산 50,000은 기술 원장 단위이며 원화나 공급사 포함량으로 환산하지 않는다. 충분하지 않으면 중단하며 합성 10회를 보장하지 않는다. 공급사 한도 초기화 주기에 맞춰 비용을 계산하되 미정산 예약을 지우지 않는다. 불일치는 운영 알림과 공급사 기록 대조로 처리하고 자동 환불·한도 초기화를 하지 않는다.",
+      "actual": "settings 는모델출력800/600·검색/매칭횟수의상한을읽고 runtime 은실제 outputLimit.apply 근거없으면닫는다. daily 수집31일/5쪽15초·summary 호출1회75초상한을검사한다. 원화50000과합성50000기술단위를구분하며실제 provider 청구/출력 상한검증은 NOT_RUN.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/settings.ts",
+          "line": 22,
+          "note": "명시800/600상한"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "line": 16,
+          "note": "출력강제근거없음닫힘"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+          "line": 110,
+          "note": "31일/5쪽/15초수집"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "5.4b",
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제환경한도/호스팅/모델강제·예산예약/정산/유실·공급사분리원장검증.",
+      "acceptance": "미정산예약초기화 0·동의/회원한도계정전환우회 0·technicalunit 원화환산 0·추가결제정책공급사별분리."
+    },
+    {
+      "id": "B53",
+      "title": "전역 큐20 고유작업·UNKNOWN",
+      "policy_ids": [
+        "P306"
+      ],
+      "policy_summary": "실행기 최대20은 같은 전역 실행의 고유 큐 작업 ID20개다. 같은 작업 재조회·첨부 처리·완료 기록은 추가 차감하지 않으며, terminal 유지관리는 기존 별도 한도를 유지한다. DB·Storage 호출 합계20회를 의미하지 않는다. 작업의 복수 첨부를 별도 작업으로 임의 계산하지 않는다. 종류별 배정과 재시작은 같은 전역 점유·작업 원장을 사용하며 자동 연장이나 토큰 재취득으로 상한을 우회하지 않는다.",
+      "actual": "worker_runtime_atomic/worker-run 과실행 journal 이전역점유/고유작업슬롯·동일원요청 intent/receipt 확인·UNKNOWN 중단을연결한다. 제품실행기소스와실제운영 daemon 상태는분리한다.",
+      "classification": "연동 대기",
+      "source_refs": [
+        {
+          "path": "backend/supabase/migrations/20261008022000_worker_runtime_atomic.sql",
+          "line": 1,
+          "note": "전역고유작업예산"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/retry.ts",
+          "line": 28,
+          "note": "원격종결미확인별도상태"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/worker-run.ts",
+          "line": 24,
+          "note": "전역점유"
+        }
+      ],
+      "evidence_refs": [],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "next_action": "실제공통 runner·DB 역할·job20개/재조회추가 0·상실응답복구를증거로연결.",
+      "acceptance": "DB 호출20개로오해 0·잔여0terminal 유지관리보존·UNKNOWN 자동재실행 0·세큐어원요청확인후재개."
+    }
+  ],
+  "questions": [],
+  "coverage_notes": {
+    "policy_unit_count": 306,
+    "covered_policy_ids": 306,
+    "missing_policy_ids": [],
+    "runtime_validation": "NOT_RUN",
+    "classification_semantics": "일치는 명시 보류/정적 조건과 일치한다는 뜻. 연동 대기는 실제 소스 경로가 있으나 현재 배포·실회원·기기 검증을 입증하지 않았다는 뜻. 화면 전용 단위도 제외하지 않고 서버 적용 범위와 담당을 명시했다.",
+    "superseded_sql": "파일명/초기 draft만으로 판정하지 않고 후속 CREATE OR REPLACE·pg_get_functiondef patch를 함께 읽음.",
+    "policy_decisions": "새 정책을 임의 확정하지 않음. 기존 미정 운영판단은 현재 fail-closed와 후속 사실확인으로 기록하고 기존 선택은 재질문하지 않음."
+  }
+}

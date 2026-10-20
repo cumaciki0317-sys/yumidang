@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "policy_items": 306,
+  "source_groups": 103,
+  "gates": 28,
+  "qa_cases": 70,
+  "documents": 340,
+  "source_and_evidence_references": 298,
+  "original_user_forms_preserved": 4,
+  "new_markdown_links_checked": 591,
+  "issues": [],
+  "scope": "audit integrity and document coverage only; no product/runtime tests"
+}
