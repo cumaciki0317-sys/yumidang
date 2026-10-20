@@ -23,7 +23,7 @@ try{
 }finally{closeSync(fixtureFd);}
 const fixture=JSON.parse(fixtureBytes!.toString('utf8')),origin=new URL(fixture.origin);
 assert.equal(origin.hostname,'127.0.0.1');assert.equal(origin.protocol,'http:');assert.equal(origin.origin,fixture.origin);
-assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--signed-consent-case','--ai-midnight','--signed-positive-discovery'].includes(mode));
+assert.ok(['--ai-limits','--ai-caps','--signed-auth-negative','--signed-auth-lifecycle-case','--signed-consent-case','--ai-midnight','--signed-positive-discovery','--signed-service-profile-readonly','--signed-service-profile-original-expired'].includes(mode));
 if(mode==='--ai-midnight')assert.equal(fixture.signedLocalAuth,true);
 assert.ok(fixture.productManifest&&Object.keys(fixture.productManifest).length>0);
 for(const [relative,expected]of Object.entries(fixture.productManifest)){
@@ -37,10 +37,140 @@ if(fixture.signedLocalAuth===true)globalThis.fetch=async(input:any,init:RequestI
  assert.ok(url.pathname==='/auth/v1/user'||url.pathname.startsWith('/rest/v1/rpc/'));
  assert.ok(init.method!=='DELETE');return signedNative(input,{...init,redirect:'error'});
 };
-try { process.stdout.write(JSON.stringify(await (mode==='--signed-positive-discovery'?signedPositiveDiscoveryCase(fixture):mode==='--signed-consent-case'?consentExecutionBoundary(fixture):mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
+try { process.stdout.write(JSON.stringify(await (mode==='--signed-service-profile-original-expired'?originalExpiredMeCase(fixture):mode==='--signed-service-profile-readonly'?signedServiceProfileReadonlyCase(fixture):mode==='--signed-positive-discovery'?signedPositiveDiscoveryCase(fixture):mode==='--signed-consent-case'?consentExecutionBoundary(fixture):mode==='--signed-auth-lifecycle-case'?signedAuthLifecycleCase(fixture):mode==='--signed-auth-negative'?signedAuthNegative(fixture):mode==='--ai-midnight'?aiMidnightHttpCase(fixture):mode==='--ai-limits'?aiLimitsHttpCase(fixture):aiCapsHttpCase(fixture)))); }
 catch(error){const code=error instanceof Error&&/^AI_CHECK_[A-Z_]+$/.test(error.message)?error.message:'AI_ISOLATED_FACTORY_FAILED';process.stderr.write(code+'\n');process.exitCode=1;}
 finally{if(fixture.signedLocalAuth===true)globalThis.fetch=signedNative;}
 }}
+
+/** 원 Auth6의 자기/타인 프로필 읽기만 수행한다. 생성·수정·모델·예산 RPC는 허용하지 않는다. */
+export async function signedServiceProfileReadonlyCase(f:any){
+ const check=(ok:unknown,label:string)=>{if(!ok)throw new Error('AI_CHECK_SERVICE_READONLY_'+label);};
+ const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
+ const keys=(v:any,names:string[])=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join(',')===[...names].sort().join(',');
+ const ownKeys=['userId','realName','avatarUrl','bio','sweetness'];
+ const publicKeys=['profileId','displayName','age','gender','avatarPath','bio','interests','conversationStyles','mbti','completedCount','sweetness'];
+ check(f.scope==='LOCAL_AUTH6_SERVICE_PROFILE_READONLY_ONLY'&&f.signedLocalAuth===true&&Array.isArray(f.accounts)&&f.accounts.length===6,'SCOPE');
+ check(Array.isArray(f.expectedProfiles)&&f.expectedProfiles.length===2&&f.accounts[0].userId!==f.accounts[1].userId,'PROFILE_BINDING');
+ check(f.productManifest&&typeof f.productManifest['backend/supabase/functions/service-api/index.ts']==='string','SERVICE_SOURCE_REQUIRED');
+ const sourceProof=()=>{for(const [name,pin]of Object.entries(f.productManifest))check(hash(readFileSync(f.codeRoot+'/'+name,'utf8'))===pin,'SOURCE_CHANGED');};
+ sourceProof();
+ const origin=new URL(f.origin);check(origin.origin===f.origin&&origin.protocol==='http:'&&origin.hostname==='127.0.0.1','ORIGIN');
+ const account=f.accounts[0],other=f.accounts[1],own=f.expectedProfiles[0],target=f.expectedProfiles[1];
+ check(own.userId===account.userId&&target.userId===other.userId&&own.sweetness===15&&target.sweetness===15,'ORIGINAL_PROFILE');
+ const native=globalThis.fetch;let authReads=0,rpcCalls=0,nativeExternalAttempts=0,forbiddenRpcAttempts=0;
+ const wire:any[]=[];const cases:any[]=[];
+ const capture=async(response:Response,name:string)=>{
+  const reader=response.clone().body?.getReader();const chunks:Uint8Array[]=[];let size=0;
+  if(reader)try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;check(size<=65536,'RESPONSE_LIMIT');chunks.push(part.value);}}finally{reader.releaseLock();}
+  const raw=Buffer.concat(chunks).toString('utf8');save(name,{httpStatus:response.status,rawBody:raw});return hash(raw);
+ };
+ const env:Record<string,string>={SUPABASE_URL:f.origin,SUPABASE_ANON_KEY:f.anon,SUPABASE_SERVICE_ROLE_KEY:f.service,
+  INTERNAL_WORKER_SECRET:'synthetic_readonly_internal_secret_32_chars',ALLOWED_ORIGINS:'[]',MAX_REQUEST_BYTES:'65536',UPSTREAM_TIMEOUT_MS:'5000'};
+ globalThis.fetch=async(input:any,init:RequestInit={})=>{
+  const u=new URL(input instanceof Request?input.url:String(input)),method=init.method??(input instanceof Request?input.method:'GET');
+  if(u.origin!==f.origin){nativeExternalAttempts++;throw new Error('AI_CHECK_SERVICE_READONLY_EXTERNAL');}
+  check(!u.username&&!u.password&&!u.hash&&!u.search,'LOCAL_URL');
+  const token=new Headers(init.headers).get('authorization')?.replace(/^Bearer /i,'');
+  let entry:any;let artifact:string;
+  if(u.pathname==='/auth/v1/user'){
+   check(method==='GET','AUTH_GET_ONLY');authReads++;entry={kind:'auth',tokenSha256:hash(token??'')};artifact='service-readonly-auth-'+authReads+'-private.json';
+  }else{
+   const name=u.pathname.replace('/rest/v1/rpc/','');
+   if(!u.pathname.startsWith('/rest/v1/rpc/')||!['get_my_profile','get_public_profile'].includes(name)){
+    forbiddenRpcAttempts++;throw new Error('AI_CHECK_SERVICE_READONLY_RPC_REFUSED');
+   }
+   check(method==='POST'&&token===account.accessToken&&typeof init.body==='string','READ_RPC_ONLY');
+   const args=JSON.parse(init.body as string);
+   check(name==='get_my_profile'?keys(args,[]):keys(args,['p_profile_id'])&&args.p_profile_id===other.userId,'RPC_ARGUMENTS');
+   rpcCalls++;entry={kind:'rpc',name,tokenSha256:hash(token)};artifact='service-readonly-rpc-'+rpcCalls+'-private.json';
+  }
+  const response=await native(input,{...init,redirect:'error'});
+  entry.httpStatus=response.status;entry.bodySha256=await capture(response,artifact!);wire.push(entry);return response;
+ };
+ const save=(name:string,value:unknown)=>{const fd=openSync(f.evidence+'/'+name,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);try{writeSync(fd,JSON.stringify(value));fsyncSync(fd);}finally{closeSync(fd);}};
+ try{
+  const {createRuntimeHandler}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/service-api/index.ts').href);
+  const handler=createRuntimeHandler((key:string)=>env[key]);
+  const parts=account.accessToken.split('.');check(parts.length===3,'ORIGINAL_TOKEN_SHAPE');
+  const forged=[parts[0],parts[1],(parts[2][0]==='a'?'b':'a')+parts[2].slice(1)].join('.');
+  for(const [name,path,token,status,expectedAuth,expectedRpc]of [
+   ['own','/me',account.accessToken,200,1,1],['missing','/me',null,401,0,0],
+   ['forged','/me',forged,401,1,0],['public_other','/profiles/'+other.userId,account.accessToken,200,1,1]
+  ]as const){
+   sourceProof();const a=authReads,r=rpcCalls,start=wire.length;
+   const headers:Record<string,string>={};if(token!==null)headers.authorization='Bearer '+token;
+   const response=await handler(new Request(f.origin+'/functions/v1/service-api'+path,{method:'GET',headers}));
+   const envelope:any=await response.json();
+   save('service-readonly-'+name+'-private.json',{httpStatus:response.status,envelope});
+   check(response.status===status&&authReads-a===expectedAuth&&rpcCalls-r===expectedRpc,'CASE_'+name);
+   check(typeof envelope.requestId==='string'&&response.headers.get('x-request-id')===envelope.requestId,'REQUEST_ID');
+   let dtoKeys:string[]=[];
+   if(name==='own'){
+    check(keys(envelope,['data','requestId'])&&keys(envelope.data,ownKeys),'OWN_EXACT_DTO');
+    const d=envelope.data;check(d.userId===own.userId&&d.realName===own.realName&&d.avatarUrl===own.avatarUrl&&d.bio===own.bio&&d.sweetness===15,'OWN_VALUES');dtoKeys=ownKeys;
+   }else if(name==='public_other'){
+    check(keys(envelope,['data','requestId'])&&keys(envelope.data,publicKeys),'PUBLIC_EXACT_DTO');const d=envelope.data;
+    check(d.profileId===target.userId&&d.displayName===target.displayName&&d.displayName!==target.realName&&d.displayName.includes('*'),'MASKED_NAME');
+    check(!Object.hasOwn(d,'realName')&&!Object.hasOwn(d,'userId')&&!JSON.stringify(d).includes(target.realName),'PUBLIC_PRIVATE_FIELDS');
+    for(const key of ['age','gender','avatarPath','bio','interests','conversationStyles','mbti','completedCount','sweetness'])check(JSON.stringify(d[key])===JSON.stringify(target[key]),'PUBLIC_VALUE_'+key);
+    check(d.completedCount===0&&d.sweetness===15,'INITIAL_PROFILE');dtoKeys=publicKeys;
+   }else check(keys(envelope,['error','requestId'])&&envelope.error?.code==='AUTH_REQUIRED','AUTH_ENVELOPE');
+   cases.push({case:name,httpStatus:status,authReads:authReads-a,rpcCalls:rpcCalls-r,dtoKeys,
+    tokenSha256:token===null?null:hash(token),outputSha256:hash(JSON.stringify(envelope)),
+    originalActorMatched:name==='own',maskedOther:name==='public_other',wire:wire.slice(start)});sourceProof();
+  }
+  check(authReads===3&&rpcCalls===2&&nativeExternalAttempts===0&&forbiddenRpcAttempts===0,'TOTALS');
+  return {status:'PASS',scope:f.scope,cases,authReads,rpcCalls,nativeExternalAttempts,forbiddenRpcAttempts,
+   providerCalls:0,modelCalls:0,reservationCalls:0,fixtureWrites:0,actualNaver:'NOT_RUN',
+   expiredOriginal:'NOT_RUN_SAME_ORIGINAL_CONTEXT_REQUIRED',rawContentLogged:false};
+ }finally{globalThis.fetch=native;}
+}
+
+/** active PASS와 같은 원 토큰의 자연 만료 후 /me 한 번만 검증한다. */
+export async function originalExpiredMeCase(f:any){
+ const check=(ok:unknown,label:string)=>{if(!ok)throw new Error('AI_CHECK_ORIGINAL_EXPIRED_ME_'+label);};
+ const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
+ check(f.scope==='ORIGINAL_AUTH6_EXPIRED_ME_ONLY'&&f.purpose==='original_expired_me'&&f.signedLocalAuth===true,'PURPOSE');
+ check(/^[a-f0-9]{64}$/.test(f.activeReceiptSha256)&&Array.isArray(f.accounts)&&f.accounts.length===6,'ACTIVE_BINDING');
+ const origin=new URL(f.origin);check(origin.origin===f.origin&&origin.protocol==='http:'&&origin.hostname==='127.0.0.1','ORIGINAL_ORIGIN');
+ const a=f.accounts[0],parts=a.accessToken.split('.');check(parts.length===3,'ORIGINAL_TOKEN');
+ const claims=JSON.parse(Buffer.from(parts[1],'base64url').toString('utf8'));
+ const observedAt=Math.floor(Date.now()/1000);
+ check(claims.sub===a.userId&&claims.session_id===a.sessionId&&claims.iss===f.origin+'/auth/v1'&&claims.role==='authenticated'&&claims.is_anonymous===false,'ORIGINAL_METADATA');
+ check(Number.isInteger(claims.iat)&&Number.isInteger(claims.exp)&&claims.exp===a.expiresAt&&claims.exp-claims.iat===3600&&observedAt>=claims.exp,'NATURAL_EXPIRY');
+ const sourceProof=()=>{check(f.productManifest&&typeof f.productManifest['backend/supabase/functions/service-api/index.ts']==='string','SERVICE_SOURCE');for(const[name,pin]of Object.entries(f.productManifest))check(hash(readFileSync(f.codeRoot+'/'+name,'utf8'))===pin,'SOURCE_CHANGED');};
+ const save=(name:string,value:unknown)=>{const fd=openSync(f.evidence+'/'+name,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);try{writeSync(fd,JSON.stringify(value));fsyncSync(fd);}finally{closeSync(fd);}};
+ sourceProof();const native=globalThis.fetch;let actualAuthReads=0,rpcCalls=0,nativeExternalAttempts=0;
+ let actualAuthHttpStatus=0,authBodySha256='';
+ globalThis.fetch=async(input:any,init:RequestInit={})=>{
+  const u=new URL(input instanceof Request?input.url:String(input));
+  if(u.origin!==f.origin){nativeExternalAttempts++;throw new Error('AI_CHECK_ORIGINAL_EXPIRED_ME_EXTERNAL');}
+  if(u.pathname!=='/auth/v1/user'){rpcCalls++;throw new Error('AI_CHECK_ORIGINAL_EXPIRED_ME_READ_SCOPE');}
+  check(!u.search&&!u.hash&&!u.username&&!u.password&&init.method==='GET'&&new Headers(init.headers).get('authorization')==='Bearer '+a.accessToken,'ORIGINAL_AUTH_GET');
+  check(actualAuthReads===0,'SINGLE_AUTH_GET');actualAuthReads++;
+  const response=await native(input,{...init,redirect:'error'});
+  const reader=response.clone().body?.getReader();const chunks:Uint8Array[]=[];let size=0;
+  if(reader)try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;check(size<=65536,'AUTH_RESPONSE_LIMIT');chunks.push(part.value);}}finally{reader.releaseLock();}
+  const raw=Buffer.concat(chunks).toString('utf8');actualAuthHttpStatus=response.status;authBodySha256=hash(raw);
+  save('service-expired-auth-private.json',{httpStatus:response.status,rawBody:raw});return response;
+ };
+ try{
+  const {createRuntimeHandler}=await import(pathToFileURL(f.codeRoot+'/backend/supabase/functions/service-api/index.ts').href);
+  const env:Record<string,string>={SUPABASE_URL:f.origin,SUPABASE_ANON_KEY:f.anon,SUPABASE_SERVICE_ROLE_KEY:f.service,
+   INTERNAL_WORKER_SECRET:'synthetic_readonly_internal_secret_32_chars',ALLOWED_ORIGINS:'[]',MAX_REQUEST_BYTES:'65536',UPSTREAM_TIMEOUT_MS:'5000'};
+  check(Math.floor(Date.now()/1000)>=claims.exp,'NATURAL_EXPIRY');
+  const response=await createRuntimeHandler((key:string)=>env[key])(new Request(f.origin+'/functions/v1/service-api/me',{method:'GET',headers:{authorization:'Bearer '+a.accessToken}}));
+  const envelope:any=await response.json();save('service-expired-me-private.json',{httpStatus:response.status,envelope});
+  const rawAuth=JSON.parse(readFileSync(f.evidence+'/service-expired-auth-private.json','utf8')),auth=JSON.parse(rawAuth.rawBody);
+  check(response.status===401&&actualAuthReads===1&&rpcCalls===0&&nativeExternalAttempts===0&&[401,403].includes(actualAuthHttpStatus),'ACTUAL_AUTH_REJECTION');
+  check(auth.error_code==='bad_jwt'&&typeof auth.msg==='string'&&/expired/i.test(auth.msg),'ACTUAL_EXPIRED_REASON');
+  check(Object.keys(envelope).sort().join(',')==='error,requestId'&&envelope.error?.code==='AUTH_REQUIRED'&&typeof envelope.requestId==='string'&&response.headers.get('x-request-id')===envelope.requestId,'PRODUCT_401');
+  sourceProof();return{status:'PASS',scope:f.scope,purpose:f.purpose,httpStatus:401,actualAuthHttpStatus,actualAuthReads,rpcCalls,
+   nativeExternalAttempts,providerCalls:0,modelCalls:0,reservationCalls:0,fixtureWrites:0,originalTokenSha256:hash(a.accessToken),
+   originalSessionSha256:hash(a.sessionId),activeReceiptSha256:f.activeReceiptSha256,iat:claims.iat,expiresAt:claims.exp,
+   observedAt,ttlSeconds:3600,authBodySha256,outputSha256:hash(JSON.stringify(envelope)),actualNaver:'NOT_RUN',rawContentLogged:false};
+ }finally{globalThis.fetch=native;}
+}
 
 /** 새 합성 Auth6/3공고 전용. 기존 AI22/23/24 모드와 결과를 재생하지 않는다. */
 export async function signedPositiveDiscoveryCase(f:any){
