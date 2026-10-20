@@ -127,6 +127,14 @@ export function resolveRoute(url: URL): Route {
     } };
   }
   function empty(body: JsonValue) { object(body, []); }
+  if (path === "/me/ai-availability") return route("GET", ({ db }) => db.rpc("get_my_ai_availability", {}));
+  if (path === "/me/ai-consents") return route("GET", ({ db }) => db.rpc("get_my_ai_consents", {}));
+  if (path === "/me/ai-consents/set") return route("POST", ({ db, body }) => {
+    const input = object(body, ["kind", "allowed"]);
+    if (typeof input.kind !== "string" || !["exploration", "summary_view", "summary_generate", "summary_source"].includes(input.kind)
+      || typeof input.allowed !== "boolean") invalid();
+    return db.rpc("set_my_ai_consent", { p_kind: input.kind, p_allowed: input.allowed });
+  });
   if (path === "/me/avatar") return route("POST", ({ db, body }) => {
     const avatarPath = text(object(body, ["avatarPath"]).avatarPath, 77, 77);
     if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(avatarPath)) invalid();

@@ -1,7 +1,7 @@
 /** KOPIS 순위 transport 책임 시험. 전부 합성 fetch/stream이며 외부 호출·키·DB·VM은0이다. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createKopisRankingProvider,collectKopisRanking,publicKopisRanking} from '../../../backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts';
+import {createKopisRankingProvider,collectKopisRanking,publicKopisRanking,verifyKopisOfficialRanking} from '../../../backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts';
 import {EventProviderError} from '../../../backend/supabase/functions/_shared/integrations/events/port.ts';
 
 const now=new Date('2026-10-05T12:00:00+09:00'),key='SYNTHETIC_PRIVATE_KEY_SENTINEL',privateReason='SYNTHETIC_PRIVATE_BODY_URL_SENTINEL';
@@ -107,6 +107,6 @@ test('순위 wrapper의 수집후 취소도 typed CANCELLED/store0이며 store�
 
 test('순위 store 진입 뒤 취소는 저장 전송0이나 취소확정으로 바꾸지 않는다',async()=>{
  const controller=new AbortController();let fetched=0,stored=0;
- const result=await collectKopisRanking({mode:'all',signal:controller.signal,provider:{async collect(){fetched++;return {mode:'all',periodVerification:'verified'};}},store:{async save(){stored++;controller.abort(privateReason);return 'applied';}}});
+ const result=await collectKopisRanking({mode:'all',signal:controller.signal,provider:{async collect(){fetched++;return verifyKopisOfficialRanking(xml(),'all',{start:'2026-09-28',end:'2026-10-04'},now,{mode:'all',period:{start:'2026-09-28',end:'2026-10-04'},checkedAt:now.toISOString(),officialUrl:'https://www.kopis.or.kr/por/boxoffice/boxoffice.do',officialCondition:'전체 공연',order:'official_display',items:[{sourceId:'PF1',rank:1}]});}},store:{async save(){stored++;controller.abort(privateReason);return 'applied';}}});
  assert.deepEqual(result,{status:'applied'});assert.equal(fetched,1);assert.equal(stored,1);
 });

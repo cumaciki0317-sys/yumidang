@@ -5,7 +5,7 @@ import { getPrincipalToken, readBearer, type Principal } from "../auth/principal
 import { createRpcTransport, fetchJson, type FetchLike, type RpcClient } from "./transport.ts";
 import { HttpError } from "../http/errors.ts";
 const userRpcs = new Set([
-  "get_naver_signup_state", "complete_naver_signup", "withdraw_my_ai_processing", "retire_my_account",
+  "get_naver_signup_state", "complete_naver_signup", "withdraw_my_ai_processing", "get_my_ai_consents", "get_my_ai_availability", "set_my_ai_consent", "retire_my_account",
   "submit_my_general_sanction_appeal", "get_my_general_sanction_appeal", "prepare_my_general_notice_delivery", "acknowledge_my_general_notice_provided", "list_my_hidden_targets", "unhide_my_report_target", "reserve_report_capture", "confirm_report_capture", "cancel_report_capture", "submit_member_report", "list_my_reports", "get_my_report", "get_my_safety_state", "list_my_sanctions", "list_my_decision_notices", "read_my_decision_notice", "list_my_cancellation_notices", "read_my_cancellation_notice",
   "block_member", "unblock_member", "list_my_blocks",
   "get_my_profile_traits", "set_my_profile_traits", "set_my_profile_preferences", "get_post_author_traits",

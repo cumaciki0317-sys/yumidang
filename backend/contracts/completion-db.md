@@ -103,3 +103,17 @@ LISTEN/NOTIFY에는 채널별 ACL이 없다. 원형 실행기는 `yumidang_compl
 
 
 2026-10-10 완료 실행기 파일은 사용자 재배정에 따른 정책 전용 커밋 `52b813e`(통합 `88abce4`)부터 민규 담당이다. TLS 설정·기존 예약 실행·운영 설정의 관련 회귀15개는 PASS다. 이 설정 회귀를 실제 TLS 연결·예약 복구·운영 배포 성공으로 집계하지 않는다. 새 격리 환경에서 원 실행 명령의 실제 검증을 이어간다.
+
+## 2026-10-20 D03: 후기 마감 잠금 재현 절차와 증거
+
+현재 최종 후기 구현은 appointment `FOR UPDATE` 뒤 `can_submit_appointment_review(...,clock_timestamp())`를 검사한다. 공개 wrapper의 content inspection 활성 상태와 ticket 유효성은 독립 조건이다. ticket 발급시각을 후기 접수시각으로 소급하거나 ticket 만료 검사를 완화하지 않는다.
+
+실행 대상은 fresh 원 JWT2명과 새 합성 약속1개만 쓰는 격리 DB다. 기존 native66/claims 주입 재현기를 현재121 환경에 그대로 실행하지 않는다. fixture는 명시 post/request/completed appointment3행과 notification·retention generation·episode map·generation map4행의 typed 차분을 검토한다. 실제 catalog/trigger가 예상과 다르면 관측을 새 allowlist로 자동 승인하지 않고 중단한다.
+
+1. 현재 소스·대상 identity·권한·전체 행 bag·sequence·예산·UNKNOWN 기준선을 저장한다. DB clock에서 미래 D를 얻고 completed_at=D-7일인 새 약속을 준비한다. 원 JWT `get_appointment_review_state`로 can_write와 D를 먼저 확인한다.
+2. 별도 관리 backend가 정확한 새 appointment UUID 한 행만 `FOR UPDATE`한다. waiter는 원 JWT의 공개 `submit_appointment_review`를 정상 입력(rating3/neutral/praises빈배열/짧은 합성문구)으로 한 번만 호출한다.
+3. observer는 동일 DB의 query_start≤serverNow<D, 정확 waiter PID의 Lock 대기, 유일 holder PID와 blocking 관계를 원자료로 저장한다. PostgREST 요청과 backend의 결합은 별도 원자료로 증명하며 query 문자열에 UUID가 보일 것이라고 가정하지 않는다.
+4. 동일 DB clock≥D를 관측한 뒤 holder를 COMMIT한다. 예상 SQLSTATE22023 / review_unavailable만 DB-entry 문제 재현으로 본다. timeout·자격·Auth·기타 validation 오류 및 모호한 backend 결합은 INCONCLUSIVE다. 응답 유실 시 자동 재전송하지 않는다.
+5. 모든 child/backend 종료 후 자기 fixture만 정리한다. appointment 삭제가 summary_state/outbox를 새로 만들 수 있으므로 선택2명의 해당 기존행이 없음을 먼저 확인하고 정확한 cleanup4행만 허용한다. sequence를 setval로 되돌리지 않는다. 전체 행·권한·catalog·sequence·예산·UNKNOWN 비교와 정리 원자료를 저장한다.
+
+`tests/integration/minkyu/deadline_lock_evidence.py`의 분류는 위 원자료 SHA와 DB microseconds를 입력받는다. 이는 입력의 진위를 인증하거나 연결/SQL을 실행하지 않는다. 성공 분류명은 REPRODUCED_DB_ENTRY_ONLY이고 httpIngressProven=false/policyComplete=false다. HTTP ingress 신뢰·만료 worker 경쟁·자연 만료·운영 검증은 별도 잔여이며 제품 SQL 변경은 아직 적용하지 않았다.

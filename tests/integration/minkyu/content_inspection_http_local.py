@@ -381,12 +381,12 @@ def ai_restore():
         uid = str(uuid.UUID(account['userId']))
         original = old_members.get(uid)
         if unfinished:
-            statements.append("update private.ai_member_processing set exploration_allowed=false,summary_allowed=false where user_id='" + uid + "';")
+            statements.append("update private.ai_member_processing set exploration_allowed=false,summary_allowed=false,summary_view_allowed=false,summary_generate_allowed=false,summary_source_allowed=false where user_id='" + uid + "';")
         elif original is None:
             statements.append("delete from private.ai_member_processing where user_id='" + uid + "';")
         else:
             assignments = []
-            for key in ('exploration_allowed', 'summary_allowed', 'exploration_withdrawn_at', 'summary_withdrawn_at', 'active_request_id'):
+            for key in ('exploration_allowed', 'summary_allowed', 'summary_view_allowed', 'summary_generate_allowed', 'summary_source_allowed', 'exploration_withdrawn_at', 'summary_withdrawn_at', 'active_request_id'):
                 value = original[key]
                 literal = 'null' if value is None else (str(value).lower() if isinstance(value, bool) else q(value))
                 assignments.append(key + '=' + literal)

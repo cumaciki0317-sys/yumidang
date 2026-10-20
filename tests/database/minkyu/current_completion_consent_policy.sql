@@ -66,9 +66,9 @@ reset role;
 
 
 -- AI 근거 검사는 일반 후기 공개와 구분한다. 합성 동의 자료만 transaction 안에 둔다.
-insert into private.ai_member_processing(user_id,summary_allowed)
-  select pg_temp.match_uid(i),true from generate_series(1,5)i
-  on conflict(user_id) do update set summary_allowed=true;
+insert into private.ai_member_processing(user_id,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)
+  select pg_temp.match_uid(i),true,true,true,true from generate_series(1,5)i
+  on conflict(user_id) do update set summary_allowed=true,summary_view_allowed=true,summary_generate_allowed=true,summary_source_allowed=true;
 
 -- 두 정상 회원으로 실제 제안 RPC의 6시간과 시작 시각 상한을 검사한다.
 set local role authenticated;

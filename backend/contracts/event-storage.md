@@ -186,3 +186,21 @@ TourAPI의999페이지 요청 상한과 전체 수집 완료를 구분한다. �
 `GET /events/{eventId}`는 기존 저장소의 공개 투영을 재사용하는 `get_public_event`에 연결했다. 비로그인과 선택적 회원 JWT를 지원하되 잘못된 JWT를 비로그인으로 낮추지 않는다. 최신 저장 정보 및 취소 상태를 제공하고 공고의 정확한 만남 위치를 추가하지 않는다. 본인 숨김 행사 직접 조회는 404이며 다른 회원에게는 그대로 제공한다.
 
 `GET /events/rankings` → `get_public_event_ranking_state`의 현재 응답은 `{status:"not_enabled",reason:"KOPIS_RANKING_PROVIDER_VERIFICATION_PENDING"}`다. 이 not_enabled는 기존 구현의 현재 응답이며, 새 공식 사이트 대조 공개·14분류 정책의 구현 완료를 뜻하지 않는다. 검증 상태·기간·분류·이전 성공 목록·지연 상태를 연결하는 별도 구현이 필요하다. 요청 날짜를 집계 기간으로 추정하거나 자체 순위를 생성하지 않는다. 공급사 호출은 발생하지 않는다.
+
+## 2026-10-20 KOPIS 공식 대조 공개 gate 구현
+
+WBS7.8의 서버 순수 검증 범위다. `KOPIS_RANKING_CATEGORIES`는 14개 키(`all`, `theatre`, `musical`, `classical`, `traditional`, `popular_music`, `dance`, `popular_dance`, `circus_magic`, `mixed`, `children`, `daehakro`, `visiting`, `festival`)와 표시명·장르/특성/지역 구분을 제공한다. 원천 `cate`는 `originalGenre`로 보존하고 표시명 세 개만 정규화한다. 특성·지역 분류를 장르 코드로 추정하지 않는다.
+
+내부 신뢰 수집기가 가져온 API XML과 공식 사이트의 관찰 결과를 `verifyKopisOfficialRanking`으로 대조한다. 입력은 분류, 실제 표시 기간, 공식 조건의 정규화된 표시명, `official_display` 순서, 실제 확인 시각, 고정 공식 안내 URL, Top10의 공연ID·순위 목록이다. 요청 기간은 어제까지 최근7일이어야 하고 두 목록은 순서까지 일치해야 한다. 동률은 그대로 유지하며 10개 미만은 확인한 개수만 유지한다. 원천 basedate가 있으면 일치해야 하고 없으면 공식 대조 기간을 공개하되 `apiPeriodVerified:false`로 내부 집계기간 증명과 구분한다. 15분 이내 관찰만 새 대조에 사용한다. 이는 검증 실행의 기술 신선도 제한이며 제품의 순위 갱신 주기를 바꾸지 않는다.
+
+반환 snapshot은 중첩 객체까지 동결하고 프로세스 내부 capability로 등록한다. 단순 `{periodVerification:"verified"}`·JSON 복제·DB JSON 재로딩만으로 공개/저장을 승인하지 않는다. `publicKopisRanking`, 저장 wrapper와 durable runtime의 완료 RPC 전 단계 모두 이 gate를 검사한다. 실패/미검증 분류는 공식 링크와 빈 목록을 반환하고, 보존된 같은 분류의 검증 snapshot은 기존 실제 기간·확인 시각을 유지하며 `refreshDelayed:true`를 표시한다. 다른 분류의 성공 목록으로 대체하지 않는다.
+
+**신뢰 경계:** 대조 함수는 회원·비로그인 HTTP 입력에 연결하지 않는다. 함수 자체가 외부 사이트를 호출하거나 진위를 독립 증명하지는 않는다. 공식 관찰 수집기·영속 증거·DB 재검증/원자 게시가 연결되기 전 `GET /events/rankings`의 기존 `not_enabled`와 SQL 차단은 유지한다. 기존 영속 작업 lane은 all/musical 두 개뿐이며 나머지 12개를 요청하면 공급사/RPC 호출 없이 `RANKING_CATEGORY_LANE_NOT_CONNECTED`로 중단한다. 다른 분류를 musical lane에 넣지 않는다. 신규 SQL migration·실제 공급사 호출·DB·운영 적용은 이번 검증에서 0회다.
+
+관련 검증: 합성 49개(Node test), 두 구현 진입점 Deno typecheck PASS. WBS7.8 전체 완료나 공식 실제 14분류 대조 완료를 뜻하지 않는다. 후속은 공식 관찰 수집·원본 증거 저장·분류별 영속 lane/DB 게시·제품 응답/앱 소비 연결과 실제 검증이다.
+
+### 공식 공개 페이지 관찰과 자동 수집 잔여
+
+2026-10-20 키 없는 공개 웹 조회에서 [공식 PC 순위 페이지](https://kopis.or.kr/por/boxoffice/boxoffice.do?menuId=MNU_00024)는 본문 추출이 비어 있었고, [공식 모바일 순위 페이지](https://kopis.or.kr/mob/box/boxoffice.do)는 날짜/선택 입력과 빈 결과 안내만 추출됐다. 공식 검색 색인의 [PC 순위 페이지](https://kopis.or.kr/por/boxoffice/boxoffice.do?STDG_CPSGG_CD=&endDate=20261007&excelGbn=0&genre_code=CCCA&menuId=MNU_00024&mt20Id=PF293222&rankType=ntssAmountSm&search=boxoffice&seatScale=&startDate=20260908&type=m)에는 날짜·지역·정렬 선택 및 `startDate/endDate/genre_code/mt20Id/rankType` query가 관찰됐으나, 이는 현재 순위의 실제 기간·선택 조건·공연ID/순서 대조 증거가 아니다. 공식 메인의 분류 선택에서는 장르와 별도 특성 선택이 확인되지만, 그 버튼을 API 필터로 추정하지 않는다.
+
+웹 추출만으로는 행 데이터·실제 선택된 기간/조건·공개 JSON endpoint 계약을 확보하지 못했다. 로컬의 키 없는 공식 HTML 읽기는 DNS 해석 실패로 원문을 확보하지 못했다. 따라서 미확인 HTML 선택자/JSON 경로/분류 코드를 추정한 collector나 영속 게시 SQL을 추가하지 않았다. 후속은 접근 가능한 환경에서 공식 공개 HTML/사용 스크립트/동적 응답의 실제 계약을 읽기 관찰하고, 기간·조건·ID·순위·순서를 함께 추출할 수 있음을 확인한 뒤 bounded HTTPS collector를 연결하는 것이다. OpenAPI 키 사용·인증된 API 호출·쓰기·실제 공개는 0회다.

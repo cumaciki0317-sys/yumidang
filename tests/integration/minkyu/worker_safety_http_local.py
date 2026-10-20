@@ -439,7 +439,7 @@ def fixture_five():
  q+='grant execute on function '+','.join('public.'+s for s in signatures+EXTRA[5:7])+' to service_role;'
  for member in [author,target]:
   if not(SUMMARY_RACE and SUMMARY_RACE[0]=='consent'and member==author):q+="insert into auth.users(id,email)values('"+member+"','five-"+member+"@test.invalid');"
-  q+="insert into public.profiles(id,real_name,birth_date,gender)values('"+member+"','합성회원','1990-01-01','female');insert into private.ai_member_processing(user_id,summary_allowed)values('"+member+"',true);"
+  q+="insert into public.profiles(id,real_name,birth_date,gender)values('"+member+"','합성회원','1990-01-01','female');insert into private.ai_member_processing(user_id,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)values('"+member+"',true,true,true,true);"
  for i in range(1,6):
   post,request,appointment,review=uid(100+i),uid(200+i),uid(300+i),uid(400+i)
   q+="insert into public.posts(id,author_id,title,description,category,starts_at,ends_at,recruitment_ends_at,public_area,status)values('"+post+"','"+author+"','합성 요약 공고','로컬 연결 검증','산책',now()-interval'12 days',now()-interval'11 days',now()-interval'13 days','서울특별시 강남구 역삼동','closed');"
@@ -507,7 +507,7 @@ def fixture_review_lane():
   q+='update private.ai_processing_guard set external_processing_allowed=true;grant execute on function '+','.join('public.'+s for s in FIVE_FUNCTIONS[14:])+' to service_role;'
  else:q+='update private.cancellation_due_control set enabled=true;'
  for member in [author,target]:
-  q+="insert into auth.users(id,email)values('"+member+"','stage3-"+member+"@test.invalid');insert into public.profiles(id,real_name,birth_date,gender)values('"+member+"','합성회원','1990-01-01','female');insert into private.ai_member_processing(user_id,summary_allowed)values('"+member+"',true);"
+  q+="insert into auth.users(id,email)values('"+member+"','stage3-"+member+"@test.invalid');insert into public.profiles(id,real_name,birth_date,gender)values('"+member+"','합성회원','1990-01-01','female');insert into private.ai_member_processing(user_id,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)values('"+member+"',true,true,true,true);"
  for i in range(1,6):
   post,request,appointment,review=uid(100+i),uid(200+i),uid(300+i),uid(400+i)
   q+="insert into public.posts(id,author_id,title,description,category,starts_at,ends_at,recruitment_ends_at,public_area,status)values('"+post+"','"+author+"','합성 요약 공고','로컬 연결 검증','산책',now()-interval'12 days',now()-interval'11 days',now()-interval'13 days','서울특별시 강남구 역삼동','closed');"
@@ -567,7 +567,7 @@ def summary_race_proof_value():
   'checkpoints',(select count(*)from private.review_summary_checkpoints where job_id=j.id),
   'published',(select count(*)from private.review_summary_job_publications where job_id=j.id),
   'eligibleCount',jsonb_array_length(private.review_summary_sources('{target}'::uuid)),
-  'authorConsent',m.summary_allowed,'authorWithdrawn',m.summary_withdrawn_at is not null,
+  'authorConsent',m.summary_source_allowed,'authorWithdrawn',m.summary_withdrawn_at is not null,
   'publicReviewCount',(select count(*)from public.appointment_reviews rv where rv.reviewer_id='{author}'and rv.id in(
     select jsonb_array_elements_text('{json.dumps(plan['approvedReviewIds'])}'::jsonb)::uuid)and private.is_review_public_eligible(rv.id)),
   'selectedReviewExists',exists(select 1 from public.appointment_reviews where id='{review}'),
@@ -1086,7 +1086,7 @@ def close():
   path=b.ROOT/'five-fixture-plan-private.json'
   if path.exists():
    plan=json.loads(path.read_text());ids=[str(uuid.UUID(plan[k]))for k in ['reviewAuthor','reviewTarget']]
-   b.sql("update private.ai_member_processing set summary_allowed=false where user_id in('"+"','".join(ids)+"');")
+   b.sql("update private.ai_member_processing set summary_allowed=false,summary_generate_allowed=false,summary_source_allowed=false where user_id in('"+"','".join(ids)+"');")
   if(b.ROOT/'five-rpc-signatures.json').exists():b.SIGNATURES+=five_signatures()+RECOVERY_FUNCTIONS+((DISCOVERY_FUNCTION,)if RECOVERY_MODE else ())
  # A partially applied fresh recipe can still close every existing EXEC.
  original_signatures=b.SIGNATURES

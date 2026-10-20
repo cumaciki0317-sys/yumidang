@@ -18,6 +18,7 @@ import {
   kopisRankingPeriod,
   parseKopisRankingXml,
   publicKopisRanking,
+  verifyKopisOfficialRanking,
 } from "../../../backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts";
 const now = new Date("2026-10-04T15:01:00Z");
 const event = (id, startsOn, endsOn) => ({
@@ -139,9 +140,16 @@ test("KOPIS 공식 응답 기간 검증·순위 보존·공개 최소 필드", (
     now,
   );
   assert.equal(data.items[0].region, "서울특별시");
+  assert.equal(publicKopisRanking(data, "musical", now).status, "unavailable");
+  const compared = verifyKopisOfficialRanking(xml(), "musical", kopisRankingPeriod(now), now, {
+    mode: "musical", period: kopisRankingPeriod(now), checkedAt: now.toISOString(),
+    officialUrl: "https://www.kopis.or.kr/por/boxoffice/boxoffice.do",
+    officialCondition: "뮤지컬", order: "official_display", items: [{sourceId:"PF1", rank:1}],
+  });
+  assert.equal(publicKopisRanking(compared, "musical", now).status, "available");
   assert.equal(
     publicKopisRanking({ ...data, secret: "exclude" }, "musical", now).status,
-    "available",
+    "unavailable",
   );
   assert.equal("secret" in publicKopisRanking(data, "musical", now), false);
   assert.equal(

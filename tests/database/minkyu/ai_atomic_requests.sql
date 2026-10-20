@@ -11,8 +11,8 @@ end;$$;
 insert into auth.users(id) values(pg_temp.ai_uid(1)),(pg_temp.ai_uid(2)),(pg_temp.ai_uid(3));
 insert into public.profiles(id,real_name,birth_date,gender)
  values(pg_temp.ai_uid(1),'합성하나','1990-01-01','female'),(pg_temp.ai_uid(2),'합성둘','1990-01-01','female'),(pg_temp.ai_uid(3),'합성셋','1990-01-01','female');
-insert into private.ai_member_processing(user_id,exploration_allowed,summary_allowed)
- select pg_temp.ai_uid(i),true,true from generate_series(1,3)i;
+insert into private.ai_member_processing(user_id,exploration_allowed,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)
+ select pg_temp.ai_uid(i),true,true,true,true,true from generate_series(1,3)i;
 create temp table ai_probes(name text primary key,request_id uuid,token uuid);
 grant all on ai_probes to service_role;
 set local role service_role;

@@ -34,6 +34,16 @@ class RestorationReadinessTests(unittest.TestCase):
                                    '2026-10-17-runtime-evidence.json').read_bytes())
         for name in verification.SOURCE_PATHS:
             self.write(self.repo / name, (REPOSITORY / name).read_bytes())
+        # 최신 정책 동기화로 아래 두 문서의 실제 bytes가 역사 readiness SHA와
+        # 달라졌다. 현재 소스를 복사하는 합성 정상 fixture의 핀만 맞춘다.
+        # 원본 readiness JSON과 실제 실행 검증기의 핀/거절은 변경하지 않는다.
+        synthetic_current_documents = {
+            str(Path(verification.DOC) / '2026-10-13-auth-lifecycle-execution.md'),
+            str(Path(verification.DOC) / '2026-10-10-final-schema-storage-restore-static.md'),
+        }
+        for entry in self.ready['sourceInputs']:
+            if entry['path'] in synthetic_current_documents:
+                entry['sha256'] = verification.digest((self.repo / entry['path']).read_bytes())
         for entry in self.ready['currentMigrationInventory']['migrations']:
             name = entry['path']
             self.write(self.repo / name, (REPOSITORY / name).read_bytes())

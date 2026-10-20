@@ -7,12 +7,44 @@ import {
   seoulCalendarDate,
 } from "./normalize.ts";
 import { type EventPeriod, EventProviderError } from "./port.ts";
-export type KopisRankingMode = "all" | "musical";
+/** Mapping describes official filter semantics; unsupported API parameters are never guessed. */
+export const KOPIS_RANKING_CATEGORIES = {
+  all: { label: "전체 공연", kind: "all" },
+  theatre: { label: "연극", kind: "genre" },
+  musical: { label: "뮤지컬", kind: "genre" },
+  classical: { label: "클래식", kind: "genre" },
+  traditional: { label: "국악", kind: "genre" },
+  popular_music: { label: "대중음악", kind: "genre" },
+  dance: { label: "무용", kind: "genre" },
+  popular_dance: { label: "대중무용", kind: "genre" },
+  circus_magic: { label: "서커스/마술", kind: "genre" },
+  mixed: { label: "복합", kind: "genre" },
+  children: { label: "아동", kind: "characteristic" },
+  daehakro: { label: "대학로", kind: "region" },
+  visiting: { label: "내한", kind: "characteristic" },
+  festival: { label: "축제", kind: "characteristic" },
+} as const;
+export type KopisRankingMode = keyof typeof KOPIS_RANKING_CATEGORIES;
+const isMode = (mode: string): mode is KopisRankingMode =>
+  Object.hasOwn(KOPIS_RANKING_CATEGORIES, mode);
+const officialUrl = "https://www.kopis.or.kr/por/boxoffice/boxoffice.do";
+export interface KopisOfficialComparison {
+  mode: KopisRankingMode;
+  period: EventPeriod;
+  checkedAt: string;
+  officialUrl: string;
+  officialCondition: string;
+  order: "official_display";
+  items: { sourceId: string; rank: number }[];
+}
+// Process-local attestation: JSON/caller assertions cannot authorize publication.
+const officialSnapshots = new WeakSet<object>();
 export interface KopisRankingItem {
   rank: number;
   sourceId: string;
   title: string;
   genre: string;
+  originalGenre: string;
   performancePeriodText: string;
   placeName: string;
   region: string;
@@ -24,9 +56,14 @@ export interface VerifiedKopisRanking {
   periodVerification: "verified";
   collectedAt: string;
   items: KopisRankingItem[];
+  apiPeriodVerified?: boolean;
+  officialComparison?: KopisOfficialComparison;
 }
 export interface PublicKopisRanking {
   status: "available" | "unavailable";
+  officialUrl: string;
+  checkedAt: string | null;
+  refreshDelayed: boolean;
   mode: KopisRankingMode;
   sourceName: "KOPIS";
   period: EventPeriod | null;
@@ -55,10 +92,13 @@ export function parseKopisRankingXml(
   period: EventPeriod,
   now: Date,
 ): VerifiedKopisRanking {
+  return parseRanking(xml, mode, period, now, false);
+}
+function parseRanking(xml: string, mode: KopisRankingMode, period: EventPeriod, now: Date, allowTies: boolean): VerifiedKopisRanking {
   rankingDate(period.start);
   rankingDate(period.end);
   if (
-    !["all", "musical"].includes(mode) ||
+    !isMode(mode) ||
     (period.start !== kopisRankingPeriod(now).start ||
       period.end !== kopisRankingPeriod(now).end)
   ) return invalid();
@@ -90,12 +130,15 @@ export function parseKopisRankingXml(
   const items = records.map((raw, i) => {
     if (
       Object.keys(raw).some((key) => !allowed.has(key)) ||
-      raw.rnum !== String(i + 1) ||
+      (!allowTies && raw.rnum !== String(i + 1)) ||
+      (allowTies && (!/^[1-9][0-9]*$/.test(raw.rnum ?? "") ||
+        Number(raw.rnum) > i + 1 || (i > 0 && Number(raw.rnum) < Number(records[i - 1].rnum)))) ||
       !/^PF[0-9A-Za-z]+$/.test(raw.mt20id ?? "") || seen.has(raw.mt20id)
     ) return invalid();
     seen.add(raw.mt20id);
-    const genre = plain(raw.cate);
-    if (mode === "musical" && genre !== "뮤지컬") return invalid();
+    const originalGenre = plain(raw.cate);
+    const genre = ({ "서양음악(클래식)": "클래식", "한국음악(국악)": "국악", "무용(서양/한국무용)": "무용" } as Record<string, string>)[originalGenre] ?? originalGenre;
+    if (KOPIS_RANKING_CATEGORIES[mode].kind === "genre" && genre !== KOPIS_RANKING_CATEGORIES[mode].label) return invalid();
     const dates = /^(\d{4})\.(\d{2})\.(\d{2})\s*~\s*(\d{4})\.(\d{2})\.(\d{2})$/
       .exec(raw.prfpd ?? "");
     if (!dates) return invalid();
@@ -105,10 +148,11 @@ export function parseKopisRankingXml(
     rankingDate(end);
     if (end < start) return invalid();
     return {
-      rank: i + 1,
+      rank: Number(raw.rnum),
       sourceId: raw.mt20id,
       title: plain(raw.prfnm),
       genre,
+      originalGenre,
       performancePeriodText: `${start.replaceAll("-", ".")} ~ ${
         end.replaceAll("-", ".")
       }`,
@@ -118,11 +162,12 @@ export function parseKopisRankingXml(
   }).slice(0, 10);
   return {
     mode,
-    requestedPeriod: period,
+    requestedPeriod: { ...period },
     responsePeriod: { start: match[2], end: match[3] },
     periodVerification: "verified",
     collectedAt: now.toISOString(),
     items,
+    apiPeriodVerified: true,
   };
 }
 export function createKopisRankingProvider(
@@ -246,51 +291,71 @@ export function createKopisRankingProvider(
     },
   };
 }
-/** 안전한 공개 투영. 기존 requested_only DB 스냅샷은 검증 완료로 승격하지 않는다. */
+/** Trusted integration only. Do not bind this function to a member-supplied HTTP payload.
+ * Compares the full displayed Top10 including ties; it does not attest API internal aggregation.
+ */
+export function verifyKopisOfficialRanking(
+  xml: string, mode: KopisRankingMode, period: EventPeriod, now: Date,
+  comparison: KopisOfficialComparison,
+): VerifiedKopisRanking {
+  if (!isMode(mode) || comparison.mode !== mode ||
+    comparison.period.start !== period.start || comparison.period.end !== period.end ||
+    comparison.officialCondition !== KOPIS_RANKING_CATEGORIES[mode].label ||
+    comparison.officialUrl !== officialUrl || comparison.order !== "official_display" ||
+    !Number.isFinite(Date.parse(comparison.checkedAt)) ||
+    new Date(comparison.checkedAt).toISOString() !== comparison.checkedAt ||
+    Date.parse(comparison.checkedAt) > now.getTime() ||
+    Date.parse(comparison.checkedAt) < now.getTime() - 15 * 60_000 ||
+    !Array.isArray(comparison.items) || !comparison.items.length || comparison.items.length > 10
+  ) return invalid();
+  const hasBasedate = /<basedate>/.test(xml);
+  const normalized = hasBasedate ? xml : xml.replace(/^(<\?xml[^?]*\?>\s*)?<boxofs>/,
+    `$&<basedate>${period.start}~${period.end}</basedate>`);
+  const parsed = parseRanking(normalized, mode, period, now, true);
+  if (parsed.items.length !== comparison.items.length || parsed.items.some((item, index) =>
+    item.sourceId !== comparison.items[index].sourceId || item.rank !== comparison.items[index].rank
+  )) return invalid();
+  const snapshot: VerifiedKopisRanking = {
+    ...parsed, apiPeriodVerified: hasBasedate,
+    officialComparison: structuredClone(comparison),
+  };
+  // Freeze attested content so later mutation cannot replace the compared rows/period/category.
+  snapshot.items.forEach(Object.freeze);
+  Object.freeze(snapshot.items);
+  Object.freeze(snapshot.responsePeriod);
+  Object.freeze(snapshot.requestedPeriod);
+  Object.freeze(snapshot.officialComparison!.period);
+  snapshot.officialComparison!.items.forEach(Object.freeze);
+  Object.freeze(snapshot.officialComparison!.items);
+  Object.freeze(snapshot.officialComparison);
+  Object.freeze(snapshot);
+  officialSnapshots.add(snapshot);
+  return snapshot;
+}
+export function isOfficiallyVerifiedKopisRanking(snapshot: VerifiedKopisRanking): boolean {
+  return officialSnapshots.has(snapshot);
+}
+/** Unverified source responses are never public. A failed refresh keeps the verified dates. */
 export function publicKopisRanking(
   snapshot: VerifiedKopisRanking | null,
   mode: KopisRankingMode,
   now: Date,
 ): PublicKopisRanking {
   const empty: PublicKopisRanking = {
-    status: "unavailable",
-    mode,
-    sourceName: "KOPIS",
-    period: null,
-    collectedAt: null,
-    items: [],
+    status: "unavailable", mode, sourceName: "KOPIS", period: null,
+    collectedAt: null, items: [], officialUrl, checkedAt: null, refreshDelayed: false,
   };
-  if (
-    !snapshot || snapshot.mode !== mode ||
-    snapshot.periodVerification !== "verified" ||
-    snapshot.responsePeriod.start !== kopisRankingPeriod(now).start ||
-    snapshot.responsePeriod.end !== kopisRankingPeriod(now).end
-  ) return empty;
+  if (!snapshot || !isMode(mode) || snapshot.mode !== mode ||
+    !officialSnapshots.has(snapshot) || !snapshot.officialComparison ||
+    snapshot.responsePeriod.end > kopisRankingPeriod(now).end) return empty;
   return {
-    status: "available",
-    mode,
-    sourceName: "KOPIS",
-    period: { ...snapshot.responsePeriod },
-    collectedAt: snapshot.collectedAt,
-    items: snapshot.items.map((
-      {
-        rank,
-        sourceId,
-        title,
-        genre,
-        performancePeriodText,
-        placeName,
-        region,
-      },
-    ) => ({
-      rank,
-      sourceId,
-      title,
-      genre,
-      performancePeriodText,
-      placeName,
-      region,
-    })),
+    status: "available", mode, sourceName: "KOPIS",
+    period: { ...snapshot.responsePeriod }, collectedAt: snapshot.collectedAt,
+    officialUrl, checkedAt: snapshot.officialComparison.checkedAt,
+    refreshDelayed: snapshot.responsePeriod.start !== kopisRankingPeriod(now).start ||
+      snapshot.responsePeriod.end !== kopisRankingPeriod(now).end,
+    items: snapshot.items.map(({rank, sourceId, title, genre, originalGenre, performancePeriodText, placeName, region}) =>
+      ({rank, sourceId, title, genre, originalGenre, performancePeriodText, placeName, region})),
   };
 }
 
@@ -319,7 +384,7 @@ export async function collectKopisRanking(input: {
   const snapshot = await input.provider.collect(input.mode, input.signal);
   if (input.signal?.aborted) throw new EventProviderError("CANCELLED");
   if (
-    snapshot.mode !== input.mode || snapshot.periodVerification !== "verified"
+    snapshot.mode !== input.mode || snapshot.periodVerification !== "verified" || !officialSnapshots.has(snapshot)
   ) return invalid();
   const status = await input.store.save(snapshot);
   if (!["applied", "stale"].includes(status)) return invalid();

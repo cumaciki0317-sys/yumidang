@@ -138,3 +138,11 @@ propose/accept는 확정 조건 변경이라는 새 활동이므로 네이버 �
 `POST /conversations/{requestId}/read`는 `{lastReadMessageId}`만 받는다. JWT 본인의 현재 열람 가능한 대화에 속하고 숨겨지지 않은 실제 메시지만 인정한다. 읽음 시각은 서버가 기록하며 `(메시지 생성 시각, UUID)` 위치가 후퇴하지 않는다. 중복·역순 요청은 현재 저장 결과를 반환한다. 새 메시지의 생성 시각은 대화 잠금 하에서 단조 증가한다. 조회와 알림 읽음은 이 상태를 변경하지 않는다.
 
 회원 DB 허용 목록에 `mark_conversation_read`, `list_conversations_with_read_state`, `get_conversation_with_read_state`를 추가했다. 기존 대화 행에 본인 `last_read_message_id`, `read_at`, `unread_count`를 추가하며 상대 읽음 상태는 반환하지 않는다. 메시지 삭제 시 FK로 최소 읽음 상태를 삭제한다. 메시지 숨김은 목록·상세·읽지 않은 수에 반영하고 확정 동행 관리 API는 유지한다. 모바일 DTO 연결은 종현 인계 범위다.
+
+## 2026-10-20 WBS4.5/4.6: 마감 접수와 잠금 대기 검증 경계
+
+정책의 서버 접수시각과 최종 업무 RPC의 DB statement 진입은 다르다. 현재 HTTP handler는 원 JWT 인증과 본문 읽기 후 업무 RPC를 호출하며 RequestContext에는 서버 requestId만 있다. 사용자 timestamp·헤더·임의 GUC를 새 권한 근거로 받지 않는다. 공개 수락 RPC signature는 유지한다.
+
+`accept_match`는 공고/신청 잠금 후 `expire_post_match_consents`를 호출한다. 만료 helper와 독립 worker가 실제 시각으로 상태를 종료할 수 있으므로 최종 비교식만 statement 시각으로 바꾸거나 이미 종료된 상태를 소급 부활시키지 않는다. HTTP 접수 증명을 도입하려면 주체·가입회차·대상·조건버전·요청 digest·한 번 소비와 결합한 서버 신뢰 채널 및 만료 worker의 공통 직렬화가 먼저 필요하다. 원 JWT의 공개 PostgREST 호출이 가능한 현재 경로에서 단순 전달 헤더는 신뢰 채널이 아니다.
+
+새 `tests/integration/minkyu/deadline_lock_evidence.py`는 후기 한 건의 DB-entry 잠금 관측만 순수 판정한다. 실제 실행기는 아니며 수락·변경·worker 경쟁 및 HTTP 최초 접수를 증명하지 않는다. 해당 회귀 통과를 WBS4.5/4.6 또는 D03 정책 전체 완료로 집계하지 않는다.

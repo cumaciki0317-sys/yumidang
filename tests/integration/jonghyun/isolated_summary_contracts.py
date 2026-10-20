@@ -175,7 +175,7 @@ class Runner(GuardedRunner):
         author,target=self.people
         q="begin;select set_config('request.jwt.claims','{\"role\":\"service_role\"}',true);"
         for member in self.people:
-            q+='insert into auth.users(id)values('+quote(member)+');insert into public.profiles(id,real_name,birth_date,gender)values('+quote(member)+",'합성회원','1990-01-01','female');insert into private.ai_member_processing(user_id,summary_allowed)values("+quote(member)+',true);'
+            q+='insert into auth.users(id)values('+quote(member)+');insert into public.profiles(id,real_name,birth_date,gender)values('+quote(member)+",'합성회원','1990-01-01','female');insert into private.ai_member_processing(user_id,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)values("+quote(member)+',true,true,true,true);'
         for i in range(5):
             q+='insert into public.posts(id,author_id,title,description,category,starts_at,ends_at,recruitment_ends_at,public_area,status)values('+quote(self.posts[i])+','+quote(author)+",'합성 요약 공고','로컬 연결 검증','산책',now()-interval'12 days',now()-interval'11 days',now()-interval'13 days','서울특별시 강남구 역삼동','closed');"
             q+='insert into public.join_requests(id,post_id,requester_id,message,status)values('+quote(self.requests[i])+','+quote(self.posts[i])+','+quote(target)+",'합성 후기 검증 신청','matched');"
@@ -221,7 +221,7 @@ class Runner(GuardedRunner):
           'checkpoints',(select count(*)from private.review_summary_checkpoints where profile_id='{target}'),
           'published',(select count(*)from private.review_summary_job_publications where profile_id='{target}'),
           'eligibleCount',jsonb_array_length(private.review_summary_sources('{target}')),
-          'authorConsent',m.summary_allowed,'authorWithdrawn',m.summary_withdrawn_at is not null,
+          'authorConsent',m.summary_source_allowed,'authorWithdrawn',m.summary_withdrawn_at is not null,
           'publicReviewCount',(select count(*)from public.appointment_reviews rv where rv.reviewer_id='{author}' and rv.id=any(array[{','.join(quote(x) for x in self.reviews[:3])}]::uuid[]) and private.is_review_public_eligible(rv.id)),
           'selectedReviewExists',exists(select 1 from public.appointment_reviews where id='{review}'),
           'reviewerExact',exists(select 1 from public.appointment_reviews where id='{review}' and reviewer_id='{author}'),

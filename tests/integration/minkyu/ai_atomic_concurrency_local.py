@@ -56,7 +56,7 @@ def main():
         sql('begin; ' + ''.join(
             f"insert into auth.users(id) values('{user}');"
             f"insert into public.profiles(id,real_name,birth_date,gender) values('{user}','합성동시검사','1990-01-01','female');"
-            f"insert into private.ai_member_processing(user_id,exploration_allowed,summary_allowed) values('{user}',true,true);"
+            f"insert into private.ai_member_processing(user_id,exploration_allowed,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed) values('{user}',true,true,true,true,true);"
             for user in users) +
             'update private.ai_processing_guard set external_processing_allowed=true where singleton; commit;')
         for ledger, units in zip(ledgers, [100, 1]):

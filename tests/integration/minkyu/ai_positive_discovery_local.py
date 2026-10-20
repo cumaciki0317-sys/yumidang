@@ -444,7 +444,7 @@ def verify_database(fixture, result, data):
             and type(data['ai_member_daily_usage'][0]['started_requests']) is int and data['ai_member_daily_usage'][0]['started_requests'] == 4,
             'POSITIVE_DB_DAILY_COUNT')
     require(len(data['ai_member_processing']) == 6 and {r['user_id'] for r in data['ai_member_processing']} == {a['userId'] for a in fixture['accounts']}
-            and all(r['exploration_allowed'] is True and r['summary_allowed'] is False and r['active_request_id'] is None for r in data['ai_member_processing']), 'POSITIVE_DB_MEMBER_SCOPE')
+            and all(r['exploration_allowed'] is True and r['summary_allowed'] is False and all(r[k] is False for k in ('summary_view_allowed','summary_generate_allowed','summary_source_allowed')) and r['active_request_id'] is None for r in data['ai_member_processing']), 'POSITIVE_DB_MEMBER_SCOPE')
     expected = {r['reservationId']: r for c in cases for r in c['reservations']}
     days = {r['accountDay'] for r in expected.values()}
     require(len(days) == 1 and all(re.fullmatch(r'\d{4}-\d{2}-\d{2}', d) for d in days), 'POSITIVE_SINGLE_KST_DAY')

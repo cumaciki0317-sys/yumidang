@@ -21,6 +21,7 @@ import { createWorkerRunScope } from "./worker-run.ts";
 import { toWireEvent } from "../db/repositories/events.ts";
 import {
   type KopisRankingMode,
+  isOfficiallyVerifiedKopisRanking,
   kopisRankingPeriod,
   type VerifiedKopisRanking,
 } from "../integrations/events/kopis-ranking.ts";
@@ -233,6 +234,7 @@ export function createEventOperations(
       ) return { status: await settle("superseded", null, false) };
       if (
         snapshot.mode !== mode || snapshot.periodVerification !== "verified" ||
+        !isOfficiallyVerifiedKopisRanking(snapshot) ||
         snapshot.requestedPeriod.start !== reference.period.start ||
         snapshot.requestedPeriod.end !== reference.period.end ||
         snapshot.responsePeriod.start !== reference.period.start ||
@@ -726,6 +728,11 @@ export function createEventOperations(
     },
     /** 내부 수동 요청도 같은 영속 작업 점유/원자 완료 경로를 거친다. 성공한 작업을 다시 수집하지 않는다. */
     async ranking(mode: KopisRankingMode, signal?: AbortSignal) {
+      // Existing durable lanes only support these two categories. Never route another
+      // category into musical; the public comparison gate covers all fourteen.
+      if (mode !== "all" && mode !== "musical") {
+        return { status: "not_enabled" as const, reason: "RANKING_CATEGORY_LANE_NOT_CONNECTED" };
+      }
       return collectRanking(
         {
           provider: "kopis",

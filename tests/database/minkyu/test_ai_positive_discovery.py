@@ -51,7 +51,7 @@ def golden():
                 'account_id': 'yumi', 'account_day': day, 'reserved_units': 100, 'unknown_at': None,
                 'settled_at': 'time', 'input_tokens': 1, 'output_tokens': 1})
     data['ai_member_daily_usage'] = [{'user_id': viewer, 'kst_day': day, 'started_requests': 4}]
-    data['ai_member_processing'] = [{'user_id': a['userId'], 'exploration_allowed': True, 'summary_allowed': False,
+    data['ai_member_processing'] = [{'user_id': a['userId'], 'exploration_allowed': True, 'summary_allowed': False, 'summary_view_allowed': False, 'summary_generate_allowed': False, 'summary_source_allowed': False,
         'active_request_id': None} for a in f['accounts']]
     data['ai_budget_ledgers'] = [{'ledger_id': f['ledger'], 'unit_limit':100000000,'call_limit':64,'charged_units': 22, 'reserved_units': 0,
         'open_calls': 0, 'settled_calls': 11, 'unknown_usage_calls': 0}]
@@ -78,7 +78,10 @@ class ProofContract(unittest.TestCase):
             lambda f,r,d: d['ai_account_budget_reservations'][0].update(input_tokens=True),
             lambda f,r,d: d['ai_global_daily_budget'][0].update(kst_day='2026-10-20'),
             lambda f,r,d: d['ai_budget_ledgers'][0].update(charged_units=23),
-            lambda f,r,d: d['ai_member_processing'][0].update(summary_allowed=True)]
+            lambda f,r,d: d['ai_member_processing'][0].update(summary_allowed=True),
+            lambda f,r,d: d['ai_member_processing'][0].update(summary_view_allowed=True),
+            lambda f,r,d: d['ai_member_processing'][0].update(summary_generate_allowed=True),
+            lambda f,r,d: d['ai_member_processing'][0].update(summary_source_allowed=True)]
         for change in changes:
             f,r,d = golden(); change(f,r,d)
             with self.subTest(change=changes.index(change)), self.assertRaises((ValueError, KeyError)):

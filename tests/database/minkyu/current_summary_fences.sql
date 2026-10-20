@@ -53,8 +53,8 @@ do $$ declare i integer;p uuid;r uuid;ap uuid;begin
 end $$;
 
 -- 선택한 synthetic 계정만 처리 허용한다. 전역 외부 전송 guard는 실제 외부 호출 없이 rollback된다.
-insert into private.ai_member_processing(user_id,summary_allowed)
-  values(pg_temp.summary_uid(1),true),(pg_temp.summary_uid(2),true),(pg_temp.summary_uid(3),true);
+insert into private.ai_member_processing(user_id,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)
+  values(pg_temp.summary_uid(1),false,true,true,true),(pg_temp.summary_uid(2),false,true,true,true),(pg_temp.summary_uid(3),false,true,true,true);
 update private.ai_processing_guard set external_processing_allowed=true where singleton;
 create temp table summary_fence_probe(job_id uuid,lease uuid,run_token uuid,revision text,ids uuid[],checkpoint jsonb,published jsonb,invocation_id uuid);
 grant all on summary_fence_probe to ym_summary_fence_synthetic;
@@ -153,6 +153,16 @@ do $$declare f summary_fence_probe;begin
 end;$$;
 set local role authenticated;
 do $$ begin
+  perform pg_temp.summary_actor(3);
+  assert public.get_visible_review_summary(pg_temp.summary_uid(2))->'summary'->>'text'='합성 최신 공개 요약','new independent consents cannot publish/read with legacy false';
+  perform public.set_my_ai_consent('summary_view',false);
+  assert public.get_visible_review_summary(pg_temp.summary_uid(2))='{"summary":null}'::jsonb;
+  perform public.set_my_ai_consent('summary_view',true);
+  assert public.get_visible_review_summary(pg_temp.summary_uid(2))->'summary' is distinct from 'null'::jsonb;
+end $$;
+reset role;
+set local role authenticated;
+do $$ begin
   perform pg_temp.summary_actor(1);
   assert public.withdraw_my_ai_processing('review_summary')->>'withdrawn'='true';
 end $$;
@@ -172,7 +182,7 @@ do $$ declare f summary_fence_probe;begin
   assert public.load_review_summary_checkpoint(f.job_id,f.lease,f.revision,f.run_token,'2026-10-05')->>'status'='stale_revision';
 end $$;
 reset role;
-update private.ai_member_processing set summary_allowed=false where user_id=pg_temp.summary_uid(2);
+update private.ai_member_processing set summary_allowed=false,summary_source_allowed=false,summary_generate_allowed=false where user_id=pg_temp.summary_uid(2);
 set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe; begin
   select * into f from summary_fence_probe;
@@ -181,7 +191,7 @@ do $$ declare f summary_fence_probe; begin
   assert public.discard_review_summary_checkpoint(f.job_id,f.lease,f.revision,f.run_token,'2026-10-05')->>'status'='applied';
 end $$;
 reset role;
-update private.ai_member_processing set summary_allowed=true where user_id=pg_temp.summary_uid(2);
+update private.ai_member_processing set summary_allowed=true,summary_source_allowed=true,summary_generate_allowed=true where user_id=pg_temp.summary_uid(2);
 update private.global_worker_run set expires_at=clock_timestamp()-interval '1 second' where singleton;
 set local role ym_summary_fence_synthetic;
 do $$ declare f summary_fence_probe; begin

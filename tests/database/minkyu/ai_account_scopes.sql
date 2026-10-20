@@ -1,7 +1,7 @@
 -- 기존 회원 guard/20회가 신규 계정 예약에서도 유지됨을 실제 scope RPC로 확인한다.
 insert into auth.users(id)values('bd000000-0000-4000-8000-000000000001');
 insert into public.profiles(id,real_name,birth_date,gender)values('bd000000-0000-4000-8000-000000000001','합성예산회원','1990-01-01','female');
-insert into private.ai_member_processing(user_id,exploration_allowed,summary_allowed)values('bd000000-0000-4000-8000-000000000001',true,true);
+insert into private.ai_member_processing(user_id,exploration_allowed,summary_allowed,summary_view_allowed,summary_generate_allowed,summary_source_allowed)values('bd000000-0000-4000-8000-000000000001',true,true,true,true,true);
 select public.configure_ai_budget_accounts(array['yumi','jonghyun']);
 select public.configure_ai_budget_ledger('account-scope-synthetic',100000,100);
 create temp table account_scope(value jsonb);grant all on account_scope to service_role;

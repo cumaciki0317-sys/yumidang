@@ -1,3 +1,4 @@
+import { verifyKopisOfficialRanking } from "../../../backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -340,22 +341,14 @@ test("Top10 전체/뮤지컬을 고정7일 별도작업으로 등록하고 실�
         failed = true;
         throw new EventProviderError("SOURCE_UNAVAILABLE");
       }
-      return {
-        mode,
-        requestedPeriod: period,
-        responsePeriod: period,
-        periodVerification: "verified",
-        collectedAt: now.toISOString(),
-        items: [{
-          rank: 1,
-          sourceId: "PF1",
-          title: "가상공연",
-          genre: "뮤지컬",
-          performancePeriodText: "2026.10.01 ~ 2026.10.10",
-          placeName: "가상극장",
-          region: "서울특별시",
-        }],
-      };
+      return verifyKopisOfficialRanking(
+        '<boxofs><boxof><rnum>1</rnum><mt20id>PF1</mt20id><cate>뮤지컬</cate><prfnm>가상공연</prfnm><prfpd>2026.10.01~2026.10.10</prfpd><prfplcnm>가상극장</prfplcnm><area>서울</area></boxof></boxofs>',
+        mode, period, now, { mode, period, checkedAt: now.toISOString(),
+          officialUrl: "https://www.kopis.or.kr/por/boxoffice/boxoffice.do",
+          officialCondition: mode === "all" ? "전체 공연" : "뮤지컬",
+          order: "official_display", items: [{sourceId: "PF1", rank: 1}],
+        },
+      );
     },
   };
   const operations = createEventOperations({
@@ -777,3 +770,34 @@ for (const lane of ["future", "ranking_all", "detail"]) {
     }
   });
 }
+
+test("미연결 12분류는 뮤지컬 lane으로 잘못 보내거나 RPC를 실행하지 않는다", async () => {
+  const f = fixture();
+  for (const mode of ["theatre", "classical", "traditional", "popular_music", "dance", "popular_dance", "circus_magic", "mixed", "children", "daehakro", "visiting", "festival"]) {
+    assert.deepEqual(await f.operations.ranking(mode), {
+      status: "not_enabled", reason: "RANKING_CATEGORY_LANE_NOT_CONNECTED",
+    });
+  }
+  assert.equal(f.calls.length, 0);
+});
+
+test("위조 verified 순위는 원자완료 RPC에 전달하지 않고 실패 정산한다", async () => {
+  const calls = [];
+  const period = {start:"2026-09-28",end:"2026-10-04"};
+  const operations = createEventOperations({
+    db: {async rpc(name, args) {
+      calls.push([name,args]);
+      if(name === "read_event_collection_contract") return {version:"2026-10-05",capabilities:["collection","ranking_jobs"]};
+      if(name === "acquire_worker_run") return {token,expiresAt:"2099-01-01T00:00:00Z"};
+      if(name === "release_worker_run") return {status:"applied"};
+      if(name === "claim_event_collection") return {jobId:token,leaseToken:token,provider:"kopis",lane:"ranking_all",period};
+      if(name === "settle_event_collection") return {status:"failed"};
+      throw Error("UNEXPECTED_RPC");
+    }},
+    providers:new Map(), providerMaxPage:999, maxPages:5, now:()=>now,
+    rankingProvider:{async collect(){return {mode:"all",periodVerification:"verified",requestedPeriod:period,responsePeriod:period,items:[]};}},
+  });
+  assert.equal((await operations.ranking("all")).status,"failed");
+  assert.equal(calls.some(([name])=>name === "complete_event_ranking_collection"),false);
+  assert.equal(calls.find(([name])=>name === "settle_event_collection")[1].p_error_code,"SOURCE_INVALID_RESPONSE");
+});
