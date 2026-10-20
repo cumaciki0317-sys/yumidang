@@ -41,5 +41,6 @@
     }
   ],
   "implementation_warning": "정책 반영 확인이며 날짜 달력 표시·서버 동일행사 통합·공개원천 충돌 계약의 구현 완료가 아님.",
-  "remote_original_pending": true
+  "remote_original_pending": false,
+  "remote_verified_commit": "5476f6d3e73d763dd6e7f4a3dac3d7c7344c71cd"
 }

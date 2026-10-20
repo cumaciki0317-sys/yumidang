@@ -21,5 +21,10 @@
   "new_product_test_runs": 0,
   "synthetic_download_cleaned": true,
   "runtime_errors": 0,
-  "final_preview": "review-preview.png"
+  "final_preview": "review-preview.png",
+  "late_source_refresh": {
+    "document_count": 341,
+    "new_original_search_hits": 1,
+    "policy_changed": false
+  }
 }
