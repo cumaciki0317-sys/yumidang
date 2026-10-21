@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""검토한 합성121 archive의 새 격리 사본에서 신규 동의 SQL만 검사. 기본 실행 없음.
+"""검토한 합성121 archive의 새 격리 사본에서 고정된 신규 서버 SQL만 검사. 기본 실행 없음.
 
 기존 컨테이너/네트워크/볼륨·archive는 읽기만 한다. 새 대상은 network none,
 port/volume 없이 생성하고 정확한 신규 ID만 한 번 중지·보존한다.
@@ -25,7 +25,8 @@ IMAGE='sha256:28f0e16a019e648089fc1a6d333549a55548f6019c15ae4bd7cd58b989027518'
 ARCHIVE=Path('/private/tmp/yumidang-db121-20261019-b003/capture-execution')
 ARCHIVE_PINS={'source.dump':'c741bec810faeb83b217a37aa8df865bd6499827e27a7099506d167c593706bf','roles.sql':'e3c775a7e3f96c947d53e72ea9e803e8d0d812b8eb3d4a9286147ed1914cecf3'}
 SQL='backend/supabase/migrations/20261020100000_ai_independent_consents.sql'
-TESTS=['tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql']
+MIGRATIONS=[SQL,'backend/supabase/migrations/20261020130000_post_private_events.sql']
+TESTS=['tests/database/minkyu/post_manual_events.sql','tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql']
 def need(ok,code):
  if not ok:raise ValueError(code)
 def sha(raw):return hashlib.sha256(raw).hexdigest()
@@ -45,7 +46,7 @@ def check_host_transition(before,after,*,first_start):
 def source_review(head,pins):
  actual=subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
  need(actual==head and re.fullmatch('[a-f0-9]{40}',head),'HEAD_CHANGED')
- need(set(pins)=={SELF,SQL,*TESTS},'SOURCE_SET_CHANGED')
+ need(set(pins)=={SELF,*MIGRATIONS,*TESTS},'SOURCE_SET_CHANGED')
  for name,pin in pins.items():
   p=ROOT/name;need(p.resolve()==p and p.is_file() and sha(p.read_bytes())==pin,'SOURCE_CHANGED')
   need(subprocess.check_output(['git','-C',str(ROOT),'show',head+':'+name])==p.read_bytes(),'SOURCE_NOT_COMMITTED')
@@ -181,7 +182,7 @@ class Scratch:
    self.guard();self.own();self.docker(['exec','-i',self.target,'pg_restore','-h','/var/run/postgresql','-U','supabase_admin','-d','template1','--create','--exit-on-error'],self.read_archive('source.dump'))
    baseline=self.sql(b"select count(*) from private.ai_account_budget_reservations where unknown_at is not null and settled_at is null;")
    need(baseline.strip()==b'2','SYNTHETIC_UNKNOWN_BASELINE')
-   self.sql(self.read_source(SQL))
+   for migration in MIGRATIONS:self.sql(self.read_source(migration))
    for test in TESTS:self.sql(self.read_source(test))
    need(self.sql(b"select count(*) from private.ai_account_budget_reservations where unknown_at is not null and settled_at is null;")==baseline,'UNKNOWN_CHANGED')
    self.guard();status='PASS_SQL_ONLY'
@@ -212,13 +213,13 @@ class Scratch:
      for name,pin in ARCHIVE_PINS.items():need(sha(private_raw(ARCHIVE/name))==pin,'ARCHIVE_CHANGED')
      preserved=True
     except BaseException:pass
-   result={'status':status if stopped and preserved else 'FAIL_CLOSED','targetId':self.target,'targetStopped':stopped,'existingPreserved':preserved,'existingStoredBytes':'NOT_VERIFIED','minimumAvailableKiB':self.minimum,'sourceHead':self.review['head'],'error':error,'scope':'SYNTHETIC_ARCHIVE_NEW_AI_SQL_ONLY','actualAuth':'NOT_RUN','operatingChanged':False,'fullRestore':False,'realMembers':False,'providerCalls':0,'automaticReplay':False}
+   result={'status':status if stopped and preserved else 'FAIL_CLOSED','targetId':self.target,'targetStopped':stopped,'existingPreserved':preserved,'existingStoredBytes':'NOT_VERIFIED','minimumAvailableKiB':self.minimum,'sourceHead':self.review['head'],'error':error,'scope':'SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY','migrationFiles':MIGRATIONS,'testFiles':TESTS,'actualAuth':'NOT_RUN','operatingChanged':False,'fullRestore':False,'realMembers':False,'providerCalls':0,'automaticReplay':False}
    self.save('receipt.json',result)
   return result
 
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--review',type=Path);p.add_argument('--sha256');p.add_argument('--output',type=Path);p.add_argument('--run',action='store_true');a=p.parse_args()
- if not a.run:print(json.dumps({'status':'NOT_RUN','scope':'SYNTHETIC_ARCHIVE_NEW_AI_SQL_ONLY'}));return
+ if not a.run:print(json.dumps({'status':'NOT_RUN','scope':'SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY','migrationFiles':MIGRATIONS,'testFiles':TESTS}));return
  need(a.review and a.output and a.sha256,'REVIEW_REQUIRED');raw=private_raw(a.review);need(sha(raw)==a.sha256,'REVIEW_CHANGED');v=json.loads(raw)
  need(set(v)=={'head','pins','name'} and type(v['pins']) is dict,'REVIEW_SHAPE');source_review(v['head'],v['pins'])
  need(a.output.parent.resolve()==a.output.parent and a.output.parent==a.review.parent and not a.output.exists(),'FRESH_PRIVATE_OUTPUT')

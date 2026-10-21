@@ -7,6 +7,29 @@ P=Path(__file__).resolve().parents[3]/'tools/local/run_ai_consent_scratch.py'
 class GuardTests(unittest.TestCase):
  def setUp(self):
   spec=importlib.util.spec_from_file_location('scratch',P);self.m=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.m)
+ def test_review_rejects_missing_or_extra_sql_before_file_reads(self):
+  from unittest.mock import patch
+  expected={self.m.SELF,*self.m.MIGRATIONS,*self.m.TESTS}
+  for names in [expected-{self.m.MIGRATIONS[-1]},expected|{'unreviewed.sql'}]:
+   with patch.object(self.m.subprocess,'check_output',return_value='a'*40+'\n'):
+    with self.assertRaisesRegex(ValueError,'SOURCE_SET_CHANGED'):
+     self.m.source_review('a'*40,dict.fromkeys(names,'b'*64))
+ def test_sql_input_is_the_exact_pinned_bytes(self):
+  import tempfile
+  from unittest.mock import Mock,patch
+  with tempfile.TemporaryDirectory() as root:
+   repo=Path(root).resolve();name=self.m.TESTS[0];p=repo/name;p.parent.mkdir(parents=True)
+   raw=b'-- exact synthetic input\nselect 1;\n';p.write_bytes(raw)
+   runner=self.m.Scratch({'pins':{name:self.m.sha(raw)}},repo)
+   runner.target='c'*64;runner.guard=Mock();runner.own=Mock()
+   runner.docker=Mock(return_value=(b'ok',0))
+   with patch.object(self.m,'ROOT',repo):
+    consumed=runner.read_source(name)
+    p.write_bytes(b'select 2;')
+    runner.sql(consumed)
+    self.assertIs(runner.docker.call_args.args[1],consumed)
+    self.assertEqual(runner.docker.call_args.args[1],raw)
+    with self.assertRaisesRegex(ValueError,'SOURCE_CHANGED'):runner.read_source(name)
  def test_first_private_read_allows_access_time_update(self):
   import os,tempfile
   with tempfile.TemporaryDirectory() as root:
