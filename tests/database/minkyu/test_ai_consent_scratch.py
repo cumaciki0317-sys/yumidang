@@ -14,20 +14,24 @@ class GuardTests(unittest.TestCase):
    with patch.object(self.m.subprocess,'check_output',return_value='a'*40+'\n'):
     with self.assertRaisesRegex(ValueError,'SOURCE_SET_CHANGED'):
      self.m.source_review('a'*40,dict.fromkeys(names,'b'*64))
- def test_kopis_is_mandatory_in_three_migrations_five_checks_and_pinned_bytes(self):
+ def test_kopis_and_deadline_mandatory_in_four_migrations_six_checks_and_pinned_bytes(self):
   import tempfile
   from unittest.mock import Mock,patch
   migration='backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql'
   check='tests/database/minkyu/kopis_verified_snapshots.sql'
-  self.assertEqual(self.m.MIGRATIONS,[self.m.SQL,'backend/supabase/migrations/20261020130000_post_private_events.sql',migration])
-  self.assertEqual(self.m.TESTS,['tests/database/minkyu/post_manual_events.sql','tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql',check])
+  deadline='backend/supabase/migrations/20261021142140_review_db_entry_deadline.sql'
+  deadline_check='tests/database/minkyu/review_db_entry_deadline_fixture.sql'
+  self.assertEqual(self.m.sha((self.m.ROOT/deadline).read_bytes()),'85f4faa8892e1b304117ea08fffe42f9d7b7e5daca25a8fb977870b91755d101')
+  self.assertEqual(self.m.sha((self.m.ROOT/deadline_check).read_bytes()),'b4e7e06497fbf054981909b2f5a0e4bc2e1d252103c4d727e382ae66d60025d1')
+  self.assertEqual(self.m.MIGRATIONS,[self.m.SQL,'backend/supabase/migrations/20261020130000_post_private_events.sql',migration,deadline])
+  self.assertEqual(self.m.TESTS,['tests/database/minkyu/post_manual_events.sql','tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql',check,deadline_check])
   expected={self.m.SELF,*self.m.MIGRATIONS,*self.m.TESTS,*self.m.ADDITIONAL_SOURCES}
-  for omitted in (migration,check):
+  for omitted in (migration,check,deadline,deadline_check):
    with patch.object(self.m.subprocess,'check_output',return_value='a'*40+'\n')as git:
     with self.assertRaisesRegex(ValueError,'SOURCE_SET_CHANGED'):
      self.m.source_review('a'*40,dict.fromkeys(expected-{omitted},'b'*64))
     self.assertEqual(git.call_count,1)  # HEAD만 확인하고 파일/추가 Git 소비 전 거절
-  for name in (migration,check):
+  for name in (migration,check,deadline,deadline_check):
    with self.subTest(name=name),tempfile.TemporaryDirectory()as root:
     repo=Path(root).resolve();path=repo/name;path.parent.mkdir(parents=True)
     raw=b'-- exact reviewed KOPIS fixture bytes\nselect 1;\n';path.write_bytes(raw)

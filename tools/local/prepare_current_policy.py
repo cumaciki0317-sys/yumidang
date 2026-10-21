@@ -264,6 +264,9 @@ def inspect_current_migrations(repo):
 # AI extension 근거: root a003/HEAD2de6195의 합성 archive SQL3 PASS_SQL_ONLY.
 # 이 근거는 실제 Auth·자연 만료·전체 복원·실회원 검증이 아니다.
 CURRENT_EXTENSION_REVIEWED = {
+    # DB-entry125: 정적 검토/정적 회귀 완료, 실제 SQL0. 운영 적용 승인이 아니다.
+    'backend/supabase/migrations/20261021142140_review_db_entry_deadline.sql':
+        '85f4faa8892e1b304117ea08fffe42f9d7b7e5daca25a8fb977870b91755d101',
     'backend/supabase/migrations/20261020100000_ai_independent_consents.sql':
         '0dbf18e2006860c47e91ba61c2161e7d2b88ac1adb36801a9ddffd616494e9fa',
     'backend/supabase/migrations/20261020130000_post_private_events.sql':

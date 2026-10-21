@@ -28,12 +28,13 @@ ARCHIVE_PINS={'source.dump':'c741bec810faeb83b217a37aa8df865bd6499827e27a7099506
 SQL='backend/supabase/migrations/20261020100000_ai_independent_consents.sql'
 # KOPIS124는 정적 검토 scope 등록이다. 이 목록 추가로 실제 SQL/Auth/운영 검증이 완료되지 않는다.
 MIGRATIONS=[SQL,'backend/supabase/migrations/20261020130000_post_private_events.sql',
- 'backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql']
+ 'backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql',
+ 'backend/supabase/migrations/20261021142140_review_db_entry_deadline.sql']
 CONCURRENT_HELPER='tests/integration/minkyu/ai_consent_concurrent_local.py'
 CONCURRENT_FIXTURE='tests/database/minkyu/ai_consent_concurrent_fixture.sql'
 ADDITIONAL_SOURCES=(CONCURRENT_HELPER,CONCURRENT_FIXTURE)
 TESTS=['tests/database/minkyu/post_manual_events.sql','tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql',
- 'tests/database/minkyu/kopis_verified_snapshots.sql']
+ 'tests/database/minkyu/kopis_verified_snapshots.sql','tests/database/minkyu/review_db_entry_deadline_fixture.sql']
 def need(ok,code):
  if not ok:raise ValueError(code)
 def sha(raw):return hashlib.sha256(raw).hexdigest()
