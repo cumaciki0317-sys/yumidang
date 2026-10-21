@@ -1,0 +1,66 @@
+{
+  "WBS ID": [
+    "4.6",
+    "7.11"
+  ],
+  "변경": "후기 마감은 DB statement 진입시각, 잠금 후 상태·시작·실제 완료 하한은 판단시각으로 분리하는 migration125와 합성 SQL fixture를 검증했다. manual 완료 fixture는 완료 행위자 제약을 유지하도록 수정했다.",
+  "실제 검증 범위": {
+    "status": "PASS_SQL_ONLY",
+    "sourceHead": "7349174d4cebd6920636ddfc20728ac62d0e0645",
+    "migrationCount": 125,
+    "SQL fixture 개수": 6,
+    "동의 철회 SQL 동시성": "동시 actor229/236와 blocker236→229 확인",
+    "보존": "6개 schema182개 table과 migration history1개, 총183개 rowbag·catalogue·sequence의 동시성 검증 전후 일치",
+    "UNKNOWN 미정산": "2개 유지",
+    "생성 대상 정지": true,
+    "기존 자원 metadata 보존": true,
+    "기존 자원 전체 저장 바이트": "NOT_VERIFIED",
+    "최소 여유 메모리 KiB": 2251536,
+    "원문 명령 증거": "455개 stdout/stderr SHA 독립 검산, childClosed 모두 true; 준비대기 pg_isready2개만 exit2",
+    "실제 Auth": "NOT_RUN",
+    "운영 변경": false,
+    "실회원": false,
+    "모델 호출": 0,
+    "전체 복원": false
+  },
+  "증거": [
+    {
+      "path": "/private/tmp/yumidang-review-deadline-sql-20261022-a002/review.json",
+      "sha256": "8ec444d3ba90bea9b32f764947d33eb362832144aaabdac137894b3be5d937fe"
+    },
+    {
+      "path": "/private/tmp/yumidang-review-deadline-sql-20261022-a002/execution/receipt.json",
+      "sha256": "fa9188b06573e4f27bae25cf977289be869073f9d2d5aee62055b3e05fa248e2"
+    },
+    {
+      "path": "/private/tmp/yumidang-review-deadline-sql-20261022-a002/execution/consent-concurrency-receipt.json",
+      "sha256": "25f9790d7e3d4b8d5a2252074aa17df35cc05f94dd124f0b5f07f61a138e6ec4"
+    },
+    {
+      "path": "/private/tmp/yumidang-review-deadline-sql-20261022-a002/execution/consent-baseline-private.json",
+      "sha256": "b54de5b337d30512d1037b16f9163347aede115cc79c96837509a3d773413030"
+    },
+    {
+      "path": "/private/tmp/yumidang-review-deadline-sql-20261022-a002/execution/consent-after-cleanup-private.json",
+      "sha256": "b54de5b337d30512d1037b16f9163347aede115cc79c96837509a3d773413030"
+    }
+  ],
+  "이전 실패": {
+    "증거": {
+      "path": "/private/tmp/yumidang-review-deadline-sql-20261021-a001/execution/receipt.json",
+      "sha256": "90ac6d4f9a674046b8c649a35de6bb1025b1dbfe69f3f6dcd9a7e27f5b647e4e"
+    },
+    "status": "FAIL_CLOSED",
+    "원인": "fixture가 manual 완료 행위자를 누락해 기존 appointments_completion_contract를 위반했다.",
+    "보존": "별도 실패 기록 유지, 재실행 결과로 덮지 않음"
+  },
+  "독립 검토": "deadline_implementation이 source13개 Git blob·명령455개 해시·보존·정리를 검산했다.",
+  "통합 HEAD": "173a5f9",
+  "남은 조건": [
+    "실제 Auth·HTTP 및 public→deepest 권한 사슬 검증",
+    "실제 발급 세션2개의 후기 마감 잠금 경쟁",
+    "AI24 자연 자정 및 실제 모델 출력·운영·회원 검증"
+  ],
+  "다음 작업": "현재 소스 AI22/23 도구의 독립 검토와 AI24 exact125 지원을 완료한 뒤 새 Auth 환경을 발급한다.",
+  "전체 진행률": "79%(22/28) 유지"
+}

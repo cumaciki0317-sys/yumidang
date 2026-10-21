@@ -1,0 +1,29 @@
+{
+  "WBS ID": [
+    "4.2",
+    "7.11"
+  ],
+  "변경": "기존 임시 작업 공간의 Git HEAD/config 누락 발견 후 보존 객체를 새 전용 작업 공간에 복사해 동일 커밋의 트리를 복구했다. 기존 작업 공간과 원본 저장소는 수정하지 않았다.",
+  "기준 HEAD": "fee269ac210a5467d7e5df2f8a99093dbb3c5009",
+  "실제 검증 범위": {
+    "git fsck --full --no-reflogs": {
+      "exit": 0,
+      "log": "/private/tmp/yumidang-recovery-fsck-supplemented-20261022.log",
+      "sha256": "6480be92b93e98cd3ea05ea4035fe2b9cc6c4be6d0f5cf94021512a7d4a05d51"
+    },
+    "복구 직후 tracked clean": true,
+    "migration 개수": 124,
+    "actor": "minkyu",
+    "hook": ".githooks",
+    "기존 미추적 자료": "기존 공간에 보존; 새 공간으로 자동 편입하지 않음",
+    "원격 변경": false
+  },
+  "원본 작업 공간": "/private/tmp/yumidang-minkyu-wbs-20261017",
+  "복구 작업 공간": "/private/tmp/yumidang-minkyu-recovery-20261022",
+  "남은 조건": [
+    "메타데이터 누락 원인은 확정하지 않았다.",
+    "실제 검증은 새 작업 공간과 새 소스 identity를 기준으로 다시 준비해야 한다."
+  ],
+  "다음 작업": "새 격리 SQL125 검증 결과와 별도 검토된 변경만 통합한다.",
+  "전체 진행률": "79%(22/28) 유지"
+}
