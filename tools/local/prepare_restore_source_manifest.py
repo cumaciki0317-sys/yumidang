@@ -67,3 +67,14 @@ def prepare_source_manifest(repo, reviewed_head, reviewed_migrations_sha256):
             "remaining": ["current typed source and capture packet review",
                           "current consumer and composition review",
                           "live identity memory preservation and intent gates"]}
+
+
+def prepare_current_profile_source(repo, reviewed_head, reviewed_migrations_sha256):
+    """현재 고정 policy profile과 소스 HEAD를 함께 확인하는 새 Auth/복원 준비 입구."""
+    from prepare_current_policy import inspect_reviewed_current_migrations
+    history, _ = inspect_reviewed_current_migrations(repo, reviewed_head, reviewed_migrations_sha256)
+    result = prepare_source_manifest(repo, reviewed_head, reviewed_migrations_sha256)
+    need(result['migrations'] == history['entries'], 'CURRENT_PROFILE_SOURCE_CHANGED')
+    return {**result, 'policyProfileVerified': True,
+            'artifactPreparation': 'prepare_current_policy explicit reviewed mode',
+            'runtimeAuthRestoreConsumer': 'FRESH_EXECUTOR_REVIEW_REQUIRED'}

@@ -1,0 +1,92 @@
+"""새 committed policy profile 준비 회귀. SQL/Auth/Docker 실행 없음."""
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import sys
+import unittest
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'tools/local'))
+sys.path.insert(0, str(Path(__file__).parent))
+import prepare_current_policy as current
+import prepare_migrations
+import test_current_policy_preparation as fixtures
+
+class ReviewedCurrentPolicyTests(unittest.TestCase):
+    def setUp(self):
+        self.fixture = fixtures.CurrentPolicyPreparationTests('test_new_queue_tail_requires_exact_reviewed_bytes')
+        self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+        self.repo, self.output = self.fixture.repo, self.fixture.output
+        self.extra = Path('backend/supabase/migrations/20261020100000_ai_independent_consents.sql')
+        (self.repo / self.extra).write_text('begin; select 99999; commit;\n')
+        self.extension = {str(self.extra): hashlib.sha256((self.repo/self.extra).read_bytes()).hexdigest()}
+        p = patch.object(current, 'CURRENT_EXTENSION_REVIEWED', self.extension)
+        p.start(); self.addCleanup(p.stop)
+        self.commit()
+        self.head = current.git(self.repo, 'rev-parse', 'HEAD').decode().strip()
+        entries = prepare_migrations.inspect_migrations(self.repo)['migrations']
+        self.pin = hashlib.sha256(json.dumps(entries, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+
+    def commit(self):
+        self.fixture.fixture.git('add', '.')
+        self.fixture.fixture.git('-c', 'user.name=Reviewed fixture', '-c', 'user.email=fixture@example.invalid',
+                                 '-c', 'commit.gpgsign=false', 'commit', '-qm', 'committed reviewed profile')
+
+    def inspect(self):
+        return current.inspect_reviewed_current_migrations(self.repo, self.head, self.pin)
+
+    def test_exact_committed_profile_builds_real_gateway_artifacts(self):
+        report = current.prepare_current_policy(self.repo, self.output, gateway_probe=True,
+                                                reviewed_head=self.head, reviewed_manifest_sha256=self.pin)
+        self.assertEqual((report['migration_count'], report['canonical_count'], report['pending_count']), (122, 122, 0))
+        self.assertEqual(report['sql_execution'], 'NOT_RUN')
+        self.assertEqual(report['source_head'], self.head)
+        self.assertEqual((self.output/'supabase/migrations'/self.extra.name).read_bytes(), (self.repo/self.extra).read_bytes())
+        self.assertTrue((self.output/'supabase/functions/service-api/index.ts').is_file())
+        self.assertTrue((self.output/'base-database-manifest.json').is_file())
+        manifest=json.loads((self.output/'migration-manifest.json').read_text())
+        self.assertEqual(len(manifest['migrations']), 122)
+
+    def test_historical_default_rejects_current_extension(self):
+        with self.assertRaises(current.PreparationError):
+            current.inspect_current_migrations(self.repo)
+
+    def test_both_explicit_review_values_required(self):
+        for head, pin in ((None,self.pin),(self.head,None),('main',self.pin)):
+            with self.assertRaises(current.PreparationError):
+                current.inspect_reviewed_current_migrations(self.repo,head,pin)
+
+    def test_reviewed_head_cannot_follow_new_commit(self):
+        (self.repo/'unrelated.txt').write_text('new head')
+        self.commit()
+        with self.assertRaisesRegex(current.PreparationError,'REVIEWED_HEAD_CHANGED'):self.inspect()
+
+    def test_reviewed_whole_list_pin_required(self):
+        with self.assertRaisesRegex(current.PreparationError,'REVIEWED_MANIFEST_CHANGED'):
+            current.inspect_reviewed_current_migrations(self.repo,self.head,'0'*64)
+
+    def test_untracked_manual_event_not_automatically_approved(self):
+        (self.repo/'backend/supabase/migrations/20261020130000_manual_event.sql').write_text('select 99998;')
+        with self.assertRaisesRegex(current.PreparationError,'UNREVIEWED_SQL_PRESENT'):self.inspect()
+
+    def test_committed_extra_not_approved_even_with_new_list_pin(self):
+        (self.repo/'backend/supabase/migrations/20261020130000_manual_event.sql').write_text('select 99998;')
+        self.commit();self.head=current.git(self.repo,'rev-parse','HEAD').decode().strip()
+        with self.assertRaisesRegex(current.PreparationError,'EXACT_REVIEWED_CURRENT_PROFILE_REQUIRED'):self.inspect()
+
+    def test_extension_bytes_changed_is_rejected(self):
+        (self.repo/self.extra).write_text('unreviewed SQL')
+        with self.assertRaises(current.PreparationError):self.inspect()
+
+    def test_edge_working_tree_not_promoted_to_committed_profile(self):
+        path=self.repo/'backend/supabase/functions/service-api/index.ts'
+        path.write_text(path.read_text()+'\n// uncommitted\n')
+        with self.assertRaisesRegex(current.PreparationError,'CURRENT_EDGE_SOURCE_NOT_COMMITTED'):
+            current.prepare_current_policy(self.repo,self.output,gateway_probe=True,
+                reviewed_head=self.head,reviewed_manifest_sha256=self.pin)
+        self.assertFalse(self.output.exists())
+
+if __name__=='__main__':unittest.main()

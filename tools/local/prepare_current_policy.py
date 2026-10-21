@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
-"""검토된 정식 41개와 최신 정책 SQL 80개를 service-api 로컬 검증 루트에 준비한다. 실행 없음."""
+"""기존121과 명시 검토한 후속 profile의 SQL/Edge를 새 로컬 루트에 준비한다.
+
+기본 모드의41+80 역사 계약은 유지한다. 후속 모드는 고정 extension과 명시
+HEAD/전체 목록 SHA가 모두 필요하며 SQL/Auth/Docker/운영을 실행하지 않는다.
+"""
 import argparse
+import hashlib
+import re
 import json
 import os
 from pathlib import Path
@@ -253,6 +259,50 @@ def inspect_current_migrations(repo):
             "entries": entries, "excluded": sorted(excluded)}, payloads
 
 
+# 기존121 CURRENT_POLICY_REVIEWED와 역사 원장은 유지한다. 새 profile은 이 고정
+# extension만 추가한다. 후속 SQL은 개수/현재 관측만으로 자동 등록하지 않는다.
+# AI extension 근거: root a003/HEAD2de6195의 합성 archive SQL3 PASS_SQL_ONLY.
+# 이 근거는 실제 Auth·자연 만료·전체 복원·실회원 검증이 아니다.
+CURRENT_EXTENSION_REVIEWED = {
+    'backend/supabase/migrations/20261020100000_ai_independent_consents.sql':
+        '0dbf18e2006860c47e91ba61c2161e7d2b88ac1adb36801a9ddffd616494e9fa',
+}
+
+
+def inspect_reviewed_current_migrations(repo, reviewed_head, reviewed_manifest_sha256):
+    """새 실행 준비용 전체 committed 목록. 과거 pending snapshot을 승격하지 않는다."""
+    from prepare_migrations import inspect_migrations
+    repo = Path(repo).resolve()
+    if (type(reviewed_head) is not str or not re.fullmatch('[a-f0-9]{40}', reviewed_head)
+            or type(reviewed_manifest_sha256) is not str
+            or not re.fullmatch('[a-f0-9]{64}', reviewed_manifest_sha256)):
+        raise PreparationError('EXPLICIT_CURRENT_REVIEW_REQUIRED')
+    if git(repo, 'rev-parse', 'HEAD').decode().strip() != reviewed_head:
+        raise PreparationError('REVIEWED_HEAD_CHANGED')
+    reviewed = {**edge.GATEWAY_REVIEWED_MIGRATIONS, **CURRENT_POLICY_REVIEWED,
+                **CURRENT_EXTENSION_REVIEWED}
+    if (set(CURRENT_EXTENSION_REVIEWED) &
+            (set(edge.GATEWAY_REVIEWED_MIGRATIONS) | set(CURRENT_POLICY_REVIEWED))):
+        raise PreparationError('EXTENSION_OVERLAPS_HISTORY')
+    inventory = inspect_migrations(repo)
+    entries = inventory['migrations']
+    actual = {entry['path']: entry['sha256'] for entry in entries}
+    if actual != reviewed:
+        raise PreparationError('EXACT_REVIEWED_CURRENT_PROFILE_REQUIRED')
+    raw = json.dumps(entries, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
+    if hashlib.sha256(raw).hexdigest() != reviewed_manifest_sha256:
+        raise PreparationError('REVIEWED_MANIFEST_CHANGED')
+    for path in (repo / MIGRATIONS).rglob('*.sql'):
+        name = str(path.relative_to(repo))
+        if name not in reviewed and not COPY.search(path.name):
+            raise PreparationError('UNREVIEWED_SQL_PRESENT')
+    payloads = {Path(entry['path']): edge.read_regular(repo, Path(entry['path'])) for entry in entries}
+    if any(hashlib.sha256(payloads[Path(entry['path'])]).hexdigest() != entry['sha256'] for entry in entries):
+        raise PreparationError('CURRENT_SQL_CHANGED_DURING_READ')
+    return {'source_head': reviewed_head, 'canonical': entries, 'pending': [],
+            'entries': entries, 'excluded': inventory['excluded']}, payloads
+
+
 def create_base_snapshot(snapshot, payloads, config, sources):
     """검증된 바이트만 임시 Git에 기록한다. 원본 저장소/index/HEAD는 변경하지 않는다."""
     selected = {**{path: data for path, data in payloads.items()
@@ -280,14 +330,21 @@ def write_manifest(path, report):
         stream.write("\n")
 
 
-def prepare_current_policy(repo, output, *, gateway_probe=False):
+def prepare_current_policy(repo, output, *, gateway_probe=False, reviewed_head=None, reviewed_manifest_sha256=None):
     if not gateway_probe:
         raise PreparationError("최신 정책 준비에는 명시적 --gateway-probe가 필요합니다.")
     repo = Path(repo).resolve()
-    history, sql_payloads = inspect_current_migrations(repo)
+    explicit_review = reviewed_head is not None or reviewed_manifest_sha256 is not None
+    inspect_source = (lambda root: inspect_reviewed_current_migrations(root, reviewed_head, reviewed_manifest_sha256)) if explicit_review else inspect_current_migrations
+    history, sql_payloads = inspect_source(repo)
+    policy = {**CURRENT_POLICY_REVIEWED, **CURRENT_EXTENSION_REVIEWED} if explicit_review else CURRENT_POLICY_REVIEWED
     config = edge.read_regular(repo, CONFIG)
     edge.gateway_config(config)  # 기존 임시 프로젝트/포트/함수 overlay 범위를 그대로 검증한다.
     sources = edge.source_snapshot(repo)
+    if explicit_review:
+        for path, raw in {CONFIG: config, **sources}.items():
+            if raw != git(repo, 'show', reviewed_head + ':' + str(path)):
+                raise PreparationError('CURRENT_EDGE_SOURCE_NOT_COMMITTED')
     destination = edge.private_gateway_output(repo, output)
     with tempfile.TemporaryDirectory(prefix="yumidang-policy-base-", dir="/private/tmp") as temporary:
         snapshot = Path(temporary) / "repo"
@@ -298,10 +355,10 @@ def prepare_current_policy(repo, output, *, gateway_probe=False):
     for name in ("migration", "database", "edge"):
         (destination / f"{name}-manifest.json").rename(destination / f"base-{name}-manifest.json")
     for path, data in sql_payloads.items():
-        if str(path) in CURRENT_POLICY_REVIEWED:
+        if str(path) in policy:
             with (destination / "supabase/migrations" / path.name).open("xb") as stream:
                 stream.write(data)
-    current_history, current_sql = inspect_current_migrations(repo)
+    current_history, current_sql = inspect_source(repo)
     if (current_history != history or current_sql != sql_payloads
             or edge.read_regular(repo, CONFIG) != config or edge.source_snapshot(repo) != sources):
         raise PreparationError("준비 중 원본이 변경되었습니다. 새 임시 루트로 다시 준비하십시오.")
@@ -309,7 +366,7 @@ def prepare_current_policy(repo, output, *, gateway_probe=False):
               "edge_execution": "NOT_RUN", "output_root": str(destination),
               "source_head": history["source_head"], "source_mode": "working_tree_snapshot",
               "canonical_count": len(history["canonical"]), "pending_count": len(history["pending"]),
-              "migration_count": len(history["entries"]), "base_migration_count": 41, "policy_migration_count": len(CURRENT_POLICY_REVIEWED),
+              "migration_count": len(history["entries"]), "base_migration_count": 41, "policy_migration_count": len(policy),
               "base_snapshot_head": base_head, "base_manifests": [f"base-{name}-manifest.json" for name in ("migration", "database", "edge")],
               "preparation_note": "파일 준비 결과이며 실제 SQL 적용·Edge 실행·운영 배포 검증이 아니다."}
     migration = {**shared, "count": len(history["entries"]), "migrations": history["entries"], "excluded": history["excluded"]}
@@ -317,7 +374,7 @@ def prepare_current_policy(repo, output, *, gateway_probe=False):
                 "migrations": history["canonical"], "pending": history["pending"],
                 "excluded": history["excluded"], "config_sha256": edge.digest(config)}
     report = {**base_report, **shared, "base_snapshot_head": base_head,
-              "policy_migrations": [entry for entry in history["entries"] if entry["path"] in CURRENT_POLICY_REVIEWED]}
+              "policy_migrations": [entry for entry in history["entries"] if entry["path"] in policy]}
     write_manifest(destination / "migration-manifest.json", migration)
     write_manifest(destination / "database-manifest.json", database)
     write_manifest(destination / "edge-manifest.json", report)
@@ -330,9 +387,12 @@ def main():
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--gateway-probe", action="store_true")
+    parser.add_argument("--reviewed-head")
+    parser.add_argument("--reviewed-manifest-sha256")
     args = parser.parse_args()
     try:
-        result = prepare_current_policy(args.repo, args.output, gateway_probe=args.gateway_probe)
+        result = prepare_current_policy(args.repo, args.output, gateway_probe=args.gateway_probe,
+                                        reviewed_head=args.reviewed_head, reviewed_manifest_sha256=args.reviewed_manifest_sha256)
     except (PreparationError, OSError) as exc:
         print(json.dumps({"status": "BLOCKED", "sql_execution": "NOT_RUN", "edge_execution": "NOT_RUN", "error": str(exc)}, ensure_ascii=False))
         return 1
