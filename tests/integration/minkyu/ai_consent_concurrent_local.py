@@ -159,7 +159,7 @@ def run(scratch):
             scratch.memory()
             child=subprocess.Popen(args,stdin=inp,stdout=out,stderr=err,start_new_session=True)
             actors.append(child);backends_closed=False;scratch.concurrent_unclosed=True
-        deadline=time.monotonic()+20
+        deadline=time.monotonic()+180
         while any(child.poll() is None for child in actors):
             scratch.memory();scratch.guard();scratch.own()
             need(time.monotonic()<deadline,'CONCURRENT_TIMEOUT')

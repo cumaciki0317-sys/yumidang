@@ -151,6 +151,13 @@ class ConcurrentAdditionalTests(unittest.TestCase):
   self.assertEqual([call.args[2] for call in phase.call_args_list],['setup','verify','cleanup'])
   self.assertFalse(r.concurrent_unclosed);self.assertTrue(r.saved['consent-concurrency-receipt.json']['baselineRestored'])
   self.assertIn('consent-actor-a-stdout.raw',r.saved);self.assertIn('consent-actor-b-stderr.raw',r.saved)
+ def test_actor_window_is_fixed_bounded_without_changing_cleanup_deadline(self):
+  import inspect
+  source=inspect.getsource(self.m.run)
+  self.assertIn('deadline=time.monotonic()+180',source)
+  self.assertIn('deadline=time.monotonic()+15',source)
+  self.assertIn("need(time.monotonic()<deadline,'CONCURRENT_TIMEOUT')",source)
+
  def test_missing_stdout_pid_with_withdrawn_body_is_not_proven(self):
   from unittest.mock import Mock,patch
   r=self.harness();children=[]

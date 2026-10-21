@@ -75,7 +75,7 @@ begin
 end $$;
 create function private.fixture_ai_withdraw_pause() returns trigger language plpgsql set search_path='' as $$
 begin
- if new.profile_id in('a1cc0000-0000-4000-8000-000000000001','a1cc0000-0000-4000-8000-000000000002') then perform pg_sleep(2); end if;
+ if new.profile_id in('a1cc0000-0000-4000-8000-000000000001','a1cc0000-0000-4000-8000-000000000002') then perform pg_sleep(20); end if;
  return new;
 end $$;
 -- 신규 fixture 함수만 원 summary 테이블 owner에 맞추며 기존 역할/ACL은 바꾸지 않는다.
@@ -94,8 +94,8 @@ select 'SETUP_COMMITTED_SYNTHETIC_SQL_ONLY' as fixture_status;
 begin;
 set local plpgsql.check_asserts=on;
 set local deadlock_timeout='200ms';
-set local lock_timeout='8s';
-set local statement_timeout='10s';
+set local lock_timeout='90s';
+set local statement_timeout='120s';
 set local application_name='minkyu_ai_withdraw_a1cc_actor_a';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a1cc0000-0000-4000-8000-000000000001',true);
@@ -109,8 +109,8 @@ commit;
 begin;
 set local plpgsql.check_asserts=on;
 set local deadlock_timeout='200ms';
-set local lock_timeout='8s';
-set local statement_timeout='10s';
+set local lock_timeout='90s';
+set local statement_timeout='120s';
 set local application_name='minkyu_ai_withdraw_a1cc_actor_b';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a1cc0000-0000-4000-8000-000000000002',true);

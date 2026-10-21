@@ -44,8 +44,8 @@ class ConcurrencyPlanTests(unittest.TestCase):
             self.assertEqual(text.count("public.withdraw_my_ai_processing('review_summary')"), 1)
             self.assertIn('set local role authenticated;', text)
             self.assertIn("deadlock_timeout='200ms'", text)
-            self.assertIn("lock_timeout='8s'", text)
-            self.assertIn("statement_timeout='10s'", text)
+            self.assertIn("lock_timeout='90s'", text)
+            self.assertIn("statement_timeout='120s'", text)
             self.assertIn('pg_backend_pid()', text)
             self.assertIn('minkyu_ai_withdraw_a1cc_actor_' + actor, text)
         self.assertIn('000000000001', texts[0])
@@ -68,7 +68,7 @@ class ConcurrencyPlanTests(unittest.TestCase):
     def test_delay_only_changes_fixture_summary_rows_not_policy_or_clock(self):
         setup = phase('setup')
         self.assertIn('before update on private.review_summary_state', setup)
-        self.assertIn('perform pg_sleep(2)', setup)
+        self.assertIn('perform pg_sleep(20)', setup)
         self.assertIn("if new.profile_id in('a1cc0000", setup)
         self.assertNotRegex(SQL, r'(?i)\b(setval|nextval|alter\s+system|disable\s+trigger|truncate)\b')
 
@@ -76,8 +76,9 @@ class ConcurrencyPlanTests(unittest.TestCase):
         delay = int(re.search(r'perform pg_sleep\((\d+)\)', phase('setup')).group(1))
         first_actor_seconds = delay * 2
         serialized_pair_seconds = first_actor_seconds * 2
-        self.assertGreater(first_actor_seconds, 2)  # reviewed guard/observer latency budget
-        self.assertEqual(serialized_pair_seconds, 8)
+        self.assertGreater(first_actor_seconds, 15.325)  # a004 measured guarded first observation
+        self.assertEqual(first_actor_seconds, 40)
+        self.assertEqual(serialized_pair_seconds, 80)
         for name in ('a', 'b'):
             actor = phase(name)
             lock = int(re.search(r"lock_timeout='(\d+)s'", actor).group(1))
@@ -85,7 +86,10 @@ class ConcurrencyPlanTests(unittest.TestCase):
             self.assertLess(first_actor_seconds, lock)
             self.assertLess(serialized_pair_seconds, statement)
             self.assertLess(lock, statement)
-            self.assertLess(statement, 20)  # fixed helper overall actor deadline
+            self.assertLess(statement, 180)  # fixed helper overall actor deadline
+        for name in ('setup', 'cleanup'):
+            self.assertIn("lock_timeout='8s'", phase(name))
+            self.assertIn("statement_timeout='10s'", phase(name))
 
     def test_cleanup_is_exact_uuid_predicates_and_only_fixture_ddl(self):
         cleanup = phase('cleanup')
