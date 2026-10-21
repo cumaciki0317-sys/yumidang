@@ -78,3 +78,21 @@ export function loadPotensLlmConfig(read: EnvReader): PotensLlmConfig {
     return protectedConfig({ provider: "potens" as const, apiKey, baseUrl, model, upstreamTimeoutMs });
   });
 }
+
+/** Gemini wire 포트용 설정. 로딩은 제품 활성화·법적 검토·외부 전송 승인이 아니다. */
+export interface GeminiLlmConfig extends ApiKeyConfig<"gemini"> {
+  readonly model: "gemini-3.5-flash-lite";
+  readonly upstreamTimeoutMs: number;
+}
+export function loadGeminiLlmConfig(read: EnvReader): GeminiLlmConfig {
+  return safely(() => {
+    const apiKey = required(read, "GEMINI_API_KEY");
+    const model = required(read, "GEMINI_MODEL");
+    if (model !== "gemini-3.5-flash-lite" || /\s/u.test(apiKey)) return fail();
+    const rawTimeout = required(read, "UPSTREAM_TIMEOUT_MS");
+    if (!/^[1-9][0-9]*$/.test(rawTimeout)) return fail();
+    const upstreamTimeoutMs = Number(rawTimeout);
+    if (!Number.isSafeInteger(upstreamTimeoutMs) || upstreamTimeoutMs > 2147483647) return fail();
+    return protectedConfig({ provider: "gemini" as const, apiKey, model, upstreamTimeoutMs });
+  });
+}
