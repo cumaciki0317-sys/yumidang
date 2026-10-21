@@ -273,6 +273,30 @@ class SourceSealTests(unittest.TestCase):
         seal.runtime=runtime;seal.prepared=m.time.monotonic();seal.started=None;seal.sources={};seal.binding_raw=b'original'
         with patch.object(m.subprocess,'check_output',return_value='a'*40):seal.guard(review)
         runtime.original_binding_bytes.assert_called_once();core.read.assert_not_called()
+    def test_initial_activity_order_by_is_inside_aggregate_and_bind_consumes_helper(self):
+        query=m.initial_activity_sql()
+        # 괄호 회귀일 뿐 PostgreSQL parse/실제 SQL PASS 증거가 아니다.
+        prefix=query[:query.index('order by pid')]
+        quoted=m.re.sub(r"'(?:[^']|'')*'",'',prefix)
+        self.assertEqual(quoted.count('(')-quoted.count(')'),2)
+        self.assertIn("'query',query)order by pid)",query)
+        self.assertIn('datname=current_database()and pid<>pg_backend_pid()',query)
+        tree=ast.parse((ROOT/m.SELF).read_bytes());runtime=next(n for n in tree.body if isinstance(n,ast.ClassDef)and n.name=='FixedDeadlineRuntime')
+        bind=next(n for n in runtime.body if isinstance(n,ast.FunctionDef)and n.name=='bind')
+        calls=[n for n in ast.walk(bind)if isinstance(n,ast.Call)and isinstance(n.func,ast.Attribute)and isinstance(n.func.value,ast.Name)and n.func.value.id=='self'and n.func.attr=='sql']
+        self.assertEqual(len(calls),1);self.assertIsInstance(calls[0].args[0],ast.Call)
+        self.assertEqual(calls[0].args[0].func.id,'initial_activity_sql')
+    def test_other_catalog_aggregate_ordering_retains_correct_call_depth(self):
+        tree=ast.parse((ROOT/m.SELF).read_bytes())
+        queries=[]
+        for node in ast.walk(tree):
+            if isinstance(node,ast.Constant)and type(node.value)is str and node.value.startswith('select ')and 'jsonb_agg('in node.value:queries.append(node.value)
+        self.assertGreaterEqual(len(queries),6)
+        for query in queries:
+            # 문자열 literal 괄호는 제거한다. aggregate 정렬은 coalesce+agg depth2 안에 있다.
+            for match in m.re.finditer(r'order by (?:pid|schemaname|s[.]setdatabase|p[.]oid)',query):
+                prefix=m.re.sub(r"'(?:[^']|'')*'",'',query[:match.start()])
+                with self.subTest(query=query[:80]):self.assertEqual(prefix.count('(')-prefix.count(')'),2)
     def test_read_port_sticky_blocks_source_and_docker_before_metadata(self):
         r=m.FixedDeadlineRuntime.__new__(m.FixedDeadlineRuntime);r.review='review';r.raw_sticky=[]
         port=SimpleNamespace(assert_closed_state=Mock(side_effect=ValueError('port sticky')))

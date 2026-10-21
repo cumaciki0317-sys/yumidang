@@ -175,6 +175,11 @@ def verify_own_sources(head, pins):
          'D03_HEAD_CHANGED')
 
 
+def initial_activity_sql():
+    """초기 관측의 고정 SELECT. aggregate ORDER BY는 jsonb_agg 괄호 안에 둔다."""
+    return "select coalesce(jsonb_agg(jsonb_build_object('pid',pid,'backendStart',backend_start,'queryStart',query_start,'xactStart',xact_start,'state',state,'waitEventType',wait_event_type,'blockingPids',pg_blocking_pids(pid),'query',query)order by pid),'[]'::jsonb)from pg_stat_activity where datname=current_database()and pid<>pg_backend_pid();"
+
+
 class ReviewedDeadlineSourceSeal:
     """현재 D03 전용 exact source seal. full source_pins는 초기/최종 그대로 수행한다."""
     MIGRATIONS='backend/supabase/migrations'
@@ -624,7 +629,7 @@ class FixedDeadlineRuntime:
         accounts=[a for a in binding['accounts']if a['userId']==self.review.reviewer_id and a['sessionId']==self.review.original_session_id]
         need(len(accounts)==1 and any(a['userId']==self.review.author_id for a in binding['accounts']),'D03_EXACT_ORIGINAL_ACTORS')
         self.account=accounts[0]
-        self.save('d03-activity-before-private.json',self.readonly.exact(self.sql("select coalesce(jsonb_agg(jsonb_build_object('pid',pid,'backendStart',backend_start,'queryStart',query_start,'xactStart',xact_start,'state',state,'waitEventType',wait_event_type,'blockingPids',pg_blocking_pids(pid),'query',query))order by pid),'[]'::jsonb)from pg_stat_activity where datname=current_database()and pid<>pg_backend_pid();")))
+        self.save('d03-activity-before-private.json',self.readonly.exact(self.sql(initial_activity_sql())))
         # bind_ports의 초기 메모리 검사 직후 시작한 같은 monitor만 유지한다.
         need(c.thread is not None and c.thread.is_alive()and not c.failures,'D03_EARLY_MONITOR_NOT_LIVE')
 
