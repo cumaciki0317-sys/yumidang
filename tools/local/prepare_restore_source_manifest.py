@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """현재 HEAD의 복원 소스 목록 준비. DB/컨테이너 실행 및 과거 packet 재승인 없음."""
 from pathlib import Path
+from contextlib import contextmanager
+import importlib.util
+import sys
 import hashlib
 import json
 import re
@@ -78,3 +81,54 @@ def prepare_current_profile_source(repo, reviewed_head, reviewed_migrations_sha2
     return {**result, 'policyProfileVerified': True,
             'artifactPreparation': 'prepare_current_policy explicit reviewed mode',
             'runtimeAuthRestoreConsumer': 'FRESH_EXECUTOR_REVIEW_REQUIRED'}
+
+
+@contextmanager
+def _reviewed_current_restore_support(repo, reviewed_head):
+    """새 typed 입구의 지연 helper import도 검토한 원 bytes 안에 고정한다."""
+    repo = Path(repo)
+    names = ('prepare_migrations', 'prepare_database', 'prepare_edge', 'prepare_current_policy')
+    payloads = {}
+    need(core.head(repo) == reviewed_head, 'REVIEWED_HEAD_CHANGED')
+    for name in names:
+        relative = 'tools/local/' + name + '.py'
+        value = core.secure.read_bytes(repo / relative, repo=repo)
+        need(value == git(repo, 'show', f'{reviewed_head}:{relative}'), 'SOURCE_NOT_COMMITTED')
+        payloads[name] = value
+    previous = {name: sys.modules.get(name) for name in names}
+    try:
+        for name in names:
+            path = repo / 'tools/local' / (name + '.py')
+            spec = importlib.util.spec_from_file_location(name, path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[name] = module
+            exec(compile(payloads[name], str(path), 'exec'), module.__dict__)
+        yield
+        need(core.head(repo) == reviewed_head, 'REVIEWED_HEAD_CHANGED')
+        for name, value in payloads.items():
+            need(core.secure.read_bytes(repo / 'tools/local' / (name + '.py'), repo=repo) == value,
+                 'SUPPORT_CHANGED_DURING_READ')
+    finally:
+        for name, old in previous.items():
+            if old is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = old
+
+
+def prepare_reviewed_current124_restore(repo, profile):
+    """root literal 현재124 profile과 실제 HEAD 전체 목록·소스 bytes를 연결한다.
+
+    기존119/121 준비·실행 입구를 변경하지 않는다. 이 결과는 DB 실행이나 현재 관측한
+    JSON을 자동 재승인하는 수단이 아니며, runtime target/intent를 발급하지 않는다.
+    """
+    need(type(profile) is core.secure.ReviewedCurrentRestoreProfile,
+         'TYPED_CURRENT_RESTORE_PROFILE_REQUIRED')
+    p = profile.value()
+    with _reviewed_current_restore_support(repo, p['sourceHead']):
+        prepared = prepare_current_profile_source(repo, p['sourceHead'], p['migrationsSha256'])
+        review = core.prepare_current124_restore_review(profile, prepared)
+        # 준비 반환 직전 동일 source closure를 다시 검산한다.
+        final = prepare_current_profile_source(repo, p['sourceHead'], p['migrationsSha256'])
+        need(canonical(final) == canonical(prepared), 'CURRENT_RESTORE_PREPARATION_CHANGED')
+    return {'source': prepared, 'review': review}

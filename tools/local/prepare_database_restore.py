@@ -1080,3 +1080,51 @@ if __name__ == '__main__':
         print(json.dumps({'status': 'FAIL_CLOSED', 'scope': SCOPE, 'fullRestore': False,
                           'activationAllowed': False}), file=sys.stderr)
         raise SystemExit(1)
+
+
+def prepare_current124_restore_review(profile, source_manifest):
+    """현재124 준비 검토 연결만 수행한다. 기존121 graph/실행 dispatcher와 분리한다.
+
+    source_manifest는 정식 prepare_restore_source_manifest 경로가 만든 준비 결과다.
+    단순 JSON의 flags는 실행 승인으로 취급하지 않는다. 실제 target ID/intent/영수증은
+    만들어 내지 않으며, 후속 capture adapter와 executor는 별도 검토가 필요하다.
+    """
+    secure.require(type(profile) is secure.ReviewedCurrentRestoreProfile,
+                   'TYPED_CURRENT_RESTORE_PROFILE_REQUIRED')
+    p = profile.value()
+    secure.require(type(source_manifest) is dict
+                   and source_manifest.get('scope') == 'CURRENT_RESTORE_SOURCE_PREPARATION_ONLY'
+                   and source_manifest.get('sourceHead') == p['sourceHead']
+                   and source_manifest.get('migrationsSha256') == p['migrationsSha256']
+                   and source_manifest.get('policyProfileVerified') is True
+                   and source_manifest.get('committedSourceVerified') is True
+                   and source_manifest.get('executionAllowed') is False
+                   and source_manifest.get('runnable') is False
+                   and source_manifest.get('fullRestore') is False,
+                   'CURRENT_RESTORE_SOURCE_PREPARATION_REQUIRED')
+    migrations = source_manifest.get('migrations')
+    secure.require(type(migrations) is list and len(migrations) == 124
+                   and type(source_manifest.get('migrationCount')) is int
+                   and source_manifest['migrationCount'] == 124
+                   and secure.digest(secure.canonical(migrations)) == p['migrationsSha256'],
+                   'CURRENT_RESTORE_EXACT124_MANIFEST_REQUIRED')
+    files = source_manifest.get('sourceFiles')
+    secure.require(type(files) is dict and set(files) ==
+                   FILES | {'tools/local/prepare_restore_source_manifest.py'}
+                   and all(secure._current_sha(value) for value in files.values())
+                   and secure.digest(secure.canonical(files)) == source_manifest.get('sourceFilesSha256'),
+                   'CURRENT_RESTORE_SOURCE_CLOSURE_REQUIRED')
+    return {'scope': 'CURRENT124_DATABASE_RESTORE_PREPARATION_ONLY',
+            'status': 'PREPARED_NOT_RUN', 'profileSha256': profile.sha256,
+            'sourceHead': p['sourceHead'], 'migrationsSha256': p['migrationsSha256'],
+            'sourceFilesSha256': source_manifest['sourceFilesSha256'],
+            'sourceIdentity': p['sourceIdentity'], 'captureId': p['captureId'],
+            'targetProject': p['targetProject'],
+            'relationRosterSha256': secure.digest(secure.canonical(p['relations'])),
+            'roleRosterSha256': secure.digest(secure.canonical(p['roles'])),
+            'sequenceRosterSha256': secure.digest(secure.canonical(p['sequences'])),
+            'executionAllowed': False, 'runnable': False, 'fullRestore': False,
+            'runtimeValidation': 'NOT_RUN', 'storageMissing': 39,
+            'remaining': ['review fresh current124 capture adapter and executor',
+                          'fresh identity memory preservation and O_EXCL intent gates',
+                          'actual restore comparison and deletion reapplication', '39 Storage originals']}

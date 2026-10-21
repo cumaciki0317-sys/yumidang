@@ -23,6 +23,238 @@ class VerificationError(Exception):
     """원문이나 경로를 포함하지 않는 고정 오류 코드."""
 
 
+
+# 현재124 전용 오프라인 계약. 역사119/121 소비기나 실제 실행 권한과 합치지 않는다.
+# root가 검토한 literal bytes로만 만들며 JSON 문서의 reviewed=true를 신뢰하지 않는다.
+class _ReviewedRestoreBytes:
+    __slots__ = ('_bytes',)
+
+    def __init__(self, reviewed_bytes):
+        require(type(reviewed_bytes) is bytes, 'ROOT_LITERAL_BYTES_REQUIRED')
+        try:
+            value = json.loads(reviewed_bytes)
+        except (ValueError, UnicodeError):
+            raise VerificationError('INVALID_REVIEW_JSON') from None
+        require(canonical(value) == reviewed_bytes, 'CANONICAL_REVIEW_BYTES_REQUIRED')
+        self._validate(value)
+        object.__setattr__(self, '_bytes', reviewed_bytes)
+
+    def __setattr__(self, name, value):
+        raise VerificationError('IMMUTABLE_REVIEW_REQUIRED')
+
+    def value(self):
+        return json.loads(self._bytes)
+
+    @property
+    def sha256(self):
+        return digest(self._bytes)
+
+
+def _current_sha(value, length=64):
+    return type(value) is str and re.fullmatch('[a-f0-9]{' + str(length) + '}', value) is not None
+
+
+def _current_uuid(value):
+    import uuid
+    try:
+        return type(value) is str and str(uuid.UUID(value)) == value
+    except (ValueError, AttributeError):
+        return False
+
+
+def _current_names(values, qualified=False, allow_empty=False):
+    pattern = r'[A-Za-z_][A-Za-z0-9_$]{0,62}'
+    if qualified:
+        pattern += r'\.' + pattern
+    return (type(values) is list and (bool(values) or allow_empty)
+            and all(type(x) is str and re.fullmatch(pattern, x) for x in values)
+            and values == sorted(set(values)))
+
+
+class ReviewedCurrentRestoreProfile(_ReviewedRestoreBytes):
+    __slots__ = ()
+
+    @staticmethod
+    def _validate(value):
+        keys = {'version', 'scope', 'sourceHead', 'migrationsSha256', 'captureId',
+                'sourceIdentity', 'targetProject', 'relations', 'roles', 'sequences',
+                'unknownIds', 'deletionPlan', 'sourceStateSha256', 'reappliedStateSha256',
+                'storageMetadata', 'storageOriginals', 'storageMissing'}
+        require(type(value) is dict and set(value) == keys, 'CURRENT_RESTORE_PROFILE_FIELDS')
+        require(type(value['version']) is int and value['version'] == 1
+                and value['scope'] == 'CURRENT124_DATABASE_RESTORE_REVIEW_ONLY', 'CURRENT_RESTORE_SCOPE')
+        require(_current_sha(value['sourceHead'], 40)
+                and all(_current_sha(value[k]) for k in
+                        ('migrationsSha256', 'sourceStateSha256', 'reappliedStateSha256')),
+                'CURRENT_RESTORE_SOURCE_PINS')
+        identity = value['sourceIdentity']
+        require(type(identity) is dict and set(identity) == {'id', 'name', 'image'}
+                and _current_sha(identity['id']) and _current_sha(identity['image'])
+                and type(identity['name']) is str
+                and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,127}', identity['name']),
+                'CURRENT_RESTORE_SOURCE_IDENTITY')
+        require(_current_uuid(value['captureId']) and type(value['targetProject']) is str
+                and re.fullmatch(r'jonghyun-backend100-[a-f0-9]{8}', value['targetProject']),
+                'CURRENT_RESTORE_CAPTURE_TARGET')
+        require(_current_names(value['relations'], True) and _current_names(value['roles'])
+                and _current_names(value['sequences'], True, True), 'CURRENT_RESTORE_EXACT_ROSTERS')
+        unknown = value['unknownIds']
+        require(type(unknown) is list and bool(unknown)
+                and all(_current_uuid(x) for x in unknown) and unknown == sorted(set(unknown)),
+                'CURRENT_RESTORE_UNKNOWN_ROSTER')
+        plan = value['deletionPlan']
+        require(type(plan) is list and bool(plan), 'CURRENT_RESTORE_DELETION_PLAN')
+        for item in plan:
+            require(type(item) is dict and set(item) == {'relation', 'rowIdentity'}
+                    and item['relation'] in value['relations']
+                    and type(item['rowIdentity']) is str and 0 < len(item['rowIdentity']) <= 512,
+                    'CURRENT_RESTORE_DELETION_ENTRY')
+        require(len({canonical(x) for x in plan}) == len(plan), 'CURRENT_RESTORE_DUPLICATE_DELETION')
+        require(all(type(value[k]) is int for k in
+                    ('storageMetadata', 'storageOriginals', 'storageMissing'))
+                and (value['storageMetadata'], value['storageOriginals'], value['storageMissing'])
+                == (45, 6, 39), 'CURRENT_RESTORE_STORAGE_SCOPE')
+
+
+_CURRENT_ARTIFACTS = frozenset({'sourceState', 'restoredState', 'reappliedState',
+                              'sourceUnknown', 'restoredUnknown', 'reappliedUnknown', 'deletionPlan'})
+
+
+def _current_reference(value):
+    require(type(value) is dict and set(value) == {'path', 'sha256'}
+            and type(value['path']) is str and _current_sha(value['sha256']),
+            'CURRENT_RESTORE_REFERENCE_FIELDS')
+    path = Path(value['path'])
+    require(path.is_absolute() and '..' not in path.parts and path.suffix == '.json',
+            'CURRENT_RESTORE_REFERENCE_PATH')
+
+
+class ReviewedCurrentRestoreEvidence(_ReviewedRestoreBytes):
+    __slots__ = ()
+
+    @staticmethod
+    def _validate(value):
+        require(type(value) is dict and set(value) ==
+                {'version', 'binding', 'artifacts', 'originalReceipts'}
+                and type(value['version']) is int and value['version'] == 1,
+                'CURRENT_RESTORE_EVIDENCE_FIELDS')
+        binding = value['binding']
+        require(type(binding) is dict and set(binding) ==
+                {'profileSha256', 'sourceHead', 'migrationsSha256', 'captureId',
+                 'sourceIdentity', 'targetProject', 'targetId', 'intentId'}
+                and _current_sha(binding['targetId']) and _current_uuid(binding['intentId']),
+                'CURRENT_RESTORE_EVIDENCE_BINDING')
+        require(type(value['artifacts']) is dict and set(value['artifacts']) == _CURRENT_ARTIFACTS
+                and type(value['originalReceipts']) is dict
+                and set(value['originalReceipts']) == {'capture', 'restore', 'deletionReapply'},
+                'CURRENT_RESTORE_EVIDENCE_REFERENCES')
+        refs = list(value['artifacts'].values()) + list(value['originalReceipts'].values())
+        for ref in refs:
+            _current_reference(ref)
+        require(len({x['path'] for x in refs}) == len(refs), 'CURRENT_RESTORE_DISTINCT_REFERENCES')
+
+
+def _current_restore_state(value, profile):
+    require(type(value) is dict and set(value) ==
+            {'snapshot', 'rawAuthority', 'effectivePrivileges', 'sequences'},
+            'CURRENT_RESTORE_STATE_FIELDS')
+    snapshot = value['snapshot']
+    require(type(snapshot) is dict and set(snapshot) == {'rows', 'catalog', 'roles'}
+            and type(snapshot['rows']) is dict
+            and sorted(snapshot['rows']) == profile['relations']
+            and all(type(x) is str and re.fullmatch(r'[0-9]+:[a-f0-9]{32}', x)
+                    for x in snapshot['rows'].values())
+            and type(snapshot['catalog']) is str and bool(snapshot['catalog']),
+            'CURRENT_RESTORE_ALL_RELATIONS')
+    roles = snapshot['roles']
+    require(type(roles) is dict and set(roles) == {'roles', 'memberships'}
+            and type(roles['roles']) is list and type(roles['memberships']) is list
+            and all(type(x) is dict and type(x.get('rolname')) is str for x in roles['roles'])
+            and sorted(x['rolname'] for x in roles['roles']) == profile['roles'],
+            'CURRENT_RESTORE_ALL_ROLES')
+    require(type(value['rawAuthority']) is dict and set(value['rawAuthority']) ==
+            {'database', 'schemas', 'relations', 'columns', 'functions', 'defaults', 'dbRoleSettings'}
+            and type(value['effectivePrivileges']) is list
+            and bool(value['effectivePrivileges']), 'CURRENT_RESTORE_AUTHORITY_FIELDS')
+    sequences = value['sequences']
+    require(type(sequences) is dict and sorted(sequences) == profile['sequences'],
+            'CURRENT_RESTORE_SEQUENCE_ROSTER')
+    for item in sequences.values():
+        require(type(item) is list and len(item) == 2 and type(item[0]) is int
+                and type(item[1]) is bool, 'CURRENT_RESTORE_SEQUENCE_VALUE')
+
+
+def verify_current_restore_evidence(profile, evidence, reader=None):
+    """새 실행기 없이 root 검토 원파일의 값/연결만 소비한다. 실행 PASS를 만들지 않는다.
+
+    artifacts는 별도 검토된 capture adapter가 남기는 정규 envelope다. 원 producer
+    영수증은 originalReceipts로 따로 보존한다. 현재 소비기는 그 producer를 실행하거나
+    임의 status를 해석하여 실제 검증/실행 권한으로 승격하지 않는다.
+    """
+    require(type(profile) is ReviewedCurrentRestoreProfile
+            and type(evidence) is ReviewedCurrentRestoreEvidence, 'TYPED_CURRENT_RESTORE_REVIEW_REQUIRED')
+    p, packet = profile.value(), evidence.value()
+    binding = packet['binding']
+    require(binding['profileSha256'] == profile.sha256
+            and all(canonical(binding[k]) == canonical(p[k]) for k in
+                    ('sourceHead', 'migrationsSha256', 'captureId', 'sourceIdentity', 'targetProject'))
+            and binding['targetId'] != p['sourceIdentity']['id'], 'CURRENT_RESTORE_BINDING_CHANGED')
+    read = read_bytes if reader is None else reader
+    consumed, loaded = {}, {}
+    refs = {**packet['artifacts'], **{'original:' + k: v for k, v in packet['originalReceipts'].items()}}
+    for kind, ref in refs.items():
+        value = read(Path(ref['path'])) if reader is None else read(ref['path'])
+        require(type(value) is bytes and digest(value) == ref['sha256'], 'CURRENT_RESTORE_EVIDENCE_BYTES_CHANGED')
+        consumed[kind] = {'sha256': digest(value), 'bytes': len(value)}
+        if kind in _CURRENT_ARTIFACTS:
+            try:
+                envelope = json.loads(value)
+            except (ValueError, UnicodeError):
+                raise VerificationError('CURRENT_RESTORE_ARTIFACT_JSON') from None
+            require(type(envelope) is dict and set(envelope) == {'kind', 'binding', 'payload'}
+                    and envelope['kind'] == kind
+                    and canonical(envelope['binding']) == canonical(binding),
+                    'CURRENT_RESTORE_ARTIFACT_BINDING')
+            loaded[kind] = envelope['payload']
+    for kind in ('sourceState', 'restoredState', 'reappliedState'):
+        _current_restore_state(loaded[kind], p)
+    source, restored, reapplied = (loaded[k] for k in ('sourceState', 'restoredState', 'reappliedState'))
+    require(digest(canonical(source)) == p['sourceStateSha256']
+            and canonical(restored) == canonical(source), 'CURRENT_RESTORE_FULL_STATE_MISMATCH')
+    require(digest(canonical(reapplied)) == p['reappliedStateSha256']
+            and canonical(loaded['deletionPlan']) == canonical(p['deletionPlan']),
+            'CURRENT_RESTORE_REAPPLY_STATE_MISMATCH')
+    for key in ('rawAuthority', 'effectivePrivileges', 'sequences'):
+        require(canonical(source[key]) == canonical(reapplied[key]), 'CURRENT_RESTORE_REAPPLY_AUTHORITY_CHANGED')
+    for key in ('catalog', 'roles'):
+        require(canonical(source['snapshot'][key]) == canonical(reapplied['snapshot'][key]),
+                'CURRENT_RESTORE_REAPPLY_CATALOG_CHANGED')
+    planned = {x['relation'] for x in p['deletionPlan']}
+    changed = {k for k, value in source['snapshot']['rows'].items()
+               if value != reapplied['snapshot']['rows'][k]}
+    require(bool(changed) and changed <= planned, 'CURRENT_RESTORE_UNPLANNED_ROW_CHANGE')
+    unknown = loaded['sourceUnknown']
+    require(type(unknown) is list and all(type(x) is dict and set(x) ==
+            {'id', 'status', 'fullReservationAndLedgerRows'} and x['status'] == 'UNKNOWN'
+            and type(x['fullReservationAndLedgerRows']) is dict
+            and bool(x['fullReservationAndLedgerRows']) for x in unknown)
+            and sorted(x['id'] for x in unknown) == p['unknownIds'], 'CURRENT_RESTORE_UNKNOWN_ROWS')
+    require(canonical(unknown) == canonical(loaded['restoredUnknown'])
+            == canonical(loaded['reappliedUnknown']), 'CURRENT_RESTORE_UNKNOWN_CHANGED')
+    # 재독출로 소비 중 파일 교체를 판정 전에 거절한다.
+    for kind, ref in refs.items():
+        value = read(Path(ref['path'])) if reader is None else read(ref['path'])
+        require(type(value) is bytes and digest(value) == consumed[kind]['sha256'],
+                'CURRENT_RESTORE_EVIDENCE_CHANGED_DURING_READ')
+    return {'status': 'CURRENT124_OFFLINE_EVIDENCE_MATCHED', 'profileSha256': profile.sha256,
+            'evidenceSha256': evidence.sha256, 'sourceHead': p['sourceHead'],
+            'migrationsSha256': p['migrationsSha256'], 'consumed': consumed,
+            'executionAllowed': False, 'runnable': False, 'fullRestore': False,
+            'runtimeValidation': 'NOT_INDEPENDENTLY_EXECUTED', 'storageMissing': 39,
+            'remaining': ['fresh executor and capture adapter review',
+                          'actual current124 database restore and cleanup', '39 Storage originals']}
+
+
 CURRENT_MANIFEST = '3e7a3b35df08323fa0818d1b9cc473781cfcaced26cfbce53988e1f73bc5f4fd'
 OLD119_MANIFEST = '32e9b5f4aa4c6f72d1111139ba6184ac2149c1cf6937de89b7f06755fc9aea3f'
 NEW_SQL = {
