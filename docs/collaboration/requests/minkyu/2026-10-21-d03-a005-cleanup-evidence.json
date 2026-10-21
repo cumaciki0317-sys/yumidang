@@ -1,0 +1,76 @@
+{
+  "wbsIds": ["4.6", "7.11"],
+  "actor": "minkyu",
+  "sourceHead": "f097829076da20adfd8c811602d63bf1c5ca583a",
+  "executionRoot": "/private/tmp/yumidang-d03-20261021-a005/yumidang-current-auth-d6264750085fca57",
+  "globalProgress": {"completed": 22, "total": 28, "percent": 79},
+  "change": "현재124개 migration/182표의 새 격리 환경에서 사전 catalog SQL·Auth6·합성 자격·timeout batch를 실행했다. probe의 정리 트리거가 새 요약4행을 생성해 최종 보존 판정이 실패했다. 별도 원자료 캡처와 독립 검토한 정확4행 정리로 원 기준선을 복원하고 신규4컨테이너만 중지했다.",
+  "actualScope": {
+    "preAuthCatalogSmoke": {
+      "status": "PASS_PREAUTH_FIXED_CATALOG_SQL_ONLY",
+      "finitePsqlCalls": 8,
+      "receiptRelative": "catalog-smoke-a005/receipt.json",
+      "receiptSha256": "dd3460fb8e6618b02d67f3d00a319788b2de4b2fd25c7aff2f1d7c718cc7a65b"
+    },
+    "auth": "실제 로컬 GoTrue 신규6세션, 원 JWT 수명3600초. D03 합성 자격2명. 실제 네이버·회원·Storage API는 미실행",
+    "firstProbe": "새 catalog-smoke 파일을 누락한 서비스 소스 목록을 runtime 생성 전에 거절. SQL/HTTP/fixture/intent0. 원 거절 자료 보존",
+    "secondProbe": {
+      "scopeId": "16f757df56004e86828b4cf0695ae213",
+      "status": "FAIL_UNCHANGED",
+      "sourcePins": 208,
+      "observedError": {"code": "22023", "message": "invalid_review", "bodyBytes": 70},
+      "requestTransactionClosed": true,
+      "pooledBackendRetained": true,
+      "backendTerminated": false,
+      "failure": "D03_UNOWNED_OR_MISSING_ROW_DELTA",
+      "extraRows": {"private.review_summary_state": 2, "private.review_refresh_outbox": 2},
+      "finalCandidatePublished": false,
+      "actualDeadlineReproduction": "NOT_RUN"
+    },
+    "followupCapture": {
+      "status": "PASS_READONLY_PROBE_FOLLOWUP_CAPTURE_ONLY",
+      "writes": 0,
+      "captureSha256": "b267fdbf7486768b051e73a8fc17497e7ac35db6040b7ea0d81bd367a1e706d8",
+      "receiptSha256": "dcab46f5aaaff43bf0f8d08b855416da18e98bd6efc4fd9d027e6294b570e156"
+    },
+    "followupCleanup": {
+      "status": "PASS_EXACT_PROBE_FOUR_ROW_CLEANUP_ONLY",
+      "scriptSha256": "cc9b46b6ed5b7738e5a82939079669ce34147795f386485c91fa6387d7c6a420",
+      "receiptSha256": "6dce7a5ec5680061e0a0763d543958296af115964159c0d4620a62e7f71db742",
+      "deletedOwnRows": 4,
+      "checkpointDeletes": 0,
+      "restoredBeforeSha256": "610392bca33656e1c1d6120b973e6204543e2c138d10aeb8b51e0d426efba14a",
+      "full182RowBagsRestored": true,
+      "authorityCatalogConstraintsPreserved": true,
+      "sequenceBeforeAfterPreserved": true,
+      "controlsClosed": true,
+      "rawAndPsqlProcessGroupClosed": true,
+      "backendAbsent": true,
+      "monitorJoined": true,
+      "memoryFailures": [],
+      "sqlSticky": false,
+      "unclosedChild": false,
+      "supportContextExited": true,
+      "originalProbePromotedToPass": false
+    },
+    "close": {
+      "status": "STOPPED_OWN_IDS_ONLY",
+      "receiptSha256": "728531e956f980683e4050b53e37de491f991c56d0602f8506bd3c64041a6d33",
+      "ownContainersStopped": 4,
+      "otherContainersStopped": 0,
+      "ownNetworksAndVolumesRetained": true,
+      "wholeStoredBytesPreserved": "NOT_VERIFIED"
+    }
+  },
+  "toolCorrection": {
+    "localCommit": "ab6b754",
+    "files": ["tests/integration/minkyu/deadline_lock_runtime.py", "tests/database/minkyu/test_deadline_source_seal.py"],
+    "change": "fixture 생성 전 자신의2UID 요약 상태를 고정하고, 삭제 전 기존 checkpoint와 변경된 payload를 거절한다.",
+    "regressionScope": "원점 빈 상태·정확 트리거 payload·동시 변경·부분실패·저장실패·checkpoint 보존의 Python 모형. ASSERT 대신 IF/RAISE 사용",
+    "sourceSealTests": 38,
+    "runtimeTests": 47,
+    "actualNewCleanupToolRun": "NOT_RUN"
+  },
+  "remaining": ["새 소스와 새 intent에서 probe 최종 보존 통과", "별도 RPC 검토 후 실제 D03 마감 잠금 경쟁 재현", "재현 후 서버 수정과125개 migration 기준 정상 성공 검증", "실회원 HOLD·운영 접근·외부 원문 조건은 유지"],
+  "next": "정리 도구와 독립 검토한 AI24 준비 코드를 통합한 새 HEAD에서 소스 목록을 동적으로 산출하고 새 격리 검증을 시작한다."
+}
