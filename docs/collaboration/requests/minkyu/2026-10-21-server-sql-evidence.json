@@ -1,0 +1,44 @@
+{
+  "wbs": [
+    "4.4",
+    "5.7",
+    "7.11"
+  ],
+  "kind": "SYNTHETIC_SQL_ONLY",
+  "receiptPath": "/private/tmp/yumidang-server-sql-20261021-a002/execution/receipt.json",
+  "receiptSha256": "c5ca06de349ecb2016aaf32cb51d0a4b44786bb0ce40588eac0d89de9025e871",
+  "sourceHead": "62e52d801dd1148b1854a622022146331f27108a",
+  "status": "PASS_SQL_ONLY",
+  "migrationFiles": [
+    "backend/supabase/migrations/20261020100000_ai_independent_consents.sql",
+    "backend/supabase/migrations/20261020130000_post_private_events.sql"
+  ],
+  "testFiles": [
+    "tests/database/minkyu/post_manual_events.sql",
+    "tests/database/minkyu/ai_independent_consents.sql",
+    "tests/database/minkyu/current_summary_fences.sql",
+    "tests/database/minkyu/current_completion_consent_policy.sql"
+  ],
+  "targetStopped": true,
+  "existingMetadataPreserved": true,
+  "existingStoredBytes": "NOT_VERIFIED",
+  "minimumAvailableKiB": 2288432,
+  "unknownBefore": 2,
+  "unknownAfter": 2,
+  "actualAuth": "NOT_RUN",
+  "realMembers": "HOLD",
+  "providerCalls": 0,
+  "operatingChanged": false,
+  "fullRestore": false,
+  "cleanInstall": "NOT_RUN",
+  "priorFailure": {
+    "receiptPath": "/private/tmp/yumidang-server-sql-20261021-a001/execution/receipt.json",
+    "receiptSha256": "c1f714746bdf0420c8109ce3383dc92c0ab66fb908662dd5ffbf7753ddd87e49",
+    "status": "FAIL_CLOSED",
+    "cause": "Existing postgres-owned definer could not execute newly admin-owned private helper",
+    "targetStopped": true,
+    "existingMetadataPreserved": true
+  },
+  "projectBaseline": "79%(22/28)",
+  "personal44Complete": false
+}
