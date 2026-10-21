@@ -6,10 +6,11 @@ import type {
   EventPeriod, EventProviderPort, EventQuery, EventFetchRequest, EventState, SourceEventRecord, StoredEventRecord,
 } from "../../integrations/events/port.ts";
 import { normalizeEventRegion, performanceGenreForSource, type PerformanceGenre } from "../../integrations/events/normalize.ts";
-import { assertSourceEventRecord, parseCalendarDate, queryPeriodInterval } from "../../integrations/events/normalize.ts";
+import { assertSourceEventRecord, parseCalendarDate, parseEventInstant, queryPeriodInterval } from "../../integrations/events/normalize.ts";
 import { selectEvents } from "../../services/event-service.ts";
 import type { JsonValue } from "../../contracts/common.ts";
 import type { RpcClient } from "../transport.ts";
+import { createKopisRankingRpcStore, KOPIS_RANKING_CATEGORIES, type KopisRankingMode, type PublicKopisRanking } from "../../integrations/events/kopis-ranking.ts";
 
 export interface EventSaveResult {
   savedCount: number;
@@ -383,6 +384,55 @@ export function createRpcEventRepository(db: RpcClient): RpcEventRepository {
         nextCursor = encodeEventCursor(filters, { rank: stateRank[last.state], key: next.key, id: last.id });
       }
       return { events, nextCursor };
+    },
+  };
+}
+
+
+/** 공식 대조 capability만 저장한다. 일반 행사/기존 requested-only HTTP와 분리된 내부 조립 경계다. */
+export function createVerifiedKopisRepository(db: RpcClient) {
+  const store = createKopisRankingRpcStore({
+    async rpc(name, input) {
+      // 공통 transport는 data 자체를 반환하며 오류는 throw한다. 기존 store의 경계로 정확히 번역한다.
+      return { data: await db.rpc(name, input as Record<string, JsonValue>), error: null };
+    },
+  });
+  return {
+    save: store.save,
+    refreshFailed: store.refreshFailed,
+    async read(mode: KopisRankingMode): Promise<PublicKopisRanking> {
+      if (!Object.hasOwn(KOPIS_RANKING_CATEGORIES, mode)) return invalidResponse();
+      const data = await db.rpc("get_verified_kopis_ranking", { p_mode: mode });
+      if (!isObject(data) || !hasExactKeys(data, ["status", "mode", "sourceName", "period", "collectedAt", "items", "officialUrl", "checkedAt", "refreshDelayed"]) ||
+        data.mode !== mode || data.sourceName !== "KOPIS" || data.officialUrl !== "https://www.kopis.or.kr/por/boxoffice/boxoffice.do" ||
+        typeof data.refreshDelayed !== "boolean" || !Array.isArray(data.items)) return invalidResponse();
+      if (data.status === "unavailable") {
+        if (data.period !== null || data.collectedAt !== null || data.checkedAt !== null || data.items.length !== 0 || data.refreshDelayed !== false) return invalidResponse();
+      } else if (data.status === "available") {
+        // PostgreSQL timestamptz JSON은 최대 6자리 소수초와 명시 offset을 사용한다.
+        // 실제 날짜/시계/시간대 검사는 기존 엄격 parser에 맡기고 검사용 정밀도만 ms로 낮춘다.
+        const instant = (v: unknown) => {
+          if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(v)) return false;
+          try { parseEventInstant(v.replace(" ", "T").replace(/\.(\d{3})\d+(?=Z|[+-])/, ".$1")); return true; }
+          catch { return false; }
+        };
+        if (!isObject(data.period) || !hasExactKeys(data.period, ["start", "end"]) ||
+          typeof data.period.start !== "string" || typeof data.period.end !== "string" ||
+          !instant(data.collectedAt) || !instant(data.checkedAt) || (data.items.length < 1 || data.items.length > 10)) return invalidResponse();
+        try { parseCalendarDate(data.period.start); parseCalendarDate(data.period.end); }
+        catch { return invalidResponse(); }
+        if (Date.parse(data.period.end) - Date.parse(data.period.start) !== 6 * 86400000) return invalidResponse();
+        const ids = new Set<string>(); let previous = 0;
+        for (const item of data.items) {
+          if (!isObject(item) || !hasExactKeys(item, ["rank", "sourceId", "title", "genre", "originalGenre", "performancePeriodText", "placeName", "region"]) ||
+            !Number.isInteger(item.rank) || (item.rank as number) < previous || (item.rank as number) < 1 || (item.rank as number) > 1000 ||
+            ["sourceId", "title", "genre", "originalGenre", "performancePeriodText", "placeName", "region"].some(k => typeof item[k] !== "string" || !(item[k] as string).trim() || (item[k] as string).length > 2000 || /[<>\u0000-\u001f]/u.test(item[k] as string)) ||
+            !/^PF[0-9A-Za-z]+$/.test(item.sourceId as string) || ids.has(item.sourceId as string)) return invalidResponse();
+          previous = item.rank as number; ids.add(item.sourceId as string);
+        }
+      } else return invalidResponse();
+      // 공개 항목만 새로 복사하며 DB 응답을 저장 capability로 승격하지 않는다.
+      return structuredClone(data) as unknown as PublicKopisRanking;
     },
   };
 }

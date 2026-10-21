@@ -244,3 +244,10 @@ owner-only `private.event_source_display`는 원천 비표출 판정을 별도�
 저장은 새 private 저장소에 한정한다. 14분류 중 성공한 분류의 실제 공개 기간·확인 시각·ID/순위/원래 순서를 보존하고, 이전 확인 시각/기간으로 덮어쓰지 않는다. `mark_verified_kopis_refresh_failed(p_mode text,p_attempt_started_at timestamptz,p_expected_checked_at timestamptz)`는 시도 시작 전에 읽은 기존 checkedAt과 시도 시작 시각을 받는다. 분류별 잠금 후 checkedAt이 바뀌었거나 시도가 현재 검증보다 빠르면 stale을 반환하며, 일치할 때만 기존 snapshot을 교체하지 않고 갱신 지연을 표시한다. 오래된 실패가 새 성공 뒤 도착해 최신 상태를 덮지 않는다. 최초 미검증은 공식 링크와 빈 목록을 반환한다. `get_verified_kopis_ranking(p_mode text)`는 별도 읽기 RPC이며 `{status,mode,sourceName,period,collectedAt,items,officialUrl,checkedAt,refreshDelayed}`만 반환한다. 지원하지 않는 분류는22023이다. 날짜가 바뀌어도 저장된 기간을 최신 날짜로 바꾸지 않는다.
 
 기존 HTTP `/events/rankings`의 exact `not_enabled` 응답·앱 decoder·requested-only 자료·worker held 상태는 유지한다. 이 변경은 새 내부 RPC와 어댑터 준비이며 공개 HTTP 연결·종현 앱 소비·자동 collector/일일 작업 완료가 아니다. 당시 공식 UI와 과거 API 원문의 한 기간/전체 공연 대조를 최신14분류 운영 검증으로 승격하지 않는다. service-role DB 연결 주입과 migration 적용은 별도 검토·실제 격리 SQL 검증 후 수행한다. 키 설치·새 외부 호출·운영 활성화는 포함하지 않는다.
+
+
+### SQL124 내부 소비 연결
+
+`createVerifiedKopisRepository(createInternalClient(config))`는 공식 대조 WeakSet capability를 기존 저장 gate에 전달한다. 내부 transport의 JSON 직접 반환/throw 오류를 gate의 `{data,error}` 형태로 번역하며 `publish_verified_kopis_snapshot`, `mark_verified_kopis_refresh_failed`, `get_verified_kopis_ranking`만 추가 허용한다. 실패 표시에는 시도 시작과 예상 확인시각을 그대로 전달한다. 일반 행사 저장이나 기존 순위 완료 RPC로 우회하지 않는다.
+
+읽기는 분류가 일치하는 정확 공개 DTO만 반환한다. 미검증은 빈 목록·null 기간과 공식 링크이며, 검증본은 기존 실제 기간과 `refreshDelayed`를 유지한다. 원천 XML·검증 내부 필드·추가 응답 필드는 거절하고 읽은 JSON을 게시 capability로 재등록하지 않는다. 이 내부 어댑터는 HTTP·앱 응답 계약을 변경하지 않으며 기존 requested-only 경로, 공식 14분류 실제 대조, 매일 수집 및 운영 활성화는 별도다.
