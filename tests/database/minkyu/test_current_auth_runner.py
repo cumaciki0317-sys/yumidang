@@ -2,6 +2,7 @@
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -40,6 +41,7 @@ class RunnerTests(unittest.TestCase):
 
     def runner(self):
         runner = self.m.CurrentAuthSource(self.review(), (self.prep, self.private, SimpleNamespace(), self.ai))
+        runner.root.mkdir(mode=0o700, exist_ok=True)
         runner.phase = 'test'; runner.plan = self.prep.load_prepared_source.return_value['target']
         return runner
 
@@ -212,7 +214,7 @@ class RunnerTests(unittest.TestCase):
         runner.save.assert_not_called()
 
     def test_missing_closure_after_durable_command_intent_also_blocks_recovery(self):
-        runner = self.runner(); runner.root.mkdir(mode=0o700)
+        runner = self.runner(); runner.root.mkdir(mode=0o700, exist_ok=True)
         (runner.root / 'start-command-1-intent.json').write_text('{"singleAttempt":true}')
         with patch.object(self.m.subprocess, 'Popen') as spawn:
             with self.assertRaisesRegex(ValueError, 'PRIOR_PROCESS_GROUP_UNCLOSED'):
@@ -221,7 +223,7 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(runner.unclosed_child)
 
     def test_new_phase_object_cannot_forget_persisted_unclosed_group(self):
-        runner = self.runner(); runner.root.mkdir(mode=0o700)
+        runner = self.runner(); runner.root.mkdir(mode=0o700, exist_ok=True)
         (runner.root / 'start-command-1-closure.json').write_text('{"closed":false,"groupAbsent":false}')
         runner.read = lambda name: json.loads((runner.root / name).read_text())
         with patch.object(self.m.subprocess, 'Popen') as spawn:
@@ -359,6 +361,42 @@ class RunnerTests(unittest.TestCase):
             invoke()
         self.assertEqual(sum(sizes), 512 * 1024)
         self.assertEqual(records['test-command-1-result.json']['stdoutSha256'], self.m.sha(raw))
+
+    def test_cli_home_is_new_private_scope_and_home_is_never_redefined(self):
+        runner = self.runner()
+        ambient = {'HOME': '/Users/minkyu', 'PATH': '/fixed/bin', 'LANG': 'ko_KR.UTF-8',
+            'SUPABASE_HOME': '/Users/minkyu/.supabase', 'SUPABASE_ACCESS_TOKEN': 'private-not-inherited',
+            'SUPABASE_PROFILE': '/Users/minkyu/private-profile', 'SUPABASE_TELEMETRY_DISABLED': 'false',
+            'DO_NOT_TRACK': '0', 'DOCKER_HOST': 'unix:///foreign', 'HTTP_PROXY': 'http://ambient',
+            'GOTRUE_JWT_EXP': '1', 'SUPABASE_AUTH_JWT_EXP': '1', 'OTHER_SECRET': 'not-inherited'}
+        with patch.dict(os.environ, ambient, clear=True):
+            env = runner.cli_env()
+        self.assertEqual(env['HOME'], ambient['HOME'])
+        self.assertEqual(env['SUPABASE_HOME'], str(runner.root / 'cli-home'))
+        self.assertEqual(env['SUPABASE_TELEMETRY_DISABLED'], '1')
+        self.assertEqual(env['DO_NOT_TRACK'], '1')
+        self.assertEqual(env['DOCKER_HOST'], self.m.HOST)
+        self.assertEqual(set(env), {'HOME','PATH','LANG','DOCKER_HOST','DOCKER_CONTEXT','SUPABASE_HOME','SUPABASE_TELEMETRY_DISABLED','DO_NOT_TRACK'})
+        self.assertEqual((runner.root / 'cli-home').stat().st_mode & 0o777, 0o700)
+        self.assertEqual(runner.cli_home(), str(runner.root / 'cli-home'))
+
+    def test_cli_home_rejects_public_mode_symlink_and_non_directory(self):
+        runner = self.runner(); home = runner.root / 'cli-home'
+        home.mkdir(mode=0o755)
+        with self.assertRaisesRegex(ValueError, 'CLI_HOME_PRIVATE'):
+            runner.cli_env()
+        home.rmdir(); home.symlink_to(self.prepared, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, 'CLI_HOME_PRIVATE'):
+            runner.cli_env()
+        home.unlink(); home.write_bytes(b'not a directory')
+        with self.assertRaisesRegex(ValueError, 'CLI_HOME_PRIVATE'):
+            runner.cli_env()
+
+    def test_cli_home_rejects_nonprivate_execution_ancestor(self):
+        runner = self.runner(); self.parent.chmod(0o755)
+        with self.assertRaisesRegex(ValueError, 'CLI_HOME_PRIVATE_ANCESTOR'):
+            runner.cli_env()
+        self.assertFalse((runner.root / 'cli-home').exists())
 
     def test_actual_kernel_history_has_no_121_override_in_adapter(self):
         raw = SOURCE.read_text()

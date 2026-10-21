@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import signal
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -382,9 +383,47 @@ class CurrentAuthSource:
             chunks.append({'name': name, 'rawSha256': sha(part), 'rawBytes': len(part)})
         self.save(prefix + '.json', {**proof, 'chunks': chunks})
 
+    def cli_home(self):
+        # 공식 CLI docs/supabase-home.md: 전역 CLI 상태는 SUPABASE_HOME 기준이다.
+        # 사용자 HOME는 변경하지 않고 새 실행 root의 개인 하위 디렉터리만 사용한다.
+        need(self.root.is_absolute() and self.root.resolve() == self.root, 'CLI_HOME_ROOT_PATH')
+        for directory in (self.root, *self.root.parents):
+            if directory == Path('/private/tmp'):
+                break
+            info = directory.lstat()
+            need(not directory.is_symlink() and stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid()
+                 and stat.S_IMODE(info.st_mode) == 0o700, 'CLI_HOME_PRIVATE_ANCESTOR')
+        else:
+            raise ValueError('CLI_HOME_BOUNDARY')
+        parent = os.open(self.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            parent_info = os.fstat(parent)
+            need(parent_info.st_uid == os.getuid() and stat.S_IMODE(parent_info.st_mode) == 0o700, 'CLI_HOME_PARENT')
+            try:
+                os.mkdir('cli-home', 0o700, dir_fd=parent)
+            except FileExistsError:
+                pass
+            before = os.stat('cli-home', dir_fd=parent, follow_symlinks=False)
+            need(stat.S_ISDIR(before.st_mode) and before.st_uid == os.getuid()
+                 and stat.S_IMODE(before.st_mode) == 0o700, 'CLI_HOME_PRIVATE')
+            child = os.open('cli-home', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+            try:
+                opened = os.fstat(child)
+                signature = lambda info: (info.st_dev, info.st_ino, info.st_mode, info.st_uid)
+                path = self.root / 'cli-home'
+                need(signature(before) == signature(opened) == signature(path.lstat())
+                     and path.resolve() == path and signature(parent_info) == signature(self.root.lstat()), 'CLI_HOME_CHANGED')
+            finally:
+                os.close(child)
+        finally:
+            os.close(parent)
+        return str(self.root / 'cli-home')
+
     def cli_env(self):
         env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'LANG', 'LC_ALL', 'LC_CTYPE')}
-        env.update(DOCKER_HOST=HOST, DOCKER_CONTEXT=CONTEXT, SUPABASE_TELEMETRY_DISABLED='true')
+        # 공식 docs/analytics.md의 env opt-out 값은 문자열 1이다.
+        env.update(DOCKER_HOST=HOST, DOCKER_CONTEXT=CONTEXT, SUPABASE_HOME=self.cli_home(),
+                   SUPABASE_TELEMETRY_DISABLED='1', DO_NOT_TRACK='1')
         return env
 
     def call(self, args, data=None, timeout=25, monitor=True):
