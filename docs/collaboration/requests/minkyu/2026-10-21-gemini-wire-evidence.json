@@ -1,0 +1,38 @@
+{
+  "actor": "minkyu",
+  "actualScope": {
+    "apiCalls": 0,
+    "independentNewTestsPass": 24,
+    "krwBudgetImplemented": false,
+    "memberTextSent": 0,
+    "newOfflineTestsPass": 24,
+    "relatedExistingTestsPass": 47,
+    "runtimeActivated": false,
+    "typecheck": "PASS_NO_REMOTE"
+  },
+  "change": "제품 비활성 Gemini wire adapter·loader·회귀를 추가했다.",
+  "evidence": [
+    {
+      "path": "/private/tmp/yumidang-gemini-wire-review-20261021/receipt.json",
+      "sha256": "073e8b60b63799d710547d6cc0b42b3eb23faace73047e04b68f6200c1e5dce5"
+    }
+  ],
+  "files": [
+    "backend/supabase/functions/_shared/ai/providers/gemini-adapter.ts",
+    "backend/supabase/functions/_shared/config/providers.ts",
+    "tests/functions/minkyu/gemini_provider.test.ts"
+  ],
+  "integratedCommit": "32c3c99",
+  "next": "고정 공식 목적지·제한 합성 입력·호출 수·예산을 갖춘 실제 측정 도구를 별도로 검토한다.",
+  "overallProgress": "79%(22/28)",
+  "remaining": [
+    "실제 반환 모델·출력 상한·사용량·비용 검증",
+    "원화 예산 포트와 제품 runtime 연결",
+    "공급사·법적 조건 및 실회원 HOLD 유지"
+  ],
+  "remotePush": false,
+  "sourceCommit": "be92ff3",
+  "wbs": [
+    "5.6"
+  ]
+}

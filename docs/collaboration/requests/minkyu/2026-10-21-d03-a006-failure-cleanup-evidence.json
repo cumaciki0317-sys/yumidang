@@ -1,0 +1,106 @@
+{
+  "actor": "minkyu",
+  "actualScope": {
+    "auth6": "ACTUAL_LOCAL_GOTRUE_SIX_SYNTHETIC_USERS",
+    "completeSqlStatementAttested": false,
+    "deadlineReproduction": "NOT_PROVEN",
+    "externalModelCalls": 0,
+    "httpDispatched": false,
+    "httpIngressProven": false,
+    "originalAuthTtlSeconds": 3600,
+    "policyComplete": false,
+    "rawRpcFingerprint": "PG_STAT_ACTIVITY_TRUNCATED_PREFIX_ONLY",
+    "realMembers": 0
+  },
+  "change": "마감 검증 관측 실패와 정리 SQL 실패를 보존하고 별도 정확 정리·종료를 완료했다.",
+  "cleanup": {
+    "checkpointDeletes": 0,
+    "full182RowsAuthorityCatalogConstraintsAndSequenceRestored": true,
+    "memoryFailures": [],
+    "monitorJoined": true,
+    "newReaderAndCleanupProcessGroupsAndDbBackendsClosed": true,
+    "originalHostProcessGroup": "NOT_VERIFIED",
+    "ownFixtureDeleted": 7,
+    "ownTriggerRowsDeleted": 4
+  },
+  "evidence": [
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/d03-deadline-3d5064e673b34fdbb37ea60e3a07b9d2/d03-runtime-final-status-private.json",
+      "sha256": "72044cae8b267501bd4d3b10556f7d073bbc13d018bfebabbad137d01f072a6f"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/d03-deadline-3d5064e673b34fdbb37ea60e3a07b9d2/d03-before-private.json",
+      "sha256": "ed6c682006f628edd214095e1ab9aa06826d97a582e8064ed04b58bf8663e161"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/actual-followup-capture-a006/receipt.json",
+      "sha256": "525e81b5d3a6a9b0bcf5cebf56c3c20873fe1c2a926060a6cd3b11f1c6443aaf"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/actual-followup-cleanup-a006/failure-receipt.json",
+      "sha256": "dceaf9d317b4af07f985164560480ba522ab1a8ef67c60cc909aca524170382a"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/actual-followup-capture-a006b/receipt.json",
+      "sha256": "3a01c40d9e1ace79f4c49edc47c29a4659b1609731e999fd4d7836486315b060"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/actual-followup-cleanup-a006b/receipt.json",
+      "sha256": "8ba44fdcdb28590c7b5881787a1a85d8034fd4b6c5fa1d8c13011278d0b60631"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/actual-followup-cleanup-a006b/after-private.json",
+      "sha256": "c7be66849843c8c5eff5a7ba2017c84747327a4a5ae2bf13e798160f1130986f"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a006/yumidang-current-auth-800366e4076dd5c5/close-stop-receipt.json",
+      "sha256": "a220ffd231fe715160f5270599d925b59e2b55e29eaf64f94cd31a47dc354e57"
+    }
+  ],
+  "failures": [
+    {
+      "originalHostProcessGroup": "NOT_VERIFIED",
+      "originalReadonlyAndRawSticky": "PRESERVED",
+      "reason": "D03_HOLDER_OBSERVATION_TIMEOUT",
+      "stage": "D03_FAST"
+    },
+    {
+      "deletesReached": false,
+      "exitCode": 3,
+      "reason": "PLPGSQL_VARIABLE_N_AMBIGUOUS",
+      "rollback": "VERIFIED_BY_NEW_READ_CAPTURE",
+      "stage": "FIRST_EXACT_CLEANUP"
+    }
+  ],
+  "next": "최종 HEAD·새 source·원 Auth 세션과 새 intent로 실제 검증을 이어간다. AI24 이전 준비는 현재 HEAD와 달라 재사용하지 않는다.",
+  "overallProgress": "79%(22/28)",
+  "remaining": [
+    "새 source에서 보완된 holder의 실제 SQL·잠금 관측",
+    "별도125 migration의 SQL·공개 RPC→deepest 권한·동시성 검증",
+    "HTTP 접수시각·정책 전체 완료 증거"
+  ],
+  "remotePush": false,
+  "sourceClose": {
+    "otherStops": 0,
+    "ownNetworksAndVolumesRetained": true,
+    "ownStopped": 4,
+    "wholeStoredBytes": "NOT_VERIFIED"
+  },
+  "sourceHead": "096b613b579ed0ae9a868a93feed97f758713ace",
+  "toolFix": {
+    "actualFixedHolderSql": "NOT_RUN",
+    "authorRegressionsPass": 108,
+    "files": {
+      "tests/database/minkyu/test_deadline_source_seal.py": "46ca49cc769792861da385492c5a6421b2c0c34ded35dc37c683fa4be3c80362",
+      "tests/integration/minkyu/deadline_lock_runtime.py": "c739e2afd1f025091deece10557b966ac8b0c1aa1b41a3c3ecbc872b432200f8"
+    },
+    "independentSourceSealPass": 43,
+    "integratedCommit": "504d43c",
+    "originalIdentity3SecondsAndFast8SecondsUnchanged": true,
+    "sourceCommit": "f0fddad"
+  },
+  "wbs": [
+    "4.6",
+    "7.11"
+  ]
+}

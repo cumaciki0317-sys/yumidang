@@ -1,0 +1,52 @@
+{
+  "actor": "minkyu",
+  "actualScope": {
+    "aggregation": "WEEKLY_NATIONWIDE_TICKET_AMOUNT_EXCEPT_DAEHAKRO_REGION_UNI",
+    "apiBasedatePresent": false,
+    "dbWrites": 0,
+    "historicalFailureUnchanged": true,
+    "historicalSamePeriodTop10Matches": 10,
+    "historicalXmlPeriod": [
+      "2026-10-13",
+      "2026-10-19"
+    ],
+    "keysRead": 0,
+    "latestSamePositionTop10Matches": 0,
+    "newApiCalls": 0,
+    "officialUiPeriod": [
+      "2026-10-14",
+      "2026-10-20"
+    ],
+    "popDanceRows": 8,
+    "publication": 0,
+    "requiredCategories": 14,
+    "uiRows": 118,
+    "unverifiedCategories": [
+      "내한",
+      "페스티벌"
+    ],
+    "verifiedUiCategories": 12
+  },
+  "change": "공식 KOPIS 실제 화면의 현재12분류 및 과거 한 기간의 전국 전체 순위를 대조했다.",
+  "evidence": [
+    {
+      "path": "/private/tmp/yumidang-kopis-public-20261021/js-rendered-observations/evidence-index.json",
+      "sha256": "edc3853008ab2cac0bf3d93368a30c850bfdb2564231183d65a7f17a98f255d1"
+    },
+    {
+      "path": "/private/tmp/yumidang-kopis-public-20261021/public-official-ranking-review.md",
+      "sha256": "8c484bc15a41dfd427e62294745f113d76097d68654afcf166ee6f43abb49917"
+    }
+  ],
+  "next": "공식 대조 입력과 기존 검증된 snapshot 계약을 연결하고 필요한 제한 API 조건을 확인한다.",
+  "overallProgress": "79%(22/28)",
+  "remaining": [
+    "미검증2분류",
+    "현재 기간 API와 공식 화면의 분류별 대조",
+    "일일 갱신·실패 보존·앱 소비"
+  ],
+  "remotePush": false,
+  "wbs": [
+    "7.8"
+  ]
+}
