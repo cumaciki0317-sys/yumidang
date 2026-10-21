@@ -236,3 +236,11 @@ owner-only `private.event_source_display`는 원천 비표출 판정을 별도�
 `eventChangeId`가 이미 존재하면 원 요청 전체 SHA256, 작성자·공고·기존 expectedUpdatedAt을 대조한 뒤 기존 만료 처리를 실행하고 제안을 다시 읽는다. 다른 요청으로 같은 ID를 재사용하면40001이다. 실제 대기 상태만 `event_change_pending`을 반환한다. 승인 후에는 `event_change_accepted`와 승인 transaction의 `event_applied_updated_at`을 반환하며 재적용하지 않는다. 이 시각은 해당 변경의 영수증으로, 이후 공고의 최신 시각이라고 안내하지 않는다. 거절·만료·취소·철회는 각각 `event_change_declined|expired|cancelled|withdrawn`을 반환하며 대기 제안을 다시 만들지 않는다. 새 제안은 새 changeId와 새 검사 ticket이 필요하다.
 
 소비된 기존 `post_update` 검사 ticket도 원 사용자·대상·입력 digest를 먼저 검증한 뒤 행사 제안에 한해서 같은 상태 resolver를 사용한다. 따라서 저장된 예전 pending outcome을 현재 상태로 오인하지 않는다. 다른 쓰기의 ticket 재시도·승인·원문 결합·ACL은 유지한다. 새 ticket으로 같은 행사 제안을 재요청하는 경우도 같은 판정을 사용한다. SQL fixture는 승인 응답 유실/소비 ticket·새 ticket 재시도, 거절 재시도, 합성 SQL 시간창 만료 후 재시도를 포함한다. 합성 삽입 세션·시간창 조정은 실제 Auth 발급·자연 만료 검증으로 집계하지 않는다.
+
+## 2026-10-21 검증 snapshot 영속 RPC — 내부 연결 준비
+
+새 `publish_verified_kopis_snapshot(p_snapshot jsonb)`는 기존 서버의 service-role 자격을 신뢰하는 전용 내부 RPC다. `createKopisRankingRpcStore`는 현재 프로세스에서 `verifyKopisOfficialRanking`의 WeakSet 검증을 통과한 객체만 전달하며, JSON 복제나 `verified:true` 입력은 RPC 전 거절한다. 이 어댑터를 회원 HTTP 입력에 연결하지 않는다. service-role 자격 자체를 가진 서버 운영 주체의 의도적 위조까지 인증하는 서명 프로토콜은 아니다. 일반 anon/authenticated는 게시·실패표시 RPC 실행 및 private 테이블 접근 권한이 없다.
+
+저장은 새 private 저장소에 한정한다. 14분류 중 성공한 분류의 실제 공개 기간·확인 시각·ID/순위/원래 순서를 보존하고, 이전 확인 시각/기간으로 덮어쓰지 않는다. `mark_verified_kopis_refresh_failed(p_mode text,p_attempt_started_at timestamptz,p_expected_checked_at timestamptz)`는 시도 시작 전에 읽은 기존 checkedAt과 시도 시작 시각을 받는다. 분류별 잠금 후 checkedAt이 바뀌었거나 시도가 현재 검증보다 빠르면 stale을 반환하며, 일치할 때만 기존 snapshot을 교체하지 않고 갱신 지연을 표시한다. 오래된 실패가 새 성공 뒤 도착해 최신 상태를 덮지 않는다. 최초 미검증은 공식 링크와 빈 목록을 반환한다. `get_verified_kopis_ranking(p_mode text)`는 별도 읽기 RPC이며 `{status,mode,sourceName,period,collectedAt,items,officialUrl,checkedAt,refreshDelayed}`만 반환한다. 지원하지 않는 분류는22023이다. 날짜가 바뀌어도 저장된 기간을 최신 날짜로 바꾸지 않는다.
+
+기존 HTTP `/events/rankings`의 exact `not_enabled` 응답·앱 decoder·requested-only 자료·worker held 상태는 유지한다. 이 변경은 새 내부 RPC와 어댑터 준비이며 공개 HTTP 연결·종현 앱 소비·자동 collector/일일 작업 완료가 아니다. 당시 공식 UI와 과거 API 원문의 한 기간/전체 공연 대조를 최신14분류 운영 검증으로 승격하지 않는다. service-role DB 연결 주입과 migration 적용은 별도 검토·실제 격리 SQL 검증 후 수행한다. 키 설치·새 외부 호출·운영 활성화는 포함하지 않는다.

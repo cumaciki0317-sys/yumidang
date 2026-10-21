@@ -390,3 +390,33 @@ export async function collectKopisRanking(input: {
   if (!["applied", "stale"].includes(status)) return invalid();
   return { status };
 }
+
+/** 내부 service-role 연결 전용. 회원 HTTP 입력이나 공개 DB client에 연결하지 않는다. */
+export function createKopisRankingRpcStore(db: {
+  rpc(name: string, input: Record<string, unknown>): Promise<{ data: unknown; error: unknown }>;
+}): KopisRankingStore & { refreshFailed(mode: KopisRankingMode, attemptStartedAt: string, expectedCheckedAt: string | null): Promise<"recorded" | "stale"> } {
+  return {
+    async save(snapshot) {
+      if (!officialSnapshots.has(snapshot) || !snapshot.officialComparison) return invalid();
+      const view = publicKopisRanking(snapshot, snapshot.mode, new Date(snapshot.collectedAt));
+      if (view.status !== "available") return invalid();
+      const { data, error } = await db.rpc("publish_verified_kopis_snapshot", {
+        p_snapshot: { ...view, officialCondition: snapshot.officialComparison.officialCondition,
+          apiPeriodVerified: snapshot.apiPeriodVerified === true },
+      });
+      if (error || !data || typeof data !== "object" ||
+        Array.isArray(data) || Object.keys(data).length !== 1 || Object.keys(data)[0] !== "status" || !["applied", "stale"].includes((data as { status: string }).status)) return invalid();
+      return (data as { status: "applied" | "stale" }).status;
+    },
+    async refreshFailed(mode, attemptStartedAt, expectedCheckedAt) {
+      const instant = (value: string) => Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+      if (!isMode(mode) || !instant(attemptStartedAt) || (expectedCheckedAt !== null && !instant(expectedCheckedAt))) return invalid();
+      const { data, error } = await db.rpc("mark_verified_kopis_refresh_failed", {
+        p_mode: mode, p_attempt_started_at: attemptStartedAt, p_expected_checked_at: expectedCheckedAt,
+      });
+      if (error || !data || typeof data !== "object" || Array.isArray(data) || Object.keys(data).length !== 1 || Object.keys(data)[0] !== "status" ||
+        !["recorded", "stale"].includes((data as { status: string }).status)) return invalid();
+      return (data as { status: "recorded" | "stale" }).status;
+    },
+  };
+}
