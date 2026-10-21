@@ -15,6 +15,8 @@ import uuid
 
 ROOT=Path(__file__).resolve().parents[2]
 SELF='tools/local/provision_current_midnight.py'
+CURRENT_DB_SOURCES=('tools/local/current_ai24_database.py','tests/integration/minkyu/deadline_readonly_transport.py','tools/local/prepare_isolated_midnight.py')
+_DATABASE_MODULES={}
 RUNNER='tests/integration/jonghyun/isolated_ai_contracts.py'
 INSPECTOR='tests/integration/minkyu/service_profile_readonly_local.py'
 HELPERS=tuple('tools/local/'+name+'.py' for name in ('prepare_migrations','prepare_database','prepare_edge','prepare_current_policy','run_database_tests'))
@@ -81,6 +83,17 @@ def support(pins):
             else:sys.modules[name]=old
 
 
+def current_database_support(pins,head):
+    """호출자가 이 모듈의 exact typed review를 구성한다. 관측 JSON은 권한이 아니다."""
+    path=CURRENT_DB_SOURCES[0];raw=read_source(path)
+    need(pins.get(path)==sha(raw),'ISSUER_DATABASE_SOURCE')
+    key=(head,sha(raw))
+    if key not in _DATABASE_MODULES:
+        module=importlib.util.module_from_spec(importlib.util.spec_from_loader('issuer_current_ai24_database',loader=None))
+        module.__file__=str(ROOT/path);exec(compile(raw,module.__file__,'exec'),module.__dict__);_DATABASE_MODULES[key]=module
+    return _DATABASE_MODULES[key]
+
+
 def source_pins(head):
     paths=(SELF,*HELPERS,RUNNER,INSPECTOR)
     pins={p:sha(read_source(p))for p in paths};verify_pins(pins,head)
@@ -89,8 +102,15 @@ def source_pins(head):
     return pins
 
 
-def verify_closure(ai,pins):
+def current_database_source_pins(head):
+    """새 current DB review 전용 closure. 기존 발급 source_pins 계약은 유지한다."""
+    pins=source_pins(head);pins.update({p:sha(read_source(p))for p in CURRENT_DB_SOURCES});verify_pins(pins,head)
+    return pins
+
+
+def verify_closure(ai,pins,current_database=False):
     required={SELF,*HELPERS,RUNNER,INSPECTOR}
+    if current_database:required.update(CURRENT_DB_SOURCES)
     signed=ai.signed_source_pins()
     need(type(pins)is dict and set(pins)==required|set(signed),'ISSUER_EXACT_SOURCE_CLOSURE')
     need(all(pins.get(path)==digest for path,digest in signed.items()),'ISSUER_SIGNED_SOURCE_CHANGED')
@@ -99,7 +119,7 @@ def verify_closure(ai,pins):
 class ReviewedCurrentMidnightIssuance:
     """발급 전에는 source-only 검토만 받는다. 아직 모르는 UUID를 입력으로 요구하지 않는다."""
     def __init__(self,decision_id,prepared_root,source_head,pins,source_profile,containers,credentials,
-                 scope_id,boundary_epoch,minimum_expiry,ports=None):
+                 scope_id,boundary_epoch,minimum_expiry,ports=None,database_review=None):
         need(type(decision_id)is str and re.fullmatch('[A-Za-z0-9_.:-]{1,128}',decision_id),'ISSUER_REVIEW_ID')
         need(type(scope_id)is str and re.fullmatch('[a-f0-9]{32}',scope_id),'ISSUER_SCOPE')
         need(type(source_profile)is dict and set(source_profile)=={'sourceHead','migrationEntriesSha256','versions','expectedTables','fullTableSetSha256'}
@@ -110,7 +130,7 @@ class ReviewedCurrentMidnightIssuance:
         self._sealed=canonical(dict(decisionId=decision_id,preparedRoot=str(root),sourceHead=source_head,pins=pins,
             sourceProfile=source_profile,containers=containers,credentials=credentials,scopeId=scope_id,
             boundaryEpoch=boundary_epoch,minimumExpiry=minimum_expiry))
-        self.ports=ports
+        self.ports=ports;self.database_review=database_review
     def descriptor(self):return json.loads(self._sealed)
 
 
@@ -161,14 +181,14 @@ def fixed_ports(ai,reviewed):
 def provision(reviewed):
     need(type(reviewed)is ReviewedCurrentMidnightIssuance,'ISSUER_TYPED_REVIEW_REQUIRED')
     value=reviewed.descriptor()
-    need({SELF,*HELPERS,RUNNER,INSPECTOR}<=set(value['pins']),'ISSUER_EXACT_SOURCE_CLOSURE')
+    need(({SELF,*HELPERS,RUNNER,INSPECTOR}|(set(CURRENT_DB_SOURCES)if reviewed.database_review is not None else set()))<=set(value['pins']),'ISSUER_EXACT_SOURCE_CLOSURE')
     verify_pins(value['pins'],value['sourceHead'])
     with support(value['pins'])as(ai,inspector):return _provision(reviewed,value,ai,inspector)
 
 
 def _provision(reviewed,value,ai,inspector):
     """전체 pinned context 안에서만 호출한다. tests도 실제 전송 대신 합성 port를 쓴다."""
-    verify_closure(ai,value['pins'])
+    verify_closure(ai,value['pins'],reviewed.database_review is not None)
     root=Path(value['preparedRoot']);ai.private_temp_root(root)
     # 포트 인터페이스는 기존 고정 metadata 검증기를 유지한다.
     adapter=type('ReviewedPorts',(),{})()
@@ -183,7 +203,42 @@ def _provision(reviewed,value,ai,inspector):
     ports=reviewed.ports if reviewed.ports is not None else fixed_ports(ai,adapter);ports.origin=origin
     accounts=[];members=[];created={};attempted={};unknown=set();done=threading.Event();failures=[];baseline=None;observer=None;memory_samples=[];clock_samples=[]
     def save(name,data):return ai.lcp_save(evidence,name,data)
+    if reviewed.ports is None:
+        db=current_database_support(value['pins'],value['sourceHead'])
+        database_review=reviewed.database_review
+        need(type(database_review)is db.ReviewedCurrentAI24Database and database_review.operation is db.IssuerOperation,'ISSUER_DATABASE_TYPED_REVIEW')
+        dv=database_review.descriptor()
+        need(dv['sourceHead']==value['sourceHead'] and dv['pins']==value['pins'] and dv['profile']==value['sourceProfile']
+            and dv['root']==str(root) and dv['scopeId']==value['scopeId'] and dv['containers']==value['containers'],'ISSUER_DATABASE_BINDING')
+        original=ports
+        def operation_guard():
+            verify_pins(value['pins'],value['sourceHead'])
+            need(original.identity()==value['containers'],'ISSUER_DATABASE_IDENTITY')
+        def active_guard():need(not done.is_set() and not failures,'ISSUER_DATABASE_MONITOR')
+        class CurrentIssuerPorts(type(original)):
+            def __init__(self,reviewed):
+                super().__init__(reviewed);self.root=reviewed.prepared_root
+            def history(self):
+                self.current_database.assert_closed_state()
+                native=self.root/'native119-runtime-provenance.json'
+                need(not native.exists() and not native.is_symlink(),'ISSUER_CURRENT_NATIVE_HISTORY_UNSUPPORTED')
+                return ai.signed_verify_history(self)
+            def read_sql(self,query,timeout=3):return self.current_database.read_sql(query,timeout)
+            def sql(self,query):return self.current_database.sql(query)
+            def snapshot(self):return self.current_database.snapshot()
+            def original_rows(self):return self.current_database.original_rows()
+            def identity(self):
+                self.current_database.assert_closed_state();return super().identity()
+            def preservation(self):
+                self.current_database.assert_closed_state();return super().preservation()
+            def raw(self,*args,**kwargs):
+                self.current_database.assert_closed_state();return super().raw(*args,**kwargs)
+        ports=CurrentIssuerPorts(adapter);ports.origin=origin
+        # 원 constructor는 metadata만 읽고 SQL을 실행하지 않는다.
+        ports.current_database=db.CurrentDatabase(ROOT,database_review,ai,ports,save,operation_guard,active_guard)
     def resource(minimum):
+        if hasattr(ports,'current_database'):
+            need(not ports.current_database.sticky or ports.current_database.inflight,'ISSUER_DATABASE_CLOSURE_STICKY')
         began=time.monotonic();memory=ports.memory_kib()
         need(type(memory)is int and memory>=minimum and time.monotonic()-began<=3,'ISSUER_MEMORY')
         memory_samples.append(memory);return memory
@@ -231,11 +286,14 @@ def _provision(reviewed,value,ai,inspector):
             and user.get('role')=='authenticated' and user.get('is_anonymous')is False and user.get('user_metadata')==meta
             and ports.session_proof(account) and ports.metadata_proof(account,value['scopeId'],meta['fixture_case']),'ISSUER_ACTUAL_SESSION')
     try:
-        initial_memory=resource(1048576);live();need(ports.empty_auth(),'ISSUER_FRESH_EMPTY_REQUIRED');ports.history()
+        initial_memory=resource(1048576)
+        observer=threading.Thread(target=monitor,daemon=True);observer.start()
+        live();need(ports.empty_auth(),'ISSUER_FRESH_EMPTY_REQUIRED');ports.history()
         baseline=ports.snapshot();save('baseline-private.json',baseline)
         need(sorted(baseline['rows'])==value['sourceProfile']['expectedTables'],'ISSUER_TABLE_SCOPE')
+        if reviewed.ports is None:
+            need(ports.current_database.preparation_status['executionAllowed'] is True,'ISSUER_DATABASE_WRITE_COVERAGE_NOT_REVIEWED')
         ai.provisioning_json(root,'current-ai24-provision-intent.json',dict(scopeId=value['scopeId'],sourceHead=value['sourceHead'],sourceProfile=value['sourceProfile'],targetId=target['id'],initialMemoryKiB=initial_memory,singleProvision=True,noReplay=True))
-        observer=threading.Thread(target=monitor,daemon=True);observer.start()
         for index in range(3):
             case='ai24-member-'+str(index);email='synthetic-ai-'+value['scopeId']+'-m'+str(index)+'@example.invalid'
             meta={'fixture_scope_id':value['scopeId'],'fixture_case':case,'email_verified':True};password=ai.base64.urlsafe_b64encode(os.urandom(36)).decode()
@@ -299,6 +357,9 @@ def _provision(reviewed,value,ai,inspector):
         fixed_code=str(error)if type(error)is ValueError and re.fullmatch('ISSUER_[A-Z_]+',str(error))else'ISSUER_FAILED'
         done.set()
         if observer is not None:observer.join(timeout=3)
+        if hasattr(ports,'current_database') and ports.current_database.sticky:
+            save('failure.json',dict(status='UNKNOWN',failureCode=fixed_code,dbClosureUnproven=True,cleanupAttempted=False,noFurtherSqlHttpMetadata=True))
+            raise ValueError('ISSUER_FAILED_PRIVATE_EVIDENCE_PRESERVED') from error
         try:save('failure-before-cleanup-private.json',ports.snapshot())
         except BaseException:failures.append('ISSUER_FAILURE_SNAPSHOT_UNKNOWN')
         closed=[]

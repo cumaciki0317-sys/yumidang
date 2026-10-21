@@ -1103,7 +1103,7 @@ class CurrentAI24LaneTests(unittest.TestCase):
     def test_current_real_constructor_late_import_rejects_ambient_poison_and_restores_on_failure(self):
         import sys
         from unittest.mock import Mock
-        _,pins,profile=self.current_fixture()
+        runner,pins,profile=self.current_fixture()
         # 실제 target reader가 config를 검사하다 멈춘다. Docker/HTTP 직전 모형이 아니다.
         # 비검토 ambient helper를 소비하면 이 고정 오류 대신 sentinel 예외가 발생한다.
         (self.prepared/'supabase').mkdir(mode=0o700)
@@ -1118,9 +1118,20 @@ class CurrentAI24LaneTests(unittest.TestCase):
         poison=SimpleNamespace(isolated_config=Mock(side_effect=AssertionError('UNPINNED_LAZY_IMPORT')))
         with patch.dict(sys.modules,{'prepare_database':poison}):
             with self.assertRaisesRegex(ValueError,'SIGNED_PREPARED_CONFIG'):
-                m.FixedSignedMidnightPorts(self.root,contract)
+                with m.current_constructor_support(pins):
+                    runner.SignedMidnightRunner(self.prepared,self.signed,contract['signedSelectedUserIds'],
+                        self.evidence,contract['scopeId'],m.boundary_time(contract['boundary']).timestamp(),
+                        current_profile=runner.ReviewedCurrentMidnightProfile(profile.descriptor()))
             self.assertIs(sys.modules['prepare_database'],poison)
         poison.isolated_config.assert_not_called()
+
+    def test_current_kernel_loader_rejects_uncommitted_source_before_target_or_sql(self):
+        _,pins,profile=self.current_fixture()
+        with patch.object(m.subprocess,'check_output',return_value=b'UNCOMMITTED_KERNEL'), \
+                patch.object(m,'live_private_bytes') as target_reader:
+            with self.assertRaisesRegex(ValueError,'CURRENT_KERNEL_NOT_COMMITTED'):
+                m._current_midnight_kernel(pins,profile.descriptor()['sourceHead'])
+            target_reader.assert_not_called()
 
     def test_current_constructor_helper_context_restores_success_and_exception(self):
         import sys

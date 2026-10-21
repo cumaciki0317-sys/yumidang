@@ -656,6 +656,9 @@ class BindingTests(unittest.TestCase):
         # 2026-10-21 independently reviewed typed AI24/D03 extensions.
         # Pin complete units before normalizing signatures as well as bodies.
         typed_units = {
+            'midnight_bind_custody': {
+                '8f89376cc43d45674ac04e1760c2edd37ca732ed4f37851971711fb8c10e8d18',
+                '36f9853c59aee9048b29fd7098923c972468ac8174591c7094c2b3a1cbc90e81'},
             'validate_signed_binding': {
                 'b282e4a93bd748a819a75525914bd1f26f9967e9a24d0fbf6b5ed45a3e3b49c6',
                 '22140dd8d1e84369866819b1e978122e651acbd0d940c7b8d2c2a94c2cb82ccd',
@@ -670,7 +673,7 @@ class BindingTests(unittest.TestCase):
             self.assertIn(hashlib.sha256(dump(candidate).encode()).hexdigest(), allowed, key)
             if original is None:
                 # This class did not exist at root7898; only this exact reviewed addition is allowed.
-                self.assertEqual(key, 'ReviewedSignedProvisioning')
+                self.assertIn(key, ('ReviewedSignedProvisioning', 'midnight_bind_custody'))
                 continue
             self.assertIn(hashlib.sha256(dump(original).encode()).hexdigest(), allowed, key)
             after.body[after.body.index(candidate)] = copy.deepcopy(original)
@@ -693,6 +696,12 @@ class BindingTests(unittest.TestCase):
                     constructor.body.append(ast.parse('self.unreviewed_skip = True').body[0])
                 with self.assertRaises(AssertionError):
                     self.assert_original_python_preserved(original, changed)
+
+    def test_current_custody_extension_rejects_guard_mutation(self):
+        original=ast.parse(RUNNER.read_text());changed=copy.deepcopy(original)
+        method=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name=='midnight_bind_custody')
+        method.body[0]=ast.Pass()
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(original,changed)
 
     def test_original_python_functions_exact(self):
         old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout

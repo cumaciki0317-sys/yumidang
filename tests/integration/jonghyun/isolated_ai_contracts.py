@@ -2662,8 +2662,233 @@ def midnight_custody_proof(runner):
     return value
 
 
+# current 전용 bridge는 이 loaded kernel이 생성한 모듈·객체의 identity만 신뢰한다.
+_CURRENT_DATABASE_MODULES = {}
+_CURRENT_DATABASE_PAIRS = {}
+_CURRENT_DATABASE_TOKEN = object()
+_CURRENT_DATABASE_BRIDGE_SEALS = {}
+_CURRENT_DATABASE_PATH = 'tools/local/current_ai24_database.py'
+
+
+def current_midnight_database_module(source_head, pins):
+    import ast
+    path=REPO/_CURRENT_DATABASE_PATH
+    if (type(source_head)is not str or not re.fullmatch('[a-f0-9]{40}',source_head)
+            or type(pins)is not dict):raise ValueError('CURRENT_DATABASE_SOURCE_REVIEW')
+    raw=path.read_bytes();kernel='tests/integration/jonghyun/isolated_ai_contracts.py'
+    for rel,data in ((_CURRENT_DATABASE_PATH,raw),(kernel,(REPO/kernel).read_bytes())):
+        p=REPO/rel
+        if (p.resolve()!=p or p.is_symlink() or hashlib.sha256(data).hexdigest()!=pins.get(rel)
+                or subprocess.check_output(['git','-C',str(REPO),'show',source_head+':'+rel],timeout=15)!=data):
+            raise ValueError('CURRENT_DATABASE_SOURCE_CHANGED')
+    if subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],text=True,timeout=15).strip()!=source_head:
+        raise ValueError('CURRENT_DATABASE_HEAD_CHANGED')
+    key=(source_head,hashlib.sha256(raw).hexdigest())
+    if key not in _CURRENT_DATABASE_MODULES:
+        module=importlib.util.module_from_spec(importlib.util.spec_from_loader('kernel_current_ai24_database',loader=None))
+        module.__file__=str(path);exec(compile(raw,str(path),'exec'),module.__dict__)
+        _CURRENT_DATABASE_MODULES[key]=module
+    return _CURRENT_DATABASE_MODULES[key]
+
+
+class ReviewedCurrentMidnightExecutionApproval:
+    """원 JSON flags와 별개인 root의 현재 실행·slot 승인. 같은 kernel만 생성/소비한다."""
+    __slots__=('_data',)
+    def __init__(self,decision_id,source_head,prepared_root,scope_id,binding_sha256,containers,member_sessions,daemon_id,expires_at):
+        root=Path(prepared_root)
+        if (type(decision_id)is not str or not re.fullmatch('[A-Za-z0-9_.:-]{1,128}',decision_id)
+                or type(source_head)is not str or not re.fullmatch('[a-f0-9]{40}',source_head)
+                or type(binding_sha256)is not str or not re.fullmatch('[a-f0-9]{64}',binding_sha256)
+                or not root.is_absolute()or root.resolve()!=root or type(scope_id)is not str
+                or not re.fullmatch('[A-Za-z0-9_.:-]{1,48}',scope_id)
+                or type(expires_at)is not int or expires_at<=time.time()
+                or type(daemon_id)is not str or str(uuid.UUID(daemon_id))!=daemon_id):
+            raise ValueError('CURRENT_EXECUTION_APPROVAL_FIELDS')
+        if (type(containers)is not dict or set(containers)!={'db','auth','rest','gateway'}
+                or len({v['id']for v in containers.values()})!=4
+                or any(not re.fullmatch('[a-f0-9]{64}',v['id'])for v in containers.values())
+                or type(member_sessions)is not list or len(member_sessions)!=3
+                or any(type(m)is not dict or set(m)!={'userId','primarySessionId','secondarySessionId'}for m in member_sessions)):
+            raise ValueError('CURRENT_EXECUTION_APPROVAL_SLOT')
+        for m in member_sessions:
+            if any(type(x)is not str or str(uuid.UUID(x))!=x for x in m.values()):raise ValueError('CURRENT_EXECUTION_APPROVAL_MEMBERS')
+        if len({m['userId']for m in member_sessions})!=3 or len({m[k]for m in member_sessions for k in ('primarySessionId','secondarySessionId')})!=6:
+            raise ValueError('CURRENT_EXECUTION_APPROVAL_MEMBERS')
+        object.__setattr__(self,'_data',json.dumps(dict(decisionId=decision_id,sourceHead=source_head,root=str(root),scopeId=scope_id,
+            bindingSha256=binding_sha256,containers=containers,members=member_sessions,daemonId=daemon_id,expiresAt=expires_at),sort_keys=True,separators=(',',':')))
+    def __setattr__(self,name,value):raise AttributeError('CURRENT_EXECUTION_APPROVAL_IMMUTABLE')
+    def descriptor(self):return json.loads(self._data)
+
+
+class ReviewedCurrentMidnightDatabaseBridge:
+    """root typed DB 검토와 exact runner의 일회성 pair. JSON이나 token 복사로 복구하지 않는다."""
+    __slots__=('_data','_token','runner','database','constructing','approval','memory_last','memory_count')
+    def __init__(self,runner,reviewed,execution_approval):
+        if type(execution_approval)is not ReviewedCurrentMidnightExecutionApproval:raise ValueError('CURRENT_EXECUTION_TYPED_APPROVAL')
+        if type(runner)is not CurrentSignedMidnightRunner or runner in _CURRENT_DATABASE_PAIRS:
+            raise ValueError('CURRENT_DATABASE_EXACT_RUNNER')
+        profile=runner.current_midnight_profile.descriptor()
+        module=current_midnight_database_module(profile['sourceHead'],runner.current_database_pins)
+        if type(reviewed)is not module.ReviewedCurrentAI24Database or reviewed.operation is not module.MidnightOperation:
+            raise ValueError('CURRENT_DATABASE_EXACT_REVIEW')
+        value=reviewed.descriptor();expected_profile={k:v for k,v in profile.items()if k!='memberSessions'}
+        sessions=profile['memberSessions'];known=runner.binding['accounts']
+        if (value['sourceHead']!=profile['sourceHead'] or value['pins']!=runner.current_database_pins
+                or value['profile']!=expected_profile or value['root']!=str(runner.root)
+                or value['scopeId']!=runner.scope_id or value.get('boundaryEpoch')!=runner.boundary_epoch
+                or value['containers']!=runner.binding['containers']
+                or value['users']!=runner.users or len(sessions)!=3 or len(known)!=6
+                or len({a['sessionId']for a in known})!=6 or {a['userId']for a in known}!=set(runner.users)
+                or any(len({a['sessionId']for a in known if a['userId']==m['userId']})!=2
+                       or {a['sessionId']for a in known if a['userId']==m['userId']}!={m['primarySessionId'],m['secondarySessionId']}
+                       for m in sessions)):
+            raise ValueError('CURRENT_DATABASE_REVIEW_BINDING')
+        approval=execution_approval.descriptor()
+        binding_raw=signed_private_read(runner.root/'signed-ai-binding-private.json')
+        if (signed_exact_json(binding_raw)!=runner.binding or approval['sourceHead']!=profile['sourceHead']
+                or approval['root']!=str(runner.root)or approval['scopeId']!=runner.scope_id
+                or approval['bindingSha256']!=hashlib.sha256(binding_raw).hexdigest()
+                or approval['containers']!=runner.binding['containers']or approval['members']!=sessions
+                or approval['expiresAt']>min(a['expiresAt']for a in known)or approval['expiresAt']<=time.time()):
+            raise ValueError('CURRENT_EXECUTION_APPROVAL_BINDING')
+        self.approval=execution_approval;self.memory_last=None;self.memory_count=0
+        self._data=json.dumps({'databaseReview':value,'members':sessions,'executionApproval':approval},sort_keys=True,separators=(',',':'))
+        self._token=_CURRENT_DATABASE_TOKEN;self.runner=runner;self.database=None;self.constructing=True
+        _CURRENT_DATABASE_PAIRS[runner]=self
+        _CURRENT_DATABASE_BRIDGE_SEALS[self]=self._data
+        try:
+            codec=type('CurrentKernelCodec',(),{'signed_exact_json':staticmethod(signed_exact_json)})()
+            self.database=module.CurrentDatabase(REPO,reviewed,codec,runner,
+                lambda name,value:lcp_save(runner.evidence,name,value),self.operation_guard,self.active_guard)
+            status=self.database.preparation_status
+            if status.get('executionAllowed')is not True:
+                raise ValueError('CURRENT_DATABASE_COVERAGE_NOT_REVIEWED')
+            self.constructing=False
+            self.execution_guard(start=True)
+        except BaseException:
+            _CURRENT_DATABASE_PAIRS.pop(runner,None);_CURRENT_DATABASE_BRIDGE_SEALS.pop(self,None);self.constructing=False;raise
+    def descriptor(self):return json.loads(self._data)
+    def assert_pair(self):
+        r=self.runner
+        if (type(self)is not ReviewedCurrentMidnightDatabaseBridge or self._token is not _CURRENT_DATABASE_TOKEN
+                or _CURRENT_DATABASE_BRIDGE_SEALS.get(self)!=self._data
+                or any(CurrentSignedMidnightRunner.__dict__.get(name)is not method for name,method in _CURRENT_RUNNER_METHODS.items())
+                or type(r)is not CurrentSignedMidnightRunner or _CURRENT_DATABASE_PAIRS.get(r)is not self
+                or any(name in r.__dict__ for name in _CURRENT_RUNNER_METHODS)):
+            raise ValueError('CURRENT_DATABASE_PAIR_CHANGED')
+        data=self.descriptor();profile=r.current_midnight_profile.descriptor();v=data['databaseReview']
+        if (v['pins']!=r.current_database_pins or v['root']!=str(r.root) or v['scopeId']!=r.scope_id
+                or v.get('boundaryEpoch')!=r.boundary_epoch
+                or v['containers']!=r.binding['containers'] or v['users']!=r.users
+                or len(r.binding['accounts'])!=6 or len({a['sessionId']for a in r.binding['accounts']})!=6
+                or data['members']!=profile['memberSessions']
+                or v['profile']!={k:x for k,x in profile.items()if k!='memberSessions'}
+                or any({a['sessionId']for a in r.binding['accounts']if a['userId']==m['userId']}!={m['primarySessionId'],m['secondarySessionId']}for m in data['members'])):raise ValueError('CURRENT_DATABASE_PAIR_BINDING')
+        if type(self.approval)is not ReviewedCurrentMidnightExecutionApproval or self.approval.descriptor()!=data['executionApproval']or self.approval.descriptor()['expiresAt']<=time.time():raise ValueError('CURRENT_EXECUTION_APPROVAL_CHANGED')
+        if self.constructing and self.database is not None:raise ValueError('CURRENT_DATABASE_CONSTRUCTION_STATE')
+        if not self.constructing:self.database.assert_closed_state()
+    def memory(self,start=False):
+        if not start and self.memory_last is not None and time.monotonic()-self.memory_last<1:return
+        began=time.monotonic();n=FixedSignedProvisioningPorts.memory_kib(self.runner)
+        threshold=1048576 if start else 786432
+        if type(n)is not int or n<threshold or time.monotonic()-began>3:raise ValueError('CURRENT_EXECUTION_MEMORY')
+        self.memory_count+=1
+        lcp_save(self.runner.evidence,'current-bridge-memory-'+str(self.memory_count).zfill(5)+'.json',{'availableKiB':n,'minimumKiB':threshold,'start':start})
+        self.memory_last=time.monotonic()
+    def execution_guard(self,start=False):
+        self.assert_pair()
+        value=self.approval.descriptor();r=self.runner
+        if value['expiresAt']<=time.time():raise ValueError('CURRENT_EXECUTION_APPROVAL_EXPIRED')
+        raw=signed_private_read(r.root/'signed-ai-binding-private.json')
+        if hashlib.sha256(raw).hexdigest()!=value['bindingSha256']or signed_exact_json(raw)!=r.binding:raise ValueError('CURRENT_EXECUTION_ORIGINAL_BINDING')
+        if Runner.call(r,['info','--format','{{.ID}}'])!=value['daemonId']:raise ValueError('CURRENT_EXECUTION_DAEMON')
+        SignedRunner.signed_identity(r);self.memory(start=start)
+    def active_guard(self):
+        r=self.runner
+        if self.approval.descriptor()['expiresAt']<=time.time():raise ValueError('CURRENT_EXECUTION_APPROVAL_EXPIRED')
+        self.memory()
+        if r.current_cancelled.is_set()and not r.current_cleanup_active:raise ValueError('EXECUTION_CANCELLED')
+    def operation_guard(self):
+        self.assert_pair();self.active_guard()
+        current_midnight_database_module(self.descriptor()['databaseReview']['sourceHead'],self.runner.current_database_pins)
+        self.execution_guard()
+
+
+class CurrentSignedMidnightRunner(SignedMidnightRunner):
+    """현재124 고정 DB bridge 전용 exact class. 역사 runner의 동작은 그대로 둔다."""
+    def __setattr__(self,name,value):
+        if name in globals().get('_CURRENT_RUNNER_METHODS',{}):raise ValueError('CURRENT_DATABASE_METHOD_OVERRIDE')
+        object.__setattr__(self,name,value)
+    def __getattribute__(self,name):
+        methods=globals().get('_CURRENT_RUNNER_METHODS',{})
+        if name in methods:
+            if name in object.__getattribute__(self,'__dict__')or CurrentSignedMidnightRunner.__dict__.get(name)is not methods[name]:
+                raise ValueError('CURRENT_DATABASE_METHOD_OVERRIDE')
+        return object.__getattribute__(self,name)
+    def __init__(self,*args,current_database_pins,current_profile,**kwargs):
+        if type(current_profile)is not ReviewedCurrentMidnightProfile:raise ValueError('CURRENT_DATABASE_TYPED_PROFILE')
+        super().__init__(*args,current_profile=current_profile,**kwargs)
+        self.current_database_pins=dict(current_database_pins)
+        self.current_cancelled=threading.Event();self.current_cleanup_active=False
+    def bridge(self):
+        value=_CURRENT_DATABASE_PAIRS.get(self)
+        if type(value)is not ReviewedCurrentMidnightDatabaseBridge:raise ValueError('CURRENT_DATABASE_UNBOUND')
+        value.assert_pair();return value
+    def call(self,args,data=None):
+        bridge=self.bridge()
+        if bridge.constructing:
+            if args!=['inspect',self.target['id']]or data is not None:raise ValueError('CURRENT_DATABASE_CONSTRUCTION_CALL')
+        else:bridge.active_guard()
+        return super().call(args,data)
+    def identity(self):self.bridge();return super().identity()
+    def signed_identity(self):self.bridge();return super().signed_identity()
+    def auth_user(self,token):self.bridge().active_guard();return super().auth_user(token)
+    def validate_original_accounts(self):
+        bridge=self.bridge();bridge.execution_guard()
+        validate_signed_binding(self.binding,self.root,self.target,current_midnight=self.current_midnight_profile)
+        self.signed_identity()
+        proofs=[]
+        for a in self.binding['accounts']:
+            actual=self.auth_user(a['accessToken'])
+            if actual.get('id')!=a['userId']or actual.get('role')!='authenticated'or actual.get('is_anonymous')is True:
+                raise ValueError('MIDNIGHT_ORIGINAL_AUTH')
+            query='select exists(select 1 from auth.sessions where id='+quote(a['sessionId'])+'::uuid and user_id='+quote(a['userId'])+'::uuid);'
+            if self.read_sql(query,timeout=2)!='t':raise ValueError('MIDNIGHT_ORIGINAL_SESSION')
+            proofs.append({'userId':a['userId'],'sessionId':a['sessionId'],'expiresAt':a['expiresAt'],
+                'gotrueUserId':actual['id'],'databaseSessionUserId':a['userId']})
+        return proofs
+    def read_sql(self,query,timeout=3):return self.bridge().database.read_sql(query,timeout)
+    def sql(self,query):return self.bridge().database.sql(query)
+    def snapshot(self):return self.bridge().database.snapshot()
+    def original_rows(self):return self.bridge().database.original_rows()
+    def export_resume_state(self):
+        bridge=self.bridge();value=super().export_resume_state()
+        value['currentDatabaseBridgeSha256']=hashlib.sha256(bridge._data.encode()).hexdigest()
+        return value
+    def restore_resume_state(self,value):
+        bridge=self.bridge()
+        if type(value)is not dict or value.get('currentDatabaseBridgeSha256')!=hashlib.sha256(bridge._data.encode()).hexdigest():
+            raise ValueError('CURRENT_DATABASE_RESUME_BINDING')
+        original=dict(value);del original['currentDatabaseBridgeSha256']
+        return super().restore_resume_state(original)
+    def start_factory(self,*args,**kwargs):
+        self.bridge().active_guard()
+        if self.current_cancelled.is_set():raise ValueError('EXECUTION_CANCELLED')
+        return super().start_factory(*args,**kwargs)
+
+
+_CURRENT_RUNNER_METHODS={name:value for name,value in CurrentSignedMidnightRunner.__dict__.items()if callable(value)}
+
+def bind_current_midnight_database(runner,reviewed,execution_approval):
+    if (type(runner)is not CurrentSignedMidnightRunner or runner.changed or runner.children
+            or hasattr(runner,'midnight_custody')or runner in _CURRENT_DATABASE_PAIRS):
+        raise ValueError('CURRENT_DATABASE_BIND_ONCE')
+    return ReviewedCurrentMidnightDatabaseBridge(runner,reviewed,execution_approval)
+
+
 def midnight_bind_custody(runner,authority):
-    if(type(runner)is not SignedMidnightRunner or type(authority)is not TypedMidnightCustody
+    if type(runner)is CurrentSignedMidnightRunner:runner.bridge()
+    if(type(runner)not in (SignedMidnightRunner,CurrentSignedMidnightRunner) or type(authority)is not TypedMidnightCustody
             or runner.changed or runner.children or hasattr(runner,'midnight_custody')):
         raise ValueError('MIDNIGHT_CUSTODY_BIND_ONCE')
     runner.midnight_custody=authority

@@ -17,6 +17,11 @@ import threading
 import time
 import uuid
 
+CURRENT_DATABASE='tools/local/current_ai24_database.py'
+CURRENT_PURE='tests/integration/minkyu/deadline_readonly_transport.py'
+_DATABASE_MODULES={}
+_CURRENT_KERNEL_MODULES={}
+
 ROOT = Path(__file__).resolve().parents[2]
 KST = timezone(timedelta(hours=9))
 PROTECTED = ('ai_budget_ledgers', 'ai_budget_reservations', 'ai_account_budget_reservations',
@@ -181,6 +186,45 @@ def current_tables(contract):
     return None if profile is None else validate_current_profile_shape(profile)['expectedTables']
 
 
+def _current_midnight_kernel(pins,head):
+    """root DB review 생성과 실제 current runner가 같은 검증된 kernel을 사용한다."""
+    relative='tests/integration/jonghyun/isolated_ai_contracts.py'
+    helper_relative='tools/local/run_database_tests.py'
+    captured={}
+    for rel in (relative,helper_relative):
+        path=ROOT/rel;raw=path.read_bytes()
+        require(path.resolve()==path and not path.is_symlink() and hashlib.sha256(raw).hexdigest()==pins.get(rel), 'CURRENT_KERNEL_SOURCE')
+        require(subprocess.check_output(['git','-C',str(ROOT),'show',head+':'+rel],timeout=15)==raw, 'CURRENT_KERNEL_NOT_COMMITTED')
+        captured[rel]=raw
+    require(subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True,timeout=15).strip()==head,'CURRENT_KERNEL_HEAD')
+    key=(head,pins[relative],pins[helper_relative])
+    if key not in _CURRENT_KERNEL_MODULES:
+        helper=importlib.util.module_from_spec(importlib.util.spec_from_loader('run_database_tests',loader=None));helper.__file__=str(ROOT/helper_relative)
+        previous=sys.modules.get('run_database_tests');old_path=list(sys.path)
+        try:
+            exec(compile(captured[helper_relative],helper.__file__,'exec'),helper.__dict__)
+            sys.modules['run_database_tests']=helper
+            module=importlib.util.module_from_spec(importlib.util.spec_from_loader('current_midnight_kernel',loader=None));module.__file__=str(ROOT/relative)
+            exec(compile(captured[relative],module.__file__,'exec'),module.__dict__)
+            _CURRENT_KERNEL_MODULES[key]=module
+        finally:
+            sys.path[:]=old_path
+            if previous is None:sys.modules.pop('run_database_tests',None)
+            else:sys.modules['run_database_tests']=previous
+    return _CURRENT_KERNEL_MODULES[key]
+
+
+def current_database_support(pins,head):
+    return _current_midnight_kernel(pins,head).current_midnight_database_module(head,pins)
+
+
+def review_current_execution(pins,head,*,decision_id,prepared_root,scope_id,binding_sha256,containers,member_sessions,daemon_id,expires_at):
+    """root 코드가 명시한 현재 승인만 생성한다. 원 binding JSON의 flags는 읽거나 변경하지 않는다."""
+    kernel=_current_midnight_kernel(pins,head)
+    return kernel.ReviewedCurrentMidnightExecutionApproval(decision_id,head,prepared_root,scope_id,
+        binding_sha256,containers,member_sessions,daemon_id,expires_at)
+
+
 def contract_pins(current_profile=None):
     paths = set(verified_product_paths()) | {
         'tests/integration/minkyu/content_inspection_http_local.py',
@@ -194,7 +238,7 @@ def contract_pins(current_profile=None):
     }
     if current_profile is not None:
         require(type(current_profile)is ReviewedCurrentAI24Profile,'CURRENT_AI24_TYPED_REVIEW')
-        paths.update((CURRENT_INSPECTOR,*CURRENT_HELPERS))
+        paths.update((CURRENT_INSPECTOR,*CURRENT_HELPERS,CURRENT_DATABASE,CURRENT_PURE,'tools/local/provision_current_midnight.py'))
     pins = {}
     for relative in sorted(paths):
         path = ROOT / relative
@@ -1038,7 +1082,7 @@ class FixedSignedMidnightPorts:
     """
     RUNNER_PATH = 'tests/integration/jonghyun/isolated_ai_contracts.py'
 
-    def __init__(self, root, contract, custody=None):
+    def __init__(self, root, contract, custody=None, current_database=None, current_execution_approval=None):
         require(custody is None or type(custody) is TypedMidnightCustody, 'MIDNIGHT_TYPED_CUSTODY_REQUIRED')
         if custody is not None:
             require(custody.descriptor()['scopeId'] == contract['scopeId'], 'MIDNIGHT_CUSTODY_BINDING')
@@ -1069,6 +1113,7 @@ class FixedSignedMidnightPorts:
             sys.path[:] = old_path
             if old_helper is None: sys.modules.pop('run_database_tests', None)
             else: sys.modules['run_database_tests'] = old_helper
+        if 'currentProfile'in contract:module=_current_midnight_kernel(contract['sourcePins'],contract['currentProfile']['sourceHead'])
         require(module.REPO == ROOT and hasattr(module, 'SignedMidnightRunner'),
                 'SIGNED_MIDNIGHT_ADAPTER_NOT_INTEGRATED')
         for name in ('validate_original_accounts', 'read_sql', 'original_rows', 'snapshot', 'counts',
@@ -1085,18 +1130,34 @@ class FixedSignedMidnightPorts:
             verify_current_profile(contract['currentProfile'],contract['sourcePins'])
             kwargs['current_profile']=module.ReviewedCurrentMidnightProfile(contract['currentProfile'])
         def construct():
-            return module.SignedMidnightRunner(Path(auth['preparedRoot']), self.binding,
+            runner_class=module.CurrentSignedMidnightRunner if 'currentProfile'in contract else module.SignedMidnightRunner
+            if 'currentProfile'in contract:kwargs['current_database_pins']=contract['sourcePins']
+            return runner_class(Path(auth['preparedRoot']), self.binding,
                 contract['signedSelectedUserIds'], self.root, contract['scopeId'],
                 boundary_time(contract['boundary']).timestamp(), **kwargs)
         if 'currentProfile'in contract:
             with current_constructor_support(contract['sourcePins']):self.runner=construct()
         else:self.runner=construct()
+        if 'currentProfile' in contract:
+            db=module.current_midnight_database_module(contract['currentProfile']['sourceHead'],contract['sourcePins'])
+            require(type(current_database)is db.ReviewedCurrentAI24Database and current_database.operation is db.MidnightOperation,
+                    'CURRENT_AI24_DATABASE_TYPED_REVIEW_REQUIRED')
+            value=current_database.descriptor()
+            require(value['sourceHead']==contract['currentProfile']['sourceHead'] and value['root']==auth['preparedRoot']
+                    and value['scopeId']==contract['scopeId'] and value.get('boundaryEpoch')==boundary_time(contract['boundary']).timestamp()
+                    and value['users']==contract['signedSelectedUserIds']
+                    and value['pins']==contract['sourcePins']
+                    and value['profile']=={k:v for k,v in contract['currentProfile'].items()if k!='memberSessions'}
+                    and value['containers']==self.binding['containers'],'CURRENT_AI24_DATABASE_BINDING')
+            # 같은 loaded kernel의 exact current runner/typed bridge만 바인딩한다.
+            # SQL coverage가 닫혀 있으면 kernel bridge도 계속 거절한다.
+            module.bind_current_midnight_database(self.runner,current_database,current_execution_approval)
         if custody is not None:
             value = custody.descriptor()
             authority = module.TypedMidnightCustody(value['sourceHead'], value['scopeId'], value['capsuleRoot'],
                 value['capsulePins'], value['factorySha256'], value['nodePath'], value['nodeSha256'], value['observerSha256'])
             module.midnight_bind_custody(self.runner, authority)
-        self.cancelled = threading.Event()
+        self.cancelled = self.runner.current_cancelled if 'currentProfile'in contract else threading.Event()
         self.cleanup_active = False
         original_sql, original_start = self.runner.sql, self.runner.start_factory
         def guarded_sql(statement):
@@ -1105,7 +1166,7 @@ class FixedSignedMidnightPorts:
         def guarded_start(*args, **kwargs):
             require(not self.cancelled.is_set(), 'EXECUTION_CANCELLED')
             return original_start(*args, **kwargs)
-        self.runner.sql, self.runner.start_factory = guarded_sql, guarded_start
+        if 'currentProfile'not in contract:self.runner.sql, self.runner.start_factory = guarded_sql, guarded_start
         self.handles, self.observations = {}, []
         self.warm_capabilities = {}
         self.baseline = self.baseline_rows = self.cleanup_result = self.result = None
@@ -1527,10 +1588,12 @@ class FixedSignedMidnightPorts:
         # 실패가 있어도 별도 재시도로 바꾸지 않는다. 실행기는 이 경로를 한 번만 호출한다.
         self.cleanup_result = {'status': 'ATTEMPTED'}
         self.cleanup_active = True
+        if 'currentProfile'in self.contract:self.runner.current_cleanup_active=True
         try:
             self.cleanup_result = self.runner.cleanup_owned()
         finally:
             self.cleanup_active = False
+            if 'currentProfile'in self.contract:self.runner.current_cleanup_active=False
 
     def cleanup_proof(self):
         require(self.cleanup_result['status'] == 'PASS' and self.cleanup_result['authLifecycleMutation'] is False
@@ -1546,7 +1609,7 @@ class FixedSignedMidnightPorts:
                 'ownedOnly': True, 'preservedBudget': self.budget()}
 
 
-def bind_fixed_execution(root, contract_sha, current_pins, reviewed_assembly, custody=None):
+def bind_fixed_execution(root, contract_sha, current_pins, reviewed_assembly, custody=None, current_database=None, current_execution_approval=None):
     """검토 코드의 승인 객체를 고정 포트에 연결한다. CLI/JSON 승인 진입점은 없다."""
     require(custody is None or type(custody) is TypedMidnightCustody, 'MIDNIGHT_TYPED_CUSTODY_REQUIRED')
     contract = load_live_contract(root, contract_sha, current_pins)
@@ -1555,7 +1618,7 @@ def bind_fixed_execution(root, contract_sha, current_pins, reviewed_assembly, cu
     require(reviewed_assembly.contract_sha256 == contract_sha
             and reviewed_assembly.scope_id == contract['scopeId']
             and reviewed_assembly.boundary == contract['boundary'], 'EXECUTOR_ASSEMBLY_BINDING_CHANGED')
-    ports = FixedSignedMidnightPorts(root, contract, custody=custody)
+    ports = FixedSignedMidnightPorts(root, contract, custody=custody, current_database=current_database, current_execution_approval=current_execution_approval)
     result = ReviewedMidnightAssembly(contract_sha, contract['scopeId'], contract['boundary'],
                                      reviewed_assembly.decision_id, ports)
     execution_assembly(contract, contract_sha, result)
