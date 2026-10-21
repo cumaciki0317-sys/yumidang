@@ -474,6 +474,13 @@ class CurrentAuthSource:
             attached = actual.get('NetworkSettings', {}).get('Networks') or {}
             need(len(attached) == 1 and {x.get('NetworkID') for x in attached.values()} == expected_network_ids, 'OWNED_NETWORK_ATTACHMENT_CHANGED')
             binding = next(x for x in self.read('owned-first-inspection.json') if x['Id'] == item['id'])
+            effective_ports = actual.get('NetworkSettings', {}).get('Ports')
+            original_ports = binding.get('NetworkSettings', {}).get('Ports')
+            if actual['State']['Running']:
+                need(effective_ports == original_ports, 'OWNED_EFFECTIVE_PORTS_CHANGED')
+            else:
+                released = type(effective_ports) is dict and all(value is None or value == [] for value in effective_ports.values())
+                need(effective_ports == original_ports or released, 'STOPPED_EFFECTIVE_PORTS_CHANGED')
             need(actual['State']['StartedAt'] == binding['State']['StartedAt'] and actual['Config'] == binding['Config']
                  and actual['HostConfig'] == binding['HostConfig'] and mount_bag(actual['Mounts']) == mount_bag(binding['Mounts']), 'OWNED_INCARNATION_CHANGED')
         return current
@@ -648,8 +655,24 @@ class CurrentAuthSource:
         for item in details:
             role = next(role for role, prefix in ROLES.items() if item['Name'] == '/' + prefix + self.plan['projectId'])
             need({key: item['HostConfig'].get(key) for key in self.v['hostLimits'][role]} == self.v['hostLimits'][role], 'EXACT_HOST_LIMITS')
-            need(all(entry.get('HostIp') in ('127.0.0.1', '::1')
-                     for values in (item['HostConfig'].get('PortBindings') or {}).values() for entry in (values or [])), 'NON_LOOPBACK_BINDING')
+            self.accept_ports(role, item)
+
+    def accept_ports(self, role, item):
+        expected = {'5432/tcp': str(self.plan['portBase'] + 1)} if role == 'db' else {'8000/tcp': str(self.plan['portBase'])} if role == 'gateway' else {}
+        configured = item['HostConfig'].get('PortBindings')
+        effective = item.get('NetworkSettings', {}).get('Ports')
+        need(type(configured) is dict and type(effective) is dict, 'PORT_EVIDENCE_REQUIRED')
+        configured_published = {k: v for k, v in configured.items() if v is not None and v != []}
+        effective_published = {k: v for k, v in effective.items() if v is not None and v != []}
+        need(set(configured_published) == set(expected) and set(effective_published) == set(expected), 'EXACT_ROLE_PORTS')
+        for port, host_port in expected.items():
+            declarations = configured_published[port]; bindings = effective_published[port]
+            need(type(declarations) is list and len(declarations) == 1, 'CONFIGURED_PORT_CARDINALITY')
+            need(declarations[0].get('HostIp') in ('', '127.0.0.1', '::1') and declarations[0].get('HostPort') == host_port, 'NON_LOOPBACK_BINDING')
+            need(type(bindings) is list and 1 <= len(bindings) <= 2, 'EFFECTIVE_PORT_CARDINALITY')
+            need(all(type(entry) is dict and set(entry) == {'HostIp', 'HostPort'}
+                     and entry['HostIp'] in ('127.0.0.1', '::1') and entry['HostPort'] == host_port for entry in bindings), 'NON_LOOPBACK_EFFECTIVE_BINDING')
+            need(len({entry['HostIp'] for entry in bindings}) == len(bindings), 'DUPLICATE_EFFECTIVE_BINDING')
 
     def guarded_sql(self, statement):
         self.runtime_source(); raw, _ = self.baseline_guard()

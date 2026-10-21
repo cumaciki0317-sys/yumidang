@@ -168,8 +168,8 @@ class RunnerTests(unittest.TestCase):
         volume = {'Name': self.m.ROLES['db'] + project, 'Labels': {'com.supabase.cli.project': project}}
         container = {'Id': container_id, 'Name': '/' + self.m.ROLES['db'] + project,
             'Config': {'Labels': {'com.supabase.cli.project': project}}, 'RestartCount': 0,
-            'HostConfig': {**runner.v['hostLimits']['db'], 'PortBindings': {'5432/tcp': [{'HostIp': '127.0.0.1', 'HostPort': '57002'}]}},
-            'NetworkSettings': {'Networks': {network['Name']: {'NetworkID': network_id}}},
+            'HostConfig': {**runner.v['hostLimits']['db'], 'PortBindings': {'5432/tcp': [{'HostIp': '127.0.0.1', 'HostPort': str(runner.plan['portBase'] + 1)}]}},
+            'NetworkSettings': {'Networks': {network['Name']: {'NetworkID': network_id}}, 'Ports': {'5432/tcp': [{'HostIp': '127.0.0.1', 'HostPort': str(runner.plan['portBase'] + 1)}]}},
             'Mounts': [{'Type': 'volume', 'Name': volume['Name']}]}
         owned = {'containers': [{'id': container_id, 'name': container['Name'][1:], 'image': runner.v['images']['db']}],
             'customNetworks': [{'id': network_id, 'name': network['Name']}], 'volumes': [{'name': volume['Name']}]}
@@ -227,11 +227,13 @@ class RunnerTests(unittest.TestCase):
         def stop(args, **kwargs):
             self.assertEqual(args, ['stop', '--time', '10', item['Id']])
             item['State']['Running'] = False; item['State']['Status'] = 'exited'
+            item['NetworkSettings']['Ports'] = {}  # own stop releases effective ports only
         runner.call = Mock(side_effect=stop)
         runner.stop_owned('bad-port', monitor=False)
         self.assertEqual(runner.call.call_count, 1)
         self.assertEqual(records['bad-port-stop-receipt.json']['ids'], [item['Id']])
         item['State']['Running'] = True; item['State']['StartedAt'] = 'new-incarnation'
+        item['NetworkSettings']['Ports'] = copy.deepcopy(records['owned-first-inspection.json'][0]['NetworkSettings']['Ports'])
         runner.call.reset_mock()
         with self.assertRaisesRegex(ValueError, 'OWNED_INCARNATION_CHANGED'): runner.stop_owned('drift', monitor=False)
         runner.call.assert_not_called()
@@ -260,6 +262,26 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(saved['start-receipt.json']['stage'], 'PREFLIGHT_BEFORE_CREATION')
         self.assertFalse(saved['start-receipt.json']['creationAttempted'])
         self.assertEqual(saved['start-receipt.json']['ownedIds'], [])
+
+    def test_unassigned_configured_address_requires_exact_effective_loopback_ports(self):
+        runner, _, raw = self.first_binding_fixture(); item = raw[0][0]
+        item['HostConfig']['PortBindings']['5432/tcp'][0]['HostIp'] = ''
+        runner.accept_services(raw[0], raw[1])
+        for address in ('0.0.0.0', '::', '', None):
+            bad = copy.deepcopy(item); bad['NetworkSettings']['Ports']['5432/tcp'][0]['HostIp'] = address
+            with self.assertRaisesRegex(ValueError, 'NON_LOOPBACK_EFFECTIVE_BINDING'): runner.accept_services([bad], raw[1])
+        bad = copy.deepcopy(item); bad['NetworkSettings'].pop('Ports')
+        with self.assertRaisesRegex(ValueError, 'PORT_EVIDENCE_REQUIRED'): runner.accept_services([bad], raw[1])
+        bad = copy.deepcopy(item); bad['NetworkSettings']['Ports']['9999/tcp'] = [{'HostIp': '127.0.0.1', 'HostPort': '59999'}]
+        with self.assertRaisesRegex(ValueError, 'EXACT_ROLE_PORTS'): runner.accept_services([bad], raw[1])
+        for role in ('auth', 'rest'):
+            unpublished = copy.deepcopy(item); unpublished['HostConfig']['PortBindings'] = {}; unpublished['NetworkSettings']['Ports'] = {'9999/tcp': None}
+            runner.accept_ports(role, unpublished)
+            with self.assertRaisesRegex(ValueError, 'EXACT_ROLE_PORTS'): runner.accept_ports(role, item)
+        gateway = copy.deepcopy(item)
+        gateway['HostConfig']['PortBindings'] = {'8000/tcp': [{'HostIp': '', 'HostPort': str(runner.plan['portBase'])}]}
+        gateway['NetworkSettings']['Ports'] = {'8000/tcp': [{'HostIp': '127.0.0.1', 'HostPort': str(runner.plan['portBase'])}]}
+        runner.accept_ports('gateway', gateway)
 
     def test_large_inventory_proof_references_chunks_without_copying_raw(self):
         runner = self.runner(); runner.phase = 'start'; runner.sequence = 0
@@ -333,6 +355,17 @@ class RunnerTests(unittest.TestCase):
         records = {'protected-resource-baseline.json': baseline, 'owned-first-inspection.json': copy.deepcopy(raw[0]),
             'owned-network-first-inspection.json': copy.deepcopy(raw[1]), 'owned-volume-first-inspection.json': copy.deepcopy(raw[2])}
         runner.read = lambda name: records[name]
+        changed_ports = copy.deepcopy(raw); changed_ports[0][0]['NetworkSettings']['Ports']['5432/tcp'][0]['HostIp'] = '0.0.0.0'
+        with self.assertRaisesRegex(ValueError, 'OWNED_EFFECTIVE_PORTS_CHANGED'): runner.check_owned(frozen, changed_ports, running=True)
+        stopped = copy.deepcopy(raw); stopped[0][0]['State']['Running'] = False
+        for released in ({}, {'5432/tcp': None}):
+            stopped[0][0]['NetworkSettings']['Ports'] = released
+            runner.check_owned(frozen, stopped, running=False)
+        for published in ({'5432/tcp': [{'HostIp': '0.0.0.0', 'HostPort': '57002'}]},
+                          {'9999/tcp': [{'HostIp': '127.0.0.1', 'HostPort': '59999'}]}):
+            stopped[0][0]['NetworkSettings']['Ports'] = published
+            with self.assertRaisesRegex(ValueError, 'STOPPED_EFFECTIVE_PORTS_CHANGED'):
+                runner.check_owned(frozen, stopped, running=False)
         reordered = copy.deepcopy(raw); reordered[0][0]['Mounts'].reverse()
         runner.check_owned(frozen, reordered, running=True)
         for field, value in [('Source', '/different'), ('RW', False), ('Propagation', 'rshared')]:
