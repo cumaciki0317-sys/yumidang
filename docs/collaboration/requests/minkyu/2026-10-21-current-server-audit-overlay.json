@@ -1,0 +1,329 @@
+{
+  "wbsId": "4.2",
+  "kind": "문서 점검용 역사 원장 이후 변경 대조; 제품 완료 판정 아님",
+  "auditHead": "1ec4f623dd3afa4c4251bf751c8b280d820446b0",
+  "actor": "minkyu",
+  "historicalMap": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-20-current-server-gap-map.json",
+    "sha256": "f339033f6f57252216dc97615c89009544ea089f295b1d14a84f5c1da1dc0cc3"
+  },
+  "historicalMapPreserved": true,
+  "policy": {
+    "path": "정책.md",
+    "sha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa"
+  },
+  "policyUnits": 306,
+  "serverGroups": 53,
+  "historicalUncoveredPolicyIds": [],
+  "evidence": {
+    "receipt": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a005/execution/receipt.json",
+      "sha256": "fef0bd9dfa56c93768b1da6024d2387634823f064b62a8415466afb073c3d193",
+      "status": "PASS_SQL_ONLY",
+      "sourceHead": "9b8538217284d16c2fc96b1e94b1f0517f4fe5d5",
+      "scope": "새 PostgreSQL 사본의 합성 SQL 전용; 실제 Auth 발급 제외"
+    },
+    "concurrency": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a005/execution/consent-concurrency-receipt.json",
+      "sha256": "3114d832c68ee048f9e3953b2a15a535473ad4538951d8b9d7cfbee39c7cbdf8",
+      "status": "PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY",
+      "sourceHead": "9b8538217284d16c2fc96b1e94b1f0517f4fe5d5",
+      "scope": "새 PostgreSQL 사본의 합성 SQL 전용; 실제 Auth 발급 제외"
+    }
+  },
+  "evidenceSummary": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-21-concurrent-withdrawal-evidence.json",
+    "sha256": "b7c60d92364fb1de7af7d388d0989eb2a77031d9eab7d0bd00b49d5793ca37a9"
+  },
+  "groups": [
+    {
+      "id": "independent_ai_consents",
+      "gapIds": [
+        "B13",
+        "B31",
+        "B32"
+      ],
+      "implementation": "후기 동의 세 항목 독립 저장·철회, 구형 동의 자동 승계 방지, availability 및 계약 연결 구현",
+      "sources": [
+        {
+          "path": "backend/supabase/migrations/20261020100000_ai_independent_consents.sql",
+          "sha256": "0dbf18e2006860c47e91ba61c2161e7d2b88ac1adb36801a9ddffd616494e9fa"
+        },
+        {
+          "path": "backend/contracts/ai-consent.md",
+          "sha256": "b53c48d7415a3cf7a53d951297fa56536674a852c7f4c168aa354cde1333a38d"
+        },
+        {
+          "path": "backend/supabase/functions/service-api/routes.ts",
+          "sha256": "469e75b0650776ca05175d883ef44d287733803ab299a19f29684f3235134d1a"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/user-client.ts",
+          "sha256": "c2ab5f94b96be60e621efe99584c6d2df862545e4e7aebf3509c9504ae2b26ea"
+        }
+      ],
+      "consumer": {
+        "owner": "jonghyun",
+        "request": {
+          "path": "docs/collaboration/requests/minkyu/2026-10-20-ai-consent-client-handoff.md",
+          "sha256": "b7065c2282b99c1b152a7a92c2e939b2e6bb630ca5b82586141ece4c75ba5ba6"
+        },
+        "integration": "미실행"
+      },
+      "verification": "a005 SQL 및 합성 두 actor 동시 철회 PASS; 원 JWT·앱·공급사·외부 사본 삭제 검증 아님",
+      "evidenceKeys": [
+        "receipt",
+        "concurrency"
+      ],
+      "remainingWbs": [
+        "5.1",
+        "5.2",
+        "5.3",
+        "5.4a",
+        "5.5",
+        "5.6",
+        "5.7",
+        "6.2",
+        "6.3"
+      ],
+      "remaining": [
+        "최신 실제 로컬 Auth/HTTP",
+        "앱 세 항목 소비",
+        "실제 모델·비용·출력",
+        "AI24 자연 자정",
+        "외부 사본 삭제 확인·실회원 HOLD"
+      ]
+    },
+    {
+      "id": "post_private_events",
+      "gapIds": [
+        "B17",
+        "B18",
+        "B22",
+        "B27",
+        "B37"
+      ],
+      "implementation": "공고 전용 직접 행사·공급사 선택 배타, 콘텐츠 검사 ticket 결합, 행사 변경 명시 합의·재시도, 기존 상세 exact DTO 보존과 별도 event-link 응답 구현",
+      "sources": [
+        {
+          "path": "backend/supabase/migrations/20261020130000_post_private_events.sql",
+          "sha256": "ff97cf33163ece13bae8373b638afbc6985ab92592480048d0ab02f1bb9a87b7"
+        },
+        {
+          "path": "backend/contracts/event-storage.md",
+          "sha256": "5a2242ec8cb2427b2c55294f2459b94954c2040bed3c11c558881d3732df1220"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "sha256": "f4e40fb29ff8ae8fda7d5b0cf90866474e9b57d20c5fb6da9a8fcbb6a31f0c0d"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/content-inspection.ts",
+          "sha256": "482c571b786759bb045b0ba6b9b247ffcda1c629b5e8076a866269bff3cd6e24"
+        },
+        {
+          "path": "backend/supabase/functions/service-api/routes.ts",
+          "sha256": "469e75b0650776ca05175d883ef44d287733803ab299a19f29684f3235134d1a"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/user-client.ts",
+          "sha256": "c2ab5f94b96be60e621efe99584c6d2df862545e4e7aebf3509c9504ae2b26ea"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/public-client.ts",
+          "sha256": "87c5480a704d7a67709bc09d144a71688d791356a6b0902d2e024f6130f4d6d4"
+        }
+      ],
+      "consumer": {
+        "owner": "jonghyun",
+        "request": {
+          "path": "docs/collaboration/requests/minkyu/2026-10-21-event-link-client-handoff.md",
+          "sha256": "74ff3c26806fc43fabdfcaae1001acefdf5689f9ec519191fa59e0e889957aa2"
+        },
+        "integration": "미실행"
+      },
+      "verification": "a005 SQL의 저장·권한·검색·기존 상세 키·명시 합의·terminal 재시도 검증; 앱·회원·운영 통합 아님",
+      "evidenceKeys": [
+        "receipt"
+      ],
+      "remainingWbs": [
+        "4.4",
+        "4.5",
+        "6.2",
+        "6.3"
+      ],
+      "remaining": [
+        "새 event-link GET 및 event 수락 앱 소비",
+        "콘텐츠 검사 실제 활성·Auth 통합",
+        "운영 migration 적용·실회원 HOLD"
+      ]
+    },
+    {
+      "id": "deadline_lock_gap",
+      "gapIds": [
+        "B20",
+        "B22",
+        "B29"
+      ],
+      "implementation": "기존 SQL은 잠금 후 현재시각 판정. D03 순수 판정·절차가 있으며 제품 마감 결함 수정 및 실제 재현은 미완료",
+      "sources": [
+        {
+          "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+          "sha256": "4b9ee69e4230dd62f70d2fa711a69b857b93d6bf17afa297192543389fc57615"
+        },
+        {
+          "path": "backend/contracts/completion-db.md",
+          "sha256": "c633fcb581853b052fa15594c981a53035402bb7c60fa24a5ca54c721a4858cf"
+        },
+        {
+          "path": "backend/contracts/matching.md",
+          "sha256": "baeac64598594ac97b19921783cde5043c6af2787a7572f778fb3754a80c694a"
+        },
+        {
+          "path": "tests/integration/minkyu/deadline_lock_evidence.py",
+          "sha256": "68748cb5a5cb2ce7fe82aad5e3970e4a1f613782c18b403a09b391a8122a5754"
+        }
+      ],
+      "separateUnintegratedDraft": {
+        "worktree": "/private/tmp/yumidang-minkyu-deadline-20261021",
+        "sources": [
+          {
+            "path": "/private/tmp/yumidang-minkyu-deadline-20261021/tests/integration/minkyu/deadline_lock_fixture.py",
+            "sha256": "02e333cebe61156e283e8d892e157ece55b5816513cec2c76ba6a44883b74c9e"
+          },
+          {
+            "path": "/private/tmp/yumidang-minkyu-deadline-20261021/tests/database/minkyu/test_deadline_lock_fixture.py",
+            "sha256": "dfab1e8267a35d6433eac2fcc2ea8eee863277250c5fee024c7fb401ea6bcf8c"
+          }
+        ],
+        "offlineTests": 9,
+        "scope": "준비·순수 계획만; primary 미통합·제품 실행 0"
+      },
+      "verification": "실제 원 JWT holder/waiter 재현 NOT_RUN; classifier는 HTTP ingress나 정책 전체 완료를 증명하지 않음",
+      "remainingWbs": [
+        "4.4",
+        "4.5",
+        "4.6",
+        "6.3"
+      ],
+      "remaining": [
+        "자격·사진·catalog·Auth 영수증 정확 fixture",
+        "별도 새 source의 실제 잠금/마감 경쟁",
+        "HTTP 최초 접수 신뢰·worker 경쟁"
+      ]
+    },
+    {
+      "id": "official_events",
+      "gapIds": [
+        "B01",
+        "B04",
+        "B35",
+        "B36"
+      ],
+      "implementation": "KOPIS 14분류·공식 대조 capability gate와 runtime 거절 구현. 공식 관측 collector·영속 게시 및 실공급사 검증은 잔여. 서울 평문 HTTP 전송 금지 유지",
+      "sources": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts",
+          "sha256": "4b1b2a4b403cce240db3716ee5989009607ac95f0713ede84432877a03ccb968"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/event-runtime.ts",
+          "sha256": "9bef08f04e274cfa001be1b6829b5395c955a3f0c89ade87289d9783c7130a7d"
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "sha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668"
+        },
+        {
+          "path": "docs/collaboration/requests/minkyu/2026-10-21-kopis-persistent-publication-design.md",
+          "sha256": "46e1a0abf3bd5033372ddcec16fe3d624a97d9a62e9d95053620de2fdb5e50e5"
+        }
+      ],
+      "verification": "합성 gate/매핑 검증 범위만 인정. 공식 대조 snapshot의 실제 획득·게시 완료 아님",
+      "providerCallAccounting": {
+        "kopisHistoricalAuthenticatedGetAttempts": 1,
+        "kopisHistoricalResult": "실패 원본 보존; 공개 검증 성공 아님",
+        "additionalAuthenticatedProviderCallsInThisAudit": 0
+      },
+      "remainingWbs": [
+        "7.8",
+        "7.9",
+        "7.12",
+        "4.4"
+      ],
+      "remaining": [
+        "공식 기간·분류·공연ID/순위/순서 관측",
+        "최신 migration 뒤 영속 게시 구현",
+        "서울 안전 HTTPS 공식 계약·실제 수집 검증"
+      ]
+    },
+    {
+      "id": "operations_member_hold",
+      "gapIds": [
+        "B06",
+        "B25",
+        "B49",
+        "B50"
+      ],
+      "implementation": "책임자·일반 신고 부재 대체 범위는 문서 확정. 실제 권한·운영·회원 검증과 구분",
+      "sources": [
+        {
+          "path": "정책.md",
+          "sha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa"
+        },
+        {
+          "path": "AGENTS.md",
+          "sha256": "6e7cb8ccc4a9c8943377d4f91105784ce8d17a9a36a09c0acdd9953bf10f1120"
+        },
+        {
+          "path": "docs/collaboration/requests/minkyu/2026-10-20-qa-case-evidence-matrix.md",
+          "sha256": "f69aeedb452e80824029478b67c7942e103d7fbf6b5d835c819d787794dfb3de"
+        },
+        {
+          "path": "docs/collaboration/requests/minkyu/2026-10-20-defect-release-blockers.md",
+          "sha256": "113dcf9936b727acc0c19235341d25332646f946636f1abe3eba6bfbe71af839"
+        }
+      ],
+      "verification": "운영 접근·최소 권한·감사·회수 및 적격 실회원/실기기 통합 미완료",
+      "remainingWbs": [
+        "7.1",
+        "7.2",
+        "7.13",
+        "7.14",
+        "7.18",
+        "6.2",
+        "6.3",
+        "6.4a",
+        "6.4b",
+        "6.5",
+        "6.6",
+        "8.19",
+        "8.22",
+        "8.23",
+        "8.25",
+        "6.7"
+      ],
+      "remaining": [
+        "운영 Supabase 접근·대상 재확인",
+        "Storage39 원본·전체 복원",
+        "실회원 재개·적격2명·동의",
+        "앱 빌드·UT·스토어 요건·공개 승인"
+      ]
+    }
+  ],
+  "actualAuthInLinkedSqlRuns": "NOT_RUN",
+  "actualAuthCallsInThisAudit": 0,
+  "sourceHeadDifference": "a005는9b85382에서 실행. auditHead1ec4f62의 모든 후속변경을 실제 검증했다고 승계하지 않음",
+  "documentAcceptance": "RPC/응답/정책 갭·담당·증거·후속 TASK 연결 검토; root 수용 및 해당 Notion TASK 반영은 별도",
+  "productCompletionClaimed": false,
+  "projectProgress": {
+    "percent": 79,
+    "completed": 22,
+    "total": 28,
+    "unchanged": true
+  },
+  "personal44Complete": false,
+  "remotePush": false,
+  "operatingChanged": false,
+  "sqlExecutedByThisAudit": false
+}

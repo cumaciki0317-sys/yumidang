@@ -1,0 +1,1372 @@
+{
+  "wbsId": "6.1",
+  "actor": "minkyu",
+  "reviewHead": "1ec4f623dd3afa4c4251bf751c8b280d820446b0",
+  "purpose": "출시 필수 TC·검증환경·증빙 방식 정의와 후속 실행 매핑; 제품 실행 완료가 아님",
+  "definitionSources": {
+    "policy": {
+      "path": "정책.md",
+      "sha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa"
+    },
+    "qaDefinition": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-qa-case-evidence-matrix.md",
+      "sha256": "f69aeedb452e80824029478b67c7942e103d7fbf6b5d835c819d787794dfb3de"
+    },
+    "blockers": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-20-defect-release-blockers.md",
+      "sha256": "113dcf9936b727acc0c19235341d25332646f946636f1abe3eba6bfbe71af839"
+    },
+    "ownership": {
+      "path": "backend/ownership.json",
+      "sha256": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3"
+    },
+    "collaboration": {
+      "path": "docs/collaboration/README.md",
+      "sha256": "b2ad63059b7d2dced57cf3486ff47b1544fab0b8f6d78d35c77bc1f95f5c54d0"
+    },
+    "sql": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a005/execution/receipt.json",
+      "sha256": "fef0bd9dfa56c93768b1da6024d2387634823f064b62a8415466afb073c3d193"
+    },
+    "concurrency": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a005/execution/consent-concurrency-receipt.json",
+      "sha256": "3114d832c68ee048f9e3953b2a15a535473ad4538951d8b9d7cfbee39c7cbdf8"
+    },
+    "officialComparison": {
+      "path": "docs/collaboration/requests/minkyu/2026-10-21-kopis-official-comparison.json",
+      "sha256": "94bb3e691091c9a2621e1a2fe1effa21c0d95302320f5ecc4499b4fc5146939c"
+    },
+    "auth6": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/root-auth6-current-receipt.json",
+      "sha256": "d35b1cc50d9bb77e4f291f6c3f9006c0d4c1c7091d7811d7db44f8ccf4ad6de0"
+    },
+    "plan": {
+      "path": "PLAN.md",
+      "sha256": "cacbad6eb96a89fd9e9a1548dedc1d263667efd49df2b583aa4736d18a9b93b9"
+    },
+    "userflow": {
+      "path": "docs/planning/design/USERFLOW.md",
+      "sha256": "70a8abfd3c030870784fc3d8eba4dfed47256091ff2898e1746ffd63c4e9337f"
+    }
+  },
+  "environmentDefinitions": {
+    "O": "오프라인 합성 단위/모형",
+    "L": "새 격리 실제 로컬Auth/HTTP/DB/RPC+합성회원·합성모델; Naver/실회원 아님",
+    "R": "명시 재개·적격회원/공급사 조건 충족 실제통합",
+    "D": "고정빌드 Android/iPhone 독립설치 실기기; ExpoGo/브라우저/빌드성공과 구분",
+    "P": "권한·대상·승인 조건을 갖춘 운영"
+  },
+  "evidenceStatusRules": {
+    "fullTC": "현재행 전체 기대/필요환경이 완료된 원영수증 없으면 NOT_RUN_FULL_CURRENT_CASE",
+    "partialActual": "실파일 SHA가 확인된 부분경계만 PASS범위 명시",
+    "historical": "기존행의 과거PASS는 원시점 소스·환경·범위로 유지",
+    "running": "진행중 positive/me/자연만료를 미리 PASS로 기록하지 않음",
+    "hold": "실회원·외부원문·운영·Storage39·앱/서명조건을 분모에서 제외하지 않음"
+  },
+  "requiredRecordSchema": [
+    "TC ID/정책·USERFLOW",
+    "담당/실행일/환경/HEAD·파일SHA/대상identity",
+    "고정입력·사전상태·기대·실제·상태",
+    "원영수증·비공개응답 path+SHA/효과수",
+    "보존/UNKNOWN/자기자원정리/실패원본",
+    "결함ID/단독파일owner/수정·재검증/후속TASK"
+  ],
+  "cases": [
+    {
+      "id": "A01",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "가입 적격 / S05·정책1·2",
+      "inputAndPrerequisites": "네이버 정상 응답, 여성·만19세 이상, 이름/성별/생일/출생연도·필수사진 충족; 정보누락/나이·성별 미충족/취소·오류를 개별 입력",
+      "expected": "적격만 가입 완료. 정보 불명확은 완료 보류, 부적격 거절. 네이버계정별1개·다른 로그인/계정연결 추가0",
+      "environmentAndOwnersOriginal": "O/L→R→D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "Naver unit 파일은 E01의 진입점이며 이 문서에서 실행하지 않음. **현재 실제 Naver/R NOT_RUN·실회원 HOLD**. 합성 Auth6는 적격 Naver 가입 증거가 아님",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.3",
+        "6.2"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "A02",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "복귀·세션 / S05·S00",
+      "inputAndPrerequisites": "기존회원 목적화면, 신규 가입, 로그아웃, 취소/만료/회수/ban 원 토큰",
+      "expected": "기존회원 목적 복귀, 신규 완료 후 홈; 거절 토큰은 새 업무/RPC/모델 전송0. 원 토큰을 새 문맥용으로 조작/재발급하지 않음",
+      "environmentAndOwnersOriginal": "O/L→R/D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E02: 원 자연3600초 만료·회수·ban의 좁은 로컬 실제 기록 보존. 전체 typed lifecycle PASS로 승격하지 않음. 현재 앱 복귀/세션 소비는 P03 별도",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.8",
+        "6.2"
+      ],
+      "partialActualEvidence": [
+        {
+          "ref": "auth6",
+          "status": "PASS_CURRENT_AUTH6_SIX_SCHEMA_ONLY",
+          "scope": "합성6회원의 실제 로컬 GoTrue/DB세션·원JWT3600·6schema180 보존. actualNaver/AI/자연만료 NOT_RUN; HTTP 원응답bytes NOT_RECORDED"
+        }
+      ],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "A03",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "익명·다른 인증 문맥 / AI·Auth",
+      "inputAndPrerequisites": "실제 발급한 익명 bearer, 다른 새 Auth 문맥 bearer 원문; 해당 문맥200/대상 문맥 거절",
+      "expected": "제품401/AUTH_REQUIRED, actualAuthReads1/RPC0/provider0. 양문맥 원행/권한/예산 보존",
+      "environmentAndOwnersOriginal": "L, M; J 오류 소비",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E02: 10/18 새 pair 실제 거절·own8 종료 PASS. **실회원/네이버 검사 아님**. 원 발급/실패 intent 재사용0",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.8",
+        "5.5"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "L"
+      ]
+    },
+    {
+      "id": "A04",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "공개 DTO·사진 관계 / S02·S14",
+      "inputAndPrerequisites": "비로그인/로그인 미확정/확정 당사자/제3자/취소·차단·탈퇴; 사진 소유/권한 변조",
+      "expected": "비로그인 중립 모자이크+안내, 실제 이름/사진을 DOM에 주입하지 않음; 미확정 이름 마스킹·확정 전체이름/상세지점·취소 즉시 재가림. 공개 지역 동까지",
+      "environmentAndOwnersOriginal": "O/L→D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E05: public fixture null·messageId 교정, 구문/typecheck만. **현재 수정 fixture 실제NOT_RUN**, DOM/기기 관찰 별도. DB 권한 진입점 E01",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.4",
+        "4.7",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "A05",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "사진 변경·파기·응답 한도 / S15",
+      "inputAndPrerequisites": "새사진 교체/업로드실패/마지막사진 삭제/탈퇴; 느린 Auth·GET/read/cancel/HEAD·늦은 결과",
+      "expected": "마지막 필수사진 삭제 거절, 실패 시 기존 유지, 탈퇴 활성본 삭제·접근회수. proxy 단일 deadline·2MiB·GET후HEAD 권한 재검사·늦은 후속전송0",
+      "environmentAndOwnersOriginal": "O/L→R/D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E04: 사진21 포함70 합성 PASS·typecheck. 실제 Storage/nativeHTTP·파기 bytes/앱 관찰은 NOT_RUN. 로컬 deadline PASS를 Storage 삭제 ACK로 확대하지 않음",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.7",
+        "7.13"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "B01",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "공고 검색 / S01·정책3·4",
+      "inputAndPrerequisites": "제목/장소명/주소/연결행사명, 소개·후기·상세지점 키워드, 작성자19/99 경계·범위밖·전체검색",
+      "expected": "허용 필드만 검색; 작성자 만19~99 범위 필터와 전체검색 구분. 무료/지역/일정/나이 결합·재조회 결과가 현재 공개 DTO와 일치; 주변/반경/거리순 없음",
+      "environmentAndOwnersOriginal": "O/L→D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E03: current public search SQL9 실제 rollback PASS. 이 원 SQL의 단언 범위만 인정하며 sequenceState=NOT_VERIFIED. SQL 파일 존재 자체는 추가 필터 전체PASS가 아님",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.4",
+        "5.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "B02",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "날짜·행사 페이지 / S09·정책8",
+      "inputAndPrerequisites": "월·연말/윤일/KST 월요일, this_week/date range 조합, 일반행사 신규/진행중/종료,2쪽·5쪽yield→재개·999잔여",
+      "expected": "월요일 시작/목요일 귀속 월별 주차; 정확 날짜범위 전달. 기본 이번주 신규 미종료, 진행중 선택/과거조회와 정렬 유지. page/cursor 모순 거절·upperbound 잔여는 부분 상태",
+      "environmentAndOwnersOriginal": "O/L→R/D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E03 주차24는 실제 모듈+합성 RPC/모델, SQL 필터/자연어 품질 아님. E04 행사78은 실제 factory+합성 fetch. 실제 공급사/운영 일일수집은 별도",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "7.8",
+        "7.9",
+        "7.12"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "B03",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "비어 있지 않은 AI 탐색 / S20·정책9",
+      "inputAndPrerequisites": "합성공고3개/명확성향, 의미판단 실패·출력차단, 검색후 작성자성향·권한변경",
+      "expected": "최대3쪽 확인/5카드, 반환직전 재조회. 근거변경/권한상실 제외, 확인0은 확인미완료, 설명실패는 확인카드/정형안내 유지. 비공개정보0",
+      "environmentAndOwnersOriginal": "L+합성 모델→승인R/D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E03 a002 실제 Auth/HTTP/REST/RPC+합성 모델4사례 PASS, cleanup·원행보존 PASS. 실제 모델 품질·회원 원문 전송·기기 렌더링 아님",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "5.3",
+        "5.5",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "B04",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "회원 한도·계정 예산 / 정책9·14",
+      "inputAndPrerequisites": "KST 일20회, 동시2요청, 모델없는버튼, 실패/재시도, 계정별320만·등록계정합계, 예약부족/유실/UNKNOWN",
+      "expected": "회원동시1/모델시작 새요청1회, 내부호출 추가차감0. 전송전 원자 예약/계정선택·전체부족 새전송0. 미확인정산 보존, 자정에미결삭제0·추가결제0",
+      "environmentAndOwnersOriginal": "O/L→승인R/P, M; J 상태표시",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E02 AI22/23 로컬 실제경계+합성 모델 PASS 기록; E03 positive 정산22는 그범위. AI24 현재 준비57+33 PASS, **자연 D/D+1 실제NOT_RUN**. 운영키/한도 실측·공급사출력상한은 별도",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "5.4a",
+        "5.5",
+        "5.6"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "P"
+      ]
+    },
+    {
+      "id": "B05",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "AI 선택 동의·독립 철회·후기요약 / S05·S14·S20",
+      "inputAndPrerequisites": "탐색 첫 사용 동의/거절·일반 검색 복귀; 후기 AI 가입 세 선택(열람/내 프로필 생성·노출/작성 후기 활용) 기본 미선택·전체 동의/개별 해제·미동의 가입; 세 항목을 하나씩 철회, 공개텍스트3개 미만/충족, 근거변경·숨김·탈퇴·동시worker",
+      "expected": "탐색 거절 시 일반 검색 유지. 세 동의 저장·제한을 독립 적용하고 전체 동의 편의 기능과 개별 체크 일치. 열람 철회는 본인 열람만 중단; 프로필 생성·노출 철회는 본인 요약 숨김/생성·갱신 중단; 원문 활용 철회는 기존·향후 작성 후기 재료 제외/영향 요약 우선 숨김. 다른 동의 자동 철회0·일반 동행/계정/후기/별점/당도 유지. 남은 적격 공개원문3개 이상+현재 처리/공개 조건 충족 시만 재생성 후 공개, 실패·부족·미확인은 숨김. 필요한 AI용·외부 사본 삭제는 확인 후 완료",
+      "environmentAndOwnersOriginal": "O/L→승인R/D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E06 J06 실제 DB/RPC 경쟁8+후기부족6=14 PASS **인계 기록**; 인증/모델/privacy/safety 합성, 원 바이트 현재 부재. 현재 신규 실행/194 재검증 아님. 이 과거14개를 새 세 동의·독립 철회 전체 PASS로 승격하지 않음. 세분화 동의/철회·탐색 첫 사용 화면 통합 검증은 NOT_RUN. 법적 적합성·공급사 조건/실회원 원문 전송 HOLD를 유지하며 AI 미동의 가입 차단은 요구하지 않음",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "5.1",
+        "5.2",
+        "5.7",
+        "6.2"
+      ],
+      "partialActualEvidence": [
+        {
+          "ref": "sql",
+          "status": "PASS_SQL_ONLY",
+          "scope": "합성 동의 저장/독립 철회/요약 공개 조건 SQL; 실제 원 JWT·앱·외부 삭제 아님"
+        },
+        {
+          "ref": "concurrency",
+          "status": "PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY",
+          "scope": "두 합성 SQL actor의 원 PID/Lock/blocker/시간 겹침·종료·baseline 복원"
+        }
+      ],
+      "currentScopeCorrection": "서버3동의 구현 및 a005합성SQL 성공은 현행 근거로 추가. 가입 UI·전체동의·독립철회 앱소비·실회원/공급사전송·외부복사본삭제는 미실행.",
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "B06",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "KOPIS 공식 순위 A안·14분류 / S09·정책8·WBS7.8",
+      "inputAndPrerequisites": "전체 공연·연극·뮤지컬·클래식·국악·대중음악·무용·대중무용·서커스/마술·복합·아동·대학로·내한·축제별 Top10, 어제까지 최근7일·매일 갱신; basedate 누락/분류별 성공·실패/동률·10개 미만/갱신실패",
+      "expected": "공식 사이트의 실제 기간·분류/지역·정렬과 API 공연ID·순위·순서 일치 분류만 공개. 원래 코드 보존·아동/대학로/내한/축제 특성 구분. 날짜 추정/일간 합산0·동률 공식 순서 유지·검증 개수만 표시·출처/확인 기간/시각 표시. 갱신 실패 시 마지막 검증 기간/지연 안내, 최초 미검증·미지원은 공식 링크. API 내부 집계기간 입증으로 안내0",
+      "environmentAndOwnersOriginal": "O/L→승인R/D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "A안·14분류는 확정 요구이며 새 선택 아님. 공식 사이트 대조·분류 매핑·저장·서버/앱·갱신 통합 검증은 NOT_RUN. [현재 KOPIS 기록](2026-10-20-kopis-read-preparation.md)의 승인 후1GET/basedate없음·제품 파서 거절은 순위 검증 PASS가 아니며 기존 실행 중단 유지",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "7.8",
+        "7.12"
+      ],
+      "partialActualEvidence": [
+        {
+          "ref": "officialComparison",
+          "status": "MATCHED_ONE_CATEGORY_ONE_DISPLAYED_PERIOD_ONLY",
+          "scope": "2026-10-13~19 전국 전체 공연 Top10 UI/XML ID·순위·순서만; 나머지13분류·현재최근7일·영속 게시·스케줄러 NOT_RUN"
+        }
+      ],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "C01",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "신청과 멱등 / S02→S11",
+      "inputAndPrerequisites": "첫메시지 전 이탈·전송실패/성공, 같은messageId 재전송, 재신청 기존방",
+      "expected": "성공 시에만 신청/작성자알림/방 생성, 실패·이탈0. 멱등 중복0, 재신청 기존방/이력 재사용·미전송입력은화면메모리",
+      "environmentAndOwnersOriginal": "O/L→D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E05 fixture 필수ID 교정; E06 과거 매칭 기록 보존. 현재 수정본 실제NOT_RUN. 앱 별도신청화면없음/이탈안내·입력유지는 P03",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.5",
+        "6.2"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "C02",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "철회·재신청 / S18·정책5",
+      "inputAndPrerequisites": "본인철회 직후 동일 새ID/본문, 실제61초 후 같은입력, 작성자거절이력",
+      "expected": "직후 STATE_CONFLICT, 1분이상 후 재신청허용; 거절된공고는재신청불가. 시계/철회시각 조작0",
+      "environmentAndOwnersOriginal": "L→D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E05 matching fixture에 즉시거절→61초→동일ID 성공 정의, **실제 대기/성공 검증NOT_RUN**. typecheck를시간정책PASS로승격하지않음",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.5",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "C03",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "확정·조건변경·동시성 / S11",
+      "inputAndPrerequisites": "유효신청2명·단일동의요청, 조건버전변경, 일정충돌·동시수락",
+      "expected": "작성자만으로확정0, 상대수락+현재조건/충돌검사, 한명확정/다른방읽기전용. 변경요청무효/새동의, 취소후재개는명시행동",
+      "environmentAndOwnersOriginal": "O/L→D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E06 기존C20/C21·매칭 경쟁은기록 범위 보존. 원Auth 거절PASS를업무경합PASS로대체하지않음. 현재조건버전/고유ID/행차분과앱상태증거 P02/P03",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.5",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "C04",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "수락 마감·worker 경합 / 정책5-3",
+      "inputAndPrerequisites": "요청+6h/시작 최솟값, 변경+6h/기존·새시작 최솟값, 마감 전/동일/후·잠금대기·worker선행",
+      "expected": "빠른 서버접수만허용, 같거나늦으면거절·부수효과0. 거절/철회/무응답은기존약속유지. 이미만료된상태를과거시각으로부활시키지않음",
+      "environmentAndOwnersOriginal": "새L→D, M/J",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E05 D03 정적gap/계획만, **실제실패 미재현/NOT_RUN**. DB-entry와HTTP접수시각을구분, statement_timestamp만으로Auth/검사지연해결PASS를주장하지않음",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.5",
+        "4.6",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "C05",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "실제 완료 / S16·정책7",
+      "inputAndPrerequisites": "종료전/종료후본인확인/양쪽확인/종료+24h, 취소·노쇼·분쟁, 정상정정",
+      "expected": "종료전확인불가, 한쪽은개인확인, 양쪽또는실제처리로완료·횟수1회. 제외/보류정책유지·실제완료전작성기한시작0",
+      "environmentAndOwnersOriginal": "O/L→D/P, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E06 기존완료·후기/stockCLI 경쟁·복구PASS는기록 범위. 현재121의실제worker·재접속/지연처리와앱횟수는추가영수증필요; 자동운영완료아님",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.6",
+        "6.2"
+      ],
+      "partialActualEvidence": [],
+      "currentScopeCorrection": "기존 행의 현재121 표현은 당시 증거 범위. 현행123의 실제 worker/지연 처리·앱 통합은 후속 실행 필요.",
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D",
+        "P"
+      ]
+    },
+    {
+      "id": "C06",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "후기 공개·분쟁·당도 / S17·정책7",
+      "inputAndPrerequisites": "본인확인후선제출/실제완료/양쪽·한쪽제출/7일경계, 중복·분쟁·해결·상대탈퇴",
+      "expected": "선제출비공개, 실제완료+7일; 양쪽즉시/한쪽마감공개, 분쟁중작성·기한·새공개보류. 이미공개후기는운영판정없이숨김0. 당도공개시/횟수완료시·초기15·최종0~100",
+      "environmentAndOwnersOriginal": "O/L→D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E01 completion/review SQL·함수는진입점. E06 과거증거와현재acceptance대조필요. 마감접수C04·최신분쟁재개 최소24h·정정기여/재가입회차는별도 입력으로기록",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.6",
+        "5.7",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "D01",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "신고접수·증거권한 / S18·정책6",
+      "inputAndPrerequisites": "온라인 설명+캡처, 대면위협/노쇼 설명+가용자료, 타인캡처/비담당직원·재조회",
+      "expected": "접수≠위반확정, 온라인필수자료·대면무캡처차이, 담당자ACL/감사·신원비노출. 운영자DB채팅원문열람0. 본인 숨김 정책·클라이언트 연결 구현은 승인됨. 신고 선택 기록만으로 완료 안내0·서버 처리 일치 확인 후 이동/갱신; 실제 목록·상세·숨김 해제·필수 약속 접근 검증은 후속",
+      "environmentAndOwnersOriginal": "O/L→R/D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E06 J07 직원native7 등인계범위 보존. AI신고는Storage소유/ACL/감사/파기선결조건전비활성. 실제직원전체업무·캡처/최종파기 잔여, 일반 신고 책임자는 대표 조유미·부재 대체는 종현으로 확정, 해당 신고의 허용 증거 처리까지만 포함. 실제 ACL·감사·운영 검증은 별도",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "7.6",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "currentScopeCorrection": "조유미 주담당/부재 종현은 일반 신고와 해당 허용 제출 증거만. 지원·AI비용·서버 운영 대체 권한 금지, 채팅 DB 원문 직접 열람0. 최소권한·접근감사·회수·파기 실제 실행은 별도.",
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "D02",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "차단·나가기·취소 / S11·정책6-1",
+      "inputAndPrerequisites": "차단/해제, 기존확정약속·대화, 한쪽나가기",
+      "expected": "신규접촉·신청·동의차단, 기존대화읽기전용·필수약속관리유지. 차단≠확정취소, 해제≠종료신청복구, 나가기본인목록만숨김",
+      "environmentAndOwnersOriginal": "O/L→D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E01 member blocks SQL/HTTP·concurrency는진입점. E06 과거BE범위외의현재앱목록/상대보존·읽음·알림소비는 P03 별도",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.5",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "id": "D03",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "탈퇴·재가입·제재승계 / S21·정책2·13",
+      "inputAndPrerequisites": "진행확정동행/후기기간만/분쟁만, 동일네이버재가입·기존제재",
+      "expected": "진행확정정리만선행, 후기/분쟁만으로차단0; 사진활성본즉시삭제·접근회수, 즉시재가입 당도15/완료0·제재승계·옛후기복구0",
+      "environmentAndOwnersOriginal": "O/L→R/D, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E06 J09 합성Auth·사진삭제·ACK유실복구/UNKNOWN 기록보존. 현재 실제 Naver재가입·Storage전부/제품삭제ACK·앱외탈퇴메일처리는검증잔여",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "4.7",
+        "7.13",
+        "6.3"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D"
+      ]
+    },
+    {
+      "id": "D04",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "보관·주기파기·중복/실패 / 정책13·WBS7.13",
+      "inputAndPrerequisites": "신고최종종결+90일, helpful90일/탈퇴중빠른때, 본인숨김최소기록, 미정산AI예약·권한없는worker",
+      "expected": "대상별기산/보존차이, 파기실패재처리/중복효과0·타행삭제0. 신고자료삭제와본인숨김분리, UNKNOWN/미정산예약을자정·보관정리로삭제0",
+      "environmentAndOwnersOriginal": "O/L→승인P, M; J 상태소비",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E01 retention/dispatch fence 테스트는진입점, E06 기존파기증거는부분. 제품queue→자료별실제삭제/감사/직원ACL/최종파기전체연결·운영 주기는 NOT_PROVEN",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "7.13"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "P"
+      ]
+    },
+    {
+      "id": "D05",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "백업·복원·locale·정리 / WBS7.14",
+      "inputAndPrerequisites": "현재121·역할/ACL/sequence/합성UNKNOWN2·ICUlocale, 새 target1개/오래된packet·변조입력",
+      "expected": "원178 bag/권한/제약/catalog·sequence·UNKNOWN보존, 실제version/rules엄격비교, 정리exactown만·타자원변경0·단일intent/noReplay",
+      "environmentAndOwnersOriginal": "O/L, M",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E07: b002 ICU실패→수정47합성PASS·b003capture실제PASS→restoreHostConfig변경FAIL_CLOSED. 실패/정리/재검증을분리. 합성UNKNOWN2는전송유실증거아님. 전체 복원/Storage39미해결",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "7.14"
+      ],
+      "partialActualEvidence": [],
+      "currentScopeCorrection": "현재 정규 migration123. 현행 Auth lifecycle 보존은6schema180표이며 archive전체193표와 구분. 역사121/178복원 증거를 최신123전체 복원으로 승계하지 않음. Storage45 metadata/6파일 확보/39원본 미확보 유지.",
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L"
+      ]
+    },
+    {
+      "id": "D06",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "수집·감시·긴급복구 / WBS7.12·7.18",
+      "inputAndPrerequisites": "수집실패/부분재개·heartbeat누락·AI예산중단·원장불확실·복구",
+      "expected": "정형상태/알림수신·담당인계, 실패영역만복구·원자료/UNKNOWN보존, 모델/공급사추가요청을무단재개하지않음",
+      "environmentAndOwnersOriginal": "O/L→승인P, M/J/Y",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "E08 runbook은정의/준비. 실제 sink/보관·파기/알림수신·운영heartbeat/복구실행 PASS없음. 운영권한/공급사조건·정확 자원guard필요",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "7.12",
+        "7.18"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "O",
+        "L",
+        "P"
+      ]
+    },
+    {
+      "id": "D07",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "titleAndPolicy": "설치앱·UT·출시기록 / WBS6.2·6.4a",
+      "inputAndPrerequisites": "새Android내부APK/고정build+endpoint·기기OS, 예시모드/회원통합모드별핵심흐름",
+      "expected": "설치/독립실행/재시작·백그라운드/네트워크실패·접근성 관찰, 실제서버상태와화면일치. 예시데이터·운영앱/기존데이터분리",
+      "environmentAndOwnersOriginal": "D, J 실행/Y 관찰/M 서버 지원",
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun",
+        "ut": "yumi",
+        "qaJudgment": [
+          "minkyu",
+          "jonghyun",
+          "yumi"
+        ]
+      },
+      "requiredEvidence": [
+        "TC ID·HEAD/source SHA·실행 환경·고정 대상 identity",
+        "입력·사전상태·기대/실제·결함ID",
+        "원 응답/영수증 path+SHA·실제 부수효과 수",
+        "기존 행/권한/예산/UNKNOWN 보존 및 자기 자원 정리",
+        "회원·실기기이면 동의/빌드/OS·실제 실패/복구 관측"
+      ],
+      "historicalEvidenceAndLimits": "**이번 문서에서 실행/산출물생성0**. 기존팀 자료는E09. 후속P03/P04를J/Y자기경로에작성·연결. iPhone계정/서명보류·스토어제출승인은별도",
+      "definitionEvidence": "qaDefinition",
+      "followupTasks": [
+        "6.2",
+        "6.4a",
+        "6.5",
+        "6.6"
+      ],
+      "partialActualEvidence": [],
+      "prerequisites": [
+        "새 대상·소스·메모리 및 보존 guard",
+        "R은 실회원 재개·적격2명·검증 동의/공급사·운영 실행 조건",
+        "D는 종현 빌드/설치·유미 관찰, P는 운영 대상·권한"
+      ],
+      "environments": [
+        "D"
+      ]
+    },
+    {
+      "id": "A06",
+      "titleAndPolicy": "본인 /me 및 같은 원 JWT 자연만료",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "inputAndPrerequisites": "정상원JWT/익명/다른문맥/다른회원·만료전후 동일 JWT",
+      "expected": "본인 응답과 공개 DTO 분리; 거절401·후속RPC/모델/예약0; 원TTL3600 실제대기; 토큰변조/refresh대체0",
+      "environments": [
+        "L",
+        "R",
+        "D"
+      ],
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun"
+      },
+      "requiredEvidence": [
+        "원본 입력/응답/영수증 path+SHA·HEAD/대상 identity",
+        "기대/실제·효과 수·보존/정리·실패 원본",
+        "회원/기기/운영 단계는 각각 별도 승인·조건 증거"
+      ],
+      "prerequisites": [
+        "positive PASS/원행·예산·UNKNOWN 정리",
+        "동일 active review·원binding·같은180표profile·고정HEAD",
+        "자연만료 전 active PASS, 원 exp 이후 expired 별도 실행"
+      ],
+      "followupTasks": [
+        "4.8",
+        "6.2",
+        "6.3"
+      ],
+      "partialActualEvidence": []
+    },
+    {
+      "id": "B07",
+      "titleAndPolicy": "공고 전용 직접행사 및 기존 API 호환",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "inputAndPrerequisites": "공급사선택/직접입력 배타·수정/합의/재시도·비표출원천",
+      "expected": "공용행사목록/상세 생성0; ticket결합; 핵심변경명시합의·terminal재시도; 기존detail exactkeys보존·event-link별도; 비표출값제거·약속관계보존",
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ],
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun"
+      },
+      "requiredEvidence": [
+        "원본 입력/응답/영수증 path+SHA·HEAD/대상 identity",
+        "기대/실제·효과 수·보존/정리·실패 원본",
+        "회원/기기/운영 단계는 각각 별도 승인·조건 증거"
+      ],
+      "prerequisites": [
+        "종현 event-link 계약소비",
+        "콘텐츠 검사 활성·실제Auth통합"
+      ],
+      "followupTasks": [
+        "4.4",
+        "4.5",
+        "7.8",
+        "6.3"
+      ],
+      "partialActualEvidence": [
+        {
+          "ref": "sql",
+          "status": "PASS_SQL_ONLY",
+          "scope": "공고행사 SQL 저장/권한/검색/상세key/합의·재시도만"
+        }
+      ]
+    },
+    {
+      "id": "B08",
+      "titleAndPolicy": "서울 HTTPS·공급사 페이지재개·지연",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "inputAndPrerequisites": "서울 평문HTTP/공식HTTPS/2·5쪽중단재개/미검증순위",
+      "expected": "서울키 평문전송0; HTTPS 공식계약 확인전비활성; cursor중복/누락·중단후재개검증; 실패시검증기간유지; 출시3공급사목표를2로축소0",
+      "environments": [
+        "O",
+        "L",
+        "R",
+        "D",
+        "P"
+      ],
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun"
+      },
+      "requiredEvidence": [
+        "원본 입력/응답/영수증 path+SHA·HEAD/대상 identity",
+        "기대/실제·효과 수·보존/정리·실패 원본",
+        "회원/기기/운영 단계는 각각 별도 승인·조건 증거"
+      ],
+      "prerequisites": [
+        "공식 안전HTTPS 수집계약·공급사 조건",
+        "정확 외부호출 승인/키출처·목적지·횟수"
+      ],
+      "followupTasks": [
+        "7.8",
+        "7.9",
+        "7.12"
+      ],
+      "partialActualEvidence": []
+    },
+    {
+      "id": "B09",
+      "titleAndPolicy": "AI 이용 가능 상태와 중단 후 보내기",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "inputAndPrerequisites": "동의필요/동시요청/일20회/processingoff·서버오류·자정",
+      "expected": "GET이 예약/모델0; 서버estimatedEligibility/readiness만; 실제요청이최종권한; 안내·입력보존/자동재전송0; 클라이언트자체횟수·타이머로가능확정0",
+      "environments": [
+        "O",
+        "L",
+        "D"
+      ],
+      "executionOwners": {
+        "server": "minkyu",
+        "client": "jonghyun"
+      },
+      "requiredEvidence": [
+        "원본 입력/응답/영수증 path+SHA·HEAD/대상 identity",
+        "기대/실제·효과 수·보존/정리·실패 원본",
+        "회원/기기/운영 단계는 각각 별도 승인·조건 증거"
+      ],
+      "prerequisites": [
+        "availability exactschema/error 계약소비",
+        "실제 모델 사용량·공급사별 단위/원화월50000과 기술토큰원장분리"
+      ],
+      "followupTasks": [
+        "5.4a",
+        "5.5",
+        "6.3"
+      ],
+      "partialActualEvidence": []
+    },
+    {
+      "id": "D08",
+      "titleAndPolicy": "iPhone 준비와 설치 조건",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "inputAndPrerequisites": "Apple계정/서명없음·서명확보·지정build",
+      "expected": "계정없이가능한준비와 실제설치 구분; 조건미충족을PASS로바꾸지않음; 설치후Auth/네트워크실패·복귀관측",
+      "environments": [
+        "O",
+        "D"
+      ],
+      "executionOwners": {
+        "client": "jonghyun",
+        "ut": "yumi",
+        "serverSupport": "minkyu"
+      },
+      "requiredEvidence": [
+        "원본 입력/응답/영수증 path+SHA·HEAD/대상 identity",
+        "기대/실제·효과 수·보존/정리·실패 원본",
+        "회원/기기/운영 단계는 각각 별도 승인·조건 증거"
+      ],
+      "prerequisites": [
+        "계정·서명·기기·빌드 확보; 추가결제별도"
+      ],
+      "followupTasks": [
+        "6.4b",
+        "6.5"
+      ],
+      "partialActualEvidence": []
+    },
+    {
+      "id": "D09",
+      "titleAndPolicy": "Play 제출·공개 후 설치 확인",
+      "definitionStatus": "DEFINED",
+      "executionStatus": "NOT_RUN_FULL_CURRENT_CASE",
+      "inputAndPrerequisites": "정확계정/비공개테스트·권한신청/심사/승인버전",
+      "expected": "실제계정요건→테스트조건→권한신청→심사→승인된공개→스토어설치 핵심흐름을 단계별증거로판정; 예시/빌드성공으로대체0",
+      "environments": [
+        "R",
+        "D",
+        "P"
+      ],
+      "executionOwners": {
+        "releaseDecision": "yumi",
+        "clientBuild": "jonghyun",
+        "server": "minkyu"
+      },
+      "requiredEvidence": [
+        "원본 입력/응답/영수증 path+SHA·HEAD/대상 identity",
+        "기대/실제·효과 수·보존/정리·실패 원본",
+        "회원/기기/운영 단계는 각각 별도 승인·조건 증거"
+      ],
+      "prerequisites": [
+        "계정최소접근·앱자료·실회원HOLD재개조건",
+        "정확스토어제출·공개 실행조건충족"
+      ],
+      "followupTasks": [
+        "8.19",
+        "8.22",
+        "8.23",
+        "8.25",
+        "6.7"
+      ],
+      "partialActualEvidence": []
+    }
+  ],
+  "auditFindings": [
+    "기존24개 행은 최신 신고대체·AI세독립동의·KOPIS14분류 요구를 정의했음",
+    "기존121/178 표현은 역사검증범위로 유지하고 현행123/180·archive193을 분리함",
+    "직접행사·서울HTTPS·availability·같은원JWT/me·iPhone·출시 후설치를 별도TC로 명시함"
+  ],
+  "acceptanceRecommendation": {
+    "definitionCriteriaMet": true,
+    "scope": "TC·검증환경·합성/실회원통합/실기기 구분·근거링크·후속TASK 정의 완료",
+    "notionClosure": "root가 해당TASK 실제criterion와 이 문서를 대조·각본문 링크/체크/상태확인 후 문서정의TASK만 수용 가능",
+    "executionTasksStillOpen": true,
+    "releaseApproved": false
+  },
+  "projectProgress": {
+    "percent": 79,
+    "completed": 22,
+    "total": 28,
+    "unchanged": true
+  },
+  "personal44Complete": false,
+  "newProductExecutions": 0,
+  "notionChanged": false,
+  "remotePush": false
+}

@@ -1,0 +1,112 @@
+{
+  "actor": "minkyu",
+  "wbsIds": [
+    "4.8",
+    "5.5",
+    "7.11"
+  ],
+  "sourceHead": "1ec4f623dd3afa4c4251bf751c8b280d820446b0",
+  "recordedAt": "2026-10-21T07:28:36.746077+00:00",
+  "sourceProfile": {
+    "migrations": 123,
+    "exactTables": 180,
+    "schemas": [
+      "auth",
+      "public",
+      "private",
+      "storage",
+      "cron",
+      "vault"
+    ]
+  },
+  "auth6": {
+    "status": "PASS_CURRENT_AUTH6_SIX_SCHEMA_ONLY",
+    "accounts": 6,
+    "sessions": 6,
+    "actualGoTrueAndDatabaseSessions": true,
+    "originalJwtLifetimeSeconds": 3600,
+    "originalBindingUnchanged": true,
+    "rawHttpResponseBytes": "NOT_RECORDED",
+    "actualNaver": "NOT_RUN"
+  },
+  "activeMe": {
+    "status": "PASS",
+    "factoryStatus": "PASS",
+    "cases": 4,
+    "actualAuthReads": 3,
+    "rpcCalls": 2,
+    "providerCalls": 0,
+    "modelCalls": 0,
+    "reservationCalls": 0,
+    "fixtureWrites": 0,
+    "scope": "LOCAL_AUTH6_SERVICE_PROFILE_READONLY_ONLY"
+  },
+  "positiveDiscovery": {
+    "status": "FAIL",
+    "cause": "PREBUILT_SOURCE_CAPSULE_MISSING_BEFORE_FACTORY_DISPATCH",
+    "factoryDispatch": 0,
+    "childClosed": true,
+    "originalFailureRetained": true,
+    "originalReceiptCleanup": "NOT_PROVEN",
+    "subordinateCleanupStatus": "PASS",
+    "independentPostFailureCurrentBaseline": "PASS_POST_FAILURE_READONLY_BASELINE_ONLY",
+    "onlyRetainedNewTechnicalLedgerRows": 1,
+    "authorityCatalogConstraintsOriginalRowsUnknownPreserved": true,
+    "sequence": "NOT_VERIFIED",
+    "replayed": false,
+    "actualAI": "NOT_RUN"
+  },
+  "naturalExpiry": {
+    "status": "WAITING_ORIGINAL_JWT",
+    "originalExpiryKst": "2026-10-21T16:56:58+09:00",
+    "lifetimeUnchanged": true,
+    "refreshOrRemint": false,
+    "sourceAndHeadFrozen": true,
+    "newPassClaimed": false
+  },
+  "cleanup": {
+    "currentSourceFourServices": "RUNNING_FOR_NATURAL_EXPIRY",
+    "oldResources": "PRESERVED",
+    "finalOwnedStop": "PENDING"
+  },
+  "evidence": {
+    "auth6Current": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/root-auth6-current-receipt.json",
+      "sha256": "d35b1cc50d9bb77e4f291f6c3f9006c0d4c1c7091d7811d7db44f8ccf4ad6de0",
+      "status": "PASS_CURRENT_AUTH6_SIX_SCHEMA_ONLY"
+    },
+    "auth6Original": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/auth-provision-05049022425240e48234e827ff6f7ad1/receipt.json",
+      "sha256": "056ebce4b55ef5db2b8abf0392138ef910738c8a7628a5a835018515c5246dd7",
+      "status": "PASS_LOCAL_AUTH6_PROVISION_ONLY"
+    },
+    "positiveFailure": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/signed-auth-05049022425240e48234e827ff6f7ad1/positive-receipt.json",
+      "sha256": "cd4f382d7483d35545b7b4df86ce8852a0cdc7eecdd4a9cb36db61794275ccfb",
+      "status": "FAIL"
+    },
+    "positiveCleanup": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/signed-auth-05049022425240e48234e827ff6f7ad1/cleanup.json",
+      "sha256": "b5f4220f38271ca580e20f680e9342646dcf3ca5a2a622dcd4e6e7dd5093d063",
+      "status": "PASS"
+    },
+    "independentPostFailureAudit": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/root-positive-failure-audit-receipt.json",
+      "sha256": "48bf373a234b7304c1168c43d7b7d0d63282f00a3ed89727f0bdfe57c9c4f771",
+      "status": "PASS_POST_FAILURE_READONLY_BASELINE_ONLY"
+    },
+    "activeMe": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/service-profile-readonly-e331ec6c83a141d3bf7313e74d3f0241/service-readonly-receipt.json",
+      "sha256": "4489f8eb2691b4bf48767633e2e52f6d6e9f6244afa88e08e84fa06052f1c4b5",
+      "status": "PASS"
+    }
+  },
+  "externalActions": {
+    "remotePush": 0,
+    "productionChanges": 0,
+    "providerRequests": 0,
+    "realMemberQa": "HOLD"
+  },
+  "projectBaseline": "79%(22/28)",
+  "personal44Percentage": "NOT_RECALCULATED"
+}

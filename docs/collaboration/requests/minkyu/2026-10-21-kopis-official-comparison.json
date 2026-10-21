@@ -1,0 +1,210 @@
+{
+  "wbsIds": [
+    "7.8",
+    "4.2"
+  ],
+  "actor": "minkyu",
+  "kind": "보존 API 원문과 공식 UI의 한 분류·한 기간 사후 대조",
+  "scope": "전국·전체 공연·총티켓예매액·2026-10-13~19 Top10의 공연ID/순위/표시순서 대조만",
+  "officialObservation": {
+    "path": "/private/tmp/yumidang-kopis-official-ui-20261021-a001/all-observation.json",
+    "sha256": "7d30a353a3e5aa0b928b3d8bfca6bd8ab451825f622f6298a6cfb23cfe492dcb",
+    "observedAt": "2026-10-21T06:42:09.763Z",
+    "selectedCategory": "전체",
+    "selectedRegion": "전국",
+    "selectedInterval": "주간",
+    "sort": {
+      "label": "총티켓예매액",
+      "value": "ntssAmountSm"
+    },
+    "actualDisplayedPeriod": {
+      "start": "2026.10.13",
+      "end": "2026.10.19"
+    },
+    "method": "OFFICIAL_VISIBLE_DOM_ONLY_NO_API_KEY_CALL",
+    "networkResponseCaptured": false
+  },
+  "historicalApi": {
+    "receipt": {
+      "path": "/private/tmp/yumidang-kopis-read-proposal-20261020/actual-read-approved-20261020-001/read-receipt.json",
+      "sha256": "f9e9fe6368f7ee79f9933a7c86582fb0c40809bc490e76c38fdb38c27a39ec8c"
+    },
+    "status": "FAIL_CLOSED",
+    "failureCode": "PRODUCT_PARSER_FAILED",
+    "requestStatus": {
+      "path": "/private/tmp/yumidang-kopis-read-proposal-20261020/actual-read-approved-20261020-001/request-1-status.json",
+      "sha256": "275c2d5e6f80e27aaa31083e87ac7566061bd66fd879ecfafd4182ccfcb7eb74"
+    },
+    "xmlBody": {
+      "path": "/private/tmp/yumidang-kopis-read-proposal-20261020/actual-read-approved-20261020-001/request-1.stdout",
+      "sha256": "8556c3b5ea526623c9f40a78f7fad75426f7638557f533302d76b7b0129ce6f2"
+    },
+    "parserResult": {
+      "path": "/private/tmp/yumidang-kopis-read-proposal-20261020/actual-read-approved-20261020-001/parse-1.stdout",
+      "sha256": "659ad3415deb1230938746209ae51761931dda121e858fac7069cd2d2c17e3b8"
+    },
+    "attemptedAuthenticatedGets": 1,
+    "approvalIntentConsumed": true,
+    "httpStatus": 200,
+    "bodyComplete": true,
+    "requestTime": "2026-10-20T06:02:56.701050+00:00",
+    "requestedPeriod": {
+      "end": "2026-10-19",
+      "start": "2026-10-13"
+    },
+    "basedatePresent": false,
+    "historicalFailurePreserved": true,
+    "failureExplanation": "보존 응답에 basedate가 없고 당시 제품 parser가 실패했다. 이후 UI 대조는 원 FAIL_CLOSED를 PASS로 바꾸지 않는다.",
+    "providerMeaningAndTiePolicyAtOriginalRun": "NOT_PROVEN"
+  },
+  "comparison": {
+    "status": "MATCHED_ONE_CATEGORY_ONE_DISPLAYED_PERIOD_ONLY",
+    "matchedCount": 10,
+    "comparedCount": 10,
+    "idMatch": true,
+    "rankMatch": true,
+    "orderMatch": true,
+    "rows": [
+      {
+        "position": 1,
+        "officialUi": {
+          "rank": 1,
+          "performanceId": "PF303043"
+        },
+        "historicalXml": {
+          "rank": 1,
+          "performanceId": "PF303043"
+        }
+      },
+      {
+        "position": 2,
+        "officialUi": {
+          "rank": 2,
+          "performanceId": "PF303493"
+        },
+        "historicalXml": {
+          "rank": 2,
+          "performanceId": "PF303493"
+        }
+      },
+      {
+        "position": 3,
+        "officialUi": {
+          "rank": 3,
+          "performanceId": "PF303361"
+        },
+        "historicalXml": {
+          "rank": 3,
+          "performanceId": "PF303361"
+        }
+      },
+      {
+        "position": 4,
+        "officialUi": {
+          "rank": 4,
+          "performanceId": "PF301234"
+        },
+        "historicalXml": {
+          "rank": 4,
+          "performanceId": "PF301234"
+        }
+      },
+      {
+        "position": 5,
+        "officialUi": {
+          "rank": 5,
+          "performanceId": "PF303549"
+        },
+        "historicalXml": {
+          "rank": 5,
+          "performanceId": "PF303549"
+        }
+      },
+      {
+        "position": 6,
+        "officialUi": {
+          "rank": 6,
+          "performanceId": "PF303402"
+        },
+        "historicalXml": {
+          "rank": 6,
+          "performanceId": "PF303402"
+        }
+      },
+      {
+        "position": 7,
+        "officialUi": {
+          "rank": 7,
+          "performanceId": "PF303624"
+        },
+        "historicalXml": {
+          "rank": 7,
+          "performanceId": "PF303624"
+        }
+      },
+      {
+        "position": 8,
+        "officialUi": {
+          "rank": 8,
+          "performanceId": "PF294946"
+        },
+        "historicalXml": {
+          "rank": 8,
+          "performanceId": "PF294946"
+        }
+      },
+      {
+        "position": 9,
+        "officialUi": {
+          "rank": 9,
+          "performanceId": "PF303843"
+        },
+        "historicalXml": {
+          "rank": 9,
+          "performanceId": "PF303843"
+        }
+      },
+      {
+        "position": 10,
+        "officialUi": {
+          "rank": 10,
+          "performanceId": "PF300854"
+        },
+        "historicalXml": {
+          "rank": 10,
+          "performanceId": "PF300854"
+        }
+      }
+    ]
+  },
+  "limits": {
+    "allFourteenCategoriesVerified": false,
+    "musicalVerified": false,
+    "dailyFreshnessFor20261021": false,
+    "dailyScheduler": "NOT_RUN",
+    "officialCollectorImplemented": false,
+    "persistentSnapshotPublication": "NOT_RUN",
+    "databaseWrites": false,
+    "productActivation": false,
+    "apiInternalAggregationPeriodProven": false,
+    "networkCallsAddedByThisComparison": 0,
+    "providerAuthenticatedCallsCumulative": 1,
+    "providerAuthenticatedCallsAdded": 0,
+    "additionalCallsAuthorized": false
+  },
+  "remaining": [
+    "나머지13분류의 공식 기간·조건·ID/순위/순서 대조",
+    "2026-10-21 기준 어제까지 최근7일의 새 관측",
+    "안전한 공식 관측 collector와 검증 snapshot 영속 게시",
+    "공식 조건·동률·분류별 실패/지연 처리 및 실제 운영 검증"
+  ],
+  "preservation": "기존 receipt/XML/UI 원자료를 변경하지 않음. 비밀키·credential URL·토큰·원 XML 전체를 이 파일에 복사하지 않음.",
+  "projectProgress": {
+    "percent": 79,
+    "completed": 22,
+    "total": 28,
+    "unchanged": true
+  },
+  "personal44Complete": false,
+  "committed": false
+}

@@ -1,0 +1,34 @@
+{
+  "wbsId": "8.19",
+  "actor": "minkyu",
+  "source": "USER_REPLY_IN_CURRENT_SESSION",
+  "confirmedAt": "2026-10-21T07:56:45.009316+00:00",
+  "userAnswer": "이후야",
+  "confirmedFact": "personal Play developer account created after 2023-11-13",
+  "exactCreationDate": "NOT_PROVIDED_NOT_REQUIRED_FOR_CUTOFF_CLASSIFICATION",
+  "priorUiReadEvidence": {
+    "path": "docs/collaboration/requests/minkyu/2026-10-21-play-account-preflight.json",
+    "sha256": "9237c1bd6aae8ea61d18dc2011e0439d90d742ee618deb6ca500517c9eb7aa5d"
+  },
+  "officialRuleSource": "https://support.google.com/googleplay/android-developer/answer/14151465?hl=en-GB",
+  "applicableYumidangPath": {
+    "closedTestMinimumOptedInTesters": 12,
+    "continuousDays": 14,
+    "afterRequirement": "apply for production access",
+    "productionApprovalSeparate": true
+  },
+  "completedThisRecord": "ACCOUNT_CUTOFF_APPLICABILITY_CONFIRMED",
+  "notProven": [
+    "Yumidang app registered",
+    "12 eligible testers continuously opted in for 14 days",
+    "tester engagement and app-specific production access approval",
+    "exact identity/device verification completion evidence",
+    "Yumi execution approval record"
+  ],
+  "appCreation": 0,
+  "testerInvitesSent": 0,
+  "productionApplication": 0,
+  "release": 0,
+  "taskComplete": false,
+  "projectBaseline": "79%(22/28)"
+}

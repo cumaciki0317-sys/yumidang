@@ -1,0 +1,68 @@
+{
+  "wbsId": "4.8",
+  "date": "2026-10-21",
+  "sourceHead": "1ec4f623dd3afa4c4251bf751c8b280d820446b0",
+  "scope": "LOCAL_AUTH6_OWN_ME_ACTIVE_AND_ORIGINAL_NATURAL_EXPIRY_ONLY",
+  "actualNaver": "NOT_RUN",
+  "activeCases": [
+    "own",
+    "missing",
+    "forged",
+    "public_other"
+  ],
+  "originalJwtLifetimeSeconds": 3600,
+  "tokenChanges": 0,
+  "expiredAuthStatus": 403,
+  "expiredMeStatus": 401,
+  "expiredRpcModelReservationCalls": 0,
+  "fullSixSchemaTableCount": 180,
+  "beforeAfterSnapshotSha256": "d665c86a0d27467624039d7d27c6dac98dda71d29b4ccb72d46fa264253004b8",
+  "originalRowsAuthBudgetsUnknown": "PRESERVED",
+  "sequence": "NOT_VERIFIED",
+  "independentReview": "ACCEPTED_LOCAL_SCOPE",
+  "positiveDiscovery": "FAIL_BEFORE_FACTORY_DISPATCH_PRESERVED_NOT_REPLAYED",
+  "cleanup": {
+    "originalClose": "FAIL_OWNED_NETWORK_CHANGED_PRESERVED",
+    "cause": "Docker dynamic IPAM usage changed after stopping one owned endpoint",
+    "followup": "STOPPED_OWN_IDS_ONLY",
+    "ownStopped": 4,
+    "otherStops": 0,
+    "ownNetworksVolumes": "RETAINED",
+    "wholeStoredBytes": "NOT_VERIFIED"
+  },
+  "evidence": {
+    "root-original-expiry-wait-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/root-original-expiry-wait-receipt.json",
+      "sha256": "859dc527175227ba06f365909601a2c618e49f8df1370055255516bc1fdab88d"
+    },
+    "service-profile-original-expired-e331ec6c83a141d3bf7313e74d3f0241/service-expired-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/service-profile-original-expired-e331ec6c83a141d3bf7313e74d3f0241/service-expired-receipt.json",
+      "sha256": "5bcaecfe401878a5f550df6f957cf44971ef06583a3c5ef0215bbea634928722"
+    },
+    "service-profile-readonly-e331ec6c83a141d3bf7313e74d3f0241/service-readonly-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/service-profile-readonly-e331ec6c83a141d3bf7313e74d3f0241/service-readonly-receipt.json",
+      "sha256": "4489f8eb2691b4bf48767633e2e52f6d6e9f6244afa88e08e84fa06052f1c4b5"
+    },
+    "close-followup-a001-stop-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/close-followup-a001-stop-receipt.json",
+      "sha256": "79a5e9d0b382bb0d8b0e70c338ff09927664885e204fc53031e84a92afeab7ea"
+    },
+    "root-close-readonly-audit.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a005/yumidang-current-auth-6ad9e79518156d95/root-close-readonly-audit.json",
+      "sha256": "bb2492eeab9e9efdf5eadeae63fb205f6d1de1fc67c67ba974370560bc9c60c4"
+    }
+  },
+  "remaining": [
+    "실제 네이버 회원 QA는 6.2 HOLD",
+    "실제 앱 소비는 담당 빌드 후 별도 검증",
+    "운영 적용은 별도 조건",
+    "실패한 positive discovery는 새 환경에서 재검증"
+  ],
+  "next": [
+    "최신124 migration 합성 SQL 검증",
+    "새 합성 Auth 환경의 positive discovery",
+    "마감 잠금 경쟁 재현"
+  ],
+  "overallProgress": "79%(22/28)",
+  "personal44Progress": "NOT_RECALCULATED"
+}

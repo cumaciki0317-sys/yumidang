@@ -1,0 +1,70 @@
+{
+  "wbsId": "8.19",
+  "actor": "minkyu",
+  "observedAt": "2026-10-21T07:26:42.831205+00:00",
+  "sourceHead": "1ec4f623dd3afa4c4251bf751c8b280d820446b0",
+  "scope": "APPROVED_ACCOUNT_UI_READ_ONLY",
+  "observations": {
+    "accountType": "personal",
+    "ownerMatchesMinkyu": true,
+    "contactEmailVerifiedDisplayed": true,
+    "contactPhoneVerifiedDisplayed": true,
+    "developerEmailVerifiedDisplayed": true,
+    "accountCreationDate": "NOT_DISPLAYED_ON_REVIEWED_SCREENS",
+    "androidDeveloperIdentityPage": "LEGAL_IDENTITY_SHOWN_NOT_PROOF_OF_ALL_RELEASE_REQUIREMENTS",
+    "yumidangSearch": "NO_MATCHING_RESULT",
+    "reviewedPages": [
+      "account overview",
+      "account details/aboutYou",
+      "developer verification ID",
+      "home app search"
+    ]
+  },
+  "publicRule": {
+    "source": "https://support.google.com/googleplay/android-developer/answer/14151465?hl=en-GB",
+    "checkedAt": "2026-10-21",
+    "conditionalOnly": true,
+    "condition": "personal account created after 2023-11-13",
+    "closedTestMinimumOptedInTesters": 12,
+    "continuousDays": 14,
+    "then": "apply for production access; approval is separate",
+    "thisAccountApplicability": "PENDING_CREATION_DATE_AND_APP_SPECIFIC_CONSOLE_EVIDENCE"
+  },
+  "localAppConfig": {
+    "path": "apps/mobile/app.json",
+    "sha256": "de19e81811c820deeb67bf9fc5fa7c926dbc0cb8acfe495b50f63daab734819b",
+    "name": "유미당",
+    "version": "1.0.0",
+    "androidPackagePresent": false,
+    "iosBundleIdentifierPresent": false,
+    "doesNotProveNativeBuildOrSigning": true
+  },
+  "excludedPersonalValues": [
+    "email values",
+    "phone value",
+    "legal name/address",
+    "payment-profile URL",
+    "unrelated app metrics"
+  ],
+  "actions": {
+    "settingsChanged": 0,
+    "appCreated": 0,
+    "accountCreated": 0,
+    "payment": 0,
+    "uploads": 0,
+    "testerInvites": 0,
+    "productionApplication": 0,
+    "submission": 0,
+    "release": 0
+  },
+  "remaining": [
+    "account creation date",
+    "identity/device verification exact completion evidence",
+    "Yumidang app-specific testing/production access evidence",
+    "signed Android build, fixed package ID and release inputs from Jonghyun",
+    "Yumi release/UT inputs"
+  ],
+  "taskComplete": false,
+  "projectBaseline": "79%(22/28)",
+  "requestDocument": "docs/collaboration/requests/minkyu/2026-10-21-jonghyun-release-inputs.md"
+}
