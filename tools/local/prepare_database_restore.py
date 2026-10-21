@@ -17,8 +17,10 @@ import re
 import subprocess
 import sys
 import signal
+import stat
 import tempfile
 import time
+import threading
 import uuid
 from types import SimpleNamespace
 
@@ -1128,3 +1130,398 @@ def prepare_current124_restore_review(profile, source_manifest):
             'remaining': ['review fresh current124 capture adapter and executor',
                           'fresh identity memory preservation and O_EXCL intent gates',
                           'actual restore comparison and deletion reapplication', '39 Storage originals']}
+
+
+CURRENT_CAPTURE_HOST = 'unix:///Users/minkyu/.colima/yumidang-minkyu/docker.sock'
+CURRENT_CAPTURE_DAEMON = '879401ec-e2b7-4ad8-9915-0a16ea74e3f5'
+CURRENT_CAPTURE_TOOLS = FILES | {'tools/local/prepare_restore_source_manifest.py',
+                               'tools/local/run_current_auth_source.py'}
+
+
+class ReviewedCurrentRestoreCapture(secure._ReviewedRestoreBytes):
+    """서로 다른 tool/source HEAD와 사전 root 검토 관측을 봉인한다. 실행 CLI는 없다."""
+    __slots__ = ()
+
+    @staticmethod
+    def _validate(v):
+        secure.require(type(v) is dict and set(v) == {
+            'scope', 'profileSha256', 'toolRepo', 'toolHead', 'toolPins', 'sourceRepo',
+            'sourceHead', 'sourcePins', 'migrations', 'captureId', 'output', 'ownIds',
+            'daemonId', 'identitySha256', 'dbIncarnation', 'metadataSha256',
+            'closedControlsSha256', 'unknownRowsSha256', 'portAuthorityPath',
+            'portAuthoritySha256'}, 'CURRENT_CAPTURE_REVIEW_FIELDS')
+        secure.require(v['scope'] == 'CURRENT124_READONLY_SOURCE_CAPTURE'
+                       and all(secure._current_sha(v[k]) for k in
+                               ('profileSha256', 'identitySha256', 'metadataSha256',
+                                'closedControlsSha256', 'unknownRowsSha256', 'portAuthoritySha256'))
+                       and all(secure._current_sha(v[k], 40) for k in ('toolHead', 'sourceHead'))
+                       and secure._current_uuid(v['captureId']), 'CURRENT_CAPTURE_REVIEW_PINS')
+        for root_key, pins_key in (('toolRepo', 'toolPins'), ('sourceRepo', 'sourcePins')):
+            path = Path(v[root_key])
+            secure.require(path.is_absolute() and path.resolve() == path
+                           and type(v[pins_key]) is dict and bool(v[pins_key])
+                           and all(type(name) is str and not Path(name).is_absolute()
+                                   and '..' not in Path(name).parts and secure._current_sha(pin)
+                                   for name, pin in v[pins_key].items()), 'CURRENT_CAPTURE_REPO_PINS')
+        secure.require(CURRENT_CAPTURE_TOOLS == set(v['toolPins'])
+                       and RECOVERY in v['sourcePins'] and HELPER in v['sourcePins'],
+                       'CURRENT_CAPTURE_SOURCE_CLOSURE')
+        secure.require(type(v['migrations']) is list and len(v['migrations']) == 124
+                       and all(type(x) is dict and type(x.get('path')) is str
+                               and type(x.get('version')) is str and re.fullmatch('[0-9]{14}', x['version'])
+                               and Path(x['path']).stem.startswith(x['version'] + '_')
+                               and x['path'] in v['sourcePins']
+                               and x.get('sha256') == v['sourcePins'][x['path']]
+                               for x in v['migrations']), 'CURRENT_CAPTURE_FULL_MANIFEST')
+        ids = v['ownIds']
+        secure.require(type(ids) is dict and set(ids) == {'db', 'auth', 'rest', 'gateway'}
+                       and all(secure._current_sha(x) for x in ids.values())
+                       and len(set(ids.values())) == 4 and v['daemonId'] == CURRENT_CAPTURE_DAEMON,
+                       'CURRENT_CAPTURE_EXACT_FOUR_IDS')
+        incarnation = v['dbIncarnation']
+        secure.require(type(incarnation) is dict and set(incarnation) == {'startedAt', 'restartCount'}
+                       and type(incarnation['startedAt']) is str and bool(incarnation['startedAt'])
+                       and type(incarnation['restartCount']) is int and incarnation['restartCount'] >= 0,
+                       'CURRENT_CAPTURE_DB_INCARNATION')
+        output = Path(v['output'])
+        secure.require(output.is_absolute() and output.parent.resolve() == output.parent
+                       and output.parent.is_relative_to(Path('/private/tmp'))
+                       and re.fullmatch(r'yumidang-current124-capture-[a-f0-9-]{36}', output.name)
+                       and output.name.endswith(v['captureId'])
+                       and not any(output.is_relative_to(Path(v[k])) for k in ('toolRepo', 'sourceRepo')),
+                       'CURRENT_CAPTURE_NEW_OUTPUT')
+        authority = Path(v['portAuthorityPath'])
+        secure.require(authority.is_absolute() and authority.is_relative_to(Path('/private/tmp')),
+                       'CURRENT_CAPTURE_ROOT_PORT_AUTHORITY')
+
+
+class CurrentRestoreCaptureReadPorts:
+    """검토한 root 조립의 읽기 전용 포트. JSON은 이 객체나 root 검토를 생성하지 못한다.
+
+    state는 pinned source의 native_backup_state(전체 비시스템 relation/roles/ACL/sequence),
+    identity는 {daemonId,ownIds,dbIncarnation,...} 전체 고정 관측, metadata는 기존 자원
+    전체 보존 관측이다. sql은 고정 읽기 SELECT만 전달한다. 실제 factory와 그 source
+    context는 별도 root 코드 검토 대상이며 adapter는 원 authority bytes를 매번 검사한다.
+    """
+    def __init__(self, *, source_context, identity, metadata, closed_controls, state,
+                 unknown_rows, sql, memory_kib):
+        callbacks = locals().copy(); callbacks.pop('self')
+        secure.require(all(callable(x) for x in callbacks.values()), 'CURRENT_CAPTURE_READ_PORTS')
+        self.__dict__.update(callbacks)
+
+
+def verify_current_capture_sources(review):
+    """tool HEAD를 source HEAD로 덮지 않는다. 각각의 Git/디스크 원 bytes를 검산한다."""
+    secure.require(type(review) is ReviewedCurrentRestoreCapture, 'TYPED_CURRENT_CAPTURE_REQUIRED')
+    v = review.value()
+    for repo_key, head_key, pins_key in (('toolRepo', 'toolHead', 'toolPins'),
+                                        ('sourceRepo', 'sourceHead', 'sourcePins')):
+        repo = Path(v[repo_key])
+        secure.require(head(repo) == v[head_key], 'CURRENT_CAPTURE_HEAD_CHANGED')
+        for name, pin in v[pins_key].items():
+            raw = secure.read_bytes(repo / name, repo=repo)
+            committed = subprocess.check_output(['git', '-C', str(repo), 'show', v[head_key] + ':' + name],
+                                                stderr=subprocess.DEVNULL, timeout=15)
+            secure.require(sha(raw) == pin and raw == committed, 'CURRENT_CAPTURE_SOURCE_CHANGED')
+        secure.require(head(repo) == v[head_key], 'CURRENT_CAPTURE_HEAD_CHANGED')
+    secure.require(inspect_migrations(Path(v['sourceRepo']))['migrations'] == v['migrations'],
+                   'CURRENT_CAPTURE_MANIFEST_CHANGED')
+    secure.require(sha(secure.read_bytes(Path(v['portAuthorityPath']))) == v['portAuthoritySha256'],
+                   'CURRENT_CAPTURE_PORT_AUTHORITY_CHANGED')
+
+
+def validate_current_capture_identity(identity, value, profile):
+    secure.require(type(identity) is dict and set(identity) ==
+                   {'daemonId', 'ownIds', 'dbIncarnation', 'containers'}
+                   and identity['daemonId'] == value['daemonId']
+                   and identity['ownIds'] == value['ownIds']
+                   and identity['dbIncarnation'] == value['dbIncarnation']
+                   and type(identity['containers']) is dict
+                   and set(identity['containers']) == set(value['ownIds']), 'CURRENT_CAPTURE_IDENTITY_CHANGED')
+    for role, container in identity['containers'].items():
+        secure.require(type(container) is dict and set(container) == {
+            'id', 'name', 'image', 'configSha256', 'hostConfigSha256', 'mountsSha256',
+            'startedAt', 'restartCount', 'networkIds', 'running'}
+            and container['id'] == value['ownIds'][role] and container['running'] is True
+            and all(secure._current_sha(container[k]) for k in
+                    ('image', 'configSha256', 'hostConfigSha256', 'mountsSha256'))
+            and type(container['name']) is str and bool(container['name'])
+            and type(container['startedAt']) is str and bool(container['startedAt'])
+            and type(container['restartCount']) is int and container['restartCount'] >= 0
+            and type(container['networkIds']) is dict and bool(container['networkIds'])
+            and all(type(k) is str and bool(k) and secure._current_sha(v)
+                    for k, v in container['networkIds'].items()), 'CURRENT_CAPTURE_CONTAINER_CHANGED')
+    db = identity['containers']['db']
+    secure.require({k: db[k] for k in ('startedAt', 'restartCount')} == value['dbIncarnation']
+                   and {k: db[k] for k in ('id', 'name', 'image')} == profile['sourceIdentity']
+                   and sha(canonical(identity)) == value['identitySha256'],
+                   'CURRENT_CAPTURE_DB_INCARNATION_CHANGED')
+
+
+def capture_current_restore_stream(stream, limit, process_group_closed):
+    """고정 stat 크기만 읽는다. 살아 있는 writer의 EOF를 기다리거나 따라가지 않는다."""
+    secure.require(type(limit) is int and 0 <= limit <= 64 * 1024**2
+                   and type(process_group_closed) is bool, 'CURRENT_CAPTURE_STREAM_LIMIT')
+    deadline = time.monotonic() + 3
+    before = os.fstat(stream.fileno())
+    secure.require(stat.S_ISREG(before.st_mode), 'CURRENT_CAPTURE_REGULAR_STREAM')
+    snapshot_size = before.st_size
+    stream.seek(0)
+    stored = stream.read(min(limit, snapshot_size))
+    digestor = hashlib.sha256(stored); hashed = len(stored)
+    can_hash = process_group_closed is True and snapshot_size <= 128 * 1024**2
+    if can_hash:
+        while hashed < snapshot_size and time.monotonic() < deadline:
+            chunk = stream.read(min(1024**2, snapshot_size - hashed))
+            if not chunk: break
+            digestor.update(chunk); hashed += len(chunk)
+    after = os.fstat(stream.fileno())
+    stable = (before.st_size, before.st_mtime_ns, before.st_ctime_ns) == (
+              after.st_size, after.st_mtime_ns, after.st_ctime_ns)
+    complete = can_hash and stable and hashed == snapshot_size and time.monotonic() <= deadline
+    return stored, {'observedBytes': snapshot_size, 'storedBytes': len(stored),
+        'hashedBytes': hashed, 'hashLimitBytes': 128 * 1024**2, 'hashTimeoutSeconds': 3,
+        'wholeStreamSha256': digestor.hexdigest() if complete else None,
+        'wholeStreamProven': complete, 'storedSha256': sha(stored),
+        'storedComplete': complete and snapshot_size == len(stored)}
+
+
+class Current124SourceCapture:
+    """새 source를 읽기만 한다. restore target 생성/SQL 실행·운영·Storage 쓰기 API 없음."""
+    def __init__(self, profile, review, ports):
+        secure.require(type(profile) is secure.ReviewedCurrentRestoreProfile
+                       and type(review) is ReviewedCurrentRestoreCapture
+                       and type(ports) is CurrentRestoreCaptureReadPorts, 'TYPED_CURRENT_CAPTURE_COMPOSITION')
+        self.profile, self.review, self.ports = profile, review, ports
+        self.p, self.v = profile.value(), review.value()
+        secure.require(self.v['profileSha256'] == profile.sha256
+                       and self.v['captureId'] == self.p['captureId']
+                       and self.v['sourceHead'] == self.p['sourceHead']
+                       and sha(canonical(self.v['migrations'])) == self.p['migrationsSha256']
+                       and self.v['ownIds']['db'] == self.p['sourceIdentity']['id'],
+                       'CURRENT_CAPTURE_PROFILE_BINDING')
+        self.root = Path(self.v['output']); self.sticky = False; self.sequence = 0
+        self.started = None; self.created = False; self.memory_samples = []
+        self.memory_failures = []; self.memory_stop = threading.Event(); self.memory_thread = None
+
+    def save(self, name, value):
+        secure.require(self.created, 'CURRENT_CAPTURE_OUTPUT_NOT_CREATED')
+        return write_private(self.root, name, value)
+
+    def guard(self, start=False):
+        secure.require(not self.sticky, 'CURRENT_CAPTURE_CLOSURE_STICKY')
+        self._guard_live(start=start)
+
+    def _guard_live(self, start=False):
+        # 진행 중인 한 자식의 감시 전용. public guard/다음 command는 sticky를 먼저 거절한다.
+        secure.require(not self.memory_failures, 'CURRENT_CAPTURE_MEMORY_MONITOR_FAILED')
+        secure.require(self.started is not None and time.monotonic() - self.started < 600,
+                       'CURRENT_CAPTURE_TOTAL_TIMEOUT')
+        verify_current_capture_sources(self.review)
+        began = time.monotonic(); memory = self.ports.memory_kib()
+        self.memory_samples.append({'availableKiB': memory, 'start': start})
+        secure.require(type(memory) is int and memory >= (1048576 if start else 786432)
+                       and time.monotonic() - began <= 3, 'CURRENT_CAPTURE_MEMORY_LOW_OR_STALE')
+        identity = self.ports.identity()
+        self.sequence += 1
+        self.save(f'identity-{self.sequence:05d}.json', identity)
+        validate_current_capture_identity(identity, self.v, self.p)
+        metadata = self.ports.metadata()
+        self.save(f'metadata-{self.sequence:05d}.json', metadata)
+        secure.require(sha(canonical(metadata)) == self.v['metadataSha256'],
+                       'CURRENT_CAPTURE_EXISTING_METADATA_CHANGED')
+
+    def start_memory_monitor(self):
+        def monitor():
+            while not self.memory_stop.is_set():
+                began = time.monotonic()
+                try:
+                    n = self.ports.memory_kib()
+                    self.memory_samples.append({'availableKiB': n, 'start': False, 'monitor': True})
+                    secure.require(type(n) is int and n >= 786432 and time.monotonic() - began <= 3,
+                                   'CURRENT_CAPTURE_MEMORY_MONITOR_FAILED')
+                except BaseException as error:
+                    self.memory_failures.append(type(error).__name__)
+                    return
+                self.memory_stop.wait(max(0, began + 1 - time.monotonic()))
+        self.memory_thread = threading.Thread(target=monitor, daemon=True)
+        self.memory_thread.start()
+
+    def checkpoint(self, label):
+        self.guard()
+        history_raw = self.ports.sql(HISTORY_SQL)
+        self.save(label + '-history-raw.json', {'raw': history_raw})
+        secure.require(type(history_raw) is str, 'CURRENT_CAPTURE_HISTORY_RESPONSE')
+        try: history = json.loads(history_raw)
+        except (ValueError, UnicodeError):
+            raise RestoreError('CURRENT_CAPTURE_HISTORY_JSON') from None
+        expected = [[x['version'], Path(x['path']).stem.split('_', 1)[1]]
+                    for x in self.v['migrations']]
+        secure.require(type(history) is list and len(history) == 124 and history == expected,
+                       'CURRENT_CAPTURE_ACTUAL124_HISTORY_REQUIRED')
+        controls = self.ports.closed_controls()
+        self.save(label + '-controls.json', controls)
+        secure.require(sha(canonical(controls)) == self.v['closedControlsSha256'],
+                       'CURRENT_CAPTURE_CLOSED_CONTROLS_CHANGED')
+        state = self.ports.state()
+        self.save(label + '-state.json', state)
+        secure._current_restore_state(state, self.p)
+        secure.require(sha(canonical(state)) == self.p['sourceStateSha256'],
+                       'CURRENT_CAPTURE_SOURCE_STATE_CHANGED')
+        unknown = self.ports.unknown_rows()
+        self.save(label + '-unknown.json', unknown)
+        secure.require(sha(canonical(unknown)) == self.v['unknownRowsSha256']
+                       and type(unknown) is list and sorted(x['id'] for x in unknown) == self.p['unknownIds']
+                       and all(x['status'] == 'UNKNOWN' and type(x['fullReservationAndLedgerRows']) is dict
+                               and bool(x['fullReservationAndLedgerRows']) for x in unknown),
+                       'CURRENT_CAPTURE_UNKNOWN_CHANGED')
+        self.guard()
+        return state
+
+    def backend_absent(self, app):
+        secure.require(re.fullmatch('[a-z0-9_]{1,63}', app), 'CURRENT_CAPTURE_APPLICATION_NAME')
+        raw = self.ports.sql("select count(*) from pg_stat_activity where application_name='" + app + "';")
+        self.save(app.replace('_', '-') + '-backend.json', {'applicationName': app, 'raw': raw})
+        secure.require(raw == '0', 'CURRENT_CAPTURE_BACKEND_NOT_ABSENT')
+
+    def command(self, kind):
+        """고정 읽기 전용 pg 도구만 실행하고 raw/PG/backend 종료를 각각 보존한다."""
+        secure.require(kind in ('database', 'roles'), 'CURRENT_CAPTURE_FIXED_COMMAND')
+        self.guard()
+        app = 'ydr_' + self.v['captureId'].replace('-', '') + '_' + kind
+        self.backend_absent(app)
+        options = ['pg_dump', '-Fc', '-d', 'postgres'] if kind == 'database' else [
+            'pg_dumpall', '--roles-only', '--no-role-passwords', '-l', 'postgres']
+        argv = ['docker', '--host', CURRENT_CAPTURE_HOST, 'exec', '--env', 'PGAPPNAME=' + app,
+                '--env', 'PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=120000 -c lock_timeout=8000',
+                self.v['ownIds']['db'], *options, '-h', '/var/run/postgresql', '-U', 'postgres']
+        prefix = 'command-' + kind
+        self.save(prefix + '-intent.json', {'argv': argv, 'timeoutSeconds': 120,
+                                          'outputLimitBytes': 64 * 1024**2, 'noReplay': True})
+        # spawn 전에 closure helper 원 bytes를 고정한다. 이후 파일 변조도 자식 정리를 막지 않는다.
+        helper_path = Path(self.v['toolRepo']) / 'tools/local/run_current_auth_source.py'
+        helper_raw = secure.read_bytes(helper_path, repo=Path(self.v['toolRepo']))
+        secure.require(sha(helper_raw) == self.v['toolPins']['tools/local/run_current_auth_source.py'],
+                       'CURRENT_CAPTURE_CLOSURE_HELPER_CHANGED')
+        nodes = [node for node in ast.parse(helper_raw).body if isinstance(node, ast.FunctionDef)
+                 and node.name in ('process_group_state', 'close_process_group')]
+        secure.require(len(nodes) == 2, 'CURRENT_CAPTURE_CLOSURE_HELPER_CONTRACT')
+        space = {'os': os, 'signal': signal, 'subprocess': subprocess, 'time': time}
+        exec(compile(ast.Module(body=nodes, type_ignores=[]), '<reviewed-pg-closure>', 'exec'), space)
+        child = None; original = None; closure = None; raw = b''
+        with tempfile.TemporaryFile(dir=self.root) as out, tempfile.TemporaryFile(dir=self.root) as err:
+            try:
+                self.sticky = True  # spawn/응답 유실부터 원증거 최종 저장까지 후속 동작 거절
+                child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=out, stderr=err,
+                                         start_new_session=True)
+                began = time.monotonic()
+                while child.poll() is None:
+                    secure.require(time.monotonic() - began < 120, 'CURRENT_CAPTURE_COMMAND_TIMEOUT')
+                    secure.require(os.fstat(out.fileno()).st_size <= 64 * 1024**2
+                                   and os.fstat(err.fileno()).st_size <= 2 * 1024**2,
+                                   'CURRENT_CAPTURE_OUTPUT_LIMIT')
+                    try: child.wait(timeout=.5)
+                    except subprocess.TimeoutExpired: pass
+                    self._guard_live()
+                secure.require(child.returncode == 0, 'CURRENT_CAPTURE_COMMAND_FAILED')
+            except BaseException as error:
+                original = error
+            finally:
+                # 검토한 tool HEAD의 PG closure helper만 captured bytes로 실행한다.
+                if child is not None:
+                    try:
+                        closure = space['close_process_group'](child, terminate=original is not None)
+                    except BaseException as error:
+                        closure = {'closed': False, 'errorType': type(error).__name__}
+                closed = child is not None and closure is not None and closure.get('closed') is True
+                raw, stdout_proof = capture_current_restore_stream(out, 64 * 1024**2, closed)
+                stderr, stderr_proof = capture_current_restore_stream(err, 2 * 1024**2, closed)
+                self.save(prefix + '-stdout.bin', raw)
+                self.save(prefix + '-stderr.bin', stderr)
+                self.save(prefix + '-streams.json', {'stdout': stdout_proof, 'stderr': stderr_proof})
+                self.save(prefix + '-closure.json', closure or {'closed': False, 'spawned': False})
+                if child is not None and (closure is None or closure.get('closed') is not True):
+                    self.sticky = True
+                    raise RestoreError('CURRENT_CAPTURE_PROCESS_GROUP_UNPROVEN') from original
+                if child is not None:
+                    try: self._backend_final(app, prefix)
+                    except BaseException:
+                        self.sticky = True
+                        raise
+        if original is not None: raise original
+        secure.require(stdout_proof['wholeStreamProven'] and stderr_proof['wholeStreamProven']
+                       and stdout_proof['observedBytes'] <= 64 * 1024**2
+                       and stderr_proof['observedBytes'] <= 2 * 1024**2,
+                       'CURRENT_CAPTURE_OUTPUT_LIMIT_OR_UNSTABLE_STREAM')
+        self.sticky = False  # 원문/streams/PG/backend 증거와 모든 판정이 완료된 정상 경로만 해제
+        self.guard()
+        return raw
+
+    def _backend_final(self, app, prefix):
+        raw = self.ports.sql("select count(*) from pg_stat_activity where application_name='" + app + "';")
+        self.save(prefix + '-backend-final.json', {'applicationName': app, 'raw': raw})
+        secure.require(raw == '0', 'CURRENT_CAPTURE_BACKEND_NOT_ABSENT')
+
+    def run(self):
+        secure.require(not self.created and not self.root.exists() and not self.root.is_symlink(),
+                       'CURRENT_CAPTURE_NO_REPLAY')
+        verify_current_capture_sources(self.review)
+        if self.root.parent != Path('/private/tmp'):
+            guards.private_temp_root(self.root.parent)
+        self.root.mkdir(mode=0o700)
+        self.created = True; self.started = time.monotonic(); result = None; original = None
+        self.save('capture-intent.json', {'reviewSha256': self.review.sha256,
+                  'profileSha256': self.profile.sha256, 'captureId': self.v['captureId'],
+                  'toolHead': self.v['toolHead'], 'sourceHead': self.v['sourceHead'],
+                  'readOnly': True, 'automaticReplay': False})
+        context = self.ports.source_context(); entered = False
+        try:
+            context.__enter__(); entered = True
+            self.guard(start=True)
+            self.start_memory_monitor()
+            before = self.checkpoint('before')
+            dump = self.command('database')
+            secure.require(dump.startswith(b'PGDMP'), 'CURRENT_CAPTURE_ARCHIVE_HEADER')
+            self.save('source.dump', dump)
+            roles = self.command('roles')
+            secure.require(b'CREATE ROLE' in roles and b'PASSWORD ' not in roles,
+                           'CURRENT_CAPTURE_ROLE_ARCHIVE_INVALID')
+            self.save('roles.sql', roles)
+            after = self.checkpoint('after')
+            secure.require(canonical(before) == canonical(after), 'CURRENT_CAPTURE_SOURCE_CHANGED')
+            self.guard()
+            result = {'status': 'CAPTURED_CURRENT124_DATABASE_ONLY',
+                      'captureId': self.v['captureId'], 'profileSha256': self.profile.sha256,
+                      'reviewSha256': self.review.sha256, 'toolHead': self.v['toolHead'],
+                      'sourceHead': self.v['sourceHead'], 'sourceUnchanged': True,
+                      'databaseArchiveSha256': sha(dump), 'rolesArchiveSha256': sha(roles),
+                      'actualRestore': 'NOT_RUN', 'fullRestore': False, 'storageMissing': 39,
+                      'targetCreated': False, 'automaticReplay': False,
+                      'captureScope': 'AUTH_FOUR_ROLE_SOURCE_ONLY',
+                      'singleDatabaseArchiveSource': 'SEPARATE_TYPED_PROFILE_REQUIRED',
+                      'restoreExecutionAllowed': False}
+        except BaseException as error:
+            original = error
+        finally:
+            self.memory_stop.set()
+            if self.memory_thread is not None:
+                self.memory_thread.join(timeout=3)
+                if self.memory_thread.is_alive(): self.memory_failures.append('MONITOR_STILL_ALIVE')
+            if self.memory_failures and original is None:
+                original = RestoreError('CURRENT_CAPTURE_MEMORY_MONITOR_FAILED')
+            if entered:
+                try:
+                    context.__exit__(type(original) if original else None, original,
+                                     original.__traceback__ if original else None)
+                except BaseException as error:
+                    if original is None: original = error
+                    else: original.add_note('CURRENT_CAPTURE_SOURCE_CONTEXT_FINALIZATION_FAILED')
+            self.save('capture-finalization.json', {'status': 'CAPTURED' if result and not original else 'FAILED',
+                      'errorType': type(original).__name__ if original else None,
+                      'closureSticky': self.sticky, 'memorySamples': self.memory_samples,
+                      'memoryMonitorFailures': self.memory_failures,
+                      'sourceAfterFailure': 'NOT_PROVEN' if original else 'EXACT_BEFORE_AFTER',
+                      'automaticReplay': False, 'actualRestore': 'NOT_RUN', 'storageMissing': 39})
+        if original is not None: raise original
+        self.save('capture-receipt.json', result)
+        return result
