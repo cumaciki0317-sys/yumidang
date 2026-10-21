@@ -383,7 +383,7 @@ def validate_current_midnight_accounts(accounts, profile):
     return value
 
 
-def validate_signed_binding(value, prepared_root, target, now=None, current_midnight=None):
+def validate_signed_binding(value, prepared_root, target, now=None, current_midnight=None, d03_email_aliases=None):
     """로컬 입력만 허용한다. JWT claims 자체는 인증 증거가 아니다."""
     fields = {'version','kind','preparedRoot','databaseManifestSha256','origin','jwtIssuer','containers',
               'credentials','accounts','evidenceRoot','sourcePins','approvedByRoot','dockerSlotReady'}
@@ -425,6 +425,11 @@ def validate_signed_binding(value, prepared_root, target, now=None, current_midn
         if signed_claims(value['credentials'][key]).get('role') != role: raise ValueError('SIGNED_CREDENTIAL_ROLE')
     now = time.time() if now is None else now
     if not isinstance(value['accounts'],list) or len(value['accounts']) != 6: raise ValueError('SIGNED_SIX_ACCOUNTS')
+    aliases=None
+    if d03_email_aliases is not None:
+        if current_midnight is not None:raise ValueError('D03_ALIAS_MIDNIGHT_SCOPE_CONFLICT')
+        aliases=validate_d03_email_aliases(d03_email_aliases,prepared_root)
+        if [a.get('authEmail')for a in value['accounts']]!=aliases:raise ValueError('D03_EXACT_SIX_ALIAS_BINDING')
     users, sessions = set(), set()
     for a in value['accounts']:
         if not isinstance(a,dict) or set(a) != {'userId','sessionId','accessToken','expiresAt','authEmail'}:
@@ -439,7 +444,7 @@ def validate_signed_binding(value, prepared_root, target, now=None, current_midn
                 or type(c.get('exp')) is not int or type(a['expiresAt']) is not int
                 or c['exp'] != a['expiresAt'] or c['exp'] <= now+300
                 or c.get('email') != a['authEmail']
-                or not re.fullmatch(r'synthetic-ai-[a-z0-9-]+@example\.invalid',a['authEmail'])):
+                or (aliases is None and not re.fullmatch(r'synthetic-ai-[a-z0-9-]+@example\.invalid',a['authEmail']))):
             raise ValueError('SIGNED_ACCOUNT_METADATA')
         if (current_midnight is None and a['userId'] in users) or a['sessionId'] in sessions: raise ValueError('SIGNED_DUPLICATE_ACCOUNT')
         users.add(a['userId']); sessions.add(a['sessionId'])
@@ -1328,9 +1333,33 @@ def provisioning_added_scope(baseline, current, added, accounts):
         if bag!=expected:raise ValueError('PROVISION_UNOWNED_ROW_CHANGED')
 
 
+class ReviewedD03AuthEmailAliases:
+    """새 D03 source의 최초 발급용 exact6 alias. Naver 확인/자격 승인이 아니다."""
+    def __init__(self, decision_id, prepared_root, aliases):
+        root=Path(prepared_root)
+        if (type(decision_id)is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',decision_id)
+            or not root.is_absolute()or root.resolve()!=root or type(aliases)is not list or len(aliases)!=6
+            or any(type(alias)is not str for alias in aliases)or len(set(aliases))!=6):raise ValueError('D03_EXACT_SIX_EMAIL_ALIASES')
+        for alias in aliases:
+            if type(alias)is not str or not re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@naver[.]yumidang[.]invalid',alias):
+                raise ValueError('D03_EXACT_SIX_EMAIL_ALIASES')
+        self._sealed=json.dumps({'decisionId':decision_id,'preparedRoot':str(root),'aliases':aliases},sort_keys=True,separators=(',',':')).encode()
+    def descriptor(self):return json.loads(self._sealed)
+
+
+def validate_d03_email_aliases(policy,prepared_root,decision_id=None):
+    if type(policy)is not ReviewedD03AuthEmailAliases:raise ValueError('D03_TYPED_EMAIL_ALIASES_REQUIRED')
+    value=policy.descriptor()
+    checked=ReviewedD03AuthEmailAliases(value['decisionId'],value['preparedRoot'],value['aliases'])
+    if checked._sealed!=policy._sealed or value['preparedRoot']!=str(prepared_root)or(decision_id is not None and value['decisionId']!=decision_id):
+        raise ValueError('D03_EMAIL_ALIAS_SCOPE_CHANGED')
+    return value['aliases']
+
+
 class ReviewedSignedProvisioning:
     """검토한 서버 코드 객체만 공급하는 새 합성 Auth 생성 계약. JSON flags는 권한이 아니다."""
-    def __init__(self, decision_id, prepared_root, source_pins, containers, credentials, minimum_expiry, ports=None):
+    def __init__(self, decision_id, prepared_root, source_pins, containers, credentials, minimum_expiry, ports=None, d03_email_aliases=None):
+        self.d03_email_aliases=d03_email_aliases
         self.decision_id, self.prepared_root = decision_id, Path(prepared_root)
         self.source_pins, self.containers, self.credentials = source_pins, containers, credentials
         self.minimum_expiry, self.ports = minimum_expiry, ports
@@ -1496,6 +1525,9 @@ def provision_signed_accounts(prepared_root, reviewed):
     """한 새 대상의 원 JWT6 입력을 만든다. 실제 호출은 검토 객체/준비 대상 없으면 거절한다."""
     root=Path(prepared_root)
     if type(reviewed)is not ReviewedSignedProvisioning or reviewed.prepared_root!=root or not isinstance(reviewed.decision_id,str)or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',reviewed.decision_id):raise ValueError('PROVISION_REVIEWED_CODE_REQUIRED')
+    email_aliases=None
+    if reviewed.d03_email_aliases is not None:
+        email_aliases=validate_d03_email_aliases(reviewed.d03_email_aliases,root,reviewed.decision_id)
     source_head=provisioning_source_check(reviewed.source_pins)
     target=signed_prepared_target(root)
     manifest=signed_exact_json(signed_private_read(root/'database-manifest.json'))
@@ -1559,7 +1591,7 @@ def provision_signed_accounts(prepared_root, reviewed):
         observer.start()
         for index in range(6):
             live();resource(1048576 if index==0 else 786432)
-            email='synthetic-ai-'+scope+'-'+str(index)+'@example.invalid';password=base64.urlsafe_b64encode(os.urandom(36)).decode()
+            email=email_aliases[index]if email_aliases is not None else'synthetic-ai-'+scope+'-'+str(index)+'@example.invalid';password=base64.urlsafe_b64encode(os.urandom(36)).decode()
             if ports.resolve_email(email)is not None:raise ValueError('PROVISION_EMAIL_ALREADY_PRESENT')
             save('account-'+str(index)+'-intent-private.json',{'scopeId':scope,'authEmail':email,'password':password,'singleCreate':True})
             attempted.append((index,email))
@@ -1595,12 +1627,15 @@ def provision_signed_accounts(prepared_root, reviewed):
         binding={'version':1,'kind':SIGNED_KIND,'preparedRoot':str(root),'databaseManifestSha256':hashlib.sha256(signed_private_read(root/'database-manifest.json')).hexdigest(),
             'origin':origin,'jwtIssuer':origin+'/auth/v1','containers':reviewed.containers,'credentials':reviewed.credentials,'accounts':accounts,
             'evidenceRoot':str(signed_evidence),'sourcePins':reviewed.source_pins,'approvedByRoot':False,'dockerSlotReady':False}
-        validate_signed_binding(binding,root,target)
+        validate_signed_binding(binding,root,target,d03_email_aliases=reviewed.d03_email_aliases)
         binding_sha=provisioning_json(root,'signed-ai-binding-private.json',binding)
         receipt={'status':'PASS_LOCAL_AUTH6_PROVISION_ONLY','scopeId':scope,'accounts':6,'bindingSha256':binding_sha,
             'creationReceiptRoot':str(evidence),'signedEvidenceRoot':str(signed_evidence),'originalRowsPreserved':True,
             'baselineSha256':baseline_sha,'finalSha256':final_sha,
             'actualGoTrueAndDatabaseSessions':True,'actualNaver':'NOT_RUN','actualAI22AI23AI24':'NOT_RUN','authAccountsRetained':True}
+        if email_aliases is not None:
+            receipt['d03EmailAliasPolicy']=reviewed.d03_email_aliases.descriptor()
+            receipt['qualification']='NOT_RUN_SYNTHETIC_EMAIL_ALIAS_ONLY'
         save('receipt.json',receipt)
         return receipt
     except BaseException as error:

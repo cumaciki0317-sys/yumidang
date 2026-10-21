@@ -599,10 +599,23 @@ class BindingTests(unittest.TestCase):
          'SignedAuthLifecycleRunner.verify_final': ['81351268e7bca1b59e79c2100c4d660d8ff88c2161b01a8dadbe79b34d3ad7d9',
                                                     'da6c084dd22fd6154dc691d7c35f4f5aa15941db289380b214dabe74b798bf1f'],
          'SignedMidnightRunner.__init__': ['673854af8c0b247933089ce1bf4c2107a309b3ba96d929894f16dbbfc0cf7e2c',
-                                           'e54ec5a5be1e961158e1125f12f54579e132b1a56c9c677da5eaac3a3efc8d30'],
-         'SignedMidnightRunner.original_rows': ['42ae05123b5df3146a0f0f03140183827a28a3a540f21842d5cd8ea0d4cf9b1f'],
+                                           'e54ec5a5be1e961158e1125f12f54579e132b1a56c9c677da5eaac3a3efc8d30',
+                                           # 2026-10-21: reviewed current AI24 profile and held helper context.
+                                           'ee8c31b27070db4dcb5dd02b9916f4f9e626741bda908120534b36b6720abe15'],
+         # Exact canonical units after the existing reviewed custody overlay normalization.
+         'SignedMidnightRunner.export_resume_state': ['5e3c83f582dc12f6166cfd055326114011fde2852d58f4e3e8506e63bd687a93',
+                                                       '5b6e8c2bcb717c726d30120588523e482796814150b6a8ff70a4b241609daedd'],
+         'SignedMidnightRunner.restore_resume_state': ['09da2adcb81aa25931e7a41326e342b41da3919f71dc37f56358af687d47f406',
+                                                        '61c179e47f88257d6110e553bca757de24bcb99e779edbf1c47bf9cf65f1dd3b'],
+         'SignedMidnightRunner.validate_original_accounts': ['b86f27727113faeaa3b0655bf715f75f8306f70a868b00f846096293a351f51e',
+                                                             '78479d8e982037beaac16b8faea75f0497c116d6e0b7b459a165373f9043682f'],
+         'SignedMidnightRunner.original_rows': ['42ae05123b5df3146a0f0f03140183827a28a3a540f21842d5cd8ea0d4cf9b1f',
+                                              # 2026-10-21: explicit current table set; legacy four-schema branch unchanged.
+                                              '18463a4e7f7347a0e7c467d12f46ad3f5084d1a02e37c2c59816b13b1bfdcfa2'],
          'provision_signed_accounts': ['2e726f031a0a01dc5cd6c70d4bfceb4addc09dc21b2f31a68cc934f387805173',
-                                       'dc28508314c0d1bd4194a221ec9368e3dc5fa40923c12a331fed771090136303'],
+                                       'dc28508314c0d1bd4194a221ec9368e3dc5fa40923c12a331fed771090136303',
+                                       # 2026-10-21: exact typed D03 aliases; default six-session guards retained.
+                                       '48041bce49c72ccdddc7f7f7252e6c0ff5b74ef1976289910e01bcd255e17331'],
          'signed_prepared_target': ['732da1839bd23afa9913b59e655fb087eef0e1955de0200101095fc35e709649',
                                     'a2f1ad066897fb8823c4ce47c46bf2d9d565b5962326756d3c548b199b8041c1'],
          'signed_private_read': ['5731f1bec0db1e63d654ae8eedd978787bca79d75f2e01fa5d93cd932cc531ed',
@@ -623,6 +636,9 @@ class BindingTests(unittest.TestCase):
             for item in (original, candidate):
                 self.assertIn(hashlib.sha256(dump(item).encode()).hexdigest(), allowed, key)
             candidate.body = copy.deepcopy(original.body)
+            if key == 'SignedMidnightRunner.__init__':
+                # Both full ASTs were pinned above, including the reviewed optional profile argument.
+                candidate.args = copy.deepcopy(original.args)
         # AI24 원 메서드는 보존하고 수명주기만 정확한 별도 override로 전환한다.
         original_alias = ast.parse('original_rows=SignedMidnightRunner.original_rows').body[0]
         for revision in (before, after):
@@ -637,10 +653,46 @@ class BindingTests(unittest.TestCase):
             else:
                 self.assertEqual(hashlib.sha256(dump(member).encode()).hexdigest(), '2ccc81b3f40bde7fff7887b263a9cf1ef4386b3be7b7b7db12478a6c3554131f')
             cls.body.remove(member)
+        # 2026-10-21 independently reviewed typed AI24/D03 extensions.
+        # Pin complete units before normalizing signatures as well as bodies.
+        typed_units = {
+            'validate_signed_binding': {
+                'b282e4a93bd748a819a75525914bd1f26f9967e9a24d0fbf6b5ed45a3e3b49c6',
+                '22140dd8d1e84369866819b1e978122e651acbd0d940c7b8d2c2a94c2cb82ccd',
+                'ee04228d1a7e133baf2b253f56b74bd432fde4b94715aff999efd4d840dce81f'},
+            'ReviewedSignedProvisioning': {
+                '1d5f5b498f915114666008c93da49f09d5c246303798268e96c2974a09d44ffa',
+                '9d530b8fdd393c8675b4ad8c5d9bd22ddc9540ccf05a5e7e99815a679da5f246'}}
+        for key, allowed in typed_units.items():
+            original = support_unit(before, key)
+            candidate = support_unit(after, key)
+            self.assertIsNotNone(candidate, key)
+            self.assertIn(hashlib.sha256(dump(candidate).encode()).hexdigest(), allowed, key)
+            if original is None:
+                # This class did not exist at root7898; only this exact reviewed addition is allowed.
+                self.assertEqual(key, 'ReviewedSignedProvisioning')
+                continue
+            self.assertIn(hashlib.sha256(dump(original).encode()).hexdigest(), allowed, key)
+            after.body[after.body.index(candidate)] = copy.deepcopy(original)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
                 self.assertEqual(dump(node),dump(current[node.name]),node.name)
+
+    def test_reviewed_typed_extension_preservation_rejects_unreviewed_mutations(self):
+        original = ast.parse(RUNNER.read_text())
+        for unit in ('validate_signed_binding', 'ReviewedSignedProvisioning'):
+            with self.subTest(unit=unit):
+                changed = copy.deepcopy(original)
+                node = next(n for n in changed.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name == unit)
+                if isinstance(node, ast.FunctionDef):
+                    node.args.args.append(ast.arg(arg='unreviewed_skip'))
+                    node.args.defaults.append(ast.Constant(value=True))
+                else:
+                    constructor = next(n for n in node.body if isinstance(n, ast.FunctionDef) and n.name == '__init__')
+                    constructor.body.append(ast.parse('self.unreviewed_skip = True').body[0])
+                with self.assertRaises(AssertionError):
+                    self.assert_original_python_preserved(original, changed)
 
     def test_original_python_functions_exact(self):
         old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout
@@ -984,6 +1036,49 @@ class ProvisioningFunctionTests(unittest.TestCase):
     def failure(self):
         paths=list(self.root.glob('auth-provision-*/failure.json'));self.assertEqual(len(paths),1)
         return json.loads(paths[0].read_text())
+    def test_d03_alias_policy_is_exact_immutable_and_scoped(self):
+        aliases=[str(uuid.uuid4())+'@naver.yumidang.invalid'for _ in range(6)]
+        policy=module.ReviewedD03AuthEmailAliases('offline-function-test-only',self.root,aliases)
+        original=list(aliases);aliases[0]='changed'
+        self.assertEqual(module.validate_d03_email_aliases(policy,self.root,'offline-function-test-only'),original)
+        for bad in (original[:5], original+[original[0]], [original[0]]*6, ['bad@example.invalid']*6, [{}]*6):
+            with self.assertRaises(ValueError):module.ReviewedD03AuthEmailAliases('test',self.root,bad)
+        with self.assertRaisesRegex(ValueError,'D03_EMAIL_ALIAS_SCOPE_CHANGED'):
+            module.validate_d03_email_aliases(policy,self.root,'another-decision')
+        with self.assertRaisesRegex(ValueError,'D03_EMAIL_ALIAS_SCOPE_CHANGED'):
+            module.validate_d03_email_aliases(policy,self.root/'another-root')
+
+    def test_d03_alias_first_issuance_keeps_six_session_guards_and_requires_typed_validator(self):
+        review=self.reviewed();aliases=[str(uuid.uuid4())+'@naver.yumidang.invalid'for _ in range(6)]
+        policy=module.ReviewedD03AuthEmailAliases(review.decision_id,self.root,aliases);review.d03_email_aliases=policy
+        receipt=self.invoke(review);binding=json.loads((self.root/'signed-ai-binding-private.json').read_bytes())
+        self.assertEqual([a['authEmail']for a in binding['accounts']],aliases)
+        self.assertEqual(receipt['qualification'],'NOT_RUN_SYNTHETIC_EMAIL_ALIAS_ONLY')
+        self.assertEqual(receipt['actualNaver'],'NOT_RUN')
+        self.assertFalse(binding['approvedByRoot']);self.assertFalse(binding['dockerSlotReady'])
+        self.assertEqual(len({a['userId']for a in binding['accounts']}),6)
+        self.assertEqual(len({a['sessionId']for a in binding['accounts']}),6)
+        with patch.object(module,'signed_source_pins',return_value=self.value['sourcePins']):
+            with self.assertRaisesRegex(ValueError,'SIGNED_ACCOUNT_METADATA'):module.validate_signed_binding(binding,self.root,self.target)
+            module.validate_signed_binding(binding,self.root,self.target,d03_email_aliases=policy)
+            with self.assertRaisesRegex(ValueError,'D03_TYPED_EMAIL_ALIASES_REQUIRED'):
+                module.validate_signed_binding(binding,self.root,self.target,d03_email_aliases=policy.descriptor())
+            reordered=module.ReviewedD03AuthEmailAliases(review.decision_id,self.root,list(reversed(aliases)))
+            with self.assertRaisesRegex(ValueError,'D03_EXACT_SIX_ALIAS_BINDING'):
+                module.validate_signed_binding(binding,self.root,self.target,d03_email_aliases=reordered)
+        self.assertEqual(sum(x==('POST','/admin/users')for x in self.ports.calls),6)
+        self.assertEqual(sum(x==('POST','/token?grant_type=password')for x in self.ports.calls),6)
+
+    def test_plain_json_alias_issuance_is_rejected_before_transport(self):
+        review=self.reviewed();review.d03_email_aliases={'aliases':[str(uuid.uuid4())+'@naver.yumidang.invalid'for _ in range(6)]}
+        with self.assertRaisesRegex(ValueError,'D03_TYPED_EMAIL_ALIASES_REQUIRED'):self.invoke(review)
+        self.assertEqual(self.ports.calls,[])
+
+    def test_d03_alias_wrong_decision_rejected_before_transport(self):
+        review=self.reviewed();review.d03_email_aliases=module.ReviewedD03AuthEmailAliases('another',self.root,[str(uuid.uuid4())+'@naver.yumidang.invalid'for _ in range(6)])
+        with self.assertRaisesRegex(ValueError,'D03_EMAIL_ALIAS_SCOPE_CHANGED'):self.invoke(review)
+        self.assertEqual(self.ports.calls,[])
+
     def test_six_actual_transport_model_calls_emit_private_original_binding_only(self):
         receipt=self.invoke();binding=self.root/'signed-ai-binding-private.json';value=json.loads(binding.read_bytes())
         self.assertEqual(receipt['status'],'PASS_LOCAL_AUTH6_PROVISION_ONLY')
