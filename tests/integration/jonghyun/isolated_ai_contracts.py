@@ -340,12 +340,57 @@ def signed_source_pins():
              'tests/integration/minkyu/member_cleanup_reconcile_local.py')
     return {**product_graph(), **{p: hashlib.sha256((REPO/p).read_bytes()).hexdigest() for p in paths}}
 
-def validate_signed_binding(value, prepared_root, target, now=None):
+CURRENT_MIDNIGHT_KIND = 'SIGNED_LOCAL_AUTH_AI24_CURRENT'
+
+
+class ReviewedCurrentMidnightProfile:
+    """현재 AI24만의 명시 검토. 발급·서명 성공을 주장하는 객체가 아니다."""
+    def __init__(self, value):
+        fields={'sourceHead','migrationEntriesSha256','versions','expectedTables','fullTableSetSha256','memberSessions'}
+        if type(value)is not dict or set(value)!=fields:raise ValueError('MIDNIGHT_CURRENT_PROFILE_FIELDS')
+        if (not re.fullmatch('[a-f0-9]{40}',value['sourceHead'])
+                or not re.fullmatch('[a-f0-9]{64}',value['migrationEntriesSha256'])):raise ValueError('MIDNIGHT_CURRENT_PROFILE_SOURCE')
+        versions=value['versions'];tables=value['expectedTables'];members=value['memberSessions']
+        if (type(versions)is not list or not versions or any(type(v)is not str or not re.fullmatch('[0-9]{14}',v)for v in versions)
+                or versions!=sorted(set(versions))):raise ValueError('MIDNIGHT_CURRENT_PROFILE_VERSIONS')
+        if (type(tables)is not list or not tables or any(type(t)is not str or not re.fullmatch(r'(auth|public|private|storage|cron|vault)\.[a-z_][a-z_0-9]*',t)for t in tables)
+                or tables!=sorted(set(tables))or hashlib.sha256(json.dumps(tables,separators=(',',':')).encode()).hexdigest()!=value['fullTableSetSha256']):
+            raise ValueError('MIDNIGHT_CURRENT_PROFILE_TABLES')
+        if type(members)is not list or len(members)!=3:raise ValueError('MIDNIGHT_CURRENT_PROFILE_MEMBERS')
+        for member in members:
+            if type(member)is not dict or set(member)!={'userId','primarySessionId','secondarySessionId'}:raise ValueError('MIDNIGHT_CURRENT_PROFILE_MEMBERS')
+            for item in member.values():
+                if type(item)is not str or str(uuid.UUID(item))!=item:raise ValueError('MIDNIGHT_CURRENT_PROFILE_MEMBERS')
+        if (len({m['userId']for m in members})!=3 or len({m[k]for m in members for k in('primarySessionId','secondarySessionId')})!=6):
+            raise ValueError('MIDNIGHT_CURRENT_PROFILE_MEMBERS')
+        self._sealed=json.dumps(value,sort_keys=True,separators=(',',':'))
+    def descriptor(self):return signed_exact_json(self._sealed)
+
+
+def validate_current_midnight_accounts(accounts, profile):
+    if type(profile)is not ReviewedCurrentMidnightProfile:raise ValueError('MIDNIGHT_CURRENT_TYPED_PROFILE')
+    value=profile.descriptor()
+    expected={(m['userId'],m[k])for m in value['memberSessions']for k in('primarySessionId','secondarySessionId')}
+    if (len(accounts)!=6 or {(a['userId'],a['sessionId'])for a in accounts}!=expected
+            or len({a['accessToken']for a in accounts})!=6 or len({a['authEmail']for a in accounts})!=3):raise ValueError('MIDNIGHT_CURRENT_EXACT_SIX_SESSIONS')
+    for member in value['memberSessions']:
+        pair=[a for a in accounts if a['userId']==member['userId']]
+        if len(pair)!=2 or len({a['authEmail']for a in pair})!=1:raise ValueError('MIDNIGHT_CURRENT_MEMBER_EMAIL')
+        for account in pair:
+            c=signed_claims(account['accessToken'])
+            if type(c.get('iat'))is not int or type(c.get('exp'))is not int or c['exp']-c['iat']!=3600:
+                raise ValueError('MIDNIGHT_CURRENT_ORIGINAL_3600')
+    return value
+
+
+def validate_signed_binding(value, prepared_root, target, now=None, current_midnight=None):
     """로컬 입력만 허용한다. JWT claims 자체는 인증 증거가 아니다."""
     fields = {'version','kind','preparedRoot','databaseManifestSha256','origin','jwtIssuer','containers',
               'credentials','accounts','evidenceRoot','sourcePins','approvedByRoot','dockerSlotReady'}
     if not isinstance(value, dict) or set(value) != fields: raise ValueError('SIGNED_BINDING_FIELDS')
-    if type(value['version']) is not int or value['version'] != 1 or value['kind'] != SIGNED_KIND:
+    if current_midnight is not None and type(current_midnight)is not ReviewedCurrentMidnightProfile:raise ValueError('MIDNIGHT_CURRENT_TYPED_PROFILE')
+    expected_kind=SIGNED_KIND if current_midnight is None else CURRENT_MIDNIGHT_KIND
+    if type(value['version']) is not int or value['version'] != 1 or value['kind'] != expected_kind:
         raise ValueError('SIGNED_BINDING_KIND')
     if value['preparedRoot'] != str(prepared_root): raise ValueError('SIGNED_PREPARED_ROOT')
     manifest = signed_private_read(Path(prepared_root)/'database-manifest.json')
@@ -396,8 +441,11 @@ def validate_signed_binding(value, prepared_root, target, now=None):
                 or c.get('email') != a['authEmail']
                 or not re.fullmatch(r'synthetic-ai-[a-z0-9-]+@example\.invalid',a['authEmail'])):
             raise ValueError('SIGNED_ACCOUNT_METADATA')
-        if a['userId'] in users or a['sessionId'] in sessions: raise ValueError('SIGNED_DUPLICATE_ACCOUNT')
+        if (current_midnight is None and a['userId'] in users) or a['sessionId'] in sessions: raise ValueError('SIGNED_DUPLICATE_ACCOUNT')
         users.add(a['userId']); sessions.add(a['sessionId'])
+    if current_midnight is not None:
+        profile=validate_current_midnight_accounts(value['accounts'],current_midnight)
+        if target['versions']!=profile['versions']:raise ValueError('MIDNIGHT_CURRENT_PROFILE_VERSIONS')
     e = Path(value['evidenceRoot'])
     if (not e.is_absolute() or e != e.resolve() or e.parent != Path(prepared_root)
             or not re.fullmatch(r'signed-auth-[a-f0-9]{32}',e.name)):
@@ -853,10 +901,17 @@ def lifecycle_row_bags(read_sql, conditions=None):
 
 class SignedMidnightRunner(SignedRunner):
     """AI24 조립용 고정 포트. 생성·재기동·자정 대기·승인은 호출자가 담당한다."""
-    def __init__(self, prepared_root, binding, member_ids, evidence_root, scope_id, boundary_epoch):
+    def __init__(self, prepared_root, binding, member_ids, evidence_root, scope_id, boundary_epoch, current_profile=None):
         super().__init__(Path(prepared_root),binding)
-        validate_signed_binding(binding,self.root,self.target)
+        if current_profile is None:validate_signed_binding(binding,self.root,self.target)
+        else:
+            validate_signed_binding(binding,self.root,self.target,current_midnight=current_profile)
+            self.current_midnight_profile=current_profile
         known={a['userId']:a for a in binding['accounts']}
+        if current_profile is not None:
+            members=current_profile.descriptor()['memberSessions']
+            if member_ids!=[m['userId']for m in members]:raise ValueError('MIDNIGHT_CURRENT_SELECTED_MEMBERS')
+            known={m['userId']:next(a for a in binding['accounts']if a['sessionId']==m['primarySessionId'])for m in members}
         if not isinstance(member_ids,list) or len(member_ids)!=3 or len(set(member_ids))!=3 or any(u not in known for u in member_ids):
             raise ValueError('MIDNIGHT_EXPLICIT_THREE_MEMBERS')
         root=Path(evidence_root)
@@ -878,7 +933,9 @@ class SignedMidnightRunner(SignedRunner):
 
     def validate_original_accounts(self):
         if not self.binding['approvedByRoot'] or not self.binding['dockerSlotReady']:raise ValueError('SIGNED_APPROVAL_SLOT_REQUIRED')
-        validate_signed_binding(self.binding,self.root,self.target)
+        current=getattr(self,'current_midnight_profile',None)
+        if current is None:validate_signed_binding(self.binding,self.root,self.target)
+        else:validate_signed_binding(self.binding,self.root,self.target,current_midnight=current)
         self.signed_identity()
         proofs=[]
         for a in self.binding['accounts']:
@@ -935,7 +992,14 @@ class SignedMidnightRunner(SignedRunner):
 
     def original_rows(self):
         """행 전체의 해시와 중복 개수를 보존한다. 원문은 반환하지 않는다."""
-        tables=json.loads(self.read_sql("select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage');",timeout=5))
+        current=getattr(self,'current_midnight_profile',None)
+        if current is not None:
+            expected=current.descriptor()['expectedTables']
+            query="select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage','cron','vault');"
+            tables=json.loads(self.read_sql(query,timeout=5))
+            if (type(tables)is not list or any(type(row)is not list or len(row)!=2 or any(type(v)is not str for v in row)for row in tables)
+                    or sorted(row[0]+'.'+row[1]for row in tables)!=expected):raise ValueError('MIDNIGHT_CURRENT_EXACT_TABLES')
+        else:tables=json.loads(self.read_sql("select jsonb_agg(jsonb_build_array(schemaname,tablename)order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage');",timeout=5))
         result={}
         for schema,table in tables:
             identifier=lambda v:'"'+v.replace('"','""')+'"'
@@ -1126,11 +1190,14 @@ class SignedMidnightRunner(SignedRunner):
             'fixtureBaseline':getattr(self,'fixture_baseline',None),'originalRows':getattr(self,'snapshot_original_rows',None),
             'ledgers':self.ledgers,'fixtureMetadata':{k:v for k,v in self.fixture.items()if k not in excluded},
             'unknown':getattr(self,'midnight_unknown',None),'externalProcessingAllowedBefore':False,
+            **({'currentProfile':self.current_midnight_profile.descriptor()}if getattr(self,'current_midnight_profile',None)is not None else {}),
             **({'sourceCustody':self.midnight_custody.descriptor(),'sourceCustodySha256':hashlib.sha256(self.midnight_custody._data.encode()).hexdigest()}if getattr(self,'midnight_custody',None)is not None else {})}
 
     def restore_resume_state(self, value):
         """소유·scope·원 입력이 같은 상태만 복원한다. SQL·재기동·새 prepare 호출 없음."""
         current=self.export_resume_state()
+        if getattr(self,'current_midnight_profile',None)is not None and value.get('currentProfile')!=current['currentProfile']:
+            raise ValueError('MIDNIGHT_CURRENT_RESUME_PROFILE')
         if getattr(self,'midnight_custody',None)is not None:
             if (not isinstance(value,dict)or value.get('sourceCustody')!=current['sourceCustody']or value.get('sourceCustodySha256')!=current['sourceCustodySha256']):
                 raise ValueError('MIDNIGHT_RESUME_CUSTODY_BINDING')
@@ -1157,8 +1224,11 @@ class SignedMidnightRunner(SignedRunner):
                     or not isinstance(rows,dict) or not isinstance(baseline['rows'],dict) or set(rows)!=set(baseline['rows'])
                     or baseline['sequence']!='NOT_VERIFIED' or baseline['physical']!='NOT_VERIFIED'
                     or any(not re.fullmatch(r'[a-f0-9]{64}',baseline[k])for k in ('catalogSha256','rolesAclSha256'))):raise ValueError('MIDNIGHT_RESUME_BASELINE')
+            current_profile=getattr(self,'current_midnight_profile',None)
+            if current_profile is not None and sorted(rows)!=current_profile.descriptor()['expectedTables']:raise ValueError('MIDNIGHT_CURRENT_EXACT_TABLES')
+            row_pattern=r'(auth|public|private|storage)\.[A-Za-z_0-9]+' if current_profile is None else r'(auth|public|private|storage|cron|vault)\.[A-Za-z_0-9]+'
             for table,bag in rows.items():
-                if (not re.fullmatch(r'(auth|public|private|storage)\.[A-Za-z_0-9]+',table) or not isinstance(bag,dict)
+                if (not re.fullmatch(row_pattern,table) or not isinstance(bag,dict)
                         or any(not re.fullmatch(r'[a-f0-9]{64}',h)or type(n)is not int or n<1 for h,n in bag.items())
                         or hashlib.sha256(json.dumps(bag,sort_keys=True,separators=(',',':')).encode()).hexdigest()!=baseline['rows'][table]):raise ValueError('MIDNIGHT_RESUME_ORIGINAL_ROW_HASH')
             if baseline['unknownRows']!={k:baseline['rows'].get(k)for k in ('private.ai_budget_reservations','private.ai_account_budget_reservations')}:

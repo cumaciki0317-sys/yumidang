@@ -375,3 +375,88 @@ class MidnightCapturedCustodyTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class CurrentMidnightAccountAndRowsTests(unittest.TestCase):
+    """MODELED: 현재3×2 원 입력과 전체 table-set 소비 검사. 발급·DB 호출 없음."""
+    @classmethod
+    def setUpClass(cls):
+        path=REPO/'tests/integration/jonghyun/isolated_ai_contracts.py'
+        spec=importlib.util.spec_from_file_location('current_midnight_accounts_modeled',path)
+        cls.r=importlib.util.module_from_spec(spec);spec.loader.exec_module(cls.r)
+
+    def setUp(self):
+        import base64, uuid
+        self.accounts=[];members=[]
+        self.now=1800000000
+        issuer='http://127.0.0.1:54321/auth/v1'
+        def token(claims):
+            encode=lambda x:base64.urlsafe_b64encode(json.dumps(x).encode()).decode().rstrip('=')
+            return encode({'alg':'HS256'})+'.'+encode(claims)+'.MODELED_SIGNATURE_ONLY'
+        self.token=token
+        for i in range(3):
+            user=str(uuid.uuid4());sessions=[str(uuid.uuid4()),str(uuid.uuid4())]
+            members.append(dict(userId=user,primarySessionId=sessions[0],secondarySessionId=sessions[1]))
+            for session in sessions:
+                claims=dict(sub=user,session_id=session,iat=self.now,exp=self.now+3600,iss=issuer,
+                    role='authenticated',email='synthetic-ai-modeled-'+str(i)+'@example.invalid')
+                self.accounts.append(dict(userId=user,sessionId=session,accessToken=token(claims),
+                    expiresAt=claims['exp'],authEmail=claims['email']))
+        self.tables=sorted(['auth.users','public.profiles','private.ai_budget_reservations',
+            'private.ai_account_budget_reservations','storage.objects','cron.job','vault.secrets'])
+        self.profile=self.r.ReviewedCurrentMidnightProfile(dict(sourceHead='a'*40,migrationEntriesSha256='b'*64,
+            versions=['20261020100000','20261020130000'],expectedTables=self.tables,
+            fullTableSetSha256=hashlib.sha256(json.dumps(self.tables,separators=(',',':')).encode()).hexdigest(),memberSessions=members))
+
+    def test_current_account_pairs_require_exact_original_session_and_3600_claims(self):
+        import copy,uuid
+        self.r.validate_current_midnight_accounts(self.accounts,self.profile)
+        for change in ('session','shortened','duplicate','email'):
+            accounts=copy.deepcopy(self.accounts)
+            if change=='session':accounts[0]['sessionId']=str(uuid.uuid4())
+            if change=='duplicate':accounts[1]=accounts[0].copy()
+            if change=='email':accounts[1]['authEmail']='synthetic-ai-other@example.invalid'
+            if change=='shortened':
+                claims=self.r.signed_claims(accounts[0]['accessToken']);claims['iat']+=1;accounts[0]['accessToken']=self.token(claims)
+            with self.subTest(change=change),self.assertRaises(ValueError):self.r.validate_current_midnight_accounts(accounts,self.profile)
+        with self.assertRaisesRegex(ValueError,'TYPED_PROFILE'):
+            self.r.validate_current_midnight_accounts(self.accounts,self.profile.descriptor())
+
+    def test_current_generic_binding_preserves_full_shared_checks_and_historical_lane(self):
+        import copy,tempfile
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory(prefix='current-midnight-binding-',dir='/private/tmp')as directory:
+            root=Path(directory).resolve();project='modeled-project';manifest=json.dumps({'config_overlay':{'api.port':54321}}).encode()
+            containers={k:dict(id=str(i)*64,name=prefix+project,image='sha256:'+'c'*64,
+                configSha256='d'*64,hostConfigSha256='e'*64,mountsSha256='f'*64)
+                for i,(k,prefix)in enumerate([('db','supabase_db_'),('auth','supabase_auth_'),('rest','supabase_rest_'),('gateway','supabase_kong_')],1)}
+            binding=dict(version=1,kind=self.r.CURRENT_MIDNIGHT_KIND,preparedRoot=str(root),
+                databaseManifestSha256=hashlib.sha256(manifest).hexdigest(),origin='http://127.0.0.1:54321',
+                jwtIssuer='http://127.0.0.1:54321/auth/v1',containers=containers,
+                credentials={'anon':self.token({'role':'anon'}),'service':self.token({'role':'service_role'})},
+                accounts=self.accounts,evidenceRoot=str(root/('signed-auth-'+'a'*32)),sourcePins={'modeled':'a'*64},
+                approvedByRoot=False,dockerSlotReady=False)
+            target=dict(id=containers['db']['id'],image=containers['db']['image'],project=project,versions=self.profile.descriptor()['versions'])
+            with patch.object(self.r,'signed_private_read',return_value=manifest),patch.object(self.r,'signed_source_pins',return_value=binding['sourcePins']):
+                self.assertEqual(self.r.validate_signed_binding(binding,root,target,now=self.now,current_midnight=self.profile),binding)
+                with self.assertRaisesRegex(ValueError,'BINDING_KIND'):self.r.validate_signed_binding(binding,root,target,now=self.now)
+                for key,value in [('jwtIssuer','http://127.0.0.1:54322/auth/v1'),('databaseManifestSha256','0'*64),
+                                  ('sourcePins',{'wrong':'a'*64}),('credentials',{'anon':self.token({'role':'service_role'}),'service':binding['credentials']['service']})]:
+                    with self.subTest(key=key),self.assertRaises(ValueError):
+                        self.r.validate_signed_binding({**binding,key:value},root,target,now=self.now,current_midnight=self.profile)
+                with self.assertRaisesRegex(ValueError,'VERSIONS'):
+                    self.r.validate_signed_binding(binding,root,{**target,'versions':target['versions'][::-1]},now=self.now,current_midnight=self.profile)
+
+    def test_current_row_collector_requires_exact_six_schema_inventory_and_bag_multiplicity(self):
+        obj=object.__new__(self.r.SignedMidnightRunner);obj.current_midnight_profile=self.profile
+        inventory=[t.split('.',1)for t in self.tables];calls=[]
+        def read(sql,timeout):
+            calls.append(sql)
+            return json.dumps(inventory if 'pg_tables'in sql else {'a'*64:2})
+        obj.read_sql=read
+        rows=obj.original_rows();self.assertEqual(sorted(rows),self.tables)
+        self.assertTrue(all(bag=={'a'*64:2}for bag in rows.values()))
+        self.assertIn("'cron','vault'",calls[0]);self.assertEqual(len(calls),len(self.tables)+1)
+        inventory[0]=['auth','replacement'];calls.clear()
+        with self.assertRaisesRegex(ValueError,'EXACT_TABLES'):obj.original_rows()
+        self.assertEqual(len(calls),1)

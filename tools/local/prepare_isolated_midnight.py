@@ -1,5 +1,7 @@
 """AI24 오프라인 CLI와 검토 코드용 고정 실행 API. 실제 경계 실행은 NOT_RUN이다."""
 import argparse
+import base64
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -32,6 +34,10 @@ WINDOWS = {
 }
 LIVE_KIND = 'AI24_NATURAL_KST_CONTRACT_ONLY'
 SIGNED_KIND = 'SIGNED_LOCAL_AUTH_AI22_23'
+CURRENT_SIGNED_KIND = 'SIGNED_LOCAL_AUTH_AI24_CURRENT'
+CURRENT_INSPECTOR = 'tests/integration/minkyu/service_profile_readonly_local.py'
+CURRENT_HELPERS = tuple('tools/local/' + name + '.py' for name in
+    ('prepare_migrations','prepare_database','prepare_edge','prepare_current_policy'))
 RESOURCES = {'startupMinimumKiB': 1048576, 'runningMinimumKiB': 786432,
              'probeMaximumSeconds': 3, 'sampleIntervalSeconds': 3}
 
@@ -112,7 +118,70 @@ def inspect_evidence(path):
             'targetBinding': 'MANIFEST_ONLY_LIVE_NOT_OBSERVED'}
 
 
-def contract_pins():
+class ReviewedCurrentAI24Profile:
+    """검토자가 명시한 현행 소스·보존 범위·세 회원의 두 원 세션을 봉인한다."""
+    def __init__(self, value):
+        validate_current_profile_shape(value)
+        self._sealed=canonical(value)
+    def descriptor(self):return exact_json(self._sealed)
+
+
+def validate_current_profile_shape(value):
+    require(type(value)is dict and set(value)=={'sourceHead','migrationEntriesSha256','versions',
+        'expectedTables','fullTableSetSha256','memberSessions'},'CURRENT_AI24_PROFILE_REQUIRED')
+    require(type(value['sourceHead'])is str and re.fullmatch('[a-f0-9]{40}',value['sourceHead']), 'CURRENT_AI24_HEAD')
+    digest_required(value['migrationEntriesSha256']);digest_required(value['fullTableSetSha256'])
+    versions=value['versions'];tables=value['expectedTables'];members=value['memberSessions']
+    require(type(versions)is list and versions and all(type(v)is str and re.fullmatch('[0-9]{14}',v)for v in versions)
+        and versions==sorted(set(versions)), 'CURRENT_AI24_VERSIONS')
+    require(type(tables)is list and tables and all(type(t)is str and re.fullmatch(r'(auth|public|private|storage|cron|vault)\.[a-z_][a-z_0-9]*',t)for t in tables)
+        and tables==sorted(set(tables)) and hashlib.sha256(canonical(tables)).hexdigest()==value['fullTableSetSha256'], 'CURRENT_AI24_TABLES')
+    require(type(members)is list and len(members)==3,'CURRENT_AI24_THREE_MEMBERS')
+    for member in members:
+        require(type(member)is dict and set(member)=={'userId','primarySessionId','secondarySessionId'},'CURRENT_AI24_MEMBER_SESSIONS')
+        require(all(type(v)is str and str(uuid.UUID(v))==v for v in member.values()),'CURRENT_AI24_MEMBER_SESSIONS')
+    require(len({m['userId']for m in members})==3 and len({m[k]for m in members for k in('primarySessionId','secondarySessionId')})==6,
+        'CURRENT_AI24_EXACT_SIX_SESSIONS')
+    return value
+
+
+def verify_current_profile(value,pins,target_versions=None):
+    value=validate_current_profile_shape(value)
+    path=ROOT/CURRENT_INSPECTOR;raw=path.read_bytes()
+    require(path.resolve()==path and not path.is_symlink() and pins.get(CURRENT_INSPECTOR)==hashlib.sha256(raw).hexdigest(),
+        'CURRENT_AI24_INSPECTOR_CHANGED')
+    module=importlib.util.module_from_spec(importlib.util.spec_from_loader('ai24_current_inspector',loader=None));module.__file__=str(path)
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    require(tuple(module.CURRENT_HELPERS)==CURRENT_HELPERS,'CURRENT_AI24_HELPER_CLOSURE')
+    source={k:v for k,v in value.items()if k!='memberSessions'}
+    history=module.verify_current_profile(source,pins,value['sourceHead'],target_versions)
+    require(path.resolve()==path and not path.is_symlink() and hashlib.sha256(path.read_bytes()).hexdigest()==pins[CURRENT_INSPECTOR],
+        'CURRENT_AI24_INSPECTOR_CHANGED')
+    return history
+
+
+@contextmanager
+def current_constructor_support(pins):
+    """실제 SignedRunner 생성 안의 늦은 import도 승인된 helper를 소비한다."""
+    path=ROOT/CURRENT_INSPECTOR;raw=path.read_bytes()
+    require(path.resolve()==path and not path.is_symlink() and pins.get(CURRENT_INSPECTOR)==hashlib.sha256(raw).hexdigest(),
+        'CURRENT_AI24_INSPECTOR_CHANGED')
+    module=importlib.util.module_from_spec(importlib.util.spec_from_loader('ai24_constructor_inspector',loader=None));module.__file__=str(path)
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    require(tuple(module.CURRENT_HELPERS)==CURRENT_HELPERS,'CURRENT_AI24_HELPER_CLOSURE')
+    try:
+        with module.current_support(pins):yield
+    finally:
+        require(path.resolve()==path and not path.is_symlink() and hashlib.sha256(path.read_bytes()).hexdigest()==pins[CURRENT_INSPECTOR],
+            'CURRENT_AI24_INSPECTOR_CHANGED')
+
+
+def current_tables(contract):
+    profile=contract.get('currentProfile')
+    return None if profile is None else validate_current_profile_shape(profile)['expectedTables']
+
+
+def contract_pins(current_profile=None):
     paths = set(verified_product_paths()) | {
         'tests/integration/minkyu/content_inspection_http_local.py',
         'tests/integration/minkyu/content_inspection_http_local.ts',
@@ -123,6 +192,9 @@ def contract_pins():
         'tools/local/run_database_tests.py', 'tools/local/prepare_isolated_midnight.py',
         'tools/local/prepare_database.py', 'tools/local/prepare_migrations.py',
     }
+    if current_profile is not None:
+        require(type(current_profile)is ReviewedCurrentAI24Profile,'CURRENT_AI24_TYPED_REVIEW')
+        paths.update((CURRENT_INSPECTOR,*CURRENT_HELPERS))
     pins = {}
     for relative in sorted(paths):
         path = ROOT / relative
@@ -131,6 +203,7 @@ def contract_pins():
                                              stderr=subprocess.DEVNULL, timeout=15)
         require(committed == path.read_bytes(), 'SOURCE_NOT_COMMITTED')
         pins[relative] = hashlib.sha256(committed).hexdigest()
+    if current_profile is not None:verify_current_profile(current_profile.descriptor(),pins)
     return pins
 
 
@@ -209,9 +282,14 @@ def build_plan(target, evidence, pins, now):
     }
 
 
-def build_signed_plan(target, evidence, pins, now, signed_input, prepared_root, selected_user_ids):
+def build_signed_plan(target, evidence, pins, now, signed_input, prepared_root, selected_user_ids, current_profile=None):
     """검토 호출자가 명시한 원 signed 계정 3명으로 비실행 계획만 조립한다."""
-    auth = signed_input_binding(signed_input, prepared_root)
+    profile=None
+    if current_profile is not None:
+        require(type(current_profile)is ReviewedCurrentAI24Profile,'CURRENT_AI24_TYPED_REVIEW')
+        profile=current_profile.descriptor();verify_current_profile(profile,pins,target.get('versions'))
+        require(selected_user_ids==[m['userId']for m in profile['memberSessions']],'CURRENT_AI24_SELECTED_MEMBERS')
+    auth = signed_input_binding(signed_input, prepared_root, profile)
     require(type(selected_user_ids) is list and len(selected_user_ids) == 3
             and all(type(value) is str and str(uuid.UUID(value)) == value
                     for value in selected_user_ids)
@@ -226,6 +304,7 @@ def build_signed_plan(target, evidence, pins, now, signed_input, prepared_root, 
     require(all(account['expiresAt'] >= boundary.timestamp() + 300
                 for account in auth['accounts']), 'DECLARED_EXPIRY_DOES_NOT_COVER_BOUNDARY')
     plan = build_plan(target, evidence, pins, now)
+    if profile is not None:plan['currentProfile']=profile
     plan['ownedIntent']['memberIds'] = list(selected_user_ids)
     plan['signedPlanBinding'] = {
         'path': auth['path'], 'sha256': auth['sha256'], 'preparedRoot': auth['preparedRoot'],
@@ -336,7 +415,7 @@ def durable_json(root, name, value):
     return hashlib.sha256(data).hexdigest()
 
 
-def signed_input_binding(path, prepared_root):
+def signed_input_binding(path, prepared_root, current_profile=None):
     """구조·해시만 고정한다. 서명/GoTrue/REST 성공 증거로 승격하지 않는다."""
     path = Path(path)
     require(path.is_absolute() and path.resolve() == path, 'CANONICAL_SIGNED_INPUT_REQUIRED')
@@ -346,7 +425,7 @@ def signed_input_binding(path, prepared_root):
                 'containers', 'credentials', 'accounts', 'evidenceRoot', 'sourcePins',
                 'approvedByRoot', 'dockerSlotReady'}
     require(set(value) == required and type(value['version']) is int and value['version'] == 1
-            and value['kind'] == SIGNED_KIND, 'EXACT_SIGNED_BINDING_REQUIRED')
+            and value['kind'] == (SIGNED_KIND if current_profile is None else CURRENT_SIGNED_KIND), 'EXACT_SIGNED_BINDING_REQUIRED')
     require(type(value['approvedByRoot']) is bool and type(value['dockerSlotReady']) is bool,
             'BOOLEAN_INPUT_PROVENANCE_REQUIRED')
     require(isinstance(value['sourcePins'], dict) and value['sourcePins'], 'SIGNED_SOURCE_PINS_REQUIRED')
@@ -390,8 +469,23 @@ def signed_input_binding(path, prepared_root):
                 'DECLARED_TOKEN_EXPIRY_REQUIRED')
         require(isinstance(account['authEmail'], str) and 0 < len(account['authEmail']) <= 254
                 and re.fullmatch(r'[^\s@]+@[^\s@]+', account['authEmail']), 'AUTH_EMAIL_SHAPE_REQUIRED')
-    for field in ('userId', 'sessionId', 'accessToken', 'authEmail'):
-        require(len({x[field] for x in accounts}) == 6, 'DISTINCT_SIGNED_ACCOUNTS_REQUIRED')
+    if current_profile is None:
+        for field in ('userId', 'sessionId', 'accessToken', 'authEmail'):
+            require(len({x[field] for x in accounts}) == 6, 'DISTINCT_SIGNED_ACCOUNTS_REQUIRED')
+    else:
+        profile=validate_current_profile_shape(current_profile)
+        expected={(m['userId'],m[k])for m in profile['memberSessions']for k in('primarySessionId','secondarySessionId')}
+        require({(a['userId'],a['sessionId'])for a in accounts}==expected and len({a['accessToken']for a in accounts})==6,'CURRENT_AI24_EXACT_SIX_SESSIONS')
+        for member in profile['memberSessions']:
+            pair=[a for a in accounts if a['userId']==member['userId']]
+            require(len(pair)==2 and len({a['authEmail']for a in pair})==1,'CURRENT_AI24_MEMBER_EMAIL')
+            for a in pair:
+                parts=a['accessToken'].split('.');require(len(parts)==3 and all(parts),'CURRENT_AI24_ORIGINAL_JWT')
+                claims=exact_json(base64.urlsafe_b64decode(parts[1]+'='*(-len(parts[1])%4)))
+                require(type(claims.get('iat'))is int and type(claims.get('exp'))is int and claims['exp']-claims['iat']==3600
+                    and claims['exp']==a['expiresAt'] and claims.get('sub')==a['userId'] and claims.get('session_id')==a['sessionId']
+                    and claims.get('iss')==value['jwtIssuer'] and claims.get('role')=='authenticated' and claims.get('is_anonymous')is not True
+                    and claims.get('email')==a['authEmail'],'CURRENT_AI24_ORIGINAL_JWT')
     require(str(private_root(value['evidenceRoot'])) != str(private_root(prepared_root)),
             'DISTINCT_EVIDENCE_ROOT_REQUIRED')
     return {'path': str(path), 'sha256': hashlib.sha256(raw).hexdigest(),
@@ -417,7 +511,11 @@ def persist_live_contract(root, plan, signed_input, prepared_root, now):
         require(not Path(relative).is_absolute() and '..' not in Path(relative).parts,
                 'RELATIVE_SOURCE_PIN_REQUIRED')
         digest_required(digest)
-    auth = signed_input_binding(signed_input, prepared_root)
+    profile=plan.get('currentProfile')
+    if profile is not None:
+        verify_current_profile(profile,plan['sourcePins'])
+        require(plan['ownedIntent']['memberIds']==[m['userId']for m in profile['memberSessions']],'CURRENT_AI24_SELECTED_MEMBERS')
+    auth = signed_input_binding(signed_input, prepared_root, profile)
     if 'signedPlanBinding' in plan:
         require(plan['signedPlanBinding'] == {
             'path': auth['path'], 'sha256': auth['sha256'], 'preparedRoot': auth['preparedRoot'],
@@ -473,6 +571,7 @@ def persist_live_contract(root, plan, signed_input, prepared_root, now):
                               'LIVE_OLD_ROWS_AND_UNKNOWN_HASHES', 'NATURAL_DAY_REGISTERED_ACCOUNT_HEADROOM',
                               'EXACT_OWNED_CREATION_RECEIPTS', 'CLOCK_RESOURCE_AND_STRICT_DISPATCH_WINDOWS',
                               'FIXED_AI24_ASSEMBLY_REVIEW_AND_ACTUAL_EXECUTION_REQUIRED']}
+    if profile is not None:contract['currentProfile']=profile
     return durable_json(root, 'ai24-live-contract.json', contract)
 
 
@@ -489,7 +588,9 @@ def load_live_contract(root, expected_sha256, current_pins):
             'CURRENT_SOURCE_PINS_CHANGED')
     require(value['resources'] == RESOURCES, 'RESOURCE_CONTRACT_CHANGED')
     binding = value['signedAuthInput']
-    require(signed_input_binding(binding['path'], binding['preparedRoot']) == binding, 'SIGNED_INPUT_CHANGED')
+    profile=value.get('currentProfile')
+    if profile is not None:verify_current_profile(profile,current_pins)
+    require(signed_input_binding(binding['path'], binding['preparedRoot'], profile) == binding, 'SIGNED_INPUT_CHANGED')
     boundary_time(value['boundary'])
     return value
 
@@ -570,7 +671,7 @@ def execution_checkpoint(contract, ports, boundary, phase=None):
     """다음 호출 전에 현재 입력·대상·실제 인증·자원을 재검증한다."""
     require(ports.current_pins() == contract['sourcePins'], 'CURRENT_SOURCE_PINS_CHANGED')
     binding = contract['signedAuthInput']
-    require(signed_input_binding(binding['path'], binding['preparedRoot']) == binding,
+    require(signed_input_binding(binding['path'], binding['preparedRoot'], contract.get('currentProfile')) == binding,
             'SIGNED_INPUT_CHANGED')
     identity = ports.identity()
     require(identity == {'containers': binding['containers'],
@@ -601,14 +702,14 @@ def execution_checkpoint(contract, ports, boundary, phase=None):
     return now
 
 
-def protected_snapshot(value):
+def protected_snapshot(value, approved_tables=None):
     require(set(value) == {'rows', 'catalogSha256', 'rolesAclSha256', 'unknownRows'}
             and isinstance(value['rows'], dict) and isinstance(value['unknownRows'], dict)
             and set(value['unknownRows']) == {'private.ai_budget_reservations',
                                              'private.ai_account_budget_reservations'},
             'FULL_PROTECTED_SNAPSHOT_REQUIRED')
     schemas = {name.split('.')[0] for name in value['rows']}
-    require(schemas == {'auth', 'public', 'private', 'storage'}
+    require((schemas == {'auth', 'public', 'private', 'storage'} if approved_tables is None else sorted(value['rows']) == approved_tables)
             and all('private.' + name in value['rows'] for name in PROTECTED),
             'ALL_PROTECTED_SCHEMAS_REQUIRED')
     for name, digest in {**value['rows'], **value['unknownRows']}.items():
@@ -705,7 +806,7 @@ def prepare_live_execution(root, contract_sha, current_pins, assembly):
     watch, intent_sha = ResourceWatch(ports), None
     try:
         watch.start()
-        baseline = protected_snapshot(ports.snapshot())
+        baseline = protected_snapshot(ports.snapshot(), current_tables(contract))
         execution_checkpoint(contract, ports, boundary, 'fixture')
         # 긴 snapshot 이후 첫 fixture 변이 바로 전에 1GiB를 다시 증명한다.
         startup_resource_check(ports)
@@ -979,9 +1080,17 @@ class FixedSignedMidnightPorts:
         auth = contract['signedAuthInput']
         raw = live_private_bytes(private_root(Path(auth['path']).parent), Path(auth['path']).name)
         self.binding = exact_json(raw)
-        self.runner = module.SignedMidnightRunner(Path(auth['preparedRoot']), self.binding,
-            contract['signedSelectedUserIds'], self.root, contract['scopeId'],
-            boundary_time(contract['boundary']).timestamp())
+        kwargs={}
+        if 'currentProfile'in contract:
+            verify_current_profile(contract['currentProfile'],contract['sourcePins'])
+            kwargs['current_profile']=module.ReviewedCurrentMidnightProfile(contract['currentProfile'])
+        def construct():
+            return module.SignedMidnightRunner(Path(auth['preparedRoot']), self.binding,
+                contract['signedSelectedUserIds'], self.root, contract['scopeId'],
+                boundary_time(contract['boundary']).timestamp(), **kwargs)
+        if 'currentProfile'in contract:
+            with current_constructor_support(contract['sourcePins']):self.runner=construct()
+        else:self.runner=construct()
         if custody is not None:
             value = custody.descriptor()
             authority = module.TypedMidnightCustody(value['sourceHead'], value['scopeId'], value['capsuleRoot'],
@@ -1003,6 +1112,7 @@ class FixedSignedMidnightPorts:
         self.unknown_id = None
 
     def current_pins(self):
+        if 'currentProfile'in self.contract:verify_current_profile(self.contract['currentProfile'],self.contract['sourcePins'])
         result = {}
         for relative, expected in self.contract['sourcePins'].items():
             path = ROOT / relative
@@ -1010,6 +1120,7 @@ class FixedSignedMidnightPorts:
                     and path.resolve() == path and not path.is_symlink(), 'SOURCE_SYMLINK_FORBIDDEN')
             result[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
             require(result[relative] == expected, 'CURRENT_SOURCE_PINS_CHANGED')
+        if 'currentProfile'in self.contract:verify_current_profile(self.contract['currentProfile'],result)
         return result
 
     def identity(self):
@@ -1054,22 +1165,24 @@ class FixedSignedMidnightPorts:
 
     def snapshot(self):
         value = self.runner.snapshot()
+        schemas="'auth','public','private','storage'" if 'currentProfile'not in self.contract else "'auth','public','private','storage','cron','vault'"
         relation_names = exact_json(self.runner.read_sql("select jsonb_agg(schemaname||'.'||tablename"
-            " order by schemaname,tablename)from pg_tables where schemaname in('auth','public','private','storage');", timeout=3))
+            " order by schemaname,tablename)from pg_tables where schemaname in("+schemas+");", timeout=3))
         require(set(value['rows']) == set(relation_names) and len(relation_names) == len(set(relation_names)),
                 'FULL_TARGET_RELATION_SET_REQUIRED')
+        if 'currentProfile'in self.contract:require(sorted(relation_names)==current_tables(self.contract),'CURRENT_AI24_EXACT_TABLES')
         self.baseline_rows = json.loads(json.dumps(self.runner.snapshot_original_rows))
         self.account_baseline = exact_json(self.runner.read_sql(
             'select jsonb_agg(to_jsonb(a)order by account_id)from private.ai_budget_accounts a;', timeout=3))
         self.guard_baseline = exact_json(self.runner.read_sql(
             'select jsonb_agg(to_jsonb(a))from private.ai_processing_guard a;', timeout=3))
         value.update(self.authority_hashes())
-        self.baseline = protected_snapshot({key: value[key] for key in ('rows', 'catalogSha256', 'rolesAclSha256', 'unknownRows')})
+        self.baseline = protected_snapshot({key: value[key] for key in ('rows', 'catalogSha256', 'rolesAclSha256', 'unknownRows')},current_tables(self.contract))
         return self.baseline
 
     def authority_hashes(self):
         # 함수/열/제약/트리거와 회원·스키마·테이블·열 ACL을 같은 SQL로 재계산한다.
-        scope = "n.nspname in('auth','public','private','storage')"
+        scope = "n.nspname in('auth','public','private','storage')" if 'currentProfile'not in self.contract else "n.nspname in('auth','public','private','storage','cron','vault')"
         catalog = "select encode(sha256(convert_to(jsonb_build_object('functions',(select jsonb_agg(to_jsonb(p)order by p.oid)from pg_proc p join pg_namespace n on n.oid=p.pronamespace where " + scope + "),'relations',(select jsonb_agg(to_jsonb(c)order by c.oid)from pg_class c join pg_namespace n on n.oid=c.relnamespace where " + scope + "),'columns',(select jsonb_agg(to_jsonb(a)order by a.attrelid,a.attnum)from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace where " + scope + "),'constraints',(select jsonb_agg(to_jsonb(c)order by c.oid)from pg_constraint c join pg_namespace n on n.oid=c.connamespace where " + scope + "),'triggers',(select jsonb_agg(to_jsonb(t)order by t.oid)from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where " + scope + "))::text,'UTF8')),'hex');"
         authority = "select encode(sha256(convert_to(jsonb_build_object('roles',(select jsonb_agg(to_jsonb(r)order by oid)from pg_roles r),'memberships',(select jsonb_agg(to_jsonb(m)order by roleid,member,grantor)from pg_auth_members m),'schemas',(select jsonb_agg(to_jsonb(n)order by oid)from pg_namespace n where " + scope + "),'relations',(select jsonb_agg(jsonb_build_array(c.oid,c.relowner,c.relacl)order by c.oid)from pg_class c join pg_namespace n on n.oid=c.relnamespace where " + scope + "),'columnAcl',(select jsonb_agg(jsonb_build_array(a.attrelid,a.attnum,a.attacl)order by a.attrelid,a.attnum)from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace where " + scope + "),'defaultAcl',(select jsonb_agg(to_jsonb(d)order by oid)from pg_default_acl d),'databaseAcl',(select jsonb_build_array(datdba,datacl)from pg_database where datname=current_database()))::text,'UTF8')),'hex');"
         return {'catalogSha256': digest_required(self.runner.read_sql(catalog, timeout=3)),
@@ -1172,7 +1285,7 @@ class FixedSignedMidnightPorts:
                 and all(value[k] == self.contract[k] for k in ('scopeId', 'boundary', 'sourcePins'))
                 and value['signedInputSha256'] == self.contract['signedAuthInput']['sha256'],
                 'EXACT_PORT_STATE_BINDING_REQUIRED')
-        baseline = protected_snapshot(value['baseline'])
+        baseline = protected_snapshot(value['baseline'],current_tables(self.contract))
         rows = value['baselineRows']
         require(isinstance(rows, dict) and set(rows) == set(baseline['rows']),
                 'FULL_TARGET_RELATION_SET_REQUIRED')
@@ -1212,7 +1325,7 @@ class FixedSignedMidnightPorts:
                 and all(value[k] == self.contract[k] for k in ('scopeId', 'boundary', 'sourcePins'))
                 and value['signedInputSha256'] == self.contract['signedAuthInput']['sha256'],
                 'EXACT_CLEANUP_BASELINE_REQUIRED')
-        baseline = protected_snapshot(value['baseline'])
+        baseline = protected_snapshot(value['baseline'],current_tables(self.contract))
         require(set(value['baselineRows']) == set(baseline['rows']), 'FULL_TARGET_RELATION_SET_REQUIRED')
         for table, rows in value['baselineRows'].items():
             require(isinstance(rows, dict) and all(digest_required(h) and type(n) is int and n > 0

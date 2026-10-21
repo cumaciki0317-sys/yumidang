@@ -736,11 +736,14 @@ class FinalLiveBoundaryTests(unittest.TestCase):
         # 커밋 원문에서 순수 파일 읽기 함수 두 개만 평가한다. 실제 포트·JWT는 만들지 않는다.
         relative = 'tests/integration/jonghyun/isolated_ai_contracts.py'
         raw = (REPO / relative).read_bytes()
-        self.assertEqual(raw, subprocess.check_output(
-            ['git', '-C', str(REPO), 'show', 'HEAD:' + relative], timeout=15))
+        committed = subprocess.check_output(['git', '-C', str(REPO), 'show', 'HEAD:' + relative], timeout=15)
+        # 후보 runner 편집 중에도 순수 source guard 두 함수는 역사 HEAD와 같아야 한다.
+        # 아래 독립 임시 Git에 후보 전체 bytes를 실제 커밋하여 자기 guard를 검사한다.
         names = {'product_graph', 'signed_source_pins'}
         selected = [n for n in ast.parse(raw).body if isinstance(n, ast.FunctionDef) and n.name in names]
         self.assertEqual({n.name for n in selected}, names)
+        prior=[n for n in ast.parse(committed).body if isinstance(n,ast.FunctionDef) and n.name in names]
+        self.assertEqual([ast.dump(n)for n in selected],[ast.dump(n)for n in prior])
         namespace = {'REPO': REPO, 'Path': Path, 'hashlib': hashlib, 're': __import__('re')}
         exec(compile(ast.Module(body=selected, type_ignores=[]), relative, 'exec'), namespace)
         auth_pins = namespace['signed_source_pins']()
@@ -977,6 +980,162 @@ class FinalLiveBoundaryTests(unittest.TestCase):
                 ports.hydrate_prepared(digest)
         self.assertEqual(calls, ['hydrate'])
 
+
+
+
+
+class CurrentAI24LaneTests(unittest.TestCase):
+    """현재 lane의 합성 계약 검사. 실제 JWT 발급/서명 인증/SQL/자정 실행 0."""
+    setUp=LiveBindingTests.setUp
+    tearDown=LiveBindingTests.tearDown
+    write_input=LiveBindingTests.write_input
+
+    def current_fixture(self):
+        import base64
+        path=REPO/'tests/integration/jonghyun/isolated_ai_contracts.py'
+        spec=importlib.util.spec_from_file_location('ai24_current_modeled_runner',path)
+        runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
+        pins=runner.signed_source_pins()
+        pins.update({p:hashlib.sha256((REPO/p).read_bytes()).hexdigest()
+            for p in (m.CURRENT_INSPECTOR,*m.CURRENT_HELPERS,'tools/local/prepare_isolated_midnight.py')})
+        inspector_path=REPO/m.CURRENT_INSPECTOR
+        inspector=importlib.util.module_from_spec(importlib.util.spec_from_loader('ai24_inspector_fixture',loader=None))
+        inspector.__file__=str(inspector_path)
+        exec(compile(inspector_path.read_bytes(),str(inspector_path),'exec'),inspector.__dict__)
+        with inspector.current_support(pins):
+            from prepare_migrations import inspect_migrations
+            entries=inspect_migrations(REPO)['migrations']
+        head=subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],text=True).strip()
+        members=[]
+        for n in range(3):
+            pair=self.signed['accounts'][2*n:2*n+2]
+            pair[1]['userId']=pair[0]['userId'];pair[1]['authEmail']=pair[0]['authEmail']
+            members.append({'userId':pair[0]['userId'],'primarySessionId':pair[0]['sessionId'],
+                'secondarySessionId':pair[1]['sessionId']})
+            for account in pair:
+                claims={'sub':account['userId'],'session_id':account['sessionId'],'iat':account['expiresAt']-3600,
+                    'exp':account['expiresAt'],'iss':self.signed['jwtIssuer'],'role':'authenticated','email':account['authEmail']}
+                encode=lambda x:base64.urlsafe_b64encode(json.dumps(x).encode()).decode().rstrip('=')
+                account['accessToken']=encode({'alg':'HS256'})+'.'+encode(claims)+'.MODELED_NOT_A_SIGNATURE'
+        tables=sorted(['auth.users','public.profiles','storage.objects','cron.job','vault.secrets']+
+            ['private.'+t for t in m.PROTECTED])
+        profile=m.ReviewedCurrentAI24Profile(dict(sourceHead=head,
+            migrationEntriesSha256=hashlib.sha256(m.canonical(entries)).hexdigest(),
+            versions=[e['version']for e in entries],expectedTables=tables,
+            fullTableSetSha256=hashlib.sha256(m.canonical(tables)).hexdigest(),memberSessions=members))
+        self.signed['kind']=m.CURRENT_SIGNED_KIND;self.signed['sourcePins']=pins;self.write_input()
+        return runner,pins,profile
+
+    def test_current_three_members_six_sessions_packet_and_wrong_auth6_kind_are_distinct(self):
+        _,_,profile=self.current_fixture();value=profile.descriptor()
+        auth=m.signed_input_binding(self.input,self.prepared,value)
+        self.assertEqual(len(auth['accounts']),6);self.assertEqual(len({a['userId']for a in auth['accounts']}),3)
+        self.assertEqual(auth['actualSignedVerification'],'NOT_OBSERVED')
+        with self.assertRaisesRegex(ValueError,'EXACT_SIGNED_BINDING'):m.signed_input_binding(self.input,self.prepared)
+        self.signed['kind']=m.SIGNED_KIND;self.write_input()
+        with self.assertRaisesRegex(ValueError,'EXACT_SIGNED_BINDING'):m.signed_input_binding(self.input,self.prepared,value)
+
+    def test_current_exact_sessions_and_original_3600_are_not_reconstructed_or_shortened(self):
+        _,_,profile=self.current_fixture();original=json.loads(json.dumps(self.signed))
+        for field,new in [('sessionId',str(uuid.uuid4())),('accessToken','MODELED.NOT.JWT'),('expiresAt',123)]:
+            self.signed=json.loads(json.dumps(original));self.signed['accounts'][0][field]=new;self.write_input()
+            with self.subTest(field=field),self.assertRaises((ValueError,UnicodeError,json.JSONDecodeError)):
+                m.signed_input_binding(self.input,self.prepared,profile.descriptor())
+        self.signed=original;self.signed['accounts'][1]['authEmail']='different@example.test';self.write_input()
+        with self.assertRaisesRegex(ValueError,'MEMBER_EMAIL'):m.signed_input_binding(self.input,self.prepared,profile.descriptor())
+
+    def test_current_real_fixed_profile_inspector_rejects_head_manifest_versions_and_helper_poison(self):
+        import sys
+        from unittest.mock import Mock
+        _,pins,profile=self.current_fixture();value=profile.descriptor()
+        poison=SimpleNamespace(inspect_migrations=Mock(side_effect=AssertionError('UNPINNED_HELPER')))
+        with patch.dict(sys.modules,{'prepare_migrations':poison}):
+            result=m.verify_current_profile(value,pins,value['versions'])
+            self.assertIs(sys.modules['prepare_migrations'],poison)
+        poison.inspect_migrations.assert_not_called();self.assertEqual([e['version']for e in result['entries']],value['versions'])
+        for key,new in [('sourceHead','0'*40),('migrationEntriesSha256','0'*64),
+                        ('versions',value['versions'][:-1]+['99999999999999'])]:
+            with self.subTest(key=key),self.assertRaises(ValueError):m.verify_current_profile({**value,key:new},pins)
+        with self.assertRaises(ValueError):m.verify_current_profile(value,{**pins,m.CURRENT_HELPERS[-1]:'0'*64})
+
+    def test_current_plan_contract_resume_all_consume_same_profile_without_live_authority(self):
+        _,pins,profile=self.current_fixture();value=profile.descriptor()
+        target={'project':'own-project','id':'1'*64,'image':'sha256:'+'c'*64,'versions':value['versions']}
+        plan=m.build_signed_plan(target,{'aiRunnerSha256':pins['tests/integration/jonghyun/isolated_ai_contracts.py']},
+            pins,self.now,self.input,self.prepared,[r['userId']for r in value['memberSessions']],current_profile=profile)
+        digest=m.persist_live_contract(self.root,plan,self.input,self.prepared,self.now)
+        contract=m.load_live_contract(self.root,digest,pins)
+        self.assertEqual(contract['currentProfile'],value);self.assertFalse(contract['executorAllowed'])
+        m.record_resume_intent(self.root,digest,pins,self.resume)
+        with self.assertRaises(FileExistsError):m.record_resume_intent(self.root,digest,pins,self.resume)
+        for filename in ('ai24-live-contract.json','ai24-resume-intent.json'):
+            self.assertNotIn('MODELED_NOT_A_SIGNATURE',(self.root/filename).read_text())
+        with self.assertRaisesRegex(ValueError,'TYPED_REVIEW'):
+            m.build_signed_plan(target,{},pins,self.now,self.input,self.prepared,[],current_profile=value)
+
+    def test_current_protected_exact_table_set_rejects_same_count_replacement_and_historical_schema_expansion(self):
+        _,_,profile=self.current_fixture();tables=profile.descriptor()['expectedTables']
+        value={'rows':{t:'a'*64 for t in tables},'catalogSha256':'b'*64,'rolesAclSha256':'c'*64,
+            'unknownRows':{'private.ai_budget_reservations':'a'*64,'private.ai_account_budget_reservations':'a'*64}}
+        m.protected_snapshot(value,tables)
+        with self.assertRaises(ValueError):m.protected_snapshot(value)
+        changed=json.loads(json.dumps(value));changed['rows'].pop('cron.job');changed['rows']['cron.replacement']='a'*64
+        with self.assertRaisesRegex(ValueError,'PROTECTED_SCHEMAS'):m.protected_snapshot(changed,tables)
+
+    def test_current_runner_explicit_primary_sessions_and_resume_profile_are_consumed(self):
+        runner,_,profile=self.current_fixture();typed=runner.ReviewedCurrentMidnightProfile(profile.descriptor())
+        evidence=self.root/'current-runner';evidence.mkdir(mode=0o700)
+        def base_init(instance,root,binding):
+            instance.root=root;instance.binding=binding;instance.target={'versions':profile.descriptor()['versions']}
+            instance.changed=False;instance.days=set();instance.ledgers=[]
+        with patch.object(runner.SignedRunner,'__init__',base_init),patch.object(runner,'validate_signed_binding')as validator, \
+             patch.object(runner,'private_temp_root'):
+            # 입력은 섞어 놓아도 primarySessionId를 명시적으로 선택해야 한다.
+            self.signed['accounts'].reverse()
+            obj=runner.SignedMidnightRunner(self.prepared,self.signed,[r['userId']for r in profile.descriptor()['memberSessions']],
+                evidence,'modeled-current',self.resume.timestamp()+60,current_profile=typed)
+        validator.assert_called_once_with(self.signed,self.prepared,obj.target,current_midnight=typed)
+        self.assertEqual([a['sessionId']for a in obj.selected_accounts],[r['primarySessionId']for r in profile.descriptor()['memberSessions']])
+        state=obj.export_resume_state();self.assertEqual(state['currentProfile'],profile.descriptor())
+        state['currentProfile']['memberSessions'].reverse()
+        with self.assertRaisesRegex(ValueError,'CURRENT_RESUME_PROFILE'):obj.restore_resume_state(state)
+
+    def test_current_real_constructor_late_import_rejects_ambient_poison_and_restores_on_failure(self):
+        import sys
+        from unittest.mock import Mock
+        _,pins,profile=self.current_fixture()
+        # 실제 target reader가 config를 검사하다 멈춘다. Docker/HTTP 직전 모형이 아니다.
+        # 비검토 ambient helper를 소비하면 이 고정 오류 대신 sentinel 예외가 발생한다.
+        (self.prepared/'supabase').mkdir(mode=0o700)
+        for path,value in [(self.prepared/'database-manifest.json',{'config_overlay':{'project_id':'jonghyun-backend100-deadbeef','api.port':62000}}),
+                           (self.prepared/'execution-intent.json',{})]:
+            path.write_bytes(m.canonical(value));path.chmod(0o600)
+        (self.prepared/'supabase/config.toml').write_bytes(b'MODELED_CONFIG_MISMATCH');(self.prepared/'supabase/config.toml').chmod(0o600)
+        contract={'sourcePins':pins,'scopeId':'modeled-current-constructor','currentProfile':profile.descriptor(),
+            'signedSelectedUserIds':[r['userId']for r in profile.descriptor()['memberSessions']],
+            'signedAuthInput':m.signed_input_binding(self.input,self.prepared,profile.descriptor()),
+            'boundary':m.natural_windows(self.now)['nextKstMidnight']}
+        poison=SimpleNamespace(isolated_config=Mock(side_effect=AssertionError('UNPINNED_LAZY_IMPORT')))
+        with patch.dict(sys.modules,{'prepare_database':poison}):
+            with self.assertRaisesRegex(ValueError,'SIGNED_PREPARED_CONFIG'):
+                m.FixedSignedMidnightPorts(self.root,contract)
+            self.assertIs(sys.modules['prepare_database'],poison)
+        poison.isolated_config.assert_not_called()
+
+    def test_current_constructor_helper_context_restores_success_and_exception(self):
+        import sys
+        from unittest.mock import Mock
+        _,pins,_=self.current_fixture()
+        poison=SimpleNamespace(inspect_migrations=Mock(side_effect=AssertionError('UNPINNED_HELPER')))
+        with patch.dict(sys.modules,{'prepare_migrations':poison}):
+            with m.current_constructor_support(pins):
+                from prepare_migrations import inspect_migrations
+                self.assertTrue(inspect_migrations(REPO)['migrations'])
+            self.assertIs(sys.modules['prepare_migrations'],poison)
+            with self.assertRaisesRegex(RuntimeError,'MODELED_FAILURE'):
+                with m.current_constructor_support(pins):raise RuntimeError('MODELED_FAILURE')
+            self.assertIs(sys.modules['prepare_migrations'],poison)
+        poison.inspect_migrations.assert_not_called()
 
 
 if __name__ == '__main__':
