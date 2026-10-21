@@ -34,6 +34,13 @@ def canonical(value): return json.dumps(value, sort_keys=True, separators=(',', 
 def sha(raw): return hashlib.sha256(raw).hexdigest()
 
 
+def photo_source_path(path, root):
+    """합성 사진 이름·직계 경로만 검사한다. private 읽기 검사는 기존 reader가 유지한다."""
+    need(path.parent == root and re.fullmatch(r'd03-photo-[a-f0-9]{32}[.]jpg', path.name),
+         'D03_PHOTO_SOURCE_PATH')
+    return path
+
+
 def load(relative, digest):
     path = ROOT / relative; raw = path.read_bytes()
     need(path.resolve() == path and not path.is_symlink() and sha(raw) == digest, 'D03_MODULE_CHANGED')
@@ -477,8 +484,7 @@ class FixedDeadlineRuntime:
             photo=packet[uid]
             need(type(photo)is dict and set(photo)=={'path','sha256','storagePath'}and type(photo['sha256'])is str
                  and re.fullmatch('[a-f0-9]{64}',photo['sha256']),'D03_PHOTO_PACKET')
-            path=Path(photo['path'])
-            need(path.parent==c.root and re.fullmatch(r'd03-photo-[a-f0-9]{32}\.jpg',path.name),'D03_PHOTO_SOURCE_PATH')
+            path=photo_source_path(Path(photo['path']),c.root)
             need(type(photo['storagePath'])is str and re.fullmatch(re.escape(uid)+r'/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.]jpg',photo['storagePath']),'D03_OWNED_PHOTO_STORAGE_PATH')
             image=c.read(path)
             need(1<=len(image)<=2097152 and sha(image)==photo['sha256'] and image[:2]==b'\xff\xd8'and image[-2:]==b'\xff\xd9','D03_PHOTO_SOURCE_BYTES')

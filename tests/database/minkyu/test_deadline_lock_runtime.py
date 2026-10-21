@@ -16,6 +16,17 @@ m=load('d03_runtime_unit','tests/integration/minkyu/deadline_lock_runtime.py')
 e=load('d03_executor_unit','tests/integration/minkyu/deadline_lock_executor.py')
 
 class RuntimeTests(unittest.TestCase):
+    def test_photo_source_ascii_name_and_direct_root(self):
+        root=Path('/private/tmp/fresh-d03')
+        name='d03-photo-'+'a'*32+'.jpg'
+        self.assertEqual(m.photo_source_path(root/name,root),root/name)
+        for bad in (name.replace('.jpg',r'\.jpg'),name+'.extra',name.upper(),
+                    'd03-photo-'+'a'*31+'.jpg'):
+            with self.subTest(name=bad),self.assertRaisesRegex(ValueError,'D03_PHOTO_SOURCE_PATH'):
+                m.photo_source_path(root/bad,root)
+        with self.assertRaisesRegex(ValueError,'D03_PHOTO_SOURCE_PATH'):
+            m.photo_source_path(root/'nested'/name,root)
+
     def review(self):
         return e.ReviewedDeadlineExecution('root','a'*40,'b'*64,'c'*64,'d'*64,'e'*32,
             *[f'd0300000-0000-4000-8000-{n:012d}'for n in range(1,7)])
