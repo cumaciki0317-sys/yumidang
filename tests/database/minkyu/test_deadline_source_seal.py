@@ -25,6 +25,116 @@ class ReviewedFixture:
     def descriptor(self):return self.value
 
 class SourceSealTests(unittest.TestCase):
+    def summary(self):
+        users=('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002')
+        origin={'epochUs':1000000,'state':[],'outbox':[],'checkpoints':[]}
+        observed={'epochUs':3000000,'state':[{'profile_id':u,'revision':1,'fingerprint':None,'visible_summary_id':None}for u in users],
+            'outbox':[{'profile_id':u,'requested_at':'1970-01-01T00:00:02+00:00'}for u in users],'checkpoints':[]}
+        return users,origin,observed
+    def test_summary_cleanup_exact_trigger_payload(self):
+        users,origin,observed=self.summary();m.validate_summary_cleanup(origin,observed,users)
+        m.validate_summary_cleanup(origin,dict(origin,epochUs=3000000),users)
+    def test_summary_cleanup_preexisting_checkpoint_state_or_outbox_refused(self):
+        users,origin,observed=self.summary()
+        for key in('state','outbox','checkpoints'):
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,'ORIGIN_NOT_EMPTY'):
+                m.validate_summary_cleanup(dict(origin,**{key:[{}]}),observed,users)
+    def test_summary_cleanup_foreign_shape_revision_time_checkpoint_refused(self):
+        import copy
+        users,origin,observed=self.summary()
+        cases=[]
+        for field,value in(('revision',2),('fingerprint','foreign'),('visible_summary_id','foreign'),('profile_id','foreign')):
+            bad=copy.deepcopy(observed);bad['state'][0][field]=value;cases.append(bad)
+        bad=copy.deepcopy(observed);bad['outbox'][0]['requested_at']='1970-01-01T00:00:00+00:00';cases.append(bad)
+        bad=copy.deepcopy(observed);bad['checkpoints']=[{}];cases.append(bad)
+        for bad in cases:
+            with self.subTest(bad=bad),self.assertRaises(ValueError):m.validate_summary_cleanup(origin,bad,users)
+    def test_fixture_summary_origin_rejected_before_business_sql(self):
+        users,origin,observed=self.summary();r=object.__new__(m.FixedDeadlineRuntime)
+        r.review=SimpleNamespace(author_id=users[0],reviewer_id=users[1]);r.executor=SimpleNamespace(fixture_sql=lambda _: 'fixture',uid=lambda u:"'"+u+"'::uuid")
+        r.readonly=SimpleNamespace(exact=json.loads);calls=[];r.save=lambda *a:calls.append(('saved',a))
+        r._sql_command=lambda sql:(calls.append(('sql',sql))or json.dumps(dict(origin,checkpoints=[{}])))
+        with self.assertRaisesRegex(ValueError,'PREEXISTING_ROWS'):r.sql('fixture')
+        self.assertEqual(len(calls),1);self.assertNotEqual(calls[0][1],'fixture')
+        self.assertFalse(hasattr(r,'summary_fixture_origin'))
+    def test_fixture_summary_origin_saved_before_dispatch_and_replay_refused(self):
+        users,origin,_=self.summary();r=object.__new__(m.FixedDeadlineRuntime)
+        r.review=SimpleNamespace(author_id=users[0],reviewer_id=users[1]);r.executor=SimpleNamespace(fixture_sql=lambda _: 'fixture',uid=lambda u:"'"+u+"'::uuid")
+        r.readonly=SimpleNamespace(exact=json.loads);calls=[];r.save=lambda name,value:calls.append(('save',name))
+        r._sql_command=lambda sql:(calls.append(('sql',sql))or json.dumps(origin))
+        r.sql('fixture');self.assertEqual(calls[1][0],'save');self.assertEqual(calls[2],('sql','fixture'))
+        count=len(calls)
+        with self.assertRaisesRegex(ValueError,'FIXTURE_REPLAY'):r.sql('fixture')
+        self.assertEqual(len(calls),count)
+    def cleanup_lane(self,mutation=None,partial_failure=False,save_failure=False):
+        import copy,re
+        users,origin,generated=self.summary();runtime=object.__new__(m.FixedDeadlineRuntime)
+        review=SimpleNamespace(author_id=users[0],reviewer_id=users[1],post_id='post',request_id='request',appointment_id='appointment')
+        runtime.review=review;runtime.executor=SimpleNamespace(uid=lambda u:"'"+u+"'::uuid")
+        runtime.core=SimpleNamespace(ai=SimpleNamespace(quote=lambda s:"'"+s.replace("'","''")+"'"))
+        runtime.readonly=SimpleNamespace(exact=json.loads);runtime.summary_fixture_origin=m.canonical(origin)
+        state={'rows':copy.deepcopy(origin),'business':True,'calls':[],'summaryDeleted':False}
+        def sql(statement):
+            state['calls'].append(statement)
+            if statement.startswith('select(select count'):return '0'
+            if statement.startswith('select jsonb_build_object'):return json.dumps(state['rows'])
+            self.assertTrue(statement.startswith('begin;'));self.assertTrue(statement.endswith('commit;'))
+            self.assertNotRegex(statement,r'(?i)\bassert\b')
+            self.assertIn('in share row exclusive mode;',statement)
+            if '$d03empty$'in statement:
+                self.assertEqual(statement.count("then raise exception 'd03_summary_predelete_not_empty'"),3)
+                if any(state['rows'][k]for k in('state','outbox','checkpoints')):raise ValueError('predelete_not_empty')
+                self.assertLess(statement.index('end $d03empty$;'),statement.index('delete from'))
+                self.assertEqual(statement.count('delete from '),7)
+                if partial_failure:raise ValueError('partial transaction rollback')
+                state['business']=False;state['rows']=copy.deepcopy(generated);return ''
+            self.assertIn('$d03summary$',statement)
+            self.assertLess(statement.index('end $d03summary$;'),statement.index('delete from'))
+            pairs=re.findall(r"from private[.](review_summary_state|review_refresh_outbox|review_summary_checkpoints) t where.*?is distinct from '((?:''|[^'])*)'::jsonb then raise exception",statement)
+            self.assertEqual(len(pairs),3)
+            mapping={'review_summary_state':'state','review_refresh_outbox':'outbox','review_summary_checkpoints':'checkpoints'}
+            for table,payload in pairs:
+                if state['rows'][mapping[table]]!=json.loads(payload.replace("''","'")):raise ValueError('payload_changed')
+            self.assertEqual(statement.count('delete from '),2)
+            state['summaryDeleted']=True;state['rows']=dict(copy.deepcopy(origin),epochUs=4000000);return ''
+        def save(name,value):
+            if name=='d03-summary-cleanup-candidate-private.json':
+                if save_failure:raise OSError('candidate save failed')
+                if mutation:mutation(state)
+        runtime.sql=sql;runtime.save=save
+        return runtime,review,state
+    def test_cleanup_lane_success_keeps_fixed_order_and_exact_payload(self):
+        runtime,review,state=self.cleanup_lane();runtime.cleanup_fixture(review)
+        self.assertFalse(state['business']);self.assertTrue(state['summaryDeleted'])
+        self.assertEqual(len(state['calls']),5)
+    def test_cleanup_lane_partial_business_failure_rolls_back_and_stops(self):
+        runtime,review,state=self.cleanup_lane(partial_failure=True)
+        with self.assertRaisesRegex(ValueError,'rollback'):runtime.cleanup_fixture(review)
+        self.assertTrue(state['business']);self.assertFalse(state['summaryDeleted']);self.assertEqual(len(state['calls']),2)
+    def test_cleanup_lane_candidate_save_failure_never_deletes_summary(self):
+        runtime,review,state=self.cleanup_lane(save_failure=True)
+        with self.assertRaises(OSError):runtime.cleanup_fixture(review)
+        self.assertFalse(state['business']);self.assertFalse(state['summaryDeleted']);self.assertEqual(len(state['calls']),3)
+    def test_cleanup_lane_concurrent_payload_or_checkpoint_change_rejects_with_asserts_off(self):
+        def state_change(state):state['rows']['state'][0]['revision']=2
+        def checkpoint_change(state):state['rows']['checkpoints']=[{'foreign':'checkpoint'}]
+        for mutate in(state_change,checkpoint_change):
+            with self.subTest(mutate=mutate.__name__):
+                runtime,review,state=self.cleanup_lane(mutation=mutate)
+                with self.assertRaisesRegex(ValueError,'payload_changed'):runtime.cleanup_fixture(review)
+                self.assertFalse(state['summaryDeleted']);self.assertTrue(state['rows']['state'])
+    def test_cleanup_lane_preexisting_checkpoint_is_not_deleted_by_appointment_trigger(self):
+        runtime,review,state=self.cleanup_lane();state['rows']['checkpoints']=[{'existing':True}]
+        with self.assertRaisesRegex(ValueError,'predelete_not_empty'):runtime.cleanup_fixture(review)
+        self.assertTrue(state['business']);self.assertFalse(state['summaryDeleted'])
+        self.assertEqual(state['rows']['checkpoints'],[{'existing':True}])
+    def test_summary_cleanup_sql_has_payload_assertions_and_only_owned_predicates(self):
+        import inspect
+        source=inspect.getsource(m.FixedDeadlineRuntime.cleanup_fixture)
+        self.assertIn('validate_summary_cleanup',source);self.assertIn('d03_summary_payload_changed',source)
+        self.assertIn('d03_summary_predelete_not_empty',source);self.assertIn('in share row exclusive mode',source)
+        self.assertIn("for table in('review_refresh_outbox','review_summary_state')",source)
+        self.assertNotIn('delete from private.review_summary_checkpoints',source)
     @contextmanager
     def fixture(self):
         with tempfile.TemporaryDirectory(dir='/private/tmp')as directory:

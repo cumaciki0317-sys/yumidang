@@ -4,6 +4,7 @@
 manifest·사진 원본 SHA를 root가 검토해야 한다. 실제 Naver/Storage API는 검증하지 않는다.
 """
 import base64
+import datetime
 from contextlib import contextmanager
 from dataclasses import dataclass
 import hashlib
@@ -330,6 +331,30 @@ def owned_rows_sql(review):
             "select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from " +
             table + ' r where ' + predicate + ' group by 1)s')
     return 'select jsonb_object_agg(t,bag)from(' + ' union all '.join(terms) + ')x;'
+
+
+def validate_summary_cleanup(origin,observed,users):
+    """고정 D03 appointment 삭제 trigger의 새 두 projection만 정리한다."""
+    need(type(origin)is dict and all(origin.get(k)==[]for k in('state','outbox','checkpoints'))
+         and type(origin.get('epochUs'))is int,'D03_SUMMARY_ORIGIN_NOT_EMPTY')
+    need(type(observed)is dict and set(observed)=={'epochUs','state','outbox','checkpoints'}
+         and type(observed['epochUs'])is int and observed['epochUs']>=origin['epochUs']
+         and observed['checkpoints']==[],'D03_SUMMARY_CHECKPOINT_OR_CLOCK')
+    expected=set(users)
+    for key in('state','outbox'):
+        rows=observed[key]
+        need(type(rows)is list and len(rows)in(0,2) and (not rows or {r.get('profile_id')for r in rows}==expected),
+             'D03_SUMMARY_EXACT_TWO')
+    need(bool(observed['state'])==bool(observed['outbox']),'D03_SUMMARY_PAIR')
+    for row in observed['state']:
+        need(set(row)=={'profile_id','revision','fingerprint','visible_summary_id'}
+             and type(row['revision'])is int and row['revision']==1
+             and row['fingerprint']is None and row['visible_summary_id']is None,'D03_SUMMARY_UNEXPECTED_STATE')
+    for row in observed['outbox']:
+        need(set(row)=={'profile_id','requested_at'}and type(row['requested_at'])is str,'D03_SUMMARY_OUTBOX_SHAPE')
+        instant=datetime.datetime.fromisoformat(row['requested_at'].replace('Z','+00:00'))
+        need(instant.tzinfo is not None and origin['epochUs']<=int(instant.timestamp()*1000000)<=observed['epochUs'],
+             'D03_SUMMARY_OUTBOX_ORIGIN')
 
 
 def verify_delta(before, after, owned, tables, *, cleanup):
@@ -693,6 +718,24 @@ class FixedDeadlineRuntime:
         return value
 
     def sql(self,statement):
+        if statement==self.executor.fixture_sql(self.review):
+            need(not hasattr(self,'summary_fixture_origin'),'D03_SUMMARY_FIXTURE_REPLAY')
+            origin=self.readonly.exact(self._sql_command(self.summary_origin_sql()))
+            need(type(origin)is dict and set(origin)=={'epochUs','state','outbox','checkpoints'}
+                 and type(origin['epochUs'])is int and all(origin[k]==[]for k in('state','outbox','checkpoints')),
+                 'D03_SUMMARY_PREEXISTING_ROWS')
+            self.save('d03-summary-origin-private.json',origin)
+            self.summary_fixture_origin=canonical(origin)
+        return self._sql_command(statement)
+
+    def summary_origin_sql(self):
+        ids=','.join(self.executor.uid(u)for u in sorted((self.review.author_id,self.review.reviewer_id)))
+        parts=["'epochUs',(extract(epoch from clock_timestamp())*1000000)::bigint"]
+        for key,table in(('state','review_summary_state'),('outbox','review_refresh_outbox'),('checkpoints','review_summary_checkpoints')):
+            parts.append("'"+key+"',(select coalesce(jsonb_agg(to_jsonb(t)order by profile_id),'[]'::jsonb)from private."+table+' t where profile_id in('+ids+'))')
+        return 'select jsonb_build_object('+','.join(parts)+');'
+
+    def _sql_command(self,statement):
         self.guard(self.review,cleanup=self.cleaning)
         self.command_index+=1
         command=PsqlHolder(self,statement=statement,label=f'sql-{self.command_index:05d}')
@@ -798,7 +841,31 @@ class FixedDeadlineRuntime:
         need(self.sql('select(select count(*)from public.appointment_reviews where appointment_id='+aid+')+(select count(*)from public.appointment_disputes where appointment_id='+aid+')+(select count(*)from public.appointment_completion_confirmations where appointment_id='+aid+');')=='0','D03_UNREVIEWED_CLEANUP_RELATION')
         order=('private.conversation_generation_appointments','private.appointment_member_episodes','public.appointments',
                'public.notifications','private.conversation_retention_generations','public.join_requests','public.posts')
-        self.sql('begin;'+''.join('delete from '+t+' where '+p[t]+';'for t in order)+'commit;')
+        need(hasattr(self,'summary_fixture_origin'),'D03_SUMMARY_ORIGIN_REQUIRED')
+        ids=','.join(self.executor.uid(u)for u in sorted((review.author_id,review.reviewer_id)))
+        prefix="begin;set local statement_timeout='5s';set local lock_timeout='1s';lock table private.review_summary_state,private.review_refresh_outbox,private.review_summary_checkpoints in share row exclusive mode;do $d03empty$ begin "
+        for table in('review_summary_state','review_refresh_outbox','review_summary_checkpoints'):
+            prefix+="if exists(select 1 from private."+table+' where profile_id in('+ids+"))then raise exception 'd03_summary_predelete_not_empty';end if;"
+        self.sql(prefix+'end $d03empty$;'+''.join('delete from '+t+' where '+p[t]+';'for t in order)+'commit;')
+        origin=self.readonly.exact(self.summary_fixture_origin)
+        observed=self.readonly.exact(self.sql(self.summary_origin_sql()))
+        validate_summary_cleanup(origin,observed,(review.author_id,review.reviewer_id))
+        self.save('d03-summary-cleanup-candidate-private.json',observed)
+        # 정확 관측 payload를 같은 트랜잭션에서 다시 비교한다. 조건이 달라지면 삭제 0/rollback.
+        q=self.core.ai.quote;ids=','.join(self.executor.uid(u)for u in sorted((review.author_id,review.reviewer_id)))
+        script="begin;set local statement_timeout='5s';set local lock_timeout='1s';lock table private.review_summary_state,private.review_refresh_outbox,private.review_summary_checkpoints in share row exclusive mode;do $d03summary$ begin "
+        for key,table in(('state','review_summary_state'),('outbox','review_refresh_outbox'),('checkpoints','review_summary_checkpoints')):
+            expected=q(canonical(observed[key]).decode())+'::jsonb'
+            script+="if(select coalesce(jsonb_agg(to_jsonb(t)order by profile_id),'[]'::jsonb)from private."+table+' t where profile_id in('+ids+'))is distinct from '+expected+" then raise exception 'd03_summary_payload_changed';end if;"
+        script+='end $d03summary$;'
+        for table in('review_refresh_outbox','review_summary_state'):
+            script+='delete from private.'+table+' where profile_id in('+ids+');'
+        self.sql(script+'commit;')
+        final=self.readonly.exact(self.sql(self.summary_origin_sql()))
+        need(all(final[k]==[]for k in('state','outbox','checkpoints')),'D03_SUMMARY_CLEANUP_REMAINS')
+        self.save('d03-summary-cleanup-proof-private.json',{'originSha256':sha(self.summary_fixture_origin),
+            'candidateSha256':sha(canonical(observed)),'final':final,'existingRowsDeleted':False})
+
 
     def prepare_fast_phase(self,review):return FastSourceSeal(self,review)
     def run_fast_phase(self,seal):return run_sealed_fast_phase(self,seal)
