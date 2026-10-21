@@ -33,6 +33,30 @@ class CurrentDatabaseTests(unittest.TestCase):
         self.assertEqual(len(self.review().descriptor()['profile']['expectedTables']),182)
         with self.assertRaisesRegex(ValueError,'TYPED_OPERATION'):self.review('issuer')
         with self.assertRaisesRegex(ValueError,'MEMBER_SCOPE'):self.review(m.MidnightOperation())
+    def test_explicit125_and_arbitrary126(self):
+        profile=self.profile();profile['versions'].append('20261021142140')
+        args=('d',m.IssuerOperation(),'a'*40,{p:'c'*64 for p in(m.SELF,m.PURE,m.KERNEL)})
+        tail=('/private/tmp/ai24-test','scope',{k:{'id':str(i)*64}for i,k in enumerate(('db','auth','rest','gateway'),1)})
+        self.assertEqual(len(m.ReviewedCurrentAI24Database(*args,profile,*tail).descriptor()['profile']['versions']),125)
+        profile['versions'][-1]='20261021142141'
+        with self.assertRaisesRegex(ValueError,'EXPLICIT125_VERSION'):m.ReviewedCurrentAI24Database(*args,profile,*tail)
+        profile['versions'].append('20261021150000')
+        with self.assertRaises(ValueError):m.ReviewedCurrentAI24Database(*args,profile,*tail)
+    def test_125_consumes_exact_inspector_target_and_literal_hash(self):
+        profile=self.profile();profile['versions'].append('20261021142140')
+        value=dict(profile=profile,pins={},sourceHead='a'*40)
+        entries=[dict(version=v,path='fixture/'+v,sha256='a'*64)for v in profile['versions']]
+        entries[-1].update(path=m.DEADLINE125,sha256=m.DEADLINE125_SHA)
+        verify=types.SimpleNamespace(verify_current_profile=unittest.mock.Mock(return_value={'entries':entries}))
+        with patch.object(m,'checked_source'),patch.object(m,'pinned_module',return_value=verify):
+            m.verify_current125(ROOT,value,profile['versions'])
+            verify.verify_current_profile.assert_called_once_with(profile,{},'a'*40,profile['versions'])
+            entries[-1]['sha256']='0'*64
+            with self.assertRaisesRegex(ValueError,'EXPLICIT125_SOURCE'):m.verify_current125(ROOT,value,profile['versions'])
+        with patch.object(m,'checked_source'),patch.object(m,'pinned_module',return_value=types.SimpleNamespace(verify_current_profile=unittest.mock.Mock(side_effect=ValueError('HEAD_MANIFEST_OR_TARGET_CHANGED')))):
+            with self.assertRaisesRegex(ValueError,'HEAD_MANIFEST_OR_TARGET_CHANGED'):m.verify_current125(ROOT,value,[])
+        with patch.object(m,'pinned_module')as load:
+            m.verify_current125(ROOT,dict(value,profile=self.profile()),None);load.assert_not_called()
     def test_profile_hash_mutation_rejected(self):
         profile=self.profile();profile['expectedTables'][0]='private.foreign'
         with self.assertRaises(ValueError):m.ReviewedCurrentAI24Database('d',m.IssuerOperation(),'a'*40,{p:'c'*64 for p in(m.SELF,m.PURE,m.KERNEL)},profile,'/private/tmp/ai24-test','scope',{k:{'id':str(i)*64}for i,k in enumerate(('db','auth','rest','gateway'),1)})

@@ -1,4 +1,4 @@
-"""AI24 current124 전용 DB 접점. 역사121 포트와 일반 SQL 권한은 변경하지 않는다.
+"""AI24 current124 및 명시125 전용 DB 접점. 역사121 포트와 일반 SQL 권한은 변경하지 않는다.
 
 별도 root typed review가 필수다. 이전 issuer/assembly 호출자는 새 review를 추가해야
 current lane을 실행할 수 있다. 배치는 각 표 관측을 하나의 RR snapshot으로 묶고
@@ -25,6 +25,10 @@ import uuid
 SELF='tools/local/current_ai24_database.py'
 PURE='tests/integration/minkyu/deadline_readonly_transport.py'
 KERNEL='tests/integration/jonghyun/isolated_ai_contracts.py'
+INSPECTOR='tests/integration/minkyu/service_profile_readonly_local.py'
+DEADLINE125='backend/supabase/migrations/20261021142140_review_db_entry_deadline.sql'
+DEADLINE125_SHA='85f4faa8892e1b304117ea08fffe42f9d7b7e5daca25a8fb977870b91755d101'
+CURRENT_HELPERS=tuple('tools/local/'+n+'.py'for n in('prepare_migrations','prepare_database','prepare_edge','prepare_current_policy'))
 
 # 독립 검토할 고정 콜사이트 method AST. 새 source만으로 자동 확장하지 않는다.
 REVIEWED_METHODS = {'tests/integration/jonghyun/isolated_ai_contracts.py|CurrentSignedMidnightRunner|validate_original_accounts': '444730d6ca812ac4aade13ddcc7baf19e71394e3956ed9248570ce2b24b31525',
@@ -76,10 +80,12 @@ class ReviewedCurrentAI24Database:
         need(type(operation)in(IssuerOperation,MidnightOperation),'AI24_DB_TYPED_OPERATION')
         need(type(decision_id)is str and re.fullmatch('[A-Za-z0-9_.:-]{1,128}',decision_id),'AI24_DB_DECISION')
         need(type(profile)is dict and set(profile)=={'sourceHead','migrationEntriesSha256','versions','expectedTables','fullTableSetSha256'}
-            and profile['sourceHead']==source_head and type(profile['versions'])is list and len(profile['versions'])==124
+            and profile['sourceHead']==source_head and type(profile['versions'])is list and len(profile['versions'])in(124,125)
             and all(type(v)is str and re.fullmatch('[0-9]{14}',v)for v in profile['versions'])
             and profile['versions']==sorted(set(profile['versions'])) and re.fullmatch('[a-f0-9]{64}',profile['migrationEntriesSha256']),
             'AI24_DB_CURRENT124')
+        if len(profile['versions'])==125:
+            need(profile['versions'][-1]=='20261021142140','AI24_DB_EXPLICIT125_VERSION')
         tables=profile['expectedTables']
         need(type(tables)is list and len(tables)==182 and tables==sorted(set(tables))
             and all(re.fullmatch('(auth|public|private|storage|cron|vault)[.][A-Za-z_0-9]+',t)for t in tables)
@@ -101,7 +107,7 @@ class ReviewedCurrentAI24Database:
 
 
 def checked_source(repo,relative,head,pins):
-    need(type(relative)is str and relative in (SELF,PURE,KERNEL,'tools/local/provision_current_midnight.py','tools/local/prepare_isolated_midnight.py'),'AI24_DB_FIXED_SOURCE_PATH')
+    need(type(relative)is str and relative in (SELF,PURE,KERNEL,INSPECTOR,*CURRENT_HELPERS,'tools/local/provision_current_midnight.py','tools/local/prepare_isolated_midnight.py'),'AI24_DB_FIXED_SOURCE_PATH')
     path=repo/relative;need(path.resolve()==path and not path.is_symlink(),'AI24_DB_SOURCE_PATH')
     need(subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True,timeout=15).strip()==head,'AI24_DB_HEAD_CHANGED')
     fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
@@ -121,6 +127,19 @@ def pinned_module(repo,relative,head,pins):
     raw=checked_source(repo,relative,head,pins)
     module=importlib.util.module_from_spec(importlib.util.spec_from_loader('current_ai24_pure',loader=None))
     module.__file__=str(repo/relative);exec(compile(raw,module.__file__,'exec'),module.__dict__);return module
+
+
+def verify_current125(repo,value,target_versions):
+    """125만 새 exact 정책/전체 manifest/실제 대상 버전을 다시 소비한다."""
+    profile=value['profile'];pins=value['pins'];head=value['sourceHead']
+    if len(profile['versions'])==124:return
+    for path in (INSPECTOR,*CURRENT_HELPERS):checked_source(repo,path,head,pins)
+    inspector=pinned_module(repo,INSPECTOR,head,pins)
+    history=inspector.verify_current_profile(profile,pins,head,target_versions)
+    entries=history['entries']
+    need(len(entries)==125 and [e['version']for e in entries]==profile['versions']
+        and {e['path']:e['sha256']for e in entries}.get(DEADLINE125)==DEADLINE125_SHA,'AI24_DB_EXPLICIT125_SOURCE')
+    for path in (INSPECTOR,*CURRENT_HELPERS):checked_source(repo,path,head,pins)
 
 
 def static_query(raw,classname,method,ordinal):
@@ -415,6 +434,7 @@ class CurrentDatabase:
         self._save=save;self.guard=guard;self.active_guard=active_guard;self.sticky=False;self.inflight=False;self.counter=0;self.raw_sticky=[]
         self.base=tuple(owner.base);self.db=owner.target['id']
         need(self.db==self.value['containers']['db']['id']and Path(owner.root if hasattr(owner,'root')else owner.reviewed.prepared_root)==Path(self.value['root']), 'AI24_DB_OWNER_SCOPE')
+        verify_current125(self.repo,self.value,owner.target['versions'])
         self.pure=pinned_module(self.repo,PURE,self.value['sourceHead'],self.value['pins'])
         checked_source(self.repo,SELF,self.value['sourceHead'],self.value['pins'])
         raw=checked_source(self.repo,KERNEL,self.value['sourceHead'],self.value['pins'])
@@ -432,7 +452,7 @@ class CurrentDatabase:
         self.core=type('CurrentActive',(),{'active':lambda _:self.active()})()
         self.original=self
         self.preparation_status={'executionAllowed':True,'actualMidnight':'NOT_RUN','writeCoverage':'REVIEWED_FIXED_CALLS_ONLY',
-            'coverageVersion':'CURRENT124_FIXED_SQL_V1','fixedOperationManifestSha256':self.registry.manifest_sha,
+            'coverageVersion':('CURRENT125_FIXED_SQL_V1'if len(self.value['profile']['versions'])==125 else 'CURRENT124_FIXED_SQL_V1'),'fixedOperationManifestSha256':self.registry.manifest_sha,
             'remaining':['ACTUAL_PERFORMANCE_NOT_MEASURED','ACTUAL_NATURAL_MIDNIGHT_NOT_RUN']}
         self.users=list(self.value['users'])
         self.epoch=self.value['boundaryEpoch']
