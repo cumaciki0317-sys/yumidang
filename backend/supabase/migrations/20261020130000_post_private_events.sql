@@ -306,6 +306,46 @@ begin
   execute replace(body,anchor,replacement);
  end loop;
 end $$;
+-- archive의 기존 definer 소유자를 신뢰한다. 적용 세션 역할을 새 호출 체인의 권한으로 사용하지 않는다.
+do $$declare own oid; own_name text; sig text; tbl regclass; role_name text;
+ new_functions text[]:=array[
+  'private.normalize_post_manual_event(jsonb)','private.post_event_source_hidden(uuid)',
+  'private.create_service_post_before_content_inspection(uuid,jsonb)','private.match_conditions(uuid)',
+  'private.appointment_schedule_change_json(uuid)','private.end_appointment_schedule_change(uuid,text)',
+  'private.clear_finished_event_change()','private.post_event_change_result(uuid,jsonb,timestamptz)',
+  'private.update_service_post_before_content_inspection(uuid,jsonb,timestamptz)',
+  'public.accept_appointment_schedule_change(uuid,uuid,text)','public.accept_appointment_event_change(uuid,uuid,text,text)',
+  'public.get_service_post_event_link(uuid)','private.project_post_linked_event(uuid)','private.assert_post_event_selectable(uuid)'];
+begin
+ select proowner into strict own from pg_proc where oid='private.execute_inspected_content(text,jsonb)'::regprocedure;
+ select rolname into strict own_name from pg_roles where oid=own;
+ if not exists(select 1 from pg_roles where oid=own and (rolsuper or rolbypassrls)) then
+  raise exception 'post_event_owner_incompatible' using errcode='55000'; end if;
+ foreach sig in array array['private.apply_content_inspection(text,uuid,jsonb)',
+  'private.create_post_before_manual_events(uuid,jsonb)','private.update_post_before_manual_events(uuid,jsonb,timestamptz)',
+  'private.match_conditions_before_manual_event(uuid)','private.change_json_before_manual_event(uuid)',
+  'private.end_change_before_manual_event(uuid,text)','private.accept_change_before_manual_event(uuid,uuid,text)',
+  'public.get_service_post(uuid)','private.linked_event_before_manual_event(uuid)','private.selectable_event_before_manual_event(uuid)'] loop
+  if not exists(select 1 from pg_proc where oid=sig::regprocedure and proowner=own) then
+   raise exception 'post_event_owner_incompatible' using errcode='55000'; end if;
+ end loop;
+ foreach tbl in array array['public.posts'::regclass,'private.post_search_locations'::regclass,
+  'private.appointment_schedule_changes'::regclass,'private.source_events'::regclass] loop
+  if not exists(select 1 from pg_class where oid=tbl and relowner=own) then
+   raise exception 'post_event_owner_incompatible' using errcode='55000'; end if;
+ end loop;
+ for role_name in select rolname from pg_roles where rolname in('anon','authenticated','service_role','authenticator','yumidang_worker_queue') loop
+  if pg_has_role(role_name,own_name,'USAGE') or pg_has_role(role_name,own_name,'SET') then
+   raise exception 'post_event_owner_incompatible' using errcode='55000'; end if;
+ end loop;
+ foreach tbl in array array['private.post_manual_events'::regclass,'private.event_source_display'::regclass] loop
+  execute format('alter table %s owner to %I',tbl,own_name);
+ end loop;
+ foreach sig in array new_functions loop
+  execute format('alter function %s owner to %I',sig,own_name);
+ end loop;
+ -- 소유권 정렬은 제품 역할 EXECUTE/테이블 권한을 새로 부여하지 않는다. 기존 ACL은 아래에서 유지한다.
+end $$;
 revoke all on function private.post_event_change_result(uuid,jsonb,timestamptz),private.post_event_source_hidden(uuid),private.normalize_post_manual_event(jsonb),private.create_service_post_before_content_inspection(uuid,jsonb),
  private.create_post_before_manual_events(uuid,jsonb),private.match_conditions(uuid),private.match_conditions_before_manual_event(uuid),
  private.appointment_schedule_change_json(uuid),private.change_json_before_manual_event(uuid),private.end_appointment_schedule_change(uuid,text),

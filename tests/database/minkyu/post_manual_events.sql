@@ -1,5 +1,23 @@
 -- 민규 전용 합성 SQL 역할·삽입 세션·RPC 검사. 실제 Auth 발급은 포함하지 않으며 모든 자료를 rollback한다.
 begin;
+-- 적용 actor가 archive owner와 달라도 신규 definer와 private RLS 테이블은 기존 호출 체인 소유자다.
+do $$declare own oid; sig text; tbl regclass;
+begin
+ select proowner into strict own from pg_proc where oid='private.execute_inspected_content(text,jsonb)'::regprocedure;
+ foreach sig in array array['private.normalize_post_manual_event(jsonb)','private.post_event_source_hidden(uuid)',
+  'private.create_service_post_before_content_inspection(uuid,jsonb)','private.match_conditions(uuid)',
+  'private.appointment_schedule_change_json(uuid)','private.end_appointment_schedule_change(uuid,text)',
+  'private.clear_finished_event_change()','private.post_event_change_result(uuid,jsonb,timestamptz)',
+  'private.update_service_post_before_content_inspection(uuid,jsonb,timestamptz)',
+  'public.accept_appointment_schedule_change(uuid,uuid,text)','public.accept_appointment_event_change(uuid,uuid,text,text)',
+  'public.get_service_post_event_link(uuid)','private.project_post_linked_event(uuid)','private.assert_post_event_selectable(uuid)'] loop
+  assert (select proowner=own from pg_proc where oid=sig::regprocedure),'post event definer owner mismatch';
+ end loop;
+ foreach tbl in array array['private.post_manual_events'::regclass,'private.event_source_display'::regclass] loop
+  assert (select relowner=own and relrowsecurity from pg_class where oid=tbl),'post event private table owner/RLS mismatch';
+  assert not has_table_privilege('authenticated',tbl,'SELECT') and not has_table_privilege('service_role',tbl,'SELECT');
+ end loop;
+end;$$;
 -- PostgREST POST도 STABLE이면 READ ONLY다. 회원 상태 공유 잠금을 유지하는 조회의 실행 속성을 검사한다.
 do $$ begin
  assert (select provolatile='v' from pg_proc where oid='public.get_my_content_inspection_ticket(uuid,uuid)'::regprocedure), 'ticket reader must retain retirement lock in POST writable transaction';
