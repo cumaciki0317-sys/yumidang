@@ -183,6 +183,8 @@ class ConcurrentAdditionalTests(unittest.TestCase):
   self.assertEqual(self.m.sequence_values(runner,names),values);self.assertEqual(runner.sql.call_count,1)
   query=runner.sql.call_args.args[0].decode();self.assertEqual(query.count(' union all '),40)
   self.assertIn('from "private"."fixture_seq_0" s',query)
+  self.assertNotIn('row_to_json',query)
+  self.assertEqual(query.count("jsonb_build_object('last_value',s.last_value,'log_cnt',s.log_cnt,'is_called',s.is_called)"),41)
   runner.sql.reset_mock()
   with self.assertRaises(ValueError):self.m.sequence_values(runner,[['private','bad;drop']])
   runner.sql.assert_not_called()

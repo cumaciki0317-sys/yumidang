@@ -43,7 +43,7 @@ def sequence_values(scratch,sequences):
     for schema,name in sequences:
         table=relation_name(schema)+'.'+relation_name(name)
         key=schema+'.'+name;keys.append(key)
-        terms.append("select '"+key+"' k,row_to_json(s)::jsonb v from "+table+' s')
+        terms.append("select '"+key+"' k,jsonb_build_object('last_value',s.last_value,'log_cnt',s.log_cnt,'is_called',s.is_called) v from "+table+' s')
     need(len(keys)==len(set(keys)),'SEQUENCE_INVENTORY')
     if not terms:return {}
     values=json.loads(scratch.sql(("select jsonb_object_agg(k,v)from("+' union all '.join(terms)+')q;').encode()))
