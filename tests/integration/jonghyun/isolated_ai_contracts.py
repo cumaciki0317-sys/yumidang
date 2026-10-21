@@ -843,6 +843,11 @@ def signed_main():
                 try:p.communicate(timeout=5)
                 except subprocess.TimeoutExpired:p.kill();p.communicate(timeout=5)
             r.save_signed('node-'+key+'-closed.json',{'exited':p.poll() is not None,'exitCode':p.returncode,'signalsOnlyExactPopenObject':True})
+    return _signed_ai2223_cases(r,b,invoke)
+
+
+def _signed_ai2223_cases(r,b,invoke):
+    proof=[]
     try:
         r.prepare()
         common={'codeRoot':str(REPO),'origin':b['origin'],'anon':b['credentials']['anon'],'service':b['credentials']['service'],'signedLocalAuth':True,
@@ -882,6 +887,7 @@ def signed_main():
     finally:r.clean()
     result={'status':'PASS','scope':SIGNED_KIND,'checks':proof,'actualAuthPostgrest':'PASS','actualNaver':'NOT_RUN','externalProvider':'NOT_RUN','tls':'NOT_RUN_LOCAL_HTTP','naturalMidnight':'NOT_RUN','originalProtectedRowsPreserved':True,'authFixtureBaselinePreserved':True}
     r.save_signed('receipt.json',result);print(json.dumps(result))
+    return result
 
 def lifecycle_row_bags(read_sql, conditions=None):
     """기존 네 schema의 테이블 집합·행 해시·중복 수를 두 번의 읽기로 검사한다."""
@@ -3142,6 +3148,398 @@ def dispatch_lifecycle_accounts(reviewed):
         except BaseException:pass
         raise ValueError('LIFECYCLE_DISPATCH_UNKNOWN_PRIVATE_EVIDENCE_PRESERVED')from None
 
+
+
+CURRENT_AI2223_PURPOSE='CURRENT_AUTH6_AI22_23_SYNTHETIC_ONLY'
+_CURRENT_AI2223_SUPPORT=('tools/local/observe_isolated.py','tools/local/prepare_auth_negative.py',
+    'tests/integration/minkyu/ai_positive_discovery_local.py','backend/supabase/config.toml',
+    'tests/integration/minkyu/deadline_readonly_transport.py')
+
+def _current_need(value,code):
+    if not value:raise ValueError(code)
+
+def _current_canonical(value):
+    return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
+
+def current_ai2223_source_pins(reviewed_head):
+    """현재 HEAD와 observer 전체 closure 및 signed 추가 파일의 committed bytes를 확인한다."""
+    _current_need(type(reviewed_head)is str and re.fullmatch('[a-f0-9]{40}',reviewed_head),'CURRENT_AI2223_SOURCE_HEAD')
+    def head():return subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],text=True,timeout=3).strip()
+    _current_need(head()==reviewed_head,'CURRENT_AI2223_HEAD_CHANGED')
+    relative=_CURRENT_AI2223_SUPPORT[0];raw=(REPO/relative).read_bytes()
+    _current_need(subprocess.check_output(['git','-C',str(REPO),'show',reviewed_head+':'+relative],timeout=15)==raw,'CURRENT_AI2223_SOURCE_NOT_COMMITTED')
+    observer=_current_ai2223_module(relative,{relative:hashlib.sha256(raw).hexdigest()})
+    observed=observer.source_pins();required={**observed,**signed_source_pins()}
+    for path in _CURRENT_AI2223_SUPPORT:required[path]=hashlib.sha256((REPO/path).read_bytes()).hexdigest()
+    for path,digest in required.items():
+        raw=(REPO/path).read_bytes()
+        _current_need((REPO/path).resolve()==REPO/path and not(REPO/path).is_symlink()and hashlib.sha256(raw).hexdigest()==digest,'CURRENT_AI2223_SOURCE_CHANGED')
+        if path not in observed:
+            committed=subprocess.check_output(['git','-C',str(REPO),'show',reviewed_head+':'+path],timeout=15)
+            _current_need(committed==raw,'CURRENT_AI2223_SOURCE_NOT_COMMITTED')
+    _current_need(head()==reviewed_head,'CURRENT_AI2223_HEAD_CHANGED');return required
+
+class ReviewedCurrentAI2223Execution:
+    """원 발급 binding의 bool/서명을 바꾸지 않는 별도 현재 실행 목적 승인."""
+    def __init__(self,value):
+        fields={'decisionId','purpose','root','sourceHead','sourcePins','bindingSha256','auth6Receipt','auth6ReceiptSha256',
+            'containers','sessions','daemonId','scopeId','approvalExpiresAt','nodePath','nodeSha256','capsuleRoot','migrationVersions','expectedTables'}
+        _current_need(type(value)is dict and set(value)==fields,'CURRENT_AI2223_REVIEW_FIELDS')
+        v=value;hex64=lambda x:type(x)is str and re.fullmatch('[a-f0-9]{64}',x)
+        root=Path(v['root']);capsule=Path(v['capsuleRoot']);node=Path(v['nodePath']);receipt=Path(v['auth6Receipt'])
+        _current_need(root.is_absolute()and root.resolve()==root and not root.is_relative_to(REPO),'CURRENT_AI2223_ROOT')
+        _current_need(v['purpose']==CURRENT_AI2223_PURPOSE and type(v['decisionId'])is str and re.fullmatch('[A-Za-z0-9_.:-]{1,128}',v['decisionId']),'CURRENT_AI2223_PURPOSE')
+        _current_need(type(v['sourceHead'])is str and re.fullmatch('[a-f0-9]{40}',v['sourceHead']) and type(v['sourcePins'])is dict
+            and 'tests/integration/jonghyun/isolated_ai_contracts.py'in v['sourcePins']and all(hex64(x)for x in v['sourcePins'].values()),'CURRENT_AI2223_SOURCE')
+        _current_need(all(hex64(v[k])for k in('bindingSha256','auth6ReceiptSha256','nodeSha256')),'CURRENT_AI2223_SHA')
+        _current_need(receipt.is_absolute()and receipt.resolve()==receipt and receipt.name=='receipt.json'and receipt.parent.parent==root
+            and re.fullmatch('auth-provision-[a-f0-9]{32}',receipt.parent.name),'CURRENT_AI2223_RECEIPT')
+        _current_need(capsule.is_absolute()and capsule.resolve()==capsule and Path('/private/tmp')in capsule.parents and capsule.parent!=Path('/private/tmp')
+            and not capsule.is_relative_to(root)and not root.is_relative_to(capsule)and not capsule.is_relative_to(REPO),'CURRENT_AI2223_CAPSULE')
+        _current_need(node.is_absolute()and node.resolve()==node and node.name=='node','CURRENT_AI2223_NODE')
+        _current_need(type(v['containers'])is dict and set(v['containers'])=={'db','auth','rest','gateway'}
+            and all(type(x)is dict and hex64(x.get('id'))for x in v['containers'].values())and len({x['id']for x in v['containers'].values()})==4,'CURRENT_AI2223_FOUR')
+        try:valid_sessions=type(v['sessions'])is list and len(v['sessions'])==6 and len(set(v['sessions']))==6 and all(str(uuid.UUID(x))==x for x in v['sessions'])
+        except (ValueError,TypeError,AttributeError):valid_sessions=False
+        _current_need(valid_sessions,'CURRENT_AI2223_SIX')
+        try:valid_daemon=str(uuid.UUID(v['daemonId']))==v['daemonId']
+        except (ValueError,TypeError,AttributeError):valid_daemon=False
+        _current_need(valid_daemon and type(v['scopeId'])is str and re.fullmatch('[a-f0-9]{32}',v['scopeId']),'CURRENT_AI2223_IDENTITY')
+        _current_need(type(v['approvalExpiresAt'])is int and time.time()<v['approvalExpiresAt']<=time.time()+3600,'CURRENT_AI2223_APPROVAL_EXPIRED')
+        _current_need(type(v['migrationVersions'])is list and v['migrationVersions']==sorted(set(v['migrationVersions']))and v['migrationVersions']
+            and all(type(x)is str and re.fullmatch('[0-9]{14}',x)for x in v['migrationVersions']),'CURRENT_AI2223_HISTORY')
+        tables=v['expectedTables']
+        _current_need(type(tables)is list and len(tables)==182 and tables==sorted(set(tables))and all(type(x)is str and re.fullmatch(r'(auth|public|private|storage|cron|vault)\.[a-z_][a-z_0-9]*',x)for x in tables),'CURRENT_AI2223_TABLE_PROFILE')
+        self._sealed=_current_canonical(v)
+    def descriptor(self):return signed_exact_json(self._sealed)
+
+def validate_current_ai2223_approval(reviewed,raw):
+    _current_need(type(reviewed)is ReviewedCurrentAI2223Execution and type(raw)is bytes,'CURRENT_AI2223_TYPED_REVIEW')
+    v=reviewed.descriptor();b=signed_exact_json(raw)
+    _current_need(hashlib.sha256(raw).hexdigest()==v['bindingSha256']and b['preparedRoot']==v['root']and b['sourcePins']=={k:v['sourcePins'][k]for k in b['sourcePins']}
+        and b['containers']==v['containers']and [a['sessionId']for a in b['accounts']]==v['sessions'],'CURRENT_AI2223_ORIGINAL_BINDING')
+    _current_need(b['approvedByRoot']is False and b['dockerSlotReady']is False,'CURRENT_AI2223_ORIGINAL_FLAGS')
+    _current_need(time.time()<v['approvalExpiresAt']and all(type(a['expiresAt'])is int and a['expiresAt']>time.time()+300 for a in b['accounts']),'CURRENT_AI2223_EXPIRY')
+    return b
+
+def verify_current_ai2223_state(before,after,added):
+    _current_need(type(before)is dict and type(after)is dict and set(before)==set(after)=={'rows','authoritySha256','constraintsSha256','catalogSha256','sequences'},'CURRENT_AI2223_SNAPSHOT')
+    _current_need(all(before[k]==after[k]for k in before if k!='rows')and set(before['rows'])==set(after['rows']),'CURRENT_AI2223_AUTHORITY_OR_SEQUENCE')
+    allowed={'private.'+x for x in PROTECTED_BUDGET}
+    _current_need(type(added)is dict and set(added)<=allowed,'CURRENT_AI2223_EFFECT_TABLE')
+    for table,old in before['rows'].items():
+        bag=dict(old)
+        for digest,n in added.get(table,{}).items():
+            _current_need(type(digest)is str and re.fullmatch('[a-f0-9]{64}',digest)and type(n)is int and n>0 and digest not in old,'CURRENT_AI2223_NEW_ROW')
+            bag[digest]=n
+        _current_need(bag==after['rows'][table],'CURRENT_AI2223_WHOLE_STATE_CHANGED')
+
+def _current_ai2223_module(relative,pins):
+    path=REPO/relative;raw=path.read_bytes()
+    _current_need(path.resolve()==path and not path.is_symlink()and hashlib.sha256(raw).hexdigest()==pins.get(relative),'CURRENT_AI2223_HELPER_CHANGED')
+    name='current_ai2223_'+Path(relative).stem
+    module=importlib.util.module_from_spec(importlib.util.spec_from_loader(name,loader=None));module.__file__=str(path)
+    exec(compile(raw,str(path),'exec'),module.__dict__);return module
+
+def _verify_current_ai2223_cases(result):
+    _current_need(type(result)is dict and result.get('status')=='PASS'and result.get('scope')==SIGNED_KIND,'CURRENT_AI2223_CASE_RESULT')
+    checks=result.get('checks')
+    _current_need(type(checks)is list and len(checks)==3 and all(type(x)is dict for x in checks)
+        and [x.get('scenario')for x in checks]==['SIGNED_AUTH_NEGATIVE','AI22','AI23'],'CURRENT_AI2223_CASE_SET')
+    negative=checks[0];coverage=('expiredBearer','revokedSession','anonymousBearer','memberChanged','differentOriginalContext')
+    wire={'status':'PASS','nativeExternalAttempts':negative.get('nativeExternalAttempts'),'cases':negative.get('cases'),**{k:negative.get(k)for k in coverage}}
+    _current_need(negative==signed_negative_receipt(wire),'CURRENT_AI2223_NEGATIVE_RESULT')
+    limits,caps=checks[1:]
+    _current_need(set(limits)=={'scenario','observations','dailyCounts'}and type(limits['observations'])is int and limits['observations']==28
+        and limits['dailyCounts']==[3,20,3]and set(caps)=={'scenario','observations'}and type(caps['observations'])is int and caps['observations']==6,'CURRENT_AI2223_ORIGINAL_34')
+    return {'AI22':28,'AI23':6,'negativeCases':4}
+
+def current_ai2223_factory_input(fixture,capsule_root):
+    _current_need(type(fixture)is dict and fixture.get('codeRoot')==str(REPO)and fixture.get('signedLocalAuth')is True
+        and fixture.get('productManifest')==product_graph(),'CURRENT_AI2223_ORIGINAL_FACTORY_INPUT')
+    # 원 fixture/binding은 보존하고 이 목적의 새 dispatch 입력만 고정된 봉인 root를 쓴다.
+    return {**fixture,'codeRoot':str(capsule_root)}
+
+class _CurrentAI2223Files:
+    def __init__(self,private):
+        from types import SimpleNamespace
+        self.ai=SimpleNamespace(signed_private_read=signed_private_read,private_temp_root=private_temp_root);self.helper=private
+    def private(self,path):return self.helper.secure_private_bytes(Path(path),self.ai)
+    def save_bytes(self,root,name,raw):return self.helper.FixedPair.save_bytes(self,root,name,raw)
+    def save(self,root,name,value):return self.save_bytes(root,name,_current_canonical(value))
+
+class _CurrentAI2223Capture:
+    """기존 검토된 bounded raw capture를 command별 private directory에 재사용한다."""
+    def __init__(self,owner,key):
+        self.owner=owner;self.evidence=owner.evidence/('factory-'+key);self.evidence.mkdir(mode=0o700)
+        self.writer=owner.files;self.child=None;self.capture_threads=[];self.capture_failures=[];self.capture_saved=False;self.captured=None;self.proof_refs=None
+    def read(self,path):return self.writer.private(path)
+    def save(self,name,value):return self.writer.save(self.evidence,name,value)
+    def finish(self):return self.owner.positive.PositiveRun.finish_capture(self)
+    def close(self):
+        if self.child is None:return
+        p=self.child;errors=[]
+        try:self.owner.observer.terminate(p)
+        except BaseException as e:errors.append(type(e).__name__)
+        try:
+            out,err=self.finish()
+            if self.captured is None:self.captured=(out,err)
+            _current_need((out,err)==self.captured,'CURRENT_AI2223_CAPTURE_CHANGED')
+        except BaseException as e:errors.append(type(e).__name__)
+        closed=p.poll()is not None and not self.owner.observer.group_alive(p)
+        self.save('current-child-closed.json',{'closed':closed,'exitCode':p.returncode,'captureFailures':self.capture_failures,'closureErrors':errors})
+        _current_need(closed and not errors,'CURRENT_AI2223_CHILD_CLOSURE_UNPROVEN');self.child=None
+        self.verify_evidence()
+    def verify_evidence(self):
+        names=('factory-input-private.json','current-command-intent.json','positive-factory-stdout-private.json','positive-factory-stderr-private.json','positive-factory-outcome.json','current-child-closed.json')
+        raw={name:self.read(self.evidence/name)for name in names};refs={name:{'path':str(self.evidence/name),'sha256':hashlib.sha256(value).hexdigest()}for name,value in raw.items()}
+        out,err=raw[names[2]],raw[names[3]];outcome=signed_exact_json(raw[names[4]]);closed=signed_exact_json(raw[names[5]])
+        _current_need(self.captured==(out,err)and outcome['stdoutSha256']==hashlib.sha256(out).hexdigest()and outcome['stderrSha256']==hashlib.sha256(err).hexdigest()and outcome['stdoutBytes']==len(out)and outcome['stderrBytes']==len(err)and outcome['privateRawOutputPreserved']is True and closed['closed']is True,'CURRENT_AI2223_COMMAND_EVIDENCE')
+        if self.proof_refs is None:self.proof_refs=refs
+        _current_need(refs==self.proof_refs,'CURRENT_AI2223_COMMAND_EVIDENCE_CHANGED')
+        return refs
+    def invoke(self,fixture,mode):
+        _current_need(mode in('--signed-auth-negative','--ai-limits','--ai-caps'),'CURRENT_AI2223_FACTORY_MODE')
+        self.owner.active();self.writer.save(self.evidence,'factory-input-private.json',fixture)
+        self.owner.check_capsule_and_node();self.owner.active()
+        argv=[self.owner.value['nodePath'],'--experimental-strip-types',str(Path(self.owner.value['capsuleRoot'])/'tests/integration/jonghyun/isolated_ai_factory.ts'),str(self.evidence/'factory-input-private.json'),mode]
+        self.save('current-command-intent.json',{'argvSha256':hashlib.sha256(_current_canonical(argv)).hexdigest(),'singleLaunch':True,'automaticReplay':False})
+        original=None;out=None
+        try:
+            self.owner.active()
+            self.child=subprocess.Popen(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True,env=midnight_minimal_env(self.evidence))
+            self.owner.positive.PositiveRun.capture(self,self.child.stdout,'positive-factory-stdout-private.json',1024*1024)
+            self.owner.positive.PositiveRun.capture(self,self.child.stderr,'positive-factory-stderr-private.json',65536)
+            while self.child.poll()is None:
+                self.owner.active();_current_need(not self.capture_failures,'CURRENT_AI2223_STREAM_FAILURE');time.sleep(.05)
+            out,err=self.finish();self.captured=(out,err);self.owner.active()
+            _current_need(self.child.returncode==0 and not self.capture_failures,'CURRENT_AI2223_FACTORY_FAILED')
+        except BaseException as error:original=error
+        finally:
+            try:self.close()
+            except BaseException as closure:
+                if original is None:original=closure
+                else:original.add_note('CURRENT_AI2223_CHILD_CLOSURE_UNPROVEN')
+        if original:raise original
+        result=signed_exact_json(out)
+        _current_need(type(result)is dict and result.get('status')=='PASS'and result.get('nativeExternalAttempts')==0,'CURRENT_AI2223_FACTORY_PROOF')
+        return result
+
+class _CurrentAI2223SQL:
+    """현재 목적 constructor + 검토된 raw child/PG 종결 mechanics. legacy SQL은 대체하지 않는다."""
+    def __init__(self,owner):
+        from types import SimpleNamespace
+        _current_need(type(owner.reviewed)is ReviewedCurrentAI2223Execution and owner.value==owner.reviewed.descriptor()
+            and owner.root==Path(owner.value['root'])and owner.binding['containers']==owner.value['containers'],'CURRENT_AI2223_SQL_REVIEW')
+        self.owner=owner;self.base=tuple(owner.r.base);self.db=owner.r.target['id'];self.pure=owner.transport
+        _current_need(self.db==owner.value['containers']['db']['id']and self.base==('docker','--host',owner.r.target['host']),'CURRENT_AI2223_SQL_DATABASE')
+        owner.active();owner.r.signed_identity()
+        raw=signed_exact_json(owner.r.call(['inspect',self.db]))
+        _current_need(type(raw)is list and len(raw)==1 and raw[0]['Id']==self.db and raw[0]['HostConfig']['PidMode']=='','CURRENT_AI2223_PRIVATE_PID_NAMESPACE')
+        self.core=SimpleNamespace(active=owner.active);self.counter=0;self.sticky=False;self.inflight=False;self.refs={};self.proofs=[]
+    def save(self,name,value):
+        digest=self.owner.save(name,value)
+        _current_need(type(digest)is str and re.fullmatch('[a-f0-9]{64}',digest),'CURRENT_AI2223_SQL_RAW_NOT_SAVED')
+        self.refs[name]={'path':str(self.owner.evidence/name),'sha256':digest};return digest
+    def child(self,*args):return self.pure.ReviewedDeadlineReadonlyTransport.child(self,*args)
+    def absent(self,*args):return self.pure.ReviewedDeadlineReadonlyTransport.absent(self,*args)
+    def assert_closed_state(self):_current_need(not self.sticky and not self.inflight,'CURRENT_AI2223_SQL_STICKY')
+    def guard(self):self.owner.active();self.owner.r.signed_identity()
+    def execute(self,query,timeout=25,read_only=False):
+        self.assert_closed_state()
+        _current_need(type(query)is str and 0<len(query)<=1024*1024 and type(timeout)in(int,float)and 0<timeout<=25 and type(read_only)is bool,'CURRENT_AI2223_SQL_ARGUMENT')
+        if read_only:
+            statement=query.strip().removesuffix(';').strip()
+            _current_need(timeout<=5 and re.match(r'(?i)^(select|with)\b',statement)and not any(x in statement for x in(';','--','/*','\\')),'CURRENT_AI2223_READ_ONLY_STATEMENT')
+            prefix="begin read only;set local statement_timeout='"+str(max(1,int(timeout*500)))+"ms';set local lock_timeout='1500ms';"
+            tail=statement+';\nrollback;'
+        else:
+            prefix="set statement_timeout='15s';set lock_timeout='10s';set plpgsql.check_asserts=on;"
+            tail=query
+        marker="select json_build_object('pid',pg_backend_pid(),'backendStart',(select backend_start from pg_stat_activity where pid=pg_backend_pid()));\n"
+        body=(prefix+'\n'+marker+tail+'\n').encode()
+        self.guard();self.counter+=1;name='current-sql-'+str(self.counter).zfill(5);self.sticky=True;self.inflight=True
+        try:
+            argv=list(self.base)+['exec','-i',self.db,'psql','-XqAt','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-f','-']
+            self.save(name+'-intent.json',{'sqlUtf8':body.decode(),'sqlSha256':hashlib.sha256(body).hexdigest(),'singleAttempt':True,'readOnly':read_only,'timeoutSeconds':timeout})
+            self.owner.active()
+            raw=self.child(argv,body,timeout,name,4*1024*1024,65536)
+            first,separator,result=raw.partition(b'\n');_current_need(separator,'CURRENT_AI2223_SQL_MARKER')
+            backend=signed_exact_json(first)
+            _current_need(type(backend)is dict and set(backend)=={'pid','backendStart'}and type(backend['pid'])is int and 1<backend['pid']<2147483648
+                and type(backend['backendStart'])is str and backend['backendStart'],'CURRENT_AI2223_SQL_MARKER')
+            self.absent(backend,name)
+            self.save(name+'-closed.json',{'backend':backend,'backendAbsent':True,'processGroupClosed':True,'resultSha256':hashlib.sha256(result).hexdigest()})
+            _current_need(name+'-raw-private.json'in self.refs,'CURRENT_AI2223_SQL_RAW_NOT_SAVED')
+            self.guard();self.inflight=False;self.sticky=False
+            self.proofs.append({'command':name,'raw':self.refs[name+'-raw-private.json'],'closure':self.refs[name+'-closed.json']})
+            return result.decode().strip()
+        except BaseException:
+            self.inflight=False;self.sticky=True
+            self.save(name+'-unknown.json',{'status':'UNKNOWN','additionalSqlPermitted':False,'cleanupSqlPermitted':False,'automaticReplay':False})
+            raise
+    def verify_evidence(self):
+        self.assert_closed_state()
+        for ref in self.refs.values():_current_need(hashlib.sha256(self.owner.files.private(ref['path'])).hexdigest()==ref['sha256'],'CURRENT_AI2223_SQL_EVIDENCE_CHANGED')
+        return self.proofs
+
+class _CurrentAI2223Run:
+    def __init__(self,reviewed):
+        _current_need(type(reviewed)is ReviewedCurrentAI2223Execution,'CURRENT_AI2223_TYPED_REVIEW')
+        self.reviewed=reviewed;self.value=reviewed.descriptor();self.root=Path(self.value['root']);private_temp_root(self.root)
+        self.sources(initial=True)
+        self.private=_current_ai2223_module(_CURRENT_AI2223_SUPPORT[1],self.value['sourcePins'])
+        self.positive=_current_ai2223_module(_CURRENT_AI2223_SUPPORT[2],self.value['sourcePins'])
+        self.observer=_current_ai2223_module(_CURRENT_AI2223_SUPPORT[0],self.value['sourcePins'])
+        self.transport=_current_ai2223_module(_CURRENT_AI2223_SUPPORT[4],self.value['sourcePins'])
+        self.files=_CurrentAI2223Files(self.private);self.failures=[];self.samples=[];self.done=threading.Event();self.thread=None
+        self.r=None;self.port=None;self.sql_port=None;self.children=[];self.cleaning=False;self.before=None;self.deadline=time.monotonic()+300;self.memory_last=None
+        self.raw=self.files.private(self.root/'signed-ai-binding-private.json');self.binding=validate_current_ai2223_approval(reviewed,self.raw)
+        receipt_raw=self.files.private(self.value['auth6Receipt']);receipt=signed_exact_json(receipt_raw)
+        _current_need(hashlib.sha256(receipt_raw).hexdigest()==self.value['auth6ReceiptSha256']and receipt.get('status')=='PASS_LOCAL_AUTH6_PROVISION_ONLY'
+            and type(receipt.get('accounts'))is int and receipt['accounts']==6 and receipt.get('bindingSha256')==self.value['bindingSha256']
+            and receipt.get('actualGoTrueAndDatabaseSessions')is True and receipt.get('originalRowsPreserved')is True and receipt.get('authAccountsRetained')is True
+            and receipt.get('actualAI22AI23AI24')=='NOT_RUN'and receipt.get('actualNaver')=='NOT_RUN'and receipt.get('creationReceiptRoot')==str(Path(self.value['auth6Receipt']).parent),'CURRENT_AI2223_AUTH6_RECEIPT')
+        self.receipt_raw=receipt_raw;target=signed_prepared_target(self.root);validate_signed_binding(self.binding,self.root,target)
+        _current_need(target['versions']==self.value['migrationVersions']and target['context']=='colima-yumidang-minkyu','CURRENT_AI2223_TARGET_PROFILE')
+        original_evidence=Path(self.binding['evidenceRoot'])
+        _current_need(not original_evidence.exists()and not original_evidence.is_symlink()and not list(self.root.glob('ai-signed-observer-*')),'CURRENT_AI2223_PRIOR_ATTEMPT')
+        self.evidence=self.root/('current-ai2223-'+self.value['scopeId']);self.evidence.mkdir(mode=0o700)
+        self.files.save(self.root,'current-ai2223-execution-intent.json',{'purpose':CURRENT_AI2223_PURPOSE,'reviewSha256':hashlib.sha256(reviewed._sealed).hexdigest(),'originalBindingSha256':self.value['bindingSha256'],'noReplay':True,'noResend':True})
+    def prepare_ports(self):
+        owner=self
+        class MonitoredCurrentSignedRunner(SignedRunner):
+            def save_signed(self,name,value):
+                # 원 cases 영수증을 현재 full-state 최종 승인으로 소비하지 않는다.
+                return super().save_signed('original-cases-receipt.json'if name=='receipt.json'else name,value)
+            def sql(self,statement):
+                owner.active();result=owner.sql_port.execute(statement);owner.active();return result
+            def auth_user(self,token):
+                owner.active();result=super().auth_user(token);owner.active();return result
+            def clean(self):
+                _current_need(all(x.child is None for x in owner.children),'CURRENT_AI2223_LIVE_CHILD_CLEANUP_DEFERRED')
+                owner.cleaning=True
+                owner.verify_http_closed()
+                owner.save('before-cleanup-private.json',owner.snapshot())
+                return super().clean()
+        self.r=MonitoredCurrentSignedRunner(self.root,self.binding);self.r.evidence=self.evidence
+        reviewed_ports=ReviewedSignedProvisioning(self.value['decisionId'],self.root,self.binding['sourcePins'],self.binding['containers'],self.binding['credentials'],int(time.time())+300)
+        provisioning_metadata(reviewed_ports,self.r.target,self.binding['origin'])
+        self.port=FixedLifecycleProvisioningPorts(reviewed_ports)
+        self.sql_port=_CurrentAI2223SQL(self)
+        def read_only(statement,timeout=5):return self.sql_port.execute(statement,timeout=timeout,read_only=True)
+        self.port.read_sql=read_only
+        self.port.runner.sql=lambda statement:self.sql_port.execute(statement)
+    def sources(self,initial=False):
+        v=self.value
+        _current_need(subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],text=True,timeout=3).strip()==v['sourceHead'],'CURRENT_AI2223_HEAD_CHANGED')
+        for relative,digest in v['sourcePins'].items():
+            path=REPO/relative
+            _current_need(type(relative)is str and not Path(relative).is_absolute()and '..'not in Path(relative).parts and path.resolve()==path and not path.is_symlink()
+                and hashlib.sha256(path.read_bytes()).hexdigest()==digest,'CURRENT_AI2223_SOURCE_CHANGED')
+        if initial:_current_need(v['sourcePins']==current_ai2223_source_pins(v['sourceHead']),'CURRENT_AI2223_EXACT_SOURCE_SET')
+    def save(self,name,value):return self.files.save(self.evidence,name,value)
+    def memory(self,minimum):
+        self.positive.PositiveRun.memory(self,minimum);self.memory_last=time.monotonic()
+    def monitor(self):return self.positive.PositiveRun.monitor(self)
+    def active(self):
+        self.sources()
+        _current_need(self.files.private(self.root/'signed-ai-binding-private.json')==self.raw and self.files.private(self.value['auth6Receipt'])==self.receipt_raw,'CURRENT_AI2223_ORIGINAL_BYTES_CHANGED')
+        # 정리도 같은 승인·메모리·마감 경계 안에서만 가능하다. 실패 후 추가 SQL을 허용하지 않는다.
+        validate_current_ai2223_approval(self.reviewed,self.raw)
+        _current_need(not self.failures and not self.done.is_set()and time.monotonic()<self.deadline and self.memory_last is not None and time.monotonic()-self.memory_last<=3,'CURRENT_AI2223_MEMORY_OR_DEADLINE')
+        if self.r is not None:_current_need(self.r.call(['info','--format','{{.ID}}'])==self.value['daemonId'],'CURRENT_AI2223_DAEMON_CHANGED')
+    def check_capsule_and_node(self):
+        self.files.helper.FixedPair.binary(self.files,Path(self.value['nodePath']),self.value['nodeSha256'],'node')
+        factory='tests/integration/jonghyun/isolated_ai_factory.ts';expected={**product_graph(),factory:self.value['sourcePins'][factory]}
+        sealed_runtime_capsule(self.value['sourceHead'],Path(self.value['capsuleRoot']),expected,expected)
+    def snapshot(self):
+        self.active();_current_need(self.port.history()=={'method':'SUPABASE_DB_HISTORY','native':'NOT_RUN'},'CURRENT_AI2223_HISTORY')
+        state=lcp_snapshot(self.port.snapshot());_current_need(sorted(state['rows'])==self.value['expectedTables'],'CURRENT_AI2223_EXACT_TABLES')
+        sequences=signed_exact_json(self.port.read_sql("select coalesce(jsonb_agg(jsonb_build_array(n.nspname,c.relname)order by n.nspname,c.relname),'[]'::jsonb)from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relkind='S'and n.nspname in('auth','public','private','storage','cron','vault');"))
+        terms=[]
+        for schema,name in sequences:
+            _current_need(re.fullmatch('[a-z_][a-z_0-9]*',schema)and re.fullmatch('[a-z_][a-z_0-9]*',name),'CURRENT_AI2223_SEQUENCE_INVENTORY')
+            terms.append("select '"+schema+'.'+name+"' k,jsonb_build_array(last_value,is_called,log_cnt)v from \""+schema+'"."'+name+'"')
+        state['sequences']=signed_exact_json(self.port.read_sql("select coalesce(jsonb_object_agg(k,v),'{}'::jsonb)from("+' union all '.join(terms)+')s;'))if terms else{}
+        self.active();return state
+    def invoke(self,fixture,mode):
+        self.active();validate_signed_binding(self.binding,self.root,self.r.target);self.r.signed_identity()
+        child=_CurrentAI2223Capture(self,uuid.uuid4().hex);self.children.append(child)
+        return child.invoke(current_ai2223_factory_input(fixture,Path(self.value['capsuleRoot'])),mode)
+    def verify_http_closed(self):
+        # 새 전용 DB·이 child group 외 요청 없음이라는 typed scope에서만 해석한다.
+        rows=signed_exact_json(self.r.sql("select coalesce(jsonb_agg(jsonb_build_object('pid',pid,'backendStart',backend_start,'applicationName',application_name,'state',state,'xactStart',xact_start,'querySha256',encode(sha256(convert_to(query,'UTF8')),'hex'))order by pid),'[]'::jsonb)from pg_stat_activity where datname=current_database()and pid<>pg_backend_pid()and backend_type='client backend'and xact_start is not null;"))
+        self.save('http-transactions-before-cleanup-private.json',{'otherOpenClientTransactions':rows,'ownedFactoryGroupsClosed':all(x.child is None for x in self.children),'scope':'FRESH_EXCLUSIVE_DATABASE_ONLY'})
+        _current_need(rows==[]and all(x.child is None for x in self.children),'CURRENT_AI2223_HTTP_TRANSACTION_NOT_CLOSED')
+    def added_budget_rows(self):
+        ledgers=','.join(quote(x)for x in self.r.ledgers)or'null';day=quote(self.day)+'::date'
+        conditions={'ai_budget_ledgers':'ledger_id in('+ledgers+')','ai_budget_reservations':'ledger_id in('+ledgers+')',
+            'ai_account_budget_reservations':'ledger_id in('+ledgers+")and account_id in('yumi','jonghyun','minkyu','sungho')and account_day="+day,
+            'ai_account_daily_budget':"account_id in('yumi','jonghyun','minkyu','sungho')and kst_day="+day,'ai_global_daily_budget':'kst_day='+day}
+        terms=[]
+        for table,condition in conditions.items():
+            terms.append("select 'private."+table+"'t,(select coalesce(jsonb_object_agg(h,n),'{}'::jsonb)from(select encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex')h,count(*)n from private."+table+' r where '+condition+' group by 1)x)bag')
+        return signed_exact_json(self.port.read_sql('select jsonb_object_agg(t,bag)from('+' union all '.join(terms)+')s;'))
+
+def run_current_ai2223(reviewed):
+    """새 root 승인·원 Auth6·원 loop를 사용한다. legacy CLI의 승인 flags를 바꾸지 않는다."""
+    def interrupted(*_args):raise RuntimeError('CURRENT_AI2223_OWN_PROCESS_TERMINATED')
+    previous=signal.signal(signal.SIGTERM,interrupted)
+    try:return _run_current_ai2223(reviewed)
+    finally:signal.signal(signal.SIGTERM,previous)
+
+
+def _run_current_ai2223(reviewed):
+    run=_CurrentAI2223Run(reviewed);original=None;result=None;final=None;errors=[];unknown=[]
+    try:
+        run.memory(1048576);run.thread=threading.Thread(target=run.monitor,daemon=True);run.thread.start();run.active();run.prepare_ports();run.active();run.r.signed_identity()
+        _current_need(run.port.settings()=={'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True},'CURRENT_AI2223_AUTH_SETTINGS')
+        _current_need(run.port.closed_controls()=={**{k:False for k in PROVISION_CLOSED_CONTROLS},'cronLaunchActiveJobs':'off'},'CURRENT_AI2223_CLOSED_CONTROLS')
+        run.check_capsule_and_node();run.before=run.snapshot();run.save('before-private.json',run.before)
+        run.day=run.port.read_sql("select(clock_timestamp()at time zone'Asia/Seoul')::date;")
+        result=_signed_ai2223_cases(run.r,run.binding,run.invoke)
+        _verify_current_ai2223_cases(result)
+    except BaseException as error:original=error
+    finally:
+        for child in run.children:
+            try:child.close()
+            except BaseException as error:errors.append('CHILD_'+type(error).__name__)
+        run.cleaning=True
+        try:
+            _current_need(all(x.child is None for x in run.children),'CURRENT_AI2223_CHILD_CLOSURE_UNPROVEN')
+            for child in run.children:child.verify_evidence()
+            added=run.added_budget_rows()if run.before is not None else{}
+            if run.before is not None:
+                run.save('planned-budget-scope-private.json',added)
+                ledger_ids=','.join(quote(x)for x in run.r.ledgers)or'null'
+                unknown=signed_exact_json(run.port.read_sql("select coalesce(jsonb_agg(jsonb_build_object('reservationId',reservation_id,'ledgerId',ledger_id,'accountId',account_id,'accountDay',account_day,'rowSha256',encode(sha256(convert_to(to_jsonb(r)::text,'UTF8')),'hex'))order by reservation_id),'[]'::jsonb)from private.ai_account_budget_reservations r where ledger_id in("+ledger_ids+')and unknown_at is not null and settled_at is null;'))
+                run.save('new-unknown-receipts-private.json',unknown)
+                if original is None and result is not None:_current_need(type(unknown)is list and len(unknown)==2,'CURRENT_AI2223_EXACT_UNKNOWN_TWO')
+            _current_need(run.port.read_sql('select external_processing_allowed from private.ai_processing_guard where singleton;')=='f','CURRENT_AI2223_FINAL_GUARD_OPEN')
+            run.sources(initial=True);run.active()
+            final=run.snapshot();run.save('final-private.json',final)
+            if run.before is not None:verify_current_ai2223_state(run.before,final,added)
+            if run.sql_port is not None:run.sql_port.verify_evidence()
+        except BaseException as error:
+            errors.append('FINAL_'+type(error).__name__)
+            run.save('final-unavailable-private.json',{'status':'NOT_PROVEN','failureType':type(error).__name__,'sqlSticky':bool(run.sql_port is not None and run.sql_port.sticky),'noReplay':True})
+        run.done.set()
+        if run.thread is not None:run.thread.join(timeout=4)
+        if run.thread is not None and run.thread.is_alive():errors.append('MEMORY_THREAD_LIVE')
+        if run.failures:errors.extend(run.failures)
+        if time.monotonic()>run.deadline:errors.append('CURRENT_AI2223_OBSERVER_TIME_LIMIT')
+        run.save('current-execution-receipt.json',{'status':'PASS'if original is None and not errors and result is not None else'FAIL','purpose':CURRENT_AI2223_PURPOSE,
+            'sourceHead':run.value['sourceHead'],'originalBindingSha256':run.value['bindingSha256'],'originalBindingFlagsUnchanged':True,
+            'errorType':None if original is None else type(original).__name__,'finalErrors':errors,'minimumAvailableKiB':min(run.samples)if run.samples else None,
+            'ownedChildClosed':all(x.child is None for x in run.children),'preservation':'PASS'if not errors and run.before is not None and final is not None else'NOT_PROVEN',
+            'observations':34 if original is None and result is not None else'NOT_PROVEN','wholeTableCount':len(final['rows'])if final is not None else None,
+            'sqlSticky':bool(run.sql_port is not None and run.sql_port.sticky),'sqlCommands':[]if run.sql_port is None else run.sql_port.proofs,
+            'elapsedSeconds':time.monotonic()-(run.deadline-300),'newUnknownCount':len(unknown),'commands':[child.proof_refs for child in run.children],
+            'scopeIncludes':['six-schema-row-bags','authority','constraints','catalog','sequences','original-UNKNOWN'],
+            'naturalMidnight':'NOT_RUN','externalProvider':'NOT_RUN','automaticReplay':False})
+    if original is not None:raise original
+    _current_need(not errors,'CURRENT_AI2223_FINAL_UNPROVEN');return result
 
 if __name__=='__main__':
     try:signed_auth_lifecycle_main() if '--signed-auth-lifecycle'in sys.argv else signed_main() if any(k in sys.argv for k in ('--signed-local-auth','--signed-auth')) else main()

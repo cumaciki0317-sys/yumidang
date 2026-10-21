@@ -677,6 +677,26 @@ class BindingTests(unittest.TestCase):
                 continue
             self.assertIn(hashlib.sha256(dump(original).encode()).hexdigest(), allowed, key)
             after.body[after.body.index(candidate)] = copy.deepcopy(original)
+        # 현재 AI22/23의 정확한 cases 이동만 허용한다. legacy prefix/flags와
+        # 원 cases/예외/finally 중 하나라도 달라지면 정상화 전에 거절한다.
+        reference_raw = subprocess.check_output(['git','show','be92ff397d723e45ac33ebeb008a25c2583c28d4:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO)
+        self.assertEqual(hashlib.sha256(reference_raw).hexdigest(), 'e1ce44be903bb8f6937f9a420e16afd50ebfc3a8182dc2ace7adef559d0dd2b7')
+        reference_main = next(n for n in ast.parse(reference_raw).body if isinstance(n,ast.FunctionDef)and n.name=='signed_main')
+        case_start = next(i for i,n in enumerate(reference_main.body)if isinstance(n,ast.Try)and any(isinstance(x,ast.Expr)and isinstance(x.value,ast.Call)and isinstance(x.value.func,ast.Attribute)and x.value.func.attr=='prepare'for x in n.body))
+        extracted = ast.parse('def _signed_ai2223_cases(r,b,invoke):\n    proof=[]\n').body[0]
+        extracted.body += copy.deepcopy(reference_main.body[case_start:])
+        extracted.body += ast.parse('return result').body
+        delegated = copy.deepcopy(reference_main)
+        delegated.body = delegated.body[:case_start]+ast.parse('return _signed_ai2223_cases(r,b,invoke)').body
+        for tree in (before,after):
+            fn = next(n for n in tree.body if isinstance(n,ast.FunctionDef)and n.name=='signed_main')
+            if dump(fn)==dump(reference_main):
+                continue
+            self.assertEqual(dump(fn),dump(delegated),'signed_main exact delegation')
+            shared = next((n for n in tree.body if isinstance(n,ast.FunctionDef)and n.name=='_signed_ai2223_cases'),None)
+            self.assertIsNotNone(shared,'signed cases missing')
+            self.assertEqual(dump(shared),dump(extracted),'signed cases/except/finally changed')
+            tree.body[tree.body.index(fn)] = copy.deepcopy(reference_main)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -702,6 +722,20 @@ class BindingTests(unittest.TestCase):
         method=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name=='midnight_bind_custody')
         method.body[0]=ast.Pass()
         with self.assertRaises(AssertionError):self.assert_original_python_preserved(original,changed)
+
+    def test_current_cases_extraction_rejects_changed_flags_loop_and_cleanup(self):
+        current=ast.parse(RUNNER.read_text())
+        self.assert_original_python_preserved(current,current)
+        for name in ('signed_main','_signed_ai2223_cases'):
+            changed=copy.deepcopy(ast.parse(RUNNER.read_text()))
+            fn=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name==name)
+            fn.body.append(ast.Pass())
+            with self.subTest(name=name),self.assertRaises(AssertionError):
+                self.assert_original_python_preserved(ast.parse(RUNNER.read_text()),changed)
+        changed=copy.deepcopy(ast.parse(RUNNER.read_text()))
+        fn=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name=='_signed_ai2223_cases')
+        selected=next(n for n in fn.body if isinstance(n,ast.Try));selected.finalbody=[]
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(ast.parse(RUNNER.read_text()),changed)
 
     def test_original_python_functions_exact(self):
         old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout
