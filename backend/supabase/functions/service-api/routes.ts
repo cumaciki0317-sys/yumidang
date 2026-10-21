@@ -97,8 +97,20 @@ function proposedLocation(value: JsonValue): AppointmentLocationInput {
   if (!/^[가-힣]+(특별시|광역시|특별자치시|특별자치도|도) [가-힣]+(시|군|구)( [가-힣]+구)? [가-힣0-9]+(동|읍|면|가)$/.test(result.publicArea)) invalid();
   return result;
 }
+function manualEvent(value: JsonValue): NonNullable<FreePostInput["manualEvent"]> | null {
+  if (value === null) return null;
+  const data = object(value, ["title", "placeName", "publicAddress", "publicAddressConfirmed"]);
+  const title = text(data.title, 1, 200), placeName = text(data.placeName, 0, 200), publicAddress = text(data.publicAddress, 0, 300);
+  const confirmed = data.publicAddressConfirmed;
+  if (typeof confirmed !== "boolean") throw new HttpError("INVALID_REQUEST");
+  if ((publicAddress && !confirmed) ||
+    /[<>\u0000-\u001f\u007f]/u.test(title + placeName + publicAddress)) invalid();
+  return { title, placeName, publicAddress, publicAddressConfirmed: confirmed };
+}
 function postInput(body: JsonValue, postId?: string): { id: string; input: FreePostInput; expectedUpdatedAt?: string } {
-  const data = object(body, [postId === undefined ? "postId" : "expectedUpdatedAt", "title", "description", "category", "startsAt", "endsAt", "publicArea", "registeredAddress", "meetingDetail", "costType", "amount"], ["recruitmentEndsAt", "registeredPlaceName", "preferenceNote", "tags", "eventId"]);
+  const data = object(body, [postId === undefined ? "postId" : "expectedUpdatedAt", "title", "description", "category", "startsAt", "endsAt", "publicArea", "registeredAddress", "meetingDetail", "costType", "amount"], ["recruitmentEndsAt", "registeredPlaceName", "preferenceNote", "tags", "eventId", "manualEvent", "eventChangeId"]);
+  if (data.eventId != null && data.manualEvent != null) invalid();
+  if (postId === undefined && Object.hasOwn(data, "eventChangeId")) invalid();
   if (["paid_request", "paid_offer"].includes(String(data.costType))) throw new HttpError("EXTERNAL_UNAVAILABLE");
   if (data.costType !== "free" || data.amount !== 0) invalid();
   const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt), recruitmentEndsAt = data.recruitmentEndsAt === undefined ? startsAt : timestamp(data.recruitmentEndsAt);
@@ -111,6 +123,8 @@ function postInput(body: JsonValue, postId?: string): { id: string; input: FreeP
     tags: strings(data.tags ?? [], 5, 20), costType: "free", amount: 0,
     // 키를 생략한 기존 수정 요청은 연결을 보존한다. 명시 null로 바꾸지 않는다.
     ...(Object.hasOwn(data, "eventId") ? { eventId: data.eventId === null ? null : uuid(data.eventId) } : {}),
+    ...(Object.hasOwn(data, "manualEvent") ? { manualEvent: manualEvent(data.manualEvent) } : {}),
+    ...(Object.hasOwn(data, "eventChangeId") ? { eventChangeId: uuid(data.eventChangeId) } : {}),
   } };
 }
 
@@ -219,11 +233,18 @@ export function resolveRoute(url: URL): Route {
     const id = uuid(match[1]);
     return route("GET", ({ db, url }) => { query(url, []); return completion.getMyAppointmentCancelAppeal(db, id); });
   }
-  match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|decline|withdraw))?$/.exec(path);
+  match = /^\/appointments\/([^/]+)\/schedule-change(?:\/(propose|accept|accept-event|decline|withdraw))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]), action = match[2];
     if (!action) return route("GET", ({ db }) => completion.getAppointmentChangeState(db, id));
     return route("POST", ({ db, body }) => {
+      if (action === "accept-event") {
+        const data = object(body, ["changeId", "conditionVersion", "eventFingerprint"]);
+        const fingerprint = text(data.eventFingerprint, 64, 64);
+        if (!/^[0-9a-f]{64}$/.test(fingerprint)) invalid();
+        return db.rpc("accept_appointment_event_change", { p_appointment_id: id, p_change_id: uuid(data.changeId),
+          p_condition_version: text(data.conditionVersion, 1, 200), p_event_fingerprint: fingerprint });
+      }
       if (action === "propose") {
         const data = object(body, ["changeId", "startsAt", "endsAt", "expectedUpdatedAt"], ["location"]);
         const startsAt = timestamp(data.startsAt), endsAt = timestamp(data.endsAt);
@@ -290,9 +311,10 @@ export function resolveRoute(url: URL): Route {
   }
   if (path === "/me/posts") return route("GET", ({ db, url }) => posts.listMyPosts(db, ...page(url)), false, true);
   if (path === "/posts") return route("POST", ({ db, body }) => { const { id, input } = postInput(body); return posts.createPost(db, id, input); });
-  match = /^\/posts\/([^/]+)(?:\/(requests|update|close|delete|reopen))?$/.exec(path);
+  match = /^\/posts\/([^/]+)(?:\/(requests|update|close|delete|reopen|event-link))?$/.exec(path);
   if (match) {
     const id = uuid(match[1]);
+    if (match[2] === "event-link") return route("GET", ({ db }) => db.rpc("get_service_post_event_link", { p_post_id: id }));
     if (match[2] === "update") return route("POST", ({ db, body }) => {
       const { input, expectedUpdatedAt } = postInput(body, id);
       return posts.updatePost(db, id, input, expectedUpdatedAt!);
@@ -415,7 +437,7 @@ export function resolveRouteForMethod(url: URL, method: string): Route {
     } };
   }
   if (method !== base.method) throw new HttpError("METHOD_NOT_ALLOWED");
-  if (method === "GET" && /^(?:\/functions\/v1)?\/service-api\/posts\/[^/]+$/.test(url.pathname)) {
+  if (method === "GET" && /^(?:\/functions\/v1)?\/service-api\/posts\/[^/]+(?:\/event-link)?$/.test(url.pathname)) {
     // resolveRoute의 정확한 prefix/UUID 검사 뒤에만 허용한다. 잘못된 query는 공개 인증 전에 거절한다.
     query(url, []);
     return { ...base, publicPostDetail: true };

@@ -204,3 +204,35 @@ WBS7.8의 서버 순수 검증 범위다. `KOPIS_RANKING_CATEGORIES`는 14개 �
 2026-10-20 키 없는 공개 웹 조회에서 [공식 PC 순위 페이지](https://kopis.or.kr/por/boxoffice/boxoffice.do?menuId=MNU_00024)는 본문 추출이 비어 있었고, [공식 모바일 순위 페이지](https://kopis.or.kr/mob/box/boxoffice.do)는 날짜/선택 입력과 빈 결과 안내만 추출됐다. 공식 검색 색인의 [PC 순위 페이지](https://kopis.or.kr/por/boxoffice/boxoffice.do?STDG_CPSGG_CD=&endDate=20261007&excelGbn=0&genre_code=CCCA&menuId=MNU_00024&mt20Id=PF293222&rankType=ntssAmountSm&search=boxoffice&seatScale=&startDate=20260908&type=m)에는 날짜·지역·정렬 선택 및 `startDate/endDate/genre_code/mt20Id/rankType` query가 관찰됐으나, 이는 현재 순위의 실제 기간·선택 조건·공연ID/순서 대조 증거가 아니다. 공식 메인의 분류 선택에서는 장르와 별도 특성 선택이 확인되지만, 그 버튼을 API 필터로 추정하지 않는다.
 
 웹 추출만으로는 행 데이터·실제 선택된 기간/조건·공개 JSON endpoint 계약을 확보하지 못했다. 로컬의 키 없는 공식 HTML 읽기는 DNS 해석 실패로 원문을 확보하지 못했다. 따라서 미확인 HTML 선택자/JSON 경로/분류 코드를 추정한 collector나 영속 게시 SQL을 추가하지 않았다. 후속은 접근 가능한 환경에서 공식 공개 HTML/사용 스크립트/동적 응답의 실제 계약을 읽기 관찰하고, 기간·조건·ID·순위·순서를 함께 추출할 수 있음을 확인한 뒤 bounded HTTPS collector를 연결하는 것이다. OpenAPI 키 사용·인증된 API 호출·쓰기·실제 공개는 0회다.
+
+## WBS4.4 공고 전용 직접 입력·행사 변경 계약 구현
+
+추가 migration `20261020130000_post_private_events.sql`과 기존 공고 HTTP를 확장했다. 실제 DB 적용·운영·앱 소비는 아래 검증 증거와 별도로 판정한다.
+
+- 기존 공고 생성/수정 입력에 선택 `manualEvent:{title,placeName,publicAddress,publicAddressConfirmed}`를 추가한다. 제목1~200자, 장소0~200자, 공개 주소0~300자이며 모두 문자열, 확인은 boolean이다. 주소가 있으면 확인이 true여야 한다. 추가 키·HTML·제어문자를 거절한다. 공개 주소는 만남 상세 주소/위치와 별개다.
+- `eventId`와 non-null 직접 입력은 배타적이다. 수정에서 두 키 생략은 보존, 직접 입력 object만 주면 원천 연결 해제, 원천 UUID만 주면 직접 입력 해제다. 각각 명시 null은 그 항목의 해제이며 전체 해제는 두 키를 null로 보낸다. 기존 클라이언트의 생략 의미는 유지한다.
+- 직접 입력은 private 공고별 테이블에만 저장하며 `source_events`·공용 행사 UUID·공용 목록/독립 상세를 생성하지 않는다. 원생성 직접 입력과 현재 값을 분리해 수정 후 원생성 재시도를 과거 값으로 되돌리지 않는다. 기존 `GET /posts/:id`와 `get_service_post`의 exact 응답 키는 변경하지 않는다. 새 명시 `GET /posts/:id/event-link` → `get_service_post_event_link`는 원래 상세 RPC의 탈퇴·숨김·공개 권한 검사를 먼저 실행하고 `{postId,eventId,manualEvent,linkedEvent,eventLinkState}`만 반환한다. 비로그인도 같은 공개 인증 연결을 사용하고 잘못된 JWT를 익명으로 재시도하지 않는다. 기존 비공개 상세/이름은 확장 DTO에 복사하지 않는다.
+- 직접 입력 세 문자열은 기존 공개 content inspection에 모두 포함하고 ticket digest는 전체 p_input을 결합한다. 기존 검사가 비활성이면 새 직접 입력 저장을 `manual_event_inspection_not_enabled`로 거절한다. 확인 checkbox를 개인정보 검사 승인으로 취급하지 않는다. 검사기/서버 연결 없이 텍스트를 우회 저장하지 않는다.
+- 직접 입력은 동의 condition fingerprint와 공고 행사명 검색에 포함한다. 행사의 날짜와 동행 날짜 겹침을 새로 강제하지 않는다. 기존 확정 동행 간 일정 충돌 판정은 유지한다.
+
+### 확정 후 명시적인 행사 변경 합의
+
+확정된 공고는 기존의 일반 전체 수정을 계속 거절한다. 작성자는 기존 `/posts/:id/update`에 전체 현재 공고 값과 새 행사 선택, 신규 `eventChangeId` UUID를 전송해 **행사 전용 제안**을 만든다. 행사 이외 필드는 현재 값과 같아야 한다. 콘텐츠 검사를 통과한 제안만 기존 약속 변경 원장에 저장하고 제안 시 현재 공고/행사는 바꾸지 않는다. 만료는 제안+6시간과 기존 시작 중 빠른 때이며 같은 시각의 수락을 거절한다. 상대·자격·분쟁·현재 updatedAt·일정 충돌의 기존 검증을 보존한다.
+
+기존 약속 변경 조회의 행사 제안에만 `changeKind:"event"`, `eventFingerprint`, `newEventInput:{eventId,manualEvent}`, `newLinkedEvent`가 추가된다. 제안 원문은 대기 중의 당사자에게만 반환한다. 종료 시 원문을 정리하고 fingerprint·상태·조건 버전만 남긴다. 기존 날짜/장소 전용 제안 응답에는 새 필드를 추가하지 않는다.
+
+**구형 수락은 행사 제안을 수락할 수 없다.** 새 `POST /appointments/:id/schedule-change/accept-event`는 정확히 `{changeId,conditionVersion,eventFingerprint}`를 받으며 fingerprint는 소문자 hex64다. 본인 JWT의 `accept_appointment_event_change`만 호출한다. 일치하는 행사 내용을 표시·확인한 상대의 명시 요청으로만 기존 권한/시간/조건 검증과 행사 반영을 같은 transaction에서 처리한다. 공개 범위 밖 회원/서비스 역할에는 새 RPC 권한을 부여하지 않는다. 구형 앱이 날짜 동일만 보고 기존 accept를 호출해도 서버에서 거절한다.
+
+종현 소비자는 행사 제안의 새 종류·전후 행사 내용·원천 비표출 상태를 명시 표시하고 확인한 fingerprint로 새 수락을 호출해야 한다. 준비 전에는 행사 변경을 활성화하지 않고 실패/입력을 보존한다. 이번 작업은 앱 파일을 수정하지 않았다.
+
+### 비표출과 적용/되돌림 경계
+
+owner-only `private.event_source_display`는 원천 비표출 판정을 별도로 보존한다. 일반 수집 upsert가 이를 자동 재공개하지 않는다. 공고의 원천ID와 약속 관계는 유지하면서 linkedEvent 원천 값은 null로 투영한다. 새 행사 연결 확장 DTO만 `eventLinkState:"hidden"`을 반환하고 기존 상세의 키는 유지한다. 공개 행사 목록/상세·AI 후보·필터 집계·행사명 검색도 숨긴 원천 값을 제외한다. 현재 DB owner가 명시 판정을 기록하는 경계만 있으며 공급사 상태 자동 판정·공식 확인 후 재표출 writer·운영 권한 배정은 잔여다.
+
+기존 migration/행사 행/공고 생성 원문은 수정하지 않고 공고별 테이블은 빈 상태로 추가한다. 롤백 시 데이터 삭제나 과거 migration 수정 대신 새 기능 호출을 중단하고 원천/직접입력/제안 자료를 보존한 추가 migration을 검토한다. 구형 앱 사용 중 새 행사 제안을 기존 수락으로 우회시키지 않는다. 실제 적용 전에는 새 격리 DB에서 schema·wrapper ACL·content ticket·조건 지문·당사자 명시 수락·비표출/정리 회귀를 통과해야 한다.
+
+### 행사 제안 응답 유실·종료 후 재시도
+
+`eventChangeId`가 이미 존재하면 원 요청 전체 SHA256, 작성자·공고·기존 expectedUpdatedAt을 대조한 뒤 기존 만료 처리를 실행하고 제안을 다시 읽는다. 다른 요청으로 같은 ID를 재사용하면40001이다. 실제 대기 상태만 `event_change_pending`을 반환한다. 승인 후에는 `event_change_accepted`와 승인 transaction의 `event_applied_updated_at`을 반환하며 재적용하지 않는다. 이 시각은 해당 변경의 영수증으로, 이후 공고의 최신 시각이라고 안내하지 않는다. 거절·만료·취소·철회는 각각 `event_change_declined|expired|cancelled|withdrawn`을 반환하며 대기 제안을 다시 만들지 않는다. 새 제안은 새 changeId와 새 검사 ticket이 필요하다.
+
+소비된 기존 `post_update` 검사 ticket도 원 사용자·대상·입력 digest를 먼저 검증한 뒤 행사 제안에 한해서 같은 상태 resolver를 사용한다. 따라서 저장된 예전 pending outcome을 현재 상태로 오인하지 않는다. 다른 쓰기의 ticket 재시도·승인·원문 결합·ACL은 유지한다. 새 ticket으로 같은 행사 제안을 재요청하는 경우도 같은 판정을 사용한다. SQL fixture는 승인 응답 유실/소비 ticket·새 ticket 재시도, 거절 재시도, 합성 SQL 시간창 만료 후 재시도를 포함한다. 합성 삽입 세션·시간창 조정은 실제 Auth 발급·자연 만료 검증으로 집계하지 않는다.

@@ -41,6 +41,12 @@ export function contentInspectionInput(rpc:string,args:Record<string,JsonValue>,
   for(const name of ['title','description','preferenceNote','publicArea','registeredPlaceName'])add(name,p[name]);
   if(!Array.isArray(p.tags)||p.tags.some(v=>typeof v!=='string'))throw new HttpError('INVALID_REQUEST');
   p.tags.forEach((v,i)=>add(`tags.${i}`,v));
+  if (p.manualEvent !== undefined && p.manualEvent !== null) {
+   const event = p.manualEvent;
+   if (!exact(event, ['title','placeName','publicAddress','publicAddressConfirmed']) ||
+     typeof event.publicAddressConfirmed !== 'boolean') throw new HttpError('INVALID_REQUEST');
+   for (const name of ['title','placeName','publicAddress']) add(`manualEvent.${name}`, event[name]);
+  }
  }else{
   for(const name of d.text)add(name,args[name]);
   for(const name of d.arrays){const v=args[name];if(!Array.isArray(v)||v.some(x=>typeof x!=='string'))throw new HttpError('INVALID_REQUEST');v.forEach((x,i)=>add(`${name}.${i}`,x));}
