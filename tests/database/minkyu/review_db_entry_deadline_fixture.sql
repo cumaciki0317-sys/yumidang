@@ -69,10 +69,12 @@ do $$declare n integer;t timestamptz;received timestamptz;decided timestamptz;ap
  if not private.can_submit_appointment_review(pg_temp.review_ap(2),pg_temp.review_uid(1),received,decided)
  or private.can_submit_appointment_review(pg_temp.review_ap(2),pg_temp.review_uid(2),received,decided)
  then raise exception 'review_entry_confirmed_own_confirmation';end if;
- -- manual 완료는 양쪽 확인이 모두 있어야 허용한다.
- update public.appointments set completion_method='manual' where id=pg_temp.review_ap(5);
+ -- manual 감사 계약은 완료 행위자를 요구한다. 먼저 본인 확인을 만들고 같은 행위자로 기록한다.
+ -- 한쪽 확인 상태는 helper 거절, 양쪽 확인 상태는 허용을 독립 검사한다.
  insert into public.appointment_completion_confirmations(appointment_id,user_id)
  values(pg_temp.review_ap(5),pg_temp.review_uid(1));
+ update public.appointments set completion_method='manual',completed_by_user_id=pg_temp.review_uid(1)
+ where id=pg_temp.review_ap(5);
  select *into ap from public.appointments where id=pg_temp.review_ap(5);
  if private.can_submit_appointment_review(ap.id,pg_temp.review_uid(1),ap.completed_at,ap.completed_at)
  then raise exception 'review_entry_manual_one_confirmation';end if;

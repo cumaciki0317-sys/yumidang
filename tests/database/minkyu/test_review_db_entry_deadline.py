@@ -12,6 +12,14 @@ class DeadlineMigrationTests(unittest.TestCase):
   self.assertIn('statement_timestamp()',SQL);self.assertIn("anchor:='if not private.can_submit",SQL);self.assertNotIn('delete from',SQL.lower());self.assertNotIn('update public.appointments',SQL.lower())
  def test_exact_source_and_catalog_protected(self):
   self.assertIn('f2ac1dfe9d6f9c519e75977c1115936df05cefddc43265ca12bd7c57978f20c1',SQL);self.assertIn('review_entry_original_catalog_changed',SQL);self.assertIn('p.proacl',SQL);self.assertIn('a.grantee<>p.proowner',SQL)
+ def test_manual_fixture_preserves_completion_actor_contract(self):
+  fixture=(ROOT/'tests/database/minkyu/review_db_entry_deadline_fixture.sql').read_text()
+  confirmation="values(pg_temp.review_ap(5),pg_temp.review_uid(1));"
+  manual="update public.appointments set completion_method='manual',completed_by_user_id=pg_temp.review_uid(1)"
+  self.assertLess(fixture.index(confirmation),fixture.index(manual))
+  self.assertLess(fixture.index(manual),fixture.index('review_entry_manual_one_confirmation'))
+  self.assertLess(fixture.index('review_entry_manual_one_confirmation'),fixture.index('review_entry_manual_both_confirmations'))
+  self.assertNotIn('disable trigger',fixture.lower());self.assertNotIn('drop constraint',fixture.lower())
  def test_sql_regression_prepared_not_executed(self):
   fixture=(ROOT/'tests/database/minkyu/review_db_entry_deadline_fixture.sql').read_text()
   for marker in ('same_time_regression','strict_upper_bound','completion_transition','hold_bypassed','missing_own_confirmation','outsider_on_eligible','confirmed_own_confirmation','manual_one_confirmation','manual_both_confirmations','no_show'):self.assertIn(marker,fixture)
