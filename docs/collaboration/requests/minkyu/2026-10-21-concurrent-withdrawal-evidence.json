@@ -1,0 +1,149 @@
+{
+  "wbsIds": [
+    "5.7",
+    "7.11"
+  ],
+  "date": "2026-10-21",
+  "actor": "minkyu",
+  "branch": "minkyu/wbs-backend-20261017",
+  "sourceHead": "9b8538217284d16c2fc96b1e94b1f0517f4fe5d5",
+  "change": "합성 동시 철회 관측창과 정확 PID 종료·기준선 복원 검증",
+  "actualScope": "새 PostgreSQL 사본의 합성 SQL; 실제 Auth·회원·공급사·운영 검증 제외",
+  "receipt": {
+    "path": "/private/tmp/yumidang-server-sql-20261021-a005/execution/receipt.json",
+    "sha256": "fef0bd9dfa56c93768b1da6024d2387634823f064b62a8415466afb073c3d193",
+    "result": {
+      "actualAuth": "NOT_RUN",
+      "additionalCheckFiles": [
+        "tests/integration/minkyu/ai_consent_concurrent_local.py",
+        "tests/database/minkyu/ai_consent_concurrent_fixture.sql"
+      ],
+      "automaticReplay": false,
+      "concurrentActorsClosed": true,
+      "error": null,
+      "existingPreserved": true,
+      "existingStoredBytes": "NOT_VERIFIED",
+      "fullRestore": false,
+      "migrationFiles": [
+        "backend/supabase/migrations/20261020100000_ai_independent_consents.sql",
+        "backend/supabase/migrations/20261020130000_post_private_events.sql"
+      ],
+      "minimumAvailableKiB": 2269240,
+      "operatingChanged": false,
+      "providerCalls": 0,
+      "realMembers": false,
+      "scope": "SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY",
+      "sourceHead": "9b8538217284d16c2fc96b1e94b1f0517f4fe5d5",
+      "status": "PASS_SQL_ONLY",
+      "targetId": "962eb3ce769f35faf39ba1dfb2e5138709447657854de775d36782a23dd44cbb",
+      "targetStopped": true,
+      "testFiles": [
+        "tests/database/minkyu/post_manual_events.sql",
+        "tests/database/minkyu/ai_independent_consents.sql",
+        "tests/database/minkyu/current_summary_fences.sql",
+        "tests/database/minkyu/current_completion_consent_policy.sql"
+      ]
+    }
+  },
+  "concurrency": {
+    "path": "/private/tmp/yumidang-server-sql-20261021-a005/execution/consent-concurrency-receipt.json",
+    "sha256": "3114d832c68ee048f9e3953b2a15a535473ad4538951d8b9d7cfbee39c7cbdf8",
+    "result": {
+      "actualAuth": "NOT_RUN",
+      "automaticReplay": false,
+      "backendsClosed": true,
+      "baselineRestored": true,
+      "failureType": null,
+      "groupsClosed": true,
+      "lockProof": {
+        "actorPids": [
+          198,
+          205
+        ],
+        "actualAuth": "NOT_RUN",
+        "blockers": [
+          198
+        ],
+        "overlapObservation": [
+          {
+            "application": "minkyu_ai_withdraw_a1cc_actor_a",
+            "backendStart": "2026-10-21T06:01:09.966848+00:00",
+            "blockers": [],
+            "observedAt": "2026-10-21T06:01:24.017245+00:00",
+            "pid": 198,
+            "query": "select public.withdraw_my_ai_processing('review_summary') as withdrawal;",
+            "queryStart": "2026-10-21T06:01:09.974625+00:00",
+            "state": "active",
+            "waitType": "Timeout"
+          },
+          {
+            "application": "minkyu_ai_withdraw_a1cc_actor_b",
+            "backendStart": "2026-10-21T06:01:10.181564+00:00",
+            "blockers": [
+              198
+            ],
+            "observedAt": "2026-10-21T06:01:24.017313+00:00",
+            "pid": 205,
+            "query": "select public.withdraw_my_ai_processing('review_summary') as withdrawal;",
+            "queryStart": "2026-10-21T06:01:10.185149+00:00",
+            "state": "active",
+            "waitType": "Lock"
+          }
+        ],
+        "providerCalls": 0,
+        "status": "PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY",
+        "waiter": 205
+      },
+      "providerCalls": 0,
+      "status": "PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY"
+    }
+  },
+  "baseline": {
+    "beforeSha256": "70e664be28eff05f64c9c86f5a8df6205193846fc043fa328e50ec9cad3cc1de",
+    "afterSha256": "70e664be28eff05f64c9c86f5a8df6205193846fc043fa328e50ec9cad3cc1de",
+    "exactlyEqual": true
+  },
+  "priorFailuresPreserved": [
+    {
+      "attempt": "a003",
+      "reason": "sequence 조회 형태 오류",
+      "receipt": "/private/tmp/yumidang-server-sql-20261021-a003/execution/receipt.json"
+    },
+    {
+      "attempt": "a004",
+      "reason": "관측 시점 전 actor 종료로 정확 backend 결합 미확정",
+      "receipt": "/private/tmp/yumidang-server-sql-20261021-a004/execution/receipt.json",
+      "followupCleanup": {
+        "existingMetadataPreserved": true,
+        "fixtureDataRetainedForFailureEvidence": true,
+        "originalBackendPidsAbsent": [
+          198,
+          205
+        ],
+        "originalGroupsClosed": true,
+        "originalReceiptUnchanged": true,
+        "otherStops": 0,
+        "sourceHead": "81213800c1f28947e9ad7880b77219740758d4ff",
+        "status": "STOPPED_EXACT_FAILED_NEW_TARGET",
+        "targetId": "e5a56da78b5ab8696245f5576953af275261d20b7c54345c6257d55b0f80a342",
+        "wholeStoredBytes": "NOT_VERIFIED"
+      }
+    }
+  ],
+  "notionTaskBodyUpdated": "71544227a435824ea3548199d3785545",
+  "remaining": [
+    "최신 실제 로컬 Auth/HTTP 검증",
+    "앱 소비",
+    "공급사·외부 사본 삭제 조건",
+    "실회원 HOLD",
+    "운영 접근·적용 조건"
+  ],
+  "next": "새123 migration Auth4 source의 실제 발급→합성 AI→본인 조회→원JWT 자연 만료 검증",
+  "projectProgress": {
+    "completed": 22,
+    "total": 28,
+    "percent": 79,
+    "unchanged": true
+  },
+  "remotePush": false
+}

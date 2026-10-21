@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-21",
+  "actor": "minkyu",
+  "reviewHead": "9b8538217284d16c2fc96b1e94b1f0517f4fe5d5",
+  "acceptedTasks": [
+    {
+      "id": "1.6",
+      "url": "https://app.notion.com/p/87844227a43583f2b47481418b110b26",
+      "criteria": "- [ ] 변경 목록·근거·검토 기록; 정책 선택을 임의 변경하지 않음\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notionStatus": "최종 완료",
+      "criteriaCheckboxes": "2/2 saved and visually re-read",
+      "scope": "승인된 문서 반영·현재 차이와 후속 연결"
+    },
+    {
+      "id": "1.7",
+      "url": "https://app.notion.com/p/5de44227a43582a4ba700157b4ff521e",
+      "criteria": "- [ ] 담당 매핑표·충돌 목록·확인 근거; 역할 재배정 자체는 새 승인 없이 하지 않음\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notionStatus": "최종 완료",
+      "criteriaCheckboxes": "2/2 saved and visually re-read",
+      "scope": "담당 매핑·충돌·actor/hook/환경 인계 점검"
+    },
+    {
+      "id": "7.10",
+      "url": "https://app.notion.com/p/67744227a43582e2a867812b4b33d1bf",
+      "criteria": "- [ ] 검사 증거·미설정 항목·개선 요청; 원격 설정 변경은 별도 승인\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notionStatus": "최종 완료",
+      "criteriaCheckboxes": "2/2 saved and visually re-read",
+      "scope": "협업 검사·미설정 항목·개선 요청 연결"
+    },
+    {
+      "id": "7.11",
+      "url": "https://app.notion.com/p/b4744227a43582b2a7ed816eb838bffd",
+      "criteria": "- [ ] 새 환경 manifest·사전 확인·실행 가능/불가 근거; 기존 데이터 보존\n- [ ] 결과물 또는 검증 증빙 링크가 연결되어 있다.",
+      "notionStatus": "최종 완료",
+      "criteriaCheckboxes": "2/2 saved and visually re-read",
+      "scope": "검증 환경 manifest·실행 가능/불가·보존·정리 증거 연결"
+    }
+  ],
+  "evidencePins": {
+    "정책.md": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa",
+    "backend/ownership.json": "f58e831b92b4ca4d23de35eb05dbd709610fc5eae8637da94fa5a85c53d435b3",
+    ".githooks/pre-commit": "830f6c18392fed20d96128881d430fc67aff2e0de4246a9aca60cdc03a1b00cf",
+    "tools/collaboration/check_ownership.py": "bd41bc0a81e6f09fb9178278195a52c8d6bb22777d378a982f033bb5007ef7a8",
+    "docs/collaboration/README.md": "b2ad63059b7d2dced57cf3486ff47b1544fab0b8f6d78d35c77bc1f95f5c54d0",
+    "docs/collaboration/team-start.md": "2777831567c976affd0e04185841fe49117e95e5a7b97b65af2ef401a97ac796",
+    "docs/collaboration/requests/minkyu/2026-10-20-current-server-gap-map.json": "f339033f6f57252216dc97615c89009544ea089f295b1d14a84f5c1da1dc0cc3",
+    "docs/collaboration/requests/minkyu/2026-10-19-collaboration-verification.md": "34001e81c7eb84027618bce38485c1640ece2120a98f923b60e649ca1638fe27"
+  },
+  "newReadOnlyChecks": {
+    "actor": "minkyu",
+    "hooksPath": ".githooks",
+    "hookExecutable": true,
+    "policyTests": {
+      "cwd": "tools/collaboration",
+      "command": "python3 -B -m unittest test_ownership.PolicyTests -q",
+      "passed": 9
+    },
+    "ownershipPaths": [
+      "backend/ownership.json",
+      "tools/collaboration/check_ownership.py",
+      "docs/collaboration/requests/minkyu/2026-10-20-current-server-gap-map.json"
+    ],
+    "ownershipPassed": true,
+    "independentReview": true
+  },
+  "historicalAuditScope": "gap-map sourceHead18f4b7d와 10/19 원격 관측을 당시 증거로 유지",
+  "latestToolFixCommit": "75e8605",
+  "currentActualSQL": "2026-10-21-concurrent-withdrawal-evidence.json",
+  "notClaimed": [
+    "현재 원격 강제보호·CI 완료",
+    "다른 팀원 clone 완료",
+    "실제 회원·공급사·운영 완료",
+    "전체 복원·누락 Storage39 확보",
+    "현재 Auth4·자연 만료 PASS"
+  ],
+  "followups": [
+    "4.2",
+    "4.8",
+    "5.5",
+    "5.7",
+    "7.14",
+    "7.1",
+    "7.2"
+  ],
+  "projectBaseline": {
+    "percent": 79,
+    "completed": 22,
+    "total": 28,
+    "unchanged": true
+  },
+  "personal44Percentage": "NOT_RECALCULATED_FROM_PARTIAL_ACCEPTANCE",
+  "remotePush": false,
+  "integrationRegression": {
+    "sourceHead": "d706063269184b1a3eaa034661edb55ee72f8407",
+    "passed": 236,
+    "seconds": 116.922,
+    "scope": "Auth preparation/runner,AI24 consumer/issuer,positive discovery,/me offline regression; actualAuth0"
+  }
+}

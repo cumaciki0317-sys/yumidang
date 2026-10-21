@@ -1,0 +1,71 @@
+{
+  "wbsIds": [
+    "4.8",
+    "7.11"
+  ],
+  "sourceHead": "9b8538217284d16c2fc96b1e94b1f0517f4fe5d5",
+  "attempts": [
+    {
+      "id": "a002",
+      "scope": "preflight network collision; no resource creation",
+      "receipt": "/private/tmp/yumidang-current-auth-run-20261021-a002/root-preflight-failure-receipt.json"
+    },
+    {
+      "id": "a003",
+      "scope": "preparation subnet range rejected; actual execution0",
+      "receipt": "/private/tmp/yumidang-current-auth-run-20261021-a003/root-preparation-rejection.json"
+    },
+    {
+      "id": "a004",
+      "scope": "CLI applied123 migrations and started4 services; service acceptance rejected nonloopback bindings",
+      "hostBindingAddresses": [
+        ""
+      ],
+      "startReceipt": {
+        "path": "/private/tmp/yumidang-current-auth-run-20261021-a004/yumidang-current-auth-ac9114d0233085f6/start-receipt.json",
+        "sha256": "400877e5a2c1e25ce2f0076333ddef4f4e8d774fd291f8de430c51102da1d4a2",
+        "status": "FAIL_CLOSED"
+      },
+      "initialCleanup": "UNPROVEN_STOP",
+      "rootFollowupCleanup": {
+        "path": "/private/tmp/yumidang-current-auth-run-20261021-a004/yumidang-current-auth-ac9114d0233085f6/root-followup-cleanup-receipt.json",
+        "sha256": "8eaafdf3aeb75ca6220e691294f7cc15e2deb9a1e4bbe451da743fa90a42b7fd",
+        "result": {
+          "actualAuth": "NOT_RUN",
+          "existingMetadataAndIncarnationsPreserved": true,
+          "ids": [
+            "39d346f4ab80e51b5d80d97a8ef73834e5f83a0c7de53fc958ee01d6299a9cbb",
+            "a35e331e13482dc510f59df1c6a6c34ee9771e37875a07140bd6a8a32a03edd2",
+            "d643361f042b2073de1dbdad68e8f3d1559f612803bc56945c0f59b74a8c2857",
+            "df9f398153f974c9a71197cfac1a2a3b16342f7895741c597aef904e0fdd4519"
+          ],
+          "networkAndVolumesRetained": true,
+          "originalReceiptUnchanged": true,
+          "otherStops": 0,
+          "status": "STOPPED_EXACT_FAILED_NEW_FOUR",
+          "wholeStoredBytes": "NOT_VERIFIED"
+        }
+      }
+    }
+  ],
+  "originalFailuresPreserved": true,
+  "authIssued": 0,
+  "actualAuth": "NOT_RUN",
+  "fixCommit": "75e8605",
+  "fixScope": [
+    "공식 네트워크 loopback 옵션",
+    "서비스 수용 실패와 정확 정리 identity 분리",
+    "사전 거절 영수증",
+    "대용량 원증거 참조"
+  ],
+  "regressionPassed": 33,
+  "independentReview": true,
+  "next": "새 HEAD·새 root/project/subnet의 start/configure와 별도 실제 Auth 발급",
+  "remotePush": false,
+  "effectivePortFix": {
+    "commit": "066e4cac73094460d923301f2d3496e3327a626c",
+    "regressionPassed": 34,
+    "independentReview": true,
+    "scope": "정확 network defaults plus observed loopback role ports; running freeze/stopped release only"
+  }
+}
