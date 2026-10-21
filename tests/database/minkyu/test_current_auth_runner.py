@@ -269,6 +269,105 @@ class RunnerTests(unittest.TestCase):
         self.assertFalse(saved['start-receipt.json']['creationAttempted'])
         self.assertEqual(saved['start-receipt.json']['ownedIds'], [])
 
+    def test_precreation_failures_keep_receipt_and_never_query_or_clean_resources(self):
+        for failed_stage, failure in [('SOURCE_REVIEW', 'SOURCE_HEAD_CHANGED'),
+                                      ('INTENT', 'REVIEW_BINDING_CHANGED'),
+                                      ('DERIVE', 'SOURCE_NOT_COMMITTED'),
+                                      ('START_MEMORY_MONITOR', 'MEMORY_UNPROVEN'),
+                                      ('BINARY_REVIEW', 'CLI_CHANGED')]:
+            with self.subTest(stage=failed_stage):
+                runner = self.runner(); runner.root.rmdir()
+                runner.source = Mock(return_value={'target': runner.plan})
+                runner.prep.private_destination = Mock(); runner.intent = Mock(); runner.derive = Mock()
+                runner.start_monitor = Mock(); runner.binary = Mock(); runner.inventory = Mock()
+                runner.baseline_guard = Mock(); runner.stop_owned = Mock(); runner.call = Mock()
+                operations = {'SOURCE_REVIEW': runner.source, 'INTENT': runner.intent,
+                              'DERIVE': runner.derive, 'START_MEMORY_MONITOR': runner.start_monitor,
+                              'BINARY_REVIEW': runner.binary}
+                operations[failed_stage].side_effect = ValueError(failure)
+                saved = {}; runner.save = lambda name, value: saved.__setitem__(name, value)
+                with self.assertRaisesRegex(ValueError, failure): runner.start()
+                receipt = saved['start-receipt.json']
+                self.assertEqual(receipt['status'], 'FAIL_CLOSED')
+                self.assertEqual(receipt['stage'], failed_stage)
+                self.assertEqual(receipt['ownedIds'], [])
+                self.assertFalse(receipt['creationAttempted'])
+                self.assertFalse(receipt['cliStartAttempted'])
+                self.assertTrue(receipt['noReplay'])
+                self.assertTrue(receipt['monitor']['joined'])
+                self.assertEqual(saved['start-failure-cleanup.json']['status'], 'NOT_CREATED_NO_RESOURCE_CLEANUP')
+                for op in (runner.inventory, runner.call, runner.baseline_guard, runner.stop_owned):
+                    op.assert_not_called()
+                self.assertTrue(runner.done.is_set())
+                with self.assertRaises(FileExistsError): runner.start()
+                runner.root.rmdir()
+
+    def test_failed_start_keeps_raw_memory_observation_before_verdict(self):
+        runner = self.runner(); runner.root.rmdir()
+        runner.source = Mock(return_value={'target': runner.plan})
+        runner.prep.private_destination = Mock(); runner.intent = Mock(); runner.derive = Mock()
+        runner.binary = Mock(); runner.inventory = Mock(); runner.stop_owned = Mock()
+        saved = {}; runner.save = lambda name, value: saved.__setitem__(name, value)
+        result = SimpleNamespace(returncode=1, stdout=b'synthetic invalid meminfo', stderr=b'synthetic colima failure')
+        with patch.object(self.m.subprocess, 'run', return_value=result):
+            with self.assertRaisesRegex(ValueError, 'MEMORY_UNPROVEN'): runner.start()
+        proof = saved['start-memory-observation.json']
+        self.assertEqual(bytes.fromhex(proof['stdoutHex']), result.stdout)
+        self.assertEqual(bytes.fromhex(proof['stderrHex']), result.stderr)
+        self.assertEqual(saved['start-receipt.json']['stage'], 'START_MEMORY_MONITOR')
+        self.assertFalse(saved['start-receipt.json']['creationAttempted'])
+        runner.inventory.assert_not_called(); runner.stop_owned.assert_not_called()
+
+    def test_monitor_join_late_failure_cannot_publish_started_pass(self):
+        import threading
+        runner = self.runner(); runner.root.rmdir()
+        runner.source = Mock(return_value={'target': runner.plan})
+        runner.prep.private_destination = Mock(); runner.intent = Mock(); runner.derive = Mock()
+        runner.binary = Mock(); runner.runtime_source = Mock(); runner.memory = Mock(); runner.healthy = Mock()
+        runner.inventory = Mock(return_value=([], [], [])); runner.inventory_proof = Mock(return_value={})
+        baseline = {'containers': [], 'customNetworks': [], 'volumes': []}
+        owned = {'containers': [{'id': 'f' * 64}], 'customNetworks': [], 'volumes': []}
+        runner.private = SimpleNamespace(metadata_summary=Mock(return_value=baseline), pair_inventory=Mock(return_value=owned))
+        runner.baseline_guard = Mock(return_value=(([], [], []), owned)); runner.bind_first = Mock()
+        runner.command = Mock(); runner.stop_owned = Mock()
+        def call(args):
+            if args[:2] == ['image', 'inspect']:
+                role = next(role for role, image in runner.v['imageRefs'].items() if image == args[2])
+                return json.dumps([{'Id': runner.v['images'][role]}])
+            return 'e' * 64
+        runner.call = Mock(side_effect=call)
+        def start_monitor():
+            def monitor():
+                runner.done.wait(3)
+                runner.failures.append('SYNTHETIC_LATE_MEMORY_FAILURE')
+            runner.thread = threading.Thread(target=monitor, daemon=True); runner.thread.start()
+        runner.start_monitor = start_monitor
+        saved = {}; runner.save = lambda name, value: saved.__setitem__(name, value)
+        with patch.object(self.m, 'assert_subnet_ports'):
+            with self.assertRaisesRegex(ValueError, 'START_FAILED_NO_REPLAY'): runner.start()
+        receipt = saved['start-receipt.json']
+        self.assertEqual(receipt['status'], 'FAIL_CLOSED')
+        self.assertEqual(receipt['stage'], 'MONITOR_FINALIZATION')
+        self.assertTrue(receipt['creationAttempted'])
+        self.assertEqual(receipt['monitor']['failures'], ['SYNTHETIC_LATE_MEMORY_FAILURE'])
+        self.assertTrue(receipt['monitor']['joined']); self.assertFalse(runner.thread.is_alive())
+        runner.stop_owned.assert_called_once_with('start-failure', monitor=False)
+
+    def test_monitor_join_unproven_keeps_original_precreation_failure_without_ports(self):
+        runner = self.runner(); runner.root.rmdir()
+        runner.source = Mock(return_value={'target': runner.plan})
+        runner.prep.private_destination = Mock(); runner.intent = Mock(); runner.derive = Mock()
+        runner.start_monitor = Mock(); runner.thread = Mock(); runner.thread.is_alive.return_value = True
+        runner.binary = Mock(side_effect=ValueError('CLI_CHANGED'))
+        runner.inventory = Mock(); runner.baseline_guard = Mock(); runner.stop_owned = Mock(); runner.call = Mock()
+        saved = {}; runner.save = lambda name, value: saved.__setitem__(name, value)
+        with self.assertRaisesRegex(ValueError, 'CLI_CHANGED') as original: runner.start()
+        receipt = saved['start-receipt.json']
+        self.assertFalse(receipt['monitor']['joined']); self.assertEqual(receipt['failureCode'], 'CLI_CHANGED')
+        self.assertEqual(receipt['status'], 'FAIL_CLOSED'); self.assertFalse(receipt['creationAttempted'])
+        self.assertIn('START_MEMORY_MONITOR_FINALIZATION_UNPROVEN', original.exception.__notes__)
+        for op in (runner.inventory, runner.baseline_guard, runner.stop_owned, runner.call): op.assert_not_called()
+
     def test_unassigned_configured_address_requires_exact_effective_loopback_ports(self):
         runner, _, raw = self.first_binding_fixture(); item = raw[0][0]
         item['HostConfig']['PortBindings']['5432/tcp'][0]['HostIp'] = ''

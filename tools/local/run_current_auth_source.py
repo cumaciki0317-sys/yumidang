@@ -304,6 +304,7 @@ class CurrentAuthSource:
         self.started_at = None
         self.unclosed_child = False
         self.phase_started = False
+        self.last_memory_observation = None
 
     def save(self, name, value):
         return self.writer.save(self.root, name, value)
@@ -318,7 +319,21 @@ class CurrentAuthSource:
 
     def memory(self, minimum):
         began = time.monotonic()
-        p = subprocess.run(['colima', 'ssh', '--profile', 'yumidang-minkyu', '--', 'cat', '/proc/meminfo'], capture_output=True, timeout=3)
+        def observation(returncode, stdout, stderr, exception=None):
+            stdout = stdout if type(stdout) is bytes else b''
+            stderr = stderr if type(stderr) is bytes else b''
+            self.last_memory_observation = {'method': 'COLIMA_PROC_MEMINFO', 'returnCode': returncode,
+                'elapsedSeconds': time.monotonic() - began, 'exceptionType': exception,
+                'stdoutHex': stdout[:65536].hex(), 'stderrHex': stderr[:16384].hex(),
+                'stdoutBytes': len(stdout), 'stderrBytes': len(stderr),
+                'stdoutSha256': sha(stdout), 'stderrSha256': sha(stderr),
+                'stdoutComplete': len(stdout) <= 65536, 'stderrComplete': len(stderr) <= 16384}
+        try:
+            p = subprocess.run(['colima', 'ssh', '--profile', 'yumidang-minkyu', '--', 'cat', '/proc/meminfo'], capture_output=True, timeout=3)
+        except BaseException as error:
+            observation(None, getattr(error, 'stdout', None), getattr(error, 'stderr', None), type(error).__name__)
+            raise
+        observation(p.returncode, p.stdout, getattr(p, 'stderr', b''))
         found = re.findall(rb'^MemAvailable:\s+([0-9]+) kB$', p.stdout, re.M)
         need(p.returncode == 0 and len(found) == 1 and time.monotonic() - began <= 3, 'MEMORY_UNPROVEN')
         n = int(found[0]); self.samples.append(n)
@@ -570,65 +585,94 @@ class CurrentAuthSource:
                 'metadataSummary': self.private.metadata_summary(raw), 'commandEvidence': references}
 
     def start(self):
-        report = self.source(); self.plan = report['target']
+        # 새 private 증거 루트만 먼저 확보한다. source 실패도 실제 자원 생성0으로 기록한다.
         self.prep.private_destination(ROOT, self.root)
         self.root.mkdir(mode=0o700)
-        self.save('review.json', self.v)
-        self.intent('start'); self.derive(report); self.start_monitor(); self.binary()
+        error = None; owned = None; creation_attempted = False; cli_attempted = False; stage = 'REVIEW_RECORD'
         try:
+            self.save('review.json', self.v)
+            self.save('start-attempt.json', {'scope': SCOPE, 'reviewSha256': sha(self.review._sealed),
+                'head': self.v['head'], 'noReplay': True, 'resourceCreation': 'NOT_ATTEMPTED'})
+            stage = 'SOURCE_REVIEW'
+            report = self.source(); self.plan = report['target']
+            stage = 'INTENT'; self.intent('start')
+            stage = 'DERIVE'; self.derive(report)
+            stage = 'START_MEMORY_MONITOR'; self.start_monitor()
+            stage = 'BINARY_REVIEW'; self.binary()
+            stage = 'PREFLIGHT_BEFORE_CREATION'
             first_sequence = self.sequence + 1
             before = self.inventory()
             self.save('preflight-inventory-proof.json', self.inventory_proof(before, first_sequence, self.sequence))
             assert_subnet_ports(before, self.plan['projectId'], self.plan['subnet'], self.plan['portBase'])
-        except BaseException as exc:
-            self.save('start-receipt.json', {'scope': SCOPE, 'status': 'FAIL_CLOSED',
-                'stage': 'PREFLIGHT_BEFORE_CREATION', 'failureType': type(exc).__name__,
-                'failureCode': str(exc) if isinstance(exc, ValueError) and re.fullmatch('[A-Z0-9_]+', str(exc)) else 'PREFLIGHT_FAILED',
-                'ownedIds': [], 'creationAttempted': False,
-                'actualAuth': 'NOT_RUN', 'noReplay': True, 'childClosed': not self.unclosed_child})
-            raise
-        baseline = self.private.metadata_summary(before)
-        baseline_sha = self.save('protected-resource-baseline.json', baseline)
-        self.save('existing-incarnations.json', existing_incarnations(before))
-        self.save('execution-intent.json', {'version': 2, 'context': CONTEXT, 'dockerHost': HOST,
-            'project': self.plan['projectId'], 'scope': 'new-synthetic-only',
-            'existingContainers': [{k: x[k] for k in ('id', 'name')} for x in baseline['containers']],
-            'existingNetworks': [{k: x[k] for k in ('id', 'name')} for x in baseline['customNetworks']],
-            'preservedBaselineSha256': baseline_sha})
-        error = None; owned = None
-        try:
+            stage = 'BASELINE_RECORD'
+            baseline = self.private.metadata_summary(before)
+            baseline_sha = self.save('protected-resource-baseline.json', baseline)
+            self.save('existing-incarnations.json', existing_incarnations(before))
+            self.save('execution-intent.json', {'version': 2, 'context': CONTEXT, 'dockerHost': HOST,
+                'project': self.plan['projectId'], 'scope': 'new-synthetic-only',
+                'existingContainers': [{k: x[k] for k in ('id', 'name')} for x in baseline['containers']],
+                'existingNetworks': [{k: x[k] for k in ('id', 'name')} for x in baseline['customNetworks']],
+                'preservedBaselineSha256': baseline_sha})
+            stage = 'CACHED_IMAGES'
             for role in ROLES:
                 images = json.loads(self.call(['image', 'inspect', self.v['imageRefs'][role]]))
                 need(len(images) == 1 and images[0]['Id'] == self.v['images'][role], 'CACHED_IMAGE_CHANGED')
+            stage = 'RUNTIME_SOURCE_BEFORE_CREATION'
             self.runtime_source(); self.memory(1048576)
+            stage = 'NETWORK_CREATE'; creation_attempted = True
             network = self.call(['network', 'create', '-o', 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1', '--subnet', self.plan['subnet'], '--label',
                 'com.supabase.cli.project=' + self.plan['projectId'], '--label', 'yumidang.scope=' + SCOPE,
                 '--label', 'yumidang.review=' + sha(self.review._sealed), 'supabase_network_' + self.plan['projectId']])
             need(re.fullmatch('[a-f0-9]{64}', network), 'NETWORK_ID')
             self.save('network-created.json', {'id': network})
+            stage = 'BINARY_AND_RUNTIME_BEFORE_CLI_START'
             self.binary(); self.runtime_source(); self.healthy()
+            stage = 'CLI_START'; cli_attempted = True
             self.command([self.v['cliPath'], 'start', '--network-id', network, '--workdir', str(self.root), '--exclude', EXCLUDE], timeout=240)
             self.healthy(); self.runtime_source()
+            stage = 'FIRST_IDENTITY'
             raw, _ = self.baseline_guard()
             owned = self.private.pair_inventory(baseline, self.private.metadata_summary(raw),
                 {'source': {'project': self.plan['projectId']}}, self.v['images'])
             self.bind_first(owned, raw)
         except BaseException as exc:
-            error = type(exc).__name__
+            error = exc
         finally:
-            if owned is None:
+            # join 이후의 늦은 실패까지 receipt 판정에 포함한다. 원 실패는 덮지 않는다.
+            self.done.set()
+            joined = True
+            if self.thread is not None:
+                try:
+                    self.thread.join(timeout=4)
+                    joined = not self.thread.is_alive()
+                except BaseException:
+                    joined = False
+            if not joined or self.failures:
+                if error is None:
+                    stage = 'MONITOR_FINALIZATION'
+                    error = ValueError('MEMORY_MONITOR_FAILED' if joined else 'MEMORY_MONITOR_CLOSURE')
+                else:
+                    error.add_note('START_MEMORY_MONITOR_FINALIZATION_UNPROVEN')
+            monitor = {'started': self.thread is not None, 'joined': joined, 'failures': list(self.failures)}
+            if creation_attempted and owned is None and not self.unclosed_child and joined:
                 try:
                     raw, owned = self.baseline_guard(monitor=False)
                     self.bind_first(owned, raw, partial=True)
                 except BaseException:
                     owned = None
+            self.save('start-memory-observation.json', self.last_memory_observation or {'status': 'NOT_OBSERVED'})
             self.save('start-receipt.json', {'scope': SCOPE, 'status': 'PASS_STARTED_ONLY' if error is None else 'FAIL_CLOSED',
-                'failureType': error, 'ownedIds': [] if owned is None else [x['id'] for x in owned['containers']],
-                'actualAuth': 'NOT_RUN', 'memorySamples': self.samples, 'initialCreationObservation': 'AFTER_CLI_START', 'preStartConfiguration': 'NOT_OBSERVED',
-                'noReplay': True})
+                'stage': stage, 'failureType': type(error).__name__ if error is not None else None,
+                'failureCode': str(error) if isinstance(error, ValueError) and re.fullmatch('[A-Z0-9_]+', str(error))
+                    else 'START_FAILED' if error is not None else None,
+                'ownedIds': [] if owned is None else [x['id'] for x in owned['containers']],
+                'creationAttempted': creation_attempted, 'cliStartAttempted': cli_attempted, 'actualAuth': 'NOT_RUN',
+                'memorySamples': self.samples, 'monitor': monitor,
+                'initialCreationObservation': 'AFTER_CLI_START' if cli_attempted and owned is not None else 'NOT_OBSERVED',
+                'preStartConfiguration': 'NOT_OBSERVED', 'noReplay': True, 'childClosed': not self.unclosed_child})
             if error is not None:
-                cleanup = 'UNPROVEN_OWNED_IDS_OR_CHILD'
-                if owned is not None and not self.unclosed_child:
+                cleanup = 'NOT_CREATED_NO_RESOURCE_CLEANUP' if not creation_attempted else 'UNPROVEN_OWNED_IDS_OR_CHILD'
+                if creation_attempted and owned is not None and not self.unclosed_child and joined:
                     try:
                         self.stop_owned('start-failure', monitor=False)
                         cleanup = 'STOPPED_OWN_IDS_ONLY'
@@ -636,8 +680,11 @@ class CurrentAuthSource:
                         cleanup = 'UNPROVEN_STOP'
                 self.save('start-failure-cleanup.json', {'status': cleanup, 'otherStops': 0,
                     'remainingIds': [] if owned is None else [x['id'] for x in owned['containers']],
-                    'remainingIdsUnproven': owned is None, 'childClosed': not self.unclosed_child})
-        need(error is None, 'START_FAILED_NO_REPLAY')
+                    'remainingIdsUnproven': creation_attempted and owned is None,
+                    'childClosed': not self.unclosed_child, 'monitorJoined': joined})
+        if error is not None:
+            if not creation_attempted: raise error
+            raise ValueError('START_FAILED_NO_REPLAY') from error
 
     def bind_first(self, owned, raw, partial=False):
         details = [x for x in raw[0] if x['Id'] in {row['id'] for row in owned['containers']}]
