@@ -1,0 +1,55 @@
+{
+  "WBS ID": [
+    "4.6",
+    "7.11"
+  ],
+  "변경": "시작 실패 증거 보존 도구2파일 로컬 반영7ea8719; timeout 고정 일괄 수집 개선은 별도 검토 중",
+  "실제 검증 범위": {
+    "sourceHead": "89b280393db0cdd900e7df1f2a16d3870fc9a53b",
+    "migrations": 124,
+    "sixSchemaTables": 182,
+    "auth": "합성 별칭6명/원 발급6세션, 수명3600초 유지",
+    "qualification": "PASS_SYNTHETIC_QUALIFICATION_ONLY",
+    "timeoutCapture": "CAPTURED_UNREVIEWED_TIMEOUT_SOURCE_ONLY",
+    "minimumMemoryKiB": 2083268,
+    "memorySamples": 1133,
+    "monitorFailures": 0,
+    "probeRequests": 0,
+    "actualD03Requests": 0,
+    "effectiveTimeoutApproved": false,
+    "queryApproved": false,
+    "close": "STOPPED_OWN_IDS_ONLY/4개, 전용 network·volume 유지",
+    "wholeStoredBytesPreserved": "NOT_VERIFIED",
+    "regression": "시작·준비 도구60개 PASS"
+  },
+  "증거": [
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a002/yumidang-current-auth-62cdd20e91853b3c/timeout-preflight-a002/receipt.json",
+      "sha256": "0f192f2e015c7516fc81d1afc36a4da15ac7ea4c493d53dd0d3aab7a0324e9ef"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a002/yumidang-current-auth-62cdd20e91853b3c/timeout-preflight-a002/candidate-private.json",
+      "sha256": "44a3f9220540bbb63d25b819a6be1acdff366072ff8ba200cec63452e57a7127"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a002/yumidang-current-auth-62cdd20e91853b3c/timeout-preflight-a002/finalization.json",
+      "sha256": "3f10643d6ef7026f2b46cd99360f45df1f2b9246ea34f6d094762be84f6e7a23"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a002/yumidang-current-auth-62cdd20e91853b3c/close-stop-receipt.json",
+      "sha256": "558003f8fe30cfa3085581a0c258907cc6e70c2db168bd1bb92a84c81eea40a6"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a002/yumidang-current-auth-62cdd20e91853b3c/d03-qualification/receipt.json",
+      "sha256": "2e1dae61bc8db50f1760fd06674cc6dfad8d7f978f66c96be2841309c3d45798"
+    }
+  ],
+  "남은 조건": [
+    "수집 후 원6세션 최소 잔여926초로1200초 기준 미달; probe/실제 요청 미실행",
+    "후보는 미승인 상태이며 실제 마감 잠금 경쟁 재현·서버 수정 완료로 계산하지 않음",
+    "실회원 HOLD/운영 접근/Storage39개 원본/실제 모델/AI24 자정 검증 잔여 유지"
+  ],
+  "다음 작업": "일괄 수집 도구 FD anchor 경합 수정·독립 검토 후 로컬 통합, 새 HEAD·새 대상·새 원 발급 세션으로 재개",
+  "전체 진행률": "79%(22/28)",
+  "민규44개": "재산정하지 않음"
+}
