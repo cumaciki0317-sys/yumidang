@@ -75,7 +75,7 @@ begin
 end $$;
 create function private.fixture_ai_withdraw_pause() returns trigger language plpgsql set search_path='' as $$
 begin
- if new.profile_id in('a1cc0000-0000-4000-8000-000000000001','a1cc0000-0000-4000-8000-000000000002') then perform pg_sleep(1); end if;
+ if new.profile_id in('a1cc0000-0000-4000-8000-000000000001','a1cc0000-0000-4000-8000-000000000002') then perform pg_sleep(2); end if;
  return new;
 end $$;
 -- 신규 fixture 함수만 원 summary 테이블 owner에 맞추며 기존 역할/ACL은 바꾸지 않는다.

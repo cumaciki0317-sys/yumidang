@@ -9,7 +9,7 @@ class GuardTests(unittest.TestCase):
   spec=importlib.util.spec_from_file_location('scratch',P);self.m=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.m)
  def test_review_rejects_missing_or_extra_sql_before_file_reads(self):
   from unittest.mock import patch
-  expected={self.m.SELF,*self.m.MIGRATIONS,*self.m.TESTS}
+  expected={self.m.SELF,*self.m.MIGRATIONS,*self.m.TESTS,*self.m.ADDITIONAL_SOURCES}
   for names in [expected-{self.m.MIGRATIONS[-1]},expected|{'unreviewed.sql'}]:
    with patch.object(self.m.subprocess,'check_output',return_value='a'*40+'\n'):
     with self.assertRaisesRegex(ValueError,'SOURCE_SET_CHANGED'):
@@ -99,3 +99,116 @@ class LifecycleTests(unittest.TestCase):
   self.assertTrue((self.r.output/'command-0001.stdout').exists());self.assertTrue((self.r.output/'command-0001.stderr').exists());self.assertTrue((self.r.output/'command-0001.json').exists())
 
 if __name__=='__main__':unittest.main()
+
+class ConcurrentAdditionalTests(unittest.TestCase):
+ def setUp(self):
+  helper=Path(__file__).resolve().parents[3]/'tests/integration/minkyu/ai_consent_concurrent_local.py'
+  spec=importlib.util.spec_from_file_location('concurrent_helper_unit',helper);self.m=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.m)
+ def rows(self):
+  return [{'application':self.m.APPS[0],'pid':101,'state':'active','query':"select public.withdraw_my_ai_processing('review_summary') as withdrawal;",'queryStart':'2026-10-21T00:00:00Z','backendStart':'2026-10-20T23:59:59Z','waitType':'Timeout','blockers':[]},
+   {'application':self.m.APPS[1],'pid':202,'state':'active','query':"select public.withdraw_my_ai_processing('review_summary') as withdrawal;",'queryStart':'2026-10-21T00:00:00Z','backendStart':'2026-10-20T23:59:59Z','waitType':'Lock','blockers':[101]}]
+ def test_actual_lock_overlap_requires_both_fixed_queries_and_exact_pids(self):
+  self.assertEqual(self.m.concurrency_proof([self.rows()],[101,202])['status'],'PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY')
+  import copy
+  for field,value in [('pid',999),('state','idle'),('query','select 1;'),('blockers',[303]),('waitType','Timeout')]:
+   rows=copy.deepcopy(self.rows());rows[1][field]=value
+   with self.assertRaisesRegex(ValueError,'CONCURRENT_LOCK_NOT_PROVEN'):self.m.concurrency_proof([rows],[101,202])
+ def test_sequential_or_missing_blocking_evidence_never_passes(self):
+  with self.assertRaises(ValueError):self.m.concurrency_proof([[self.rows()[0]],[self.rows()[1]]],[101,202])
+  with self.assertRaises(ValueError):self.m.concurrency_proof([],[101,101])
+ def test_group_absence_requires_reap_and_unknown_is_not_absent(self):
+  from unittest.mock import Mock,patch
+  child=Mock(pid=12345);child.wait.return_value=0
+  with patch.object(self.m,'group_state',return_value='absent'):self.assertTrue(self.m.close_group(child)['closed'])
+  with patch.object(self.m.os,'killpg',side_effect=PermissionError()):self.assertEqual(self.m.group_state(12345),'unknown')
+ def test_helper_has_no_standalone_docker_runner_or_configurable_target(self):
+  raw=Path(self.m.__file__).read_text()
+  self.assertNotIn('if __name__',raw);self.assertNotIn('argparse',raw)
+  self.assertIn('scratch.guard();scratch.own()',raw)
+  self.assertIn('scratch.concurrent_unclosed=True',raw)
+  self.assertIn('after==baseline',raw)
+ def test_phase_rejects_arbitrary_name_before_dispatch(self):
+  from unittest.mock import Mock
+  runner=Mock()
+  with self.assertRaisesRegex(ValueError,'FIXED_PHASE'):self.m.phase(runner,b'bytes','arbitrary')
+  runner.docker.assert_not_called()
+ def harness(self):
+  from unittest.mock import Mock
+  class Fake:
+   __module_host__='unix:///fixed-review.sock'
+  r=Fake();r.target='a'*64;r.concurrent_unclosed=False;r.seq=0;r.read_source=Mock(return_value=b'pinned-fixture')
+  r.guard=Mock();r.own=Mock();r.memory=Mock();r.saved={};r.save=lambda name,value:r.saved.__setitem__(name,value)
+  return r
+ def test_run_dispatches_two_once_keeps_raw_evidence_and_restores_full_baseline(self):
+  from unittest.mock import Mock,patch
+  r=self.harness();children=[]
+  def popen(args,**kwargs):
+   i=len(children);child=Mock(pid=1000+i,returncode=0);child.poll.side_effect=[None,0,0,0] if i==0 else [0,0,0]
+   kwargs['stdout'].write(f'{(101,202)[i]}|2026-10-21 00:00:00+00\n{{"withdrawn": true}}\n'.encode());children.append(child);return child
+  with patch.object(self.m.subprocess,'Popen',side_effect=popen),patch.object(self.m,'snapshot',return_value={'rows':{},'catalogue':{},'sequences':{}}),patch.object(self.m,'phase') as phase,patch.object(self.m,'observe',return_value=self.rows()),patch.object(self.m,'observe_exact_backends',return_value=[]),patch.object(self.m,'close_group',return_value={'closed':True,'observations':[]}),patch.object(self.m.time,'sleep'):
+   result=self.m.run(r)
+  self.assertEqual(result['status'],'PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY');self.assertEqual(len(children),2)
+  self.assertEqual([call.args[2] for call in phase.call_args_list],['setup','verify','cleanup'])
+  self.assertFalse(r.concurrent_unclosed);self.assertTrue(r.saved['consent-concurrency-receipt.json']['baselineRestored'])
+  self.assertIn('consent-actor-a-stdout.raw',r.saved);self.assertIn('consent-actor-b-stderr.raw',r.saved)
+ def test_missing_stdout_pid_with_withdrawn_body_is_not_proven(self):
+  from unittest.mock import Mock,patch
+  r=self.harness();children=[]
+  def popen(args,**kwargs):
+   i=len(children);child=Mock(pid=1000+i,returncode=0);child.poll.side_effect=[None,0,0,0] if i==0 else [0,0,0]
+   kwargs['stdout'].write(b'{"withdrawn": true}\n');children.append(child);return child
+  with patch.object(self.m.subprocess,'Popen',side_effect=popen),patch.object(self.m,'snapshot',return_value={}),patch.object(self.m,'phase') as phase,patch.object(self.m,'observe',return_value=self.rows()),patch.object(self.m,'observe_exact_backends',return_value=[]),patch.object(self.m,'close_group',return_value={'closed':True,'observations':[]}),patch.object(self.m.time,'sleep'):
+   with self.assertRaisesRegex(ValueError,'CONSENT_CONCURRENCY_NOT_PROVEN'):self.m.run(r)
+  self.assertEqual(r.saved['consent-concurrency-receipt.json']['status'],'NOT_PROVEN')
+  self.assertTrue(r.saved['consent-concurrency-receipt.json']['backendsClosed'])
+  self.assertEqual([call.args[2] for call in phase.call_args_list],['setup','cleanup'])
+
+ def test_unclosed_actor_refuses_fixture_cleanup_and_keeps_scratch_stop_blocked(self):
+  from unittest.mock import Mock,patch
+  r=self.harness();count=0
+  def popen(args,**kwargs):
+   nonlocal count
+   count+=1;return Mock(pid=1000+count,returncode=0,poll=Mock(return_value=0))
+  with patch.object(self.m.subprocess,'Popen',side_effect=popen),patch.object(self.m,'snapshot',return_value={}),patch.object(self.m,'phase') as phase,patch.object(self.m,'close_group',return_value={'closed':False,'observations':[{'group':'unknown'}]}):
+   with self.assertRaisesRegex(ValueError,'CONSENT_CONCURRENCY_NOT_PROVEN'):self.m.run(r)
+  self.assertTrue(r.concurrent_unclosed);self.assertEqual([c.args[2] for c in phase.call_args_list],['setup'])
+  self.assertEqual(r.saved['consent-concurrency-receipt.json']['status'],'NOT_PROVEN')
+
+ def test_sequence_snapshot_batches_41_exact_relations_in_one_sql(self):
+  from unittest.mock import Mock
+  import json
+  names=[['private','fixture_seq_'+str(i)] for i in range(41)]
+  values={'.'.join(row):{'last_value':7,'log_cnt':0,'is_called':True} for row in names}
+  runner=Mock();runner.sql.return_value=json.dumps(values).encode()
+  self.assertEqual(self.m.sequence_values(runner,names),values);self.assertEqual(runner.sql.call_count,1)
+  query=runner.sql.call_args.args[0].decode();self.assertEqual(query.count(' union all '),40)
+  self.assertIn('from "private"."fixture_seq_0" s',query)
+  runner.sql.reset_mock()
+  with self.assertRaises(ValueError):self.m.sequence_values(runner,[['private','bad;drop']])
+  runner.sql.assert_not_called()
+  runner.sql.return_value=b'{}'
+  with self.assertRaisesRegex(ValueError,'SEQUENCE_KEYSET'):self.m.sequence_values(runner,names)
+ def test_exact_pid_surviving_local_application_reset_is_not_closed(self):
+  bindings=[{'pid':101,'backendStart':'original'}]
+  self.assertFalse(self.m.exact_backends_absent([{'pid':101,'backendStart':'original','application':'','state':'idle'}],bindings))
+  self.assertTrue(self.m.exact_backends_absent([],bindings))
+  self.assertTrue(self.m.exact_backends_absent([{'pid':101,'backendStart':'new-incarnation','application':'other'}],bindings))
+ def test_missing_pid_and_nonunique_observation_refuse_cleanup_identity(self):
+  with self.assertRaisesRegex(ValueError,'ACTOR_BACKEND_IDENTITY_UNPROVEN'):self.m.actor_bindings([b''],[],1)
+  rows=self.rows();rows[0]['pid']=999
+  with self.assertRaisesRegex(ValueError,'ACTOR_PID_MISMATCH'):self.m.actor_bindings([b'101|time\n'],[rows],1)
+  binding=self.m.actor_bindings([b''],[self.rows()],1)
+  self.assertEqual(binding[0]['pidSource'],'unique_observation')
+ def test_application_reset_with_original_backend_alive_blocks_cleanup_and_stop(self):
+  from unittest.mock import Mock,patch
+  import itertools
+  r=self.harness();children=[]
+  def popen(args,**kwargs):
+   i=len(children);child=Mock(pid=1000+i,returncode=0);child.poll.side_effect=[None,0,0,0] if i==0 else [0,0,0]
+   kwargs['stdout'].write(f'{(101,202)[i]}|2026-10-21 00:00:00+00\n{{"withdrawn": true}}\n'.encode());children.append(child);return child
+  alive=[{'pid':101,'backendStart':'2026-10-20T23:59:59Z','application':'','state':'idle'}]
+  clock=iter(itertools.count())
+  with patch.object(self.m.subprocess,'Popen',side_effect=popen),patch.object(self.m,'snapshot',return_value={}),patch.object(self.m,'phase') as phase,patch.object(self.m,'observe',return_value=self.rows()),patch.object(self.m,'observe_exact_backends',return_value=alive),patch.object(self.m,'close_group',return_value={'closed':True,'observations':[]}),patch.object(self.m.time,'sleep'),patch.object(self.m.time,'monotonic',side_effect=lambda:next(clock)):
+   with self.assertRaisesRegex(ValueError,'CONSENT_CONCURRENCY_NOT_PROVEN'):self.m.run(r)
+  self.assertTrue(r.concurrent_unclosed);self.assertEqual([c.args[2] for c in phase.call_args_list],['setup'])
+  self.assertFalse(r.saved['consent-concurrency-receipt.json']['backendsClosed'])

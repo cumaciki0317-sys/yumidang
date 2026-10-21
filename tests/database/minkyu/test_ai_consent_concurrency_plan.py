@@ -68,9 +68,24 @@ class ConcurrencyPlanTests(unittest.TestCase):
     def test_delay_only_changes_fixture_summary_rows_not_policy_or_clock(self):
         setup = phase('setup')
         self.assertIn('before update on private.review_summary_state', setup)
-        self.assertIn('perform pg_sleep(1)', setup)
+        self.assertIn('perform pg_sleep(2)', setup)
         self.assertIn("if new.profile_id in('a1cc0000", setup)
         self.assertNotRegex(SQL, r'(?i)\b(setval|nextval|alter\s+system|disable\s+trigger|truncate)\b')
+
+    def test_observation_window_and_fixed_timeouts_remain_ordered(self):
+        delay = int(re.search(r'perform pg_sleep\((\d+)\)', phase('setup')).group(1))
+        first_actor_seconds = delay * 2
+        serialized_pair_seconds = first_actor_seconds * 2
+        self.assertGreater(first_actor_seconds, 2)  # reviewed guard/observer latency budget
+        self.assertEqual(serialized_pair_seconds, 8)
+        for name in ('a', 'b'):
+            actor = phase(name)
+            lock = int(re.search(r"lock_timeout='(\d+)s'", actor).group(1))
+            statement = int(re.search(r"statement_timeout='(\d+)s'", actor).group(1))
+            self.assertLess(first_actor_seconds, lock)
+            self.assertLess(serialized_pair_seconds, statement)
+            self.assertLess(lock, statement)
+            self.assertLess(statement, 20)  # fixed helper overall actor deadline
 
     def test_cleanup_is_exact_uuid_predicates_and_only_fixture_ddl(self):
         cleanup = phase('cleanup')

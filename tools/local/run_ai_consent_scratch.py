@@ -7,6 +7,7 @@ port/volume 없이 생성하고 정확한 신규 ID만 한 번 중지·보존한
 """
 import argparse
 import hashlib
+import types
 import json
 import os
 from pathlib import Path
@@ -26,6 +27,9 @@ ARCHIVE=Path('/private/tmp/yumidang-db121-20261019-b003/capture-execution')
 ARCHIVE_PINS={'source.dump':'c741bec810faeb83b217a37aa8df865bd6499827e27a7099506d167c593706bf','roles.sql':'e3c775a7e3f96c947d53e72ea9e803e8d0d812b8eb3d4a9286147ed1914cecf3'}
 SQL='backend/supabase/migrations/20261020100000_ai_independent_consents.sql'
 MIGRATIONS=[SQL,'backend/supabase/migrations/20261020130000_post_private_events.sql']
+CONCURRENT_HELPER='tests/integration/minkyu/ai_consent_concurrent_local.py'
+CONCURRENT_FIXTURE='tests/database/minkyu/ai_consent_concurrent_fixture.sql'
+ADDITIONAL_SOURCES=(CONCURRENT_HELPER,CONCURRENT_FIXTURE)
 TESTS=['tests/database/minkyu/post_manual_events.sql','tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql']
 def need(ok,code):
  if not ok:raise ValueError(code)
@@ -46,7 +50,7 @@ def check_host_transition(before,after,*,first_start):
 def source_review(head,pins):
  actual=subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
  need(actual==head and re.fullmatch('[a-f0-9]{40}',head),'HEAD_CHANGED')
- need(set(pins)=={SELF,*MIGRATIONS,*TESTS},'SOURCE_SET_CHANGED')
+ need(set(pins)=={SELF,*MIGRATIONS,*TESTS,*ADDITIONAL_SOURCES},'SOURCE_SET_CHANGED')
  for name,pin in pins.items():
   p=ROOT/name;need(p.resolve()==p and p.is_file() and sha(p.read_bytes())==pin,'SOURCE_CHANGED')
   need(subprocess.check_output(['git','-C',str(ROOT),'show',head+':'+name])==p.read_bytes(),'SOURCE_NOT_COMMITTED')
@@ -65,8 +69,9 @@ def private_raw(path):
  return raw
 
 class Scratch:
+ __module_host__=HOST
  def __init__(self,review,output):
-  self.review=review;self.output=output;self.target=None;self.seq=0;self.before=None;self.created=None;self.runtime_host=None;self.minimum=None;self.started_at=None;self.init=None;self.start_sent=False
+  self.review=review;self.output=output;self.target=None;self.seq=0;self.before=None;self.created=None;self.runtime_host=None;self.minimum=None;self.started_at=None;self.init=None;self.start_sent=False;self.concurrent_unclosed=False
  def save(self,name,raw):
   raw=raw if isinstance(raw,bytes) else canon(raw)
   with os.fdopen(os.open(self.output/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600),'wb') as f:f.write(raw)
@@ -154,6 +159,15 @@ class Scratch:
  def sql(self,raw):
   self.guard();self.own()
   return self.docker(['exec','-i',self.target,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-h','/var/run/postgresql','-U','supabase_admin','-d','postgres'],raw)[0]
+ def additional_checks(self):
+  self.guard();self.own()
+  raw=self.read_source(CONCURRENT_HELPER)
+  module=types.ModuleType('reviewed_ai_consent_concurrent_local');module.__file__=str(ROOT/CONCURRENT_HELPER)
+  exec(compile(raw,module.__file__,'exec'),module.__dict__)
+  result=module.run(self)
+  self.guard();self.own()
+  need(result.get('status')=='PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY','CONCURRENT_CHECK_NOT_PROVEN')
+  return result
  def run(self):
   error=None;status='FAIL_CLOSED';stopped=False
   try:
@@ -184,6 +198,7 @@ class Scratch:
    need(baseline.strip()==b'2','SYNTHETIC_UNKNOWN_BASELINE')
    for migration in MIGRATIONS:self.sql(self.read_source(migration))
    for test in TESTS:self.sql(self.read_source(test))
+   self.additional_checks()
    need(self.sql(b"select count(*) from private.ai_account_budget_reservations where unknown_at is not null and settled_at is null;")==baseline,'UNKNOWN_CHANGED')
    self.guard();status='PASS_SQL_ONLY'
   except BaseException as exc:error=type(exc).__name__+':'+str(exc) if isinstance(exc,ValueError) else type(exc).__name__
@@ -201,6 +216,7 @@ class Scratch:
     except BaseException:pass
    if self.target and self.created:
     try:
+     need(not self.concurrent_unclosed,'STOP_WITH_UNCLOSED_CONCURRENT_ACTORS_REFUSED')
      if self.runtime_host is None and self.start_sent:
       x=json.loads(self.docker(['inspect',self.target])[0])[0]
       if x['State']['Running']:self.own(first=True)
@@ -213,13 +229,13 @@ class Scratch:
      for name,pin in ARCHIVE_PINS.items():need(sha(private_raw(ARCHIVE/name))==pin,'ARCHIVE_CHANGED')
      preserved=True
     except BaseException:pass
-   result={'status':status if stopped and preserved else 'FAIL_CLOSED','targetId':self.target,'targetStopped':stopped,'existingPreserved':preserved,'existingStoredBytes':'NOT_VERIFIED','minimumAvailableKiB':self.minimum,'sourceHead':self.review['head'],'error':error,'scope':'SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY','migrationFiles':MIGRATIONS,'testFiles':TESTS,'actualAuth':'NOT_RUN','operatingChanged':False,'fullRestore':False,'realMembers':False,'providerCalls':0,'automaticReplay':False}
+   result={'status':status if stopped and preserved else 'FAIL_CLOSED','targetId':self.target,'targetStopped':stopped,'existingPreserved':preserved,'existingStoredBytes':'NOT_VERIFIED','minimumAvailableKiB':self.minimum,'sourceHead':self.review['head'],'error':error,'scope':'SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY','migrationFiles':MIGRATIONS,'testFiles':TESTS,'additionalCheckFiles':list(ADDITIONAL_SOURCES),'concurrentActorsClosed':not self.concurrent_unclosed,'actualAuth':'NOT_RUN','operatingChanged':False,'fullRestore':False,'realMembers':False,'providerCalls':0,'automaticReplay':False}
    self.save('receipt.json',result)
   return result
 
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--review',type=Path);p.add_argument('--sha256');p.add_argument('--output',type=Path);p.add_argument('--run',action='store_true');a=p.parse_args()
- if not a.run:print(json.dumps({'status':'NOT_RUN','scope':'SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY','migrationFiles':MIGRATIONS,'testFiles':TESTS}));return
+ if not a.run:print(json.dumps({'status':'NOT_RUN','scope':'SYNTHETIC_ARCHIVE_REVIEWED_SERVER_SQL_ONLY','migrationFiles':MIGRATIONS,'testFiles':TESTS,'additionalCheckFiles':list(ADDITIONAL_SOURCES)}));return
  need(a.review and a.output and a.sha256,'REVIEW_REQUIRED');raw=private_raw(a.review);need(sha(raw)==a.sha256,'REVIEW_CHANGED');v=json.loads(raw)
  need(set(v)=={'head','pins','name'} and type(v['pins']) is dict,'REVIEW_SHAPE');source_review(v['head'],v['pins'])
  need(a.output.parent.resolve()==a.output.parent and a.output.parent==a.review.parent and not a.output.exists(),'FRESH_PRIVATE_OUTPUT')
