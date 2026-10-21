@@ -33,6 +33,7 @@ CONTEXT = 'colima-yumidang-minkyu'
 ROLES = {'db': 'supabase_db_', 'auth': 'supabase_auth_', 'rest': 'supabase_rest_', 'gateway': 'supabase_kong_'}
 EXCLUDE = 'realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'
 SCOPE = 'REVIEWED_CURRENT_AUTH_FOUR_NEW_SERVICES_ONLY'
+NETWORK_OPTIONS = {'com.docker.network.bridge.host_binding_ipv4': '127.0.0.1'}
 
 
 def need(ok, code):
@@ -514,14 +515,42 @@ class CurrentAuthSource:
         for relative, pin in self.read('runtime-input-pins.json').items():
             need(sha(self.prep.regular_bytes(self.root, relative)) == pin, 'RUNTIME_INPUT_CHANGED')
 
+    def inventory_proof(self, raw, first_sequence, last_sequence):
+        need(first_sequence <= last_sequence, 'INVENTORY_COMMAND_REFERENCES_REQUIRED')
+        references = []
+        for sequence in range(first_sequence, last_sequence + 1):
+            prefix = self.phase + '-command-' + str(sequence)
+            names = [prefix + suffix for suffix in ('-intent.json', '-stdout.json', '-stderr.json', '-closure.json', '-result.json')]
+            for name in list(names):
+                if name.endswith(('-stdout.json', '-stderr.json')):
+                    document = self.read(name)
+                    names.extend(part['name'] for part in document.get('chunks', []))
+            for name in names:
+                need(re.fullmatch(re.escape(prefix) + r'-(intent|stdout|stderr|closure|result)(-part-[1-9][0-9]*)?[.]json', name), 'INVENTORY_REFERENCE_NAME')
+                content = self.writer.private(self.root / name)
+                references.append({'name': name, 'sha256': sha(content), 'bytes': len(content)})
+        return {'firstCommand': first_sequence, 'lastCommand': last_sequence,
+                'canonicalInventorySha256': sha(canonical(raw)),
+                'metadataSummary': self.private.metadata_summary(raw), 'commandEvidence': references}
+
     def start(self):
         report = self.source(); self.plan = report['target']
         self.prep.private_destination(ROOT, self.root)
         self.root.mkdir(mode=0o700)
         self.save('review.json', self.v)
         self.intent('start'); self.derive(report); self.start_monitor(); self.binary()
-        before = self.inventory()
-        assert_subnet_ports(before, self.plan['projectId'], self.plan['subnet'], self.plan['portBase'])
+        try:
+            first_sequence = self.sequence + 1
+            before = self.inventory()
+            self.save('preflight-inventory-proof.json', self.inventory_proof(before, first_sequence, self.sequence))
+            assert_subnet_ports(before, self.plan['projectId'], self.plan['subnet'], self.plan['portBase'])
+        except BaseException as exc:
+            self.save('start-receipt.json', {'scope': SCOPE, 'status': 'FAIL_CLOSED',
+                'stage': 'PREFLIGHT_BEFORE_CREATION', 'failureType': type(exc).__name__,
+                'failureCode': str(exc) if isinstance(exc, ValueError) and re.fullmatch('[A-Z0-9_]+', str(exc)) else 'PREFLIGHT_FAILED',
+                'ownedIds': [], 'creationAttempted': False,
+                'actualAuth': 'NOT_RUN', 'noReplay': True, 'childClosed': not self.unclosed_child})
+            raise
         baseline = self.private.metadata_summary(before)
         baseline_sha = self.save('protected-resource-baseline.json', baseline)
         self.save('existing-incarnations.json', existing_incarnations(before))
@@ -536,7 +565,7 @@ class CurrentAuthSource:
                 images = json.loads(self.call(['image', 'inspect', self.v['imageRefs'][role]]))
                 need(len(images) == 1 and images[0]['Id'] == self.v['images'][role], 'CACHED_IMAGE_CHANGED')
             self.runtime_source(); self.memory(1048576)
-            network = self.call(['network', 'create', '--subnet', self.plan['subnet'], '--label',
+            network = self.call(['network', 'create', '-o', 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1', '--subnet', self.plan['subnet'], '--label',
                 'com.supabase.cli.project=' + self.plan['projectId'], '--label', 'yumidang.scope=' + SCOPE,
                 '--label', 'yumidang.review=' + sha(self.review._sealed), 'supabase_network_' + self.plan['projectId']])
             need(re.fullmatch('[a-f0-9]{64}', network), 'NETWORK_ID')
@@ -587,9 +616,6 @@ class CurrentAuthSource:
         need(all((x.get('Labels') or {}).get('com.supabase.cli.project') == self.plan['projectId'] for x in volumes), 'NEW_VOLUME_BINDING')
         for item in details:
             role = next(role for role, prefix in ROLES.items() if item['Name'] == '/' + prefix + self.plan['projectId'])
-            need({key: item['HostConfig'].get(key) for key in self.v['hostLimits'][role]} == self.v['hostLimits'][role], 'EXACT_HOST_LIMITS')
-            need(all(entry.get('HostIp') in ('127.0.0.1', '::1')
-                     for values in (item['HostConfig'].get('PortBindings') or {}).values() for entry in (values or [])), 'NON_LOOPBACK_BINDING')
             need(re.fullmatch('[a-f0-9]{64}', item['Id']) and item['RestartCount'] == 0
                  and (item['Config'].get('Labels') or {}).get('com.supabase.cli.project') == self.plan['projectId'], 'NEW_ID_LABEL')
             attached = item.get('NetworkSettings', {}).get('Networks') or {}
@@ -612,6 +638,18 @@ class CurrentAuthSource:
         for kind, name in [('containers', 'owned-containers.json'), ('customNetworks', 'owned-networks.json'), ('volumes', 'owned-volumes.json')]:
             keys = ('id', 'name', 'image') if kind == 'containers' else ('id', 'name') if kind == 'customNetworks' else ('name',)
             self.save(name, [{key: row[key] for key in keys} for row in owned[kind]])
+
+        if not partial:
+            self.accept_services(details, networks)
+
+    def accept_services(self, details, networks):
+        # 정확 cleanup identity는 이미 저장했다. 서비스 수용 실패를 성공으로 바꾸지 않는다.
+        need(len(networks) == 1 and (networks[0].get('Options') or {}) == NETWORK_OPTIONS, 'NETWORK_OPTIONS')
+        for item in details:
+            role = next(role for role, prefix in ROLES.items() if item['Name'] == '/' + prefix + self.plan['projectId'])
+            need({key: item['HostConfig'].get(key) for key in self.v['hostLimits'][role]} == self.v['hostLimits'][role], 'EXACT_HOST_LIMITS')
+            need(all(entry.get('HostIp') in ('127.0.0.1', '::1')
+                     for values in (item['HostConfig'].get('PortBindings') or {}).values() for entry in (values or [])), 'NON_LOOPBACK_BINDING')
 
     def guarded_sql(self, statement):
         self.runtime_source(); raw, _ = self.baseline_guard()

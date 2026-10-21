@@ -164,7 +164,7 @@ class RunnerTests(unittest.TestCase):
         labels = {'com.supabase.cli.project': project, 'yumidang.scope': self.m.SCOPE,
             'yumidang.review': self.m.sha(runner.review._sealed)}
         network = {'Id': network_id, 'Name': 'supabase_network_' + project, 'Labels': labels,
-            'IPAM': {'Config': [{'Subnet': runner.plan['subnet']}]}}
+            'IPAM': {'Config': [{'Subnet': runner.plan['subnet']}]}, 'Options': dict(self.m.NETWORK_OPTIONS)}
         volume = {'Name': self.m.ROLES['db'] + project, 'Labels': {'com.supabase.cli.project': project}}
         container = {'Id': container_id, 'Name': '/' + self.m.ROLES['db'] + project,
             'Config': {'Labels': {'com.supabase.cli.project': project}}, 'RestartCount': 0,
@@ -179,7 +179,7 @@ class RunnerTests(unittest.TestCase):
         runner, owned, raw = self.first_binding_fixture()
         runner.bind_first(owned, raw, partial=True)
         for change, code in [('review', 'NEW_NETWORK_BINDING'), ('network', 'EXACT_REVIEW_NETWORK'),
-                ('memory', 'EXACT_HOST_LIMITS'), ('mount', 'OWNED_MOUNTS_ONLY'), ('port', 'NON_LOOPBACK_BINDING'),
+                ('mount', 'OWNED_MOUNTS_ONLY'),
                 ('volume', 'NEW_VOLUME_BINDING')]:
             changed = copy.deepcopy(raw)
             if change == 'review':
@@ -200,6 +200,90 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'REVIEW_NETWORK_UNPROVEN'):
             runner.bind_first(owned, (raw[0], [], raw[2]), partial=True)
         runner.save.assert_not_called()
+
+    def test_rejected_services_keep_exact_cleanup_identity_without_acceptance(self):
+        for field, code in [('port', 'NON_LOOPBACK_BINDING'), ('memory', 'EXACT_HOST_LIMITS'), ('options', 'NETWORK_OPTIONS')]:
+            runner, owned, raw = self.first_binding_fixture()
+            if field == 'port': raw[0][0]['HostConfig']['PortBindings']['5432/tcp'][0]['HostIp'] = '0.0.0.0'
+            elif field == 'memory': raw[0][0]['HostConfig']['Memory'] = 1
+            else: raw[1][0]['Options'] = {}
+            with self.assertRaisesRegex(ValueError, code): runner.bind_first(owned, raw)
+            self.assertTrue(any(call.args[0] == 'owned-resources.json' for call in runner.save.call_args_list))
+            runner.save.reset_mock()
+            runner.bind_first(owned, raw, partial=True)  # cleanup-only identity, never service acceptance
+            self.assertTrue(any(call.args[0] == 'owned-resources.json' for call in runner.save.call_args_list))
+
+    def test_bad_port_acceptance_still_stops_only_captured_id_and_rejects_identity_drift(self):
+        runner, owned, raw = self.first_binding_fixture()
+        item = raw[0][0]
+        item.update(Image=runner.v['images']['db'], State={'StartedAt': 'first', 'Running': True,
+            'Status': 'running', 'OOMKilled': False, 'Restarting': False})
+        item['HostConfig']['PortBindings']['5432/tcp'][0]['HostIp'] = '0.0.0.0'
+        records = {'protected-resource-baseline.json': self.private.metadata_summary(([], [], []))}
+        runner.save = lambda name, value: records.__setitem__(name, copy.deepcopy(value))
+        runner.read = lambda name: records[name]
+        with self.assertRaisesRegex(ValueError, 'NON_LOOPBACK_BINDING'): runner.bind_first(owned, raw)
+        runner.baseline_guard = Mock(side_effect=lambda *args: (raw, owned))
+        def stop(args, **kwargs):
+            self.assertEqual(args, ['stop', '--time', '10', item['Id']])
+            item['State']['Running'] = False; item['State']['Status'] = 'exited'
+        runner.call = Mock(side_effect=stop)
+        runner.stop_owned('bad-port', monitor=False)
+        self.assertEqual(runner.call.call_count, 1)
+        self.assertEqual(records['bad-port-stop-receipt.json']['ids'], [item['Id']])
+        item['State']['Running'] = True; item['State']['StartedAt'] = 'new-incarnation'
+        runner.call.reset_mock()
+        with self.assertRaisesRegex(ValueError, 'OWNED_INCARNATION_CHANGED'): runner.stop_owned('drift', monitor=False)
+        runner.call.assert_not_called()
+
+    def test_network_create_has_official_loopback_option_and_acceptance_requires_exact_options(self):
+        import inspect
+        source = inspect.getsource(self.m.CurrentAuthSource.start)
+        self.assertIn("'-o', 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1'", source)
+        runner, _, raw = self.first_binding_fixture()
+        runner.accept_services(raw[0], raw[1])
+        for options in ({}, {**self.m.NETWORK_OPTIONS, 'unexpected': 'value'}, {'com.docker.network.bridge.host_binding_ipv4': '0.0.0.0'}):
+            raw[1][0]['Options'] = options
+            with self.assertRaisesRegex(ValueError, 'NETWORK_OPTIONS'): runner.accept_services(raw[0], raw[1])
+
+    def test_preflight_collision_keeps_raw_inventory_and_failure_receipt_before_creation(self):
+        runner = self.runner(); runner.root.rmdir()
+        runner.source = Mock(return_value={'target': runner.plan})
+        runner.prep.private_destination = Mock(); runner.intent = Mock(); runner.derive = Mock()
+        runner.start_monitor = Mock(); runner.binary = Mock(); runner.call = Mock()
+        raw = ([], [{'Name': 'unrelated', 'IPAM': {'Config': [{'Subnet': runner.plan['subnet']}]}}], [])
+        runner.inventory = Mock(return_value=raw); runner.inventory_proof = Mock(return_value={'canonicalInventorySha256': 'a' * 64}); saved = {}
+        runner.save = lambda name, value: saved.__setitem__(name, value)
+        with self.assertRaisesRegex(ValueError, 'SUBNET_COLLISION'): runner.start()
+        runner.call.assert_not_called()
+        self.assertEqual(saved['preflight-inventory-proof.json']['canonicalInventorySha256'], 'a' * 64)
+        self.assertEqual(saved['start-receipt.json']['stage'], 'PREFLIGHT_BEFORE_CREATION')
+        self.assertFalse(saved['start-receipt.json']['creationAttempted'])
+        self.assertEqual(saved['start-receipt.json']['ownedIds'], [])
+
+    def test_large_inventory_proof_references_chunks_without_copying_raw(self):
+        runner = self.runner(); runner.phase = 'start'; runner.sequence = 0
+        raw = ([], [{'Name': 'other', 'Id': 'd' * 64, 'IPAM': {'Config': [{'Subnet': runner.plan['subnet']}]},
+                     'Labels': {}, 'Options': {}, 'LargeRawOnly': 'x' * 5000000}], [])
+        command_raw = self.m.canonical(raw)
+        runner.writer.save_bytes = lambda root, name, value: (self.assertLessEqual(len(value), 2 * 1024 * 1024), (root / name).write_bytes(value))[-1]
+        runner.writer.private = lambda path: path.read_bytes()
+        runner.save = lambda name, value: runner.writer.save_bytes(runner.root, name, self.m.canonical(value))
+        runner.read = lambda name: json.loads((runner.root / name).read_bytes())
+        runner.sequence = 1
+        runner.save_output('stdout', command_raw, {'sha256': self.m.sha(command_raw), 'totalBytes': len(command_raw)})
+        runner.save_output('stderr', b'', {'sha256': self.m.sha(b''), 'totalBytes': 0})
+        for suffix in ('intent', 'closure', 'result'): runner.save('start-command-1-' + suffix + '.json', {'closed': True})
+        proof = runner.inventory_proof(raw, 1, 1)
+        runner.save('preflight-inventory-proof.json', proof)
+        self.assertEqual(proof['canonicalInventorySha256'], self.m.sha(command_raw))
+        self.assertLess(len(self.m.canonical(proof)), 2 * 1024 * 1024)
+        self.assertTrue(any('-part-' in entry['name'] for entry in proof['commandEvidence']))
+        for entry in proof['commandEvidence']:
+            self.assertEqual(entry['sha256'], self.m.sha((runner.root / entry['name']).read_bytes()))
+        with self.assertRaisesRegex(ValueError, 'SUBNET_COLLISION'):
+            self.m.assert_subnet_ports(raw, runner.plan['projectId'], runner.plan['subnet'], runner.plan['portBase'])
+        self.assertTrue((runner.root / 'preflight-inventory-proof.json').exists())
 
     def test_unclosed_original_group_blocks_later_inventory_and_stop(self):
         runner = self.runner(); runner.unclosed_child = True
