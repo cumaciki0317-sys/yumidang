@@ -165,6 +165,8 @@ class RunnerTests(unittest.TestCase):
             'yumidang.review': self.m.sha(runner.review._sealed)}
         network = {'Id': network_id, 'Name': 'supabase_network_' + project, 'Labels': labels,
             'IPAM': {'Config': [{'Subnet': runner.plan['subnet']}]}, 'Options': dict(self.m.NETWORK_OPTIONS)}
+        network['Containers'] = {container_id: {'Name': self.m.ROLES['db'] + project, 'EndpointID': 'fixed-endpoint'}}
+        network['Status'] = {'IPAM': {'Subnets': {runner.plan['subnet']: {'IPsInUse': 12, 'DynamicIPsAvailable': 244}}}}
         volume = {'Name': self.m.ROLES['db'] + project, 'Labels': {'com.supabase.cli.project': project}}
         container = {'Id': container_id, 'Name': '/' + self.m.ROLES['db'] + project,
             'Config': {'Labels': {'com.supabase.cli.project': project}}, 'RestartCount': 0,
@@ -228,11 +230,15 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(args, ['stop', '--time', '10', item['Id']])
             item['State']['Running'] = False; item['State']['Status'] = 'exited'
             item['NetworkSettings']['Ports'] = {}  # own stop releases effective ports only
+            raw[1][0]['Containers'] = {}
+            stats = raw[1][0]['Status']['IPAM']['Subnets'][runner.plan['subnet']]
+            stats['IPsInUse'] -= 1; stats['DynamicIPsAvailable'] += 1
         runner.call = Mock(side_effect=stop)
         runner.stop_owned('bad-port', monitor=False)
         self.assertEqual(runner.call.call_count, 1)
         self.assertEqual(records['bad-port-stop-receipt.json']['ids'], [item['Id']])
         item['State']['Running'] = True; item['State']['StartedAt'] = 'new-incarnation'
+        raw[1][0] = copy.deepcopy(records['owned-network-first-inspection.json'][0])
         item['NetworkSettings']['Ports'] = copy.deepcopy(records['owned-first-inspection.json'][0]['NetworkSettings']['Ports'])
         runner.call.reset_mock()
         with self.assertRaisesRegex(ValueError, 'OWNED_INCARNATION_CHANGED'): runner.stop_owned('drift', monitor=False)
@@ -342,6 +348,66 @@ class RunnerTests(unittest.TestCase):
             runner.stop_owned('failure', monitor=False)
         runner.save.assert_not_called()
 
+    def network_transition_fixture(self):
+        ids = {str(i) * 64 for i in range(1, 5)}; subnet = '10.250.17.0/24'
+        first = {'Id': 'e' * 64, 'Options': {'fixed': 'value'},
+            'IPAM': {'Config': [{'Subnet': subnet, 'Gateway': '10.250.17.1'}]},
+            'Containers': {i: {'Name': 'own-' + i[:1], 'EndpointID': i, 'IPv4Address': 'fixed-' + i[:1]} for i in ids},
+            'Status': {'OtherStatus': 'preserved', 'IPAM': {'Subnets': {subnet: {'IPsInUse': 10, 'DynamicIPsAvailable': 246, 'OtherCounter': 8}}}}}
+        details = {i: {'State': {'Running': True}} for i in ids}
+        return first, details, ids
+
+    def apply_network_stops(self, first, details, stopped):
+        now = copy.deepcopy(first)
+        for i in details: details[i]['State']['Running'] = i not in stopped
+        now['Containers'] = {i: v for i, v in now['Containers'].items() if i not in stopped}
+        subnet = first['IPAM']['Config'][0]['Subnet']; stats = now['Status']['IPAM']['Subnets'][subnet]
+        stats['IPsInUse'] -= len(stopped); stats['DynamicIPsAvailable'] += len(stopped)
+        return now
+
+    def test_own_network_accepts_running_partial_and_all_stop_exact_accounting(self):
+        first, details, ids = self.network_transition_fixture()
+        for count in (0, 1, 3, 4):
+            with self.subTest(stopped=count):
+                now = self.apply_network_stops(first, details, set(sorted(ids)[:count]))
+                before = copy.deepcopy(now)
+                self.m.check_owned_network(first, now, details, ids)
+                self.assertEqual(now, before)  # 원 관측과 최초 증거를 변경하지 않는다.
+        self.assertEqual(first['Status']['IPAM']['Subnets']['10.250.17.0/24']['IPsInUse'], 10)
+
+    def test_current_network_counters_reject_boolean_one_float_and_negative(self):
+        first, details, ids = self.network_transition_fixture()
+        subnet = first['IPAM']['Config'][0]['Subnet']
+        first['Status']['IPAM']['Subnets'][subnet]['IPsInUse'] = 5
+        now = self.apply_network_stops(first, details, ids)
+        self.assertEqual(now['Status']['IPAM']['Subnets'][subnet]['IPsInUse'], 1)
+        self.m.check_owned_network(first, now, details, ids)
+        for key, value in [('IPsInUse', True), ('IPsInUse', 1.0), ('IPsInUse', -1),
+                           ('DynamicIPsAvailable', float(now['Status']['IPAM']['Subnets'][subnet]['DynamicIPsAvailable']))]:
+            bad = copy.deepcopy(now); bad['Status']['IPAM']['Subnets'][subnet][key] = value
+            with self.assertRaisesRegex(ValueError, 'OWNED_NETWORK_STATUS_COUNTER'):
+                self.m.check_owned_network(first, bad, details, ids)
+
+    def test_own_network_rejects_unexpected_counter_static_endpoint_and_foreign_delta(self):
+        first, details, ids = self.network_transition_fixture()
+        now = self.apply_network_stops(first, details, {sorted(ids)[0]})
+        mutations = []
+        bad = copy.deepcopy(now); bad['Status']['IPAM']['Subnets']['10.250.17.0/24']['IPsInUse'] -= 1; mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Status']['OtherStatus'] = 'changed'; mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Options']['fixed'] = 'changed'; mutations.append(bad)
+        bad = copy.deepcopy(now); key = next(iter(bad['Containers'])); bad['Containers'][key]['EndpointID'] = 'different'; mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Containers']['foreign'] = {}; mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Status']['IPAM']['Subnets']['unexpected'] = {}; mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Containers'].pop(next(iter(bad['Containers']))); mutations.append(bad)
+        bad = copy.deepcopy(now); bad.pop('Status'); mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Status']['IPAM']['Subnets']['10.250.17.0/24']['IPsInUse'] = True; mutations.append(bad)
+        bad = copy.deepcopy(now); bad['Status']['IPAM']['Subnets']['10.250.17.0/24']['DynamicIPsAvailable'] -= 1; mutations.append(bad)
+        for bad in mutations:
+            with self.subTest(network=bad), self.assertRaises(ValueError):
+                self.m.check_owned_network(first, bad, details, ids)
+        changed_first = copy.deepcopy(first); changed_first['Containers']['foreign'] = {}
+        with self.assertRaises(ValueError): self.m.check_owned_network(changed_first, now, details, ids)
+
     def test_owned_mount_guard_allows_order_only_and_keeps_fields_and_duplicates(self):
         runner, _, raw = self.first_binding_fixture()
         container = raw[0][0]
@@ -358,6 +424,9 @@ class RunnerTests(unittest.TestCase):
         changed_ports = copy.deepcopy(raw); changed_ports[0][0]['NetworkSettings']['Ports']['5432/tcp'][0]['HostIp'] = '0.0.0.0'
         with self.assertRaisesRegex(ValueError, 'OWNED_EFFECTIVE_PORTS_CHANGED'): runner.check_owned(frozen, changed_ports, running=True)
         stopped = copy.deepcopy(raw); stopped[0][0]['State']['Running'] = False
+        stopped[1][0]['Containers'] = {}
+        stopped_stats = stopped[1][0]['Status']['IPAM']['Subnets'][runner.plan['subnet']]
+        stopped_stats['IPsInUse'] -= 1; stopped_stats['DynamicIPsAvailable'] += 1
         for released in ({}, {'5432/tcp': None}):
             stopped[0][0]['NetworkSettings']['Ports'] = released
             runner.check_owned(frozen, stopped, running=False)

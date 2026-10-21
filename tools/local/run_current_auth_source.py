@@ -138,6 +138,36 @@ def runtime_support(review):
                 sys.modules[name] = old
 
 
+def check_owned_network(first, now, details, owned_ids):
+    """중지한 자기 endpoint의 IP 반환만 허용하고 원 관측을 변경하지 않는다."""
+    need(type(now) is dict and {k: v for k, v in now.items() if k not in ('Containers', 'Status')}
+         == {k: v for k, v in first.items() if k not in ('Containers', 'Status')}, 'OWNED_NETWORK_CHANGED')
+    endpoints = first.get('Containers')
+    need(type(endpoints) is dict and set(endpoints) <= owned_ids and owned_ids <= set(details)
+         and all(type(details[i].get('State', {}).get('Running')) is bool for i in owned_ids), 'OWNED_NETWORK_ENDPOINT_BINDING')
+    live = {i for i in owned_ids if details[i]['State']['Running']}
+    need(live <= set(endpoints) and now.get('Containers') == {i: endpoints[i] for i in live}, 'OWNED_NETWORK_ENDPOINT_CHANGED')
+    released = len(set(endpoints) - live)
+    expected = json.loads(canonical(first.get('Status')))
+    need(type(expected) is dict and type(expected.get('IPAM')) is dict
+         and type(expected['IPAM'].get('Subnets')) is dict, 'OWNED_NETWORK_STATUS_EVIDENCE')
+    subnets = [entry.get('Subnet') for entry in first.get('IPAM', {}).get('Config', [])]
+    need(len(subnets) == 1 and type(subnets[0]) is str and set(expected['IPAM']['Subnets']) == set(subnets), 'OWNED_NETWORK_STATUS_SUBNET')
+    stats = expected['IPAM']['Subnets'][subnets[0]]
+    need(type(stats) is dict and all(type(stats.get(k)) is int and stats[k] >= 0
+         for k in ('IPsInUse', 'DynamicIPsAvailable')) and stats['IPsInUse'] >= released, 'OWNED_NETWORK_STATUS_COUNTER')
+    stats['IPsInUse'] -= released
+    stats['DynamicIPsAvailable'] += released
+    current_status = now.get('Status')
+    need(type(current_status) is dict and type(current_status.get('IPAM')) is dict
+         and type(current_status['IPAM'].get('Subnets')) is dict
+         and set(current_status['IPAM']['Subnets']) == set(subnets), 'OWNED_NETWORK_STATUS_EVIDENCE')
+    current_stats = current_status['IPAM']['Subnets'][subnets[0]]
+    need(type(current_stats) is dict and all(type(current_stats.get(k)) is int and current_stats[k] >= 0
+         for k in ('IPsInUse', 'DynamicIPsAvailable')), 'OWNED_NETWORK_STATUS_COUNTER')
+    need(current_status == expected, 'OWNED_NETWORK_STATUS_CHANGED')
+
+
 def existing_incarnations(raw):
     return {x['Id']: {'startedAt': x['State']['StartedAt'], 'restartCount': x['RestartCount']}
             for x in raw[0]}
@@ -462,8 +492,7 @@ class CurrentAuthSource:
         expected_network_ids = {item['Id'] for item in first_networks}
         for first in first_networks:
             now = next((item for item in raw[1] if item['Id'] == first['Id']), None)
-            need(now is not None and {k: v for k, v in now.items() if k != 'Containers'}
-                 == {k: v for k, v in first.items() if k != 'Containers'}, 'OWNED_NETWORK_CHANGED')
+            check_owned_network(first, now, details, {row['id'] for row in frozen['containers']})
         for first in self.read('owned-volume-first-inspection.json'):
             need(first in raw[2], 'OWNED_VOLUME_CHANGED')
         for item in frozen['containers']:
