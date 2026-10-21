@@ -1,0 +1,96 @@
+{
+  "wbsIds": [
+    "4.6",
+    "7.11"
+  ],
+  "actor": "minkyu",
+  "sourceHead": "277ba2376e56d308e4427c95bb4d50ce4c2371a4",
+  "status": "D03_PROBE_BIND_FAILED_CLOSED",
+  "change": "새 bounded timeout batch와 D03 runtime을 실제 격리 환경에서 검증",
+  "actualScope": {
+    "authAccounts": 6,
+    "originalJwtLifetimeSeconds": 3600,
+    "syntheticQualifiedActors": 2,
+    "migrationCount": 124,
+    "expectedTables": 182,
+    "timeoutReadonlyBatch": "CAPTURED_UNREVIEWED_TIMEOUT_SOURCE_ONLY",
+    "probeHttpRequests": 0,
+    "businessFixturesCreated": 0,
+    "actualD03": "NOT_RUN",
+    "actualNaver": "NOT_RUN",
+    "actualModel": "NOT_RUN",
+    "realMemberQA": "HOLD",
+    "productionWrites": 0
+  },
+  "failure": {
+    "stage": "bind 초기 pg_stat_activity 조회",
+    "code": "D03_SQL_EXECUTION_FAILED_RAW_SAVED",
+    "psqlExitCode": 3,
+    "reason": "jsonb_agg ORDER BY 앞의 조기 닫힘 괄호로 SQL 문법 오류",
+    "automaticReplay": false
+  },
+  "preservation": {
+    "qualifiedWhole182BaselineRowsAuthorityCatalogConstraintsUnchanged": true,
+    "originalAuthBindingAndReceiptRetained": true,
+    "sequenceBeforeAfterComparison": "NOT_VERIFIED_NO_PRE_PROBE_SEQUENCE_BASELINE",
+    "ownRawPsqlBackendsRemaining": 0,
+    "finalErrors": [],
+    "monitorFailures": [],
+    "stoppedOwnContainerCount": 4,
+    "otherContainersStopped": 0,
+    "ownNetworksAndVolumesRetained": true,
+    "wholeStoredBytesPreserved": "NOT_VERIFIED",
+    "sequenceStateAtCleanup": "5c95c206125d0ebe3fe5609f690bcbfc0b0cdb4ca9e293bbcc318125894d49a0"
+  },
+  "evidence": {
+    "auth6": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/root-auth6-current-receipt.json",
+      "sha256": "b5d620fa88fa17da629f11bf32b272150ea4b874b6bbb3e4bed140950249477a"
+    },
+    "qualification": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/d03-qualification/receipt.json",
+      "sha256": "4b740371997819f00509fbbe4bd9650c0640525224d6d4b3c7c313cf967b9ce6"
+    },
+    "timeout": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/timeout-batch-a004/receipt.json",
+      "sha256": "6c20a1921bf529af9133d36fd6430df7b6dfbcc71e350073f3b1c871803a3a99"
+    },
+    "timeoutCandidate": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/timeout-batch-a004/candidate-private.json",
+      "sha256": "be6869fff32498adc4a6ae4a67ccdc53522be76f8ab4fe825aef3bddefd4dde2"
+    },
+    "failure": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/d03-deadline-e7353591094f426f9712d4f9f927af71/probe-primary-failure-private.json",
+      "sha256": "88e66cca41e885c077fccbe68f17e9e9915f7afa5ce0ba65913ab95991c6aef1"
+    },
+    "rawSqlFailure": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/d03-deadline-e7353591094f426f9712d4f9f927af71/d03-sql-00001-closed-private.json",
+      "sha256": "07c13540e71781856ffbf241d5444a37bb85c360543f5d03507a018222f2b1c4"
+    },
+    "cleanup": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/d03-deadline-e7353591094f426f9712d4f9f927af71/probe-cleanup-private.json",
+      "sha256": "9701c559cc63745a5b9b5b6376701592b019c04d868ddf0e58008e23e7939e1d"
+    },
+    "final": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/d03-deadline-e7353591094f426f9712d4f9f927af71/d03-runtime-final-status-private.json",
+      "sha256": "a1bc24694de1541aca14a2d018e4a33398d2d8b8319b96955c97b603004ca03b"
+    },
+    "backendClosure": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/d03-deadline-e7353591094f426f9712d4f9f927af71/d03-owned-backends-closure-private.json",
+      "sha256": "a3e76f795c94e09da983fa523845dde4c3f4bbe1e4d2b1964cd926442fbfb42a"
+    },
+    "close": {
+      "path": "/private/tmp/yumidang-d03-20261021-a004/yumidang-current-auth-4a803f829f9d88a1/close-stop-receipt.json",
+      "sha256": "b53cb04651a1d42477235b7792615bcfb963845384a066e1652af752b37521f6"
+    }
+  },
+  "remainingConditions": [
+    "initial activity SQL 수정 및 실제 PostgreSQL 구문 smoke",
+    "새 소스·새 영수증·새 세션으로 probe 재실행",
+    "RPC 원문 root 검토 뒤 D03 한 번 재현",
+    "서버 수정은 재현 후 별도 추가 migration 및 재검증"
+  ],
+  "nextWork": "도구 SQL 수정과 Auth 발급 전 구문 검증을 완료한다. AI24 SQL coverage/custody 연결은 독립적으로 계속한다.",
+  "projectProgress": "79%(22/28)",
+  "minkyu44Progress": "NOT_RECOUNTED"
+}
