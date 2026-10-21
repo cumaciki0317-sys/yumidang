@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-21",
+  "wbsIds": [
+    "5.2",
+    "5.3",
+    "5.5"
+  ],
+  "sourceHead": "4673485a0006936f0a0a9b3f30d17cd2985152e5",
+  "scope": "SIGNED_POSITIVE_DISCOVERY_ONLY",
+  "status": "PASS_LOCAL_AUTH_DB_AND_SYNTHETIC_MODEL_ONLY",
+  "cases": [
+    {
+      "case": "semantic",
+      "cards": 2,
+      "modelTasks": 4,
+      "reservations": 4,
+      "allSettled": true
+    },
+    {
+      "case": "judgment_failure",
+      "cards": 0,
+      "modelTasks": 2,
+      "reservations": 2,
+      "allSettled": true
+    },
+    {
+      "case": "output_privacy",
+      "cards": 0,
+      "modelTasks": 1,
+      "reservations": 1,
+      "allSettled": true
+    },
+    {
+      "case": "recheck_change",
+      "cards": 1,
+      "modelTasks": 4,
+      "reservations": 4,
+      "allSettled": true
+    }
+  ],
+  "model": "SYNTHETIC_IN_MEMORY_ONLY",
+  "nativeExternalAttempts": 0,
+  "actualNaver": "NOT_RUN",
+  "actualProviderQuality": "NOT_RUN",
+  "fullSixSchemaTableCount": 182,
+  "originalAuth6BindingSha256": "58667a37964e69e4fac2acfc6bf0b5e303dfb7e59c084608c19085a0644e16af",
+  "originalRowsAuthorityCatalogConstraints": "PRESERVED",
+  "newBudgetRows": "11 reservations settled, UNKNOWN0; retained in four technical budget tables",
+  "fixtureCleanup": "PASS",
+  "ownedChildClosed": true,
+  "ownStopped": 4,
+  "otherStops": 0,
+  "oldResourceMetadata": "PRESERVED",
+  "wholeStoredBytes": "NOT_VERIFIED",
+  "sequence": "NOT_VERIFIED",
+  "sourceCapsule": "exact51 product graph plus factory, files0400 directories0500",
+  "independentReview": "ACCEPTED_POSITIVE_SCOPE",
+  "evidence": {
+    "signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/positive-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/positive-receipt.json",
+      "sha256": "e12670b6f3ba8c98db91f636074f48f963cdd14763e10593c63e152a005f8263"
+    },
+    "signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/positive-factory-proof.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/positive-factory-proof.json",
+      "sha256": "2bbd6dfd55f7154bf9b26f0a96270e48819fbd18c29b3a5e46e4c18c7fdf9593"
+    },
+    "signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/cleanup.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/cleanup.json",
+      "sha256": "b5f4220f38271ca580e20f680e9342646dcf3ca5a2a622dcd4e6e7dd5093d063"
+    },
+    "root-auth6-current-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/root-auth6-current-receipt.json",
+      "sha256": "7946c31ae7dfc2e0ec44de20f48dfa095ab4d802054af6a1f679d545d317673f"
+    },
+    "close-stop-receipt.json": {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/close-stop-receipt.json",
+      "sha256": "ed2b90bdec74e924caf19c5fe4ccd1dec15099872570f684bbecf4ced30a02dc"
+    }
+  },
+  "priorFailure": "a005 preserved FAIL before factory, not replayed or changed to PASS",
+  "remaining": [
+    "AI24 자연 KST 자정·늦은 정산·UNKNOWN 검증",
+    "실제 공급사 출력/사용량 측정",
+    "실회원 QA HOLD·앱 실제 소비·운영 조건"
+  ],
+  "overallProgress": "79%(22/28)",
+  "personal44Progress": "NOT_RECALCULATED",
+  "syntheticModelCalls": 11
+}

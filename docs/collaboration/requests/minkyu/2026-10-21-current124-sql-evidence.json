@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-21",
+  "wbsIds": [
+    "5.1",
+    "5.2",
+    "5.5",
+    "7.8",
+    "7.11"
+  ],
+  "scope": "SYNTHETIC_DB_121_ARCHIVE_PLUS_3_REVIEWED_MIGRATIONS_ONLY",
+  "sourceHead": "da9da69b03044afce9d6c6a0dac56e822b0271c7",
+  "migrationCount": 124,
+  "status": "PASS_SQL_ONLY",
+  "migrationFiles": [
+    "backend/supabase/migrations/20261020100000_ai_independent_consents.sql",
+    "backend/supabase/migrations/20261020130000_post_private_events.sql",
+    "backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql"
+  ],
+  "testFiles": [
+    "tests/database/minkyu/post_manual_events.sql",
+    "tests/database/minkyu/ai_independent_consents.sql",
+    "tests/database/minkyu/current_summary_fences.sql",
+    "tests/database/minkyu/current_completion_consent_policy.sql",
+    "tests/database/minkyu/kopis_verified_snapshots.sql"
+  ],
+  "concurrentWithdrawals": "PASS_SYNTHETIC_SQL_CONCURRENCY_ONLY",
+  "snapshotTables": 183,
+  "snapshotScope": "six schemas182 plus migration history1; full database restoration not established",
+  "unknownRowsBeforeAfter": 2,
+  "minimumAvailableKiB": 2250012,
+  "targetStopped": true,
+  "existingPreserved": true,
+  "existingResourceCounts": {
+    "containers": 447,
+    "networks": 167,
+    "volumes": 63
+  },
+  "independentReview": "ACCEPTED_SQL_ONLY",
+  "actualAuth": "NOT_RUN",
+  "providerCalls": 0,
+  "operatingChanged": false,
+  "fullRestore": false,
+  "realMembers": false,
+  "existingStoredBytes": "NOT_VERIFIED",
+  "previousFailure": {
+    "path": "/private/tmp/yumidang-server-sql-20261021-a006/execution/receipt.json",
+    "status": "FAIL_CLOSED",
+    "cause": "reviewed target name did not match strict format",
+    "targetId": null,
+    "preserved": true
+  },
+  "evidence": {
+    "receipt.json": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a007/execution/receipt.json",
+      "sha256": "52654fbd2e38bde69cb61fb3125a5f947368b8c77101d3621205d1976b578d3c"
+    },
+    "consent-concurrency-receipt.json": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a007/execution/consent-concurrency-receipt.json",
+      "sha256": "6d46aacc09a71f354dbb05c683bcab87d7f4db40d8e40a1f02942bf89f680e9a"
+    },
+    "consent-baseline-private.json": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a007/execution/consent-baseline-private.json",
+      "sha256": "805d8d3183d6ba22cc6378f4b24b13c7ea9f5c261a15ea213668e0f2a6d7af88"
+    },
+    "consent-after-cleanup-private.json": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a007/execution/consent-after-cleanup-private.json",
+      "sha256": "805d8d3183d6ba22cc6378f4b24b13c7ea9f5c261a15ea213668e0f2a6d7af88"
+    },
+    "existing-before-private.json": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a007/execution/existing-before-private.json",
+      "sha256": "0cc6b44034d247c02ac1f02efe86da642050ae407a2d00e368f8a031b6b81fcd"
+    },
+    "existing-after-private.json": {
+      "path": "/private/tmp/yumidang-server-sql-20261021-a007/execution/existing-after-private.json",
+      "sha256": "752ff01ba909fed03c6d4ec787fa04a74dc0490b8d36c55fcde03e64e9a72451"
+    }
+  },
+  "remaining": [
+    "KOPIS RPC internal-client 연결과 일일 갱신·공식14분류 검증",
+    "최신124 새 Auth의 실제 검색·factory 검증",
+    "자연 자정 AI24·운영·실회원 검증",
+    "Storage 원본39개 확보와 전체 복원"
+  ],
+  "overallProgress": "79%(22/28)",
+  "personal44Progress": "NOT_RECALCULATED"
+}
