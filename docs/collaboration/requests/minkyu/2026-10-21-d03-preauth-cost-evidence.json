@@ -1,0 +1,69 @@
+{
+  "WBS ID": [
+    "7.11",
+    "4.6"
+  ],
+  "변경": "검토된124 migration 격리 a003을 구성하고 인증 발급 전에 반복 source/identity 검사 비용을 분리 측정했다. batch 도구는 primary 로컬 c79257f에 반영/관련83개 PASS.",
+  "실제 검증 범위": {
+    "sourceHead": "c79257f6f3f8c3669921a15156d97c32fbc62e4b",
+    "sourcePinCount": 207,
+    "sourceVerificationSeconds": [
+      7.094918,
+      7.243512,
+      7.411862
+    ],
+    "identitySeconds": [
+      1.3552042089868337,
+      1.3818774999817833,
+      1.1600180410314351
+    ],
+    "memoryMinimumKiB": 2147744,
+    "memorySamples": 40,
+    "monitorJoined": true,
+    "monitorFailures": [],
+    "newSourceStart": "PASS_STARTED_ONLY",
+    "newSourceConfigure": "PASS_EMPTY_CONFIGURED_ONLY",
+    "authIssued": 0,
+    "benchmarkSqlCalls": 0,
+    "httpCalls": 0,
+    "actualD03": "NOT_RUN",
+    "wholeRuntimeFeasible": "NOT_PROVEN",
+    "closeStatus": "STOPPED_OWN_IDS_ONLY",
+    "closedOwnedCount": 4,
+    "wholeStoredBytesPreserved": "NOT_VERIFIED"
+  },
+  "증거": [
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a003/root-source-verification-cost.json",
+      "sha256": "251c25c81572ff1b245ce4d0f78c729853d4d1a4b2f3d297325a5dbaadd89f49"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a003/yumidang-current-auth-5e3da8697c68776a/root-preauth-identity-benchmark-receipt.json",
+      "sha256": "a560b426aab8be4b1e4bd3e4b107eef736a76dca519344b646eec673aa439c26"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a003/yumidang-current-auth-5e3da8697c68776a/root-preauth-identity-benchmark-finalization.json",
+      "sha256": "fb94bf4f8cb0630c7302e9d4d998c8ec8db7c80e969c2429fd927a7f0e7e9e9e"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a003/yumidang-current-auth-5e3da8697c68776a/start-receipt.json",
+      "sha256": "c689026a5a9d04257bba5359e0b063c170b5237957b0fdf77374cde1f9791deb"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a003/yumidang-current-auth-5e3da8697c68776a/configure-receipt.json",
+      "sha256": "ec1fcac4e7f87ffe41d094bf6cb9ec462c5547bf872538e41213fd77d300dcd9"
+    },
+    {
+      "path": "/private/tmp/yumidang-d03-20261021-a003/yumidang-current-auth-5e3da8697c68776a/close-stop-receipt.json",
+      "sha256": "d81c2b2cd8c301fe38a81844a8c5a6f7ce3709d367a0f7f5005f21cad8007eb5"
+    }
+  ],
+  "남은 조건": [
+    "반복 git show 검산의 약7초 비용과 full identity 비용을 구분한다. 이 세 측정만으로 전체900초/fixture300초/Auth잔여1200초 충족을 증명하지 않는다.",
+    "기존 읽기 SQL은 Docker CLI/psql의 전체 process group·DB backend 종료와 원문 증거가 부족해 실제 D03 실행을 시작하지 않았다.",
+    "실회원 HOLD·운영 접근·Storage39원본·실제 모델·AI24 자정 검증 잔여 유지"
+  ],
+  "다음 작업": "기존 Docker 보존검사 간격을 그대로 유지하며 source FD bytes/HEAD/동적 경로집합으로 반복 Git blob 검산만 줄이고 D03 전용 bounded readonly 포트의 종료·원문·sticky 회귀를 검토한다. 이후 새 HEAD·새 대상·원 발급 세션으로 실제 재현한다.",
+  "전체 진행률": "79%(22/28)",
+  "민규44개": "재산정하지 않음"
+}
