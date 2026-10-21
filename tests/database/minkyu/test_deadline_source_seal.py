@@ -422,4 +422,42 @@ class SourceSealTests(unittest.TestCase):
         seal.finish.assert_not_called();seal.close.assert_called_once()
         self.assertFalse(r.save.call_args.args[1]['successReturnPermitted'])
 
+class HolderObservationTests(unittest.TestCase):
+    def holder(self,guard_cost=2.4,save_cost=0):
+        import queue
+        clock=[0.0];lines=queue.Queue();lines.put(b'11111111-1111-4111-8111-111111111111\n');lines.put(b'{"pid":12841,"backendStart":"exact-start"}\n')
+        guards=[];saved=[]
+        def guard(review):guards.append(review);clock[0]+=guard_cost
+        def save(name,value):saved.append((name,value));clock[0]+=save_cost
+        h=SimpleNamespace(owner=SimpleNamespace(guard=guard,save=save,review='review'),failure=[],lines=lines,index=0,label='holder',proc=SimpleNamespace(poll=lambda:None))
+        return h,clock,guards,saved
+    def test_buffered_uuid_and_identity_share_one_full_guard_with_original_three_seconds(self):
+        h,clock,guards,saved=self.holder()
+        with patch.object(m.time,'monotonic',side_effect=lambda:clock[0]):value=m.PsqlHolder.next_json(h,3)
+        self.assertEqual(value,{'pid':12841,'backendStart':'exact-start'});self.assertEqual(len(guards),1);self.assertEqual(len(saved),2)
+        self.assertLess(clock[0],3)
+    def test_slow_full_guard_never_accepts_buffered_identity_after_original_deadline(self):
+        h,clock,_,saved=self.holder(guard_cost=3.01)
+        with patch.object(m.time,'monotonic',side_effect=lambda:clock[0]):
+            with self.assertRaisesRegex(ValueError,'OBSERVATION_TIMEOUT'):m.PsqlHolder.next_json(h,3)
+        self.assertEqual(saved,[]);self.assertEqual(h.lines.qsize(),2)
+    def test_slow_evidence_save_does_not_promote_late_identity(self):
+        h,clock,_,saved=self.holder(guard_cost=0,save_cost=3.01)
+        with patch.object(m.time,'monotonic',side_effect=lambda:clock[0]):
+            with self.assertRaisesRegex(ValueError,'OBSERVATION_TIMEOUT'):m.PsqlHolder.next_json(h,3)
+        self.assertEqual(len(saved),1);self.assertEqual(h.lines.qsize(),1)
+    def test_capture_failure_still_refuses_identity(self):
+        h,clock,_,_=self.holder(0);h.failure=['reader failed']
+        with patch.object(m.time,'monotonic',side_effect=lambda:clock[0]):
+            with self.assertRaisesRegex(ValueError,'CAPTURE_FAILURE'):m.PsqlHolder.next_json(h,3)
+    def test_row_holder_opening_has_only_identity_result_and_original_timeouts(self):
+        relative=ROOT/'tests/integration/minkyu/deadline_lock_executor.py';spec=importlib.util.spec_from_file_location('holder_opening_pure',relative);ex=importlib.util.module_from_spec(spec);sys.modules[spec.name]=ex;spec.loader.exec_module(ex)
+        review=SimpleNamespace(appointment_id='11111111-1111-4111-8111-111111111111',validate=lambda:None)
+        opening=ex.holder_open_sql(review);fixed=m.identity_holder_open_sql(review,opening)
+        self.assertIn("perform 1 from public.appointments where id='"+review.appointment_id+"'::uuid for update",fixed)
+        self.assertNotIn('select id from public.appointments',fixed);self.assertEqual(fixed.count("select json_build_object('pid'"),1)
+        for setting in ("statement_timeout='390s'","idle_in_transaction_session_timeout='390s'","lock_timeout='3s'"):self.assertIn(setting,fixed)
+        self.assertIn('if not found then raise exception',fixed)
+        with self.assertRaisesRegex(ValueError,'FIXED_HOLDER_OPENING'):m.identity_holder_open_sql(review,opening.replace('for update','for share'))
+
 if __name__=='__main__':unittest.main()

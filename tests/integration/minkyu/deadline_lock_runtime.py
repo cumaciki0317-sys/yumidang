@@ -382,6 +382,15 @@ def predicates_placeholder():
             'private.conversation_retention_generations','private.appointment_member_episodes','private.conversation_generation_appointments')
 
 
+def identity_holder_open_sql(review,opening):
+    """잠금용 행 값을 출력하지 않고 원 identity JSON 한 줄만 출력한다."""
+    review.validate()
+    target="select id from public.appointments where id='"+review.appointment_id+"'::uuid for update;"
+    need(type(opening)is str and opening.count(target)==1,'D03_FIXED_HOLDER_OPENING')
+    lock="do $d03holder$ begin perform 1 from public.appointments where id='"+review.appointment_id+"'::uuid for update; if not found then raise exception 'd03_holder_appointment_missing';end if;end $d03holder$;"
+    return opening.replace(target,lock)
+
+
 class PsqlHolder:
     """새 host process group의 정확 컨테이너 DB 세션 하나만 보유한다."""
     def __init__(self, owner, statement=None, label='holder'):
@@ -405,7 +414,12 @@ class PsqlHolder:
                             if name=='stdout':self.lines.put(line)
                     except BaseException as error:self.failure.append(type(error).__name__)
                 t=threading.Thread(target=reader,daemon=True);t.start();self.readers.append(t)
-            self.send(owner.executor.holder_open_sql(owner.review) if statement is None else "select json_build_object('kind','D03_COMMAND_BACKEND','pid',pg_backend_pid(),'backendStart',backend_start)from pg_stat_activity where pid=pg_backend_pid();\nset statement_timeout='15s';set lock_timeout='10s';set plpgsql.check_asserts=on;\n"+statement+"\n\\q\n")
+            need(self.proc.poll() is None,'D03_HOLDER_CLOSED')
+            if statement is None:
+                opening=owner.executor.holder_open_sql(owner.review)
+                if label in ('holder','probe-holder'):opening=identity_holder_open_sql(owner.review,opening)
+            else:opening="select json_build_object('kind','D03_COMMAND_BACKEND','pid',pg_backend_pid(),'backendStart',backend_start)from pg_stat_activity where pid=pg_backend_pid();\nset statement_timeout='15s';set lock_timeout='10s';set plpgsql.check_asserts=on;\n"+statement+"\n\\q\n"
+            self.send(opening)
         except BaseException as original:
             try:self.close()
             except BaseException as closure:original.add_note('D03_RAW_CLOSE_UNPROVEN:'+type(closure).__name__)
@@ -434,12 +448,21 @@ class PsqlHolder:
         end=time.monotonic()+seconds
         while time.monotonic()<end:
             self.owner.guard(self.owner.review)
-            need(not self.failure, 'D03_HOLDER_CAPTURE_FAILURE')
-            try:line=self.lines.get(timeout=.1)
-            except queue.Empty:
-                need(self.proc.poll() is None, 'D03_HOLDER_EXITED');continue
-            self.index+=1;self.owner.save(f'd03-{self.label}-line-{self.index:03d}.json',{'rawBase64':base64.b64encode(line).decode()})
-            if line.startswith((b'{',b'[')):return json.loads(line)
+            # 한 관측 배치에 이미 도착한 줄을 처리할 때 full guard를 재실행하지 않는다.
+            # 실제 대기/저장/판정은 처음부터 같은 마감 안에 있어야 한다.
+            need(time.monotonic()<end,'D03_HOLDER_OBSERVATION_TIMEOUT')
+            while time.monotonic()<end:
+                need(not self.failure,'D03_HOLDER_CAPTURE_FAILURE')
+                try:line=self.lines.get(timeout=min(.1,max(0,end-time.monotonic())))
+                except queue.Empty:
+                    need(self.proc.poll() is None,'D03_HOLDER_EXITED');break
+                self.index+=1
+                self.owner.save(f'd03-{self.label}-line-{self.index:03d}.json',{'rawBase64':base64.b64encode(line).decode()})
+                need(time.monotonic()<end,'D03_HOLDER_OBSERVATION_TIMEOUT')
+                if line.startswith((b'{',b'[')):
+                    value=json.loads(line)
+                    need(time.monotonic()<end,'D03_HOLDER_OBSERVATION_TIMEOUT')
+                    return value
         raise ValueError('D03_HOLDER_OBSERVATION_TIMEOUT')
 
     def identity(self):
