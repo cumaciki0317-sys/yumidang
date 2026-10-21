@@ -1,5 +1,6 @@
 """새 원 Auth6의 service-api 읽기만 검증한다. CLI/기본 import는 실행하지 않는다."""
 import base64
+from contextlib import contextmanager
 import hashlib
 import importlib.util
 import json
@@ -18,6 +19,8 @@ SELF = 'tests/integration/minkyu/service_profile_readonly_local.py'
 FACTORY = 'tests/integration/jonghyun/isolated_ai_factory.ts'
 POSITIVE = 'tests/integration/minkyu/ai_positive_discovery_local.py'
 SCOPE = 'LOCAL_AUTH6_SERVICE_PROFILE_READONLY_ONLY'
+CURRENT_HELPERS = tuple('tools/local/' + name + '.py' for name in
+    ('prepare_migrations', 'prepare_database', 'prepare_edge', 'prepare_current_policy'))
 EXPIRED = 'original_expired_me'
 EXPIRED_SCOPE = 'ORIGINAL_AUTH6_EXPIRED_ME_ONLY'
 SHA = re.compile('[a-f0-9]{64}\\Z')
@@ -75,7 +78,65 @@ def service_graph(repo=ROOT):
     return found
 
 
-def source_pins(expected_head=None):
+class ReviewedCurrentServiceProfile:
+    """현재 명시 SQL profile. 개수나 관측 목록을 승인으로 사용하지 않는다."""
+    def __init__(self, source_head, migration_entries_sha256, versions):
+        need(type(source_head) is str and re.fullmatch('[a-f0-9]{40}', source_head)
+             and type(migration_entries_sha256) is str and SHA.fullmatch(migration_entries_sha256)
+             and type(versions) is list and versions and versions == sorted(set(versions))
+             and all(type(v) is str and re.fullmatch('[0-9]{14}', v) for v in versions),
+             'READONLY_CURRENT_PROFILE_REVIEW')
+        self._sealed = canonical(dict(sourceHead=source_head,
+            migrationEntriesSha256=migration_entries_sha256, versions=versions))
+    def descriptor(self): return exact(self._sealed)
+
+
+@contextmanager
+def current_support(pins):
+    # lazy import도 검토된 module만 소비하도록 호출이 끝날 때까지 고정한다.
+    previous = {Path(p).stem: sys.modules.get(Path(p).stem) for p in CURRENT_HELPERS}
+    try:
+        modules = {}
+        for relative in CURRENT_HELPERS:
+            need(relative in pins, 'READONLY_CURRENT_HELPER_PIN_REQUIRED')
+            module = load(relative, pins[relative]); name = Path(relative).stem
+            sys.modules[name] = module; modules[name] = module
+        yield modules['prepare_current_policy']
+    finally:
+        for name, module in previous.items():
+            if module is None: sys.modules.pop(name, None)
+            else: sys.modules[name] = module
+
+
+def verify_current_profile(value, pins, expected_head, target_versions=None):
+    need(type(value) is dict and set(value) == {'sourceHead', 'migrationEntriesSha256', 'versions'},
+         'READONLY_CURRENT_PROFILE_REVIEW')
+    reviewed = ReviewedCurrentServiceProfile(value['sourceHead'], value['migrationEntriesSha256'], value['versions'])
+    need(reviewed.descriptor() == value and value['sourceHead'] == expected_head,
+         'READONLY_CURRENT_PROFILE_HEAD')
+    with current_support(pins) as policy:
+        history, _ = policy.inspect_reviewed_current_migrations(ROOT, expected_head, value['migrationEntriesSha256'])
+    for relative in CURRENT_HELPERS:
+        path = ROOT / relative
+        need(path.resolve() == path and not path.is_symlink() and sha(path.read_bytes()) == pins[relative],
+             'READONLY_CURRENT_HELPER_CHANGED')
+    need(subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True, timeout=15).strip()
+         == expected_head, 'READONLY_HEAD_CHANGED')
+    versions = [entry['version'] for entry in history['entries']]
+    need(versions == value['versions'] and (target_versions is None or target_versions == versions),
+         'READONLY_CURRENT_PROFILE_VERSIONS')
+    return history
+
+
+def verify_target_profile(value, target):
+    profile = value.get('currentProfile')
+    if profile is None:
+        need(len(target['versions']) == 121, 'READONLY_CURRENT121_REQUIRED')
+    else:
+        verify_current_profile(profile, value['pins'], value['sourceHead'], target['versions'])
+
+
+def source_pins(expected_head=None, current_profile=None):
     head = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True, timeout=15).strip()
     need(re.fullmatch('[a-f0-9]{40}', head) and (expected_head is None or expected_head == head), 'READONLY_HEAD_CHANGED')
     original = subprocess.check_output(['git', '-C', str(ROOT), 'show', head + ':' + POSITIVE], timeout=15)
@@ -83,6 +144,8 @@ def source_pins(expected_head=None):
     _, pins = shared.source_pins(head)
     need((ROOT / SELF).is_file(), 'READONLY_SOURCE_NOT_COMMITTED')
     additions = {**service_graph(ROOT), SELF: sha((ROOT / SELF).read_bytes())}
+    if current_profile is not None:
+        additions.update({p: sha((ROOT / p).read_bytes()) for p in CURRENT_HELPERS})
     for relative, pin in additions.items():
         try: committed = subprocess.check_output(['git', '-C', str(ROOT), 'show', head + ':' + relative], timeout=15, stderr=subprocess.DEVNULL)
         except subprocess.SubprocessError: raise ValueError('READONLY_SOURCE_NOT_COMMITTED') from None
@@ -90,6 +153,8 @@ def source_pins(expected_head=None):
         pins[relative] = pin
     need(subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True, timeout=15).strip() == head,
          'READONLY_HEAD_CHANGED')
+    if current_profile is not None:
+        verify_current_profile(current_profile, pins, head)
     return head, pins
 
 
@@ -97,7 +162,7 @@ class ReviewedServiceProfileReadonly:
     """별도 root 검토 코드만 생성한다. JSON flags/ports/skip 옵션을 받지 않는다."""
     def __init__(self, decision_id, root, source_head, pins, binding_sha256, auth6_receipt,
                  auth6_receipt_sha256, capsule_root, node_path, node_sha256, scope_id,
-                 daemon_id, runtime_identity_ref):
+                 daemon_id, runtime_identity_ref, current_profile=None):
         root, capsule, receipt, node = map(Path, (root, capsule_root, auth6_receipt, node_path))
         need(type(decision_id) is str and re.fullmatch('[A-Za-z0-9_.:-]{1,128}', decision_id), 'READONLY_REVIEW_ID')
         need(root.is_absolute() and root.resolve() == root and not root.is_relative_to(ROOT), 'READONLY_PRIVATE_ROOT')
@@ -117,10 +182,17 @@ class ReviewedServiceProfileReadonly:
              and Path(runtime_identity_ref['path']) == root / 'service-profile-runtime-identity.json'
              and type(runtime_identity_ref['sha256']) is str and SHA.fullmatch(runtime_identity_ref['sha256']),
              'READONLY_EXPLICIT_RUNTIME_IDENTITY')
+        if current_profile is not None:
+            need(type(current_profile) is ReviewedCurrentServiceProfile, 'READONLY_CURRENT_TYPED_REVIEW_REQUIRED')
+            profile = current_profile.descriptor()
+            need(profile['sourceHead'] == source_head and set(CURRENT_HELPERS) <= set(pins),
+                 'READONLY_CURRENT_PROFILE_HEAD_OR_PINS')
         self._sealed = canonical(dict(scope=SCOPE, decisionId=decision_id, root=str(root), sourceHead=source_head,
             pins=pins, bindingSha256=binding_sha256, auth6Receipt=str(receipt), auth6ReceiptSha256=auth6_receipt_sha256,
             capsuleRoot=str(capsule), nodePath=str(node), nodeSha256=node_sha256, scopeId=scope_id,
             daemonId=daemon_id, runtimeIdentity=runtime_identity_ref))
+        if current_profile is not None:
+            self._sealed = canonical({**exact(self._sealed), 'currentProfile': profile})
 
     def descriptor(self): return exact(self._sealed)
 
@@ -428,7 +500,8 @@ class ServiceProfileReadonlyRun:
     def __init__(self, reviewed):
         need(type(reviewed) is ReviewedServiceProfileReadonly, 'READONLY_TYPED_REVIEW_REQUIRED')
         self.reviewed = reviewed; self.value = reviewed.descriptor(); self.root = Path(self.value['root'])
-        need(source_pins(self.value['sourceHead'])[1] == self.value['pins'], 'READONLY_SOURCE_CHANGED')
+        need((source_pins(self.value['sourceHead'], self.value['currentProfile']) if 'currentProfile' in self.value
+              else source_pins(self.value['sourceHead']))[1] == self.value['pins'], 'READONLY_SOURCE_CHANGED')
         pins = self.value['pins']; sys.path.insert(0, str(ROOT / 'tools/local'))
         self.shared = load(POSITIVE, pins[POSITIVE])
         self.ai = load('tests/integration/jonghyun/isolated_ai_contracts.py', pins['tests/integration/jonghyun/isolated_ai_contracts.py'])
@@ -452,7 +525,8 @@ class ServiceProfileReadonlyRun:
     def active(self):
         need(not self.failures and not self.done.is_set() and time.monotonic() < self.deadline, 'READONLY_LIVE_GUARD')
     def fixed_identity(self):
-        need(source_pins(self.value['sourceHead'])[1] == self.value['pins'], 'READONLY_SOURCE_CHANGED')
+        need((source_pins(self.value['sourceHead'], self.value['currentProfile']) if 'currentProfile' in self.value
+              else source_pins(self.value['sourceHead']))[1] == self.value['pins'], 'READONLY_SOURCE_CHANGED')
         if self.r is None: return
         need(self.r.call(['info', '--format', '{{.ID}}']) == self.value['daemonId'], 'READONLY_DAEMON_CHANGED')
         self.r.signed_identity()
@@ -479,7 +553,7 @@ class ServiceProfileReadonlyRun:
         binding, receipt = exact(binding_raw), exact(receipt_raw)
         verify_auth6_receipt(receipt,binding_raw,self.value['auth6Receipt'])
         target = self.ai.signed_prepared_target(self.root)
-        need(len(target['versions']) == 121, 'READONLY_CURRENT121_REQUIRED')
+        verify_target_profile(self.value, target)
         self.ai.validate_signed_binding(binding, self.root, target)
         self.bind_ports(binding,binding_raw,target)
         need(not self.evidence.exists() and not self.evidence.is_symlink(), 'READONLY_EVIDENCE_NO_REPLAY')
@@ -603,7 +677,7 @@ class OriginalExpiredMeRun(ServiceProfileReadonlyRun):
         active,binding,raw,fixture,final,refs=original_active_evidence(self.expired_review,self.read,self.shared)
         expired_metadata(binding,int(time.time()))
         need(sha(self.read(self.root/'database-manifest.json'))==binding['databaseManifestSha256'],'EXPIRED_SOURCE_MANIFEST_CHANGED')
-        target=self.ai.signed_prepared_target(self.root);need(len(target['versions'])==121,'READONLY_CURRENT121_REQUIRED')
+        target=self.ai.signed_prepared_target(self.root);verify_target_profile(self.value,target)
         need(active['database']=={'id':target['id'],'project':target['project']},'EXPIRED_ORIGINAL_DATABASE_CHANGED')
         self.active_receipt=active;self.active_fixture=fixture;self.active_final=final;self.active_refs=refs
         self.bind_ports(binding,raw,target)

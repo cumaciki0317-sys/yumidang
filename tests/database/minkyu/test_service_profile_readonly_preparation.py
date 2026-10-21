@@ -339,6 +339,94 @@ class ServiceReadonlyPreparation(unittest.TestCase):
         with self.assertRaises(ValueError):readonly.prepare_original_expired_me(active,raw,raw+b' ',claims,current,now_epoch=4600)
         with self.assertRaises(ValueError):readonly.prepare_original_expired_me(active,raw,raw,claims,current,now_epoch=4599)
 
+    def current_fixture(self):
+        head = subprocess.check_output(['git', '-C', str(REPO), 'rev-parse', 'HEAD'], text=True).strip()
+        pins = {p: readonly.sha((REPO / p).read_bytes()) for p in readonly.CURRENT_HELPERS}
+        with mock.patch.object(readonly, 'ROOT', REPO), readonly.current_support(pins):
+            from prepare_migrations import inspect_migrations
+            entries = inspect_migrations(REPO)['migrations']
+        return head, pins, entries, readonly.ReviewedCurrentServiceProfile(head,
+            readonly.sha(readonly.canonical(entries)), [e['version'] for e in entries])
+
+    def test_current_profile_real_pinned_helpers_reject_poisoned_late_import_and_restore_modules(self):
+        head, pins, entries, profile = self.current_fixture()
+        poison = SimpleNamespace(inspect_migrations=mock.Mock(side_effect=AssertionError('UNPINNED_IMPORT')))
+        with mock.patch.dict(sys.modules, {'prepare_migrations': poison}), mock.patch.object(readonly, 'ROOT', REPO):
+            result = readonly.verify_current_profile(profile.descriptor(), pins, head, [e['version'] for e in entries])
+            self.assertIs(sys.modules['prepare_migrations'], poison)
+        poison.inspect_migrations.assert_not_called()
+        self.assertEqual(result['entries'], entries)
+        # 잘못된 전체 배열 SHA·HEAD·같은 개수의 다른 versions도 승인하지 않는다.
+        for changes in [dict(migrationEntriesSha256='0'*64), dict(sourceHead='0'*40),
+                        dict(versions=[e['version'] for e in entries][:-1] + ['99999999999999'])]:
+            value = {**profile.descriptor(), **changes}
+            with self.subTest(changes=changes), mock.patch.object(readonly, 'ROOT', REPO), self.assertRaises(ValueError):
+                readonly.verify_current_profile(value, pins, head)
+        with mock.patch.object(readonly, 'ROOT', REPO), self.assertRaisesRegex(ValueError, 'VERSIONS'):
+            readonly.verify_current_profile(profile.descriptor(), pins, head, list(reversed(profile.descriptor()['versions'])))
+
+    def test_current_helper_missing_or_changed_refused_before_inspection(self):
+        head, pins, _, profile = self.current_fixture()
+        for bad in [{k:v for k,v in pins.items() if k != readonly.CURRENT_HELPERS[0]},
+                    {**pins, readonly.CURRENT_HELPERS[-1]: '0'*64}]:
+            with self.subTest(pins=bad), mock.patch.object(readonly, 'ROOT', REPO), self.assertRaises(ValueError):
+                readonly.verify_current_profile(profile.descriptor(), bad, head)
+
+    def test_current_profile_is_typed_sealed_and_inherited_by_original_expired_review(self):
+        head, pins, _, profile = self.current_fixture()
+        pins.update({p:'a'*64 for p in (readonly.SELF, readonly.FACTORY, readonly.POSITIVE)})
+        review = self.make_review(source_head=head, pins=pins, current_profile=profile)
+        self.assertEqual(review.descriptor()['currentProfile'], profile.descriptor())
+        old = self.make_review()
+        self.assertNotIn('currentProfile', old.descriptor())
+        expired = readonly.ReviewedOriginalExpiredMe('same-current-profile', review, {
+            'path': str(self.root / ('service-profile-readonly-'+'c'*32) / 'service-readonly-receipt.json'), 'sha256':'a'*64})
+        self.assertIs(expired.active_review, review)
+        for change in [dict(current_profile=profile.descriptor()), dict(source_head='0'*40),
+                       dict(pins={p:'a'*64 for p in (readonly.SELF, readonly.FACTORY, readonly.POSITIVE)})]:
+            args=dict(source_head=head, pins=pins, current_profile=profile); args.update(change)
+            with self.subTest(change=change), self.assertRaises(ValueError): self.make_review(**args)
+
+    def test_current_and_historical_target_lanes_are_consumed_by_both_binds(self):
+        readonly.verify_target_profile({}, {'versions': list(range(121))})
+        with self.assertRaisesRegex(ValueError, 'CURRENT121'):
+            readonly.verify_target_profile({}, {'versions': list(range(123))})
+        head,pins,entries,profile=self.current_fixture()
+        value={'currentProfile':profile.descriptor(),'pins':pins,'sourceHead':head}
+        with mock.patch.object(readonly,'ROOT',REPO):
+            readonly.verify_target_profile(value, {'versions':[e['version'] for e in entries]})
+            with self.assertRaisesRegex(ValueError, 'VERSIONS'):
+                readonly.verify_target_profile(value, {'versions':list(range(len(entries)))})
+
+    def test_current_active_bind_rejects_same_count_drift_before_ports_then_consumes_exact_versions(self):
+        head,pins,entries,profile=self.current_fixture()
+        run,port,_,binding,target=self.fake_bind_run()
+        run.value.update(sourceHead=head,pins=pins,currentProfile=profile.descriptor())
+        target['versions']=[e['version'] for e in entries]
+        correct=list(target['versions']);target['versions'][-1]='99999999999999'
+        with mock.patch.object(readonly,'ROOT',REPO),self.assertRaisesRegex(ValueError,'VERSIONS'):run.bind()
+        run.ai.validate_signed_binding.assert_not_called();port.memory_kib.assert_not_called()
+        port.closed_controls.assert_not_called();self.assertFalse(run.evidence.exists())
+        target['versions']=correct
+        with mock.patch.object(readonly,'ROOT',REPO):self.assertEqual(run.bind(),target)
+        run.ai.validate_signed_binding.assert_called_once_with(binding,self.root,target)
+        port.closed_controls.assert_called_once()
+
+    @unittest.skipUnless(shutil.which('node'),'Node 필요')
+    def test_current_original_expired_bind_rejects_profile_drift_before_ports(self):
+        head,pins,entries,profile=self.current_fixture()
+        review,_,_=self.active_packet();run,calls=self.genuine_expired_run(review)
+        run.value.update(sourceHead=head,pins=pins,currentProfile=profile.descriptor())
+        target=run.ai.signed_prepared_target.return_value
+        target['versions']=[e['version'] for e in entries]
+        correct=list(target['versions']);target['versions'][-1]='99999999999999'
+        with mock.patch.object(readonly,'ROOT',REPO),self.assertRaisesRegex(ValueError,'VERSIONS'):run.bind()
+        self.assertEqual(calls,[]);self.assertFalse(run.evidence.exists())
+        target['versions']=correct
+        with mock.patch.object(readonly,'ROOT',REPO):run.bind()
+        self.assertEqual(calls,['first-fixed-read-sql'])
+        run.ai.validate_signed_binding.assert_not_called()
+
     def make_review(self, **changes):
         data=dict(decision_id='offline-readonly-test',root=str(self.root),source_head='a'*40,
             pins={k:'a'*64 for k in (readonly.SELF,readonly.FACTORY,readonly.POSITIVE)},binding_sha256='a'*64,
