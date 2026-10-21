@@ -266,6 +266,8 @@ def inspect_current_migrations(repo):
 CURRENT_EXTENSION_REVIEWED = {
     'backend/supabase/migrations/20261020100000_ai_independent_consents.sql':
         '0dbf18e2006860c47e91ba61c2161e7d2b88ac1adb36801a9ddffd616494e9fa',
+    'backend/supabase/migrations/20261020130000_post_private_events.sql':
+        'ff97cf33163ece13bae8373b638afbc6985ab92592480048d0ab02f1bb9a87b7',
 }
 
 

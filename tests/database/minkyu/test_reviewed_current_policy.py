@@ -54,6 +54,19 @@ class ReviewedCurrentPolicyTests(unittest.TestCase):
         with self.assertRaises(current.PreparationError):
             current.inspect_current_migrations(self.repo)
 
+    def test_two_explicit_extensions_keep_full_list_and_reject_third(self):
+        second=Path('backend/supabase/migrations/20261020130000_post_private_events.sql')
+        (self.repo/second).write_text('begin; select 99998; commit;\n')
+        current.CURRENT_EXTENSION_REVIEWED[str(second)]=hashlib.sha256((self.repo/second).read_bytes()).hexdigest()
+        self.commit();self.head=current.git(self.repo,'rev-parse','HEAD').decode().strip()
+        entries=prepare_migrations.inspect_migrations(self.repo)['migrations']
+        self.pin=hashlib.sha256(json.dumps(entries,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+        history,payloads=self.inspect()
+        self.assertEqual(len(history['entries']),123)
+        self.assertEqual(payloads[second],(self.repo/second).read_bytes())
+        (self.repo/'backend/supabase/migrations/20261021100000_unreviewed.sql').write_text('select 99997;')
+        with self.assertRaisesRegex(current.PreparationError,'UNREVIEWED_SQL_PRESENT'):self.inspect()
+
     def test_both_explicit_review_values_required(self):
         for head, pin in ((None,self.pin),(self.head,None),('main',self.pin)):
             with self.assertRaises(current.PreparationError):
