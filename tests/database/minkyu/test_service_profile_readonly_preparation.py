@@ -346,7 +346,7 @@ class ServiceReadonlyPreparation(unittest.TestCase):
             from prepare_migrations import inspect_migrations
             entries = inspect_migrations(REPO)['migrations']
         return head, pins, entries, readonly.ReviewedCurrentServiceProfile(head,
-            readonly.sha(readonly.canonical(entries)), [e['version'] for e in entries])
+            readonly.sha(readonly.canonical(entries)), [e['version'] for e in entries], ['auth.users','private.synthetic'], readonly.sha(readonly.canonical(['auth.users','private.synthetic'])))
 
     def test_current_profile_real_pinned_helpers_reject_poisoned_late_import_and_restore_modules(self):
         head, pins, entries, profile = self.current_fixture()
@@ -426,6 +426,30 @@ class ServiceReadonlyPreparation(unittest.TestCase):
         with mock.patch.object(readonly,'ROOT',REPO):run.bind()
         self.assertEqual(calls,['first-fixed-read-sql'])
         run.ai.validate_signed_binding.assert_not_called()
+
+    def test_current_exact_table_scope_refuses_same_count_substitution_and_old_profile_missing_tables(self):
+        head,pins,_,profile=self.current_fixture();value={'currentProfile':profile.descriptor()}
+        rows={t:{} for t in profile.descriptor()['expectedTables']}
+        readonly.verify_snapshot_tables(value,{'rows':rows})
+        for altered in [{**rows,'private.extra':{}},{k:v for k,v in rows.items() if k!='auth.users'},
+                        {'auth.users':{},'private.replacement':{}}]:
+            with self.subTest(altered=altered),self.assertRaisesRegex(ValueError,'SNAPSHOT_TABLES'):
+                readonly.verify_snapshot_tables(value,{'rows':altered})
+        bad=profile.descriptor();bad.pop('expectedTables')
+        with self.assertRaisesRegex(ValueError,'PROFILE_REVIEW'):readonly.verify_current_profile(bad,pins,head)
+        with self.assertRaisesRegex(ValueError,'TABLE_PROFILE'):
+            readonly.validate_table_profile(profile.descriptor()['expectedTables'],'0'*64)
+        # 기존 source의178 bag 조건은 여전히 독립적으로 유지한다.
+        readonly.verify_snapshot_tables({}, {'rows':{'private.t'+str(i):{} for i in range(178)}})
+        with self.assertRaises(ValueError):readonly.verify_snapshot_tables({}, {'rows':rows})
+
+    @unittest.skipUnless(shutil.which('node'),'Node 필요')
+    def test_current_original_active_evidence_uses_same_approved_full_table_scope(self):
+        review,writer,final=self.active_packet(current_tables=True)
+        with mock.patch.object(readonly,'ROOT',REPO):
+            _,_,_,_,raw,_=readonly.original_active_evidence(review,writer.private,self.shared)
+        self.assertEqual(readonly.exact(raw),final)
+        self.assertEqual(sorted(final['rows']),review.active_review.descriptor()['currentProfile']['expectedTables'])
 
     def make_review(self, **changes):
         data=dict(decision_id='offline-readonly-test',root=str(self.root),source_head='a'*40,
@@ -601,7 +625,7 @@ class ServiceReadonlyPreparation(unittest.TestCase):
             after=copy.deepcopy(before);mutate(after)
             with self.subTest(mutate=mutate),self.assertRaises(ValueError):self.shared.unchanged_except(before,after,set())
 
-    def active_packet(self):
+    def active_packet(self,current_tables=False):
         """원자료 연결 회귀용 합성 과거 영수증. 실제 Auth/DB 증거로 사용하지 않는다."""
         parent=self.root;scope='c'*32;evidence=parent/('service-profile-readonly-'+scope);evidence.mkdir(mode=0o700)
         _,raw,claims,_=self.expired_fixture();binding=readonly.exact(raw);f=fixture();f['accounts']=binding['accounts']
@@ -624,8 +648,14 @@ class ServiceReadonlyPreparation(unittest.TestCase):
         receipt_sha=save(receipt_path,auth6)
         pins={k:'a'*64 for k in (readonly.SELF,readonly.FACTORY,readonly.POSITIVE,
             'tests/integration/jonghyun/isolated_ai_contracts.py','tools/local/prepare_auth_negative.py')}
+        options={}
+        if current_tables:
+            tables=sorted(['private.t'+str(i) for i in range(176)]+['auth.users',
+                'private.ai_account_budget_reservations','private.post_manual_events','private.event_source_display'])
+            options['current_profile']=readonly.ReviewedCurrentServiceProfile('a'*40,'a'*64,['20261020100000'],tables,readonly.sha(readonly.canonical(tables)))
+            pins.update({p:'a'*64 for p in readonly.CURRENT_HELPERS})
         review=self.make_review(binding_sha256=readonly.sha(binding_raw),auth6_receipt=str(receipt_path),pins=pins,
-            auth6_receipt_sha256=receipt_sha,runtime_identity_ref=runtime_ref)
+            auth6_receipt_sha256=receipt_sha,runtime_identity_ref=runtime_ref,**options)
         v=review.descriptor();f.update(scopeId=scope,codeRoot=v['capsuleRoot'])
         fixture_path=evidence/'service-readonly-factory-private.json';fixture_sha=save(fixture_path,f)
         proof_path=evidence/'service-readonly-factory-proof.json';proof_sha=save(proof_path,proof)
@@ -637,6 +667,7 @@ class ServiceReadonlyPreparation(unittest.TestCase):
         final={'rows':{'private.t'+str(i):{'a'*64:22}for i in range(176)},
             'authoritySha256':'b'*64,'constraintsSha256':'c'*64,'catalogSha256':'d'*64}
         final['rows'].update({'auth.users':{'e'*64:6},'private.ai_account_budget_reservations':{'f'*64:2}})
+        if current_tables: final['rows'].update({'private.post_manual_events':{},'private.event_source_display':{}})
         snapshot_sha=save(evidence/'before-private.json',final);save(evidence/'final-private.json',final)
         auth_sha=readonly.sha(readonly.canonical({'auth.users':{'e'*64:6}}))
         active={'scope':readonly.SCOPE,'status':'PASS','fixedFailures':[],'root':str(parent),'sourceHead':v['sourceHead'],

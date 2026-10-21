@@ -9,11 +9,12 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import uuid
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -86,6 +87,100 @@ class ProofContract(unittest.TestCase):
             f,r,d = golden(); change(f,r,d)
             with self.subTest(change=changes.index(change)), self.assertRaises((ValueError, KeyError)):
                 positive.verify_database(f,r,d)
+
+    def current_fixture(self):
+        head = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
+        pins = {p:positive.sha((ROOT/p).read_bytes()) for p in (positive.READONLY_PROFILE,*positive.CURRENT_HELPERS)}
+        path=ROOT/positive.READONLY_PROFILE
+        module=importlib.util.module_from_spec(importlib.util.spec_from_loader('positive_profile_test',loader=None))
+        module.__file__=str(path);exec(compile(path.read_bytes(),str(path),'exec'),module.__dict__)
+        with module.current_support(pins):
+            from prepare_migrations import inspect_migrations
+            entries=inspect_migrations(ROOT)['migrations']
+        profile=positive.ReviewedCurrentPositiveProfile(head,positive.sha(positive.canonical(entries)),
+            [e['version'] for e in entries], ['auth.users','private.synthetic'], positive.sha(positive.canonical(['auth.users','private.synthetic'])))
+        return head,pins,entries,profile
+
+    def test_current_profile_consumes_real_pinned_inspector_without_recursive_source_pins_or_poison(self):
+        head,pins,entries,profile=self.current_fixture()
+        poison=SimpleNamespace(inspect_migrations=Mock(side_effect=AssertionError('UNPINNED_IMPORT')))
+        with patch.dict(sys.modules,{'prepare_migrations':poison}), patch.object(positive,'source_pins',side_effect=AssertionError('RECURSIVE_SOURCE_PINS')):
+            result=positive.verify_current_profile(profile.descriptor(),pins,head,profile.descriptor()['versions'])
+            self.assertIs(sys.modules['prepare_migrations'],poison)
+        poison.inspect_migrations.assert_not_called();self.assertEqual(result['entries'],entries)
+        for changed in [dict(sourceHead='0'*40),dict(migrationEntriesSha256='0'*64),
+                        dict(versions=profile.descriptor()['versions'][:-1]+['99999999999999'])]:
+            with self.subTest(changed=changed),self.assertRaises(ValueError):
+                positive.verify_current_profile({**profile.descriptor(),**changed},pins,head)
+
+    def test_current_inspector_or_helper_pin_change_is_refused(self):
+        head,pins,_,profile=self.current_fixture()
+        for path in (positive.READONLY_PROFILE,*positive.CURRENT_HELPERS):
+            for bad in [{**pins,path:'0'*64},{k:v for k,v in pins.items() if k!=path}]:
+                with self.subTest(path=path),self.assertRaises(ValueError):
+                    positive.verify_current_profile(profile.descriptor(),bad,head)
+
+    def test_current_typed_review_seals_profile_and_historical_descriptor_unchanged(self):
+        head,pins,_,profile=self.current_fixture()
+        with tempfile.TemporaryDirectory(prefix='positive-profile-review-') as directory:
+            root=Path(directory).resolve();receipt=root/('auth-provision-'+'b'*32)/'receipt.json'
+            args=dict(decision_id='offline-current',root=root,source_head=head,
+                pins={**pins,positive.SELF:'a'*64,positive.FACTORY:'a'*64},binding_sha256='a'*64,
+                auth6_receipt=receipt,auth6_receipt_sha256='a'*64,
+                capsule_root='/private/tmp/positive-reviewed-capsule/source',node_path='/usr/bin/node',
+                node_sha256='a'*64,scope_id='a'*32,daemon_id=str(uuid.UUID(int=10)))
+            # 이 순수 생성 회귀는 node 실행·실제 설치 경로 검증 범위를 주장하지 않는다.
+            with patch.object(positive.Path,'resolve',lambda p:p):
+                old=positive.ReviewedPositiveDiscovery(**args)
+                new=positive.ReviewedPositiveDiscovery(**args,current_profile=profile)
+                self.assertNotIn('currentProfile',old.descriptor())
+                self.assertEqual(new.descriptor()['currentProfile'],profile.descriptor())
+                for change in [dict(current_profile=profile.descriptor()),dict(source_head='0'*40),
+                               dict(pins={positive.SELF:'a'*64,positive.FACTORY:'a'*64})]:
+                    params={**args,'current_profile':profile,**change}
+                    with self.subTest(change=change),self.assertRaises(ValueError):positive.ReviewedPositiveDiscovery(**params)
+
+    def test_current_profile_target_same_count_drift_is_rejected_before_any_docker(self):
+        head,pins,entries,profile=self.current_fixture()
+        run=object.__new__(positive.PositiveRun);run.root=Path('/private/tmp/positive-offline-bind')
+        receipt_path=run.root/('auth-provision-'+'b'*32)/'receipt.json'
+        raw=positive.canonical({'accounts':[]})
+        receipt=positive.canonical(dict(status='PASS_LOCAL_AUTH6_PROVISION_ONLY',accounts=6,
+            bindingSha256=positive.sha(raw),actualGoTrueAndDatabaseSessions=True,originalRowsPreserved=True,
+            actualNaver='NOT_RUN',actualAI22AI23AI24='NOT_RUN',authAccountsRetained=True,
+            creationReceiptRoot=str(receipt_path.parent)))
+        run.value=dict(bindingSha256=positive.sha(raw),auth6Receipt=str(receipt_path),
+            auth6ReceiptSha256=positive.sha(receipt),sourceHead=head,pins=pins,currentProfile=profile.descriptor())
+        run.read=lambda p:receipt if str(p)==str(receipt_path) else raw
+        target={'versions':[e['version'] for e in entries],'context':'wrong-offline-context','host':'offline'}
+        run.ai=SimpleNamespace(signed_prepared_target=Mock(return_value=target))
+        run.private_module=SimpleNamespace(CONTEXT='expected',HOST='expected')
+        correct=list(target['versions']);target['versions'][-1]='99999999999999'
+        real_run=subprocess.run
+        def no_docker(args,**kwargs):
+            if args[0] != 'git': raise AssertionError('DOCKER_NOT_ALLOWED')
+            return real_run(args,**kwargs)
+        with patch.object(positive.subprocess,'run',side_effect=no_docker):
+            with self.assertRaisesRegex(ValueError,'VERSIONS'):run.bind()
+            target['versions']=correct
+            with self.assertRaisesRegex(ValueError,'FIXED_MINKYU_CONTEXT'):run.bind()
+        positive.verify_target_profile({}, {'versions':list(range(121))})
+        with self.assertRaisesRegex(ValueError,'CURRENT121'):
+            positive.verify_target_profile({}, {'versions':correct})
+
+    def test_current_exact_table_scope_preserves_all_bags_and_authority_without_count_promotion(self):
+        _,_,_,profile=self.current_fixture();tables=profile.descriptor()['expectedTables']
+        before={'rows':{t:{'a'*64:2} for t in tables},'authoritySha256':'b'*64}
+        positive.unchanged_except(before,copy.deepcopy(before),set(),approved_tables=tables)
+        for after in [dict(before,rows={'auth.users':{'a'*64:2},'private.replacement':{}}),
+                      dict(before,rows={**before['rows'],'private.extra':{}}),
+                      dict(before,authoritySha256='c'*64),
+                      dict(before,rows={**before['rows'],'auth.users':{'a'*64:1}})]:
+            with self.subTest(after=after),self.assertRaises(ValueError):
+                positive.unchanged_except(before,after,set(),approved_tables=tables)
+        with self.assertRaises(ValueError):positive.unchanged_except(before,before,set())
+        bad=profile.descriptor();bad.pop('expectedTables')
+        with self.assertRaisesRegex(ValueError,'PROFILE_REVIEW'):positive.verify_current_profile(bad,{},'a'*40)
 
     def test_duplicate_and_nonfinite_json_rejected(self):
         for raw in ['{"a":1,"a":2}', '{"a":NaN}']:

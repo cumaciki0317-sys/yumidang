@@ -78,16 +78,38 @@ def service_graph(repo=ROOT):
     return found
 
 
+def validate_table_profile(tables, digest):
+    need(type(tables) is list and tables
+         and all(type(t) is str and re.fullmatch(r'(auth|public|private|storage|cron|vault)\.[a-z_][a-z_0-9]*', t) for t in tables)
+         and tables == sorted(set(tables)) and type(digest) is str and SHA.fullmatch(digest)
+         and sha(canonical(tables)) == digest, 'READONLY_EXACT_TABLE_PROFILE')
+    return tables
+
+
+def approved_tables(value):
+    if 'currentProfile' not in value: return None
+    profile = value['currentProfile']
+    return validate_table_profile(profile['expectedTables'], profile['fullTableSetSha256'])
+
+
+def verify_snapshot_tables(value, snapshot):
+    tables = approved_tables(value)
+    need(type(snapshot['rows']) is dict and (len(snapshot['rows']) == 178 if tables is None
+         else sorted(snapshot['rows']) == tables), 'READONLY_EXACT_SNAPSHOT_TABLES')
+
+
 class ReviewedCurrentServiceProfile:
     """현재 명시 SQL profile. 개수나 관측 목록을 승인으로 사용하지 않는다."""
-    def __init__(self, source_head, migration_entries_sha256, versions):
+    def __init__(self, source_head, migration_entries_sha256, versions, expected_tables, full_table_set_sha256):
         need(type(source_head) is str and re.fullmatch('[a-f0-9]{40}', source_head)
              and type(migration_entries_sha256) is str and SHA.fullmatch(migration_entries_sha256)
              and type(versions) is list and versions and versions == sorted(set(versions))
              and all(type(v) is str and re.fullmatch('[0-9]{14}', v) for v in versions),
              'READONLY_CURRENT_PROFILE_REVIEW')
+        validate_table_profile(expected_tables, full_table_set_sha256)
         self._sealed = canonical(dict(sourceHead=source_head,
-            migrationEntriesSha256=migration_entries_sha256, versions=versions))
+            migrationEntriesSha256=migration_entries_sha256, versions=versions,
+            expectedTables=expected_tables, fullTableSetSha256=full_table_set_sha256))
     def descriptor(self): return exact(self._sealed)
 
 
@@ -109,9 +131,10 @@ def current_support(pins):
 
 
 def verify_current_profile(value, pins, expected_head, target_versions=None):
-    need(type(value) is dict and set(value) == {'sourceHead', 'migrationEntriesSha256', 'versions'},
+    need(type(value) is dict and set(value) == {'sourceHead', 'migrationEntriesSha256', 'versions', 'expectedTables', 'fullTableSetSha256'},
          'READONLY_CURRENT_PROFILE_REVIEW')
-    reviewed = ReviewedCurrentServiceProfile(value['sourceHead'], value['migrationEntriesSha256'], value['versions'])
+    reviewed = ReviewedCurrentServiceProfile(value['sourceHead'], value['migrationEntriesSha256'], value['versions'],
+        value['expectedTables'], value['fullTableSetSha256'])
     need(reviewed.descriptor() == value and value['sourceHead'] == expected_head,
          'READONLY_CURRENT_PROFILE_HEAD')
     with current_support(pins) as policy:
@@ -392,8 +415,11 @@ def original_active_evidence(reviewed, reader, shared):
     before_raw=read(evidence/'before-private.json');final_raw=read(evidence/'final-private.json')
     need(sha(before_raw)==active['beforeSnapshotSha256'] and sha(final_raw)==active['finalSnapshotSha256'],
         'EXPIRED_ACTIVE_SNAPSHOT_CHANGED')
-    before,final=exact(before_raw),exact(final_raw);shared.unchanged_except(before,final,set())
-    need(type(final['rows']) is dict and len(final['rows'])==178,'EXPIRED_ACTIVE_FULL178_REQUIRED')
+    before,final=exact(before_raw),exact(final_raw)
+    tables=approved_tables(v)
+    if tables is None: shared.unchanged_except(before,final,set())
+    else: shared.unchanged_except(before,final,set(),approved_tables=tables)
+    verify_snapshot_tables(v,final)
     auth_sha=sha(canonical({k:b for k,b in final['rows'].items() if k.startswith('auth.')}))
     need(active['authRowsSha256']==active['banRevokeSha256']==auth_sha
         and active['banRevokeScope']=='FULL_AUTH_ROW_BAGS_INCLUDE_USER_BAN_AND_SESSION_ROWS','EXPIRED_ACTIVE_AUTH_SCOPE_CHANGED')
@@ -582,7 +608,7 @@ class ServiceProfileReadonlyRun:
     def snapshot(self):
         self.fixed_identity()
         need(self.port.history() == {'method': 'SUPABASE_DB_HISTORY', 'native': 'NOT_RUN'}, 'READONLY_HISTORY_CHANGED')
-        value = self.ai.lcp_snapshot(self.port.snapshot()); need(len(value['rows']) == 178, 'READONLY_FULL178_REQUIRED')
+        value = self.ai.lcp_snapshot(self.port.snapshot()); verify_snapshot_tables(self.value,value)
         self.fixed_identity(); return value
     def prepare_fixture(self):
         self.before = self.snapshot(); self.save('before-private.json', self.before)
@@ -738,7 +764,9 @@ def execute_run(run):
             need(run.child is None, 'READONLY_FINAL_CAPTURE_CHILD_NOT_CLOSED')
             if run.before is not None:
                 final = run.snapshot(); run.save('final-private.json', final)
-                run.shared.unchanged_except(run.before, final, set())
+                tables=approved_tables(run.value)
+                if tables is None: run.shared.unchanged_except(run.before, final, set())
+                else: run.shared.unchanged_except(run.before, final, set(), approved_tables=tables)
                 for ref in (run.private_response_refs or {}).values():
                     need(sha(run.read(ref['path'])) == ref['sha256'], 'READONLY_FINAL_RAW_RESPONSE_CHANGED')
                 if run.factory_proof:

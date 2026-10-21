@@ -18,6 +18,9 @@ import uuid
 ROOT = Path(__file__).resolve().parents[3]
 SELF = 'tests/integration/minkyu/ai_positive_discovery_local.py'
 FACTORY = 'tests/integration/jonghyun/isolated_ai_factory.ts'
+READONLY_PROFILE = 'tests/integration/minkyu/service_profile_readonly_local.py'
+CURRENT_HELPERS = tuple('tools/local/' + name + '.py' for name in
+    ('prepare_migrations', 'prepare_database', 'prepare_edge', 'prepare_current_policy'))
 SCOPE = 'SIGNED_POSITIVE_DISCOVERY_ONLY'
 CASE_TASKS = {'semantic': ['intent', 'preference_match', 'preference_match', 'explanation'],
     'judgment_failure': ['intent', 'preference_match'], 'output_privacy': ['intent'],
@@ -45,7 +48,61 @@ def canonical(value): return json.dumps(value, sort_keys=True, separators=(',', 
 def sha(raw): return hashlib.sha256(raw).hexdigest()
 
 
-def source_pins(expected_head=None):
+def valid_tables(tables):
+    return (type(tables) is list and bool(tables)
+        and all(type(t) is str and re.fullmatch(r'(auth|public|private|storage|cron|vault)\.[a-z_][a-z_0-9]*', t) for t in tables)
+        and tables == sorted(set(tables)))
+
+
+def approved_tables(value):
+    if 'currentProfile' not in value: return None
+    profile=value['currentProfile'];tables=profile['expectedTables']
+    require(valid_tables(tables) and sha(canonical(tables)) == profile['fullTableSetSha256'], 'POSITIVE_EXACT_TABLE_PROFILE')
+    return tables
+
+
+class ReviewedCurrentPositiveProfile:
+    """정확한 명시 profile을 검토한다. 실행 대상의 개수로 승인하지 않는다."""
+    def __init__(self, source_head, migration_entries_sha256, versions, expected_tables, full_table_set_sha256):
+        require(type(source_head) is str and re.fullmatch('[a-f0-9]{40}', source_head)
+                and type(migration_entries_sha256) is str and re.fullmatch('[a-f0-9]{64}', migration_entries_sha256)
+                and type(versions) is list and versions
+                and all(type(v) is str and re.fullmatch('[0-9]{14}', v) for v in versions)
+                and versions == sorted(set(versions)), 'POSITIVE_CURRENT_PROFILE_REVIEW')
+        require(valid_tables(expected_tables) and type(full_table_set_sha256) is str
+                and sha(canonical(expected_tables)) == full_table_set_sha256, 'POSITIVE_EXACT_TABLE_PROFILE')
+        self._sealed = canonical(dict(sourceHead=source_head,
+            migrationEntriesSha256=migration_entries_sha256, versions=versions,
+            expectedTables=expected_tables, fullTableSetSha256=full_table_set_sha256))
+    def descriptor(self): return raw_json(self._sealed)
+
+
+def verify_current_profile(profile, pins, head, versions=None):
+    # readonly.source_pins는 호출하지 않는다. positive와의 순환 source 검사 없이
+    # 고정된 공통 검토 inspector만 소비하고, 그 lazy helper closure도 공통 코드가 묶는다.
+    require(type(profile) is dict and set(profile) == {'sourceHead','migrationEntriesSha256','versions','expectedTables','fullTableSetSha256'},
+            'POSITIVE_CURRENT_PROFILE_REVIEW')
+    path = ROOT / READONLY_PROFILE; raw = path.read_bytes()
+    require(READONLY_PROFILE in pins and path.resolve() == path and not path.is_symlink()
+            and sha(raw) == pins[READONLY_PROFILE], 'POSITIVE_CURRENT_INSPECTOR_CHANGED')
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader('positive_current_inspector', loader=None))
+    module.__file__ = str(path)
+    exec(compile(raw, str(path), 'exec'), module.__dict__)
+    require(tuple(module.CURRENT_HELPERS) == CURRENT_HELPERS, 'POSITIVE_CURRENT_HELPER_CLOSURE')
+    history = module.verify_current_profile(profile, pins, head, versions)
+    require(path.resolve() == path and not path.is_symlink() and sha(path.read_bytes()) == pins[READONLY_PROFILE],
+            'POSITIVE_CURRENT_INSPECTOR_CHANGED')
+    return history
+
+
+def verify_target_profile(value, target):
+    if 'currentProfile' in value:
+        verify_current_profile(value['currentProfile'], value['pins'], value['sourceHead'], target['versions'])
+    else:
+        require(len(target['versions']) == 121, 'POSITIVE_CURRENT121')
+
+
+def source_pins(expected_head=None, current_profile=None):
     """기존 observer의 전체 tracked source guard를 그대로 실행한 뒤 신규 driver도 HEAD에 묶는다."""
     head = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], timeout=15, text=True).strip()
     require(re.fullmatch('[a-f0-9]{40}', head) and (expected_head is None or head == expected_head), 'POSITIVE_HEAD_CHANGED')
@@ -66,6 +123,8 @@ def source_pins(expected_head=None):
     namespace = dict(REPO=ROOT, hashlib=hashlib, re=re)
     exec(compile(ast.Module(body=nodes, type_ignores=[]), str(ai_path), 'exec'), namespace)
     required = {**namespace['signed_source_pins'](), SELF: sha((ROOT / SELF).read_bytes())}
+    if current_profile is not None:
+        required.update({p:sha((ROOT/p).read_bytes()) for p in (READONLY_PROFILE, *CURRENT_HELPERS)})
     # 기존 observer와 signed Auth 원 계약을 모두 검사한다. 호출자가 필요한 경로를 생략할 수 없다.
     for relative, expected in required.items():
         if relative in pins:
@@ -76,12 +135,14 @@ def source_pins(expected_head=None):
         pins[relative] = expected
     require(subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], timeout=15, text=True).strip() == head,
             'POSITIVE_HEAD_CHANGED')
+    if current_profile is not None:
+        verify_current_profile(current_profile, pins, head)
     return head, pins
 
 
 class ReviewedPositiveDiscovery:
     def __init__(self, decision_id, root, source_head, pins, binding_sha256, auth6_receipt, auth6_receipt_sha256,
-                 capsule_root, node_path, node_sha256, scope_id, daemon_id):
+                 capsule_root, node_path, node_sha256, scope_id, daemon_id, current_profile=None):
         root = Path(root); capsule = Path(capsule_root); receipt = Path(auth6_receipt)
         require(type(decision_id) is str and re.fullmatch('[A-Za-z0-9_.:-]{1,128}', decision_id), 'POSITIVE_DECISION')
         require(root.is_absolute() and root.resolve() == root and not root.is_relative_to(ROOT), 'POSITIVE_ROOT')
@@ -104,13 +165,21 @@ class ReviewedPositiveDiscovery:
             bindingSha256=binding_sha256, auth6Receipt=str(receipt), auth6ReceiptSha256=auth6_receipt_sha256,
             capsuleRoot=str(capsule), nodePath=str(node), nodeSha256=node_sha256, scopeId=scope_id, daemonId=daemon_id))
 
+        if current_profile is not None:
+            require(type(current_profile) is ReviewedCurrentPositiveProfile, 'POSITIVE_CURRENT_TYPED_PROFILE')
+            profile = current_profile.descriptor()
+            require(profile['sourceHead'] == source_head and {READONLY_PROFILE, *CURRENT_HELPERS} <= set(pins),
+                    'POSITIVE_CURRENT_PROFILE_HEAD_OR_PINS')
+            self._sealed = canonical({**raw_json(self._sealed), 'currentProfile':profile})
+
     def descriptor(self): return raw_json(self._sealed)
 
 
 def support(reviewed):
     require(type(reviewed) is ReviewedPositiveDiscovery, 'POSITIVE_TYPED_REVIEW_REQUIRED')
     value = reviewed.descriptor()
-    require(source_pins(value['sourceHead'])[1] == value['pins'], 'POSITIVE_SOURCE_CHANGED')
+    require((source_pins(value['sourceHead'], value['currentProfile']) if 'currentProfile' in value
+             else source_pins(value['sourceHead']))[1] == value['pins'], 'POSITIVE_SOURCE_CHANGED')
     sys.path.insert(0, str(ROOT / 'tools/local'))
     modules = {}
     for name, relative in (('run_database_tests', 'tools/local/run_database_tests.py'),
@@ -156,9 +225,11 @@ def verify_result(fixture, result):
     return cases
 
 
-def unchanged_except(before, after, excluded):
+def unchanged_except(before, after, excluded, approved_tables=None):
     require(set(before) == set(after) and all(before[k] == after[k] for k in before if k != 'rows')
-            and set(before['rows']) == set(after['rows']) and len(before['rows']) == 178,
+            and set(before['rows']) == set(after['rows'])
+            and (len(before['rows']) == 178 if approved_tables is None else
+                 valid_tables(approved_tables) and sorted(before['rows']) == approved_tables),
             'POSITIVE_AUTHORITY_OR_INVENTORY_CHANGED')
     require(all(after['rows'][table] == bag for table, bag in before['rows'].items() if table not in excluded),
             'POSITIVE_UNOWNED_ROW_CHANGED')
@@ -183,7 +254,8 @@ class PositiveRun:
         self.fixed_identity()
     def fixed_identity(self):
         # 메모리 실패 후에도 새 호출 없이 정확 소유 fixture를 닫을 수 있다. source/신원 검사는 유지한다.
-        require(source_pins(self.value['sourceHead'])[1] == self.value['pins'], 'POSITIVE_SOURCE_CHANGED')
+        require((source_pins(self.value['sourceHead'], self.value['currentProfile']) if 'currentProfile' in self.value
+                 else source_pins(self.value['sourceHead']))[1] == self.value['pins'], 'POSITIVE_SOURCE_CHANGED')
         if self.r is not None:
             require(self.r.call(['info', '--format', '{{.ID}}']) == self.value['daemonId'], 'POSITIVE_DAEMON_CHANGED')
             self.r.signed_identity()
@@ -203,7 +275,8 @@ class PositiveRun:
     def snapshot(self, cleanup=False):
         check = self.fixed_identity if cleanup else self.live
         check(); require(self.port.history() == {'method': 'SUPABASE_DB_HISTORY', 'native': 'NOT_RUN'}, 'POSITIVE_HISTORY')
-        value = self.ai.lcp_snapshot(self.port.snapshot()); require(len(value['rows']) == 178, 'POSITIVE_FULL_178_REQUIRED')
+        value = self.ai.lcp_snapshot(self.port.snapshot()); tables=approved_tables(self.value)
+        require((len(value['rows']) == 178 if tables is None else sorted(value['rows']) == tables), 'POSITIVE_EXACT_SNAPSHOT_TABLES')
         check(); return value
     def bind(self):
         raw = self.read(self.root / 'signed-ai-binding-private.json'); require(sha(raw) == self.value['bindingSha256'], 'POSITIVE_ORIGINAL_BINDING_CHANGED')
@@ -214,7 +287,7 @@ class PositiveRun:
                 and receipt['originalRowsPreserved'] is True and receipt['actualNaver'] == 'NOT_RUN'
                 and receipt['actualAI22AI23AI24'] == 'NOT_RUN' and receipt['authAccountsRetained'] is True
                 and receipt['creationReceiptRoot'] == str(Path(self.value['auth6Receipt']).parent), 'POSITIVE_AUTH6_PROVENANCE')
-        target = self.ai.signed_prepared_target(self.root); require(len(target['versions']) == 121, 'POSITIVE_CURRENT121')
+        target = self.ai.signed_prepared_target(self.root); verify_target_profile(self.value, target)
         require(target['context'] == self.private_module.CONTEXT and target['host'] == self.private_module.HOST,
                 'POSITIVE_FIXED_MINKYU_CONTEXT')
         observed = subprocess.run(['docker', '--host', target['host'], 'info', '--format', '{{.ID}}'],
@@ -287,7 +360,7 @@ class PositiveRun:
         self.setup = True; self.r.ledgers.append(ledger); self.r.sql(''.join(statements))
         self.setup_snapshot = self.snapshot(); self.save('setup-private.json', self.setup_snapshot)
         unchanged_except(self.before, self.setup_snapshot, {'public.posts', 'private.profile_traits',
-            'private.ai_member_processing', 'private.ai_processing_guard', 'private.ai_budget_accounts', 'private.ai_budget_ledgers'})
+            'private.ai_member_processing', 'private.ai_processing_guard', 'private.ai_budget_accounts', 'private.ai_budget_ledgers'}, approved_tables=approved_tables(self.value))
         self.validate_fixture(False)
     def validate_fixture(self, changed):
         q = self.ai.quote; f = self.fixture
@@ -381,7 +454,7 @@ class PositiveRun:
         require(canary == 'f', 'POSITIVE_RAW_CONTENT_STORED')
         self.validate_fixture(True)
         after = self.snapshot(); self.save('after-private.json', after)
-        unchanged_except(self.setup_snapshot, after, set(OWN) | {'private.' + t for t in BUDGET})
+        unchanged_except(self.setup_snapshot, after, set(OWN) | {'private.' + t for t in BUDGET}, approved_tables=approved_tables(self.value))
     def close_child(self):
         if self.child is None: return
         source = ROOT / 'tools/local/observe_isolated.py'; raw = source.read_bytes()
@@ -416,7 +489,7 @@ class PositiveRun:
         except BaseException: errors.append('POSITIVE_STANDARD_CLEANUP_UNPROVEN')
         final = self.snapshot(cleanup=True); self.save('final-after-cleanup-private.json', final)
         require(self.before is not None, 'POSITIVE_BEFORE_SNAPSHOT_REQUIRED')
-        unchanged_except(self.before, final, {'private.' + t for t in BUDGET})
+        unchanged_except(self.before, final, {'private.' + t for t in BUDGET}, approved_tables=approved_tables(self.value))
         require(self.read(self.root / 'signed-ai-binding-private.json') == self.binding_raw
                 and self.read(self.value['auth6Receipt']) == self.receipt_raw, 'POSITIVE_ORIGINAL_AUTH6_CHANGED')
         self.fixed_identity(); self.capsule(); require(not errors, 'POSITIVE_CLEANUP_OR_CAPTURE_UNPROVEN')
