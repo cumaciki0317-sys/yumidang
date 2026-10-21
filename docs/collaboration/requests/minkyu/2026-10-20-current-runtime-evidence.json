@@ -1,0 +1,40 @@
+{
+  "scope": "SYNTHETIC_ARCHIVE_NEW_AI_SQL_ONLY",
+  "sourceHead": "2de619567b277f32b30a2137e4f2a97b69dcb4a2",
+  "result": "PASS_SQL_ONLY",
+  "receiptPath": "/private/tmp/yumidang-ai-consent-sql-20261020-a003/execution/receipt.json",
+  "receiptSha256": "ec33a47e2be741b05e8bfc832acebf96108e98bcfc451a23c4cf5ae1160c1edf",
+  "migration": "20261020100000_ai_independent_consents.sql",
+  "sqlFiles": [
+    "ai_independent_consents.sql",
+    "current_summary_fences.sql",
+    "current_completion_consent_policy.sql"
+  ],
+  "targetStopped": true,
+  "existingMetadataPreserved": true,
+  "existingStoredBytes": "NOT_VERIFIED",
+  "unknownCountBefore": 2,
+  "unknownCountAfter": 2,
+  "minimumAvailableKiB": 2290988,
+  "actualAuth": "NOT_RUN",
+  "actualMembers": "HOLD",
+  "providerCalls": 0,
+  "operatingChanged": false,
+  "fullRestore": false,
+  "failuresPreserved": [
+    {
+      "id": "a001",
+      "result": "PRECREATE_PRIVATE_CHANGED",
+      "newTargets": 0
+    },
+    {
+      "id": "a002",
+      "result": "FAIL_CLOSED_MOUNT_ORDER",
+      "newTargets": 1,
+      "ownTargetStopped": true,
+      "diagnosis": "All existing432 full mount bags equal; raw ordering differed on9. Original failed receipt unchanged."
+    }
+  ],
+  "personal44Complete": false,
+  "projectBaseline": "79%(22/28)"
+}

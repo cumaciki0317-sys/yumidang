@@ -1,0 +1,3307 @@
+{
+  "sourceHead": "18f4b7d34f2a738a8e8e1630875111b27b47cb04",
+  "historicalAuditSourceHead": "72be7fb7a4af3d24770ea11f3f9e255e85326ccd",
+  "policySha256": "c06506e94d919f2ff7116acb653c55dcafb7439b2e1e2663177c3152604c2daa",
+  "kind": "CURRENT_SOURCE_IMPACT_AND_FOLLOWUP_MAP_NOT_PRODUCT_PASS",
+  "serverGroups": [
+    {
+      "id": "B01",
+      "title": "KOPIS 공식 대조·14분류 공개",
+      "policyIds": [
+        "P001",
+        "P201",
+        "P202",
+        "P203",
+        "P232"
+      ],
+      "wbs": [
+        "1.1",
+        "1.2",
+        "4.2",
+        "6.1",
+        "7.8"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "공식 사이트 대조 증거 계약→14조건 매핑→검증 snapshot 저장→조회 투영을 민규가 구현. 일반 수집과 분리.",
+      "acceptance": "각 분류의 공식 실제기간·조건·ID/순서·확인시각 보존, 10개 미만·동률·갱신실패·최초미검증을 독립 검증.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/kopis-ranking.ts",
+          "note": "응답 기간 필수 parser",
+          "exists": true,
+          "currentSha256": "4b1b2a4b403cce240db3716ee5989009607ac95f0713ede84432877a03ccb968",
+          "unchangedFromHistoricalAuditSource": false,
+          "historicalLine": 67
+        },
+        {
+          "path": "backend/supabase/migrations/20261008013000_public_event_detail.sql",
+          "note": "공개 HTTP가 부르는 DB는 미활성 고정",
+          "exists": true,
+          "currentSha256": "931c3c4f6578e7e8d88910a84419102a1c00dc22a44ce2621f63f37056926d41",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 14
+        }
+      ],
+      "currentDelta": "14분류·공식대조 capability gate 및 runtime 거절 회귀 구현. 공식 관찰 collector·영속 게시·14분류lane·실제 공홈/API 대조는 잔여.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B02",
+      "title": "신고 본인 숨김 실제 서버 확인",
+      "policyIds": [
+        "P002"
+      ],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "현재 클라이언트와 실제 회원 서버를 연결해 목록/상세/필수 관리 접근을 대조.",
+      "acceptance": "숨김 선택 응답 성공 후만 숨김 완료 안내; 해제 후 다른 숨김/차단 유지.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/user-client.ts",
+          "note": "허용 RPC",
+          "exists": true,
+          "currentSha256": "585b12ee92b6f1a4453a0d57e171341f268c6eb8a44217c60f510c9d8f86c394",
+          "unchangedFromHistoricalAuditSource": false,
+          "historicalLine": 9
+        },
+        {
+          "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+          "note": "실제 조회 필터",
+          "exists": true,
+          "currentSha256": "f264a46e13c39deaabcff7d548bea7f51c4de9301d9e2ff35ae5db670a46f84e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        }
+      ],
+      "currentDelta": "본인 숨김 승인 정책 유지. 서버 처리 성공과 실제 앱 목록/상세/숨김관리/필수 약속 접근의 공동QA는 잔여.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B03",
+      "title": "플랫폼 설치·실행 증거 경계",
+      "policyIds": [
+        "P003",
+        "P004",
+        "P005"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "확인 불가",
+      "historicalAction": "종현 설치/연동 증거와 민규 서버 적용 증거를 별도로 연결.",
+      "acceptance": "예시 APK·Expo Go·합성 검사·실제 회원·실기기 증거를 각각 표시.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/service-api/handler.ts",
+          "note": "실제 API 진입 조립",
+          "exists": true,
+          "currentSha256": "2f200eb1a90599c59b677ceb19591e6f87a991db5df24e2f0ab34eeb1a262c1c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 66
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B04",
+      "title": "서울 평문 수집 차단과 HTTPS 연결 대기",
+      "policyIds": [
+        "P006"
+      ],
+      "wbs": [
+        "1.4",
+        "4.2",
+        "7.12",
+        "7.9"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "민규가 안전한 endpoint/실제 신규 envelope/진행 중 갱신 검증 후 별도 연결.",
+      "acceptance": "키 포함 HTTP 호출 0, HTTPS 실응답·페이지 재개·진행 중 갱신 입증.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "note": "미설정 수집 차단",
+          "exists": true,
+          "currentSha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 151
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "note": "신규 envelope 미확인 차단",
+          "exists": true,
+          "currentSha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 111
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B05",
+      "title": "공급사 조건·Gemini 예산과 제품 런타임",
+      "policyIds": [
+        "P007",
+        "P008",
+        "P009"
+      ],
+      "wbs": [
+        "5.4a",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "Gemini 는 공급사별 원장/회원 전송 조건을 확인한 뒤 별도 제품 연결; 대표 계정 전환은 회의 때.",
+      "acceptance": "테스트 합성 호출과 실제 회원 전송 분리, 원화청구/기술토큰 분리, 지연으로 최종청구 상한 보장하지 않음.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "note": "제품 Potens 조립과 fail-closed",
+          "exists": true,
+          "currentSha256": "6daf67ccf0c85d87831eb488de697ead056559547381559a21da4d4ba9b8a568",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 32
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/account-pool.ts",
+          "note": "등록계정 전환 구현",
+          "exists": true,
+          "currentSha256": "f46c10cb3377ae5298b327bfed6bc9e889a4502f4d085b998c82cca68012bc74",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 43
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B06",
+      "title": "운영·공개 정보와 실제 권한",
+      "policyIds": [
+        "P010",
+        "P011",
+        "P012",
+        "P013"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "확인 불가",
+      "historicalAction": "대표 조유미 실제 계정 ACL·접수메일·삭제처리·감사·대체 미지정 상태의 실행 절차 확인.",
+      "acceptance": "비승인/비배정 접근 거절, 허용 증거 접근 감사, 회원 채팅 DB 직접 열람 없음.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+          "note": "사건별 운영자 권한",
+          "exists": true,
+          "currentSha256": "296cc4fc48fce2f66f1ad72d10b39b3a12d2f7a225033a61fb8ab2b56a4486fd",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 18
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/report-operator-client.ts",
+          "note": "운영자 요청 전송",
+          "exists": true,
+          "currentSha256": "cd809aff277d07276a669612d044321866385a7f2d1f2a9f03ebe79c38c34b50",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 41
+        }
+      ],
+      "currentDelta": "일반 신고 처리와 해당 신고의 허용 증거 확인에 한해 대표 조유미 부재 시 종현이 대체한다. 다른 지원·AI 비용·서버 운영의 대체 지정으로 확대하지 않는다. 실제 배정/최소 ACL·접근 감사·회수 검증은 잔여다.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B07",
+      "title": "무료 동행 쓰기 계약과 제외 기능의 실행 경계",
+      "policyIds": [
+        "P014",
+        "P015",
+        "P016",
+        "P017",
+        "P018",
+        "P019",
+        "P268",
+        "P269",
+        "P270",
+        "P271",
+        "P272",
+        "P273"
+      ],
+      "wbs": [
+        "1.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "일치",
+      "historicalAction": "기존 테스트 함수가 운영 라우팅에 노출되지 않도록 출시 설정 확인.",
+      "acceptance": "현재 진입/쓰기 API 에서 유료·계좌·기관 인증 사용 불가, 기존 기록 보존.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "note": "무료 공고 타입",
+          "exists": true,
+          "currentSha256": "caf64d5be42db7966ed1bd22d15955e8feed86c56d02aeb25264b27bde57bf90",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 8
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+          "note": "네이버 자격 경로",
+          "exists": true,
+          "currentSha256": "7cb3173f75a012641401d5411a7c90c865c86b702b89e3cb7dc79a99efc46d5a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 62
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B08",
+      "title": "네이버 자격·단일계정·복귀",
+      "policyIds": [
+        "P020",
+        "P021",
+        "P022",
+        "P023",
+        "P024",
+        "P025",
+        "P026",
+        "P027"
+      ],
+      "wbs": [
+        "1.2",
+        "3.1",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 네이버 앱·리다이렉트·여성/19세/누락정보 경계와 복귀 검증.",
+      "acceptance": "18/19생일·누락·위조 state·중복콜백·기존계정 목적복귀를 실제 연결로 확인.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+          "note": "일회성state 검증",
+          "exists": true,
+          "currentSha256": "7cb3173f75a012641401d5411a7c90c865c86b702b89e3cb7dc79a99efc46d5a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 57
+        },
+        {
+          "path": "backend/supabase/migrations/20261002090000_naver_signup.sql",
+          "note": "단일subject 계정/자격DB",
+          "exists": true,
+          "currentSha256": "835cedd273fbb901a8ecc1aff538bbb9f89c3f1ea49aa6e18fbfdc4d61722338",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 84
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B09",
+      "title": "사진 필수·성향 선택 가입",
+      "policyIds": [
+        "P028",
+        "P029",
+        "P030",
+        "P031",
+        "P032",
+        "P033"
+      ],
+      "wbs": [
+        "3.1",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 사진 업로드·권한·10MB/JPG PNG UX 와 signup final commit 연결검증.",
+      "acceptance": "사진미선택/업로드실패/선택만한상태 가입완료거절, 선택성향 공란 허용.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/signup.ts",
+          "note": "사진/성향 입력 검증",
+          "exists": true,
+          "currentSha256": "683b9db8d9ecf7bcb80e3c1cef6b5c3c7868378fbaa72b98dae1bbac6a39e173",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 62
+        },
+        {
+          "path": "backend/supabase/migrations/20260917052827_profile_images_required.sql",
+          "note": "DB사진 요구",
+          "exists": true,
+          "currentSha256": "0797f8e416ca2a6b56e3fdd4a0cadc2d713349416a685ee14949c13bcdd69a8f",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 34
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B10",
+      "title": "계정·제재 상태 표시",
+      "policyIds": [
+        "P034",
+        "P035",
+        "P046"
+      ],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "계정 화면의 경고/검토/해제 상태를 실제 응답에 연결.",
+      "acceptance": "사유·이의마감·실제 제한종료 표시, 안내 제공·읽음과 분리.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/user-client.ts",
+          "note": "상태조회 허용목록",
+          "exists": true,
+          "currentSha256": "585b12ee92b6f1a4453a0d57e171341f268c6eb8a44217c60f510c9d8f86c394",
+          "unchangedFromHistoricalAuditSource": false,
+          "historicalLine": 9
+        },
+        {
+          "path": "backend/supabase/migrations/20261005135215_member_sanction_history.sql",
+          "note": "제재이력 실제 SQL",
+          "exists": true,
+          "currentSha256": "c6dfa91e15bf8b97c1878b53ec62d887e18061fa5704aeee8f946a5ea5cc3b8c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B11",
+      "title": "연속취소·24시간 이의·제재 정정",
+      "policyIds": [
+        "P036",
+        "P037",
+        "P038",
+        "P039",
+        "P040",
+        "P041",
+        "P042",
+        "P043",
+        "P044",
+        "P045",
+        "P047",
+        "P048"
+      ],
+      "wbs": [
+        "1.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 서버에 최신 migration 적용과 이의24h 경계·동시취소·정정 재계산 검증.",
+      "acceptance": "마감 동일 시각 거절, 경고이력 보존, 기존제재시작 유지·신규만 새시작, 중간미정 뒤판정보류.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005021810_sanction_adjudication_draft.sql",
+          "note": "순서/횟수/보류",
+          "exists": true,
+          "currentSha256": "b3c56b87385b5bf835f7ae52390b80b963d50b9308dc3878b8645a756905120f",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 140
+        },
+        {
+          "path": "backend/supabase/migrations/20261006151000_historical_safety_episode.sql",
+          "note": "탈퇴회차 최초효과 확장",
+          "exists": true,
+          "currentSha256": "8d4866ee9fa60321927109fa880cdf10d1d37e9d0a77f9a18892d66ba3dccb8a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        },
+        {
+          "path": "backend/supabase/migrations/20261007020000_cancellation_clock_lineage.sql",
+          "note": "시작시각 정정 lineage",
+          "exists": true,
+          "currentSha256": "4f88fa9f16c1106ed4f56de580ed8e800ef9e6bddfa022a7ce048ca341c9fdbd",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 72
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B12",
+      "title": "탈퇴·재가입·후기와 삭제 완료",
+      "policyIds": [
+        "P049",
+        "P050",
+        "P051",
+        "P052",
+        "P053",
+        "P054",
+        "P055",
+        "P056",
+        "P057"
+      ],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 Auth/Storage/DB·상대후기·재가입·제재 회차 통합 검증.",
+      "acceptance": "진행확정약속만 탈퇴보류; 후기/분쟁만은 허용; 미삭제 processing·실제삭제후 completed.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/member-lifecycle-service.ts",
+          "note": "탈퇴요청/응답 검증",
+          "exists": true,
+          "currentSha256": "379286175c77d45848c74b49875d97095aecbb0cb95e00bc8609d60df1f6e7e2",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 21
+        },
+        {
+          "path": "backend/supabase/migrations/20261005020135_current_member_lifecycle.sql",
+          "note": "약속/프로필/회차 처리",
+          "exists": true,
+          "currentSha256": "d24d3e338e9a8876c3d34c761f3fe9c863095faa95d93bf0055c471a81ab266d",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 178
+        },
+        {
+          "path": "backend/supabase/migrations/20261009011700_member_retirement_receipt.sql",
+          "note": "동일요청 완료조회",
+          "exists": true,
+          "currentSha256": "bfa60e1169dc3752c54a53c5a4be462af5a40ef87ccd4e8477f724230fd41456",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 18
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B13",
+      "title": "AI 선택 동의 세종·전체동의",
+      "policyIds": [
+        "P058",
+        "P059",
+        "P060",
+        "P061",
+        "P062"
+      ],
+      "wbs": [
+        "1.2",
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "독립3동의와 탐색 첫 사용 동의의 저장/열람/철회 계약을 민규가 명시 설계·구현; 일반가입 차단 금지.",
+      "acceptance": "기본 미선택으로 가입성공, 항목별 증거와 독립철회, 전체동의는 UI 선택일뿐 하나의동의로 저장하지 않음.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/signup-service.ts",
+          "note": "가입완료 현재 인자",
+          "exists": true,
+          "currentSha256": "7cb3173f75a012641401d5411a7c90c865c86b702b89e3cb7dc79a99efc46d5a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 86
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "note": "요약 동의 단일 boolean",
+          "exists": true,
+          "currentSha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 11
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B14",
+      "title": "관계별 개인정보 공개·취소 회수",
+      "policyIds": [
+        "P063",
+        "P064",
+        "P065",
+        "P066",
+        "P067",
+        "P068",
+        "P069",
+        "P072"
+      ],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "서버 권한투영과 클라이언트 취소즉시 회수·후발응답을 함께 검증.",
+      "acceptance": "비로그인 응답/DOM 민감정보 0, 제3자 실명/상세 0, 취소직후 저장응답 재사용 불가.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "note": "관계/차단 공개 경계",
+          "exists": true,
+          "currentSha256": "28ad42ff14cae65bd6b984667119113753d04cf78b79c969b05d9a3fe675de69",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 407
+        },
+        {
+          "path": "backend/supabase/migrations/20261005001538_current_public_search.sql",
+          "note": "공고 상세 공개 투영",
+          "exists": true,
+          "currentSha256": "f9b27ec0c373cf8264a6c0e7e7768a52c7bd4730c1644f8cb384391178d06d54",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 192
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B15",
+      "title": "공고 검색·정렬·필터·페이지",
+      "policyIds": [
+        "P070",
+        "P071",
+        "P073",
+        "P074",
+        "P075",
+        "P076",
+        "P077",
+        "P078",
+        "P079",
+        "P080",
+        "P081"
+      ],
+      "wbs": [
+        "1.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "최신 SQL/클라이언트 입력 조합 검증; 전체검색 상한99 오적용 금지.",
+      "acceptance": "제목/장소/주소/연결행사 검색, 소개/후기/상세미검색, 10개추가조회·실패/0건구분.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "note": "차단 검색 wrapper",
+          "exists": true,
+          "currentSha256": "28ad42ff14cae65bd6b984667119113753d04cf78b79c969b05d9a3fe675de69",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 196
+        },
+        {
+          "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+          "note": "본인숨김 검색 wrapper",
+          "exists": true,
+          "currentSha256": "f264a46e13c39deaabcff7d548bea7f51c4de9301d9e2ff35ae5db670a46f84e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 14
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/search-service.ts",
+          "note": "검색서비스 실제 경로",
+          "exists": true,
+          "currentSha256": "4be9b97d6decaa537d6e9cb6f0f6770db33d51944d4eea9d2a0735cfea39b098",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 23
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B16",
+      "title": "공고 입력·장소·검사·초안",
+      "policyIds": [
+        "P082",
+        "P083",
+        "P084",
+        "P085",
+        "P086",
+        "P088",
+        "P089",
+        "P090",
+        "P091"
+      ],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "Kakao/우편번호·검사 classifier·DB ticket consume 와 등록화면 통합 검증.",
+      "acceptance": "오래된입력 충돌·연락처차단·오탐경로·길이경계·장소동명이인·입력보존 확인.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "note": "현재 쓰기 계약",
+          "exists": true,
+          "currentSha256": "caf64d5be42db7966ed1bd22d15955e8feed86c56d02aeb25264b27bde57bf90",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 2
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/content-inspection.ts",
+          "note": "검사 승인/분류 연결",
+          "exists": true,
+          "currentSha256": "86552a41dbf1936ca99a47eb20ba7da0e266cfe505af25846cbd4cc9f973f0c2",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 63
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/posts.ts",
+          "note": "실제 RPC쓰기",
+          "exists": true,
+          "currentSha256": "fe8190d050cccf483aad0dcd8521a36d0e18dafae2cc2c1e9264272d2dabac45",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B17",
+      "title": "직접 입력 행사와 공고 저장",
+      "policyIds": [
+        "P087",
+        "P205",
+        "P206",
+        "P208",
+        "P209",
+        "P210"
+      ],
+      "wbs": [
+        "1.2",
+        "3.6",
+        "4.2"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "미구현",
+      "historicalAction": "manual 저장/응답·검사·핵심변경·검색 계약을 민규가 추가하되 공용행사 생성하지 않음.",
+      "acceptance": "직접 입력 행사 등록→재조회/수정/재시도에 유지, API 행사와상호배타, 삭제는연결만삭제.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/contracts/posts.ts",
+          "note": "UUID/null 계약",
+          "exists": true,
+          "currentSha256": "caf64d5be42db7966ed1bd22d15955e8feed86c56d02aeb25264b27bde57bf90",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 10
+        },
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "note": "선택 UUID 컬럼",
+          "exists": true,
+          "currentSha256": "0d436dc31e8483603d8751ca25f7d50e79660f613c220aa220ab5a514b03475a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B18",
+      "title": "공고 상태·마감·삭제·핵심변경",
+      "policyIds": [
+        "P092",
+        "P093",
+        "P094",
+        "P095",
+        "P096"
+      ],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "직접 입력 행사/통합관계가 추가될때 핵심조건 fingerprint/변경합의를 함께 확장.",
+      "acceptance": "마감후기존채팅유지, 삭제후읽기전용, 확정중삭제가취소대체못함.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/posts.ts",
+          "note": "별도 삭제 요청",
+          "exists": true,
+          "currentSha256": "fe8190d050cccf483aad0dcd8521a36d0e18dafae2cc2c1e9264272d2dabac45",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 8
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "note": "조건변경/동의 무효화",
+          "exists": true,
+          "currentSha256": "af2c94c092e757765aef5745ce73bd83a146842875cf93b29a933102127c875e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 132
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "note": "모집재개 독립RPC",
+          "exists": true,
+          "currentSha256": "af2c94c092e757765aef5745ce73bd83a146842875cf93b29a933102127c875e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 269
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B19",
+      "title": "첫 메시지 신청·재신청",
+      "policyIds": [
+        "P097",
+        "P098",
+        "P099",
+        "P100",
+        "P101",
+        "P102",
+        "P103",
+        "P104",
+        "P105"
+      ],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "첫전송 응답유실/동일 ID 재시도·재신청·거절·서버적용 검증.",
+      "acceptance": "전송실패 신청 0·알림 0, 재시도 중복 0, 철회후60초 경계, 거절후재신청거절.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005002006_first_chat_application.sql",
+          "note": "최초신청 원자SQL",
+          "exists": true,
+          "currentSha256": "46a7be5550c2a4e6c901899b06db4b7ebc7c833ef820b117cfbed24d43eef191",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 29
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "note": "차단pair guard",
+          "exists": true,
+          "currentSha256": "28ad42ff14cae65bd6b984667119113753d04cf78b79c969b05d9a3fe675de69",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 84
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/matching.ts",
+          "note": "HTTP서비스 전달",
+          "exists": true,
+          "currentSha256": "6b56a5c88d10b72594ace1c9223a3cf89c4cd1e177fa8c7439ee127db9619bd3",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B20",
+      "title": "확정 요청·만료·일정충돌·모집재개",
+      "policyIds": [
+        "P106",
+        "P107",
+        "P108",
+        "P109",
+        "P110",
+        "P111"
+      ],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 DB 동시요청·만료동일 시각·기존일정충돌·복원 분기검증.",
+      "acceptance": "한명만확정, 만료동일 시각거절, 취소만으로자동재개없음, 거절/철회복원없음.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005001429_current_completion_consent_policy.sql",
+          "note": "6시간 요청만료",
+          "exists": true,
+          "currentSha256": "22312f4333a4676a654a02a2802d63ebf6c7304923172a9dea6bf0de877df275",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 101
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "note": "원자확정/모집종료",
+          "exists": true,
+          "currentSha256": "af2c94c092e757765aef5745ce73bd83a146842875cf93b29a933102127c875e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 77
+        },
+        {
+          "path": "backend/supabase/migrations/20261005005459_current_recruitment_reopen.sql",
+          "note": "이전 유효신청복원",
+          "exists": true,
+          "currentSha256": "af2c94c092e757765aef5745ce73bd83a146842875cf93b29a933102127c875e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 269
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B21",
+      "title": "채팅 전송·읽기전용·나가기",
+      "policyIds": [
+        "P112",
+        "P113",
+        "P114"
+      ],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 양쪽계정·권한상실·메시지순서·응답유실 연결검증.",
+      "acceptance": "동일 messageId 중복 0, 종료방쓰기거절/읽기유지, 나가기가상대기록삭제안함.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/conversations.ts",
+          "note": "본인나가기 RPC",
+          "exists": true,
+          "currentSha256": "44ab8119b18a897f5ff2cca29881346f87e08ffa5f2b756826d5ebc53b263359",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        },
+        {
+          "path": "backend/supabase/migrations/20261008026000_message_read_receipts.sql",
+          "note": "읽음 실SQL",
+          "exists": true,
+          "currentSha256": "b613a5fe40b3a342b2a980c33595777094705bc1df91103667e5fffe254d6b2e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 15
+        },
+        {
+          "path": "backend/supabase/migrations/20261010030000_hidden_message_read_receipts.sql",
+          "note": "숨김메시지 읽음가드",
+          "exists": true,
+          "currentSha256": "74653943bae50901d50c72b1f4ccd66502f2799fc8ea7a5115e73fde270fe6ef",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 13
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B22",
+      "title": "일정·장소 변경 합의와 경계시각",
+      "policyIds": [
+        "P115",
+        "P116",
+        "P117",
+        "P118"
+      ],
+      "wbs": [
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "최신 조건/변경버전·겹침·마감/동일 시각·동시수락거절 통합검증.",
+      "acceptance": "수락 전원약속유지, 종료/변경시작동일 시각거절, 응답유실동일제안재확인.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005014629_appointment_place_change_draft.sql",
+          "note": "장소·일정 제안",
+          "exists": true,
+          "currentSha256": "a3c2284bf1b2fbf19c3a4404c1deea2eaa6314c9faee51894c3b5c30e4e4904c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 87
+        },
+        {
+          "path": "backend/supabase/migrations/20261005014630_appointment_location_validation.sql",
+          "note": "장소최신검증",
+          "exists": true,
+          "currentSha256": "93d7ab1d413a6e46425218798925f26440e8f1a674e2c3830e60394b862fa0c7",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 4
+        },
+        {
+          "path": "backend/supabase/migrations/20261005040600_appointment_change_withdrawal.sql",
+          "note": "철회실제함수",
+          "exists": true,
+          "currentSha256": "80d58914f8db461c9e5d961b4a5ebcc8c51aaa6a0ce76fd843333e2079d5a10b",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 8
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B23",
+      "title": "확정 취소·시작후 불발/중단",
+      "policyIds": [
+        "P119",
+        "P120",
+        "P121",
+        "P122",
+        "P123",
+        "P124"
+      ],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 시작전/동일 시각/시작후 및 취소후 재조회/알림 확인.",
+      "acceptance": "시작후일방취소거절, 설명없는신고거절, 취소확정시관계권한즉시회수.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/completion.ts",
+          "note": "취소 RPC",
+          "exists": true,
+          "currentSha256": "65ce51d12d2923f475e462965382f424f37adf05a882ad7c113edaef66a67604",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 22
+        },
+        {
+          "path": "backend/supabase/migrations/20261005195033_appointment_cancel_appeal_atomic_report.sql",
+          "note": "이의/신고 원자경로",
+          "exists": true,
+          "currentSha256": "53750fc93d7edf48ff863807ccfa267c3e759213d55385b3d0d28103ec71f745",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 13
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B24",
+      "title": "차단과 본인 숨김 분리",
+      "policyIds": [
+        "P125",
+        "P126",
+        "P127",
+        "P128"
+      ],
+      "wbs": [
+        "6.3",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "차단→해제와 별도숨김 수명/필수약속 관리 매트릭스 실행.",
+      "acceptance": "차단해제로신고숨김복원안함, 기존약속관리유지, 종료신청/취소약속자동복원 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005005855_current_member_blocks.sql",
+          "note": "차단입력과 pair guard",
+          "exists": true,
+          "currentSha256": "28ad42ff14cae65bd6b984667119113753d04cf78b79c969b05d9a3fe675de69",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 40
+        },
+        {
+          "path": "backend/supabase/migrations/20261006123430_member_report_hidden_targets.sql",
+          "note": "독립 콘텐츠숨김",
+          "exists": true,
+          "currentSha256": "4aa5af4aa88a53481c1bf52f3ce67f9ff5d3155e7cf215bd8b6d224ec219927b",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 4
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B25",
+      "title": "신고 접수·증거·상태와 숨김",
+      "policyIds": [
+        "P129",
+        "P130",
+        "P131",
+        "P132",
+        "P133",
+        "P134",
+        "P135"
+      ],
+      "wbs": [
+        "6.3",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 Storage ownership·담당 ACL·신고상태·접수/위반확정 분리검증.",
+      "acceptance": "타인캡처재사용거절, 접수만으로제재 0, 신고자/당사자노출차등, 필수경로유지.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005015709_member_reports.sql",
+          "note": "설명/증거/접수검증",
+          "exists": true,
+          "currentSha256": "317fbb34f1e07bf37976b3d9ec809f0ca6bfabf787006aad737e6552aeffc07c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 151
+        },
+        {
+          "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+          "note": "사건별배정조회",
+          "exists": true,
+          "currentSha256": "296cc4fc48fce2f66f1ad72d10b39b3a12d2f7a225033a61fb8ab2b56a4486fd",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 86
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/report-service.ts",
+          "note": "회원신고 호출경로",
+          "exists": true,
+          "currentSha256": "bbca2f8761ea3d17e9db015094d763e77c85698a0ef51e2aa13e401fc74f9ea0",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 2
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B26",
+      "title": "일반 위반·반복·영구제재·7일 이의",
+      "policyIds": [
+        "P136",
+        "P137",
+        "P138",
+        "P139",
+        "P140"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "적용된 migration 과 운영사건/안내제공 실패/7일동일 시각/정정 검증.",
+      "acceptance": "접수와최종위반분리, 안내실패기산 0, 잘못된이력/당도정정, 기존제한시작재초기화 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005021810_sanction_adjudication_draft.sql",
+          "note": "12개월·단계계산",
+          "exists": true,
+          "currentSha256": "b3c56b87385b5bf835f7ae52390b80b963d50b9308dc3878b8645a756905120f",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 183
+        },
+        {
+          "path": "backend/supabase/migrations/20261006130041_general_sanction_notice_delivery.sql",
+          "note": "안내성공기산",
+          "exists": true,
+          "currentSha256": "31526ba209a742449233cad1f52d024f471fb2de12864a53e4d15065226f676a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 57
+        },
+        {
+          "path": "backend/supabase/migrations/20261006150000_general_sanction_appeal_resolution.sql",
+          "note": "이의정정 연결",
+          "exists": true,
+          "currentSha256": "718da5f5d8ccf27908190fd8d2511c1712d2af0fc7cd2d3518c46bae8b1ba50e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 11
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B27",
+      "title": "금지콘텐츠·애매한 채팅 확인",
+      "policyIds": [
+        "P141",
+        "P142"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 분류기·동의확인·쓰기8경로·오탐안내를 승인된 설정으로 연결.",
+      "acceptance": "공개개인정보차단, 정상약속채팅허용, 애매한채팅확인후전송, ticket 다른입력재사용거절.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/content-inspection.ts",
+          "note": "분류결정",
+          "exists": true,
+          "currentSha256": "86552a41dbf1936ca99a47eb20ba7da0e266cfe505af25846cbd4cc9f973f0c2",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        },
+        {
+          "path": "backend/supabase/migrations/20261009011600_content_inspection_tickets.sql",
+          "note": "DB소비/기한결합",
+          "exists": true,
+          "currentSha256": "a3a7abf169d4edd2d86556def9823f5f56a2072796c3a9adcc1b46e1d23b58ec",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 7
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B28",
+      "title": "완료·자동24시간·불발정정",
+      "policyIds": [
+        "P143",
+        "P144",
+        "P145",
+        "P146",
+        "P147",
+        "P148",
+        "P149",
+        "P150"
+      ],
+      "wbs": [
+        "6.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 예약 runner·재접속·분쟁보류·탈퇴후정정 상태 검증.",
+      "acceptance": "종료전거절, 한쪽완료만으로실제완료 0, 최신종료+24h, 불발/미결보류, 탈퇴자진행복원 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20260923100000_bilateral_completion.sql",
+          "note": "양쪽완료",
+          "exists": true,
+          "currentSha256": "d49cd183f46738412f2fb5fff8737dee5bac30431011c18f939671ba3d7a8cd2",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 55
+        },
+        {
+          "path": "backend/supabase/migrations/20261005041000_appointment_review_no_show_lifecycle.sql",
+          "note": "노쇼/정상정정",
+          "exists": true,
+          "currentSha256": "b780d364f0d614a160934bd57bb2c1347f24d6a9321275baadbbaf632db3ed50",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 47
+        },
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "note": "회차별완료횟수",
+          "exists": true,
+          "currentSha256": "6db41b47a2f469d1370f2589f9a1daedc854275eac65f220fcb37909002a891e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 194
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B29",
+      "title": "후기 기한·분쟁보류·공개시각",
+      "policyIds": [
+        "P151",
+        "P152",
+        "P153",
+        "P154",
+        "P161",
+        "P162",
+        "P163"
+      ],
+      "wbs": [
+        "6.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "정의 순서·실제 DB 함수·분쟁중신규공개/기한정지·재개를 확인.",
+      "acceptance": "실제완료전기한시작 0, 양쪽제출은완료후즉시, 한쪽은7일마감, 기존공개는운영결정만숨김.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005001429_current_completion_consent_policy.sql",
+          "note": "최신 한쪽기한공개",
+          "exists": true,
+          "currentSha256": "22312f4333a4676a654a02a2802d63ebf6c7304923172a9dea6bf0de877df275",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 16
+        },
+        {
+          "path": "backend/supabase/migrations/20261005040900_appointment_review_holds.sql",
+          "note": "최소재개시간",
+          "exists": true,
+          "currentSha256": "b13e5ade5891e49b049a7243ba3cbe161d8e64545212bc72d8865638a6992fe6",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 69
+        },
+        {
+          "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+          "note": "선제제출자격",
+          "exists": true,
+          "currentSha256": "4b9ee69e4230dd62f70d2fa711a69b857b93d6bf17afa297192543389fc57615",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 27
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B30",
+      "title": "후기 입력·칭찬·중복방지",
+      "policyIds": [
+        "P155",
+        "P156",
+        "P157",
+        "P158",
+        "P159",
+        "P160"
+      ],
+      "wbs": [
+        "6.1",
+        "1.2"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "원문활용동의 세분화 전까지 후기서버기능과 AI 활용표시를 분리.",
+      "acceptance": "동일요청재전송기존성공·내용변경거절, 부정칭찬거절, 활용미동의후기도일반제출허용.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261002110000_completion_review_policy.sql",
+          "note": "칭찬조건과입력검증",
+          "exists": true,
+          "currentSha256": "4b9ee69e4230dd62f70d2fa711a69b857b93d6bf17afa297192543389fc57615",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 81
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/reviews.ts",
+          "note": "후기쓰기RPC",
+          "exists": true,
+          "currentSha256": "587968606996f316e71655d6e579573e07a57c8c82df21d5882483fb280a14ff",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 7
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B31",
+      "title": "프로필·칭찬·AI 요약 공개",
+      "policyIds": [
+        "P164",
+        "P165",
+        "P166",
+        "P167",
+        "P168",
+        "P169",
+        "P170",
+        "P171",
+        "P172"
+      ],
+      "wbs": [
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "3동의 DB·요약열람 차단·원문동의영향 revision 을 연결한후 공개.",
+      "acceptance": "남은허용텍스트3개/2개, 대상철회/저자철회/viewer 철회 독립, 실패중원문/칭찬유지.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "note": "원문/대상 단일동의",
+          "exists": true,
+          "currentSha256": "6db41b47a2f469d1370f2589f9a1daedc854275eac65f220fcb37909002a891e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 244
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/eligibility.ts",
+          "note": "공개텍스트3개",
+          "exists": true,
+          "currentSha256": "655213747d630d45e971af6389ca2376e676d34683dd7328036ccd65f08a1ad3",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        },
+        {
+          "path": "backend/supabase/migrations/20261005003159_current_summary_fences.sql",
+          "note": "revision/lease공개검사",
+          "exists": true,
+          "currentSha256": "e3796267685e641cc3aa0257bf2410ff4abec12c0ef5d52225ff14ba54fd4cbc",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 6
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B32",
+      "title": "AI 동의 독립철회·사본삭제",
+      "policyIds": [
+        "P173",
+        "P174",
+        "P175",
+        "P176",
+        "P177"
+      ],
+      "wbs": [
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "세 동의 독립철회와 영향요약우선숨김·안전재생성·외부삭제추적 계약 구현.",
+      "acceptance": "다른두동의유지·일반후기/당도유지·철회후전송 0·실제삭제확인 전완료표시 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "note": "2종철회현재함수",
+          "exists": true,
+          "currentSha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 192
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "note": "요약일괄철회",
+          "exists": true,
+          "currentSha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 12
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B33",
+      "title": "당도 산식·정정·회차",
+      "policyIds": [
+        "P178",
+        "P179",
+        "P180",
+        "P181",
+        "P182",
+        "P183",
+        "P184",
+        "P185"
+      ],
+      "wbs": [
+        "6.1",
+        "1.4"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 DB 초기/최댓값/최솟값/후기임시숨김/최종무효/사건중복/정정 검증.",
+      "acceptance": "15→17/11 예시·운영감점최대하나·최종 clamp·완료/칭찬가산 0·재가입15.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "note": "최종합산/clamp",
+          "exists": true,
+          "currentSha256": "6db41b47a2f469d1370f2589f9a1daedc854275eac65f220fcb37909002a891e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 127
+        },
+        {
+          "path": "backend/supabase/migrations/20261005013901_current_sweetness_ledger.sql",
+          "note": "후기산식",
+          "exists": true,
+          "currentSha256": "6db41b47a2f469d1370f2589f9a1daedc854275eac65f220fcb37909002a891e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 76
+        },
+        {
+          "path": "backend/supabase/migrations/20261006151000_historical_safety_episode.sql",
+          "note": "탈퇴회차새감점차단",
+          "exists": true,
+          "currentSha256": "8d4866ee9fa60321927109fa880cdf10d1d37e9d0a77f9a18892d66ba3dccb8a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 23
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B34",
+      "title": "행사 기간·주차·정렬·작성선택",
+      "policyIds": [
+        "P186",
+        "P187",
+        "P188",
+        "P189",
+        "P190",
+        "P191",
+        "P192",
+        "P193",
+        "P194",
+        "P197",
+        "P198",
+        "P207"
+      ],
+      "wbs": [
+        "4.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제수집일자/월귀속/작성선택 전체기간과 일반검색 라우팅검증.",
+      "acceptance": "9/1화·금 경계예시, 월요일00시 경계, 종료일포함 date-only, 정렬동률 stable.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/services/event-service.ts",
+          "note": "주간미종료정책",
+          "exists": true,
+          "currentSha256": "03647676f900f1a332dd7a009f7a3d17ce582e255dc3d181e3c00adc283aed9c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 42
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/normalize.ts",
+          "note": "한국시간월요일주차",
+          "exists": true,
+          "currentSha256": "d32c7c95ac55843fece7b55d07953ed099fd23a2895eab9aa7260dd5475fb1a7",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 35
+        },
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/events.ts",
+          "note": "DB목록RPC",
+          "exists": true,
+          "currentSha256": "876d87fb08486a2110970611e552b79222221ba66a7c445d4f58e8991fc4977e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 116
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B35",
+      "title": "세공급사 공통 행사 정보·표시",
+      "policyIds": [
+        "P195",
+        "P196",
+        "P199",
+        "P200",
+        "P211",
+        "P212",
+        "P213",
+        "P214",
+        "P215",
+        "P216"
+      ],
+      "wbs": [
+        "4.2",
+        "1.2"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "원천칼럼별 null/출처와화면매핑을검증; TourAPI 관광타입15를축제만으로축소금지.",
+      "acceptance": "빈가격무료오인 0, 원천구분/공개주소/공식링크보존, 비이미지기본그림 0, 각정보누락안내.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+          "note": "공통원천타입",
+          "exists": true,
+          "currentSha256": "8ea3a34e317f817d4b332936bc438c2716cf662ccdfc59e8b9e9051f136ea546",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 46
+        },
+        {
+          "path": "backend/supabase/migrations/20261009031628_event_detail_projection.sql",
+          "note": "상세가격투영",
+          "exists": true,
+          "currentSha256": "8b5b4af91067276fdfd27cd7340d30ff04f94ba632b029fa274885fde0be636c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 24
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "note": "서울자료누락보존",
+          "exists": true,
+          "currentSha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 90
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B36",
+      "title": "행사 수집 기간·진행중갱신·재개",
+      "policyIds": [
+        "P204"
+      ],
+      "wbs": [
+        "4.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "최근1개월/미래31일·진행 중 장기행사 재개를 실제수집과 DB 로 검증.",
+      "acceptance": "실패영역만재시도·원래 checkpoint 보존·5쪽상한후다음실행재개·수집실패0건대체없음.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261009011100_event_collection_lane.sql",
+          "note": "수집영속제어",
+          "exists": true,
+          "currentSha256": "f9e6026400a3a7b8d6e3a0c929f9c13e65cc41ff991180fd4fb4f17e921cc34c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 4
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/event-collection.ts",
+          "note": "실제수집조립",
+          "exists": true,
+          "currentSha256": "1e7471e0f75f47d6680b4453a60876503b542575429b4881c6519d57448a9e5f",
+          "unchangedFromHistoricalAuditSource": false,
+          "historicalLine": 16
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+          "note": "기간한도",
+          "exists": true,
+          "currentSha256": "20d7ea22d0a7ced423cfcd81c9627efcc6d69c6f73b76940570c740176ce6486",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 27
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B37",
+      "title": "연결 공고·행사작성 복귀",
+      "policyIds": [
+        "P217",
+        "P218",
+        "P219"
+      ],
+      "wbs": [
+        "4.2",
+        "3.6"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "관계기반 연결공고목록·10개/최신순/모집중필터와복귀현재상태 확인 연결.",
+      "acceptance": "동명이름문자검색으로연결공고추정 0, 직접 입력 행사독립상세 0, 차단/숨김/익명권한유지.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "note": "공고행사최신투영",
+          "exists": true,
+          "currentSha256": "0d436dc31e8483603d8751ca25f7d50e79660f613c220aa220ab5a514b03475a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 38
+        },
+        {
+          "path": "backend/supabase/functions/service-api/handler.ts",
+          "note": "독립행사상세 API",
+          "exists": true,
+          "currentSha256": "2f200eb1a90599c59b677ceb19591e6f87a991db5df24e2f0ab34eeb1a262c1c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 108
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B38",
+      "title": "행사 취소/연기·등록전확인·조건변경알림",
+      "policyIds": [
+        "P220",
+        "P221",
+        "P222",
+        "P223",
+        "P224",
+        "P225"
+      ],
+      "wbs": [
+        "4.2",
+        "3.6",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "공식검증된상태·unknown 구분·등록 전재확인응답·확정후변경합의·앱안알림 계약추가.",
+      "acceptance": "단순누락취소승격 0, 취소/연기미정새 연결거절, 실패입력보존, 기존동행자동취소/변경 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+          "note": "현재상태모델",
+          "exists": true,
+          "currentSha256": "8ea3a34e317f817d4b332936bc438c2716cf662ccdfc59e8b9e9051f136ea546",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 8
+        },
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "note": "새연결기본검사",
+          "exists": true,
+          "currentSha256": "0d436dc31e8483603d8751ca25f7d50e79660f613c220aa220ab5a514b03475a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 30
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B39",
+      "title": "원천 비표출·재표출",
+      "policyIds": [
+        "P226",
+        "P227"
+      ],
+      "wbs": [
+        "4.2",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "미구현",
+      "historicalAction": "provider 단위표출상태·검증근거·공개필드투영/깊은링크차단·재표출최신검증구현.",
+      "acceptance": "비표출원천이름/이미지/주소노출 0, 취소뜻아님안내, 공고본문/독립만남장소유지.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/port.ts",
+          "note": "현재원천모델",
+          "exists": true,
+          "currentSha256": "8ea3a34e317f817d4b332936bc438c2716cf662ccdfc59e8b9e9051f136ea546",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 46
+        },
+        {
+          "path": "backend/supabase/migrations/20261008012000_member_hidden_content_filters.sql",
+          "note": "본인숨김과다른개념",
+          "exists": true,
+          "currentSha256": "f264a46e13c39deaabcff7d548bea7f51c4de9301d9e2ff35ae5db670a46f84e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B40",
+      "title": "공식 동일개최 원천 통합·되돌리기",
+      "policyIds": [
+        "P228",
+        "P229",
+        "P230",
+        "P231"
+      ],
+      "wbs": [
+        "4.2",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "미구현",
+      "historicalAction": "공식근거만통합·가역관계·필드출처·대표전환·핵심충돌상태설계/구현.",
+      "acceptance": "유사제목자동통합 0, 기존링크보존, 분리후공고관계유실 0, 다른공개원천유지.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20260929100000_event_storage.sql",
+          "note": "원천별식별저장",
+          "exists": true,
+          "currentSha256": "8b853ab4af4311552126bbf66f073a9b2baeaad2371fabb2d0afc1ee2196931c",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 110
+        },
+        {
+          "path": "backend/supabase/migrations/20261002150000_post_event_links.sql",
+          "note": "현재단일원천연결",
+          "exists": true,
+          "currentSha256": "0d436dc31e8483603d8751ca25f7d50e79660f613c220aa220ab5a514b03475a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B41",
+      "title": "AI 탐색 동의·개인정보·일반검색",
+      "policyIds": [
+        "P233",
+        "P234",
+        "P235",
+        "P236",
+        "P237",
+        "P238",
+        "P239",
+        "P240",
+        "P241",
+        "P242"
+      ],
+      "wbs": [
+        "5.4a",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "첫 사용동의의서버저장·철회·일반검색유지와모델전송전검사를연결.",
+      "acceptance": "미동의모델전송 0/일반검색허용·개인식별필터·GPS 미사용·카드종류구분·원문로그 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/ai-chat/handler.ts",
+          "note": "인증AI진입",
+          "exists": true,
+          "currentSha256": "d6c928b9bc217142278a35acb6abcad3e230b0ec6307a63802dc4c3da862eb74",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 27
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "note": "서버동의검사",
+          "exists": true,
+          "currentSha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 11
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/privacy.ts",
+          "note": "개인정보필터",
+          "exists": true,
+          "currentSha256": "ac301aad68c5cc16f782d696ef174933a238b6498ab0ead012626aaad6b73e64",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 2
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B42",
+      "title": "AI 입력한도·검색검증·복구",
+      "policyIds": [
+        "P243",
+        "P244",
+        "P245",
+        "P246"
+      ],
+      "wbs": [
+        "5.4b",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제설정·모델출력 상한·오류/응답유실/PII 복구를합성/실공급사구분검증.",
+      "acceptance": "확인0개=확인미완료, 부분결과안내·조건요약대체·전송확실실패1재시도/유실자동중복 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/settings.ts",
+          "note": "명시한도",
+          "exists": true,
+          "currentSha256": "19f24e6112dafe0906c04fa8dfeac498d17e67cdfa36b074d0e1a4a09b1f4839",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 12
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/discovery.ts",
+          "note": "반환전재검증",
+          "exists": true,
+          "currentSha256": "4986e91b96f52c0d001edbdfd6aa8b5f3c7bb52c3e078ca66062fc73e0714448",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 27
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/orchestrator.ts",
+          "note": "해석/검색/출력흐름",
+          "exists": true,
+          "currentSha256": "9aae4050bf2d40abcd260e55eed86277470d2d5bd92d2ae3b8e3c359fbd88645",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 17
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B43",
+      "title": "AI 평가·문제신고 보류·90일",
+      "policyIds": [
+        "P247",
+        "P248",
+        "P249",
+        "P250"
+      ],
+      "wbs": [
+        "5.4b",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제 ACL/소유권·최종응답제공증거·파기준비·보류 UI 를통합대조.",
+      "acceptance": "준비미완료문제신고비활성·helpful 중복/만료거절·원문전체전송 0·90일/탈퇴빠른삭제.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/feedback.ts",
+          "note": "helpful/신고포트",
+          "exists": true,
+          "currentSha256": "6c140b4ff2960ea3d1e4f984a7bc3cdf36d11d02e30f561e9611c433c98943b7",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 7
+        },
+        {
+          "path": "backend/supabase/migrations/20261008014000_ai_feedback_receipts.sql",
+          "note": "receipt보관",
+          "exists": true,
+          "currentSha256": "d8ed7f0a2738d59ccf3a5e77185ee75454f16d0ae8e9e75285353e2c39e66d9a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 72
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/ai-feedback-maintenance.ts",
+          "note": "파기작업",
+          "exists": true,
+          "currentSha256": "d3cacb813564a3b276a5cf20235d09738fab91b34658dc52e953d30087ae9dea",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 6
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B44",
+      "title": "AI회원20회·동시1개·중단후보내기",
+      "policyIds": [
+        "P251",
+        "P252",
+        "P253",
+        "P254",
+        "P255"
+      ],
+      "wbs": [
+        "5.4b",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "부분 구현",
+      "historicalAction": "민규가가용상태확인계약을먼저설계·연결, 이후종현버튼제어. 기존동작즉시교체금지.",
+      "acceptance": "동시요청1·KST 자정·내부 retry 추가 0·모델없는조건버튼 0·안내/입력유지·자동재전송 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "note": "모델시작차감",
+          "exists": true,
+          "currentSha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 95
+        },
+        {
+          "path": "backend/supabase/migrations/20261005002528_ai_atomic_requests.sql",
+          "note": "회원하루20",
+          "exists": true,
+          "currentSha256": "789e97ae1e179bff176f0fc5b9d18fed445e26d18d4b186ca877defc98f35c02",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 27
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/member-request.ts",
+          "note": "중단상태",
+          "exists": true,
+          "currentSha256": "2d62854772e624b40b743b57b8d02ebea2a3427cde379a439444a5f8db271c71",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B45",
+      "title": "알림·최신상태·안내 성공기산",
+      "policyIds": [
+        "P256",
+        "P257",
+        "P258",
+        "P259",
+        "P260"
+      ],
+      "wbs": [
+        "3.6",
+        "6.3"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "대상삭제/권한상실/일시오류와구체원인단정없는복구를실제화면으로대조.",
+      "acceptance": "클릭만으로확정 0, 최신상태조회·403/404원인추측 0·모두읽음타인영향 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/db/repositories/notifications.ts",
+          "note": "알림읽음RPC",
+          "exists": true,
+          "currentSha256": "efe9ee83d69308ef0eb8534742bee9dcdbd38b3a4ecbdec393f468c744814bb7",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 3
+        },
+        {
+          "path": "backend/supabase/migrations/20261006130041_general_sanction_notice_delivery.sql",
+          "note": "안내제공시각",
+          "exists": true,
+          "currentSha256": "31526ba209a742449233cad1f52d024f471fb2de12864a53e4d15065226f676a",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 10
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B46",
+      "title": "안심수칙·외부연동 현재증거",
+      "policyIds": [
+        "P261",
+        "P262",
+        "P263",
+        "P264",
+        "P265",
+        "P266",
+        "P267"
+      ],
+      "wbs": [
+        "1.1",
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "확인 불가",
+      "historicalAction": "기존실제환경결과를버전·시점별연결하고현재 미검증은 NOT_RUN 표시.",
+      "acceptance": "공급사호출/합성/실제 회원/기기/배포증거구분·과거 PASS 현재성공승격없음.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "note": "AI전송준비차단",
+          "exists": true,
+          "currentSha256": "6daf67ccf0c85d87831eb488de697ead056559547381559a21da4d4ba9b8a568",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 16
+        },
+        {
+          "path": "backend/supabase/functions/_shared/integrations/events/seoul.ts",
+          "note": "서울수집보류",
+          "exists": true,
+          "currentSha256": "917788edc7428fde45b32f1a58083f43006b4ea2df93cafa32805a0848195668",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 155
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B47",
+      "title": "자료별 보관·삭제·네이버 최소기록",
+      "policyIds": [
+        "P274",
+        "P275",
+        "P276",
+        "P277",
+        "P278",
+        "P279",
+        "P280"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제스토리지/DB/회차/신고절차종료·최소연결목적정기검토를운영절차와검증.",
+      "acceptance": "즉시삭제7일유예 0·채팅늦은종료+1년·신고숨김별도유지·종료제재상세90일·최소기록목적보존.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005030100_member_retention_batches.sql",
+          "note": "공고/채팅세대별보관",
+          "exists": true,
+          "currentSha256": "c7877762ca88df738a991b35fc65ae4144e1de6eaf7fca44b623caadaa7a1e60",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        },
+        {
+          "path": "backend/supabase/migrations/20261005225107_report_retention_purge.sql",
+          "note": "사건종결후파기",
+          "exists": true,
+          "currentSha256": "c5b801c0f31dd8f058aafd844f90b5531cd582c7f668cc6703b0b01b3ce14a91",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 39
+        },
+        {
+          "path": "backend/supabase/functions/_shared/auth/member-cleanup.ts",
+          "note": "활성본삭제연결",
+          "exists": true,
+          "currentSha256": "51937528b1f3a0e783e9eda25f951730790833d9bfd423cf28a601362ff72c94",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B48",
+      "title": "진단·원장·백업과 복구삭제",
+      "policyIds": [
+        "P281",
+        "P282",
+        "P283",
+        "P284"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "확인 불가",
+      "historicalAction": "운영보관 job/감사/백업만료·격리복원·삭제목록재적용증거를수집.",
+      "acceptance": "삭제자료새백업제외·복구재삭제·미정산예약보존·비밀값/원문로그 0.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261008023000_worker_runtime_retention.sql",
+          "note": "작업상세보관",
+          "exists": true,
+          "currentSha256": "014f04fdde6c2a01edee99d36f0e3521529af29c25746f86af4cea200c5abea6",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 1
+        },
+        {
+          "path": "backend/supabase/migrations/20261006170000_ai_account_budget.sql",
+          "note": "미정산예산기록",
+          "exists": true,
+          "currentSha256": "3b8e5f523a077ee699505cda61835c3a082d4fdca7475e1b27db761b6e671ce8",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 12
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B49",
+      "title": "운영자·삭제요청 지원체계",
+      "policyIds": [
+        "P285",
+        "P286",
+        "P287",
+        "P288",
+        "P289",
+        "P290"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "확인 불가",
+      "historicalAction": "공개방침삭제직접링크·메일접수·최소본인확인·처리목표·지연안내를실행증거와연결.",
+      "acceptance": "비로그인삭제구역접근·메일도착확인·본인확인실패보존·진행약속조건·활성삭제즉시.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261005143318_assigned_report_operator_access.sql",
+          "note": "실제배정전제ACL",
+          "exists": true,
+          "currentSha256": "296cc4fc48fce2f66f1ad72d10b39b3a12d2f7a225033a61fb8ab2b56a4486fd",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 18
+        },
+        {
+          "path": "backend/supabase/functions/_shared/services/member-lifecycle-service.ts",
+          "note": "탈퇴처리상태",
+          "exists": true,
+          "currentSha256": "379286175c77d45848c74b49875d97095aecbb0cb95e00bc8609d60df1f6e7e2",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 10
+        }
+      ],
+      "currentDelta": "대표 조유미/일반 신고 부재 대체 종현 확정. 실제 최소 ACL/감사/회수는 잔여.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B50",
+      "title": "출시조건·법적적합성·플랫폼 요건",
+      "policyIds": [
+        "P291",
+        "P292",
+        "P293",
+        "P294",
+        "P295",
+        "P296"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "확인 불가",
+      "historicalAction": "종현/민규기술검증·유미운영/출시확인과현재공식조건증거를분리연결.",
+      "acceptance": "미검증 PASS 승격 0·필수접근/신고/차단/탈퇴/제재/후기/요약·외부삭제실제검증.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "note": "법적검토전닫힘",
+          "exists": true,
+          "currentSha256": "6daf67ccf0c85d87831eb488de697ead056559547381559a21da4d4ba9b8a568",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 16
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "note": "회원전송전닫힘",
+          "exists": true,
+          "currentSha256": "6daf67ccf0c85d87831eb488de697ead056559547381559a21da4d4ba9b8a568",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 16
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B51",
+      "title": "일일작업·요약분할·재시도",
+      "policyIds": [
+        "P297",
+        "P298",
+        "P299"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "00:01등록과각 job 독립실행·전체 근거분할·실패3/예산 yield 를실제 환경설정으로검증.",
+      "acceptance": "자동완료배치대기 0·요약10작업/60초·lease180·12000자/20후기/병합4·800토큰강제.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+          "note": "일일작업분리",
+          "exists": true,
+          "currentSha256": "20d7ea22d0a7ced423cfcd81c9627efcc6d69c6f73b76940570c740176ce6486",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 5
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/retry.ts",
+          "note": "지수retry",
+          "exists": true,
+          "currentSha256": "8251f99dcb9113f3de6c5df819cdecc006139221b9b0e98a6a6f2801ecd611a6",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 25
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/review-summary/orchestrator.ts",
+          "note": "입력분할/병합",
+          "exists": true,
+          "currentSha256": "fbfc07358667c7ba06adbc2a087650ae1e29063e3b41f803db84367203bae438",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 66
+        }
+      ],
+      "currentDelta": "신규 독립 동의 migration/API/availability 영향 범위를 별도 실제 SQL로 검증 중. 기존 단일 summary_allowed를 현재 동의 근거로 사용하지 않음.",
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B52",
+      "title": "비용원장·호출상한·timeout",
+      "policyIds": [
+        "P300",
+        "P301",
+        "P302",
+        "P303",
+        "P304",
+        "P305"
+      ],
+      "wbs": [
+        "5.4b",
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제환경한도/호스팅/모델강제·예산예약/정산/유실·공급사분리원장검증.",
+      "acceptance": "미정산예약초기화 0·동의/회원한도계정전환우회 0·technicalunit 원화환산 0·추가결제정책공급사별분리.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/settings.ts",
+          "note": "명시800/600상한",
+          "exists": true,
+          "currentSha256": "19f24e6112dafe0906c04fa8dfeac498d17e67cdfa36b074d0e1a4a09b1f4839",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 22
+        },
+        {
+          "path": "backend/supabase/functions/_shared/ai/providers/runtime.ts",
+          "note": "출력강제근거없음닫힘",
+          "exists": true,
+          "currentSha256": "6daf67ccf0c85d87831eb488de697ead056559547381559a21da4d4ba9b8a568",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 16
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/daily.ts",
+          "note": "31일/5쪽/15초수집",
+          "exists": true,
+          "currentSha256": "20d7ea22d0a7ced423cfcd81c9627efcc6d69c6f73b76940570c740176ce6486",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 110
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    },
+    {
+      "id": "B53",
+      "title": "전역 큐20 고유작업·UNKNOWN",
+      "policyIds": [
+        "P306"
+      ],
+      "wbs": [
+        "1.4",
+        "6.1"
+      ],
+      "owner": "minkyu",
+      "historicalClassification": "연동 대기",
+      "historicalAction": "실제공통 runner·DB 역할·job20개/재조회추가 0·상실응답복구를증거로연결.",
+      "acceptance": "DB 호출20개로오해 0·잔여0terminal 유지관리보존·UNKNOWN 자동재실행 0·세큐어원요청확인후재개.",
+      "currentSourceRefs": [
+        {
+          "path": "backend/supabase/migrations/20261008022000_worker_runtime_atomic.sql",
+          "note": "전역고유작업예산",
+          "exists": true,
+          "currentSha256": "d3c9ebed9c370d561a18f92a230fa395c2d0efa0780d88cb3785fd86b8bb6bc3",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 1
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/retry.ts",
+          "note": "원격종결미확인별도상태",
+          "exists": true,
+          "currentSha256": "8251f99dcb9113f3de6c5df819cdecc006139221b9b0e98a6a6f2801ecd611a6",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 28
+        },
+        {
+          "path": "backend/supabase/functions/_shared/jobs/worker-run.ts",
+          "note": "전역점유",
+          "exists": true,
+          "currentSha256": "683b9a6a8a0f1ce0484450eeb76ff7f30da8655125044935fccf62d91c7faf1e",
+          "unchangedFromHistoricalAuditSource": true,
+          "historicalLine": 24
+        }
+      ],
+      "currentDelta": null,
+      "actualRuntimeAcceptance": "OPEN_UNLESS_EXACT_PREVIOUS_RECEIPT_RECONCILED",
+      "implementationComplete": false
+    }
+  ],
+  "policyCoverage": {
+    "P001": [
+      "B01"
+    ],
+    "P002": [
+      "B02"
+    ],
+    "P003": [
+      "B03"
+    ],
+    "P004": [
+      "B03"
+    ],
+    "P005": [
+      "B03"
+    ],
+    "P006": [
+      "B04"
+    ],
+    "P007": [
+      "B05"
+    ],
+    "P008": [
+      "B05"
+    ],
+    "P009": [
+      "B05"
+    ],
+    "P010": [
+      "B06"
+    ],
+    "P011": [
+      "B06"
+    ],
+    "P012": [
+      "B06"
+    ],
+    "P013": [
+      "B06"
+    ],
+    "P014": [
+      "B07"
+    ],
+    "P015": [
+      "B07"
+    ],
+    "P016": [
+      "B07"
+    ],
+    "P017": [
+      "B07"
+    ],
+    "P018": [
+      "B07"
+    ],
+    "P019": [
+      "B07"
+    ],
+    "P020": [
+      "B08"
+    ],
+    "P021": [
+      "B08"
+    ],
+    "P022": [
+      "B08"
+    ],
+    "P023": [
+      "B08"
+    ],
+    "P024": [
+      "B08"
+    ],
+    "P025": [
+      "B08"
+    ],
+    "P026": [
+      "B08"
+    ],
+    "P027": [
+      "B08"
+    ],
+    "P028": [
+      "B09"
+    ],
+    "P029": [
+      "B09"
+    ],
+    "P030": [
+      "B09"
+    ],
+    "P031": [
+      "B09"
+    ],
+    "P032": [
+      "B09"
+    ],
+    "P033": [
+      "B09"
+    ],
+    "P034": [
+      "B10"
+    ],
+    "P035": [
+      "B10"
+    ],
+    "P036": [
+      "B11"
+    ],
+    "P037": [
+      "B11"
+    ],
+    "P038": [
+      "B11"
+    ],
+    "P039": [
+      "B11"
+    ],
+    "P040": [
+      "B11"
+    ],
+    "P041": [
+      "B11"
+    ],
+    "P042": [
+      "B11"
+    ],
+    "P043": [
+      "B11"
+    ],
+    "P044": [
+      "B11"
+    ],
+    "P045": [
+      "B11"
+    ],
+    "P046": [
+      "B10"
+    ],
+    "P047": [
+      "B11"
+    ],
+    "P048": [
+      "B11"
+    ],
+    "P049": [
+      "B12"
+    ],
+    "P050": [
+      "B12"
+    ],
+    "P051": [
+      "B12"
+    ],
+    "P052": [
+      "B12"
+    ],
+    "P053": [
+      "B12"
+    ],
+    "P054": [
+      "B12"
+    ],
+    "P055": [
+      "B12"
+    ],
+    "P056": [
+      "B12"
+    ],
+    "P057": [
+      "B12"
+    ],
+    "P058": [
+      "B13"
+    ],
+    "P059": [
+      "B13"
+    ],
+    "P060": [
+      "B13"
+    ],
+    "P061": [
+      "B13"
+    ],
+    "P062": [
+      "B13"
+    ],
+    "P063": [
+      "B14"
+    ],
+    "P064": [
+      "B14"
+    ],
+    "P065": [
+      "B14"
+    ],
+    "P066": [
+      "B14"
+    ],
+    "P067": [
+      "B14"
+    ],
+    "P068": [
+      "B14"
+    ],
+    "P069": [
+      "B14"
+    ],
+    "P070": [
+      "B15"
+    ],
+    "P071": [
+      "B15"
+    ],
+    "P072": [
+      "B14"
+    ],
+    "P073": [
+      "B15"
+    ],
+    "P074": [
+      "B15"
+    ],
+    "P075": [
+      "B15"
+    ],
+    "P076": [
+      "B15"
+    ],
+    "P077": [
+      "B15"
+    ],
+    "P078": [
+      "B15"
+    ],
+    "P079": [
+      "B15"
+    ],
+    "P080": [
+      "B15"
+    ],
+    "P081": [
+      "B15"
+    ],
+    "P082": [
+      "B16"
+    ],
+    "P083": [
+      "B16"
+    ],
+    "P084": [
+      "B16"
+    ],
+    "P085": [
+      "B16"
+    ],
+    "P086": [
+      "B16"
+    ],
+    "P087": [
+      "B17"
+    ],
+    "P088": [
+      "B16"
+    ],
+    "P089": [
+      "B16"
+    ],
+    "P090": [
+      "B16"
+    ],
+    "P091": [
+      "B16"
+    ],
+    "P092": [
+      "B18"
+    ],
+    "P093": [
+      "B18"
+    ],
+    "P094": [
+      "B18"
+    ],
+    "P095": [
+      "B18"
+    ],
+    "P096": [
+      "B18"
+    ],
+    "P097": [
+      "B19"
+    ],
+    "P098": [
+      "B19"
+    ],
+    "P099": [
+      "B19"
+    ],
+    "P100": [
+      "B19"
+    ],
+    "P101": [
+      "B19"
+    ],
+    "P102": [
+      "B19"
+    ],
+    "P103": [
+      "B19"
+    ],
+    "P104": [
+      "B19"
+    ],
+    "P105": [
+      "B19"
+    ],
+    "P106": [
+      "B20"
+    ],
+    "P107": [
+      "B20"
+    ],
+    "P108": [
+      "B20"
+    ],
+    "P109": [
+      "B20"
+    ],
+    "P110": [
+      "B20"
+    ],
+    "P111": [
+      "B20"
+    ],
+    "P112": [
+      "B21"
+    ],
+    "P113": [
+      "B21"
+    ],
+    "P114": [
+      "B21"
+    ],
+    "P115": [
+      "B22"
+    ],
+    "P116": [
+      "B22"
+    ],
+    "P117": [
+      "B22"
+    ],
+    "P118": [
+      "B22"
+    ],
+    "P119": [
+      "B23"
+    ],
+    "P120": [
+      "B23"
+    ],
+    "P121": [
+      "B23"
+    ],
+    "P122": [
+      "B23"
+    ],
+    "P123": [
+      "B23"
+    ],
+    "P124": [
+      "B23"
+    ],
+    "P125": [
+      "B24"
+    ],
+    "P126": [
+      "B24"
+    ],
+    "P127": [
+      "B24"
+    ],
+    "P128": [
+      "B24"
+    ],
+    "P129": [
+      "B25"
+    ],
+    "P130": [
+      "B25"
+    ],
+    "P131": [
+      "B25"
+    ],
+    "P132": [
+      "B25"
+    ],
+    "P133": [
+      "B25"
+    ],
+    "P134": [
+      "B25"
+    ],
+    "P135": [
+      "B25"
+    ],
+    "P136": [
+      "B26"
+    ],
+    "P137": [
+      "B26"
+    ],
+    "P138": [
+      "B26"
+    ],
+    "P139": [
+      "B26"
+    ],
+    "P140": [
+      "B26"
+    ],
+    "P141": [
+      "B27"
+    ],
+    "P142": [
+      "B27"
+    ],
+    "P143": [
+      "B28"
+    ],
+    "P144": [
+      "B28"
+    ],
+    "P145": [
+      "B28"
+    ],
+    "P146": [
+      "B28"
+    ],
+    "P147": [
+      "B28"
+    ],
+    "P148": [
+      "B28"
+    ],
+    "P149": [
+      "B28"
+    ],
+    "P150": [
+      "B28"
+    ],
+    "P151": [
+      "B29"
+    ],
+    "P152": [
+      "B29"
+    ],
+    "P153": [
+      "B29"
+    ],
+    "P154": [
+      "B29"
+    ],
+    "P155": [
+      "B30"
+    ],
+    "P156": [
+      "B30"
+    ],
+    "P157": [
+      "B30"
+    ],
+    "P158": [
+      "B30"
+    ],
+    "P159": [
+      "B30"
+    ],
+    "P160": [
+      "B30"
+    ],
+    "P161": [
+      "B29"
+    ],
+    "P162": [
+      "B29"
+    ],
+    "P163": [
+      "B29"
+    ],
+    "P164": [
+      "B31"
+    ],
+    "P165": [
+      "B31"
+    ],
+    "P166": [
+      "B31"
+    ],
+    "P167": [
+      "B31"
+    ],
+    "P168": [
+      "B31"
+    ],
+    "P169": [
+      "B31"
+    ],
+    "P170": [
+      "B31"
+    ],
+    "P171": [
+      "B31"
+    ],
+    "P172": [
+      "B31"
+    ],
+    "P173": [
+      "B32"
+    ],
+    "P174": [
+      "B32"
+    ],
+    "P175": [
+      "B32"
+    ],
+    "P176": [
+      "B32"
+    ],
+    "P177": [
+      "B32"
+    ],
+    "P178": [
+      "B33"
+    ],
+    "P179": [
+      "B33"
+    ],
+    "P180": [
+      "B33"
+    ],
+    "P181": [
+      "B33"
+    ],
+    "P182": [
+      "B33"
+    ],
+    "P183": [
+      "B33"
+    ],
+    "P184": [
+      "B33"
+    ],
+    "P185": [
+      "B33"
+    ],
+    "P186": [
+      "B34"
+    ],
+    "P187": [
+      "B34"
+    ],
+    "P188": [
+      "B34"
+    ],
+    "P189": [
+      "B34"
+    ],
+    "P190": [
+      "B34"
+    ],
+    "P191": [
+      "B34"
+    ],
+    "P192": [
+      "B34"
+    ],
+    "P193": [
+      "B34"
+    ],
+    "P194": [
+      "B34"
+    ],
+    "P195": [
+      "B35"
+    ],
+    "P196": [
+      "B35"
+    ],
+    "P197": [
+      "B34"
+    ],
+    "P198": [
+      "B34"
+    ],
+    "P199": [
+      "B35"
+    ],
+    "P200": [
+      "B35"
+    ],
+    "P201": [
+      "B01"
+    ],
+    "P202": [
+      "B01"
+    ],
+    "P203": [
+      "B01"
+    ],
+    "P204": [
+      "B36"
+    ],
+    "P205": [
+      "B17"
+    ],
+    "P206": [
+      "B17"
+    ],
+    "P207": [
+      "B34"
+    ],
+    "P208": [
+      "B17"
+    ],
+    "P209": [
+      "B17"
+    ],
+    "P210": [
+      "B17"
+    ],
+    "P211": [
+      "B35"
+    ],
+    "P212": [
+      "B35"
+    ],
+    "P213": [
+      "B35"
+    ],
+    "P214": [
+      "B35"
+    ],
+    "P215": [
+      "B35"
+    ],
+    "P216": [
+      "B35"
+    ],
+    "P217": [
+      "B37"
+    ],
+    "P218": [
+      "B37"
+    ],
+    "P219": [
+      "B37"
+    ],
+    "P220": [
+      "B38"
+    ],
+    "P221": [
+      "B38"
+    ],
+    "P222": [
+      "B38"
+    ],
+    "P223": [
+      "B38"
+    ],
+    "P224": [
+      "B38"
+    ],
+    "P225": [
+      "B38"
+    ],
+    "P226": [
+      "B39"
+    ],
+    "P227": [
+      "B39"
+    ],
+    "P228": [
+      "B40"
+    ],
+    "P229": [
+      "B40"
+    ],
+    "P230": [
+      "B40"
+    ],
+    "P231": [
+      "B40"
+    ],
+    "P232": [
+      "B01"
+    ],
+    "P233": [
+      "B41"
+    ],
+    "P234": [
+      "B41"
+    ],
+    "P235": [
+      "B41"
+    ],
+    "P236": [
+      "B41"
+    ],
+    "P237": [
+      "B41"
+    ],
+    "P238": [
+      "B41"
+    ],
+    "P239": [
+      "B41"
+    ],
+    "P240": [
+      "B41"
+    ],
+    "P241": [
+      "B41"
+    ],
+    "P242": [
+      "B41"
+    ],
+    "P243": [
+      "B42"
+    ],
+    "P244": [
+      "B42"
+    ],
+    "P245": [
+      "B42"
+    ],
+    "P246": [
+      "B42"
+    ],
+    "P247": [
+      "B43"
+    ],
+    "P248": [
+      "B43"
+    ],
+    "P249": [
+      "B43"
+    ],
+    "P250": [
+      "B43"
+    ],
+    "P251": [
+      "B44"
+    ],
+    "P252": [
+      "B44"
+    ],
+    "P253": [
+      "B44"
+    ],
+    "P254": [
+      "B44"
+    ],
+    "P255": [
+      "B44"
+    ],
+    "P256": [
+      "B45"
+    ],
+    "P257": [
+      "B45"
+    ],
+    "P258": [
+      "B45"
+    ],
+    "P259": [
+      "B45"
+    ],
+    "P260": [
+      "B45"
+    ],
+    "P261": [
+      "B46"
+    ],
+    "P262": [
+      "B46"
+    ],
+    "P263": [
+      "B46"
+    ],
+    "P264": [
+      "B46"
+    ],
+    "P265": [
+      "B46"
+    ],
+    "P266": [
+      "B46"
+    ],
+    "P267": [
+      "B46"
+    ],
+    "P268": [
+      "B07"
+    ],
+    "P269": [
+      "B07"
+    ],
+    "P270": [
+      "B07"
+    ],
+    "P271": [
+      "B07"
+    ],
+    "P272": [
+      "B07"
+    ],
+    "P273": [
+      "B07"
+    ],
+    "P274": [
+      "B47"
+    ],
+    "P275": [
+      "B47"
+    ],
+    "P276": [
+      "B47"
+    ],
+    "P277": [
+      "B47"
+    ],
+    "P278": [
+      "B47"
+    ],
+    "P279": [
+      "B47"
+    ],
+    "P280": [
+      "B47"
+    ],
+    "P281": [
+      "B48"
+    ],
+    "P282": [
+      "B48"
+    ],
+    "P283": [
+      "B48"
+    ],
+    "P284": [
+      "B48"
+    ],
+    "P285": [
+      "B49"
+    ],
+    "P286": [
+      "B49"
+    ],
+    "P287": [
+      "B49"
+    ],
+    "P288": [
+      "B49"
+    ],
+    "P289": [
+      "B49"
+    ],
+    "P290": [
+      "B49"
+    ],
+    "P291": [
+      "B50"
+    ],
+    "P292": [
+      "B50"
+    ],
+    "P293": [
+      "B50"
+    ],
+    "P294": [
+      "B50"
+    ],
+    "P295": [
+      "B50"
+    ],
+    "P296": [
+      "B50"
+    ],
+    "P297": [
+      "B51"
+    ],
+    "P298": [
+      "B51"
+    ],
+    "P299": [
+      "B51"
+    ],
+    "P300": [
+      "B52"
+    ],
+    "P301": [
+      "B52"
+    ],
+    "P302": [
+      "B52"
+    ],
+    "P303": [
+      "B52"
+    ],
+    "P304": [
+      "B52"
+    ],
+    "P305": [
+      "B52"
+    ],
+    "P306": [
+      "B53"
+    ]
+  },
+  "uncoveredPolicyIds": [],
+  "notes": [
+    "과거 분류는 historicalClassification이며 현재 기능 PASS로 승계하지 않는다.",
+    "현재 소스 동일성은 정적 대조이고 실제 회원/운영/공급사/기기 검증이 아니다.",
+    "KOPIS/독립동의/신고대체 최신정책은 현재 요구이며 별도 실행 근거가 필요하다.",
+    "historicalLine은 과거 감사 리비전의 위치이며 현재 파일 행번호가 아니다."
+  ]
+}

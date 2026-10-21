@@ -28,10 +28,20 @@
 - WBS4.5/4.6: HTTP 접수 신뢰·검사 지연·expiry worker arbitration이 없어 clock_timestamp를 statement_timestamp로 교체하는 방식은 채택하지 않는다. 실제 Lock 증거 판정과 재현 준비를 먼저 분리한다. 제품 결함은 미해결이다.
 - WBS5.1/5.7: 독립 동의 API/DB와 요약 eligibility 구현 중. 기존 동의의 자동 승계는 하지 않으며 합성 fixture는 명시적으로 새 동의를 선택한다.
 - WBS7.8: 공식 사이트 대조를 통과한 분류만 게시 가능한 gate 구현 중. 실제 공홈/API 대조와 영속 게시 검증은 잔여다.
-- 실제 검증: Docker daemon ID879401ec-e2b7-4ad8-9915-0a16ea74e3f5를 읽기 확인했다. 이 재개 묶음의 신규 컨테이너·DB·Auth·공급사 실행은 아직0이다.
+- 재개 초기 관찰: Docker daemon ID879401ec-e2b7-4ad8-9915-0a16ea74e3f5를 읽기 확인했다. 이 시점의 신규 컨테이너·DB·Auth·공급사 실행은0이었다. 이후 실제 SQL 결과는 하단의 신규 AI 검증 기록을 따른다.
 
 ## 외부 조건
 
 운영 프로젝트 접근은 소유자 초대/연결 갱신, Storage39개 원본 확보, 실회원2명 HOLD 해소, 공급사 운영/보관/삭제·실측 조건, 종현 빌드/유미 UT·출시 자료, iPhone 서명 조건이 필요하다. 이 조건이 필요한 TASK를 제외해44개를 줄이지 않고 독립 작업을 계속한다.
 
-이전 a002 source4는 정지 완료, b003 target은 정지·보존이며 복원 결과는 FAIL_CLOSED다. 원178행·sequence41·UNKNOWN2와 기존 metadata/실패 영수증을 보존한다. 과거 packet/intent/token을 새 실행에 재사용하지 않는다.
+이전 a002 source4는 정지 완료, b003 target은 정지·보존이며 복원 결과는 FAIL_CLOSED다. 원 전체 행 bag·sequence41·UNKNOWN2와 기존 metadata/실패 영수증을 보존한다. 과거 packet/intent/token을 새 실행에 재사용하지 않는다.
+
+## 신규 AI SQL 실제 검증 — 2de6195
+
+[영수증 요약](2026-10-20-current-runtime-evidence.json): 새 network-none PostgreSQL 사본에서 독립동의 migration과 SQL3파일이 PASS_SQL_ONLY다. 기본false·이전단일동의승계0·독립철회·서버사전상태·이전요약게시/열람·현재완료/동의 회귀를 실제 SQL로 실행했다. 원archive는고정121합성snapshot이며운영복원/전체122신규설치/실제Auth검증PASS가아니다.
+
+새대상1개정상중지,기존자원metadata보존,UNKNOWN2유지,최소2290988KiB였다. 기존저장바이트전체·실회원·공급사·운영·동시전체철회는미검증이다. a001은create전접근시각오판으로중단했고a002는Mounts배열순서오판으로중단/정확own1정상중지했다. 독립원문검산뒤새baseline에서만전체mountbag정렬을적용했으며과거실패/guard/원자료는바꾸지않았다.
+
+로컬커밋 a85a833/5a133f4/18f4b7d/2de6195를남겼다. 5a133f4의추가테스트는임시경로비정규형때문에실패한상태로커밋돼18f4b7d에서canonicalfixture로수정하고12회귀를통과했다. 2de6195는mountbag RED→GREEN과14회귀통과다. 원격푸시는0이다.
+
+정책306항목·서버53묶음/참조131개의현재SHA와후속WBS를 [새차이원장](2026-10-20-current-server-gap-map.md)에연결했다. 독립검토의B06신고대체·1.6이미반영USERFLOW·5.1수신회신정정을반영했다.
