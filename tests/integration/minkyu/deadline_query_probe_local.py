@@ -110,7 +110,7 @@ class ProbeSeal:
             p=ROOT/rel;st=p.lstat();raw=module.fast_source_bytes(p,(st.st_dev,st.st_ino,st.st_size,st.st_mtime_ns,digest))
             need(sha(raw)==digest,'PROBE_SOURCE_PIN')
             self.sources[rel]=(st.st_dev,st.st_ino,st.st_size,st.st_mtime_ns,digest)
-        self.binding=self.core.read(self.core.root/'signed-ai-binding-private.json')
+        self.binding=runtime.original_binding_bytes()
         runtime.guard(self.review)
         runtime.save('probe-seal-private.json',{'fullPreGuard':True,'fullPostGuardRequired':True,
                      'sourceSetSha256':sha(canonical(self.sources)),'timeoutPreflightSha256':authority.timeout_preflight_sha256})
@@ -121,7 +121,7 @@ class ProbeSeal:
         need(review==r.review and (self.start is None or time.monotonic()-self.start<6),'PROBE_FAST_WINDOW')
         need(not r.raw_sticky and not self.core.failures and r.memory_last is not None
              and time.monotonic()-r.memory_last<=3,'PROBE_MEMORY_OR_RAW_CLOSURE')
-        need(self.core.read(self.core.root/'signed-ai-binding-private.json')==self.binding,'PROBE_ORIGINAL_BINDING')
+        need(r.original_binding_bytes()==self.binding,'PROBE_ORIGINAL_BINDING')
         for rel,stamp in self.sources.items():
             need(sha(self.module.fast_source_bytes(ROOT/rel,stamp))==stamp[4],'PROBE_CAPTURED_SOURCE_CHANGED')
         need(subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True,timeout=1).strip()==review.source_head,'PROBE_HEAD_CHANGED')

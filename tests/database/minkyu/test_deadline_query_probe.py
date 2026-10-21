@@ -111,6 +111,14 @@ class QueryProbeTests(unittest.TestCase):
         self.context_run(True)
     def test_candidate_published_only_after_successful_context_exit(self):
         self.context_run(False)
+    def test_probe_guard_uses_runtime_binding_anchor_not_private_reader(self):
+        from types import SimpleNamespace
+        seal=m.ProbeSeal.__new__(m.ProbeSeal);review=SimpleNamespace(source_head='a'*40)
+        core=SimpleNamespace(failures=[],read=Mock(side_effect=AssertionError('legacy reader called')))
+        runtime=SimpleNamespace(review=review,raw_sticky=[],core=core,memory_last=m.time.monotonic(),original_binding_bytes=Mock(return_value=b'original'))
+        seal.runtime=runtime;seal.core=core;seal.start=None;seal.sources={};seal.binding=b'original'
+        with patch.object(m.subprocess,'check_output',return_value='a'*40):seal.guard(review)
+        runtime.original_binding_bytes.assert_called_once();core.read.assert_not_called()
     def test_normal_finalization_verifies_full_original_bags(self):
         r=self.runtime();before={'auth':'same','UNKNOWN':'same'};m.finalize_probe(r,'review',before,True,None)
         r.verify_delta.assert_called_once_with(before,{'rows':'original'},'review',cleanup=True);r.close.assert_called_once_with(None)

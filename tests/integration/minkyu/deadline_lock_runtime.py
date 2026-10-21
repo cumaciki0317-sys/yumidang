@@ -15,6 +15,7 @@ import queue
 import re
 import signal
 import subprocess
+import stat
 import sys
 import threading
 import time
@@ -23,7 +24,9 @@ ROOT = Path(__file__).resolve().parents[3]
 SELF = 'tests/integration/minkyu/deadline_lock_runtime.py'
 EXECUTOR = 'tests/integration/minkyu/deadline_lock_executor.py'
 READONLY = 'tests/integration/minkyu/service_profile_readonly_local.py'
-OWN_SOURCES = (SELF, EXECUTOR, READONLY)
+READONLY_TRANSPORT = 'tests/integration/minkyu/deadline_readonly_transport.py'
+PRIVATE_ANCHOR_HELPER = 'tools/local/collect_d03_timeout_batch.py'
+OWN_SOURCES = (SELF, EXECUTOR, READONLY, READONLY_TRANSPORT, PRIVATE_ANCHOR_HELPER)
 
 
 def need(value, code):
@@ -170,6 +173,134 @@ def verify_own_sources(head, pins):
         need(raw == committed and sha(raw) == digest, 'D03_SOURCE_NOT_COMMITTED')
     need(subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True, timeout=15).strip() == head,
          'D03_HEAD_CHANGED')
+
+
+class ReviewedDeadlineSourceSeal:
+    """현재 D03 전용 exact source seal. full source_pins는 초기/최종 그대로 수행한다."""
+    MIGRATIONS='backend/supabase/migrations'
+    @staticmethod
+    def directory_state(st):return (st.st_dev,st.st_ino,st.st_uid,st.st_gid,st.st_mode)
+    @staticmethod
+    def file_state(st):return (st.st_dev,st.st_ino,st.st_uid,st.st_gid,st.st_mode,st.st_nlink,st.st_size,st.st_mtime_ns,st.st_ctime_ns)
+    def __init__(self,readonly,reviewed,own_pins):
+        need(type(reviewed)is readonly.ReviewedServiceProfileReadonly,'D03_TYPED_SOURCE_SEAL_REVIEW')
+        self.readonly=readonly;self.value=reviewed.descriptor();self.head=self.value['sourceHead']
+        need('currentProfile'in self.value and self.value['currentProfile']['sourceHead']==self.head,'D03_CURRENT_SOURCE_SEAL_ONLY')
+        self.pins=dict(self.value['pins']);self.own_pins=dict(own_pins);self.directories={};self.files={};self.closed=False
+        for rel,digest in self.own_pins.items():
+            need(rel not in self.pins or self.pins[rel]==digest,'D03_SOURCE_SEAL_PIN_COLLISION');self.pins[rel]=digest
+        self.preservation_copies=set();self.migrations=[]
+        try:
+            self.full_verify();self.capture_reviewed_migrations();self.index=self.head_index()
+            tracked={entry[0].decode()for entry in self.index}
+            need(self.working_index()==self.index,'D03_SOURCE_INDEX_NOT_HEAD')
+            for rel,digest in self.pins.items():
+                path=ROOT/rel
+                need(type(rel)is str and not Path(rel).is_absolute()and '..'not in Path(rel).parts
+                     and path.resolve()==path and re.fullmatch('[a-f0-9]{64}',digest),'D03_SOURCE_SEAL_PATH')
+                fd=self.directory(path.parent);leaf=os.open(path.name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
+                try:state=self.file_state(os.fstat(leaf))
+                except BaseException:os.close(leaf);raise
+                self.files[rel]=(leaf,state,digest)
+                need(stat.S_ISREG(os.fstat(leaf).st_mode)and os.fstat(leaf).st_nlink==1,'D03_SOURCE_SEAL_REGULAR')
+                raw=self.read_leaf(leaf,self.files[rel][1][6])
+                need(sha(raw)==digest,'D03_SOURCE_SEAL_CAPTURED_BYTES')
+                if rel not in self.preservation_copies or rel in tracked:
+                    need(self.git('show',self.head+':'+rel)==raw,'D03_SOURCE_SEAL_GIT_BLOB')
+            self.check()
+        except BaseException:self.close();raise
+    def git(self,*args):return subprocess.check_output(['git','-C',str(ROOT),*args],timeout=15,stderr=subprocess.DEVNULL)
+    def head_now(self):return self.git('rev-parse','HEAD').decode().strip()
+    def full_verify(self):
+        head,pins=self.readonly.source_pins(self.head,self.value['currentProfile'])
+        need(head==self.head and pins==self.value['pins'],'D03_SOURCE_FULL_PROFILE_CHANGED')
+        verify_own_sources(self.head,self.own_pins)
+    def capture_reviewed_migrations(self):
+        # service graph pins는 SQL을 포함하지 않는다. 명시 current profile에서 별도로 확정한다.
+        cp=self.value['currentProfile']
+        with self.readonly.current_support(self.value['pins'])as policy:
+            history,payloads=policy.inspect_reviewed_current_migrations(ROOT,self.head,cp['migrationEntriesSha256'])
+            entries=history['entries']
+            need([entry['version']for entry in entries]==cp['versions'],'D03_SOURCE_MIGRATION_VERSIONS')
+            need(sha(json.dumps(entries,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode())==cp['migrationEntriesSha256'],'D03_SOURCE_MIGRATION_MANIFEST')
+            need(set(payloads)=={Path(entry['path'])for entry in entries},'D03_SOURCE_MIGRATION_PAYLOAD_SET')
+            for entry in entries:
+                rel=entry['path'];raw=payloads[Path(rel)]
+                need(rel.startswith(self.MIGRATIONS+'/')and sha(raw)==entry['sha256'],'D03_SOURCE_MIGRATION_PAYLOAD')
+                need(rel not in self.pins or self.pins[rel]==entry['sha256'],'D03_SOURCE_MIGRATION_PIN_COLLISION')
+                self.pins[rel]=entry['sha256'];self.migrations.append(rel)
+            for rel in history['excluded']:
+                path=ROOT/rel
+                if path.suffix.lower()!='.sql':continue
+                need(rel.startswith(self.MIGRATIONS+'/')and policy.COPY.search(path.name)
+                     and path.resolve()==path and not path.is_symlink(),'D03_SOURCE_UNREVIEWED_EXCLUDED_SQL')
+                # COPY는 실행 source가 아니라 원문 보존 대상이다. 신규 추가는 이후 universe가 거절한다.
+                self.preservation_copies.add(rel);self.pins[rel]=sha(path.read_bytes());self.migrations.append(rel)
+        self.migrations=sorted(self.migrations)
+    def head_index(self):
+        rows=[]
+        for entry in self.git('ls-tree','-rz','--full-tree',self.head).split(b'\0'):
+            if not entry:continue
+            meta,path=entry.split(b'\t',1);mode,kind,digest=meta.split(b' ')
+            rows.append((path,mode,digest,b'0'))
+        return sorted(rows)
+    def working_index(self):
+        rows=[]
+        for entry in self.git('ls-files','--stage','-z').split(b'\0'):
+            if not entry:continue
+            meta,path=entry.split(b'\t',1);mode,digest,stage=meta.split(b' ')
+            rows.append((path,mode,digest,stage))
+        return sorted(rows)
+    def directory(self,path):
+        if path in self.directories:return self.directories[path][0]
+        flags=os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW
+        parent=None if path==Path('/')else path.parent
+        fd=os.open(str(path)if parent is None else path.name,flags,**({}if parent is None else{'dir_fd':self.directory(parent)}))
+        try:state=self.directory_state(os.fstat(fd))
+        except BaseException:os.close(fd);raise
+        self.directories[path]=(fd,state,parent)
+        return fd
+    def check_directories(self):
+        for path,(fd,expected,parent)in self.directories.items():
+            need(self.directory_state(os.fstat(fd))==expected,'D03_SOURCE_PARENT_FD_CHANGED')
+            if parent is not None:
+                current=os.stat(path.name,dir_fd=self.directories[parent][0],follow_symlinks=False)
+                need(self.directory_state(current)==expected,'D03_SOURCE_PARENT_PATH_CHANGED')
+    @staticmethod
+    def read_leaf(fd,size):
+        chunks=[];offset=0
+        while offset<size:
+            chunk=os.pread(fd,min(1048576,size-offset),offset);need(chunk,'D03_SOURCE_SHORT_READ');chunks.append(chunk);offset+=len(chunk)
+        need(not os.pread(fd,1,size),'D03_SOURCE_OVERSIZE');return b''.join(chunks)
+    def migration_universe(self):
+        root=ROOT/self.MIGRATIONS;actual=[]
+        need(root.resolve()==root and not root.is_symlink(),'D03_MIGRATION_SOURCE_PATH')
+        for path in root.rglob('*'):
+            need(not path.is_symlink(),'D03_MIGRATION_SOURCE_LINK')
+            if path.is_file()and path.suffix.lower()=='.sql':actual.append(path.relative_to(ROOT).as_posix())
+        return sorted(actual)
+    def check(self):
+        need(not self.closed and self.head_now()==self.head,'D03_SOURCE_HEAD_CHANGED')
+        need(self.working_index()==self.index,'D03_SOURCE_INDEX_CHANGED')
+        need(self.migration_universe()==self.migrations,'D03_SOURCE_MIGRATION_UNIVERSE_CHANGED')
+        self.check_directories()
+        for rel,(held,expected,digest)in self.files.items():
+            path=ROOT/rel;parent=self.directories[path.parent][0]
+            fd=os.open(path.name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=parent)
+            try:
+                need(self.file_state(os.fstat(held))==expected and self.file_state(os.fstat(fd))==expected,'D03_SOURCE_LEAF_CHANGED')
+                need(sha(self.read_leaf(fd,expected[6]))==digest,'D03_SOURCE_BYTES_CHANGED')
+                need(self.file_state(os.fstat(fd))==expected and self.file_state(os.stat(path.name,dir_fd=parent,follow_symlinks=False))==expected,'D03_SOURCE_READ_CHANGED')
+            finally:os.close(fd)
+        self.check_directories()
+        need(self.head_now()==self.head,'D03_SOURCE_HEAD_CHANGED')
+    def finish(self):
+        self.check();self.full_verify();self.check()
+    def close(self):
+        if self.closed:return
+        for fd,_,_ in self.files.values():os.close(fd)
+        for fd,_,_ in reversed(list(self.directories.values())):os.close(fd)
+        self.files={};self.directories={};self.closed=True
 
 
 def predicates(review):
@@ -364,9 +495,46 @@ class FixedDeadlineRuntime:
     def __init__(self,authority,readonly,executor,service_review,review):
         self.authority=authority;self.readonly=readonly;self.executor=executor;self.review=review
         self.value=service_review.descriptor();self.own_pins=readonly.exact(authority.owned_source_pins_bytes)
+        self.readonly_transport=load(READONLY_TRANSPORT,self.own_pins[READONLY_TRANSPORT])
+        self.private_anchor_helper=load(PRIVATE_ANCHOR_HELPER,self.own_pins[PRIVATE_ANCHOR_HELPER])
+        self.binding_anchor=None;self.original_binding_raw=None
         self.cleaning=False;self.children=[];self.backend_ids=[];self.sequence=None;self.account=None;self.command_index=0;self.http_backend=None;self.http_child=None;self.dispatch_us=None;self.auth_verified=False;self.http_dispatched=False;self.http_response_closed=False;self.memory_last=None;self.raw_sticky=[];self.raw_discharge_index=0
         owner=self
         class DeadlineCore(readonly.ServiceProfileReadonlyRun):
+            def __init__(core,reviewed):
+                super().__init__(reviewed)
+                core.source_seal=ReviewedDeadlineSourceSeal(readonly,reviewed,owner.own_pins)
+            def fixed_identity(core):
+                owner.assert_readonly_closed(core)
+                # Docker 신원/보존 검사는 원 readonly와 동일 순서·동일 범위다.
+                core.source_seal.check()
+                if core.r is None:return
+                need(core.r.call(['info','--format','{{.ID}}'])==core.value['daemonId'],'READONLY_DAEMON_CHANGED')
+                core.r.signed_identity()
+                actual={}
+                for role,container in core.binding['containers'].items():
+                    x=readonly.exact(core.r.call(['inspect',container['id']]))[0]
+                    need(x['State']['Restarting']is False,'READONLY_RUNTIME_RESTARTING')
+                    actual[role]={'id':x['Id'],'startedAt':x['State']['StartedAt'],'restartCount':x['RestartCount'],
+                        'networks':{k:v['NetworkID']for k,v in x['NetworkSettings']['Networks'].items()}}
+                readonly.verify_runtime_projection(core.runtime_identity,actual,core.binding,core.owned_networks)
+            def bind_ports(core,binding,binding_raw,target):
+                # 원 readonly bind_ports의 검사·순서 유지, SQL 생성 전 고정 wrapper 설치만 추가한다.
+                core.binding=binding;core.binding_raw=binding_raw;core.target=target
+                core.r=core.ai.SignedRunner(core.root,binding)
+                reviewed=core.ai.ReviewedSignedProvisioning(core.value['decisionId'],core.root,binding['sourcePins'],
+                    binding['containers'],binding['credentials'],int(time.time())+300)
+                core.ai.provisioning_metadata(reviewed,target,binding['origin'])
+                core.port=readonly.monitored_read_ports(core.ai,reviewed,core)
+                core.port=owner.readonly_transport.bind_deadline_readonly_port(core.ai,core,owner)
+                core.owned_networks=readonly.exact(core.read(core.root/'owned-networks.json'))
+                ref=core.value['runtimeIdentity'];raw=core.read(ref['path'])
+                need(sha(raw)==ref['sha256'],'READONLY_RUNTIME_PACKET_CHANGED');core.runtime_identity=readonly.exact(raw)
+                core.live();core.memory(start=True)
+                need(core.thread is None,'D03_MONITOR_NO_DUPLICATE')
+                core.thread=threading.Thread(target=core.monitor,daemon=True);core.thread.start()
+                need(core.thread.is_alive()and not core.failures,'D03_EARLY_MONITOR_NOT_LIVE')
+                need(core.port.settings()=={'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True},'READONLY_AUTH_SETTINGS')
             def memory(core,start=False):
                 super().memory(start);owner.memory_last=time.monotonic()
             def monitor(core):
@@ -381,11 +549,24 @@ class FixedDeadlineRuntime:
         self.core.deadline=time.monotonic()+900
         self.core.evidence=self.core.root/('d03-deadline-'+review.scope_id)
 
+    def original_binding_bytes(self):
+        need(self.binding_anchor is not None and type(self.original_binding_raw)is bytes
+             and sha(self.original_binding_raw)==self.value['bindingSha256'],'D03_ORIGINAL_BINDING_ANCHOR_REQUIRED')
+        self.binding_anchor.check()
+        return self.original_binding_raw
+
+    def assert_readonly_closed(self,core=None):
+        core=self.core if core is None else core
+        if core.port is not None:
+            need(callable(getattr(core.port,'assert_closed_state',None)),'D03_BOUND_READONLY_PORT_REQUIRED')
+            core.port.assert_closed_state()
+
     def guard(self,review,cleanup=False):
         need(review==self.review,'D03_EXECUTION_REVIEW_CHANGED')
         need(not self.raw_sticky,'D03_RAW_CLOSURE_STICKY_NO_FURTHER_SQL')
+        self.assert_readonly_closed()
         if cleanup:self.cleaning=True
-        verify_own_sources(review.source_head,self.own_pins)
+        self.core.source_seal.check()
         self.core.fixed_identity()
         if not self.cleaning:self.core.active()
         self.core.closed_controls()
@@ -433,8 +614,10 @@ class FixedDeadlineRuntime:
         need(all(a['expiresAt']>time.time()+1200 for a in binding['accounts']),'D03_FRESH_ORIGINAL_AUTH_REQUIRED')
         need(not c.evidence.exists()and not c.evidence.is_symlink(),'D03_EVIDENCE_NO_REPLAY')
         # bind_ports는 원본 runtimeIdentity/정확4ID·시작시각/설정/메모리를 검증한다.
-        c.bind_ports(binding,raw,target)
         c.evidence.mkdir(mode=0o700);c.evidence_owned=True
+        self.binding_anchor=self.private_anchor_helper.PrivateFileAnchor(c.root/'signed-ai-binding-private.json',sha(raw),c.read)
+        self.original_binding_raw=raw
+        c.bind_ports(binding,raw,target)
         c.closed_controls()
         need(c.port.read_sql('select enabled from private.content_inspection_control where singleton;')=='f','D03_INSPECTION_TICKET_LANE_NOT_REVIEWED')
         need(c.port.read_sql('select count(*)from public.posts;')=='0','D03_FRESH_SOURCE_REQUIRED')
@@ -442,8 +625,8 @@ class FixedDeadlineRuntime:
         need(len(accounts)==1 and any(a['userId']==self.review.author_id for a in binding['accounts']),'D03_EXACT_ORIGINAL_ACTORS')
         self.account=accounts[0]
         self.save('d03-activity-before-private.json',self.readonly.exact(self.sql("select coalesce(jsonb_agg(jsonb_build_object('pid',pid,'backendStart',backend_start,'queryStart',query_start,'xactStart',xact_start,'state',state,'waitEventType',wait_event_type,'blockingPids',pg_blocking_pids(pid),'query',query))order by pid),'[]'::jsonb)from pg_stat_activity where datname=current_database()and pid<>pg_backend_pid();")))
-        # AI 활성화 prepare는 호출하지 않고 메모리 전용 모니터만 시작한다.
-        c.thread=threading.Thread(target=c.monitor,daemon=True);c.thread.start()
+        # bind_ports의 초기 메모리 검사 직후 시작한 같은 monitor만 유지한다.
+        need(c.thread is not None and c.thread.is_alive()and not c.failures,'D03_EARLY_MONITOR_NOT_LIVE')
 
     def verify_original_auth(self,review):
         self.guard(review)
@@ -616,13 +799,27 @@ class FixedDeadlineRuntime:
     def run_fast_phase(self,seal):return run_sealed_fast_phase(self,seal)
 
     def close(self,original_error=None):
-        errors=[]
+        errors=[];readonly_closed=True
+        try:self.assert_readonly_closed()
+        except BaseException:
+            readonly_closed=False;errors.append('D03_READONLY_CLOSURE_STICKY')
         self.core.done.set()
         if self.core.thread is not None:
             self.core.thread.join(timeout=4)
             if self.core.thread.is_alive():errors.append('D03_MEMORY_MONITOR_STILL_LIVE')
         if self.core.failures:errors.append('D03_LATE_MEMORY_MONITOR_FAILURE')
         if self.raw_sticky:errors.append('D03_RAW_CLOSURE_STICKY')
+        anchor=getattr(self,'binding_anchor',None)
+        if anchor is not None:
+            try:
+                if readonly_closed and not self.raw_sticky:anchor.check()
+            except BaseException as error:errors.append('D03_FINAL_BINDING_'+type(error).__name__)
+            finally:anchor.close();self.binding_anchor=None
+        if hasattr(self.core,'source_seal'):
+            try:
+                if readonly_closed and not self.raw_sticky and not errors:self.core.source_seal.finish()
+            except BaseException as error:errors.append('D03_FINAL_SOURCE_'+type(error).__name__)
+            finally:self.core.source_seal.close()
         if self.core.evidence_owned:
             try:self.save('d03-runtime-final-status-private.json',{'originalFailureType':None if original_error is None else type(original_error).__name__,
                 'monitorFailures':list(self.core.failures),'rawSticky':list(self.raw_sticky),'finalErrors':errors,
@@ -784,7 +981,7 @@ class FastSourceSeal:
         c=self.runtime.core
         need(not self.runtime.raw_sticky and not c.failures and self.runtime.memory_last is not None
              and time.monotonic()-self.runtime.memory_last<=3,'D03_FAST_MEMORY_OR_CLOSURE_UNPROVEN')
-        need(c.read(c.root/'signed-ai-binding-private.json')==self.binding_raw,'D03_FAST_ORIGINAL_JWT_BYTES_CHANGED')
+        need(self.runtime.original_binding_bytes()==self.binding_raw,'D03_FAST_ORIGINAL_JWT_BYTES_CHANGED')
         for relative,stamp in self.sources.items():
             path=ROOT/relative;st=path.lstat()
             need(not path.is_symlink()and (st.st_dev,st.st_ino,st.st_size,st.st_mtime_ns)==stamp[:4]
