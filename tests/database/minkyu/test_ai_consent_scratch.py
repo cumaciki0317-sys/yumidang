@@ -14,6 +14,30 @@ class GuardTests(unittest.TestCase):
    with patch.object(self.m.subprocess,'check_output',return_value='a'*40+'\n'):
     with self.assertRaisesRegex(ValueError,'SOURCE_SET_CHANGED'):
      self.m.source_review('a'*40,dict.fromkeys(names,'b'*64))
+ def test_kopis_is_mandatory_in_three_migrations_five_checks_and_pinned_bytes(self):
+  import tempfile
+  from unittest.mock import Mock,patch
+  migration='backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql'
+  check='tests/database/minkyu/kopis_verified_snapshots.sql'
+  self.assertEqual(self.m.MIGRATIONS,[self.m.SQL,'backend/supabase/migrations/20261020130000_post_private_events.sql',migration])
+  self.assertEqual(self.m.TESTS,['tests/database/minkyu/post_manual_events.sql','tests/database/minkyu/ai_independent_consents.sql','tests/database/minkyu/current_summary_fences.sql','tests/database/minkyu/current_completion_consent_policy.sql',check])
+  expected={self.m.SELF,*self.m.MIGRATIONS,*self.m.TESTS,*self.m.ADDITIONAL_SOURCES}
+  for omitted in (migration,check):
+   with patch.object(self.m.subprocess,'check_output',return_value='a'*40+'\n')as git:
+    with self.assertRaisesRegex(ValueError,'SOURCE_SET_CHANGED'):
+     self.m.source_review('a'*40,dict.fromkeys(expected-{omitted},'b'*64))
+    self.assertEqual(git.call_count,1)  # HEAD만 확인하고 파일/추가 Git 소비 전 거절
+  for name in (migration,check):
+   with self.subTest(name=name),tempfile.TemporaryDirectory()as root:
+    repo=Path(root).resolve();path=repo/name;path.parent.mkdir(parents=True)
+    raw=b'-- exact reviewed KOPIS fixture bytes\nselect 1;\n';path.write_bytes(raw)
+    runner=self.m.Scratch({'pins':{name:self.m.sha(raw)}},repo)
+    runner.target='c'*64;runner.guard=Mock();runner.own=Mock();runner.docker=Mock(return_value=(b'ok',0))
+    with patch.object(self.m,'ROOT',repo):
+     self.assertEqual(runner.read_source(name),raw)
+     path.write_bytes(raw+b'-- unreviewed mutation\n')
+     with self.assertRaisesRegex(ValueError,'SOURCE_CHANGED'):runner.read_source(name)
+     runner.docker.assert_not_called()
  def test_sql_input_is_the_exact_pinned_bytes(self):
   import tempfile
   from unittest.mock import Mock,patch
