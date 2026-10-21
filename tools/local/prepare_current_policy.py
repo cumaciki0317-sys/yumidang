@@ -268,6 +268,9 @@ CURRENT_EXTENSION_REVIEWED = {
         '0dbf18e2006860c47e91ba61c2161e7d2b88ac1adb36801a9ddffd616494e9fa',
     'backend/supabase/migrations/20261020130000_post_private_events.sql':
         'ff97cf33163ece13bae8373b638afbc6985ab92592480048d0ab02f1bb9a87b7',
+    # 정적 독립 검토·Node/Deno 검사만 완료. 실제 SQL/Auth0이며 운영 적용 승인이 아니다.
+    'backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql':
+        '77f14ec4d7bcd4e6d5ad35d2c6a1338f935c598fb801b173b9469ed32353a2bd',
 }
 
 

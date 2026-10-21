@@ -16,6 +16,7 @@ import test_current_policy_preparation as fixtures
 
 class ReviewedCurrentPolicyTests(unittest.TestCase):
     def setUp(self):
+        self.registered_extensions = dict(current.CURRENT_EXTENSION_REVIEWED)
         self.fixture = fixtures.CurrentPolicyPreparationTests('test_new_queue_tail_requires_exact_reviewed_bytes')
         self.fixture.setUp()
         self.addCleanup(self.fixture.doCleanups)
@@ -66,6 +67,36 @@ class ReviewedCurrentPolicyTests(unittest.TestCase):
         self.assertEqual(payloads[second],(self.repo/second).read_bytes())
         (self.repo/'backend/supabase/migrations/20261021100000_unreviewed.sql').write_text('select 99997;')
         with self.assertRaisesRegex(current.PreparationError,'UNREVIEWED_SQL_PRESENT'):self.inspect()
+
+    def test_three_reviewed_extensions_require_exact_124_manifest_and_reject_fourth_or_mutation(self):
+        third = Path('backend/supabase/migrations/20261021120000_kopis_verified_snapshots.sql')
+        reviewed_sha = '77f14ec4d7bcd4e6d5ad35d2c6a1338f935c598fb801b173b9469ed32353a2bd'
+        self.assertEqual(self.registered_extensions.get(str(third)), reviewed_sha)
+        self.assertEqual(hashlib.sha256((ROOT/third).read_bytes()).hexdigest(), reviewed_sha)
+        second = Path('backend/supabase/migrations/20261020130000_post_private_events.sql')
+        for path, sql in ((second, 'begin; select 99998; commit;\n'),
+                          (third, 'begin; select 99997; commit;\n')):
+            (self.repo/path).write_text(sql)
+            current.CURRENT_EXTENSION_REVIEWED[str(path)] = hashlib.sha256((self.repo/path).read_bytes()).hexdigest()
+        def commit_review():
+            self.commit(); self.head = current.git(self.repo, 'rev-parse', 'HEAD').decode().strip()
+            entries = prepare_migrations.inspect_migrations(self.repo)['migrations']
+            self.pin = hashlib.sha256(json.dumps(entries, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+        commit_review()
+        history, payloads = self.inspect()
+        self.assertEqual(len(history['entries']), 124)
+        self.assertEqual(payloads[third], (self.repo/third).read_bytes())
+        original = (self.repo/third).read_bytes()
+        (self.repo/third).write_bytes(original+b'-- unreviewed mutation\n')
+        commit_review()
+        with self.assertRaisesRegex(current.PreparationError, 'EXACT_REVIEWED_CURRENT_PROFILE_REQUIRED'):
+            self.inspect()
+        (self.repo/third).write_bytes(original)
+        fourth = Path('backend/supabase/migrations/20261021130000_unreviewed.sql')
+        (self.repo/fourth).write_text('select 99996;\n')
+        commit_review()
+        with self.assertRaisesRegex(current.PreparationError, 'EXACT_REVIEWED_CURRENT_PROFILE_REQUIRED'):
+            self.inspect()
 
     def test_both_explicit_review_values_required(self):
         for head, pin in ((None,self.pin),(self.head,None),('main',self.pin)):
