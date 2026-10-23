@@ -33,6 +33,8 @@ CONTEXT = 'colima-yumidang-minkyu'
 ROLES = {'db': 'supabase_db_', 'auth': 'supabase_auth_', 'rest': 'supabase_rest_', 'gateway': 'supabase_kong_'}
 EXCLUDE = 'realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'
 SCOPE = 'REVIEWED_CURRENT_AUTH_FOUR_NEW_SERVICES_ONLY'
+MATCHING126_SCOPE = 'REVIEWED_MATCHING126_AUTH_FOUR_NEW_SERVICES_ONLY'
+MATCHING126_PROFILE = 'matching_db_entry_126'
 NETWORK_OPTIONS = {'com.docker.network.bridge.host_binding_ipv4': '127.0.0.1'}
 
 
@@ -99,6 +101,25 @@ class ReviewedCurrentAuthSource:
             preparedManifestSha256=prepared_manifest_sha256, preparedPins=prepared_pins,
             root=str(execution), head=head, pins=pins, cliPath=str(binary), cliSha256=cli_sha256,
             cliVersion='2.116.0', images=images, imageRefs=image_refs, hostLimits=host_limits, operations=sorted(set(operations))))
+
+    def descriptor(self):
+        return json.loads(self._sealed)
+
+
+class ReviewedMatching126AuthSource:
+    """고정126 목적의 별도 root 검토 객체. 기존125 authority는 이 타입이 아니다."""
+    def __init__(self, *, decision_id, prepared_root, prepared_manifest_sha256, prepared_pins,
+                 execution_root, head, pins, cli_path, cli_sha256, images, image_refs, host_limits,
+                 operations=('start', 'configure', 'close')):
+        # 원 검토자의 모든 source/path/image/operation 검사를 정상 constructor로 재사용한다.
+        # 반환 객체를125 실행에 전달하지 않고 별도126 scope/type으로 봉인한다.
+        validated = ReviewedCurrentAuthSource(decision_id=decision_id, prepared_root=prepared_root,
+            prepared_manifest_sha256=prepared_manifest_sha256, prepared_pins=prepared_pins,
+            execution_root=execution_root, head=head, pins=pins, cli_path=cli_path,
+            cli_sha256=cli_sha256, images=images, image_refs=image_refs, host_limits=host_limits,
+            operations=operations).descriptor()
+        self._sealed = canonical({**validated, 'scope': MATCHING126_SCOPE,
+                                  'migrationProfile': MATCHING126_PROFILE})
 
     def descriptor(self):
         return json.loads(self._sealed)
@@ -533,7 +554,7 @@ class CurrentAuthSource:
         need(phase in self.v['operations'], 'OPERATION_NOT_APPROVED')
         self.source()
         need(self.read('review.json') == self.v, 'REVIEW_BINDING_CHANGED')
-        self.save(phase + '-intent.json', {'scope': SCOPE, 'reviewSha256': sha(self.review._sealed),
+        self.save(phase + '-intent.json', {'scope': self.v['scope'], 'reviewSha256': sha(self.review._sealed),
             'head': self.v['head'], 'noReplay': True, 'phase': phase})
         self.phase_started = True
 
@@ -591,7 +612,7 @@ class CurrentAuthSource:
         error = None; owned = None; creation_attempted = False; cli_attempted = False; stage = 'REVIEW_RECORD'
         try:
             self.save('review.json', self.v)
-            self.save('start-attempt.json', {'scope': SCOPE, 'reviewSha256': sha(self.review._sealed),
+            self.save('start-attempt.json', {'scope': self.v['scope'], 'reviewSha256': sha(self.review._sealed),
                 'head': self.v['head'], 'noReplay': True, 'resourceCreation': 'NOT_ATTEMPTED'})
             stage = 'SOURCE_REVIEW'
             report = self.source(); self.plan = report['target']
@@ -621,7 +642,7 @@ class CurrentAuthSource:
             self.runtime_source(); self.memory(1048576)
             stage = 'NETWORK_CREATE'; creation_attempted = True
             network = self.call(['network', 'create', '-o', 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1', '--subnet', self.plan['subnet'], '--label',
-                'com.supabase.cli.project=' + self.plan['projectId'], '--label', 'yumidang.scope=' + SCOPE,
+                'com.supabase.cli.project=' + self.plan['projectId'], '--label', 'yumidang.scope=' + self.v['scope'],
                 '--label', 'yumidang.review=' + sha(self.review._sealed), 'supabase_network_' + self.plan['projectId']])
             need(re.fullmatch('[a-f0-9]{64}', network), 'NETWORK_ID')
             self.save('network-created.json', {'id': network})
@@ -661,7 +682,7 @@ class CurrentAuthSource:
                 except BaseException:
                     owned = None
             self.save('start-memory-observation.json', self.last_memory_observation or {'status': 'NOT_OBSERVED'})
-            self.save('start-receipt.json', {'scope': SCOPE, 'status': 'PASS_STARTED_ONLY' if error is None else 'FAIL_CLOSED',
+            self.save('start-receipt.json', {'scope': self.v['scope'], 'status': 'PASS_STARTED_ONLY' if error is None else 'FAIL_CLOSED',
                 'stage': stage, 'failureType': type(error).__name__ if error is not None else None,
                 'failureCode': str(error) if isinstance(error, ValueError) and re.fullmatch('[A-Z0-9_]+', str(error))
                     else 'START_FAILED' if error is not None else None,
@@ -692,7 +713,7 @@ class CurrentAuthSource:
         need(len(networks) == 1, 'REVIEW_NETWORK_UNPROVEN')
         network = networks[0]
         labels = network.get('Labels') or {}
-        need(labels.get('com.supabase.cli.project') == self.plan['projectId'] and labels.get('yumidang.scope') == SCOPE
+        need(labels.get('com.supabase.cli.project') == self.plan['projectId'] and labels.get('yumidang.scope') == self.v['scope']
              and labels.get('yumidang.review') == sha(self.review._sealed)
              and [x.get('Subnet') for x in network.get('IPAM', {}).get('Config') or []] == [self.plan['subnet']], 'NEW_NETWORK_BINDING')
         volumes = [x for x in raw[2] if x['Name'] in {row['name'] for row in owned['volumes']}]
@@ -794,7 +815,7 @@ class CurrentAuthSource:
         self.save('signed-provisioning-packet-private.json', {'containers': containers, 'credentials': reviewed.credentials,
             'sourcePins': reviewed.source_pins, 'reviewSha256': sha(self.review._sealed), 'actualAuth': 'NOT_RUN'})
         self.runtime_source(); self.baseline_guard(); self.healthy()
-        self.save('configure-receipt.json', {'scope': SCOPE, 'status': 'PASS_EMPTY_CONFIGURED_ONLY',
+        self.save('configure-receipt.json', {'scope': self.v['scope'], 'status': 'PASS_EMPTY_CONFIGURED_ONLY',
             'migrationCount': len(target['versions']), 'actualAuth': 'NOT_RUN', 'jwtExpirySeconds': 3600,
             'signedProvisioning': 'READY_FOR_SEPARATE_REVIEWED_KERNEL_CALL'})
 
@@ -820,10 +841,47 @@ class CurrentAuthSource:
         self.stop_owned('close', monitor=False)
 
 
+class Matching126AuthSource(CurrentAuthSource):
+    """정상126 loader만 연결한다. lifecycle·자원·메모리·종결 본문은 원형을 공유한다."""
+    def __init__(self, review, support):
+        need(type(review) is ReviewedMatching126AuthSource, 'TYPED_REVIEW_REQUIRED')
+        self.review = review
+        self.v = review.descriptor()
+        need(self.v.get('scope') == MATCHING126_SCOPE
+             and self.v.get('migrationProfile') == MATCHING126_PROFILE, 'MATCHING126_TYPED_PROFILE_REQUIRED')
+        self.prep, self.private, self.guard, self.ai = support
+        self.root = Path(self.v['root'])
+        self.writer = object.__new__(self.private.FixedPair)
+        self.writer.ai = self.ai
+        self.samples, self.failures = [], []
+        self.done = threading.Event()
+        self.thread = None
+        self.sequence = 0
+        self.phase = 'unassigned'
+        self.started_at = None
+        self.unclosed_child = False
+        self.phase_started = False
+        self.last_memory_observation = None
+
+    def source(self):
+        checked_sources(self.v)
+        return self.prep.load_prepared_matching126_source(ROOT, Path(self.v['preparedRoot']),
+            manifest_sha256=self.v['preparedManifestSha256'], head=self.v['head'], pins=self.v['preparedPins'])
+
+
 def run_phase(review, phase):
     need(type(review) is ReviewedCurrentAuthSource and phase in {'start', 'configure', 'close'}, 'TYPED_PHASE_REQUIRED')
+    return _run_source_phase(review, phase, CurrentAuthSource)
+
+
+def run_matching126_phase(review, phase):
+    need(type(review) is ReviewedMatching126AuthSource and phase in {'start', 'configure', 'close'}, 'TYPED_PHASE_REQUIRED')
+    return _run_source_phase(review, phase, Matching126AuthSource)
+
+
+def _run_source_phase(review, phase, runner_class):
     with runtime_support(review) as support:
-        runner = CurrentAuthSource(review, support)
+        runner = runner_class(review, support)
         runner.phase = phase
         try:
             getattr(runner, phase)()

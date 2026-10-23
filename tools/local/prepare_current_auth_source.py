@@ -28,6 +28,8 @@ HOST = 'unix:///Users/minkyu/.colima/yumidang-minkyu/docker.sock'
 DAEMON = '879401ec-e2b7-4ad8-9915-0a16ea74e3f5'
 ROLES = {'db': 'supabase_db_', 'auth': 'supabase_auth_', 'rest': 'supabase_rest_', 'gateway': 'supabase_kong_'}
 SCOPE = 'CURRENT_AUTH_FOUR_ROLE_PREPARATION_ONLY'
+MATCHING126_SCOPE = 'MATCHING126_AUTH_FOUR_ROLE_PREPARATION_ONLY'
+MATCHING126_PROFILE = 'matching_db_entry_126'
 
 
 def need(ok, code):
@@ -175,8 +177,38 @@ def load_prepared_source(repo, output, *, manifest_sha256, head, pins):
         return _load_bound(repo, output, report, head, pins, payloads, policy, database)
 
 
+def load_prepared_matching126_source(repo, output, *, manifest_sha256, head, pins):
+    """고정126 준비 산출물만 소비한다.125 loader의 허용 범위는 변경하지 않는다."""
+    repo, output = Path(repo), Path(output)
+    private_destination(repo, output / '.uncreated-loader-check')
+    raw = regular_bytes(output, 'current-auth-source-manifest.json')
+    need(sha(raw) == manifest_sha256, 'PREPARED_MANIFEST_CHANGED')
+    report = json.loads(raw)
+    need(report.get('status') == 'READY_PREPARATION_ONLY' and report.get('scope') == MATCHING126_SCOPE
+         and report.get('migrationProfile') == MATCHING126_PROFILE and report.get('migrationCount') == 126
+         and report.get('execution') == 'NOT_RUN' and report.get('sourceHead') == head
+         and report.get('sourcePins') == pins, 'MATCHING126_PREPARED_BINDING')
+    payloads = verify_review(repo, head, pins)
+    with load_support(repo, payloads) as (policy, database):
+        return _load_profile_bound(repo, output, report, head, pins, payloads, policy, database,
+                                   MATCHING126_PROFILE)
+
+
+def _inspect_profile(policy, repo, head, manifest_sha256, profile):
+    if profile is None:
+        return policy.inspect_reviewed_current_migrations(repo, head, manifest_sha256)
+    need(profile == MATCHING126_PROFILE, 'MATCHING126_EXACT_PROFILE_REQUIRED')
+    history, sql = policy.inspect_reviewed_matching126_migrations(repo, head, manifest_sha256)
+    need(len(history['entries']) == 126, 'MATCHING126_HISTORY_REQUIRED')
+    return history, sql
+
+
 def _load_bound(repo, output, report, head, pins, payloads, policy, database):
-    history, sql = policy.inspect_reviewed_current_migrations(repo, head, report['migrationManifestSha256'])
+    return _load_profile_bound(repo, output, report, head, pins, payloads, policy, database, None)
+
+
+def _load_profile_bound(repo, output, report, head, pins, payloads, policy, database, profile):
+    history, sql = _inspect_profile(policy, repo, head, report['migrationManifestSha256'], profile)
     sources = policy.edge.source_snapshot(repo)
     expected_sources = {SELF, CONFIG, *HELPER_PATHS, *(str(path) for path in sql), *(str(path) for path in sources)}
     need(set(pins) == expected_sources, 'EXACT_SOURCE_SET')
@@ -201,7 +233,7 @@ def _load_bound(repo, output, report, head, pins, payloads, policy, database):
     for relative, data in expected.items():
         need(regular_bytes(output, relative) == data, 'PREPARED_BYTES_CHANGED')
     need(verify_review(repo, head, pins) == payloads, 'SOURCE_CHANGED_DURING_LOAD')
-    current, current_sql = policy.inspect_reviewed_current_migrations(repo, head, report['migrationManifestSha256'])
+    current, current_sql = _inspect_profile(policy, repo, head, report['migrationManifestSha256'], profile)
     need(current == history and current_sql == sql, 'SQL_CHANGED_DURING_LOAD')
     need(policy.edge.source_snapshot(repo) == sources, 'SOURCE_SNAPSHOT_CHANGED_DURING_LOAD')
     need(verify_review(repo, head, pins) == payloads, 'SOURCE_CHANGED_DURING_LOAD')
@@ -217,9 +249,26 @@ def prepare(repo, output, *, head, manifest_sha256, pins, project, port, subnet)
         return _prepare_bound(repo, output, head, manifest_sha256, pins, plan, payloads, policy, database)
 
 
+def prepare_matching126(repo, output, *, head, manifest_sha256, pins, project, port, subnet):
+    """고정126 전용 새 source 파일 준비. root 별도 typed 실행 승인을 대신하지 않는다."""
+    repo = Path(repo)
+    need(repo.is_absolute() and repo.resolve() == repo, 'REPO_PATH')
+    plan = target_plan(project, port, subnet)
+    payloads = verify_review(repo, head, pins)
+    with load_support(repo, payloads) as (policy, database):
+        return _prepare_profile_bound(repo, output, head, manifest_sha256, pins, plan, payloads,
+                                      policy, database, MATCHING126_PROFILE)
+
+
 def _prepare_bound(repo, output, head, manifest_sha256, pins, plan, payloads, policy, database):
+    return _prepare_profile_bound(repo, output, head, manifest_sha256, pins, plan, payloads,
+                                  policy, database, None)
+
+
+def _prepare_profile_bound(repo, output, head, manifest_sha256, pins, plan, payloads, policy, database, profile):
     project, port = plan['projectId'], plan['portBase']
-    history, sql = policy.inspect_reviewed_current_migrations(repo, head, manifest_sha256)
+    history, sql = _inspect_profile(policy, repo, head, manifest_sha256, profile)
+    scope = SCOPE if profile is None else MATCHING126_SCOPE
     sources = policy.edge.source_snapshot(repo)
     expected = {SELF, CONFIG, *HELPER_PATHS, *(str(path) for path in sql), *(str(path) for path in sources)}
     need(set(pins) == expected, 'EXACT_SOURCE_SET')
@@ -228,7 +277,7 @@ def _prepare_bound(repo, output, head, manifest_sha256, pins, plan, payloads, po
     output = private_destination(repo, output)
     # 모든 검증을 끝낸 뒤 새 private 루트만 생성한다. 실행 실패 정리는 adapter의 별도 책임이다.
     output.mkdir(mode=0o700)
-    receipt = {'status': 'FAIL_CLOSED', 'scope': SCOPE, 'execution': 'NOT_RUN'}
+    receipt = {'status': 'FAIL_CLOSED', 'scope': scope, 'execution': 'NOT_RUN'}
     try:
         for path, raw in {**sql, **sources}.items():
             relative = str(path).removeprefix('backend/')
@@ -241,14 +290,16 @@ def _prepare_bound(repo, output, head, manifest_sha256, pins, plan, payloads, po
         with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb') as stream:
             stream.write(rendered)
         need(verify_review(repo, head, pins) == payloads, 'SOURCE_CHANGED_DURING_PREPARATION')
-        current, current_sql = policy.inspect_reviewed_current_migrations(repo, head, manifest_sha256)
+        current, current_sql = _inspect_profile(policy, repo, head, manifest_sha256, profile)
         need(current == history and current_sql == sql, 'SQL_CHANGED_DURING_PREPARATION')
-        receipt = {'status': 'READY_PREPARATION_ONLY', 'scope': SCOPE, 'sourceHead': head,
+        receipt = {'status': 'READY_PREPARATION_ONLY', 'scope': scope, 'sourceHead': head,
             'sourcePins': pins, 'migrationManifestSha256': manifest_sha256,
             'migrations': history['entries'], 'migrationCount': len(history['entries']),
             'configSha256': sha(rendered), 'configOverlay': overlay, 'target': plan,
             'execution': 'NOT_RUN', 'providerCalls': 0, 'realMembers': False,
             'operatingChanged': False, 'automaticReplay': False}
+        if profile is not None:
+            receipt['migrationProfile'] = profile
         return receipt
     finally:
         with os.fdopen(os.open(output / 'current-auth-source-manifest.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), 'wb') as stream:
