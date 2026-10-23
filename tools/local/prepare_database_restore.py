@@ -1525,3 +1525,42 @@ class Current124SourceCapture:
         if original is not None: raise original
         self.save('capture-receipt.json', result)
         return result
+
+
+
+def prepare_matching126_restore_review(profile, source_manifest):
+    """고정126 준비 연결만 수행한다. 역사121 실행·현재124 capture는 변경하지 않는다."""
+    secure.require(type(profile) is secure.ReviewedMatching126RestoreProfile,
+                   'TYPED_MATCHING126_RESTORE_PROFILE_REQUIRED')
+    p = profile.value()
+    secure.require(type(source_manifest) is dict
+                   and source_manifest.get('scope') == 'CURRENT_RESTORE_SOURCE_PREPARATION_ONLY'
+                   and source_manifest.get('sourceHead') == p['sourceHead']
+                   and source_manifest.get('migrationsSha256') == p['migrationsSha256']
+                   and source_manifest.get('policyProfileVerified') is True
+                   and source_manifest.get('reviewedProfile') == 'matching_db_entry_126'
+                   and source_manifest.get('committedSourceVerified') is True
+                   and all(source_manifest.get(k) is False for k in
+                           ('executionAllowed', 'runnable', 'fullRestore')),
+                   'MATCHING126_RESTORE_SOURCE_PREPARATION_REQUIRED')
+    secure.require(type(source_manifest.get('migrationCount')) is int
+                   and source_manifest['migrationCount'] == 126
+                   and source_manifest.get('migrations') == p['migrations'],
+                   'MATCHING126_RESTORE_MANIFEST_CHANGED')
+    names = FILES | {'tools/local/prepare_restore_source_manifest.py'}
+    files = source_manifest.get('sourceFiles')
+    secure.require(type(files) is dict and set(files) == names
+                   and files == {name: p['sourcePins'][name] for name in names}
+                   and sha(canonical(files)) == source_manifest.get('sourceFilesSha256'),
+                   'MATCHING126_RESTORE_SOURCE_CLOSURE_CHANGED')
+    return {'scope': 'MATCHING126_DATABASE_RESTORE_PREPARATION_ONLY', 'status': 'PREPARED_NOT_RUN',
+            'profileSha256': profile.sha256, 'sourceHead': p['sourceHead'],
+            'migrationsSha256': p['migrationsSha256'], 'sourceFilesSha256': sha(canonical(files)),
+            'sourcePinsSha256': sha(canonical(p['sourcePins'])), 'databaseLocaleSha256': p['databaseLocaleSha256'],
+            'executionAllowed': False, 'runnable': False, 'fullRestore': False,
+            'capture': 'NOT_RUN', 'restore': 'NOT_RUN', 'deletionReapply': 'NOT_RUN',
+            'storageMissing': 39, 'capture120SecondExitProof': 'UNRESOLVED_IN_OLD124_CAPTURE',
+            'remaining': ['new named126 capture and target executor independent review',
+                          'current identity memory custody and first-intent runtime checks',
+                          'actual roles ACL locale sequence UNKNOWN and deletion ACK comparison',
+                          '39 historical Storage originals and current Storage mapping']}

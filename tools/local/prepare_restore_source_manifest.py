@@ -132,3 +132,28 @@ def prepare_reviewed_current124_restore(repo, profile):
         final = prepare_current_profile_source(repo, p['sourceHead'], p['migrationsSha256'])
         need(canonical(final) == canonical(prepared), 'CURRENT_RESTORE_PREPARATION_CHANGED')
     return {'source': prepared, 'review': review}
+
+
+
+def prepare_reviewed_matching126_restore(repo, profile):
+    """명시126 정상 inspector와 HEAD 전체 바이트를 연결하는 오프라인 전용 입구."""
+    need(type(profile) is core.secure.ReviewedMatching126RestoreProfile,
+         'TYPED_MATCHING126_RESTORE_PROFILE_REQUIRED')
+    p = profile.value()
+    with _reviewed_current_restore_support(repo, p['sourceHead']):
+        from prepare_current_policy import inspect_reviewed_matching126_migrations
+        history, _ = inspect_reviewed_matching126_migrations(
+            repo, p['sourceHead'], p['migrationsSha256'])
+        prepared = prepare_source_manifest(repo, p['sourceHead'], p['migrationsSha256'])
+        need(prepared['migrations'] == history['entries'] == p['migrations'],
+             'MATCHING126_PROFILE_SOURCE_CHANGED')
+        prepared.update(policyProfileVerified=True, reviewedProfile='matching_db_entry_126')
+        review = core.prepare_matching126_restore_review(profile, prepared)
+        final = prepare_source_manifest(repo, p['sourceHead'], p['migrationsSha256'])
+        need(canonical(final) == canonical({k: v for k, v in prepared.items()
+                 if k not in ('policyProfileVerified', 'reviewedProfile')}),
+             'MATCHING126_RESTORE_PREPARATION_CHANGED')
+        final_history, _ = inspect_reviewed_matching126_migrations(
+            repo, p['sourceHead'], p['migrationsSha256'])
+        need(final_history['entries'] == history['entries'], 'MATCHING126_PROFILE_CHANGED_DURING_READ')
+    return {'source': prepared, 'review': review}
