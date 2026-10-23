@@ -182,7 +182,14 @@ export function createWebMemberSessionPort(options: WebSessionOptions): MemberSe
       browser.sessionStorage.removeItem(temporaryKey);
       if (access) await authFetch("/logout?scope=local", {}, access, signal);
     },
-    async signupState(signal) { return signupState(await client.request("/state", { signal })); },
+    async signupState(signal) {
+      const currentGeneration = generation;
+      const state = signupState(await client.request("/state", { signal }));
+      checkAbort(signal);
+      if (generation !== currentGeneration || !active) throw new ApiError(401, "SESSION_CHANGED");
+      active = { ...active, status: state.status };
+      return state;
+    },
     async complete(input, signal) {
       const currentGeneration = generation;
       const state = signupState(await client.request("/complete", { method: "POST", body: input, signal }));

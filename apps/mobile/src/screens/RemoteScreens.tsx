@@ -5,7 +5,7 @@ import { canSelectEvent, eventCreateReturnPath, eventSelectionQuery, eventSelect
 import { router, useFocusEffect } from "expo-router";
 import { ApiError } from "../api";
 import { RemoteAiFeedback } from "./RemoteAiFeedback";
-import { RemoteBlockControls, RemotePostManagement, RemoteProfilePhoto, RemoteReport } from "./RemoteMemberScreens";
+import { RemoteBlockControls, RemotePostManagement, RemoteProfilePhoto, RemoteReport, useMemberResource } from "./RemoteMemberScreens";
 import { serviceSessionEpoch, useService, useServiceSession } from "../remote";
 import { normalizeMobileRegion } from "../service";
 import { useApp } from "../state";
@@ -22,6 +22,8 @@ import {
   TextButton,
   Title,
 } from "../ui";
+import { RecoveryCard, recoveryKind, type RecoveryKind } from "../presentation/client-feedback";
+import { formatKoreanDateTime } from "../presentation/ux-time";
 import { monthWeek, parseDateInput } from "../domain";
 import type { Filters } from "../types";
 import type { PublicPostCard } from "../../../../backend/supabase/functions/_shared/contracts/search";
@@ -41,7 +43,7 @@ const errorMessage = (error: unknown) =>
     : error instanceof ApiError && error.code === "AUTH_REQUIRED"
     ? "로그인 후 확인할 수 있어요."
     : error instanceof ApiError && error.status === 404
-    ? "삭제되었거나 접근할 수 없는 대상이에요."
+    ? "현재 이 항목을 열 수 없어요. 접근 가능한 상태인지 확인해 주세요."
     : "불러오지 못했어요. 입력한 조건을 유지했으니 다시 시도해 주세요.";
 
 /** Every query/session has separate display state; an old response cannot restore revoked information. */
@@ -67,15 +69,17 @@ function useRemotePage<T extends { id: string }>(
       nextCursor: string | null;
       busy: boolean;
       error: string;
+      recovery: RecoveryKind;
     }
-  >({ key, items: [], nextCursor: null, busy: true, error: "" });
-  useEffect(() => {
+  >({ key, items: [], nextCursor: null, busy: true, error: "", recovery: "retry" as RecoveryKind });
+  useFocusEffect(useCallback(() => {
+    set({ key, items: [], nextCursor: null, busy: true, error: "", recovery: "retry" });
     const active = new AbortController();
     controller.current?.abort();
     controller.current = active;
     void loader.current(undefined, active.signal).then((page) => {
       if (!active.signal.aborted && serviceSessionEpoch() === epoch) {
-        set({ key, ...page, busy: false, error: "" });
+        set({ key, ...page, busy: false, error: "", recovery: "retry" as RecoveryKind });
       }
     }).catch((error) => {
       if (!active.signal.aborted && serviceSessionEpoch() === epoch) {
@@ -84,25 +88,26 @@ function useRemotePage<T extends { id: string }>(
           items: [],
           nextCursor: null,
           busy: false,
-          error: errorMessage(error),
+          error: errorMessage(error), recovery: recoveryKind(error),
         });
       }
     });
     return () => {
       active.abort();
       controller.current?.abort();
+      set({ key: "", items: [], nextCursor: null, busy: true, error: "", recovery: "retry" });
     };
-  }, [key, revision, epoch]);
+  }, [key, epoch]));
   const visible = state.key === key
     ? state
-    : { key, items: [], nextCursor: null, busy: true, error: "" };
+    : { key, items: [], nextCursor: null, busy: true, error: "", recovery: "retry" as RecoveryKind };
   const more = async () => {
     if (visible.busy || !visible.nextCursor) return;
     const active = new AbortController();
     controller.current?.abort();
     controller.current = active;
     const cursor = visible.nextCursor;
-    set({ ...visible, busy: true, error: "" });
+    set({ ...visible, busy: true, error: "", recovery: "retry" as RecoveryKind });
     try {
       const page = await loader.current(cursor, active.signal);
       if (active.signal.aborted || serviceSessionEpoch() !== epoch) return;
@@ -117,11 +122,12 @@ function useRemotePage<T extends { id: string }>(
         items: [...visible.items, ...page.items],
         nextCursor: page.nextCursor,
         busy: false,
-        error: "",
+        error: "", recovery: "retry" as RecoveryKind,
       });
     } catch (error) {
       if (!active.signal.aborted && serviceSessionEpoch() === epoch) {
-        set({ ...visible, busy: false, error: errorMessage(error) });
+        const blocked = error instanceof ApiError && (error.status === 401 || error.status === 403 || error.code === "AUTH_REQUIRED");
+        set({ ...visible, ...(blocked ? { items: [], nextCursor: null } : {}), busy: false, error: errorMessage(error), recovery: recoveryKind(error) });
       }
     }
   };
@@ -170,7 +176,7 @@ export function RemotePostResults(
     <View style={{ gap: 14 }}>
       {page.items.map((post) => <RemotePostCard key={post.id} post={post} />)}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
       {page.busy && <Body muted>공개 가능한 동행을 확인하고 있어요…</Body>}
       {!page.busy && !page.error && !page.items.length && (
@@ -237,7 +243,7 @@ export function RemoteEventResults({
       ))}
       {page.busy && <Body muted>행사를 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
       {!page.busy && !page.error && !page.items.length && (
         <Empty title="조건에 맞는 행사가 없어요" />
@@ -542,18 +548,25 @@ export function RemotePostDetail({ id }: { id: string }) {
     return { items: [{ ...details, id: details.postId }], nextCursor: null };
   });
   const post = page.items[0];
+  const ownership = useMemberResource(`detail-owner:${id}`, (member, signal) => member.ownsPost(id, signal));
+  const owner = session.authenticated && ownership.data === true;
   return (
-    <Screen title="공고 상세">
+    <Screen title="공고 상세" footer={post ? owner
+      ? <RemotePostManagement postId={post.postId} verifiedOwner presentation="sheet" onChanged={page.retry} />
+      : !session.authenticated || ownership.data === false
+      ? <Button disabled={post.status !== "recruiting"} onPress={() => app.navigate(session.authenticated ? "S11" : "S05", session.authenticated ? post.postId : undefined)}>대화로 동행 신청하기</Button>
+      : ownership.error ? <RecoveryCard message={ownership.error} kind={ownership.errorStatus === 401 ? "login" : ownership.errorStatus === 403 ? "unavailable" : "retry"} onRetry={ownership.reload} /> : <Card><Body>공고 권한을 확인하고 있어요.</Body></Card>
+      : undefined}>
       {page.busy && <Body muted>현재 공고를 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
       {post && (
         <>
           <Card>
             <Badge>{post.category}</Badge>
             <Title large>{post.title}</Title>
-            <Body>{post.startsAt} ~ {post.endsAt}</Body>
+            <Body>{formatKoreanDateTime(post.startsAt)} ~ {formatKoreanDateTime(post.endsAt)}</Body>
             <Body>{post.publicArea}</Body>
             <Body>{post.description}</Body>
           </Card>
@@ -587,8 +600,7 @@ export function RemotePostDetail({ id }: { id: string }) {
               <Body>{post.linkedEvent.title}</Body>
             </Card>
           )}
-          <Button disabled={post.status !== "recruiting"} onPress={() => app.navigate(session.authenticated ? "S11" : "S05", session.authenticated ? post.postId : undefined)}>대화로 동행 신청하기</Button>
-          {session.authenticated && <><RemotePostManagement postId={post.postId} onChanged={page.retry} /><RemoteReport targetId={post.postId} targetType="post" /></>}
+          {session.authenticated && !owner && <RemoteReport targetId={post.postId} targetType="post" />}
           <TextButton onPress={() => app.navigate("S01")}>둘러보기</TextButton>
         </>
       )}
@@ -617,7 +629,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
     <Screen title="행사 상세">
       {page.busy && <Body muted>행사를 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
       {event && (
         <Card>
@@ -633,6 +645,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
           }}>이 행사로 동행 구하기</Button> : <Body muted>종료·취소 또는 상태를 확인하지 못한 행사는 신규 동행 모집에 연결할 수 없어요.</Body>}
         </Card>
       )}
+      {event && <Card><Title>이 행사에 연결된 동행 공고</Title><Body muted>연결된 공고 조회를 준비하고 있어요. 조회가 연결되면 미리보기와 전체 목록을 확인할 수 있어요.</Body></Card>}
     </Screen>
   );
 }
@@ -769,7 +782,7 @@ export function RemoteProfileScreen({ id }: { id: string }) {
     <Screen title="프로필">
       {page.busy && <Body muted>프로필을 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
       {profile && (
         <>
@@ -820,7 +833,7 @@ function RemoteProfileReviews({ id }: { id: string }) {
     <View style={{ gap: 12 }}>
       <Card>
         <Title>많이 받은 칭찬</Title>
-        {praises.key === key &&
+        {praises.key === key && !(page.error && (page.recovery === "login" || page.recovery === "unavailable")) && (page.items.length > 0 || (!page.busy && !page.error)) &&
           praises.items.map((praise) => (
             <Body key={praise.code}>{praise.label} · {praise.count}회</Body>
           ))}
@@ -836,13 +849,14 @@ function RemoteProfileReviews({ id }: { id: string }) {
               : "아쉬웠어요"}
           </Body>
           {review.text && <Body>{review.text}</Body>}
-          <Body small muted>{review.submittedAt}</Body>
+          <Body small muted>{formatKoreanDateTime(review.submittedAt)}</Body>
         </Card>
       ))}
       {page.busy && <Body muted>후기를 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
+      {page.error && (page.recovery === "login" || page.recovery === "unavailable") && <TextButton onPress={page.retry}>상태 다시 확인</TextButton>}
       {!page.busy && !page.error && !page.items.length && (
         <Body muted>공개된 후기가 없어요.</Body>
       )}
@@ -1023,11 +1037,12 @@ export function RemoteEventListScreen(
 
 /** Search spans available upcoming/ongoing events independently of the draft interval. */
 export function RemoteEventPicker(
-  { onSelect, onDirectInput }: {
+  { onSelect, onDirectInput, directInputRef }: {
     startsAt?: string;
     endsAt?: string;
     onSelect: (event: PublicEventItem) => void;
     onDirectInput?: () => void;
+    directInputRef?: React.Ref<View>;
   },
 ) {
   const service = useService();
@@ -1042,7 +1057,11 @@ export function RemoteEventPicker(
       return { items: result.events, nextCursor: result.nextCursor };
     },
   );
+  const searchLock = useRef(false);
+  useEffect(() => { if (!page.busy) searchLock.current = false; }, [page.busy, appliedKeyword]);
   const search = () => {
+    if (page.busy || searchLock.current) return;
+    searchLock.current = true;
     const next = keyword.trim();
     if (next === appliedKeyword) page.retry();
     else setAppliedKeyword(next);
@@ -1052,24 +1071,26 @@ export function RemoteEventPicker(
       <Body small muted>
         조회 가능한 전체 기간의 예정·진행 중 행사에서 찾아요. 행사 선택으로 동행 일정은 바뀌지 않아요.
       </Body>
-      <Field
+      <Row style={{ alignItems: "flex-end", flexWrap: "nowrap" }}>
+      <View style={{ flex: 1, minWidth: 0 }}><Field
         label="행사 검색"
         value={keyword}
         onChangeText={setKeyword}
         placeholder="행사명·장소명·공개 주소"
         maxLength={300}
         returnKeyType="search"
-        onSubmitEditing={search}
-      />
+        onSubmitEditing={(event) => { if (!(event.nativeEvent as { isComposing?: boolean }).isComposing) search(); }}
+      /></View>
+        <Button secondary disabled={page.busy} onPress={search}>검색</Button>
+      </Row>
       <Row>
-        <Button secondary onPress={search}>검색</Button>
         <TextButton onPress={() => {
           setKeyword("");
           if (appliedKeyword) setAppliedKeyword("");
           else page.retry();
         }}>검색 초기화</TextButton>
       </Row>
-      {onDirectInput && <Button secondary onPress={onDirectInput}>행사 직접 입력</Button>}
+      {onDirectInput && <Button secondary focusRef={directInputRef} onPress={onDirectInput}>행사 직접 입력</Button>}
       {page.items.map((event) => {
         const eligible = canSelectEvent(event);
         return (
@@ -1091,7 +1112,7 @@ export function RemoteEventPicker(
       })}
       {page.busy && <Body muted>선택할 행사를 확인하고 있어요…</Body>}
       {page.error && (
-        <Empty title={page.error} action="다시 시도" onPress={page.retry} />
+        <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
       )}
       {!page.busy && !page.error && !page.items.length && (
         <>

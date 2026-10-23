@@ -1,0 +1,18 @@
+{
+  "avd": "Yumidang_UX_API35",
+  "expected": {
+    "font_scale": "1.0",
+    "enabled_accessibility_services": "null",
+    "accessibility_enabled": "0",
+    "stylus_handwriting_enabled": "null",
+    "show_ime_with_hard_keyboard": "1"
+  },
+  "actual": {
+    "font_scale": "1.0",
+    "enabled_accessibility_services": "null",
+    "accessibility_enabled": "0",
+    "stylus_handwriting_enabled": "null",
+    "show_ime_with_hard_keyboard": "1"
+  },
+  "restored": true
+}

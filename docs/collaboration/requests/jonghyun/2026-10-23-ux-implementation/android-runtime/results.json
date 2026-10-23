@@ -1,0 +1,285 @@
+{
+  "environment": {
+    "avd": "Yumidang_UX_API35",
+    "serial": "emulator-5560",
+    "api": 35,
+    "device": "Pixel 7,1080x2400,density420",
+    "app": "official Expo Go57.0.9 / Expo57 / RN0.86.3",
+    "mode": "preview synthetic fixtures only",
+    "control": "user explicitly approved ADB UI control"
+  },
+  "checks": [
+    {
+      "id": "N01",
+      "result": "OBSERVED",
+      "case": "시스템100%→200%에서 홈 탭 높이 확대·4라벨 표시",
+      "evidence": [
+        "home-100.png",
+        "home-100.xml",
+        "home-200-stable.png",
+        "home-200-stable.xml"
+      ],
+      "detail": "동일 1080x2400 화면에서 tab button 높이138→172px. 실제 최종 디자인 판정·전체 화면 통과 아님."
+    },
+    {
+      "id": "N02",
+      "result": "FIXED_AND_RECHECKED",
+      "case": "S03 제목 입력 키보드 가림",
+      "before": "create-keyboard-200.png",
+      "after": "create-standard-keyboard-fixed-200.png",
+      "detail": "원래 제목이 키보드 뒤에 가림. 보완 후 제목 EditText y1294..1456, 화면 키보드는 아래에 표시. Android KAV height·실측 스크롤 적용. 필기 도구가 아닌 일반 화면 키보드로 재검증."
+    },
+    {
+      "id": "N03",
+      "result": "FIXED_AND_RECHECKED",
+      "case": "S03 첫 오류 실제 조작 이동",
+      "evidence": [
+        "create-error-fixed-200.xml",
+        "talkback-category-after-submit.png"
+      ],
+      "detail": "이전 제목 입력 초점 해제, 첫 카테고리 버튼 노출, 제목 Android fixed title 보존. TalkBack 녹색 초점 테두리가 지금이당 버튼에 나타남. XML focused와 TalkBack 초점은 별도 근거."
+    },
+    {
+      "id": "N04",
+      "result": "OBSERVED",
+      "case": "S06 사진 미입력 오류",
+      "evidence": [
+        "talkback-signup-photo-error.png",
+        "talkback-signup-photo-stable.png"
+      ],
+      "detail": "사진 선택 버튼이 화면 위로 이동하고 TalkBack 초점 테두리가 나타남. 실제 사진 업로드·가입 서버 저장은 실행하지 않음."
+    },
+    {
+      "id": "N05",
+      "result": "OBSERVED",
+      "case": "S15-2 부분 MBTI 오류",
+      "evidence": [
+        "talkback-preferences-error-real.png",
+        "talkback-preferences-error-stable.png"
+      ],
+      "detail": "E만 선택 후 저장 시 첫 미완료 쌍의 S 버튼에 TalkBack 초점. 오류 문구·선택 E·기존 소개 유지. 실제 저장 성공을 만들지 않음."
+    },
+    {
+      "id": "N06",
+      "result": "OBSERVED_EARLIER_CHECKPOINT",
+      "case": "S11 시스템 뒤로가기 미전송 이탈 확인",
+      "evidence": [
+        "chat-leave-200.png",
+        "chat-continue-200.xml",
+        "chat-discard-200.xml"
+      ],
+      "detail": "미전송 입력 Un에 대해 이탈 확인→계속 작성 입력 유지→명시 삭제 후 이탈. Gboard 최초 필기 안내가 입력을 가로채 전체 원래 문자열 입력으로 주장하지 않음. 서버 신청·알림 미생성은 합성 검사와 구분. 마지막 Screen 키보드 보완 전 관찰."
+    },
+    {
+      "id": "N07",
+      "result": "OBSERVED_EARLIER_CHECKPOINT",
+      "case": "Q09 하단 공고 관리",
+      "evidence": [
+        "management-200.png",
+        "management-200.xml",
+        "applicants-200.xml"
+      ],
+      "detail": "작성자 예시 공고에서 신청 현황·공고 수정·모집 마감·닫기 전부 화면 안에 표시. 신청 현황 진입 확인. 마지막 공통 Screen 보완 전 관찰, 메뉴 구현은 이후 수정 없음."
+    },
+    {
+      "id": "N08",
+      "result": "OBSERVED",
+      "case": "공통 헤더 터치 크기",
+      "evidence": [
+        "create-200.xml",
+        "chat-first-200.xml"
+      ],
+      "detail": "실제 헤더 나가기/뒤로/메뉴 bounds116x116 physical px, density420에서 약44dp. 전체 아이콘·전체기기 접근성 통과 아님."
+    }
+  ],
+  "limits": [
+    "TalkBack 발음·실제 청취 품질 검증 미실행. 초점 테두리·서비스 연결과 구조만 관찰.",
+    "Android 전 화면·전 키보드·전 필드 완주와 iOS 검증 미실행.",
+    "예시 모드 검증. 실제 네이버·API·DB·실회원·공급사 호출·독립 UT·출시용 APK 검증 아님.",
+    "UIAutomator idle 실패 시 과거 XML이 남는 문제를 발견해 driver가 기존 파일 삭제+성공 메시지 검사를 하도록 수정. preview-200.xml·home-200 전환 캡처는 근거에서 제외.",
+    "TalkBack 검증에는 UIAutomator dump와 focused 속성을 접근성 초점 증명으로 사용하지 않고 screenshot-only 초점 테두리를 사용."
+  ],
+  "settings_restored": {
+    "font_scale": "1.0",
+    "enabled_accessibility_services": "null",
+    "accessibility_enabled": "0",
+    "stylus_handwriting_enabled": "null",
+    "show_ime_with_hard_keyboard": "1"
+  },
+  "resources": "전용 에뮬레이터 종료, 이번 native Metro8140 종료. 기존 CarePlus AVD는 사용·수정하지 않음.",
+  "source_hashes": {
+    "apps/mobile/src/ui.tsx": "1c747ccfe2978ffd2c1f734c65809b008d0ea854457e492abf95b0b54ca9d5b4",
+    "apps/mobile/src/presentation/ux-form.tsx": "a0895f41589d71e6566251a8cef891980f0f0c03348b34f661a68589cdae8f09",
+    "apps/mobile/src/screens/BrowseScreens.tsx": "aefbff15f7c4abef69011cecfb0d7829b013d8d0215b0b0371b8ac55f3deefbe",
+    "apps/mobile/src/screens/AuthAiScreens.tsx": "4d0eae06935cefcc747e822eeab4fb3cf4d39fbb75ec1b1cdbddb697bda89eee",
+    "apps/mobile/src/screens/CommunityScreens.tsx": "c7e5d8a0aeb6a877c55e667010e7002793e9a9d91591e15b400dfdb5843d8042",
+    "apps/mobile/src/screens/RemoteMemberScreens.tsx": "5a9eb427c1df1fd91c2711a032c24d09cb963702ce55733a1fb413b52f68551b"
+  },
+  "followup_source_hashes": {
+    "apps/mobile/src/screens/AuthAiScreens.tsx": "064e551ffa85e283a260cd43a2025f93d1f6bf6d5fd5fe424f1ee8e86d9b2bbc",
+    "apps/mobile/src/screens/BrowseScreens.tsx": "1a2047b1fcbc64bf888dde8ca9aedaeca29112146cb0c1207060a19cec5d1d5c",
+    "apps/mobile/src/screens/CommunityScreens.tsx": "195c81f5ec5402a093e7f8d8e66e8617a00473ee05c689d3d9ea15f312d940ac",
+    "apps/mobile/src/screens/RemoteMemberScreens.tsx": "020abcdf94a8dc4ee42f3123286aa00fab1e0727f0015edd70f7911a7420a473",
+    "apps/mobile/src/screens/RemoteScreens.tsx": "79a4e8e56f2fe96c64b7a52ac8c444f060550cfbc1f2ccade55fc064678289a1",
+    "apps/mobile/src/presentation/ux-form.tsx": "6cb76ac148df144ea4b63c331f4a43e4c201262569b49fe3be3c339ef6fb31ad",
+    "apps/mobile/src/presentation/ux-modal-sheet.tsx": "b60c66958f0987a717ce2c07ee0f4764d0efef5968438d83415a8e0e6eb16858",
+    "apps/mobile/src/presentation/member-ux.tsx": "f35f12ac118f11dbc04470a45c6b573e09631aa74612a2e82231dbcfcc4a514c"
+  },
+  "followup_checks": [
+    {
+      "id": "N09",
+      "result": "OBSERVED",
+      "case": "가입 사진 항목 순서·필수·도움말·조작·오류",
+      "evidence": [
+        "audit-signup-photo-order.png",
+        "audit-signup-photo-order.xml"
+      ],
+      "detail": "Android200%에서순서확인. 음성청취검증아님."
+    },
+    {
+      "id": "N10",
+      "result": "OBSERVED",
+      "case": "S11/S16/S18현재상태카드·변경제안마감",
+      "evidence": [
+        "audit-appointment-current.png",
+        "audit-confirmed-chat.png",
+        "audit-cancel-current.png",
+        "audit-deadline-card-200.png"
+      ],
+      "detail": "예시현재확정카드와200%줄바꿈된빨간마감/흰글자·응답주체관찰. 실제서버상태검증아님."
+    },
+    {
+      "id": "N11",
+      "result": "OBSERVED",
+      "case": "목적별설정과후기AI3항목준비안내",
+      "evidence": [
+        "audit-account-menu-200.png",
+        "audit-account-three-consents-200.png"
+      ],
+      "detail": "5목적메뉴및3항목스크롤노출. 실제동의상태/개별변경연동완료아님."
+    },
+    {
+      "id": "N12",
+      "result": "FIXED_AND_RECHECKED",
+      "case": "행사→직접입력중단·키보드native예외",
+      "before": [
+        "audit-manual-open.png",
+        "audit-overlay-manual-keyboard.png",
+        "native-overlay-error.log"
+      ],
+      "evidence": [
+        "final-manual-keyboard-200.png",
+        "final-address-open-200.png",
+        "final-address-back-manual.xml",
+        "final-manual-back-event.xml",
+        "final-manual-reopened.xml",
+        "final-manual-connected.png"
+      ],
+      "detail": "같은 검색→Enter→직접입력→이름입력에서 오류없이KeptManualEvent입력. 주소→직접→선택→공고뒤로단계와닫기후재진입값유지·직접연결/변경/삭제관찰. 시험한경로성공이며모든Fabric오류미발생보장아님."
+    },
+    {
+      "id": "N13",
+      "result": "OBSERVED",
+      "case": "Q15TalkBack복귀초점",
+      "evidence": [
+        "final-talkback-manual-back-event-stable.png",
+        "final-talkback-event-back-form-stable.png"
+      ],
+      "detail": "직접입력닫기→행사선택직접입력button, 행사선택닫기→공고행사연결button의녹색초점테두리. UIAutomator를TalkBack초점증거로쓰지않음. 전체읽기순서/음성품질미검증."
+    },
+    {
+      "id": "N14",
+      "result": "FIXED_AND_RECHECKED",
+      "case": "미전송이탈확인맥락노출·접근성초점",
+      "before": [
+        "audit-unsent-leave.png",
+        "audit-unsent-fixed-200.png"
+      ],
+      "evidence": [
+        "final-unsent-context-200.png",
+        "final-unsent-talkback-repeat-stable.png",
+        "final-unsent-retained.xml",
+        "final-unsent-discard.xml"
+      ],
+      "detail": "200%에서제목/설명/삭제/계속작성모두표시, TalkBack실제계속작성초점관찰. 계속작성은PreserveNativeDraft보존, 명시삭제이후이탈. 실제신청생성서버검증아님."
+    }
+  ],
+  "restoration_followup": "final-restored-settings.json expected==actual true; dedicated emulator and Metro terminated",
+  "remaining_jonghyun_checks": [
+    "실제 서버 계약 연결 뒤 해당 앱 화면 회귀",
+    "최종 레퍼런스/디자인 MD 적용 뒤 화면 재확인",
+    "출시 설치본 QA는 별도 WBS6.4a/7.3a 범위에서 진행"
+  ],
+  "compact_source_hashes": {
+    "apps/mobile/src/ui.tsx": "e7192f3de58074d3169748b2add5516f2fdf514ad0dcd2c3477ba8aaadf7b848",
+    "apps/mobile/src/presentation/ux-form.tsx": "4900d619951318b2c8724b232b981b305025e052f90b7a2d9b05deb814801915",
+    "apps/mobile/src/presentation/ux-modal-sheet.tsx": "dd600a4e3a8652be48f683dd16e7b894db6aeb9382655ed5e1229f95bf473157"
+  },
+  "compact_checks": [
+    {
+      "id": "N15",
+      "result": "OBSERVED",
+      "case": "320dp200% 홈4탭·작성 헤더/44dp 터치",
+      "evidence": [
+        "compact-home-200.png",
+        "compact-create-header.xml"
+      ],
+      "detail": "디버그 배너 넘침과 제품 헤더를 구분. 전체 화면/기기 접근성 판정 아님."
+    },
+    {
+      "id": "N16",
+      "result": "FIXED_AND_RECHECKED",
+      "case": "작은 화면 키보드 좌표·제목/하단 입력·다음 조작",
+      "before": [
+        "compact-title-keyboard.png",
+        "compact-title-fixed.png"
+      ],
+      "evidence": [
+        "compact-title-final.png",
+        "compact-title-final.xml",
+        "compact-lower-final.png",
+        "compact-error-final.xml"
+      ],
+      "detail": "최종 다음827..994px, IME시작1057px. 제목584..746px·하단입력487..751px. 다음 조작 후 첫 카테고리로 이동. 화면 기준 측정으로 보정, 임의 여백/글자 상한 없음."
+    },
+    {
+      "id": "N17",
+      "result": "OBSERVED",
+      "case": "작은 화면 행사 검색·직접 입력·복귀·값 보존·예시 연결",
+      "evidence": [
+        "compact-picker-final.xml",
+        "compact-manual-final.png",
+        "compact-manual-value-final.xml",
+        "compact-connected-final.png",
+        "compact-address.xml",
+        "compact-manual-return.xml",
+        "compact-picker-return.xml"
+      ],
+      "detail": "최종 검색855..1016px·검색버튼843..1015px·직접행사명864..1025px 모두 IME1057px 위. 닫기 후 FinalManualEvent 보존·공고 전용 연결과 변경/삭제 확인. 주소 단계 복귀는 이전 compact 좌표 보정 전 동일 기능 체크포인트와 구분."
+    },
+    {
+      "id": "N18",
+      "result": "OBSERVED_WITH_LIMIT",
+      "case": "작은 화면 대화 입력/보내기·이탈 안내 스크롤·계속 작성 보존",
+      "evidence": [
+        "compact-chat-keyboard-final.xml",
+        "compact-leave-final.png",
+        "compact-leave-actions-final.xml",
+        "compact-retained-final.xml",
+        "compact-deadline-card-final.png"
+      ],
+      "detail": "입력537..779px·보내기597..718px, 안내799..1051px로 IME 위. 이탈 안내 제목/설명은 처음 보이며 아래로 스크롤 후 삭제487..739px·계속776..949px 조작. 계속 작성 후 CompactUnsentDraft 보존, 실제 전송 안 함. 마감 카드는 compact 이전 좌표 보정 시점의 같은 member 제품 파일 관찰."
+    },
+    {
+      "id": "N19",
+      "result": "OBSERVED_WITH_LIMIT",
+      "case": "작은 화면 TalkBack 복귀·선택창 끝 탐색",
+      "evidence": [
+        "compact-talkback-modal.png",
+        "compact-talkback-wrap.png"
+      ],
+      "detail": "좌표 최종 보정 전 동일 선택/복귀 구현에서 직접입력 복귀 버튼의 녹색 테두리 관찰. 다음 항목 탐색1회에서 뒤 공고 초점 이동 미관찰. 전체 읽기순서·음성 품질 판정 아님."
+    }
+  ],
+  "compact_restoration": "compact-restored-settings.json expected==actual true; size override removed, original font/accessibility/stylus/rotation; dedicated AVD/Metro terminated"
+}

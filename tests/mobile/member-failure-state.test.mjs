@@ -30,12 +30,22 @@ function harness(kind = 'action', supplied = {}) {
   const api = {};
   vm.runInNewContext(ts.transpileModule(readFileSync(path.join(appRoot, 'src/api.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, { exports: api, AbortController, TextEncoder, setTimeout, clearTimeout, URL, fetch });
   const ui = Object.fromEntries(['Body','Button','Card','Chip','Empty','Field','Row','Screen','TextButton','Title'].map(name => [name, name]));
+  function loadPresentation(file) {
+    const out = {};
+    const js = ts.transpileModule(readFileSync(path.join(appRoot, 'src/presentation', file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2022 } }).outputText;
+    vm.runInNewContext(js, { exports: out, Date, Intl, require(id) { if(id==='react')return React;if(id==='react-native')return {View:'View'};if(id==='../ui')return ui;if(id==='./ux-time')return loadPresentation('ux-time.ts');return {}; } });
+    return out;
+  }
   const exports = {};
   const compiled = ts.transpileModule(readFileSync(sourcePath, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2022 } }).outputText;
   vm.runInNewContext(`${compiled}\nexports.testRemoteChat = RemoteChat;`, { exports, Date, Intl, AbortController, console, require(id) {
     if (id === 'react') return React;
-    if (id === 'react-native') return { FlatList: 'FlatList', Image: 'Image', View: 'View' };
-    if (id === 'expo-router') return { useFocusEffect(callback) { effect(callback, [callback], true); } };
+    if (id === 'react-native') return { FlatList: 'FlatList', Image: 'Image', View: 'View', Modal:'Modal', ScrollView:'ScrollView',Pressable:'Pressable' };
+    if (id === 'expo-router') return { useFocusEffect(callback) { effect(callback, [callback], true); },useNavigation:()=>({dispatch(){}}) };
+    if(id==='expo-router/react-navigation')return {usePreventRemove(){}};
+    if(id==='../presentation/ux-time')return loadPresentation('ux-time.ts');
+    if(id==='../presentation/member-ux')return loadPresentation('member-ux.tsx');
+    if(id==='../presentation/ux-form')return {useUxFocus:()=>({focusTarget(){}})};
     if (id === 'expo-crypto') return { randomUUID: () => `synthetic-intent-${++nextId}` };
     if (id === '../api') return api;
     if (id === '../remote') return { useMemberService: () => service, useServiceSession: () => ({ epoch, authenticated }), serviceSessionEpoch: () => epoch, useMessageReadPort: () => null, useMemberPorts: () => ({}) };

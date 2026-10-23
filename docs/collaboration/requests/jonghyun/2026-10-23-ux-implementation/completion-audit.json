@@ -1,0 +1,219 @@
+{
+  "scope": "사용자 확정 UX15항목 + Q06 기존 직접 입력 정책 구분. 원래 대상 화면·동작을 유지하며 서버 계약이 없는 과제를 구현 완료로 바꾸지 않는다.",
+  "previous_goal_turn": "PROGRESS: full approved scope and current contracts re-audited; found Q07 own_review FE omission and fixed; integrated174PASS/type/lint/Android export.",
+  "source": [
+    "decisions.json의원문+effective_overrides",
+    "진단 review-data.json의대상화면과reproduction",
+    "원래 implementation-plan.md+후속Q09승인",
+    "현재 제품코드·테스트·android-runtime/results.json"
+  ],
+  "requirements": [
+    {
+      "id": "Q01",
+      "gate": "원인별 복구·문맥 보존·권한 상실 자료 제거",
+      "state": "LOCAL_SYNTHETIC_VERIFIED_WITH_REPRESENTATIVE_ANDROID",
+      "evidence": [
+        "signupFailure/authMessage",
+        "ux-signup.test.mjs16cases",
+        "root focused29case run",
+        "current member/signup regression; app-qa-followup.md"
+      ]
+    },
+    {
+      "id": "Q02",
+      "gate": "다시 불러오기/헤더로그인복귀/현재 identity+epoch+port 입력 보존·제거",
+      "state": "LOCAL_VERIFIED",
+      "evidence": [
+        "signup-draft.ts",
+        "remote.tsx",
+        "web-member-session.ts",
+        "ux-signup.test.mjs",
+        "mobile-web-session.test.ts"
+      ],
+      "not_proven": "실제 네이버·사진 저장 완주"
+    },
+    {
+      "id": "Q03",
+      "gate": "S03/S06/S15-2 항목명→도움말→조작→오류, 필수배지·첫오류·입력보존",
+      "state": "REPRESENTATIVE_ANDROID_RECHECKED",
+      "evidence": [
+        "audit-signup-photo-order.png/xml",
+        "signup regression"
+      ]
+    },
+    {
+      "id": "Q04",
+      "gate": "첫 미전송 이탈 확인·계속작성·명시삭제, 성공 전 신청없음",
+      "state": "REPRESENTATIVE_ANDROID_FIXED_AND_RECHECKED",
+      "evidence": [
+        "ux-member/recovery tests",
+        "android N06",
+        "android N12~N14 actual observations"
+      ],
+      "not_proven": "실제 서버 신청/알림 전 과정"
+    },
+    {
+      "id": "Q05",
+      "gate": "S11/S16/S18 현재 상태·응답주체·마감/확정 표현",
+      "state": "LOCAL_SYNTHETIC_VERIFIED_WITH_REPRESENTATIVE_ANDROID",
+      "evidence": [
+        "current member/signup regression; app-qa-followup.md"
+      ]
+    },
+    {
+      "id": "Q06",
+      "gate": "직접입력은공고전용·정책상등록가능·현재서버준비와구분",
+      "state": "DEPENDENCY_OPEN",
+      "dependency": "직접 입력 행사 저장/검증 서버 계약, 민규",
+      "evidence": [
+        "server-followup.md"
+      ]
+    },
+    {
+      "id": "Q07",
+      "gate": "확인된사유만표시·불명은중립/재확인",
+      "state": "EXISTING_OWN_SUBMISSION_CONSUMER_FIXED_WITH_ADDITIONAL_REASON_DEPENDENCY",
+      "dependency": "본인 제출은 기존 계약으로 소비 완료. 추가 미확인 사유만 민규 응답 계약 후속.",
+      "evidence": [
+        "reviewUnavailableReason validates own_review shape and can_write===false",
+        "current SQL get_appointment_review_state",
+        "ux-member new4 cases; full174",
+        "final-requirement-audit.md"
+      ]
+    },
+    {
+      "id": "Q08",
+      "gate": "KST절대일시·응답마감만보조남은시간·클라이언트권한판정금지",
+      "state": "LOCAL_SYNTHETIC_VERIFIED_WITH_REPRESENTATIVE_ANDROID",
+      "evidence": [
+        "current member/signup regression; app-qa-followup.md"
+      ]
+    },
+    {
+      "id": "Q09",
+      "gate": "하단관리·소유권확인·기존신청/수정/마감/삭제/재개 유지",
+      "state": "LOCAL_SYNTHETIC_VERIFIED_WITH_REPRESENTATIVE_ANDROID",
+      "evidence": [
+        "android N07는이전시점관찰",
+        "current member/signup regression; app-qa-followup.md"
+      ]
+    },
+    {
+      "id": "Q10",
+      "gate": "목적별목록→상세·후기AI3항목독립·실제철회성공과준비구분",
+      "state": "LOCAL_VERIFIED_WITH_DEPENDENCY",
+      "dependency": "후기AI3동의독립GET/PATCH서버계약,민규"
+    },
+    {
+      "id": "Q11",
+      "gate": "알림누적·중복/커서/실패·늦은응답·권한회수",
+      "state": "LOCAL_VERIFIED",
+      "evidence": [
+        "mergeNotificationPages",
+        "ux-pagination-auth.test.mjs"
+      ],
+      "not_proven": "실제서버다페이지/실회원권한"
+    },
+    {
+      "id": "Q12",
+      "gate": "상세미리보기→전체목록·전체기본/최신/모집중/10개더보기",
+      "state": "LOCAL_REGRESSION_VERIFIED_WITH_DEPENDENCY",
+      "dependency": "실제eventID관계조회서버계약,민규"
+    },
+    {
+      "id": "Q13",
+      "gate": "그림크기유지·44조작영역·인접겹침/포커스정렬",
+      "state": "REPRESENTATIVE_VERIFIED",
+      "evidence": [
+        "ui.IconButton",
+        "android N08",
+        "ux-common.test.mjs"
+      ],
+      "not_proven": "모든화면·모든기기접근성"
+    },
+    {
+      "id": "Q14",
+      "gate": "헤더/탭/입력/S11 유연높이·줄바꿈·키보드·확대상한없음",
+      "state": "REPRESENTATIVE_ANDROID_FIXED_AND_RECHECKED",
+      "evidence": [
+        "android N01~N05",
+        "ux-native-focus.test.mjs",
+        "android N12~N14 actual observations"
+      ]
+    },
+    {
+      "id": "Q15",
+      "gate": "하단선택·오른쪽검색/Enter/IME/중복·중첩닫기복귀/입력보존",
+      "state": "REPRESENTATIVE_ANDROID_FIXED_AND_RECHECKED",
+      "user_resolution": "Q15-close-destination A confirmed",
+      "evidence": [
+        "android N12~N14 actual observations"
+      ]
+    },
+    {
+      "id": "Q16",
+      "gate": "단순성공토스트·후속/부분완료지속·닫힘/경과를완료로간주금지",
+      "state": "LOCAL_VERIFIED",
+      "evidence": [
+        "pendingPhotoCleanup same-session Set",
+        "ux-member.test.mjs",
+        "app/_layout.toast live region"
+      ]
+    }
+  ],
+  "not_authorized": [
+    "commit",
+    "push",
+    "main merge",
+    "deploy",
+    "real member/provider transmission",
+    "backend/DB policy edits"
+  ],
+  "conclusion": "승인한 로컬 UX 보완과 대표 Android411dp/320dp 검증을 수행. 실제 계약 연결·최종 디자인·출시 설치본/실회원 검증은 별도 잔여이며 전체 WBS/출시 완료가 아님. 모든 기기·방향·키보드 조합을 신규 필수 조건으로 추가하지 않음.",
+  "followup_integrated_source_hashes": {
+    "apps/mobile/src/screens/AuthAiScreens.tsx": "064e551ffa85e283a260cd43a2025f93d1f6bf6d5fd5fe424f1ee8e86d9b2bbc",
+    "apps/mobile/src/screens/BrowseScreens.tsx": "1a2047b1fcbc64bf888dde8ca9aedaeca29112146cb0c1207060a19cec5d1d5c",
+    "apps/mobile/src/screens/CommunityScreens.tsx": "195c81f5ec5402a093e7f8d8e66e8617a00473ee05c689d3d9ea15f312d940ac",
+    "apps/mobile/src/screens/RemoteMemberScreens.tsx": "020abcdf94a8dc4ee42f3123286aa00fab1e0727f0015edd70f7911a7420a473",
+    "apps/mobile/src/screens/RemoteScreens.tsx": "79a4e8e56f2fe96c64b7a52ac8c444f060550cfbc1f2ccade55fc064678289a1",
+    "apps/mobile/src/presentation/ux-form.tsx": "6cb76ac148df144ea4b63c331f4a43e4c201262569b49fe3be3c339ef6fb31ad",
+    "apps/mobile/src/presentation/ux-modal-sheet.tsx": "b60c66958f0987a717ce2c07ee0f4764d0efef5968438d83415a8e0e6eb16858",
+    "apps/mobile/src/presentation/member-ux.tsx": "f35f12ac118f11dbc04470a45c6b573e09631aa74612a2e82231dbcfcc4a514c"
+  },
+  "validation_priority": "Android actual app first; web supplementary only, user confirmed2026-10-23",
+  "notion_followup": "2.2/2.3/2.6/2.10 appended and read back, status unchanged 작업중",
+  "compact_android": {
+    "record": "compact-qa.md / android-runtime/results.json N15~N19",
+    "source_hashes": {
+      "apps/mobile/src/ui.tsx": "e7192f3de58074d3169748b2add5516f2fdf514ad0dcd2c3477ba8aaadf7b848",
+      "apps/mobile/src/presentation/ux-form.tsx": "4900d619951318b2c8724b232b981b305025e052f90b7a2d9b05deb814801915",
+      "apps/mobile/src/presentation/ux-modal-sheet.tsx": "dd600a4e3a8652be48f683dd16e7b894db6aeb9382655ed5e1229f95bf473157"
+    },
+    "new_policy_decision": false,
+    "scroll_limit": "작은 화면200% 이탈 안내는 스크롤 필요; 기존 승인된 유연한 높이/스크롤 구조 유지"
+  },
+  "final_requirement_audit": "final-requirement-audit.md",
+  "review_submission_source_hash": "e03a432275db672e68c39e5b063ab64b3c3dabd9d5aba797770f7e8d0f4535b9",
+  "execution_dependency": {
+    "state": "BACKEND_HANDOFF_PENDING_USER_CONFIRMED",
+    "question": "해소: 사용자 C 선택. 새 인계 없으므로 기존 후속 요청 유지·실제 연결 대기.",
+    "revalidation": "직전 현재 소스/원격 대조 기록 유지. 이번은 사용자 답변 기록이며 새 서버/기기 검사 없음.",
+    "consecutive_goal_turns_with_same_dependency": 3,
+    "remaining_independent_implementation": "원래 승인 UX의 Q07 보완 후 새 종현 단독 누락 발견 없음. 기존 실제 연동 계약을 임의 생성하지 않음.",
+    "resume_condition": "민규 최신 계약/인계를 수신한 뒤 실제 계약과 클라이언트 연결 조건을 대조해 재개. 사용자 답변 수신 자체를 연결 작업 재개 지시로 해석하지 않음.",
+    "user_resolution": {
+      "date": "2026-10-23",
+      "source": "사용자 직접 답변",
+      "choice": "C",
+      "decision": "아직 새 인계 없음 — 기존 후속 요청을 유지하고 실제 연결은 대기",
+      "scope": [
+        "후기 AI3종 독립 동의",
+        "행사 ID별 공고 조회",
+        "직접 입력 행사 저장",
+        "AI 이용 가능 상태",
+        "기존 native 인증 인계"
+      ],
+      "effect": "자료 선택 질문은 해소. 실제 구현/연동은 완료 아님. 민규 최신 계약/인계 수신 뒤 종현 클라이언트 연결을 재개."
+    }
+  }
+}

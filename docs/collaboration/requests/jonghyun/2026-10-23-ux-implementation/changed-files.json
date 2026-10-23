@@ -1,0 +1,162 @@
+{
+  "baseline": "522be4ee3d594d53eec6978da0d0f23a3596c529",
+  "includes_foundation_baseline_files": true,
+  "files": [
+    {
+      "path": "apps/mobile/package-lock.json",
+      "sha256": "84b745540641f7ed1af6d1169fc10673162a9b3ba7be7d70aca271affee16d7a"
+    },
+    {
+      "path": "apps/mobile/package.json",
+      "sha256": "14bf5f8d08bc2231d305480c5169b22db1d1958075fee4c7e350a387e99da84a"
+    },
+    {
+      "path": "apps/mobile/scripts/verify-android-settings.mjs",
+      "sha256": "bd35f488640f792c7b5a0d71c7a1de8520966ee56e767a77caf69c64c85bc491"
+    },
+    {
+      "path": "apps/mobile/src/app/(tabs)/_layout.tsx",
+      "sha256": "a4ce555c4e9b0de430ca905c13281a7604e01ddc739e2a083a9ba45f6d112291"
+    },
+    {
+      "path": "apps/mobile/src/app/_layout.tsx",
+      "sha256": "bf70f04a17ea260552aca4cf27e069da362c3cf45d816bec551f1c543b5e1889"
+    },
+    {
+      "path": "apps/mobile/src/auth-callback-task.ts",
+      "sha256": "f2c5ff2790c6157dd2f8c6175ac6a115bba39afeaccacdd96d181a589c24e189"
+    },
+    {
+      "path": "apps/mobile/src/presentation/client-feedback.tsx",
+      "sha256": "9711dd32af178c3a3a70f681ee18667a678f7a233d262cb4b8f765729ba9926b"
+    },
+    {
+      "path": "apps/mobile/src/presentation/member-ux.tsx",
+      "sha256": "e03a432275db672e68c39e5b063ab64b3c3dabd9d5aba797770f7e8d0f4535b9"
+    },
+    {
+      "path": "apps/mobile/src/presentation/ux-form.tsx",
+      "sha256": "4900d619951318b2c8724b232b981b305025e052f90b7a2d9b05deb814801915"
+    },
+    {
+      "path": "apps/mobile/src/presentation/ux-modal-sheet.tsx",
+      "sha256": "dd600a4e3a8652be48f683dd16e7b894db6aeb9382655ed5e1229f95bf473157"
+    },
+    {
+      "path": "apps/mobile/src/presentation/ux-time.ts",
+      "sha256": "305b0eb1ba2b47bc32990b0eeb36dda359d8f369b1b2c64448170b622ee36070"
+    },
+    {
+      "path": "apps/mobile/src/remote.tsx",
+      "sha256": "cbbca34bcbac8967eb73e379901b1468ef55ded3418c7fb3438701a916773b87"
+    },
+    {
+      "path": "apps/mobile/src/screens/AuthAiScreens.tsx",
+      "sha256": "064e551ffa85e283a260cd43a2025f93d1f6bf6d5fd5fe424f1ee8e86d9b2bbc"
+    },
+    {
+      "path": "apps/mobile/src/screens/BrowseScreens.tsx",
+      "sha256": "1a2047b1fcbc64bf888dde8ca9aedaeca29112146cb0c1207060a19cec5d1d5c"
+    },
+    {
+      "path": "apps/mobile/src/screens/CommunityScreens.tsx",
+      "sha256": "195c81f5ec5402a093e7f8d8e66e8617a00473ee05c689d3d9ea15f312d940ac"
+    },
+    {
+      "path": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "sha256": "020abcdf94a8dc4ee42f3123286aa00fab1e0727f0015edd70f7911a7420a473"
+    },
+    {
+      "path": "apps/mobile/src/screens/RemoteScreens.tsx",
+      "sha256": "79a4e8e56f2fe96c64b7a52ac8c444f060550cfbc1f2ccade55fc064678289a1"
+    },
+    {
+      "path": "apps/mobile/src/signup-draft.ts",
+      "sha256": "f0f7adc42a430b244869bfe377206cfa401e80b1628872e8afbe329a1643a10d"
+    },
+    {
+      "path": "apps/mobile/src/ui.tsx",
+      "sha256": "e7192f3de58074d3169748b2add5516f2fdf514ad0dcd2c3477ba8aaadf7b848"
+    },
+    {
+      "path": "apps/mobile/src/web-member-connection.ts",
+      "sha256": "9970b613e5ac365fa3d69e9fa7fdfb025bd47a04d4a871018c7de8881516055c"
+    },
+    {
+      "path": "apps/mobile/src/web-member-session.ts",
+      "sha256": "6343d41cbd6fed9196659199b6ab0d560afe4208e656a4ca0c8d8d44734b1c22"
+    },
+    {
+      "path": "docs/collaboration/requests/jonghyun/2026-10-20-event-ux-approved-spec.md",
+      "sha256": "d34f95f423d11dc87284581aab1a36325f1ac99a3c2b421bfd192fbd0adfb9f3"
+    },
+    {
+      "path": "docs/planning/design/IA.md",
+      "sha256": "d23fff2b515a5e450bbdb80ae81cc05e84417d22de53e004a4a1722fd05ccec6"
+    },
+    {
+      "path": "docs/planning/design/USERFLOW.md",
+      "sha256": "c5fb4c15612a63b84df0ceb3efc9dd7dc79c2559d7c6463668f2e7b2205e202e"
+    },
+    {
+      "path": "tests/functions/jonghyun/mobile-web-session.test.ts",
+      "sha256": "12421d24972a3113867bb1615fa01480fc24e7e933eed0cf87971bfed40e4aaa"
+    },
+    {
+      "path": "tests/mobile/android-settings.test.mjs",
+      "sha256": "93d3e4c2534b84b432f5cec74a5b524756deb0b2a898a212a21de8599c948b6e"
+    },
+    {
+      "path": "tests/mobile/client-auth-connection.test.mjs",
+      "sha256": "15dfb8e054c29fef075a6720b5aaf927d9d22785d57e3c49ea967e56444a8611"
+    },
+    {
+      "path": "tests/mobile/event-selection-picker.test.mjs",
+      "sha256": "188f7811d0e8a04976b02bfbb81708351b2ebd7f606f1e953dec1eb42058b30b"
+    },
+    {
+      "path": "tests/mobile/member-failure-state.test.mjs",
+      "sha256": "b012c1026664d4aea4011b6a5bc040355a56810f26db56bc63314f65ec2fbd57"
+    },
+    {
+      "path": "tests/mobile/ux-common-completion.test.mjs",
+      "sha256": "90e4c70903cb64003beabf6408a2f186435e503b8098dd201f2703510f1c0ef0"
+    },
+    {
+      "path": "tests/mobile/ux-common.test.mjs",
+      "sha256": "d0b10b0a4f2130cc2700bfbade92487d8c4c26a4f8cd0c00424c398b3a3605d8"
+    },
+    {
+      "path": "tests/mobile/ux-keyboard-offset.test.mjs",
+      "sha256": "b763d704a789a119cdda4827a6b9311d05674f37a7aaf340cf7b551a3331f551"
+    },
+    {
+      "path": "tests/mobile/ux-member.test.mjs",
+      "sha256": "069883129be1c52cbaf20724967ff6b4920eb62abd4a6e8f9c5085138801f281"
+    },
+    {
+      "path": "tests/mobile/ux-modal-sheet.test.mjs",
+      "sha256": "d59553249ce80b8d3e9684a437b989a23c41c58f46045918db73cc17d1b850b5"
+    },
+    {
+      "path": "tests/mobile/ux-native-focus.test.mjs",
+      "sha256": "b2b8dd155077e12941947b57c38c88dddc6bc677405c621cfc5fb8f2dc07a8b5"
+    },
+    {
+      "path": "tests/mobile/ux-pagination-auth.test.mjs",
+      "sha256": "8faad33f3490a670d6e596a658f5c9ec0a4a51f8b0ec8df6811ff783d3e612cd"
+    },
+    {
+      "path": "tests/mobile/ux-preview-member.test.mjs",
+      "sha256": "eafbf0d239c2ff1ecd457f6232ad75de9c44c4937deab743ef239985476c98f3"
+    },
+    {
+      "path": "tests/mobile/ux-recovery.test.mjs",
+      "sha256": "92a4a7640647531dd2e3401e61116dabec2589d000cca5f7e41457a12908f3b3"
+    },
+    {
+      "path": "tests/mobile/ux-signup.test.mjs",
+      "sha256": "5d7bef3f4ea98a6063f9ec204f176f2932f72e999a837b4c5242e4237265a20e"
+    }
+  ]
+}

@@ -1,8 +1,12 @@
 import { RemoteChatsScreen, RemoteChatScreen, RemoteMeScreen, RemotePhotoScreen, RemotePreferencesScreen, RemoteAppointmentScreen, RemoteReviewScreen, RemoteCancelScreen, RemoteNotificationsScreen, RemoteAccountScreen } from "./RemoteMemberScreens";
+import { FormErrors, FormErrorAnchor, FormErrorTarget, useFormErrors, useUxFocus } from "../presentation/ux-form";
 import { serviceMode } from "../remote";
 import { RemoteProfileScreen } from "./RemoteScreens";
-import React, { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusEffect, useNavigation } from "expo-router";
+import { usePreventRemove } from "expo-router/react-navigation";
+import { AppointmentStatusCard, ChangeProposalStatusCard, CompanionStatusCard, reviewUnavailableReason } from "../presentation/member-ux";
+import { formatDeadline, formatKoreanDateTime } from "../presentation/ux-time";
 import {
   Image,
   Linking,
@@ -31,21 +35,21 @@ import {
   Card,
   Chip,
   colors,
-  dateLabel,
   Divider,
   Empty,
   Field,
   Icon,
+  IconButton,
   MemberBox,
   PostCard,
-  rangeLabel,
   Row,
   Screen,
   Section,
   TextButton,
-  timeLabel,
   Title,
 } from "../ui";
+
+const previewRangeLabel = (start: number, end: number) => `${formatKoreanDateTime(start)} ~ ${formatKoreanDateTime(end)}`;
 
 function LoginGuard({ title, tab = false }: { title: string; tab?: boolean }) {
   const app = useApp();
@@ -286,12 +290,7 @@ function PreviewChatsScreen() {
       title="채팅"
       tab
       right={
-        <Pressable
-          accessibilityLabel="알림"
-          onPress={() => app.navigate("S12")}
-        >
-          <Icon name="notifications-outline" />
-        </Pressable>
+        <IconButton accessibilityLabel="알림" name="notifications-outline" onPress={() => app.navigate("S12")} />
       }
     >
       <ScrollView
@@ -371,8 +370,9 @@ function PreviewChatsScreen() {
 }
 
 export function ChatScreen({ id, conversationId }: { id?: string; conversationId?: string }) {
+  const app = useApp();
   const requestId = id?.startsWith("request:") ? id.slice(8) : conversationId;
-  return serviceMode ? <RemoteChatScreen postId={requestId ? undefined : id} conversationId={requestId} /> : <PreviewChatScreen id={id} conversationId={conversationId} />;
+  return serviceMode ? <RemoteChatScreen postId={requestId ? undefined : id} conversationId={requestId} /> : <PreviewChatScreen key={`${app.viewerId ?? "anonymous"}:${id ?? ""}:${conversationId ?? ""}`} id={id} conversationId={conversationId} />;
 }
 function PreviewChatScreen({
   id,
@@ -383,6 +383,7 @@ function PreviewChatScreen({
 }) {
   const app = useApp();
   const [input, setInput] = useState("");
+  const uxFocus = useUxFocus(), continueDraftTarget = useRef<View | null>(null), draftExitContext = useRef<View | null>(null);
   const [selected, setSelected] = useState<string | null>(
     conversationId || null,
   );
@@ -395,10 +396,18 @@ function PreviewChatScreen({
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [newPlace, setNewPlace] = useState("");
+  const navigation = useNavigation(), pendingExit = useRef<(() => void) | null>(null);
+  const [confirmedExit, setConfirmedExit] = useState<{ run: () => void } | null>(null);
+  const dispatchedExit = useRef<typeof confirmedExit>(null);
+  const previewPost = app.posts.find(post => post.id === id);
+  const hasConversation = app.conversations.some(c => c.postId === id && (previewPost?.authorId === app.viewerId || c.applicantId === app.viewerId));
+  const hasUnsentFirstMessage = Boolean(app.member && input.trim() && !hasConversation);
+  useEffect(() => { if (exitConfirm) uxFocus.focusTarget(continueDraftTarget.current, { reveal: draftExitContext.current }); }, [exitConfirm, uxFocus]);
+  usePreventRemove(hasUnsentFirstMessage, ({ data }) => { pendingExit.current = () => navigation.dispatch(data.action); setExitConfirm(true); });
+  useEffect(() => { if (confirmedExit && !hasUnsentFirstMessage && dispatchedExit.current !== confirmedExit) { dispatchedExit.current = confirmedExit; confirmedExit.run(); } }, [confirmedExit, hasUnsentFirstMessage]);
   useFocusEffect(
     useCallback(
       () => () => {
-        setInput("");
         setError("");
         setExitConfirm(false);
       },
@@ -424,12 +433,9 @@ function PreviewChatScreen({
     conversations.find((c) => c.id === selected) ||
     conversations.find((c) => c.status === "confirmed") ||
     conversations[0];
-  const appointment = app.appointments.find(
-    (a) =>
-      a.postId === id &&
-      a.applicantId === conversation?.applicantId &&
-      a.status === "confirmed",
-  );
+  const relatedAppointments = app.appointments.filter(a => a.postId === id && a.applicantId === conversation?.applicantId);
+  const appointment = relatedAppointments.find(a => a.status === "confirmed");
+  const currentAppointment = appointment || (relatedAppointments.length === 1 ? relatedAppointments[0] : undefined);
   const otherId = host ? conversation?.applicantId : post.authorId;
   const blocked = !!otherId && app.blockedIds.includes(otherId);
   const cooldown =
@@ -460,18 +466,17 @@ function PreviewChatScreen({
   return (
     <Screen
       title="1:1 대화"
+      focusController={uxFocus}
       onBack={() => {
-        if (!conversation && input.trim()) setExitConfirm(true);
+        if (hasUnsentFirstMessage) { pendingExit.current = app.back; setExitConfirm(true); }
         else app.back();
       }}
       right={
-        <Pressable
-          accessibilityRole="button"
+        <IconButton
+          name="ellipsis-vertical"
           accessibilityLabel="대화 메뉴"
           onPress={() => setMenu(!menu)}
-        >
-          <Icon name="ellipsis-vertical" />
-        </Pressable>
+        />
       }
       footer={
         readonly ? (
@@ -516,23 +521,28 @@ function PreviewChatScreen({
       }
     >
       {exitConfirm && (
-        <Card style={{ backgroundColor: colors.pink }}>
-          <Title>보내지 않은 메시지가 있어요</Title>
-          <Body>
-            지금 나가면 입력 내용이 삭제되고 신청은 만들어지지 않아요.
-          </Body>
-          <Button
-            onPress={() => {
-              setInput("");
-              app.back();
-            }}
-          >
-            입력 삭제하고 나가기
-          </Button>
-          <Button secondary onPress={() => setExitConfirm(false)}>
-            계속 작성하기
-          </Button>
-        </Card>
+        <View ref={draftExitContext} collapsable={false}>
+          <Card style={{ backgroundColor: colors.pink }}>
+            <Title>보내지 않은 메시지가 있어요</Title>
+            <Body>
+              지금 나가면 입력 내용이 삭제되고 신청은 만들어지지 않아요.
+            </Body>
+            <Button
+              onPress={() => {
+                const exit = pendingExit.current;
+                pendingExit.current = null;
+                setInput("");
+                setExitConfirm(false);
+                setConfirmedExit(exit ? { run: exit } : null);
+              }}
+            >
+              입력 삭제하고 나가기
+            </Button>
+            <Button secondary focusRef={continueDraftTarget} accessibilityHint="작성 중인 메시지를 유지하고 계속 작성해요." onPress={() => { pendingExit.current = null; setExitConfirm(false); }}>
+              계속 작성하기
+            </Button>
+          </Card>
+        </View>
       )}
       {host && conversations.length > 1 && (
         <ScrollView horizontal contentContainerStyle={{ gap: 8 }}>
@@ -550,6 +560,8 @@ function PreviewChatScreen({
           ))}
         </ScrollView>
       )}
+      <Body small muted>예시 데이터의 현재 상태예요. 실제 서버 처리 결과가 아니에요.</Body>
+      {currentAppointment ? <AppointmentStatusCard status={currentAppointment.status} /> : conversation?.status === "confirmed" ? <AppointmentStatusCard unavailable /> : pending ? <CompanionStatusCard kind={host ? "waiting" : "response"} deadline={conversation?.requestExpiresAt} proposerName={app.members[post.authorId]?.name} /> : conversation?.status === "active" && !host ? <CompanionStatusCard kind="applied" /> : null}
       {otherId && <MemberBox memberId={otherId} confirmed={!!appointment} />}
       <Card
         onPress={() => app.navigate("S02", post.id)}
@@ -563,7 +575,7 @@ function PreviewChatScreen({
         </Row>
         <Title style={{ fontSize: 17 }}>{post.title}</Title>
         <Body small muted>
-          {rangeLabel(
+          {previewRangeLabel(
             appointment?.startsAt || post.startsAt,
             appointment?.endsAt || post.endsAt,
           )}
@@ -666,7 +678,7 @@ function PreviewChatScreen({
             </Body>
           </View>
           <Body small muted>
-            {timeLabel(m.at)}
+            {formatKoreanDateTime(m.at)}
           </Body>
         </View>
       ))}
@@ -693,8 +705,7 @@ function PreviewChatScreen({
                   : "작성자가 동행 확정을 요청했어요. 일정과 조건을 확인해 주세요."}
               </Body>
               <Body small style={{ color: colors.primary }}>
-                수락 마감: {dateLabel(conversation.requestExpiresAt!)}{" "}
-                {timeLabel(conversation.requestExpiresAt!)} · 마감 시각부터 수락
+                수락 마감: {formatDeadline(conversation.requestExpiresAt!, app.now)} · 마감 시각부터 수락
                 불가
               </Body>
               {host ? (
@@ -762,8 +773,7 @@ function PreviewChatScreen({
       )}
       {appointment && (
         <Card>
-          <Badge tone="green">동행 확정</Badge>
-          <Title>우리 약속이 정해졌어요</Title>
+          <Title>약속 정보</Title>
           <Body>{post.meetingPoint}</Body>
           <Body small muted>
             {post.address}
@@ -831,11 +841,9 @@ function PreviewChatScreen({
             </View>
           )}
           {appointment.proposal && (
-            <View style={{ gap: 12 }}>
-              <Divider />
-              <Title style={{ fontSize: 16 }}>변경 제안 대기</Title>
+            <ChangeProposalStatusCard requestedByMe={appointment.proposal.proposedBy === app.viewerId} deadline={appointment.proposal.expiresAt}>
               <Body>
-                {rangeLabel(
+                {previewRangeLabel(
                   appointment.proposal.startsAt,
                   appointment.proposal.endsAt,
                 )}
@@ -848,8 +856,7 @@ function PreviewChatScreen({
                 {appointment.proposal.meetingPoint}
               </Body>
               <Body small muted>
-                마감 {dateLabel(appointment.proposal.expiresAt)}{" "}
-                {timeLabel(appointment.proposal.expiresAt)} · 미응답 시 기존
+                {formatDeadline(appointment.proposal.expiresAt, app.now)} · 미응답 시 기존
                 약속 유지
               </Body>
               {appointment.proposal.proposedBy === app.viewerId ? (
@@ -883,7 +890,7 @@ function PreviewChatScreen({
                   </Button>
                 </Row>
               )}
-            </View>
+            </ChangeProposalStatusCard>
           )}
           <TextButton
             color={colors.red}
@@ -942,7 +949,7 @@ function PreviewNotificationsScreen() {
                   {n.text}
                 </Body>
                 <Body small muted>
-                  {dateLabel(n.at)} {timeLabel(n.at)}
+                  {formatKoreanDateTime(n.at)}
                 </Body>
               </View>
               {!n.read && <View style={st.dot} />}
@@ -985,12 +992,7 @@ function PreviewMeScreen() {
       title="나"
       tab
       right={
-        <Pressable
-          accessibilityLabel="계정 상태"
-          onPress={() => app.navigate("S21")}
-        >
-          <Icon name="settings-outline" />
-        </Pressable>
+        <IconButton accessibilityLabel="계정 상태" name="settings-outline" onPress={() => app.navigate("S21")} />
       }
     >
       <Card onPress={() => app.navigate("S14", app.viewerId!)}>
@@ -1054,14 +1056,14 @@ function PreviewMeScreen() {
                       }
                     </Badge>
                     <Body small muted>
-                      {dateLabel(a.startsAt)}
+                      {formatKoreanDateTime(a.startsAt)}
                     </Body>
                   </Row>
                   <Title style={{ fontSize: 17 }}>
                     {p?.title || "탈퇴 회원의 동행"}
                   </Title>
                   <Body small muted>
-                    {rangeLabel(a.startsAt, a.endsAt)}
+                    {previewRangeLabel(a.startsAt, a.endsAt)}
                   </Body>
                   {canWriteReview(a, app.viewerId!, app.now) && !mine && (
                     <Button onPress={() => app.navigate("S17", a.id)}>
@@ -1221,12 +1223,7 @@ function PreviewProfileScreen({ id }: { id?: string }) {
       title="프로필"
       right={
         !own ? (
-          <Pressable
-            accessibilityLabel="프로필 신고"
-            onPress={() => setReport(!report)}
-          >
-            <Icon name="flag-outline" />
-          </Pressable>
+          <IconButton accessibilityLabel="프로필 신고" name="flag-outline" onPress={() => setReport(!report)} />
         ) : undefined
       }
     >
@@ -1337,7 +1334,7 @@ function PreviewProfileScreen({ id }: { id?: string }) {
                   {app.members[r.authorId]
                     ? maskName(app.members[r.authorId].name)
                     : "탈퇴한 사용자입니다."}{" "}
-                  · {dateLabel(r.submittedAt)}
+                  · {formatKoreanDateTime(r.submittedAt)}
                 </Body>
                 <Body style={{ color: colors.primary }}>
                   {"★".repeat(r.stars)}
@@ -1505,27 +1502,38 @@ export function TagsEditor({
 export function PreferencesScreen() { return serviceMode ? <RemotePreferencesScreen /> : <PreviewPreferencesScreen />; }
 function PreviewPreferencesScreen() {
   const app = useApp();
+  const formErrors = useFormErrors();
+  const uxFocus = useUxFocus();
+  const mbtiTargets = useRef<(View | null)[]>([]);
   const [interests, setInterests] = useState(app.member?.interests || []);
   const [styles, setStyles] = useState(app.member?.conversationStyles || []);
   const [mbti, setMbti] = useState(app.member?.mbti || "");
   const [intro, setIntro] = useState(app.member?.introduction || "");
   const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState<"mbti" | "save" | null>(null);
+  const focusMbti = useCallback(() => {
+    const pairs = [["E", "I"], ["S", "N"], ["T", "F"], ["J", "P"]];
+    const first = pairs.findIndex((pair, index) => !pair.includes(mbti[index] || ""));
+    uxFocus.focusTarget(mbtiTargets.current[Math.max(0, first)]);
+  }, [mbti, uxFocus]);
   if (!app.member) return <LoginGuard title="취향·성향 편집" />;
   return (
-    <Screen
+    <FormErrors controller={formErrors}><Screen focusController={uxFocus}
       title="취향·성향 편집"
       footer={
         <Button
           onPress={() => {
             if (app.failNext) {
               app.setPreview({ failNext: false });
-              setError(
-                "저장에 실패했어요. 입력 내용을 유지했으니 다시 시도해 주세요.",
-              );
+              setError("저장에 실패했어요. 입력 내용을 유지했으니 다시 시도해 주세요.");
+              setErrorField("save");
+              formErrors.focusFirstError();
               return;
             }
             if (mbti.trim() && !/^[EI][SN][TF][JP]$/.test(mbti)) {
               setError("MBTI의 네 가지를 모두 선택하거나 비워 주세요.");
+              setErrorField("mbti");
+              formErrors.focusFirstError();
               return;
             }
             app.updateMember({
@@ -1573,7 +1581,7 @@ function PreviewPreferencesScreen() {
           "사진 찍기 좋아요",
         ]}
       />
-      <Section title="MBTI (선택)">
+      <FormErrorTarget id="preferences-mbti" error={errorField === "mbti" ? error : undefined} order={0} focus={focusMbti}><Section title="MBTI (선택)">
         <View style={{ gap: 10 }}>
           {[
             ["E", "I"],
@@ -1585,6 +1593,7 @@ function PreviewPreferencesScreen() {
               {pair.map((x) => (
                 <Chip
                   key={x}
+                  focusRef={x === pair[0] ? (node) => { mbtiTargets.current[i] = node; } : undefined}
                   selected={mbti[i] === x}
                   onPress={() => {
                     const next = mbti.padEnd(4, " ").split("");
@@ -1602,7 +1611,8 @@ function PreviewPreferencesScreen() {
             {mbti.trim() ? `선택: ${mbti}` : "아직 선택하지 않았어요."}
           </Body>
         </View>
-      </Section>
+        {errorField === "mbti" && error && <Body style={{ color: colors.red }}>{error}</Body>}
+      </Section></FormErrorTarget>
       <Field
         label="한 줄 소개 (선택)"
         value={intro}
@@ -1610,8 +1620,10 @@ function PreviewPreferencesScreen() {
         multiline
         placeholder="어떤 동행을 즐기는지 알려주세요"
       />
-      {error && <Body style={{ color: colors.red }}>{error}</Body>}
-    </Screen>
+      {errorField === "save" && error && <FormErrorAnchor id="preferences-save" error={error} order={100}>
+        <Body style={{ color: colors.red }}>{error}</Body>
+      </FormErrorAnchor>}
+    </Screen></FormErrors>
   );
 }
 
@@ -1646,6 +1658,8 @@ function PreviewAppointmentScreen({ id }: { id?: string }) {
         </Button>
       }
     >
+      <Body small muted>예시 데이터의 현재 상태예요. 실제 서버 처리 결과가 아니에요.</Body>
+      <AppointmentStatusCard status={a.status} />
       <Card>
         <Row between>
           <Badge>{p?.category || "동행"}</Badge>
@@ -1665,7 +1679,7 @@ function PreviewAppointmentScreen({ id }: { id?: string }) {
           <Icon name="calendar-outline" color={colors.primary} />
           <View style={{ flex: 1, gap: 4 }}>
             <Body style={{ fontWeight: "600" }}>일시</Body>
-            <Body>{rangeLabel(a.startsAt, a.endsAt)}</Body>
+            <Body>{previewRangeLabel(a.startsAt, a.endsAt)}</Body>
           </View>
         </View>
         <View style={st.detail}>
@@ -1718,14 +1732,14 @@ function PreviewAppointmentScreen({ id }: { id?: string }) {
           <Title>동행 완료 확인</Title>
           {app.now < a.endsAt ? (
             <Body muted>
-              예상 종료 {timeLabel(a.endsAt)} 이후 본인이 완료를 확인할 수
+              예상 종료 {formatKoreanDateTime(a.endsAt)} 이후 본인이 완료를 확인할 수
               있어요.
             </Body>
           ) : a.completedAt !== null ? (
             <>
               <Badge tone="green">실제 완료</Badge>
               <Body small muted>
-                {dateLabel(a.completedAt)} {timeLabel(a.completedAt)}에
+                {formatKoreanDateTime(a.completedAt)}에
                 완료됐어요.
               </Body>
             </>
@@ -1756,7 +1770,7 @@ function PreviewAppointmentScreen({ id }: { id?: string }) {
           {mine && <Badge tone="gray">내 후기 제출 완료 · 수정 불가</Badge>}
           {deadline && (
             <Body small muted>
-              후기 작성 마감 {dateLabel(deadline)} {timeLabel(deadline)}
+              후기 작성 마감 {formatKoreanDateTime(deadline)}
               {app.now >= deadline ? " · 마감됨" : ""}
             </Body>
           )}
@@ -1768,6 +1782,10 @@ function PreviewAppointmentScreen({ id }: { id?: string }) {
             )}
         </Card>
       )}
+      {confirmed && a.proposal && <ChangeProposalStatusCard requestedByMe={a.proposal.proposedBy === app.viewerId} deadline={a.proposal.expiresAt}>
+        <Body>{previewRangeLabel(a.proposal.startsAt, a.proposal.endsAt)}</Body><Body>{a.proposal.placeName}</Body><Body small>{formatDeadline(a.proposal.expiresAt, app.now)}</Body>
+        {a.proposal.proposedBy === app.viewerId ? <Button secondary onPress={() => feedback(app, app.rejectChange(a.id))}>제안 철회</Button> : <Row><Button disabled={app.now >= a.proposal.expiresAt} onPress={() => feedback(app, app.acceptChange(a.id))}>변경 수락</Button><Button secondary onPress={() => feedback(app, app.rejectChange(a.id))}>변경 거절</Button></Row>}
+      </ChangeProposalStatusCard>}
       {confirmed && (
         <TextButton
           color={colors.red}
@@ -1820,14 +1838,8 @@ function PreviewReviewScreen({ id }: { id?: string }) {
   if (!allowed)
     return (
       <Screen title="동행 상호 평가">
-        <Empty
-          title={
-            a.status === "disputed"
-              ? "검토 중에는 후기를 쓸 수 없어요"
-              : "지금은 평가할 수 없어요"
-          }
-          description="예상 종료 후 본인 완료 확인이 필요해요. 취소·분쟁 상태 또는 작성 기한 종료 후에는 제출할 수 없어요."
-        />
+        <Body small muted>예시 데이터의 현재 상태예요. 실제 서버 처리 결과가 아니에요.</Body>
+        <Card><Title>{reviewUnavailableReason({ disputed: a.status === "disputed" }).title}</Title><Body>{reviewUnavailableReason({ disputed: a.status === "disputed" }).description}</Body><Button secondary onPress={() => app.navigate("S16", a.id)}>약속 상태 확인</Button></Card>
       </Screen>
     );
   return (
@@ -1862,7 +1874,7 @@ function PreviewReviewScreen({ id }: { id?: string }) {
         <Badge>{p?.category || "동행"}</Badge>
         <Title style={{ fontSize: 16 }}>{p?.title || "동행 약속"}</Title>
         <Body small muted>
-          {rangeLabel(a.startsAt, a.endsAt)}
+          {previewRangeLabel(a.startsAt, a.endsAt)}
         </Body>
       </Card>
       <Section title="동행은 어떠셨나요?">
@@ -1995,6 +2007,7 @@ function PreviewCancelScreen({ id }: { id?: string }) {
   if (afterStart)
     return (
       <Screen title="중단·불발 신고">
+        <Body small muted>예시 데이터의 현재 상태예요. 실제 서버 처리 결과가 아니에요.</Body><AppointmentStatusCard status={a?.status} unavailable={!a} />
         <Title large>시작 이후에는 신고로 접수해요</Title>
         <Body muted>
           노쇼나 동행 중단 상황을 알려주세요. 신고 접수만으로 위반이 확정되지는
@@ -2043,6 +2056,8 @@ function PreviewCancelScreen({ id }: { id?: string }) {
         </Button>
       }
     >
+      <Body small muted>예시 데이터의 현재 상태예요. 실제 서버 처리 결과가 아니에요.</Body>
+      {a ? <AppointmentStatusCard status={a.status} /> : conversation?.requestExpiresAt && conversation.requestExpiresAt > app.now ? <CompanionStatusCard kind="response" deadline={conversation.requestExpiresAt} proposerName={app.members[p.authorId]?.name} /> : <CompanionStatusCard kind="applied" />}
       <Badge tone="gray">{withdraw ? "확정 전" : "시작 전 확정 취소"}</Badge>
       <Title large>
         {withdraw ? "신청을 철회할까요?" : "취소 사유를 알려주세요"}
@@ -2179,11 +2194,12 @@ export function SafetyScreen() {
   );
 }
 
-export function AccountScreen() { return serviceMode ? <RemoteAccountScreen /> : <PreviewAccountScreen />; }
+export function AccountScreen() { const app = useApp(); return serviceMode ? <RemoteAccountScreen /> : <PreviewAccountScreen key={app.viewerId ?? "anonymous"} />; }
 function PreviewAccountScreen() {
   const app = useApp();
+  const [section, setSection] = useState<"account" | "ai" | "visibility" | "reports" | "retirement" | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [withdraw, setWithdraw] = useState<"discovery" | "summary" | null>(
+  const [withdraw, setWithdraw] = useState<"discovery" | null>(
     null,
   );
   const [support, setSupport] = useState(false);
@@ -2212,8 +2228,10 @@ function PreviewAccountScreen() {
       ),
     );
   };
-  return (
-    <Screen title="계정 상태·관리">
+  return <Screen title={section === "account" ? "계정 이용" : section === "ai" ? "AI 동의" : section === "visibility" ? "차단·숨김" : section === "reports" ? "신고·판정" : section === "retirement" ? "회원 탈퇴" : "계정 관리"} onBack={section ? () => { setSection(null); setWithdraw(null); setDeleteConfirm(false); setSupport(false); setError(""); } : undefined}>
+    <Body small muted>예시 데이터의 설정이에요. 실제 서버의 동의·운영 처리 결과가 아니에요.</Body>
+    {!section && <>{([['account','계정 이용'],['ai','AI 동의'],['visibility','차단·숨김'],['reports','신고·판정'],['retirement','회원 탈퇴']] as const).map(([value,label]) => <Button key={value} secondary onPress={() => setSection(value)}>{label}</Button>)}</>}
+    {section === "account" && <>
       <Card>
         <Row>
           <Avatar member={app.member} size={50} />
@@ -2239,11 +2257,31 @@ function PreviewAccountScreen() {
         </Body>
         {app.restrictionsEndAt && (
           <Body small>
-            제한 종료: {dateLabel(app.restrictionsEndAt)}{" "}
-            {timeLabel(app.restrictionsEndAt)}
+            제한 종료: {formatKoreanDateTime(app.restrictionsEndAt)}
           </Body>
         )}
       </Card>
+      <Button
+        secondary
+        onPress={() => {
+          void app.logout();
+        }}
+      >
+        로그아웃
+      </Button>
+    </>}
+    {section === "ai" && <>
+      <Body muted>AI 동의는 선택 사항이에요. 철회해도 계정과 일반 동행은 유지돼요.</Body><Title>AI 탐색</Title>
+      <MenuRow icon="sparkles-outline" title="AI 동행 탐색" description={app.aiDiscoveryAllowed ? "사용 가능 · 철회 요청" : "새 전송 중단"} onPress={() => setWithdraw("discovery")} />
+      {withdraw === "discovery" && <Card><Title>AI 탐색 처리를 철회할까요?</Title><Body>이 예시의 새 AI 탐색 처리를 중단해요. 일반 검색은 계속 사용할 수 있어요.</Body><Button onPress={() => { app.withdrawAi("discovery"); app.showToast("AI 탐색의 모의 사용을 중단했어요."); setWithdraw(null); }}>철회 요청</Button><TextButton onPress={() => setWithdraw(null)}>취소</TextButton></Card>}
+      <Title>후기 AI 선택 동의</Title>{["후기 요약 열람","내 프로필 요약 생성·노출","내가 작성한 후기의 요약 활용"].map(label => <Card key={label}><Title>{label}</Title><Body muted>현재 동의 상태와 개별 변경 연결을 준비 중이에요.</Body></Card>)}<Body small muted>세 동의는 각각 독립적으로 관리해요. 이 예시에서는 개별 동의 상태를 꾸미거나 한 항목을 전체 철회로 연결하지 않아요.</Body>
+    </>}
+    {section === "visibility" && <><Title>차단한 회원</Title>
+      {app.blockedIds.map(id => <Card key={id}><Body>{app.members[id] ? maskName(app.members[id].name) : "차단한 회원"}</Body><TextButton onPress={() => app.unblock(id)}>차단 해제</TextButton></Card>)}
+      {app.blockedIds.length === 0 && <Body muted>예시에서 차단한 회원이 없어요.</Body>}<Body small muted>차단을 해제해도 종료된 신청과 약속은 자동 복원되지 않아요.</Body>
+      <Title>신고 후 숨긴 항목</Title><Body muted>이 예시에는 숨김 내역 조회를 연결하지 않았어요. 실제 숨김이 없는 것으로 표시하지 않아요.</Body>
+    </>}
+    {section === "reports" && <><Title>신고·판정 내역</Title><Body muted>이 예시에는 신고·판정 내역 조회를 연결하지 않았어요. 실제 접수·판정 결과는 별도로 확인해야 해요.</Body>
       <Section title="취소·제재 기준">
         <Card>
           <Body>
@@ -2263,52 +2301,6 @@ function PreviewAccountScreen() {
           <TextButton onPress={() => mail("유미당 제재·취소 사유 이의 접수")}>
             사유 이의·운영 문의
           </TextButton>
-        </Card>
-      </Section>
-      <Section title="AI 사용 동의">
-        <Card>
-          <MenuRow
-            icon="sparkles-outline"
-            title="AI 동행 탐색"
-            description={
-              app.aiDiscoveryAllowed ? "사용 가능 · 철회 요청" : "새 전송 중단"
-            }
-            onPress={() => setWithdraw("discovery")}
-          />
-          <Divider />
-          <MenuRow
-            icon="document-text-outline"
-            title="AI 후기 요약"
-            description={
-              app.aiSummaryAllowed ? "사용 가능 · 철회 요청" : "관련 요약 숨김"
-            }
-            onPress={() => setWithdraw("summary")}
-          />
-          <Body small muted>
-            철회해도 계정과 일반 동행은 유지돼요. 해당 AI의 새 전송을 멈추고
-            관련 요약을 숨겨요. 실제 공급사 전송·사본 삭제는 별도 운영 확인이
-            필요해요.
-          </Body>
-          {withdraw && (
-            <View style={{ gap: 10 }}>
-              <Title style={{ fontSize: 16 }}>
-                {withdraw === "discovery" ? "AI 탐색" : "AI 후기 요약"} 사용을
-                철회할까요?
-              </Title>
-              <Button
-                onPress={() => {
-                  app.withdrawAi(withdraw);
-                  app.showToast("해당 AI의 모의 사용을 중단했어요.");
-                  setWithdraw(null);
-                }}
-              >
-                해당 AI 철회 요청
-              </Button>
-              <TextButton onPress={() => setWithdraw(null)}>
-                돌아가기
-              </TextButton>
-            </View>
-          )}
         </Card>
       </Section>
       <Section title="안전·지원">
@@ -2360,6 +2352,8 @@ function PreviewAccountScreen() {
           )}
         </Card>
       </Section>
+    </>}
+    {section === "retirement" && <>
       <Section title="회원 탈퇴">
         <Card>
           <Body>
@@ -2415,16 +2409,8 @@ function PreviewAccountScreen() {
           {error && <Body style={{ color: colors.red }}>{error}</Body>}
         </Card>
       </Section>
-      <Button
-        secondary
-        onPress={() => {
-          void app.logout();
-        }}
-      >
-        로그아웃
-      </Button>
-    </Screen>
-  );
+    </>}
+  </Screen>;
 }
 
 const st = StyleSheet.create({
