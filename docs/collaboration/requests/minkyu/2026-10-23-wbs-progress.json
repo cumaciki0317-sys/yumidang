@@ -1,0 +1,309 @@
+{
+  "source": "CORRECT_WBS_LIVE_CHROME_DOM_SNAPSHOT",
+  "parentUrl": "https://app.notion.com/p/WBS-45c44227a43582f4ab0681f06bddf2f9",
+  "observedDate": "2026-10-23",
+  "actor": "minkyu",
+  "counts": {
+    "최종 완료": 12,
+    "작업 중": 15,
+    "작업 대기": 1,
+    "배포 완료": 2,
+    "대기": 14
+  },
+  "completed": 14,
+  "total": 44,
+  "percent": 31.82,
+  "countsNotChangedByCurrentWork": false,
+  "historicalFeatureBaseline": "79%(22/28) distinct historical denominator",
+  "tasks": [
+    {
+      "id": "LEGACY-ME",
+      "title": "내 정보 조회 API",
+      "url": "https://app.notion.com/p/c9e44227a4358263abd48138ac13c095",
+      "status": "작업 중"
+    },
+    {
+      "id": "LEGACY-ENV",
+      "title": "배포 환경 설정",
+      "url": "https://app.notion.com/p/27444227a435827c985d0130dbe6bc1e",
+      "status": "배포 완료"
+    },
+    {
+      "id": "LEGACY-REQ",
+      "title": "요구사항 명세서 작성",
+      "url": "https://app.notion.com/p/25f44227a43583a691ea8187a5e9cbef",
+      "status": "최종 완료"
+    },
+    {
+      "id": "LEGACY-SIGNUP",
+      "title": "회원가입 API",
+      "url": "https://app.notion.com/p/f8944227a43582e8956c01bfa0c58484",
+      "status": "배포 완료"
+    },
+    {
+      "id": "1.6",
+      "title": "[1.6] 최신 정책·계획·협업 문서의 승인된 차이 반영",
+      "url": "https://app.notion.com/p/87844227a43583f2b47481418b110b26",
+      "status": "최종 완료"
+    },
+    {
+      "id": "1.7",
+      "title": "[1.7] 담당·소유권·작업 환경 인계 정합성 확인",
+      "url": "https://app.notion.com/p/5de44227a43582a4ba700157b4ff521e",
+      "status": "최종 완료"
+    },
+    {
+      "id": "4.1",
+      "title": "[4.1] 목표 운영 DB 식별과 실제 구조 확인",
+      "url": "https://app.notion.com/p/74844227a43582628d10814ad114d10e",
+      "status": "최종 완료",
+      "completionScope": "OPERATING_IDENTITY_CURRENT_METADATA_AND_MIGRATION_HISTORY_ONLY",
+      "evidence": "2026-10-23-operating-db-readonly.json",
+      "notionCriteriaChecked": 2,
+      "notionReloadVerified": true
+    },
+    {
+      "id": "4.2",
+      "title": "[4.2] 최신 정책·API 계약·DB 구현 차이 검토",
+      "url": "https://app.notion.com/p/a9d44227a43583f8ba4701594912846e",
+      "status": "최종 완료"
+    },
+    {
+      "id": "4.3",
+      "title": "[4.3] 실제 네이버 인증·가입 서버 통합 검증",
+      "url": "https://app.notion.com/p/ec444227a4358253b275812cf9f296a1",
+      "status": "작업 중"
+    },
+    {
+      "id": "4.4",
+      "title": "[4.4] 행사·공고 조회/작성/수정·공개 DTO 검증",
+      "url": "https://app.notion.com/p/9c444227a435837bb15e81a430cd2e96",
+      "status": "작업 중"
+    },
+    {
+      "id": "4.5",
+      "title": "[4.5] 첫 메시지 신청·확정·변경·만료 동시성 검증",
+      "url": "https://app.notion.com/p/c8b44227a435824e88f70178809712c4",
+      "status": "작업 중"
+    },
+    {
+      "id": "4.6",
+      "title": "[4.6] 실제 완료·분쟁 보류·후기 공개 시점 검증",
+      "url": "https://app.notion.com/p/b8e44227a43582f9b6688129248af75a",
+      "status": "작업 중"
+    },
+    {
+      "id": "4.7",
+      "title": "[4.7] 신고·차단·탈퇴·제재 승계·사진 파기·RLS 검증",
+      "url": "https://app.notion.com/p/35f44227a4358348937b0154172b7949",
+      "status": "작업 중"
+    },
+    {
+      "id": "4.8",
+      "title": "[4.8] 내 정보 조회 서버 권한·응답 검증",
+      "url": "https://app.notion.com/p/55244227a435837ba4ff818a0638df18",
+      "status": "최종 완료"
+    },
+    {
+      "id": "5.1",
+      "title": "[5.1] AI 외부전송·동의·공급사 조건 확인",
+      "url": "https://app.notion.com/p/8f144227a43583ddb99e814384ed499f",
+      "status": "작업 중"
+    },
+    {
+      "id": "5.2",
+      "title": "[5.2] 자연어 조건과 실제 DB 검색 연동 검증",
+      "url": "https://app.notion.com/p/38244227a4358235920c813c1164a71f",
+      "status": "최종 완료",
+      "completionScope": "TASK_DEFINED_LOCAL_DB_AND_SYNTHETIC_MODEL_SCOPE",
+      "evidence": "2026-10-23-search-acceptance-review.json",
+      "notionCriteriaChecked": 2,
+      "notionReloadVerified": true
+    },
+    {
+      "id": "5.3",
+      "title": "[5.3] 모델 설명·개인정보 필터·0건/실패 검증",
+      "url": "https://app.notion.com/p/df444227a4358252859e815064731934",
+      "status": "최종 완료",
+      "completionScope": "TASK_DEFINED_LOCAL_DB_AND_SYNTHETIC_MODEL_SCOPE",
+      "evidence": "2026-10-23-search-acceptance-review.json",
+      "notionCriteriaChecked": 2,
+      "notionReloadVerified": true
+    },
+    {
+      "id": "5.4a",
+      "title": "[5.4a] 회원 하루20회·동시1개 서버 한도 검증",
+      "url": "https://app.notion.com/p/d9444227a435825f867681b456349161",
+      "status": "작업 중"
+    },
+    {
+      "id": "5.5",
+      "title": "[5.5] 다중 계정 예산·원장 런타임 연결 검증",
+      "url": "https://app.notion.com/p/1e044227a435838bbac981f28d58e706",
+      "status": "작업 중"
+    },
+    {
+      "id": "5.6",
+      "title": "[5.6] 출력 상한·실제 모델·공급사 사용량 측정 검증",
+      "url": "https://app.notion.com/p/e8d44227a43582ebb0970102bc507392",
+      "status": "작업 중"
+    },
+    {
+      "id": "5.7",
+      "title": "[5.7] 후기 AI 요약의 경쟁·철회·숨김·삭제 통합 검증",
+      "url": "https://app.notion.com/p/71544227a435824ea3548199d3785545",
+      "status": "대기"
+    },
+    {
+      "id": "6.1",
+      "title": "[6.1] 출시 필수 QA 케이스와 증빙 방식 정의",
+      "url": "https://app.notion.com/p/e9144227a435823783778174efedfef0",
+      "status": "최종 완료"
+    },
+    {
+      "id": "6.2",
+      "title": "[6.2] 로그인→후기 실제 회원 회귀 QA",
+      "url": "https://app.notion.com/p/dd144227a435838b876f01f0ad2d662e",
+      "status": "대기"
+    },
+    {
+      "id": "6.3",
+      "title": "[6.3] 신고·차단·비로그인·AI 위험 케이스 QA",
+      "url": "https://app.notion.com/p/a7b44227a4358343b0d5014492f85b76",
+      "status": "작업 중"
+    },
+    {
+      "id": "6.4a",
+      "title": "[6.4a] Android 독립 설치 앱 QA",
+      "url": "https://app.notion.com/p/1fc44227a435824898ad819d89db1a23",
+      "status": "작업 중"
+    },
+    {
+      "id": "6.4b",
+      "title": "[6.4b] iPhone 독립 설치 앱 QA 준비",
+      "url": "https://app.notion.com/p/dfb44227a43582ecb26481c293e4a876",
+      "status": "대기"
+    },
+    {
+      "id": "6.5",
+      "title": "[6.5] 수정 재검증과 출시 차단 후보 정리",
+      "url": "https://app.notion.com/p/d4a44227a43582a69360813d166c87b6",
+      "status": "작업 대기"
+    },
+    {
+      "id": "6.6",
+      "title": "[6.6] Android 비공개 베타 운영·결함 분류·수정 재검증",
+      "url": "https://app.notion.com/p/4fc44227a435823190940118145a51bf",
+      "status": "대기"
+    },
+    {
+      "id": "6.7",
+      "title": "[6.7] 정식 공개 후 Play 설치·로그인·핵심 흐름 확인",
+      "url": "https://app.notion.com/p/62044227a4358259ada7012953df0a38",
+      "status": "대기"
+    },
+    {
+      "id": "7.1",
+      "title": "[7.1] 현재 Railway·운영 DB 연결 재검증",
+      "url": "https://app.notion.com/p/ea944227a4358382ba4e81fdb9de2b1d",
+      "status": "작업 중"
+    },
+    {
+      "id": "7.2",
+      "title": "[7.2] 자동완료 실행기 DB 권한·실제 처리·복구 검증",
+      "url": "https://app.notion.com/p/6ff44227a435824aad03819c0474fd30",
+      "status": "작업 중"
+    },
+    {
+      "id": "7.6",
+      "title": "[7.6] J1 취소·신고 소비자 로컬 구현·가상 검증",
+      "url": "https://app.notion.com/p/58444227a435834498aa81cd4c497ce8",
+      "status": "최종 완료"
+    },
+    {
+      "id": "7.8",
+      "title": "[7.8] KOPIS 공식 순위 기간·표기 검증 준비",
+      "url": "https://app.notion.com/p/18344227a435821b9db781e2ef60e707",
+      "status": "작업 중"
+    },
+    {
+      "id": "7.9",
+      "title": "[7.9] 서울 행사 안전 HTTPS 자동 수집 검증",
+      "url": "https://app.notion.com/p/c6944227a43583ae8012812f6f7bb6f3",
+      "status": "대기"
+    },
+    {
+      "id": "7.10",
+      "title": "[7.10] 출시 전 협업 변경 검사 체계 점검",
+      "url": "https://app.notion.com/p/67744227a43582e2a867812b4b33d1bf",
+      "status": "최종 완료"
+    },
+    {
+      "id": "7.11",
+      "title": "[7.11] 백엔드·AI 검증 환경과 기존 인계 자료 정리",
+      "url": "https://app.notion.com/p/b4744227a43582b2a7ed816eb838bffd",
+      "status": "최종 완료"
+    },
+    {
+      "id": "7.12",
+      "title": "[7.12] 행사 일일 수집·갱신·재개와 앱·AI 표시 일치 검증",
+      "url": "https://app.notion.com/p/85444227a43582fe898a0122b282e335",
+      "status": "대기"
+    },
+    {
+      "id": "7.13",
+      "title": "[7.13] 개인정보·AI 피드백·신고 자료의 주기 파기 연결 검증",
+      "url": "https://app.notion.com/p/72b44227a4358327a48d01db00d9e9fa",
+      "status": "대기"
+    },
+    {
+      "id": "7.14",
+      "title": "[7.14] 최종 DB·권한·Storage 원본 백업과 격리 복원 검증",
+      "url": "https://app.notion.com/p/27444227a435827c928b012ae83a203e",
+      "status": "대기"
+    },
+    {
+      "id": "7.18",
+      "title": "[7.18] 출시 후 서버·수집·AI·오류 감시와 긴급 복구 준비",
+      "url": "https://app.notion.com/p/83844227a4358391aa9781e9a588ddf9",
+      "status": "대기"
+    },
+    {
+      "id": "8.19",
+      "title": "[8.19] 개인 Play 개발자 계정의 검증·생성 시점·테스트 요건 확인",
+      "url": "https://app.notion.com/p/1d444227a435828485b4011ed484a802",
+      "status": "대기"
+    },
+    {
+      "id": "8.22",
+      "title": "[8.22] 비공개 테스트 요건 충족 확인·정식 출시 권한 신청",
+      "url": "https://app.notion.com/p/49a44227a435839085c4010f23cc86d4",
+      "status": "대기"
+    },
+    {
+      "id": "8.23",
+      "title": "[8.23] Android 제출 자료 최종 대조·심사 제출",
+      "url": "https://app.notion.com/p/42f44227a4358310b1780160f02ba91b",
+      "status": "대기"
+    },
+    {
+      "id": "8.25",
+      "title": "[8.25] Android 정식 공개 실행·스토어 노출 확인",
+      "url": "https://app.notion.com/p/4a744227a43582918fbf811fdfe1a650",
+      "status": "대기"
+    }
+  ],
+  "initialCounts": {
+    "대기": 14,
+    "최종 완료": 9,
+    "작업 대기": 1,
+    "배포 완료": 2,
+    "작업 중": 18
+  },
+  "initialCompleted": 11,
+  "statusMutationTaskIds": [
+    "4.1",
+    "5.2",
+    "5.3"
+  ]
+}

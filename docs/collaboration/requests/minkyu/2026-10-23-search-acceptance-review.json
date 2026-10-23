@@ -1,0 +1,146 @@
+{
+  "status": "PASS_OFFLINE_64_WITH_HISTORICAL_LIMITATIONS",
+  "recordedAt": "2026-10-23T05:30:46.063145+00:00",
+  "headAtReceipt": "31a221d271206e909d7986e2b2272695f323f086",
+  "auditHead": "31a221d271206e909d7986e2b2272695f323f086",
+  "historicalSearchHead": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+  "historicalCurrent124PositiveHead": "4673485a0006936f0a0a9b3f30d17cd2985152e5",
+  "sourceDiffs": [
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/ai-chat/",
+      "diffEmpty": true
+    },
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/_shared/ai/Agents/chatbot/",
+      "diffEmpty": true
+    },
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/_shared/services/search-service.ts",
+      "diffEmpty": true
+    },
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/_shared/db/repositories/search.ts",
+      "diffEmpty": true
+    },
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/_shared/integrations/events/normalize.ts",
+      "diffEmpty": true
+    },
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/_shared/contracts/search.ts",
+      "diffEmpty": true
+    },
+    {
+      "from": "1d9b46b69adbc52f693accbff04ca4a00d35c547",
+      "to": "31a221d271206e909d7986e2b2272695f323f086",
+      "path": "backend/supabase/functions/_shared/contracts/ai.ts",
+      "diffEmpty": true
+    }
+  ],
+  "current124ToAuditChangedProductPaths": [
+    "backend/supabase/functions/_shared/ai/providers/gemini-adapter.ts",
+    "backend/supabase/functions/_shared/config/providers.ts",
+    "backend/supabase/functions/_shared/db/internal-client.ts",
+    "backend/supabase/functions/_shared/db/repositories/events.ts"
+  ],
+  "offlineRegression": {
+    "command": "node --experimental-strip-types --test tests/functions/jonghyun/search-policy.test.mjs tests/ai/jonghyun/chatbot-semantic.test.mjs tests/ai/jonghyun/chatbot.test.mjs tests/functions/minkyu/week_boundary_discovery.test.mjs",
+    "exitCode": 0,
+    "pass": 64,
+    "fail": 0,
+    "durationMs": 594.393833,
+    "logPath": "/private/tmp/yumidang-search-acceptance-review-20261023/current-64.log",
+    "logSha256": "426eb9ac9d0cfddae1fdcb3c7684a0890dd6c7807126ba06dbca1410391f1e5d",
+    "note": "앞선 무보존 출력 이후 증거 보존용 1회 재검사"
+  },
+  "historicalArtifacts": [
+    {
+      "path": "/private/tmp/yumidang-positive-source-20261019-a002/signed-auth-315769d6cfb4420cbbd421ea1e06406d/positive-receipt.json",
+      "sha256": "764cfd0ae581beab3811d0614fc1bfef7dacc1c32e05e5bb71e9d15935dcb233",
+      "status": "PASS"
+    },
+    {
+      "path": "/private/tmp/yumidang-week-boundary-evidence-20261019/receipt.json",
+      "sha256": "bed315f28f22241c0f90ebb162787f3487a9045d4d64eefc07c2c7cbea6a543c",
+      "status": "PASS_MODEL_PORTS_ONLY"
+    },
+    {
+      "path": "/private/tmp/yumidang-db121-20261019-a002/search-sql-execution/current-public-search-receipt.json",
+      "sha256": "1d6649c17bc8a6e4295238c5b2c6f3e9f0d1a33468d93e98ea8d6378dce81e2d",
+      "status": "PASS_CURRENT_PUBLIC_SEARCH_ROLLBACK_ONLY"
+    },
+    {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/positive-receipt.json",
+      "sha256": "e12670b6f3ba8c98db91f636074f48f963cdd14763e10593c63e152a005f8263",
+      "status": "PASS"
+    },
+    {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/positive-factory-proof.json",
+      "sha256": "2bbd6dfd55f7154bf9b26f0a96270e48819fbd18c29b3a5e46e4c18c7fdf9593",
+      "status": "PASS"
+    },
+    {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/signed-auth-6d1c7c8102234aa6a26cabe8c63fa5c9/cleanup.json",
+      "sha256": "b5f4220f38271ca580e20f680e9342646dcf3ca5a2a622dcd4e6e7dd5093d063",
+      "status": "PASS"
+    },
+    {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/root-auth6-current-receipt.json",
+      "sha256": "7946c31ae7dfc2e0ec44de20f48dfa095ab4d802054af6a1f679d545d317673f",
+      "status": "PASS_CURRENT_AUTH6_SIX_SCHEMA_ONLY"
+    },
+    {
+      "path": "/private/tmp/yumidang-current-auth-run-20261021-a006/yumidang-current-auth-770e4fedb8550a43/close-stop-receipt.json",
+      "sha256": "ed2b90bdec74e924caf19c5fe4ccd1dec15099872570f684bbecf4ced30a02dc",
+      "status": "STOPPED_OWN_IDS_ONLY"
+    }
+  ],
+  "searchSql": {
+    "path": "/private/tmp/yumidang-minkyu-recovery-20261022/tests/database/minkyu/current_public_search.sql",
+    "sha256": "f7f1a3ab0514f5f7e882e426f179aa22ac6ad7286a25670aba4dc4026cd41829"
+  },
+  "unavailableHistoricalArtifact": {
+    "path": "/private/tmp/yumidang-wbs-ai-20261017-d017a004/signed-auth-7be00986bede4a1e9669a3039f9fb6db/receipt.json",
+    "exists": false,
+    "documentedExpectedSha256": "a922282b25bb321d3cad1d143fa9e84e80096b86acad147e01e42b8dc3849737",
+    "limitation": "원파일 부재로 SHA와 요청별 raw 응답 재검산 불가. 문서 집계·고정 실행기 결합 근거와 구분한다."
+  },
+  "taskMapping": {
+    "5.2": {
+      "oldCatalogId": "512a6def75f88249afbb81226a0a0043",
+      "currentId": "38244227a4358235920c813c1164a71f"
+    },
+    "5.3": {
+      "oldCatalogId": "c3ba6def75f8837b80e9818c1542538f",
+      "currentId": "df444227a4358252859e815064731934"
+    },
+    "limitation": "ID 차이만 확인. 과거 완료조회 대상 ID 확정 및 정책 변경 재개 원인 단정0. 현재 작업중 상태를 과거 완료로 추정 승계하지 않는다."
+  },
+  "scope": {
+    "5.2": "기존 실제 검색SQL·로컬 Auth·current124 positive와 현행 오프라인 조건/주차/19~99/비검색 제외 검증을 범위별 연결 가능",
+    "5.3": "current124 로컬 Auth/PostgREST/factory+합성 모델 4시나리오·11예약 정산. 실제 공급사 품질·회원 원문 전송 미포함",
+    "remaining": "정상0건 raw 직접 증명이 필수면 새 격리 실행 필요. AI22/23 예산·UNKNOWN 실제 재검증은 5.5 별도. 회원 원문 HOLD 유지.",
+    "notion": "현재 TASK 본문 확인 및 완료 반영은 root 담당이며 이 검토는 상태 변경0"
+  },
+  "actualCalls": {
+    "Docker": 0,
+    "DB": 0,
+    "Auth": 0,
+    "provider": 0,
+    "browser": 0
+  },
+  "repositoryWrites": 0,
+  "headChanges": 0
+}

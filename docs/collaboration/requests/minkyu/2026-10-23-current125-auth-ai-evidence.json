@@ -1,0 +1,66 @@
+{
+  "wbsIds": [
+    "5.5",
+    "7.11"
+  ],
+  "actor": "minkyu",
+  "sourceHead": "31a221d271206e909d7986e2b2272695f323f086",
+  "scope": "CURRENT125_STANDARD_LOCAL_AUTH6_ONLY",
+  "authStatus": "PASS_CURRENT125_STANDARD_AUTH6_ONLY",
+  "actualGoTrueAndDatabaseSessions": true,
+  "originalJwtLifetimeSeconds": 3600,
+  "accounts": 6,
+  "expectedTables": 182,
+  "migrationCount": 125,
+  "originalRowsPreserved": true,
+  "catalogConstraintsAuthorityUnchanged": true,
+  "kernelReceipt": {
+    "path": "/private/tmp/yumidang-current125-auth-20261023-a003/yumidang-current-auth-aea374930db34a2f/auth-provision-8e542d1eb2514ee1947999f49149c13e/receipt.json",
+    "sha256": "f2dc6f3d799ec0faa1264e87894904ede11f8064fa38d68ac4404c5dd7cfc08f"
+  },
+  "wrapperReceipt": {
+    "path": "/private/tmp/yumidang-current125-auth-20261023-a003/yumidang-current-auth-aea374930db34a2f/root-standard-auth6-wrapper-receipt.json",
+    "sha256": "3260a10530cc40e7cd71a85bf94137a9ee1f0807dd02517ad64f7acb370af30a"
+  },
+  "memoryProbes": 146,
+  "minimumObservedAvailableKiB": 2086220,
+  "maximumObservedProbeSeconds": 1.3557707910076715,
+  "memoryProbeExceptions": 0,
+  "actualAI": "FAIL_BEFORE_FACTORY_DISPATCH",
+  "actualNaver": "NOT_RUN",
+  "actualNaturalExpiry": "NOT_RUN",
+  "actualProvider": "NOT_RUN",
+  "sequenceAndPhysicalRestore": "NOT_VERIFIED",
+  "taskCompletionClaimed": false,
+  "remotePush": false,
+  "operatingChanges": false,
+  "previousFailuresPreserved": [
+    "a001 auth PROVISION_RESOURCE_MONITOR_FAILED and followup MEMORY_MONITOR_FAILED",
+    "a002 prepare PROJECT rejected before source creation"
+  ],
+  "aiReceipt": {
+    "path": "/private/tmp/yumidang-current125-auth-20261023-a003/yumidang-current-auth-aea374930db34a2f/current-ai2223-2037c18f9c4e4bd49d18585cd487530e/current-execution-receipt.json",
+    "sha256": "b1df6c33b98e65303002648b923efb682d8fc636db1ec3483ef160ba1f8f1836"
+  },
+  "aiFailure": {
+    "code": "D03_READ_PROCESS_TIMEOUT",
+    "type": "VALUE_ERROR"
+  },
+  "aiMemoryFailure": {
+    "code": "PROCESS_TIMEOUT",
+    "type": "TIMEOUT_EXPIRED"
+  },
+  "aiFullPreservation": "NOT_PROVEN",
+  "aiSqlSticky": true,
+  "aiFactoryProcesses": 0,
+  "aiModelCalls": 0,
+  "aiBudgetDispatches": 0,
+  "aiFailureScope": "before baseline snapshot completed; no factory children/commands",
+  "closeReceipt": {
+    "path": "/private/tmp/yumidang-current125-auth-20261023-a003/yumidang-current-auth-aea374930db34a2f/close-stop-receipt.json",
+    "sha256": "78dce42cc9bee777211a9538d6efdb15db198dcb2d5dcdaad2ab678f79aeb59d"
+  },
+  "closeStatus": "STOPPED_OWN_IDS_ONLY",
+  "ownContainersStopped": 4,
+  "ownNetworksAndVolumesRetained": true
+}

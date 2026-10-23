@@ -1,0 +1,59 @@
+{
+  "wbs": [
+    "4.5",
+    "4.6",
+    "7.11"
+  ],
+  "date": "2026-10-23",
+  "actor": "minkyu",
+  "sourceHead": "8598a2966192062062571ac1e93df7a4a536d868",
+  "migrationCount": 126,
+  "migrationManifestSha256": "2a8ac2e318e05ffe6bc3a1aaef304c5e3a231b414c864b91b819d2f3e295cbc2",
+  "changes": "마감 접수시각 SQL migration 적용과 격리 검증",
+  "actualValidation": {
+    "migrationApply": "PASS",
+    "emptyConfiguration": "PASS",
+    "originalFixture": "FAIL_CONSTRAINT_BEFORE_SCHEDULE_FINGERPRINT_ASSERTION",
+    "postFailureReadOnly": "PASS_182_TABLES_AUTHORITY_CATALOG_CONSTRAINT_SEQUENCE_HISTORY_EQUAL",
+    "ownContainerStop": "PASS_EXACT_4_ONLY",
+    "actualAuth": "NOT_RUN",
+    "actualHTTP": "NOT_RUN",
+    "twoSessionLockRace": "NOT_RUN",
+    "physicalStorageRestore": "NOT_RUN"
+  },
+  "originalFailurePreserved": true,
+  "fixtureError": "기존 synthetic fixture의 old_starts_at -1초 변경이 appointment_schedule_change_expiry 제약을 위반함",
+  "correctionLocalCommit": "6e10354",
+  "next": "새 HEAD·새 격리 대상·새 intent에서 수정 fixture 재검증 후 실제 Auth/HTTP 잠금 경쟁 검증",
+  "remaining": [
+    "실제 JWT 두 세션 잠금 경쟁",
+    "실제 Auth/HTTP 통합",
+    "실제 완료 조건 충족 전 WBS 완료 처리 금지"
+  ],
+  "evidence": {
+    "start": {
+      "path": "/private/tmp/yumidang-matching126-sql-20261023-a001/yumidang-current-auth-32bc1eefb4808b09/start-receipt.json",
+      "sha256": "6b73198b2c3db13004eebedab9bdf282bb3b8ae64f256cb3b14d5e3f3afbef53"
+    },
+    "configure": {
+      "path": "/private/tmp/yumidang-matching126-sql-20261023-a001/yumidang-current-auth-32bc1eefb4808b09/configure-receipt.json",
+      "sha256": "e5d32b650e43694d17346c4969d4b2d383ea76c5a6f013d28201357ac90d0c31"
+    },
+    "failure": {
+      "path": "/private/tmp/yumidang-matching126-sql-20261023-a001/yumidang-current-auth-32bc1eefb4808b09/matching126-sql-378a651d62c54038abbd28ae1f46fc94/failure-receipt.json",
+      "sha256": "ba2f19dc8fc0ae0dddec94e734120c0d932fa88424d4958fcea3e38756d45e51"
+    },
+    "rollbackPreservation": {
+      "path": "/private/tmp/yumidang-matching126-sql-20261023-a001/yumidang-current-auth-32bc1eefb4808b09/matching126-failure-readonly-proof/receipt.json",
+      "sha256": "a24cf426864f3997a7bf0cb149208b4bebdcfd176385696b03147113d5f18bb8"
+    },
+    "after": {
+      "path": "/private/tmp/yumidang-matching126-sql-20261023-a001/yumidang-current-auth-32bc1eefb4808b09/matching126-failure-readonly-proof/after-private.json",
+      "sha256": "a7e193c9776d0c51c000e69063c7ea0730067226bad271e481b93880336a470c"
+    },
+    "close": {
+      "path": "/private/tmp/yumidang-matching126-sql-20261023-a001/yumidang-current-auth-32bc1eefb4808b09/close-stop-receipt.json",
+      "sha256": "cf822bef25c719c2f731f1e8e67a0abae9fa4f8ba401370100d49e0c6a17993e"
+    }
+  }
+}
