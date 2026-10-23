@@ -697,19 +697,26 @@ class BindingTests(unittest.TestCase):
             self.assertIsNotNone(shared,'signed cases missing')
             self.assertEqual(dump(shared),dump(extracted),'signed cases/except/finally changed')
             tree.body[tree.body.index(fn)] = copy.deepcopy(reference_main)
-        # 2026-10-23 승인: current 전용 진단/1초 monitor의 정확한 네 메서드 hunk만 허용한다.
+        # 2026-10-23 승인: current 전용 진단/1초 monitor 및 독립 child·메모리의 정확한 여섯 unit hunk만 허용한다.
         # 고정 원 HEAD bytes를 확인하고, 전체 unit AST pin 이후 원 unit으로 정상화한다.
         # 클래스 전체/legacy 함수/그 밖 current 메서드를 제외하는 규칙은 없다.
         current_raw=subprocess.check_output(['git','show','3ff66dc9d61fe6948e9a5e44eabcaa2322ff488d:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO)
         self.assertEqual(hashlib.sha256(current_raw).hexdigest(),'0ff3a9bab3b536d405032781143e72b3583fc4d0c367e1e96f75de5111c249cf')
         current_reference=ast.parse(current_raw)
+        # 새 current 전용 진단 helper도 전체 AST 정확값 외의 변경을 허용하지 않는다.
+        for revision in(before,after):
+            member=support_unit(revision,'_current_ai2223_error')
+            if member is not None:self.assertEqual(hashlib.sha256(dump(member).encode()).hexdigest(),'2ba7f7f6d945112cd3ffad8e03e738ec5ac958e466243853d5b11594a63d3c8d')
         current_hunks={
+            '_CurrentAI2223SQL.child':('9a184c216b78593729ce3a824efe56a19a3618673b7311b5de7b51236661bc7c','8eb30e31f7014ead81efc72203eb6a4458d1f08a23c84b3afba3a84642011931'),
+            '_CurrentAI2223Run.memory':('e36351e5549fcf4ef3cd64b81bfc6a0635f535ea5bc29ac2b12b47919175e43d','0b8f8b5aac5ecdf05e5e8f21f80d069209a14c7fd18b635dd3c328a32d694cec'),
+
             # UNKNOWN 영수증에 safe_error 진단만 추가.
             '_CurrentAI2223SQL.execute':('6f6747421506965828d0b6a15bb8ac242e94df96b78735efba563c958603df8c','43d339a257db41eb5d2468277f322a58a166da2577d118869bbf59ff8daf4284'),
             # memory_error 초기값만 추가.
-            '_CurrentAI2223Run.__init__':('5021b46c6e86f82e735b48a22413f010ceea7e05dc162b372771e7ef4fa00611','7113af26f121d593ee6ab124a2aaea631a5fabd80e57f15814c78da34576d4b6'),
+            '_CurrentAI2223Run.__init__':('5021b46c6e86f82e735b48a22413f010ceea7e05dc162b372771e7ef4fa00611','7113af26f121d593ee6ab124a2aaea631a5fabd80e57f15814c78da34576d4b6','40ed49abeaf251fa2bc0d503a3e4dee238cef27df724a919476bf69474edd349'),
             # 동일 threshold/probe/freshness를 둔 1초 monitor 및 안전 오류 보존.
-            '_CurrentAI2223Run.monitor':('da1e721e0628e5c08438c1a1bff8bb4f6e99415b565e0f56591c42e6d197e056','ad94c6a6de8726d1fe987138cf078481d7bca2787a21b58a272149cc66cbc5c9'),
+            '_CurrentAI2223Run.monitor':('da1e721e0628e5c08438c1a1bff8bb4f6e99415b565e0f56591c42e6d197e056','ad94c6a6de8726d1fe987138cf078481d7bca2787a21b58a272149cc66cbc5c9','0cc491e090247608496e6fb74a145f059face4bf6dc0948d99d7fb4f7e3c7c1c'),
             # 원/final/memory 오류의 고정 label 진단만 추가.
             '_run_current_ai2223':('63c7e289403b8b02d2f686d92e0aa59a4adbd1cd572371c53227ade30fd62ddf','5b15006f964937ab2e651d3c652f73c40e52e4138f208873e4fb688297f81153')}
         for key,allowed in current_hunks.items():
@@ -763,7 +770,7 @@ class BindingTests(unittest.TestCase):
 
     def test_current_process_diagnostic_allowlist_rejects_unreviewed_hunks_and_methods(self):
         original=ast.parse(RUNNER.read_text())
-        for key in('_CurrentAI2223SQL.execute','_CurrentAI2223Run.__init__','_CurrentAI2223Run.monitor','_run_current_ai2223','_CurrentAI2223Run.active','SignedRunner.auth_user'):
+        for key in('_current_ai2223_error','_CurrentAI2223SQL.child','_CurrentAI2223Run.memory','_CurrentAI2223SQL.execute','_CurrentAI2223Run.__init__','_CurrentAI2223Run.monitor','_run_current_ai2223','_CurrentAI2223Run.active','SignedRunner.auth_user'):
             changed=copy.deepcopy(original);member=changed
             for name in key.split('.'):
                 member=next(n for n in member.body if isinstance(n,(ast.FunctionDef,ast.ClassDef))and n.name==name)

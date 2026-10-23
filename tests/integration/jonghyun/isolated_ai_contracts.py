@@ -3260,6 +3260,16 @@ def current_ai2223_factory_input(fixture,capsule_root):
     # 원 fixture/binding은 보존하고 이 목적의 새 dispatch 입력만 고정된 봉인 root를 쓴다.
     return {**fixture,'codeRoot':str(capsule_root)}
 
+def _current_ai2223_error(error,transport):
+    """current 전용 고정 진단. 원 exception message/argv와 legacy allowlist는 사용하지 않는다."""
+    codes=('CURRENT_AI2223_MEMORY_PROBE','CURRENT_AI2223_MEMORY_DATABASE','CURRENT_AI2223_CHILD_GUARD_FAILED',
+           'PROVISION_MEMORY_READ','PROVISION_MEMORY_PARSE','SIGNED_LIVE_IDENTITY','SIGNED_LIVE_CONFIG',
+           'CURRENT_AI2223_MEMORY_INSPECT','CURRENT_AI2223_DAEMON_CHANGED','CURRENT_AI2223_MEMORY_OR_DEADLINE')
+    if type(error)is ValueError and len(error.args)==1 and type(error.args[0])is str and error.args[0]in codes:
+        return {'type':'VALUE_ERROR','code':error.args[0]}
+    return transport.safe_error(error)
+
+
 class _CurrentAI2223Files:
     def __init__(self,private):
         from types import SimpleNamespace
@@ -3341,7 +3351,85 @@ class _CurrentAI2223SQL:
         digest=self.owner.save(name,value)
         _current_need(type(digest)is str and re.fullmatch('[a-f0-9]{64}',digest),'CURRENT_AI2223_SQL_RAW_NOT_SAVED')
         self.refs[name]={'path':str(self.owner.evidence/name),'sha256':digest};return digest
-    def child(self,*args):return self.pure.ReviewedDeadlineReadonlyTransport.child(self,*args)
+    def child(self,argv,body,timeout,prefix,out_limit,err_limit):
+        """current 전용: 독립 watcher만 종료 관측·wait·signal·reap을 수행한다."""
+        import tempfile
+        process=None;failure=None;watcher=None;watcher_started=False;stop=threading.Event();finished=threading.Event();proof={}
+        ownership=threading.Lock();owner={'value':None}
+        with tempfile.TemporaryFile()as inp,tempfile.TemporaryFile()as out,tempfile.TemporaryFile()as err:
+            inp.write(body);inp.seek(0)
+            try:
+                process=subprocess.Popen(argv,stdin=inp,stdout=out,stderr=err,start_new_session=True)
+                began=time.monotonic();deadline=began+timeout
+                def observe():
+                    # native bootstrap 지연으로 start가 예외를 내더라도 단 한 소유자만 child를 만진다.
+                    with ownership:
+                        if owner['value']=='fallback':finished.set();return
+                        owner['value']='watcher'
+                    error=None;exit_at=None
+                    try:
+                        while True:
+                            if stop.is_set():raise ValueError('CURRENT_AI2223_CHILD_GUARD_FAILED')
+                            now=time.monotonic()
+                            if now>=deadline:raise ValueError('D03_READ_PROCESS_TIMEOUT')
+                            _current_need(os.fstat(out.fileno()).st_size<=out_limit and os.fstat(err.fileno()).st_size<=err_limit,'D03_READ_OUTPUT_LIMIT')
+                            try:process.wait(timeout=min(.01,deadline-now))
+                            except subprocess.TimeoutExpired:continue
+                            exit_at=time.monotonic()
+                            _current_need(exit_at<deadline,'D03_READ_PROCESS_TIMEOUT')
+                            break
+                    except BaseException as caught:error=caught
+                    finally:
+                        proof['exitObservedMonotonic']=exit_at;proof['deadlineMonotonic']=deadline
+                        proof['onTime']=exit_at is not None and exit_at<deadline
+                        proof['failure']=error
+                        try:proof['closure']=self.pure.close_group(process,error is not None)
+                        except BaseException as caught:proof['closureFailure']=caught
+                        finished.set()
+                watcher=threading.Thread(target=observe,daemon=True);watcher.start();watcher_started=True
+                while not finished.is_set():
+                    self.core.active()
+                    finished.wait(.01)
+                # 독립 종료 관측과 별개로 마지막 full guard도 반드시 통과해야 한다.
+                self.core.active()
+            except BaseException as caught:failure=caught;stop.set()
+            finally:
+                fallback_claimed=False
+                with ownership:
+                    if process is not None and not watcher_started and owner['value']is None:
+                        owner['value']='fallback';fallback_claimed=True
+                if fallback_claimed:
+                    proof['fallbackOwnershipClaimed']=True
+                    try:proof['closure']=self.pure.close_group(process,True)
+                    except BaseException as caught:proof['closureFailure']=caught
+                elif watcher is not None and(watcher_started or watcher.ident is not None):
+                    try:watcher.join(timeout=8)
+                    except BaseException as caught:proof['closureFailure']=caught
+                watcher_closed=watcher is not None and watcher.ident is not None and not watcher.is_alive()
+                closure=proof.get('closure');streams={};captured={}
+                for label,stream,limit in(('stdout',out,out_limit),('stderr',err,err_limit)):
+                    before=os.fstat(stream.fileno());raw=os.pread(stream.fileno(),min(before.st_size,limit+1),0);after=os.fstat(stream.fileno())
+                    whole=bool((watcher_closed or fallback_claimed)and closure and closure['closed']and len(raw)==before.st_size and(before.st_size,before.st_mtime_ns,before.st_ctime_ns)==(after.st_size,after.st_mtime_ns,after.st_ctime_ns))
+                    chunks=[];captured[label]=raw
+                    for offset in range(0,len(raw),self.pure.CHUNK_BYTES):
+                        piece=raw[offset:offset+self.pure.CHUNK_BYTES];name=prefix+'-'+label+'-'+str(offset//self.pure.CHUNK_BYTES).zfill(4)+'-private.json'
+                        self.save(name,{'rawHex':piece.hex(),'bytes':len(piece),'sha256':hashlib.sha256(piece).hexdigest(),'offset':offset})
+                        chunks.append({'path':name,'bytes':len(piece),'sha256':hashlib.sha256(piece).hexdigest(),'offset':offset})
+                    streams[label]={'chunks':chunks,'capturedBytes':len(raw),'observedBytes':before.st_size,'sha256':hashlib.sha256(raw).hexdigest(),'wholeProven':whole}
+                self.save(prefix+'-raw-private.json',{'streams':streams,'closure':closure,'watcherClosed':watcher_closed,'fallbackOwnershipClaimed':proof.get('fallbackOwnershipClaimed',False),'processOwner':owner['value'],
+                    'exitObservedMonotonic':proof.get('exitObservedMonotonic'),'deadlineMonotonic':proof.get('deadlineMonotonic'),'onTime':proof.get('onTime',False),
+                    'returnCode':None if process is None else process.returncode,'failureType':None if failure is None else type(failure).__name__,
+                    'originalFailure':self.pure.safe_error(failure or proof.get('failure')),
+                    'watcherFailure':_current_ai2223_error(proof.get('failure'),self.pure),
+                    'closureFailure':self.pure.safe_error(proof.get('closureFailure'))})
+        _current_need((watcher_closed or fallback_claimed)and closure and closure['closed'],'D03_READ_PG_UNPROVEN')
+        if failure is not None:raise failure
+        if proof.get('failure')is not None:raise proof['failure']
+        if proof.get('closureFailure')is not None:raise proof['closureFailure']
+        _current_need(proof.get('onTime')is True,'D03_READ_PROCESS_TIMEOUT')
+        _current_need(process.returncode==0,'D03_READ_COMMAND_FAILED')
+        _current_need(all(v['wholeProven']and v['observedBytes']<=limit for v,limit in((streams['stdout'],out_limit),(streams['stderr'],err_limit))),'D03_READ_STREAM_UNPROVEN')
+        return captured['stdout']
     def absent(self,*args):return self.pure.ReviewedDeadlineReadonlyTransport.absent(self,*args)
     def assert_closed_state(self):_current_need(not self.sticky and not self.inflight,'CURRENT_AI2223_SQL_STICKY')
     def guard(self):self.owner.active();self.owner.r.signed_identity()
@@ -3401,6 +3489,7 @@ class _CurrentAI2223Run:
             and receipt.get('actualGoTrueAndDatabaseSessions')is True and receipt.get('originalRowsPreserved')is True and receipt.get('authAccountsRetained')is True
             and receipt.get('actualAI22AI23AI24')=='NOT_RUN'and receipt.get('actualNaver')=='NOT_RUN'and receipt.get('creationReceiptRoot')==str(Path(self.value['auth6Receipt']).parent),'CURRENT_AI2223_AUTH6_RECEIPT')
         self.receipt_raw=receipt_raw;target=signed_prepared_target(self.root);validate_signed_binding(self.binding,self.root,target)
+        self.memory_target_raw=json.dumps(target,sort_keys=True,separators=(',',':')).encode()
         _current_need(target['versions']==self.value['migrationVersions']and target['context']=='colima-yumidang-minkyu','CURRENT_AI2223_TARGET_PROFILE')
         original_evidence=Path(self.binding['evidenceRoot'])
         _current_need(not original_evidence.exists()and not original_evidence.is_symlink()and not list(self.root.glob('ai-signed-observer-*')),'CURRENT_AI2223_PRIOR_ATTEMPT')
@@ -3440,14 +3529,51 @@ class _CurrentAI2223Run:
         if initial:_current_need(v['sourcePins']==current_ai2223_source_pins(v['sourceHead']),'CURRENT_AI2223_EXACT_SOURCE_SET')
     def save(self,name,value):return self.files.save(self.evidence,name,value)
     def memory(self,minimum):
-        self.positive.PositiveRun.memory(self,minimum);self.memory_last=time.monotonic()
+        import tempfile
+        from types import SimpleNamespace
+        guard_began=time.monotonic();probe_began=None;value=None;failure=None;cancelled=False
+        try:
+            self.sources()
+            _current_need(self.files.private(self.root/'signed-ai-binding-private.json')==self.raw and self.files.private(self.value['auth6Receipt'])==self.receipt_raw,'CURRENT_AI2223_ORIGINAL_BYTES_CHANGED')
+            validate_current_ai2223_approval(self.reviewed,self.raw)
+            _current_need(not self.failures and time.monotonic()<self.deadline,'CURRENT_AI2223_MEMORY_OR_DEADLINE')
+            target=signed_exact_json(self.memory_target_raw);item=self.value['containers']['db']
+            _current_need(target['id']==item['id'],'CURRENT_AI2223_MEMORY_DATABASE')
+            base=['docker','--host',target['host']]
+            def bounded(arguments,limit):
+                with tempfile.TemporaryFile()as output,tempfile.TemporaryFile()as errors:
+                    result=subprocess.run(base+arguments,stdout=output,stderr=errors,timeout=3)
+                    _current_need(result.returncode==0 and os.fstat(output.fileno()).st_size<=limit and os.fstat(errors.fileno()).st_size<=65536,'CURRENT_AI2223_MEMORY_INSPECT')
+                    output.seek(0);return output.read(limit+1)
+            _current_need(bounded(['info','--format','{{.ID}}'],128).decode().strip()==self.value['daemonId'],'CURRENT_AI2223_DAEMON_CHANGED')
+            inspected=signed_exact_json(bounded(['inspect',item['id']],2*1024*1024))
+            _current_need(type(inspected)is list and len(inspected)==1,'CURRENT_AI2223_MEMORY_INSPECT')
+            current=inspected[0]
+            _current_need(current['Id']==item['id']and current['Name']=='/'+item['name']and current['Image']==item['image']
+                and current['State']['Running']is True and current['State']['OOMKilled']is False
+                and current['HostConfig']['PidMode']==''and current['Config']['Labels'].get('com.supabase.cli.project')==target['project'],'SIGNED_LIVE_IDENTITY')
+            for field,key in(('Config','configSha256'),('HostConfig','hostConfigSha256'),('Mounts','mountsSha256')):
+                data=current[field]if field!='Mounts'else sorted(current[field],key=lambda x:json.dumps(x,sort_keys=True,separators=(',',':')).encode())
+                _current_need(hashlib.sha256(json.dumps(data,sort_keys=True,separators=(',',':')).encode()).hexdigest()==item[key],'SIGNED_LIVE_CONFIG')
+            # 정상 종료 취소는 검증된 probe 직전 경계에서만 허용한다. 진입 후 실패는 숨기지 않는다.
+            if self.done.is_set():cancelled=True;return
+            probe_began=time.monotonic()
+            value=FixedSignedProvisioningPorts.memory_kib(SimpleNamespace(base=base,target=target));elapsed=time.monotonic()-probe_began
+            _current_need(type(value)is int and value>=minimum and elapsed<=3,'CURRENT_AI2223_MEMORY_PROBE')
+            self.samples.append(value);self.memory_last=time.monotonic()
+        except BaseException as error:
+            failure=error;raise
+        finally:
+            self.save('current-memory-'+uuid.uuid4().hex+'-private.json',{'minimumKiB':minimum,'availableKiB':value if type(value)is int else None,
+                'guardElapsedSeconds':(probe_began if probe_began is not None else time.monotonic())-guard_began,'probeElapsedSeconds':None if probe_began is None else time.monotonic()-probe_began,
+                'cancelledBeforeProbe':cancelled,'failure':_current_ai2223_error(failure,self.transport),'transport':'EXACT_OWNED_DB_MEMINFO','retry':False})
     def monitor(self):
         # current 경로만 1초 주기로 관측한다. probe≤3초·freshness≤3초·임계값은 유지한다.
         while not self.done.is_set():
             began=time.monotonic()
             try:self.memory(786432)
             except BaseException as error:
-                self.memory_error=self.transport.safe_error(error);self.failures.append('CURRENT_AI2223_MEMORY_MONITOR');return
+                self.memory_error=_current_ai2223_error(error,self.transport);self.failures.append('CURRENT_AI2223_MEMORY_MONITOR');return
             self.done.wait(max(0,began+1-time.monotonic()))
     def active(self):
         self.sources()
