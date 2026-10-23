@@ -277,7 +277,29 @@ CURRENT_EXTENSION_REVIEWED = {
 }
 
 
+# 기존125 등록과 분리한다. 이 한 경로·바이트만126의 추가 검토 범위다.
+# 등록은 준비 허용이며 SQL 적용·실제 제품 검증·운영 승인이 아니다.
+MATCHING126_REVIEWED = {
+    'backend/supabase/migrations/20261023050324_matching_db_entry_deadlines.sql':
+        '05d0f9a100a946afc8a25b04206cd656d53185904db5ef9f7ac6cb97154c530a',
+}
+
+
 def inspect_reviewed_current_migrations(repo, reviewed_head, reviewed_manifest_sha256):
+    """기존 명시125 profile.126 추가가 이 호출의 허용 범위를 바꾸지 않는다."""
+    return _inspect_exact_reviewed_migrations(repo, reviewed_head, reviewed_manifest_sha256,
+                                             CURRENT_EXTENSION_REVIEWED)
+
+
+def inspect_reviewed_matching126_migrations(repo, reviewed_head, reviewed_manifest_sha256):
+    """기존125+고정 matching126만 허용한다. 미검토127은 선택하지 않는다."""
+    if set(MATCHING126_REVIEWED) & set(CURRENT_EXTENSION_REVIEWED):
+        raise PreparationError('EXTENSION_OVERLAPS_HISTORY')
+    return _inspect_exact_reviewed_migrations(repo, reviewed_head, reviewed_manifest_sha256,
+        {**CURRENT_EXTENSION_REVIEWED, **MATCHING126_REVIEWED})
+
+
+def _inspect_exact_reviewed_migrations(repo, reviewed_head, reviewed_manifest_sha256, extensions):
     """새 실행 준비용 전체 committed 목록. 과거 pending snapshot을 승격하지 않는다."""
     from prepare_migrations import inspect_migrations
     repo = Path(repo).resolve()
@@ -288,8 +310,8 @@ def inspect_reviewed_current_migrations(repo, reviewed_head, reviewed_manifest_s
     if git(repo, 'rev-parse', 'HEAD').decode().strip() != reviewed_head:
         raise PreparationError('REVIEWED_HEAD_CHANGED')
     reviewed = {**edge.GATEWAY_REVIEWED_MIGRATIONS, **CURRENT_POLICY_REVIEWED,
-                **CURRENT_EXTENSION_REVIEWED}
-    if (set(CURRENT_EXTENSION_REVIEWED) &
+                **extensions}
+    if (set(extensions) &
             (set(edge.GATEWAY_REVIEWED_MIGRATIONS) | set(CURRENT_POLICY_REVIEWED))):
         raise PreparationError('EXTENSION_OVERLAPS_HISTORY')
     inventory = inspect_migrations(repo)
@@ -344,8 +366,27 @@ def prepare_current_policy(repo, output, *, gateway_probe=False, reviewed_head=N
     repo = Path(repo).resolve()
     explicit_review = reviewed_head is not None or reviewed_manifest_sha256 is not None
     inspect_source = (lambda root: inspect_reviewed_current_migrations(root, reviewed_head, reviewed_manifest_sha256)) if explicit_review else inspect_current_migrations
-    history, sql_payloads = inspect_source(repo)
     policy = {**CURRENT_POLICY_REVIEWED, **CURRENT_EXTENSION_REVIEWED} if explicit_review else CURRENT_POLICY_REVIEWED
+    return _prepare_exact_policy_artifacts(repo, output, inspect_source, policy,
+                                           explicit_review, reviewed_head)
+
+
+def prepare_reviewed_matching126(repo, output, *, gateway_probe=False,
+                                 reviewed_head=None, reviewed_manifest_sha256=None):
+    """고정126 파일 준비 전용. 기본121·명시125 CLI와 실행 계약은 유지한다."""
+    if not gateway_probe:
+        raise PreparationError("최신 정책 준비에는 명시적 --gateway-probe가 필요합니다.")
+    repo = Path(repo).resolve()
+    inspect_source = lambda root: inspect_reviewed_matching126_migrations(
+        root, reviewed_head, reviewed_manifest_sha256)
+    policy = {**CURRENT_POLICY_REVIEWED, **CURRENT_EXTENSION_REVIEWED, **MATCHING126_REVIEWED}
+    return _prepare_exact_policy_artifacts(repo, output, inspect_source, policy, True,
+                                           reviewed_head, reviewed_profile='matching_db_entry_126')
+
+
+def _prepare_exact_policy_artifacts(repo, output, inspect_source, policy,
+                                    explicit_review, reviewed_head, *, reviewed_profile=None):
+    history, sql_payloads = inspect_source(repo)
     config = edge.read_regular(repo, CONFIG)
     edge.gateway_config(config)  # 기존 임시 프로젝트/포트/함수 overlay 범위를 그대로 검증한다.
     sources = edge.source_snapshot(repo)
@@ -377,6 +418,8 @@ def prepare_current_policy(repo, output, *, gateway_probe=False, reviewed_head=N
               "migration_count": len(history["entries"]), "base_migration_count": 41, "policy_migration_count": len(policy),
               "base_snapshot_head": base_head, "base_manifests": [f"base-{name}-manifest.json" for name in ("migration", "database", "edge")],
               "preparation_note": "파일 준비 결과이며 실제 SQL 적용·Edge 실행·운영 배포 검증이 아니다."}
+    if reviewed_profile is not None:
+        shared['reviewed_profile'] = reviewed_profile
     migration = {**shared, "count": len(history["entries"]), "migrations": history["entries"], "excluded": history["excluded"]}
     database = {**shared, "count": len(history["canonical"]), "total_count": len(history["entries"]),
                 "migrations": history["canonical"], "pending": history["pending"],
