@@ -1,3 +1,5 @@
+import { FormErrors, FormErrorAnchor, FormErrorTarget, useFormErrors, useUxFocus, createUxFocusController } from "../presentation/ux-form";
+import { UxModalSheet } from "../presentation/ux-modal-sheet";
 import RemotePlacePicker from "./RemotePlacePicker";
 import { serviceMode, serviceSessionEpoch, useServiceSession } from "../remote";
 import { RemoteAccountHeader, RemoteUpcomingAppointments, RemotePostEditor, useMemberAction } from "./RemoteMemberScreens";
@@ -202,6 +204,7 @@ function ConfirmCard({
     <Modal transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <Card style={styles.confirm}>
+          <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ padding: 23, gap: 19 }} keyboardShouldPersistTaps="handled">
           <Title>{title}</Title>
           <Body muted>{description}</Body>
           <Row>
@@ -218,6 +221,7 @@ function ConfirmCard({
               {confirm}
             </Button>
           </Row>
+          </ScrollView>
         </Card>
       </View>
     </Modal>
@@ -320,9 +324,8 @@ export function HomeScreen() {
                   <Artwork
                     name={event.image}
                     height={190}
-                    style={{ borderRadius: 16 }}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, height: "100%", borderRadius: 16 }}
                   />
-                  <View style={styles.heroShade} />
                   <View style={styles.heroBadge}>
                     <Badge tone="gray">
                       {event.startsAt <= app.now ? "진행 중" : "예정"}
@@ -1144,6 +1147,8 @@ function PreviewEventDetail({ id }: { id: string }) {
   const app = useApp();
   const event = app.events.find((e) => e.id === id);
   const [limit, setLimit] = useState(10);
+  const [allPosts, setAllPosts] = useState(false);
+  const [onlyRecruiting, setOnlyRecruiting] = useState(false);
   if (!event)
     return (
       <Screen title="행사 상세">
@@ -1161,6 +1166,8 @@ function PreviewEventDetail({ id }: { id: string }) {
       p.status !== "deleted" &&
       !app.blockedIds.includes(p.authorId),
   );
+  const allNewestPosts = [...posts].sort((a, b) => b.createdAt - a.createdAt);
+  const sortedPosts = allNewestPosts.filter(p => !onlyRecruiting || p.status === "recruiting");
   const openSource = async () => {
     if (!event.sourceUrl || !/^https:\/\//i.test(event.sourceUrl)) {
       app.showToast("확인된 공식 출처 링크가 없어요.");
@@ -1172,6 +1179,12 @@ function PreviewEventDetail({ id }: { id: string }) {
       app.showToast("출처 링크를 열지 못했어요. 다시 시도해 주세요.");
     }
   };
+  if (allPosts) return <Screen title="이 행사에 연결된 동행 공고" onBack={() => setAllPosts(false)}>
+    <Row><Chip selected={!onlyRecruiting} onPress={() => { setOnlyRecruiting(false); setLimit(10); }}>전체</Chip><Chip selected={onlyRecruiting} onPress={() => { setOnlyRecruiting(true); setLimit(10); }}>모집 중</Chip></Row><Body small muted>최근 등록순</Body>
+    {!sortedPosts.length && <Body muted>조건에 맞는 연결 공고가 없어요.</Body>}
+    {sortedPosts.slice(0, limit).map(post => <PostCard key={post.id} post={post} />)}
+    {limit < sortedPosts.length && <Button secondary onPress={() => setLimit(n => n + 10)}>공고 10개 더 보기</Button>}
+  </Screen>;
   return (
     <Screen
       title="행사 상세"
@@ -1233,14 +1246,10 @@ function PreviewEventDetail({ id }: { id: string }) {
       <Section title={`연결된 동행 공고 (${posts.length})`}>
         {posts.length ? (
           <View style={{ gap: 14 }}>
-            {posts.slice(0, limit).map((post) => (
+            {allNewestPosts.slice(0, 1).map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
-            {limit < posts.length && (
-              <Button secondary onPress={() => setLimit((n) => n + 10)}>
-                공고 10개 더 보기
-              </Button>
-            )}
+            <Button secondary onPress={() => { setLimit(10); setAllPosts(true); }}>연결 공고 전체 보기</Button>
           </View>
         ) : (
           <Empty
@@ -1265,6 +1274,8 @@ type PostWithWishes = Post & {
 export function PostDetailScreen({ id }: { id: string }) { return serviceMode ? <RemotePostDetail id={id} /> : <PreviewPostDetail id={id} />; }
 function PreviewPostDetail({ id }: { id: string }) {
   const app = useApp();
+  const [manageOpen, setManageOpen] = useState(false);
+  const [showApplicants, setShowApplicants] = useState(false);
   const post = app.posts.find((p) => p.id === id) as PostWithWishes | undefined;
   const [confirm, setConfirm] = useState<"delete" | "edit" | "close" | null>(
     null,
@@ -1346,34 +1357,7 @@ function PreviewPostDetail({ id }: { id: string }) {
               ? statusLabelSafe(post, app.now)
               : "동행 신청하기";
   const footer = owner ? (
-    <Row>
-      <Button
-        secondary
-        onPress={() => setConfirm("edit")}
-        disabled={Boolean(appointment)}
-        style={{ flex: 1 }}
-      >
-        수정
-      </Button>
-      {post.status === "closed" ? (
-        <Button
-          onPress={() => {
-            feedback(app, app.reopenPost(id), "모집을 다시 열었어요.");
-          }}
-          style={{ flex: 2 }}
-        >
-          모집 다시 열기
-        </Button>
-      ) : (
-        <Button
-          onPress={() => setConfirm("close")}
-          disabled={Boolean(appointment)}
-          style={{ flex: 2 }}
-        >
-          모집 마감하기
-        </Button>
-      )}
-    </Row>
+    <Button onPress={() => setManageOpen(true)}>공고 관리</Button>
   ) : participant && appointment ? (
     <Button onPress={() => app.navigate("S16", appointment.id)}>
       확정 약속 상세 보기
@@ -1394,6 +1378,75 @@ function PreviewPostDetail({ id }: { id: string }) {
   );
   return (
     <Screen title="동행 공고" footer={footer}>
+      <Modal visible={manageOpen} transparent animationType="slide" onRequestClose={() => setManageOpen(false)}>
+        <View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }}>
+          <Title>내 공고 관리</Title>
+          <Button secondary onPress={() => { setManageOpen(false); setShowApplicants(true); }}>신청 현황 보기</Button>
+          <TextButton onPress={() => { setManageOpen(false); setConfirm("edit"); }}>공고 수정</TextButton>
+          {post.status === "closed" ? <TextButton onPress={() => { setManageOpen(false); feedback(app, app.reopenPost(id), "모집을 다시 열었어요."); }}>모집 다시 열기</TextButton>
+            : <TextButton onPress={() => { setManageOpen(false); setConfirm("close"); }}>모집 마감</TextButton>}
+          {!appointment && <TextButton color={colors.red} onPress={() => { setManageOpen(false); setConfirm("delete"); }}>공고 삭제</TextButton>}
+          <TextButton onPress={() => setManageOpen(false)}>닫기</TextButton>
+        </ScrollView></View></View>
+      </Modal>
+      <Modal visible={showApplicants} transparent animationType="slide" onRequestClose={() => setShowApplicants(false)}>
+        <View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }}>
+          <Title>신청 현황</Title>
+      {owner && (
+        <Section title={`신청자 (${applicants.length})`}>
+          {applicants.length ? (
+            applicants.map((c) => (
+              <Card key={c.id}>
+                <MemberBox
+                  memberId={c.applicantId}
+                  compact
+                  confirmed={participant && c.status === "confirmed"}
+                />
+                <Body small muted>
+                  {c.requestAt &&
+                  c.requestExpiresAt &&
+                  c.requestExpiresAt > app.now
+                    ? `최종 동의 대기 · ${dateLabel(c.requestExpiresAt)} ${timeLabel(c.requestExpiresAt)}까지`
+                    : c.status === "confirmed"
+                      ? "동행이 확정된 상대예요."
+                      : "첫 메시지를 보내 신청한 상대예요."}
+                </Body>
+                <Row>
+                  <Button
+                    secondary
+                    onPress={() => { setShowApplicants(false); app.navigate("S11", c.id); }}
+                    style={{ flex: 1 }}
+                  >
+                    채팅 보기
+                  </Button>
+                  <Button
+                    disabled={Boolean(appointment) || post.startsAt <= app.now}
+                    onPress={() => { setShowApplicants(false); setSelectedApplicant(c.id); }}
+                    style={{ flex: 1 }}
+                  >
+                    상대 선택
+                  </Button>
+                </Row>
+                {!appointment && (
+                  <TextButton
+                    color={colors.red}
+                    onPress={() => { setShowApplicants(false); setRejectingApplicant(c.id); }}
+                  >
+                    신청 거절
+                  </TextButton>
+                )}
+              </Card>
+            ))
+          ) : (
+            <Card>
+              <Body muted>아직 첫 메시지를 보낸 신청자가 없어요.</Body>
+            </Card>
+          )}
+        </Section>
+      )}
+          <TextButton onPress={() => setShowApplicants(false)}>닫기</TextButton>
+        </ScrollView></View></View>
+      </Modal>
       <Row between>
         <Row>
           <Badge>{post.category}</Badge>
@@ -1489,63 +1542,6 @@ function PreviewPostDetail({ id }: { id: string }) {
               <Icon name="chevron-forward" color={colors.primary} size={18} />
             </Row>
           </Card>
-        </Section>
-      )}
-      {owner && (
-        <Section title={`신청자 (${applicants.length})`}>
-          {applicants.length ? (
-            applicants.map((c) => (
-              <Card key={c.id}>
-                <MemberBox
-                  memberId={c.applicantId}
-                  compact
-                  confirmed={participant && c.status === "confirmed"}
-                />
-                <Body small muted>
-                  {c.requestAt &&
-                  c.requestExpiresAt &&
-                  c.requestExpiresAt > app.now
-                    ? `최종 동의 대기 · ${dateLabel(c.requestExpiresAt)} ${timeLabel(c.requestExpiresAt)}까지`
-                    : c.status === "confirmed"
-                      ? "동행이 확정된 상대예요."
-                      : "첫 메시지를 보내 신청한 상대예요."}
-                </Body>
-                <Row>
-                  <Button
-                    secondary
-                    onPress={() => app.navigate("S11", c.id)}
-                    style={{ flex: 1 }}
-                  >
-                    채팅 보기
-                  </Button>
-                  <Button
-                    disabled={Boolean(appointment) || post.startsAt <= app.now}
-                    onPress={() => setSelectedApplicant(c.id)}
-                    style={{ flex: 1 }}
-                  >
-                    상대 선택
-                  </Button>
-                </Row>
-                {!appointment && (
-                  <TextButton
-                    color={colors.red}
-                    onPress={() => setRejectingApplicant(c.id)}
-                  >
-                    신청 거절
-                  </TextButton>
-                )}
-              </Card>
-            ))
-          ) : (
-            <Card>
-              <Body muted>아직 첫 메시지를 보낸 신청자가 없어요.</Body>
-            </Card>
-          )}
-          {!appointment && (
-            <TextButton color={colors.red} onPress={() => setConfirm("delete")}>
-              공고 삭제
-            </TextButton>
-          )}
         </Section>
       )}
       {!owner && !existingChat && (
@@ -1685,9 +1681,28 @@ export function CreateScreen({ id }: { id?: string }) {
 }
 function CreateForm({ id }: { id?: string }) {
   const app = useApp();
+  const formErrors = useFormErrors();
+  const uxFocus = useUxFocus();
+  const categoryTarget = useRef<View>(null);
+  const placeTargetControl = useRef<View>(null);
+  const eventTarget = useRef<View>(null);
+  const manualEntryTarget = useRef<View>(null);
+  const manualAddressTarget = useRef<View>(null);
+  const sourceVenueTarget = useRef<View>(null);
+  const meetingPlaceReturn = useRef<React.RefObject<View | null>>(placeTargetControl);
+  const manualOrigin = useRef<string | null>(null);
+  const [eventFocus] = useState(createUxFocusController);
+  const [manualFocus] = useState(createUxFocusController);
+  const [placeFocus] = useState(createUxFocusController);
+  type SheetLayer = "form" | "event" | "manual" | "place";
+  type SheetTransition = { destination: SheetLayer; target?: React.RefObject<View | null> } | null;
+  const transition = useRef<SheetTransition>(null);
+  const [sheetTransitioning, setSheetTransitioning] = useState(false);
+  const queueSheet = (next: SheetTransition) => { transition.current = next; setSheetTransitioning(Boolean(next)); };
   const serviceSession = useServiceSession();
   const [eventOpen, setEventOpen] = useState(false);
   const [eventQuery, setEventQuery] = useState("");
+  const [appliedEventQuery, setAppliedEventQuery] = useState("");
   const [eventLimit, setEventLimit] = useState(10);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualInput, setManualInput] = useState<ManualEvent>(blankManualEvent);
@@ -1757,8 +1772,10 @@ function CreateForm({ id }: { id?: string }) {
     const eventError = eventDraftError(draft);
     if (eventError) nextErrors.event = eventError;
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length)
+    if (Object.keys(nextErrors).length) {
+      formErrors.focusFirstError();
       app.showToast("입력 내용을 확인해 주세요.");
+    }
     else void saveThen("next");
   };
   const places = PREVIEW_PLACES.filter((p) =>
@@ -1766,27 +1783,56 @@ function CreateForm({ id }: { id?: string }) {
       placeQuery.trim(),
     ),
   );
-  const openManual = () => {
-    setManualInput(safeManualEvent(draft.manualEvent) ?? blankManualEvent());
-    setManualError(""); setEventOpen(false); setManualOpen(true);
+  const restoreShown = (layer: SheetLayer) => {
+    const pending = transition.current;
+    if (!pending || pending.destination !== layer) return;
+    queueSheet(null);
+    const controller = layer === "event" ? eventFocus : layer === "manual" ? manualFocus : layer === "place" ? placeFocus : uxFocus;
+    if (pending.target) controller.focusTarget(pending.target.current);
   };
-  const closePlacePicker = () => { setPlaceOpen(false); if (placeTarget === "event") setManualOpen(true); };
+  const afterSheetClosed = () => {
+    if (eventOpen || manualOpen || placeOpen) return;
+    const pending = transition.current;
+    if (!pending) return;
+    if (pending.destination === "event") setEventOpen(true);
+    else if (pending.destination === "manual") setManualOpen(true);
+    else if (pending.destination === "place") setPlaceOpen(true);
+    else { uxFocus.setEnabled(true); restoreShown("form"); }
+  };
+  const openEvent = () => { uxFocus.focusTarget(eventTarget.current); uxFocus.setEnabled(false); queueSheet(null); setEventOpen(true); };
+  const closeEvent = () => { queueSheet({ destination: "form", target: eventTarget }); setEventOpen(false); };
+  const openManual = () => {
+    const origin = JSON.stringify([draft.eventId ?? null, safeManualEvent(draft.manualEvent)]);
+    if (manualOrigin.current !== origin) {
+      setManualInput(safeManualEvent(draft.manualEvent) ?? blankManualEvent());
+      manualOrigin.current = origin;
+    }
+    setManualError(""); queueSheet({ destination: "manual" }); setEventOpen(false);
+  };
+  const closeManual = () => { queueSheet({ destination: "event", target: manualEntryTarget }); setManualOpen(false); };
+  const closePlacePicker = () => {
+    queueSheet(placeTarget === "event" ? { destination: "manual", target: manualAddressTarget } : { destination: "form", target: meetingPlaceReturn.current });
+    setPlaceOpen(false);
+  };
+  const selectEvent = (selected: { id: string; title: string; placeName: string | null }) => { setLiveEvent(selected); change(selectedEventPatch(selected.id)); closeEvent(); };
   const receivePlace = (selected: { placeName: string; address: string; publicArea: string }) => {
     if (placeTarget === "event") setManualInput((value) => ({ ...value, placeName: value.placeName || selected.placeName, publicAddress: selected.address, publicAddressConfirmed: false }));
     else change({ placeName: selected.placeName, address: selected.address, publicArea: selected.publicArea });
     closePlacePicker();
   };
-  const previewEvents = app.events.filter((candidate) => candidate.endsAt > app.now && `${candidate.title} ${candidate.placeName} ${candidate.publicArea}`.toLocaleLowerCase().includes(eventQuery.trim().toLocaleLowerCase()));
-  const eventSection = <Section title="연결된 행사 (선택)">
+  const searchPreviewEvents = () => { setAppliedEventQuery(eventQuery.trim()); setEventLimit(10); };
+  const previewEvents = app.events.filter((candidate) => candidate.endsAt > app.now && `${candidate.title} ${candidate.placeName} ${candidate.publicArea}`.toLocaleLowerCase().includes(appliedEventQuery.trim().toLocaleLowerCase()));
+  const sheetActive = eventOpen || manualOpen || placeOpen || sheetTransitioning;
+  const eventSection = <FormErrorTarget id="event" error={errors.event} order={draft.eventSectionPosition === "top" ? -1 : 100} focus={() => uxFocus.focusTarget(eventTarget.current)}><Section title="연결된 행사 (선택)">
     {draft.eventId || draft.manualEvent !== undefined ? <Card style={{ backgroundColor: colors.lavender }}>
       {safeManualEvent(draft.manualEvent) ? <ManualEventDetails value={draft.manualEvent} /> : <Body style={{ fontWeight: "600" }}>{event?.title ?? (draft.eventId ? "연결된 행사 정보를 확인하고 있어요" : "직접 입력한 행사 정보를 다시 확인해 주세요")}</Body>}
-      <Row><TextButton onPress={() => setEventOpen(true)}>변경</TextButton><TextButton onPress={() => { change(clearEventPatch()); setLiveEvent(null); }}>삭제</TextButton></Row>
-    </Card> : <Button secondary icon="ticket-outline" onPress={() => setEventOpen(true)}>행사 연결하기</Button>}
-    {serviceMode && event?.placeName && <TextButton onPress={() => { setPlaceTarget("meeting"); setPlaceQuery(event.placeName!); setPlaceOpen(true); }}>행사장을 만남 장소 후보로 찾기</TextButton>}
+      <Row><TextButton focusRef={eventTarget} accessibilityHint={errors.event} onPress={openEvent}>변경</TextButton><TextButton onPress={() => { change(clearEventPatch()); setLiveEvent(null); }}>삭제</TextButton></Row>
+    </Card> : <Button secondary focusRef={eventTarget} accessibilityHint={errors.event} icon="ticket-outline" onPress={openEvent}>행사 연결하기</Button>}
+    {serviceMode && event?.placeName && <TextButton focusRef={sourceVenueTarget} onPress={() => { uxFocus.focusTarget(sourceVenueTarget.current); uxFocus.setEnabled(false); queueSheet(null); meetingPlaceReturn.current = sourceVenueTarget; setPlaceTarget("meeting"); setPlaceQuery(event.placeName!); setPlaceOpen(true); }}>행사장을 만남 장소 후보로 찾기</TextButton>}
     {serviceMode && eventSource.error && <><Body muted>연결된 행사 정보를 확인하지 못했어요. 입력은 유지돼요.</Body><TextButton onPress={eventSource.retry}>행사 다시 확인</TextButton></>}
     {errors.event ? <Body style={{ color: colors.red }}>{errors.event}</Body> : null}
     <Body small muted>행사 연결은 선택이에요. 행사 선택은 동행 일정을 바꾸지 않아요.</Body>
-  </Section>;
+  </Section></FormErrorTarget>;
   if (serviceMode ? !serviceSession.authenticated : !app.member)
     return (
       <Screen title="동행 모집">
@@ -1798,7 +1844,11 @@ function CreateForm({ id }: { id?: string }) {
       </Screen>
     );
   return (
-    <Screen
+    <FormErrors controller={formErrors}><View collapsable={false} style={{ flex: 1 }}>
+      <View collapsable={false} style={{ flex: 1 }} pointerEvents={sheetActive ? "none" : "auto"}
+        importantForAccessibility={sheetActive ? "no-hide-descendants" : "auto"}
+        accessibilityElementsHidden={sheetActive}>
+      <Screen focusController={uxFocus}
       title="동행 모집"
       back={false}
       right={
@@ -1834,11 +1884,13 @@ function CreateForm({ id }: { id?: string }) {
         </Card>
       )}
       {draft.eventSectionPosition === "top" && eventSection}
-      <Section title="활동 카테고리 *">
+      <FormErrorTarget id="category" error={errors.category} order={0} focus={() => uxFocus.focusTarget(categoryTarget.current)}><Section title="활동 카테고리 *">
         <View style={styles.wrap}>
           {CATEGORIES.map((v) => (
             <Chip
               key={v}
+              focusRef={v === CATEGORIES[0] ? categoryTarget : undefined}
+              accessibilityHint={errors.category}
               selected={draft.category === v}
               onPress={() => change({ category: v })}
             >
@@ -1851,9 +1903,9 @@ function CreateForm({ id }: { id?: string }) {
             {errors.category}
           </Body>
         )}
-      </Section>
+      </Section></FormErrorTarget>
       <Field
-        label="공고 제목 *"
+        label="공고 제목 *" errorOrder={10}
         value={draft.title}
         onChangeText={(title) => change({ title })}
         placeholder="어떤 동행을 함께하고 싶으신가요?"
@@ -1862,7 +1914,7 @@ function CreateForm({ id }: { id?: string }) {
         hint={`${draft.title.length}/50자`}
       />
       <Field
-        label="동행 소개 *"
+        label="동행 소개 *" errorOrder={20}
         value={draft.introduction}
         onChangeText={(introduction) => change({ introduction })}
         placeholder="활동과 원하는 분위기를 소개해 주세요."
@@ -1886,7 +1938,7 @@ function CreateForm({ id }: { id?: string }) {
       </Card>
       <Section title="일정 설정 *">
         <Field
-          label="시작 일시"
+          label="시작 일시" errorOrder={30}
           value={draft.startsAt}
           onChangeText={(startsAt) => change({ startsAt })}
           placeholder={`${localInput(app.now + DAY).slice(0, 10)}T14:00`}
@@ -1894,14 +1946,14 @@ function CreateForm({ id }: { id?: string }) {
           hint="한국시간 · YYYY-MM-DDTHH:mm"
         />
         <Field
-          label="예상 종료 일시"
+          label="예상 종료 일시" errorOrder={40}
           value={draft.endsAt}
           onChangeText={(endsAt) => change({ endsAt })}
           placeholder={`${localInput(app.now + DAY).slice(0, 10)}T16:00`}
           error={errors.endsAt}
         />
         <Field
-          label="모집 마감 일시 (선택)"
+          label="모집 마감 일시 (선택)" errorOrder={50}
           value={draft.deadlineAt}
           onChangeText={(deadlineAt) => change({ deadlineAt })}
           placeholder="비워두면 동행 시작 시각에 마감"
@@ -1916,11 +1968,15 @@ function CreateForm({ id }: { id?: string }) {
           </Row>
         </Card>
       </Section>
-      <Section title="만남 장소 *">
+      <FormErrorTarget id="place" error={errors.placeName} order={60} focus={() => uxFocus.focusTarget(placeTargetControl.current)}><Section title="만남 장소 *">
         <Button
           secondary
           icon="search-outline"
+          focusRef={placeTargetControl}
+          accessibilityHint={errors.placeName}
           onPress={() => {
+            uxFocus.focusTarget(placeTargetControl.current); uxFocus.setEnabled(false);
+            queueSheet(null); meetingPlaceReturn.current = placeTargetControl;
             setPlaceTarget("meeting");
             setPlaceQuery("");
             setPlaceOpen(true);
@@ -1950,7 +2006,7 @@ function CreateForm({ id }: { id?: string }) {
           </Body>
         )}
         <Field
-          label="상세 만남 지점 (선택)"
+          label="상세 만남 지점 (선택)" errorOrder={70}
           value={draft.meetingPoint}
           onChangeText={(meetingPoint) => change({ meetingPoint })}
           placeholder="예: 정문 입구에서 만나요"
@@ -1970,52 +2026,23 @@ function CreateForm({ id }: { id?: string }) {
             보여요.
           </Body>
         </Row>
-      </Section>
+      </Section></FormErrorTarget>
       {draft.eventSectionPosition !== "top" && eventSection}
-      <Modal visible={eventOpen} transparent animationType="slide" onRequestClose={() => setEventOpen(false)}>
-        <View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }} keyboardShouldPersistTaps="handled">
-          <Title>연결할 행사 선택</Title>
-          <TextButton onPress={() => setEventOpen(false)}>행사 선택 닫기</TextButton>
-          {serviceMode ? <RemoteEventPicker onSelect={(selected) => { setLiveEvent(selected); change(selectedEventPatch(selected.id)); setEventOpen(false); }} onDirectInput={openManual} /> : <>
-            <Body small muted>프로토타입 행사 목록이에요. 예정·진행 중 전체에서 찾아요. 동행 날짜가 달라도 연결할 수 있어요.</Body>
-            <Field label="행사 검색" value={eventQuery} onChangeText={(value) => { setEventQuery(value); setEventLimit(10); }} placeholder="행사명 또는 장소명" />
-            {previewEvents.slice(0, eventLimit).map((candidate) => <Card key={candidate.id} onPress={() => { change(selectedEventPatch(candidate.id)); setEventOpen(false); }}><Body>{candidate.title}</Body><Body small muted>{candidate.placeName} · {candidate.publicArea}</Body></Card>)}
-            {!previewEvents.length && <Body muted>조건에 맞는 행사가 없어요. 검색어를 바꾸거나 직접 입력해 주세요.</Body>}
-            {previewEvents.length > eventLimit && <Button secondary onPress={() => setEventLimit((value) => value + 10)}>행사 10개 더 보기</Button>}
-            <Button secondary onPress={openManual}>직접 입력</Button>
-          </>}
-        </ScrollView></View></View>
-      </Modal>
-      <Modal visible={manualOpen} transparent animationType="slide" onRequestClose={() => setManualOpen(false)}>
-        <View style={styles.sheetOverlay}><View style={styles.filterSheet}><ScrollView contentContainerStyle={{ padding: 22, gap: 14 }} keyboardShouldPersistTaps="handled">
-          <Title>행사 직접 입력</Title>
-          <Body small muted>이 공고에만 표시해요. 공통 행사 목록이나 별도 행사 상세에는 등록하지 않아요.</Body>
-          {serviceMode && <Body small muted>직접 입력 행사 서버 연결은 준비 중이에요. 입력·세션 보관·등록 전 확인은 가능하지만 실제 공고 등록은 아직 할 수 없어요.</Body>}
-          <Field label="행사명 *" value={manualInput.title} onChangeText={(title) => { setManualInput((value) => ({ ...value, title })); setManualError(""); }} placeholder="예: 주말 취미 합주 공연" />
-          <Field label="장소명 (선택)" value={manualInput.placeName} onChangeText={(placeName) => { setManualInput((value) => ({ ...value, placeName })); setManualError(""); }} placeholder="예: 공개된 공연장 또는 공방" />
-          <Button secondary onPress={() => { setPlaceTarget("event"); setPlaceQuery(manualInput.placeName); setManualOpen(false); setPlaceOpen(true); }}>공개 행사장 주소 검색 (선택)</Button>
-          {manualInput.publicAddress ? <><Body>{manualInput.publicAddress}</Body><TextButton onPress={() => setManualInput((value) => ({ ...value, publicAddress: "", publicAddressConfirmed: false }))}>주소 삭제</TextButton>
-            <Pressable accessibilityRole="checkbox" accessibilityLabel="공개 행사장 주소임을 확인했어요" accessibilityState={{ checked: manualInput.publicAddressConfirmed }} onPress={() => setManualInput((value) => ({ ...value, publicAddressConfirmed: !value.publicAddressConfirmed }))}><Body>{manualInput.publicAddressConfirmed ? "☑" : "☐"} 공개 행사장 주소임을 확인했어요.</Body></Pressable>
-          </> : <Body small muted>주소를 찾지 못하면 생략할 수 있어요. 공고의 필수 만남 장소는 별도로 선택해요.</Body>}
-          <Body small style={{ color: colors.red }}>행사 주소는 공개되는 정보예요. 개인 집 주소나 비공개 만남 지점은 입력하지 마세요.</Body>
-          {manualError ? <Body style={{ color: colors.red }}>{manualError}</Body> : null}
-          <Button onPress={() => { const error = manualEventError(manualInput); if (error) { setManualError(error); return; } change(manualEventPatch(manualInput)); setLiveEvent(null); setManualOpen(false); }}>이 공고에 연결</Button>
-          <TextButton onPress={() => setManualOpen(false)}>닫기</TextButton>
-        </ScrollView></View></View>
-      </Modal>
+
+
       {errors.personalInfo && (
-        <Card style={{ borderColor: "#F2CBD3", backgroundColor: colors.pink }}>
+        <FormErrorAnchor id="personal-info" error={errors.personalInfo} order={110}>
           <Body small style={{ color: colors.red }}>
             {errors.personalInfo}
           </Body>
-          <TextButton
+        </FormErrorAnchor>
+      )}
+      {errors.personalInfo && <TextButton
             color={colors.red}
             onPress={() => app.navigate("S21", "개인정보 감지 오탐 문의")}
           >
             오탐 문의하기
-          </TextButton>
-        </Card>
-      )}
+          </TextButton>}
       <TextButton
         onPress={() => {
           void saveThen("save");
@@ -2065,14 +2092,37 @@ function CreateForm({ id }: { id?: string }) {
           }}
         />
       )}
-      <Modal
-        visible={placeOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={closePlacePicker}
-      >
-        <View style={styles.sheetOverlay}>
-          <View style={styles.filterSheet}>
+
+    </Screen></View>
+      <UxModalSheet visible={eventOpen} focusController={eventFocus} onRequestClose={closeEvent} onShown={() => restoreShown("event")} onClosed={afterSheetClosed} overlayStyle={styles.sheetOverlay} sheetStyle={styles.filterSheet}>
+          <Title>연결할 행사 선택</Title>
+          <TextButton onPress={closeEvent}>행사 선택 닫기</TextButton>
+          {serviceMode ? <RemoteEventPicker onSelect={selectEvent} onDirectInput={openManual} directInputRef={manualEntryTarget} /> : <>
+            <Body small muted>프로토타입 행사 목록이에요. 예정·진행 중 전체에서 찾아요. 동행 날짜가 달라도 연결할 수 있어요.</Body>
+            <Row style={{ alignItems: "flex-end", flexWrap: "nowrap" }}><View style={{ flex: 1, minWidth: 0 }}><Field label="행사 검색" value={eventQuery} onChangeText={(value) => { setEventQuery(value); setEventLimit(10); }} placeholder="행사명 또는 장소명" returnKeyType="search" onSubmitEditing={(event) => { if (!(event.nativeEvent as { isComposing?: boolean }).isComposing) searchPreviewEvents() }} /></View><Button secondary onPress={() => searchPreviewEvents()}>검색</Button></Row>
+            {previewEvents.slice(0, eventLimit).map((candidate) => <Card key={candidate.id} onPress={() => { change(selectedEventPatch(candidate.id)); closeEvent(); }}><Body>{candidate.title}</Body><Body small muted>{candidate.placeName} · {candidate.publicArea}</Body></Card>)}
+            {!previewEvents.length && <Body muted>조건에 맞는 행사가 없어요. 검색어를 바꾸거나 직접 입력해 주세요.</Body>}
+            {previewEvents.length > eventLimit && <Button secondary onPress={() => setEventLimit((value) => value + 10)}>행사 10개 더 보기</Button>}
+            <Button secondary focusRef={manualEntryTarget} onPress={openManual}>직접 입력</Button>
+          </>}
+      </UxModalSheet>
+      <UxModalSheet visible={manualOpen} focusController={manualFocus} onRequestClose={closeManual} onShown={() => restoreShown("manual")} onClosed={afterSheetClosed} overlayStyle={styles.sheetOverlay} sheetStyle={styles.filterSheet}>
+          <Title>행사 직접 입력</Title>
+          <Body small muted>이 공고에만 표시해요. 공통 행사 목록이나 별도 행사 상세에는 등록하지 않아요.</Body>
+          {serviceMode && <Body small muted>직접 입력 행사 서버 연결은 준비 중이에요. 입력·세션 보관·등록 전 확인은 가능하지만 실제 공고 등록은 아직 할 수 없어요.</Body>}
+          <Field label="행사명 *" value={manualInput.title} onChangeText={(title) => { setManualInput((value) => ({ ...value, title })); setManualError(""); }} placeholder="예: 주말 취미 합주 공연" />
+          <Field label="장소명 (선택)" value={manualInput.placeName} onChangeText={(placeName) => { setManualInput((value) => ({ ...value, placeName })); setManualError(""); }} placeholder="예: 공개된 공연장 또는 공방" />
+          <Button secondary focusRef={manualAddressTarget} onPress={() => { setPlaceTarget("event"); setPlaceQuery(manualInput.placeName); queueSheet({ destination: "place" }); setManualOpen(false); }}>공개 행사장 주소 검색 (선택)</Button>
+          {manualInput.publicAddress ? <><Body>{manualInput.publicAddress}</Body><TextButton onPress={() => setManualInput((value) => ({ ...value, publicAddress: "", publicAddressConfirmed: false }))}>주소 삭제</TextButton>
+            <Pressable accessibilityRole="checkbox" accessibilityLabel="공개 행사장 주소임을 확인했어요" accessibilityState={{ checked: manualInput.publicAddressConfirmed }} onPress={() => setManualInput((value) => ({ ...value, publicAddressConfirmed: !value.publicAddressConfirmed }))}><Body>{manualInput.publicAddressConfirmed ? "☑" : "☐"} 공개 행사장 주소임을 확인했어요.</Body></Pressable>
+          </> : <Body small muted>주소를 찾지 못하면 생략할 수 있어요. 공고의 필수 만남 장소는 별도로 선택해요.</Body>}
+          <Body small style={{ color: colors.red }}>행사 주소는 공개되는 정보예요. 개인 집 주소나 비공개 만남 지점은 입력하지 마세요.</Body>
+          {manualError ? <Body style={{ color: colors.red }}>{manualError}</Body> : null}
+          <Button onPress={() => { const error = manualEventError(manualInput); if (error) { setManualError(error); return; } change(manualEventPatch(manualInput)); setLiveEvent(null); queueSheet({ destination: "form", target: eventTarget }); setManualOpen(false); }}>이 공고에 연결</Button>
+          <TextButton onPress={closeManual}>닫기</TextButton>
+      </UxModalSheet>
+      <UxModalSheet visible={placeOpen} focusController={placeFocus} onRequestClose={closePlacePicker} onShown={() => restoreShown("place")} onClosed={afterSheetClosed}
+        overlayStyle={styles.sheetOverlay} sheetStyle={styles.filterSheet} contentContainerStyle={{ padding: 22, gap: 16 }} header={<>
             <View style={styles.handle} />
             <Row between style={{ paddingHorizontal: 22 }}>
               <Title>{placeTarget === "event" ? "공개 행사장 주소 선택" : "만남 장소 선택"}</Title>
@@ -2085,10 +2135,7 @@ function CreateForm({ id }: { id?: string }) {
                 <Icon name="close-outline" />
               </Pressable>
             </Row>
-            <ScrollView
-              contentContainerStyle={{ padding: 22, gap: 16 }}
-              keyboardShouldPersistTaps="handled"
-            >
+        </>}>
               {serviceMode ? <RemotePlacePicker initialQuery={placeQuery} addressUse={placeTarget === "event" ? "public-event" : "meeting"} onSelect={receivePlace} onCancel={closePlacePicker} /> : <>
               {placeTarget === "event" && <Body small muted>선택한 행사 주소는 공고에 공개돼요. 공개 행사장 주소만 선택해 주세요.</Body>}
               <Badge tone="gray">프로토타입 장소 목록</Badge>
@@ -2154,11 +2201,8 @@ function CreateForm({ id }: { id?: string }) {
                   onPress={() => setPlaceQuery("")}
                 />
               )}</>}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </Screen>
+      </UxModalSheet>
+    </View></FormErrors>
   );
 }
 
@@ -2455,8 +2499,8 @@ function PublishForm() {
 
 const styles = StyleSheet.create({
   iconTap: {
-    width: 35,
-    height: 35,
+    width: 44,
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2479,20 +2523,13 @@ const styles = StyleSheet.create({
   },
   heroEvent: {
     width: 304,
+    minHeight: 190,
     borderRadius: 16,
     overflow: "hidden",
     backgroundColor: colors.lavender,
   },
-  heroShade: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 108,
-    backgroundColor: "#23143BD9",
-  },
   heroBadge: { position: "absolute", top: 12, left: 12 },
-  heroCopy: { position: "absolute", bottom: 14, left: 16, right: 14, gap: 4 },
+  heroCopy: { marginTop: 64, padding: 14, paddingLeft: 16, gap: 4, flexGrow: 1, justifyContent: "flex-end", backgroundColor: "#23143BD9" },
   categoryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -2552,7 +2589,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 22,
   },
-  confirm: { width: "100%", maxWidth: 380, gap: 19, padding: 23 },
+  confirm: { width: "100%", maxWidth: 380, maxHeight: "90%", padding: 0 },
   sheetOverlay: {
     flex: 1,
     justifyContent: "flex-end",

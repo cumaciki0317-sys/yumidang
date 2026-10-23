@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-23",
+  "actor": "jonghyun",
+  "branch": "jonghyun/ux-implementation-20261023",
+  "baseline": "522be4ee3d594d53eec6978da0d0f23a3596c529",
+  "mode": "separate clone and branch per writer, root sequential integration",
+  "lanes": {
+    "root": {
+      "clone": "jonghyun-ux-implementation-20261023",
+      "paths": [
+        "ui integration",
+        "BrowseScreens.tsx",
+        "CommunityScreens.tsx",
+        "remote.tsx session bridge",
+        "client-feedback.tsx",
+        "handoff and verification"
+      ]
+    },
+    "ux_common_impl": {
+      "clone": "jonghyun-ux-common-20261023",
+      "paths": [
+        "ui.tsx",
+        "presentation/ux-form.tsx",
+        "tests/mobile/ux-common.test.mjs"
+      ],
+      "handover": "writes finished before root integration; final read-only review",
+      "native_followup_paths": [
+        "ui.tsx",
+        "presentation/ux-form.tsx",
+        "BrowseScreens.tsx",
+        "CommunityScreens.tsx",
+        "ux-common-completion.test.mjs",
+        "ux-native-focus.test.mjs"
+      ]
+    },
+    "ux_signup_impl": {
+      "clone": "jonghyun-ux-signup-20261023",
+      "paths": [
+        "AuthAiScreens.tsx",
+        "signup-draft.ts",
+        "tests/mobile/ux-signup.test.mjs"
+      ],
+      "handover": "writes finished before root integration",
+      "native_followup": "AuthAiScreens.tsx / ux-signup.test.mjs, 공통 컨트롤러 연결"
+    },
+    "ux_member_impl": {
+      "clone": "jonghyun-ux-member-20261023",
+      "paths": [
+        "RemoteMemberScreens.tsx",
+        "presentation/member-ux.tsx",
+        "presentation/ux-time.ts",
+        "tests/mobile/ux-member.test.mjs"
+      ],
+      "handover": "later exclusive assignment of RemoteScreens.tsx and pagination-auth tests for access-denial correction; root stops editing those files",
+      "native_followup": "RemoteMemberScreens.tsx / ux-member.test.mjs, 공통 컨트롤러 연결"
+    }
+  },
+  "limits": [
+    "no backend/domain/DB/ownership policy/hook edits",
+    "no real member/provider calls",
+    "no commit/push/main merge/deploy",
+    "no REA install or execution"
+  ],
+  "completion_followup": {
+    "root": "결정·요구사항 문서·실제 기기/브라우저 검증·통합. 제품 파일은 lane 편집 종료 후만 통합.",
+    "common": {
+      "exclusive": [
+        "BrowseScreens.tsx",
+        "RemoteScreens.tsx(RemoteEventPicker optional ref only)",
+        "presentation/ux-modal-sheet.tsx",
+        "tests/mobile/event-selection-picker.test.mjs",
+        "narrow modal and event-preview tests"
+      ],
+      "scope": "Q15 자체 스크롤/키보드·닫기 복귀·입력 보존·IME/중복, Q12 예시 미리보기 필터 분리"
+    },
+    "signup": {
+      "exclusive": [
+        "AuthAiScreens.tsx",
+        "tests/mobile/ux-signup.test.mjs"
+      ],
+      "scope": "Q01 인증/권한/통신 오류 구분과 Q03 S06 사진 항목 순서·필수 배지"
+    },
+    "member": {
+      "exclusive": [
+        "RemoteMemberScreens.tsx",
+        "CommunityScreens.tsx",
+        "presentation/member-ux.tsx",
+        "tests/mobile/ux-member.test.mjs",
+        "narrow preview/member tests"
+      ],
+      "scope": "Q05 실제 약속 상태·대상 화면, Q09 busy 경합, Q08 예시 KST, Q10 예시 목적별 설정"
+    }
+  },
+  "native_final_followup": {
+    "common": [
+      "BrowseScreens.tsx",
+      "presentation/ux-modal-sheet.tsx",
+      "ux-modal-sheet.test.mjs"
+    ],
+    "member": [
+      "CommunityScreens.tsx",
+      "RemoteMemberScreens.tsx",
+      "ux-member.test.mjs",
+      "ux-preview-member.test.mjs"
+    ],
+    "root": [
+      "artifact/doc integration",
+      "member-failure-state test import mock",
+      "actual Android device UI validation",
+      "Notion handoff"
+    ],
+    "parallel_edit_boundary": "각 clone 단독 수정. root는lane편집종료후해당파일만복사."
+  },
+  "compact_followup": {
+    "common": {
+      "clone": "jonghyun-ux-common-20261023",
+      "exclusive": [
+        "apps/mobile/src/ui.tsx",
+        "apps/mobile/src/presentation/ux-form.tsx",
+        "apps/mobile/src/presentation/ux-modal-sheet.tsx",
+        "tests/mobile/ux-keyboard-offset.test.mjs",
+        "tests/mobile/ux-modal-sheet.test.mjs"
+      ],
+      "status": "편집 종료 후 root가 해시 확인해 순차 통합"
+    },
+    "root": {
+      "exclusive": [
+        "실제 Android UI검증",
+        "문서·증거·Notion 인수인계"
+      ],
+      "temporary_diagnostic": "좌표 숫자만 임시 2파일 관찰, 백업 해시 확인 원복, 최종 제품에 로그 없음"
+    },
+    "checks": "기존 UX를 유지하는 키보드 좌표 수정. 새 정책·구조 선택 없음."
+  },
+  "review_state_followup": {
+    "actor": "jonghyun",
+    "member_clone": "jonghyun-ux-member-20261023",
+    "exclusive": [
+      "apps/mobile/src/presentation/member-ux.tsx",
+      "tests/mobile/ux-member.test.mjs"
+    ],
+    "status": "편집 종료·해시 확인 후 root 순차 통합",
+    "root": "원래 명세/계약 감사·검사·문서·Notion만. 서버·정책·권한 변경 없음."
+  }
+}

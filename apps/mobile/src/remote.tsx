@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { observeSignupDraftSession } from "./signup-draft";
 import { YumidangService } from "./service";
 import { ApiError, ServiceApiClient } from "./api";
 import { MemberService, uuid } from "./member-service";
@@ -16,7 +17,7 @@ export function installServiceSession(accessToken: string | null) {
   if (sessionDetails?.accessToken !== accessToken) sessionDetails = null;
   token = accessToken;
   epoch++;
-  listeners.forEach((listener) => listener());
+  notifyServiceSession();
 }
 export const serviceSessionEpoch = () => epoch;
 export const serviceAccessToken = async () => {
@@ -77,7 +78,12 @@ let memberReportCapture: ((input: ReportCaptureInput) => Promise<{ assetId: stri
 let sessionDetails: SessionResult | null = null;
 let portsEpoch = 0;
 const portListeners = new Set<() => void>();
-function changedPorts() { portsEpoch++; portListeners.forEach(f => f()); }
+function syncSignupDraft() {
+  observeSignupDraftSession(sessionPort && sessionDetails && sessionDetails.status !== "ready"
+    ? { userId: sessionDetails.userId, epoch, session: sessionPort } : null);
+}
+function notifyServiceSession() { syncSignupDraft(); listeners.forEach(listener => listener()); }
+function changedPorts() { syncSignupDraft(); portsEpoch++; portListeners.forEach(f => f()); }
 /** Trusted integration only. The app never invents an Origin or a callback URL. */
 export function installMemberSessionPort(port: MemberSessionPort | null) {
   if (sessionPort !== port) {
@@ -92,7 +98,13 @@ export function installMemberReportCaptureUpload(port: typeof memberReportCaptur
 export function installMemberSessionDetails(details: SessionResult | null) {
   const verified = details === null ? null : sessionResult(details);
   clearRetirementBinding(details === null);
-  sessionDetails = verified; token = verified?.accessToken ?? null; epoch++; listeners.forEach(listener => listener());
+  sessionDetails = verified; token = verified?.accessToken ?? null; epoch++; notifyServiceSession();
+}
+/** Initial empty restoration must not discard an in-flight browser verifier. Other null results still revoke authority. */
+export function installRestoredMemberSessionDetails(details: SessionResult | null, expectedEpoch: number) {
+  if (epoch !== expectedEpoch) return;
+  if (details === null && sessionDetails === null && token === null && retirementBinding === null && retirementState === null) return;
+  installMemberSessionDetails(details);
 }
 export function useMemberPorts() {
   useSyncExternalStore(f => { portListeners.add(f); return () => { portListeners.delete(f); }; }, () => portsEpoch, () => 0);
@@ -123,7 +135,7 @@ function clearRetirementBinding(discard: boolean) {
 function clearNormalMemberSession() {
   sessionDetails = null; token = null; epoch++;
   if (retirementBinding) retirementBinding.epoch = epoch;
-  listeners.forEach(listener => listener());
+  notifyServiceSession();
 }
 export const memberRetirementSnapshot = () => retirementState;
 export function subscribeMemberRetirement(listener: () => void) { retirementListeners.add(listener); return () => { retirementListeners.delete(listener); }; }

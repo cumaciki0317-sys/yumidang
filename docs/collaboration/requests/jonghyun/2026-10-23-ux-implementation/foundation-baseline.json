@@ -1,0 +1,17 @@
+{
+  "source": "/Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-app-foundation-20261021",
+  "source_head": "522be4ee3d594d53eec6978da0d0f23a3596c529",
+  "copy_reason": "Preserve prior2ndpriority changes without committing or changing original clone",
+  "copied_hashes": {
+    "apps/mobile/package-lock.json": "84b745540641f7ed1af6d1169fc10673162a9b3ba7be7d70aca271affee16d7a",
+    "apps/mobile/package.json": "14bf5f8d08bc2231d305480c5169b22db1d1958075fee4c7e350a387e99da84a",
+    "apps/mobile/src/app/_layout.tsx": "ef9db42a1e311098401237fcef3df9dc9b58b5c5e734912e02eb9bc21b798fbc",
+    "apps/mobile/src/remote.tsx": "76442a8fc6182cb6cc6065ac022be1af367909080c2d98c7914c0ea61442bad2",
+    "apps/mobile/src/screens/AuthAiScreens.tsx": "3401ee5be2c56ff6f97fe5f2e487d728b1d2c62e2fa2c5d7440934e92471a8c9",
+    "apps/mobile/src/web-member-connection.ts": "9970b613e5ac365fa3d69e9fa7fdfb025bd47a04d4a871018c7de8881516055c",
+    "apps/mobile/src/auth-callback-task.ts": "f2c5ff2790c6157dd2f8c6175ac6a115bba39afeaccacdd96d181a589c24e189",
+    "apps/mobile/scripts/verify-android-settings.mjs": "bd35f488640f792c7b5a0d71c7a1de8520966ee56e767a77caf69c64c85bc491",
+    "tests/mobile/android-settings.test.mjs": "93d3e4c2534b84b432f5cec74a5b524756deb0b2a898a212a21de8599c948b6e",
+    "tests/mobile/client-auth-connection.test.mjs": "675f09f978ebeaa256b1b7ef10a26af8ab2bc415428039474310449531eed3c5"
+  }
+}

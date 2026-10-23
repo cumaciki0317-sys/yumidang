@@ -1,0 +1,256 @@
+{
+  "typecheck": {
+    "command": "npm --prefix apps/mobile run typecheck",
+    "result": "PASS"
+  },
+  "lint": {
+    "command": "npm --prefix apps/mobile run lint",
+    "result": "기존 전체 lint PASS 후 이번 변경 member-ux.tsx 0errors/0warnings"
+  },
+  "unit": {
+    "files": [
+      "ux-common.test.mjs",
+      "ux-common-completion.test.mjs",
+      "ux-native-focus.test.mjs",
+      "ux-signup.test.mjs",
+      "ux-member.test.mjs",
+      "ux-recovery.test.mjs",
+      "ux-pagination-auth.test.mjs",
+      "client-auth-connection.test.mjs",
+      "member-failure-state.test.mjs",
+      "event-selection-picker.test.mjs",
+      "ux-preview-member.test.mjs",
+      "ux-modal-sheet.test.mjs",
+      "ux-keyboard-offset.test.mjs"
+    ],
+    "unique_cases": 174,
+    "result": "PASS, final integrated single run174/174",
+    "log": "final-review-state-tests.log",
+    "execution_detail": "현재 계약 재대조에서 Q07 own_review 소비 누락 보완. 기존40+신규4 member 검사 포함, 통합13파일174건 단일 통과. 기기/실서버 검증과 구분.",
+    "environment": "Node VM, production TSX, synthetic React/RN/router/network; not actual device/server/UT"
+  },
+  "web_export": {
+    "command": "EXPO_OFFLINE=1 CI=1 EXPO_PUBLIC_DATA_MODE=preview npm run build:web -- --output-dir /private/tmp/yumidang-ux-audit-web-20261023",
+    "result": "PASS, supplementary web build",
+    "log": "/private/tmp/yumidang-ux-final-audit-export-20261023.log",
+    "entry": "entry-f938ae1391e589e6f6d0c29d4baa5669.js",
+    "sha256": "69a4628788b29328413790af1b8e87c03d5fdddf730134469df854df69bfda68",
+    "final_reload_smoke": "Chrome final reload observed entry-f938ae1391e589e6f6d0c29d4baa5669.js and visible preview login guard, captured error logs0; supplementary smoke only",
+    "scope": "이전165건 체크포인트의 보조 웹 빌드. 이번 키보드 좌표 최종본의 웹 재빌드/실행 증거로 사용하지 않음."
+  },
+  "browser": {
+    "tool": "cua_repl, Chrome browser2",
+    "data": "preview synthetic fixtures only",
+    "observed_css_viewport": {
+      "width": 341,
+      "height": 738
+    },
+    "requested_viewport_width": 375,
+    "request_not_observation": true,
+    "checks": [
+      "form first invalid category focused and typed title retained",
+      "label/help/input/plain error and separate required badges",
+      "search input right button position does not overlap input at width341",
+      "Enter search changes visible fixtures",
+      "closing event picker restores trigger focus and preserves title",
+      "owner detail single bottom management trigger and sheet actions",
+      "management applicant view opens",
+      "event related-post preview -> full list with all/recruiting and newest labels",
+      "final export reload and management smoke at default viewport",
+      "latest native-focus supplement export: category actual button focus and title preserved"
+    ],
+    "limits": [
+      "not full device or all-screen accessibility proof",
+      "not authenticated live server validation",
+      "large server-linked event list pagination NOT_RUN"
+    ],
+    "viewport_reset": true,
+    "prior_width_scope": "341x738은 이전 체크포인트. 이번 최종 웹 확인은 기본 viewport로 수행, 임의375px 확인으로 확대하지 않음."
+  },
+  "preservation": {
+    "main_product_changes": false,
+    "foundation_original10_hashes": "이번 작은 화면 검증 종료 후 10개 모두 원본 해시 일치",
+    "ownership": "통과: 371개 경로, 작업자 jonghyun, 정책 HEAD:backend/ownership.json",
+    "diff_check": "PASS after Q07 existing-contract consumer and audit docs"
+  },
+  "notion": {
+    "tasks": {
+      "2.2": "f5444227a43583de92c081c3f911bcba",
+      "2.3": "ec644227a4358293a395015943dd0636",
+      "2.6": "74244227a43582e5ab72814958790b64",
+      "2.10": "3ea44227a4358264b18501f23b59a11f"
+    },
+    "result": "structured new handoff appended and old2026-10-21 record visible; status 작업 중 visibly selected for each",
+    "reason": "UX selections resolved; independent Jonghyun device/integration QA remains; not entire TASK final completion",
+    "android_followup": {
+      "tasks": [
+        "2.2",
+        "2.3",
+        "2.6",
+        "2.10"
+      ],
+      "result": "2026-10-23 추가 구현·Android 검증 인수인계 append 후 본문을 다시 읽어 확인. 기존 기록/담당/우선순위/일정/작업 중 상태 보존.",
+      "evidence": [
+        "notion-2.2-android-followup.png",
+        "notion-2.3-android-followup.png",
+        "notion-2.6-android-followup.png",
+        "notion-2.10-android-handoff.png"
+      ]
+    },
+    "current_followup": {
+      "result": "2.2/2.3/2.6/2.10 앱우선추가인수인계append후각본문재조회확인. 종현담당·작업중·기존기록보존. 최신독립QA와서버후속구분.",
+      "evidence": [
+        "notion-2.2-app-final.png",
+        "notion-2.3-app-final.png",
+        "notion-2.6-app-final.png",
+        "notion-2.10-app-final.png"
+      ]
+    },
+    "compact_followup": {
+      "tasks": [
+        "2.6",
+        "2.10"
+      ],
+      "result": "추가 인수인계를 각 TASK 끝에 작성하고 마지막 본문 재조회 확인. 현재 Android 우선 기준·170건·실제 작은 화면 관찰·원복·한계 기록. 기존 담당/상태/우선순위/일정 보존.",
+      "evidence": [
+        "notion-2.6-compact-final.png",
+        "notion-2.10-compact-final.png"
+      ]
+    },
+    "review_submission_followup": {
+      "task": "2.3",
+      "result": "작성 후 마지막 본문 재조회·저장 증거 확보. 종현/작업중/기존 우선순위·일정 보존.",
+      "evidence": "notion-2.3-review-state-final.png"
+    },
+    "backend_handoff_wait_confirmation": {
+      "task": "2.3",
+      "result": "사용자 C 답변을 추가 기록하고 본문 재조회 확인. 기존 속성 보존.",
+      "evidence": "notion-2.3-handoff-wait-confirmed.png"
+    },
+    "publish_ready": {
+      "states": {
+        "2.2": "BE 연동 대기",
+        "2.3": "BE 연동 대기",
+        "2.6": "퍼블리싱 완료",
+        "2.10": "BE 연동 대기"
+      },
+      "result": "4 TASK 상태 선택 후 본문 최신 진행·검증·잔여 추가 및 각 본문 재조회 확인. 담당·우선순위·일정 보존.",
+      "proofs": [
+        "notion-2.2-publish-ready.png",
+        "notion-2.3-publish-ready.png",
+        "notion-2.6-publish-ready.png",
+        "notion-2.10-publish-ready.png"
+      ]
+    }
+  },
+  "not_executed": [
+    "commit",
+    "push",
+    "main merge",
+    "deploy",
+    "real member/provider calls",
+    "REA install/run"
+  ],
+  "session_regression": {
+    "command": "node --experimental-strip-types --test tests/functions/jonghyun/mobile-web-session.test.ts",
+    "result": "PASS9/9",
+    "scope": "이전 동일 작업 체크포인트의 session adapter 검사. 이후 해당 제품 파일 변경 없음. 실제 네이버·탈퇴 호출 아님."
+  },
+  "android": {
+    "record": "android-runtime/results.json",
+    "result": "대표 항목 관찰·발견 결함 보완·원복 완료; 전체 화면/출시 QA 통과 아님"
+  },
+  "previous_checkpoint": "verification-117-checkpoint.json; historical observations retained",
+  "android_followup": {
+    "result": "N09~N14 representative actual Android observations; limitations in android-runtime/results.json",
+    "priority": "Android app first, web supplementary",
+    "settings_restored": true,
+    "source_hashes": {
+      "apps/mobile/src/screens/AuthAiScreens.tsx": "064e551ffa85e283a260cd43a2025f93d1f6bf6d5fd5fe424f1ee8e86d9b2bbc",
+      "apps/mobile/src/screens/BrowseScreens.tsx": "1a2047b1fcbc64bf888dde8ca9aedaeca29112146cb0c1207060a19cec5d1d5c",
+      "apps/mobile/src/screens/CommunityScreens.tsx": "195c81f5ec5402a093e7f8d8e66e8617a00473ee05c689d3d9ea15f312d940ac",
+      "apps/mobile/src/screens/RemoteMemberScreens.tsx": "020abcdf94a8dc4ee42f3123286aa00fab1e0727f0015edd70f7911a7420a473",
+      "apps/mobile/src/screens/RemoteScreens.tsx": "79a4e8e56f2fe96c64b7a52ac8c444f060550cfbc1f2ccade55fc064678289a1",
+      "apps/mobile/src/presentation/ux-form.tsx": "6cb76ac148df144ea4b63c331f4a43e4c201262569b49fe3be3c339ef6fb31ad",
+      "apps/mobile/src/presentation/ux-modal-sheet.tsx": "b60c66958f0987a717ce2c07ee0f4764d0efef5968438d83415a8e0e6eb16858",
+      "apps/mobile/src/presentation/member-ux.tsx": "f35f12ac118f11dbc04470a45c6b573e09631aa74612a2e82231dbcfcc4a514c"
+    }
+  },
+  "android_export": {
+    "command": "EXPO_OFFLINE=1 CI=1 EXPO_PUBLIC_DATA_MODE=preview node node_modules/expo/bin/cli export --platform android --clear --output-dir /private/tmp/yumidang-ux-review-state-android-20261023",
+    "result": "PASS",
+    "bundle": "entry-61b761bb9dbc81147df055b47e4ca116.hbc",
+    "sha256": "4a4fcc08c3ad3d2552763b39d2b87642159be0cadc6378739c8ba55ba2990fcb",
+    "log": "/private/tmp/yumidang-ux-review-state-android-export-20261023.log",
+    "scope": "현재 소스 Android Hermes 예시 번들 생성. APK/AAB 설치·실회원·운영 검증 아님."
+  },
+  "compact_android": {
+    "result": "작은 화면의 대표 경로 관찰·키보드 좌표 결함 수정 후 재검증",
+    "viewport": "840x1800 physical, density420, width320dp, font200%",
+    "record": "compact-qa.md / android-runtime/results.json compact_checks",
+    "source_hashes": {
+      "apps/mobile/src/ui.tsx": "e7192f3de58074d3169748b2add5516f2fdf514ad0dcd2c3477ba8aaadf7b848",
+      "apps/mobile/src/presentation/ux-form.tsx": "4900d619951318b2c8724b232b981b305025e052f90b7a2d9b05deb814801915",
+      "apps/mobile/src/presentation/ux-modal-sheet.tsx": "dd600a4e3a8652be48f683dd16e7b894db6aeb9382655ed5e1229f95bf473157"
+    },
+    "settings_restored": true,
+    "restoration": "android-runtime/compact-restored-settings.json",
+    "resources": "dedicated AVD and Metro8140 terminated",
+    "limits": [
+      "320dp200%의 긴 이탈 안내는 스크롤로 두 조작에 접근. 제목·설명·두 조작이 한 화면에 동시에 표시된다고 주장하지 않음.",
+      "실서버·실회원·독립 UT·출시 설치본 검증 아님."
+    ],
+    "android_export_checkpoint": {
+      "command": "EXPO_OFFLINE=1 CI=1 EXPO_PUBLIC_DATA_MODE=preview node node_modules/expo/bin/cli export --platform android --clear --output-dir /private/tmp/yumidang-ux-compact-android-20261023",
+      "result": "PASS",
+      "bundle": "entry-2bbaf4f005a776eb281be7f22254094c.hbc",
+      "sha256": "f78dc49853392e87527b4aa0f2dd307aa640902183a0f3a6a327bdfac56ef9ed",
+      "log": "/private/tmp/yumidang-ux-compact-android-export-20261023.log",
+      "scope": "Android Hermes 예시 번들 생성. 설치용 APK/AAB·운영 앱 검증 아님."
+    }
+  },
+  "review_submission_followup": {
+    "source_hashes": {
+      "apps/mobile/src/presentation/member-ux.tsx": "e03a432275db672e68c39e5b063ab64b3c3dabd9d5aba797770f7e8d0f4535b9"
+    },
+    "case": "서버가 확인한 본인 제출을 정확히 안내",
+    "evidence": "tests/mobile/ux-member.test.mjs 신규4cases, 전체174건 로그",
+    "limits": "새 분기의 실제 기기/실서버 관찰 아님. 기존 원문·권한·동의·공개 조건 변경 없음.",
+    "new_decision_needed": false
+  },
+  "remote_dependency_check": {
+    "date": "2026-10-23",
+    "method": "git ls-remote --heads origin, local object comparison and git merge-base --is-ancestor against main",
+    "main": "522be4ee3d594d53eec6978da0d0f23a3596c529",
+    "branches": {
+      "minkyu/backend100-20261012": "831ead2ce554a672793cf0da1546f351ddcf61ce",
+      "minkyu/foundation-harness": "ba6038aa25e93b2ea4b63e494e323ec2da7cdcbe",
+      "minkyu/handoff-20261005": "2d4cbf47c03e86e679b7c6cdea1d047cdb7f31a9",
+      "minkyu/wbs-backend-20261017": "8aff6e99ed189568b6a7a3a1d8e49cf6f860e589"
+    },
+    "all_observed_backend_heads_are_main_ancestors": true,
+    "result": "관찰한 원격 민규 브랜치는 모두 main에 이미 포함. 새로 연결할 계약 없음. 미공유 작업/인계는 이 확인 범위 밖.",
+    "writes": "fetch/checkout/merge/commit/push/deploy 없음. 원격 조회만 실행."
+  },
+  "backend_handoff_wait_user_resolution": {
+    "date": "2026-10-23",
+    "source": "사용자 직접 답변",
+    "choice": "C",
+    "decision": "아직 새 인계 없음 — 기존 후속 요청을 유지하고 실제 연결은 대기",
+    "scope": [
+      "후기 AI3종 독립 동의",
+      "행사 ID별 공고 조회",
+      "직접 입력 행사 저장",
+      "AI 이용 가능 상태",
+      "기존 native 인증 인계"
+    ],
+    "effect": "자료 선택 질문은 해소. 실제 구현/연동은 완료 아님. 민규 최신 계약/인계 수신 뒤 종현 클라이언트 연결을 재개."
+  },
+  "sharing_authorization": {
+    "date": "2026-10-23",
+    "source": "사용자 명시 요청: WBS 업데이트 후 커밋/푸시",
+    "branch": "jonghyun/ux-implementation-20261023",
+    "scope": "현재 격리 작업의 제품·클라이언트 테스트·UI 문서·검증 증거. main 병합·배포 제외.",
+    "historical_execution_records": "이 문서와 이전 인수인계의 미커밋/미푸시/미실행은 해당 검증 시점 기록. 최신 공유 결과는 git 원격 리비전과 Notion 공유 완료 기록을 따른다."
+  }
+}

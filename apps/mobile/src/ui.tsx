@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useId, useImperativeHandle, useRef } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -17,10 +17,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets, useSafeAreaFrame } from "react-native-safe-area-context";
 import { useApp } from "./state";
 import { useFocusEffect } from "expo-router";
 import { maskName } from "./domain";
+import { useFormErrorTarget, useUxFocus, useUxScrollViewport, useUxKeyboardOffset, UxFocusProvider, type UxFocusController } from "./presentation/ux-form";
 import type { Member, Post, EventItem } from "./types";
 
 export const colors = {
@@ -63,6 +64,18 @@ export function Icon({
       importantForAccessibility="no-hide-descendants"
     />
   );
+}
+/** The transparent 44px control reserves layout space, so adjacent hit areas never overlap. */
+export function IconButton({ name, accessibilityLabel, onPress, size = 21, color = colors.ink, style, disabled = false }: {
+  name: React.ComponentProps<typeof Ionicons>["name"];
+  accessibilityLabel: string; onPress: () => void; size?: number;
+  color?: ColorValue; style?: ViewStyle; disabled?: boolean;
+}) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel}
+    accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
+    style={({ pressed }) => [{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }, style, pressed && { opacity: 0.65 }]}>
+    <Icon name={name} size={size} color={color} />
+  </Pressable>;
 }
 export function Body({
   children,
@@ -171,6 +184,8 @@ export function Button({
   icon,
   testID,
   style,
+  focusRef,
+  accessibilityHint,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -180,9 +195,14 @@ export function Button({
   icon?: React.ComponentProps<typeof Ionicons>["name"];
   testID?: string;
   style?: ViewStyle;
+  focusRef?: React.Ref<View>;
+  accessibilityHint?: string;
 }) {
   return (
     <Pressable
+      ref={focusRef}
+      accessibilityHint={accessibilityHint}
+      accessible
       testID={testID}
       accessibilityLabel={typeof children === "string" ? children : undefined}
       accessibilityRole="button"
@@ -220,13 +240,20 @@ export function TextButton({
   children,
   onPress,
   color = colors.primary,
+  focusRef,
+  accessibilityHint,
 }: {
   children: React.ReactNode;
   onPress: () => void;
   color?: string;
+  focusRef?: React.Ref<View>;
+  accessibilityHint?: string;
 }) {
   return (
     <Pressable
+      ref={focusRef}
+      accessible
+      accessibilityHint={accessibilityHint}
       accessibilityRole="button"
       onPress={onPress}
       style={{ paddingVertical: 8 }}
@@ -240,14 +267,21 @@ export function Chip({
   selected = false,
   onPress,
   disabled = false,
+  focusRef,
+  accessibilityHint,
 }: {
   children: React.ReactNode;
   selected?: boolean;
   onPress: () => void;
   disabled?: boolean;
+  focusRef?: React.Ref<View>;
+  accessibilityHint?: string;
 }) {
   return (
     <Pressable
+      ref={focusRef}
+      accessibilityHint={accessibilityHint}
+      accessible
       accessibilityRole="button"
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
@@ -277,31 +311,55 @@ export function Field({
   label,
   error,
   hint,
+  required = false,
+  inputRef,
+  errorOrder,
   ...props
-}: TextInputProps & { label?: string; error?: string; hint?: string }) {
+}: TextInputProps & {
+  label?: string; error?: string; hint?: string; required?: boolean;
+  inputRef?: React.Ref<TextInput>; errorOrder?: number;
+}) {
+  const generatedId = useId();
+  const localRef = useRef<TextInput | null>(null);
+  useImperativeHandle(inputRef, () => localRef.current!);
+  const id = props.nativeID || `field-${generatedId.replace(/:/g, "")}`;
+  const isRequired = required || /(?:[·*]\s*필수|\*)\s*$/.test(label || "");
+  const displayLabel = label?.replace(/\s*(?:[·*]\s*필수|\*)\s*$/, "");
+  const hintId = `${id}-hint`;
+  const errorId = `${id}-error`;
+  const uxFocus = useUxFocus();
+  const focus = useCallback(() => uxFocus.focusTarget(localRef.current, { input: true }), [uxFocus]);
+  useFormErrorTarget({ id, error, focus, order: errorOrder });
+  const webAccessibility = Platform.OS === "web" ? {
+    "aria-describedby": [hint && hintId, error && errorId].filter(Boolean).join(" ") || undefined,
+    "aria-invalid": !!error,
+    "aria-required": isRequired,
+  } : {};
   return (
-    <View style={{ gap: 8 }}>
-      {label && <Text style={s.label}>{label}</Text>}
+    <View style={{ gap: 8, minWidth: 0 }}>
+      {displayLabel && <View style={s.fieldLabelRow}>
+        <Text style={s.label}>{displayLabel}</Text>
+        {isRequired && <View style={s.requiredBadge} accessible={false}>
+          <Text style={s.requiredText}>필수</Text>
+        </View>}
+      </View>}
+      {hint && <Text nativeID={hintId} style={[s.body, s.small, s.muted]}>{hint}</Text>}
       <TextInput
-        placeholderTextColor={colors.faint}
-        accessibilityLabel={label || props.placeholder}
         {...props}
+        placeholderTextColor={colors.faint}
+        accessibilityLabel={`${props.accessibilityLabel || displayLabel || props.placeholder || "입력"}${isRequired ? ", 필수" : ""}`}
+        accessibilityHint={Platform.OS === "web" ? undefined : [hint, error].filter(Boolean).join(". ") || undefined}
+        {...webAccessibility}
+        nativeID={id}
+        onFocus={(event) => { uxFocus.revealTarget(localRef.current); props.onFocus?.(event); }}
+        ref={localRef}
         style={[
           s.input,
           props.multiline && { minHeight: 100, textAlignVertical: "top" },
-          error && { borderColor: colors.red },
           props.style,
         ]}
       />
-      {error ? (
-        <Body small style={{ color: colors.red }}>
-          {error}
-        </Body>
-      ) : hint ? (
-        <Body small muted>
-          {hint}
-        </Body>
-      ) : null}
+      {error && <Text nativeID={errorId} accessibilityLiveRegion="polite" style={[s.body, s.small, { color: colors.red }]}>{error}</Text>}
     </View>
   );
 }
@@ -316,10 +374,15 @@ export function Section({
   onPress?: () => void;
   children: React.ReactNode;
 }) {
+  const isRequired = /\*\s*$/.test(title);
+  const displayTitle = title.replace(/\s*\*\s*$/, "");
   return (
     <View style={{ gap: 14 }}>
       <Row between>
-        <Title>{title}</Title>
+        <View style={s.fieldLabelRow} accessible accessibilityLabel={`${displayTitle}${isRequired ? ", 필수" : ""}`}>
+          <Title>{displayTitle}</Title>
+          {isRequired && <View style={s.requiredBadge} accessible={false}><Text style={s.requiredText}>필수</Text></View>}
+        </View>
         {action && onPress && (
           <TextButton onPress={onPress}>{action} ›</TextButton>
         )}
@@ -638,6 +701,8 @@ export function Screen({
   scroll = true,
   back = true,
   onBack,
+  backLabel = "뒤로 가기",
+  focusController,
 }: {
   children: React.ReactNode;
   title?: string;
@@ -647,6 +712,8 @@ export function Screen({
   scroll?: boolean;
   back?: boolean;
   onBack?: () => void;
+  backLabel?: string;
+  focusController?: UxFocusController;
 }) {
   useFocusEffect(
     useCallback(() => {
@@ -675,9 +742,20 @@ export function Screen({
   );
   const app = useApp();
   const insets = useSafeAreaInsets();
+  const safeFrame = useSafeAreaFrame();
+  const localFocus = useUxFocus();
+  const uxFocus = focusController || localFocus;
+  const scrollRef = useRef<ScrollView>(null);
+  const viewport = useUxScrollViewport(uxFocus, scrollRef);
+  const keyboard = useUxKeyboardOffset(safeFrame.y);
+  useFocusEffect(useCallback(() => {
+    uxFocus.setEnabled(true);
+    return () => uxFocus.setEnabled(false);
+  }, [uxFocus]));
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <UxFocusProvider controller={uxFocus}><KeyboardAvoidingView
+      keyboardVerticalOffset={keyboard.keyboardVerticalOffset} onLayout={keyboard.onLayout}
+      behavior={Platform.OS === "ios" ? "padding" : Platform.OS === "android" ? "height" : undefined}
       style={{
         flex: 1,
         backgroundColor: colors.background,
@@ -689,7 +767,7 @@ export function Screen({
           {!tab && back ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="뒤로 가기"
+              accessibilityLabel={backLabel}
               onPress={onBack || app.back}
               style={s.iconButton}
             >
@@ -702,6 +780,12 @@ export function Screen({
       )}
       {scroll ? (
         <ScrollView
+          ref={scrollRef}
+          style={{ flex: 1 }}
+          onScroll={viewport.onScroll}
+          onLayout={viewport.onLayout}
+          scrollEventThrottle={16}
+          scrollsChildToFocus
           contentContainerStyle={[s.content, { paddingBottom: tab ? 100 : 24 }]}
           keyboardShouldPersistTaps="handled"
         >
@@ -717,7 +801,7 @@ export function Screen({
           {footer}
         </View>
       )}
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingView></UxFocusProvider>
   );
 }
 export const s = StyleSheet.create({
@@ -732,7 +816,7 @@ export const s = StyleSheet.create({
     color: colors.ink,
   },
   large: { fontSize: 28, lineHeight: 37, letterSpacing: -1 },
-  row: { flexDirection: "row", alignItems: "center", gap: 8 },
+  row: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", minWidth: 0, gap: 8 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 18,
@@ -760,7 +844,7 @@ export const s = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  buttonText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  buttonText: { fontSize: 15, fontWeight: "700", color: "#fff", flexShrink: 1, textAlign: "center" },
   secondary: {
     backgroundColor: "#fff",
     borderWidth: 1,
@@ -774,7 +858,10 @@ export const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
-  label: { fontSize: 13, fontWeight: "600", color: colors.ink },
+  label: { fontSize: 13, fontWeight: "600", color: colors.ink, flexShrink: 1 },
+  fieldLabelRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 },
+  requiredBadge: { backgroundColor: colors.lavender, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
+  requiredText: { color: colors.primary, fontSize: 10, fontWeight: "700" },
   input: {
     minHeight: 48,
     borderWidth: 1,
@@ -833,14 +920,15 @@ export const s = StyleSheet.create({
     overflow: "hidden",
   },
   header: {
-    height: 64,
+    minHeight: 64,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
     backgroundColor: colors.background,
   },
-  iconButton: { height: 36, width: 30, justifyContent: "center" },
+  iconButton: { minHeight: 44, width: 44, marginLeft: -7, justifyContent: "center", alignItems: "center" },
   content: { paddingHorizontal: 20, paddingTop: 12, gap: 22 },
   footer: {
     padding: 18,

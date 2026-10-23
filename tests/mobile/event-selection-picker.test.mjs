@@ -1,6 +1,6 @@
 // Isolated hook/transport regression: no Expo runtime, OAuth or external API calls.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import vm from "node:vm";
@@ -8,6 +8,8 @@ import test from "node:test";
 const appRoot = path.resolve(import.meta.dirname, "../../apps/mobile");
 const requireApp = createRequire(path.join(appRoot, "package.json"));
 const ts = requireApp("typescript");
+const sourceRoot = path.join(appRoot, "src");
+const fallbackSourceRoot = process.env.YUMIDANG_UX_FALLBACK_SOURCE_ROOT;
 const fixture = { id: "10000000-0000-4000-8000-000000000001", title: "합성 공연", state: "upcoming", sourceStatus: "active", precision: "date", startsOn: "2026-11-01", endsOn: "2026-11-01" };
 const text = (node) => Array.isArray(node) ? node.map(text).join("") : typeof node === "string" ? node : node?.props?.children?.map(text).join("") ?? "";
 function nodes(node) { return Array.isArray(node) ? node.flatMap(nodes) : node && typeof node === "object" ? [node, ...(node.props?.children ?? []).flatMap(nodes)] : []; }
@@ -22,6 +24,11 @@ function harness(service, props = {}, detail = false) {
       return [slots[key], (next) => { const value = typeof next === "function" ? next(slots[key]) : next; if (!Object.is(slots[key], value)) { slots[key] = value; dirty = true; } }];
     },
     useRef(initial) { const key = index++; if (!(key in slots)) slots[key] = { current: initial }; return slots[key]; },
+    useCallback(callback, deps) {
+      const key = index++, previous = slots[key];
+      if (!previous || deps.some((value, i) => !Object.is(value, previous.deps[i]))) slots[key] = { callback, deps };
+      return slots[key].callback;
+    },
     useEffect(effect, deps) {
       const key = index++, previous = slots[key];
       if (!previous || deps.some((value, i) => !Object.is(value, previous.deps[i]))) {
@@ -37,7 +44,9 @@ function harness(service, props = {}, detail = false) {
   };
   function load(file) {
     const exports = {};
-    const compiled = ts.transpileModule(readFileSync(path.join(appRoot, "src", file), "utf8"), {
+    const primary = path.join(sourceRoot, file);
+    const sourceFile = !existsSync(primary) && fallbackSourceRoot ? path.join(fallbackSourceRoot, file) : primary;
+    const compiled = ts.transpileModule(readFileSync(sourceFile, "utf8"), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
     }).outputText;
     vm.runInNewContext(compiled, {
@@ -45,12 +54,13 @@ function harness(service, props = {}, detail = false) {
       require(id) {
         if (id === "react") return react;
         if (id === "react-native") return { View: "View", Linking: {} };
-        if (id === "expo-router") return { useFocusEffect() {}, router: { push(route) { routes.push(JSON.parse(JSON.stringify(route))); } } };
+        if (id === "expo-router") return { useFocusEffect(callback) { react.useEffect(callback, [callback]); }, router: { push(route) { routes.push(JSON.parse(JSON.stringify(route))); } } };
         if (id === "../api") return { ApiError };
         if (id === "../remote") return { useService: () => servicePort, useServiceSession: () => ({ epoch: 0, authenticated: false }), serviceSessionEpoch: () => 0 };
         if (id === "../state") return { useApp: () => ({ navigate() {} }) };
         if (id === "../ui") return ui;
         if (id === "../presentation/events/EventPresentation") return { EventListCard: "EventListCard", EventDetailContent: "EventDetailContent" };
+        if(id === "../presentation/client-feedback") { const actual=load("presentation/client-feedback.tsx");return {...actual,RecoveryCard:"RecoveryCard"}; }
         if (id === "../presentation/events/event-selection") return load("presentation/events/event-selection.ts");
         return {};
       },
@@ -98,7 +108,8 @@ test("empty results offer direct input while network failure never says zero res
   assert.equal(entered, true);
   const failed = harness(async () => { throw new Error("network"); });
   await failed.flush();
-  assert.equal(failed.find("Empty").props.action, "다시 시도");
+  assert.equal(failed.find("RecoveryCard").props.kind, "retry");
+  assert.match(failed.find("RecoveryCard").props.message, /불러오지 못/);
   assert.ok(!nodes(failed.tree).some(node => node.type === "Empty" && node.props.title === "조건에 맞는 행사가 없어요"));
 });
 
@@ -122,4 +133,32 @@ test("anonymous detail CTA preserves local event create return path without star
   const route = new URL(h.routes[0].params.returnPath, "https://local.invalid");
   assert.equal(route.pathname, "/create");
   assert.equal(route.searchParams.get("id"), `event:${fixture.id}`);
+});
+
+test("Enter and button execute the same query once, while composition and same-frame repeats do not send", async () => {
+  let finish;
+  const h = harness(async (query) => query.query ? new Promise(resolve => { finish = resolve; }) : { events: [fixture], nextCursor: null });
+  await h.flush();
+  h.find("Field").props.onChangeText("  한글 공연  "); await h.flush();
+  const input = h.find("Field"), button = h.find("Button", "검색");
+  input.props.onSubmitEditing({ nativeEvent: { isComposing: true } });
+  assert.equal(h.calls.length, 1);
+  input.props.onSubmitEditing({ nativeEvent: { isComposing: false } });
+  button.props.onPress(); // Same render/event turn, before busy state commits.
+  input.props.onSubmitEditing({ nativeEvent: {} });
+  await h.flush();
+  assert.equal(h.calls.length, 2);
+  assert.deepEqual(h.calls[1], { query: { mode: "post_selection", query: "한글 공연" }, cursor: undefined });
+  button.props.onPress(); await h.flush(); assert.equal(h.calls.length, 2);
+  finish({ events: [fixture], nextCursor: null }); await h.flush();
+  h.find("Field").props.onSubmitEditing({ nativeEvent: {} }); await h.flush();
+  assert.equal(h.calls.length, 3); // A deliberate retry after completion is allowed.
+  finish({ events: [fixture], nextCursor: null }); await h.flush();
+});
+
+test("service direct-input entry exposes its actual button ref for nested return focus", async () => {
+  const directInputRef = { current: null };
+  const h = harness(async () => ({ events: [], nextCursor: null }), { onDirectInput() {}, directInputRef });
+  await h.flush();
+  assert.equal(h.find("Button", "행사 직접 입력").props.focusRef, directInputRef);
 });

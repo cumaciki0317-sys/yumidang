@@ -1,6 +1,6 @@
-import React, { useEffect, useSyncExternalStore } from "react";
-import { subscribeWebMemberConfiguration, webMemberConfiguration } from "../web-member-connection";
-import { serviceMode, serviceConfigurationError, installWebMemberConnection, installMemberSessionDetails, installMemberSessionPort, installPhotoStoragePort, installMemberReportCaptureUpload, serviceSessionEpoch, useMemberPorts } from "../remote";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
+import { createWebMemberConnectionLease, reportWebMemberConnectionStatus, subscribeWebMemberConfiguration, webMemberConfiguration } from "../web-member-connection";
+import { serviceMode, serviceConfigurationError, installWebMemberConnection, installRestoredMemberSessionDetails, installMemberSessionPort, installPhotoStoragePort, installMemberReportCaptureUpload, serviceSessionEpoch, useMemberPorts } from "../remote";
 import { Platform, Pressable, Text, View } from "react-native";
 import { Stack, router, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -61,6 +61,8 @@ function Frame() {
       {app.toast && (
         <View
           pointerEvents="none"
+          accessible
+          accessibilityLiveRegion="polite"
           style={{
             position: "absolute",
             bottom: 90,
@@ -80,22 +82,21 @@ function Frame() {
     </View>
   );
 }
-function MemberConnection() {
+export function MemberConnection() {
   const options = useSyncExternalStore(subscribeWebMemberConfiguration, webMemberConfiguration, () => null);
   const ports = useMemberPorts();
-  useEffect(() => {
-    if (Platform.OS !== "web" || !serviceMode || !options) return;
-    try { installWebMemberConnection(options); }
-    catch { installMemberSessionPort(null); installPhotoStoragePort(null); installMemberReportCaptureUpload(null); }
-    return () => { installMemberSessionPort(null); installPhotoStoragePort(null); installMemberReportCaptureUpload(null); };
-  }, [options]);
+  const connection = useRef<ReturnType<typeof createWebMemberConnectionLease> | null>(null);
+  if (connection.current === null) connection.current = createWebMemberConnectionLease(installWebMemberConnection, () => {
+    installMemberSessionPort(null); installPhotoStoragePort(null); installMemberReportCaptureUpload(null);
+  }, reportWebMemberConnectionStatus);
+  useEffect(() => connection.current!.connect(Platform.OS === "web" && serviceMode ? options : null), [options]);
   useEffect(() => {
     if (!ports.session) return;
     const controller = new AbortController(), epoch = serviceSessionEpoch();
     void ports.session.restore(controller.signal).then(details => {
-      if (!controller.signal.aborted && serviceSessionEpoch() === epoch) installMemberSessionDetails(details);
+      if (!controller.signal.aborted && serviceSessionEpoch() === epoch) installRestoredMemberSessionDetails(details, epoch);
     }).catch(() => {
-      if (!controller.signal.aborted && serviceSessionEpoch() === epoch) installMemberSessionDetails(null);
+      if (!controller.signal.aborted && serviceSessionEpoch() === epoch) installRestoredMemberSessionDetails(null, epoch);
     });
     return () => controller.abort();
   }, [ports.session]);

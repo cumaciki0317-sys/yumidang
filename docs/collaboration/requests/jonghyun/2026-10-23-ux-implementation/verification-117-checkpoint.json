@@ -1,0 +1,114 @@
+{
+  "typecheck": {
+    "command": "npm --prefix apps/mobile run typecheck",
+    "result": "PASS"
+  },
+  "lint": {
+    "command": "npm --prefix apps/mobile run lint",
+    "result": "PASS, no warnings"
+  },
+  "unit": {
+    "files": [
+      "ux-common.test.mjs",
+      "ux-common-completion.test.mjs",
+      "ux-native-focus.test.mjs",
+      "ux-signup.test.mjs",
+      "ux-member.test.mjs",
+      "ux-recovery.test.mjs",
+      "ux-pagination-auth.test.mjs",
+      "client-auth-connection.test.mjs",
+      "member-failure-state.test.mjs",
+      "event-selection-picker.test.mjs"
+    ],
+    "unique_cases": 117,
+    "result": "PASS, final integrated single run117/117",
+    "log": "ux-native-completion-tests.log",
+    "execution_detail": "첫 보완 통합에서는 인증 테스트 mock에 React.createContext가 없어30개 실패. mock의 module import 지원만 추가하고 모든 제품 assertion을 유지한 뒤 전체117건 단일 재실행 통과.",
+    "environment": "Node VM, production TSX, synthetic React/RN/router/network; not actual device/server/UT"
+  },
+  "web_export": {
+    "command": "EXPO_OFFLINE=1 CI=1 EXPO_PUBLIC_DATA_MODE=preview node node_modules/expo/bin/cli export --clear --platform web --output-dir /private/tmp/yumidang-ux-implementation-web-20261023",
+    "result": "PASS",
+    "log": "/private/tmp/yumidang-ux-native-final-export-20261023.log",
+    "entry": "entry-e8a71e2b54ffc464af82db84164c9a99.js",
+    "sha256": "0931a6570674b69ade2607cb68c038b6af1a96ac2891d176c0653cd95c279968",
+    "final_reload_smoke": "새 탭에서 예시 로그인→작성→제목 입력→제출 후 실제 DOM 초점 지금이당 버튼·제목 보존·captured error log0 확인"
+  },
+  "browser": {
+    "tool": "cua_repl, Chrome browser2",
+    "data": "preview synthetic fixtures only",
+    "observed_css_viewport": {
+      "width": 341,
+      "height": 738
+    },
+    "requested_viewport_width": 375,
+    "request_not_observation": true,
+    "checks": [
+      "form first invalid category focused and typed title retained",
+      "label/help/input/plain error and separate required badges",
+      "search input right button position does not overlap input at width341",
+      "Enter search changes visible fixtures",
+      "closing event picker restores trigger focus and preserves title",
+      "owner detail single bottom management trigger and sheet actions",
+      "management applicant view opens",
+      "event related-post preview -> full list with all/recruiting and newest labels",
+      "final export reload and management smoke at default viewport",
+      "latest native-focus supplement export: category actual button focus and title preserved"
+    ],
+    "limits": [
+      "not full device or all-screen accessibility proof",
+      "not authenticated live server validation",
+      "large server-linked event list pagination NOT_RUN"
+    ],
+    "viewport_reset": true,
+    "prior_width_scope": "341x738은 이전 체크포인트. 이번 최종 웹 확인은 기본 viewport로 수행, 임의375px 확인으로 확대하지 않음."
+  },
+  "preservation": {
+    "main_product_changes": false,
+    "foundation_original10_hashes": "unchanged when checked",
+    "ownership": "통과: 158개 경로, 작업자 jonghyun, 정책 HEAD:backend/ownership.json",
+    "diff_check": "PASS after native supplement"
+  },
+  "notion": {
+    "tasks": {
+      "2.2": "f5444227a43583de92c081c3f911bcba",
+      "2.3": "ec644227a4358293a395015943dd0636",
+      "2.6": "74244227a43582e5ab72814958790b64",
+      "2.10": "3ea44227a4358264b18501f23b59a11f"
+    },
+    "result": "structured new handoff appended and old2026-10-21 record visible; status 작업 중 visibly selected for each",
+    "reason": "UX selections resolved; independent Jonghyun device/integration QA remains; not entire TASK final completion",
+    "android_followup": {
+      "tasks": [
+        "2.2",
+        "2.3",
+        "2.6",
+        "2.10"
+      ],
+      "result": "2026-10-23 추가 구현·Android 검증 인수인계 append 후 본문을 다시 읽어 확인. 기존 기록/담당/우선순위/일정/작업 중 상태 보존.",
+      "evidence": [
+        "notion-2.2-android-followup.png",
+        "notion-2.3-android-followup.png",
+        "notion-2.6-android-followup.png",
+        "notion-2.10-android-handoff.png"
+      ]
+    }
+  },
+  "not_executed": [
+    "commit",
+    "push",
+    "main merge",
+    "deploy",
+    "real member/provider calls",
+    "REA install/run"
+  ],
+  "session_regression": {
+    "command": "node --experimental-strip-types --test tests/functions/jonghyun/mobile-web-session.test.ts",
+    "result": "PASS9/9",
+    "scope": "이전 동일 작업 체크포인트의 session adapter 검사. 이후 해당 제품 파일 변경 없음. 실제 네이버·탈퇴 호출 아님."
+  },
+  "android": {
+    "record": "android-runtime/results.json",
+    "result": "대표 항목 관찰·발견 결함 보완·원복 완료; 전체 화면/출시 QA 통과 아님"
+  }
+}
