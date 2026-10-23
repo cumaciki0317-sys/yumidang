@@ -179,6 +179,26 @@ class CleanupGuardTests(unittest.TestCase):
             owner=SimpleNamespace(root=root,value=v,reviewed=m.ReviewedCurrentAI2223Execution(v),raw=raw,receipt_raw=b'receipt',files=SimpleNamespace(private=lambda p:raw if Path(p).name=='signed-ai-binding-private.json'else b'receipt'),sources=lambda:None,r=None,cleaning=True,failures=[],done=threading.Event(),deadline=time.monotonic()+300,memory_last=time.monotonic())
             m._CurrentAI2223Run.active(owner)
 
+class CurrentMonitorTests(unittest.TestCase):
+    def owner(self,memory):
+        path='tests/integration/minkyu/deadline_readonly_transport.py';transport=m._current_ai2223_module(path,{path:hashlib.sha256((ROOT/path).read_bytes()).hexdigest()})
+        path='tests/integration/minkyu/ai_positive_discovery_local.py';positive=m._current_ai2223_module(path,{path:hashlib.sha256((ROOT/path).read_bytes()).hexdigest()})
+        class Done:
+            def __init__(self):self.waits=[]
+            def is_set(self):return len(self.waits)>=2
+            def wait(self,seconds):self.waits.append(seconds)
+        return SimpleNamespace(done=Done(),failures=[],memory=memory,transport=transport,positive=positive,memory_error=None)
+    def test_current_monitor_one_second_cadence_keeps_existing_maintain_threshold(self):
+        probes=[];owner=self.owner(lambda minimum:probes.append(minimum))
+        m._CurrentAI2223Run.monitor(owner)
+        self.assertEqual(probes,[786432,786432]);self.assertTrue(all(0<=n<=1 for n in owner.done.waits));self.assertFalse(owner.failures)
+    def test_monitor_failure_retains_fixed_safe_code_and_stops_new_probes(self):
+        probes=[]
+        def memory(minimum):probes.append(minimum);raise ValueError('POSITIVE_MEMORY_PROBE')
+        owner=self.owner(memory);m._CurrentAI2223Run.monitor(owner)
+        self.assertEqual(probes,[786432]);self.assertEqual(owner.failures,['CURRENT_AI2223_MEMORY_MONITOR'])
+        self.assertEqual(owner.memory_error,{'type':'VALUE_ERROR','code':'POSITIVE_MEMORY_PROBE'});self.assertFalse(owner.done.waits)
+
 class CurrentCasesTests(unittest.TestCase):
     @staticmethod
     def execute(failure=False):
@@ -302,13 +322,32 @@ class FailureReceiptTests(unittest.TestCase):
         import threading
         saved={}
         state=WholeStateTests().state()
-        owner=SimpleNamespace(samples=[2000000],memory=lambda _:None,thread=None,monitor=lambda:None,active=lambda:None,
+        owner=SimpleNamespace(transport=SimpleNamespace(safe_error=lambda e:None if e is None else{'type':'VALUE_ERROR','code':'UNCLASSIFIED_FAILURE'}),memory_error=None,samples=[2000000],memory=lambda _:None,thread=None,monitor=lambda:None,active=lambda:None,
             prepare_ports=lambda:None,r=SimpleNamespace(signed_identity=lambda:None),port=SimpleNamespace(settings=lambda:{},read_sql=lambda _: 'f'),children=[],cleaning=False,
             before=None,snapshot=lambda:state,save=lambda k,v:saved.__setitem__(k,v),sources=lambda **_:None,done=threading.Event(),failures=[],
             sql_port=None,value={'sourceHead':'a'*40,'bindingSha256':'b'*64},deadline=time.monotonic()+300)
         with patch.object(m,'_CurrentAI2223Run',return_value=owner):
             with self.assertRaises(ValueError):m.run_current_ai2223(object())
         self.assertEqual(saved['current-execution-receipt.json']['status'],'FAIL');self.assertEqual(saved['current-execution-receipt.json']['preservation'],'NOT_PROVEN')
+
+
+    def test_original_and_final_failure_codes_are_separate_in_final_receipt(self):
+        import threading
+        saved={};path='tests/integration/minkyu/deadline_readonly_transport.py'
+        transport=m._current_ai2223_module(path,{path:hashlib.sha256((ROOT/path).read_bytes()).hexdigest()})
+        def failed_snapshot():raise ValueError('CURRENT_AI2223_MEMORY_OR_DEADLINE')
+        owner=SimpleNamespace(transport=transport,memory_error={'type':'VALUE_ERROR','code':'POSITIVE_MEMORY_PROBE'},samples=[2000000],memory=lambda _:None,thread=None,monitor=lambda:None,active=lambda:None,
+            prepare_ports=lambda:None,r=SimpleNamespace(signed_identity=lambda:None),port=SimpleNamespace(settings=lambda:{},read_sql=lambda _:'f'),children=[],cleaning=False,
+            before=None,snapshot=failed_snapshot,save=lambda k,v:saved.__setitem__(k,v),sources=lambda **_:None,done=threading.Event(),failures=[],
+            sql_port=None,value={'sourceHead':'a'*40,'bindingSha256':'b'*64},deadline=time.monotonic()+300)
+        with patch.object(m,'_CurrentAI2223Run',return_value=owner):
+            with self.assertRaisesRegex(ValueError,'AUTH_SETTINGS'):m.run_current_ai2223(object())
+        receipt=saved['current-execution-receipt.json']
+        self.assertEqual(receipt['status'],'FAIL');self.assertEqual(receipt['preservation'],'NOT_PROVEN')
+        self.assertEqual(receipt['originalFailure'],{'type':'VALUE_ERROR','code':'UNCLASSIFIED_FAILURE'})
+        self.assertEqual(receipt['memoryFailure'],{'type':'VALUE_ERROR','code':'POSITIVE_MEMORY_PROBE'})
+        self.assertEqual(receipt['finalFailureDetails'],[{'stage':'FINAL','failure':{'type':'VALUE_ERROR','code':'CURRENT_AI2223_MEMORY_OR_DEADLINE'}}])
+        self.assertEqual(saved['final-unavailable-private.json']['failure'],receipt['finalFailureDetails'][0]['failure'])
 
 
 class OverallDeadlineTests(unittest.TestCase):
@@ -319,7 +358,7 @@ class OverallDeadlineTests(unittest.TestCase):
             if 'unknown_at is not null'in sql:return '[{},{}]'
             if "select(clock_timestamp()"in sql:return '2026-10-21'
             return 'f'
-        owner=SimpleNamespace(samples=[2000000],memory=lambda _:None,thread=None,monitor=lambda:None,active=lambda:None,prepare_ports=lambda:None,
+        owner=SimpleNamespace(transport=SimpleNamespace(safe_error=lambda e:None if e is None else{'type':'VALUE_ERROR','code':'UNCLASSIFIED_FAILURE'}),memory_error=None,samples=[2000000],memory=lambda _:None,thread=None,monitor=lambda:None,active=lambda:None,prepare_ports=lambda:None,
             r=SimpleNamespace(signed_identity=lambda:None,ledgers=['synthetic-a','synthetic-b']),port=SimpleNamespace(settings=lambda:{'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True},closed_controls=lambda:{**{k:False for k in m.PROVISION_CLOSED_CONTROLS},'cronLaunchActiveJobs':'off'},read_sql=read_sql),
             check_capsule_and_node=lambda:None,snapshot=lambda:copy.deepcopy(state),save=lambda k,v:saved.__setitem__(k,v),added_budget_rows=lambda:{},children=[],cleaning=False,before=None,
             sources=lambda **_:None,done=threading.Event(),failures=[],sql_port=None,value={'sourceHead':'a'*40,'bindingSha256':'b'*64},binding={},invoke=lambda *_:None,deadline=time.monotonic()-1)
@@ -413,6 +452,7 @@ class StickySqlTests(unittest.TestCase):
             raw=saved['current-sql-00001-raw-private.json'];self.assertTrue(raw['closure']['closed'])
             self.assertEqual(raw['streams']['stdout']['capturedBytes'],8);self.assertTrue(port.sticky)
             self.assertEqual(saved['current-sql-00001-unknown.json']['additionalSqlPermitted'],False)
+            self.assertEqual(saved['current-sql-00001-unknown.json']['failure'],{'type':'VALUE_ERROR','code':'D03_READ_PROCESS_TIMEOUT'})
     def test_backend_absence_is_required_before_sticky_clears(self):
         with tempfile.TemporaryDirectory()as directory:
             port,_,_=self.make(Path(directory).resolve())

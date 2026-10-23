@@ -22,6 +22,30 @@ def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+_SAFE_FAILURE_CODES=frozenset((
+    'D03_READ_PROCESS_TIMEOUT','D03_READ_OUTPUT_LIMIT','D03_READ_SIGNAL_RACE_UNPROVEN',
+    'D03_READ_PG_UNPROVEN','D03_READ_COMMAND_FAILED','D03_READ_STREAM_UNPROVEN',
+    'CURRENT_AI2223_MEMORY_OR_DEADLINE','CURRENT_AI2223_EXPIRY','CURRENT_AI2223_HEAD_CHANGED',
+    'CURRENT_AI2223_SOURCE_CHANGED','CURRENT_AI2223_ORIGINAL_BYTES_CHANGED','CURRENT_AI2223_DAEMON_CHANGED',
+    'CURRENT_AI2223_APPROVAL_EXPIRED','CURRENT_AI2223_SQL_STICKY','CURRENT_AI2223_FACTORY_FAILED',
+    'CURRENT_AI2223_STREAM_FAILURE','CURRENT_AI2223_MEMORY_MONITOR','CURRENT_AI2223_OBSERVER_TIME_LIMIT',
+    'POSITIVE_MEMORY_PROBE','POSITIVE_MEMORY_LIMIT'))
+
+
+def safe_error(error):
+    """고정 label만 내보낸다. 원 exception message/argv/자격증명은 저장하지 않는다."""
+    if error is None:return None
+    for cls,label,code in ((PermissionError,'PERMISSION_ERROR','PERMISSION_DENIED'),
+            (ProcessLookupError,'PROCESS_LOOKUP_ERROR','PROCESS_LOOKUP'),
+            (subprocess.TimeoutExpired,'TIMEOUT_EXPIRED','PROCESS_TIMEOUT'),
+            (subprocess.CalledProcessError,'CALLED_PROCESS_ERROR','PROCESS_FAILED')):
+        if isinstance(error,cls):return {'type':label,'code':code}
+    label=('VALUE_ERROR'if isinstance(error,ValueError)else'RUNTIME_ERROR'if isinstance(error,RuntimeError)
+        else'OS_ERROR'if isinstance(error,OSError)else'TYPE_ERROR'if isinstance(error,TypeError)else'OTHER_ERROR')
+    code=error.args[0]if len(error.args)==1 and type(error.args[0])is str and error.args[0]in _SAFE_FAILURE_CODES else'UNCLASSIFIED_FAILURE'
+    return {'type':label,'code':code}
+
+
 def close_group(child, terminate=False):
     """직접 자식 회수와 원 PG 부재를 모두 확인한다. 조회 오류는 성공이 아니다."""
     def alive():
@@ -35,7 +59,12 @@ def close_group(child, terminate=False):
         for sig, seconds in ((signal.SIGTERM, .5), (signal.SIGKILL, 1.0)):
             live = alive(); observations.append({'signal': int(sig), 'groupPresent': live})
             if live:
-                os.killpg(child.pid, sig)
+                try:os.killpg(child.pid, sig)
+                except ProcessLookupError:
+                    # 직전 존재 관측과 실제 signal 사이에 종료될 수 있다. 새 ESRCH와 회수까지 필요하다.
+                    absent=not alive()
+                    observations.append({'signal':int(sig),'signalLookupRace':True,'freshGroupAbsent':absent})
+                    need(absent,'D03_READ_SIGNAL_RACE_UNPROVEN')
             end = time.monotonic() + seconds
             while time.monotonic() < end:
                 child.poll()
@@ -110,7 +139,7 @@ class ReviewedDeadlineReadonlyTransport:
 
     def child(self, argv, body, timeout, prefix, out_limit, err_limit):
         """원문은 유한 snapshot만 읽는다. 미종결/저장실패는 caller sticky를 유지한다."""
-        process = None; failure = None; closure = None
+        process = None; failure = None; original_failure = None; closure = None; closure_error = None
         with tempfile.TemporaryFile() as inp, tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
             inp.write(body); inp.seek(0)
             try:
@@ -123,11 +152,12 @@ class ReviewedDeadlineReadonlyTransport:
                          and os.fstat(err.fileno()).st_size <= err_limit, 'D03_READ_OUTPUT_LIMIT')
                     time.sleep(.01)
             except BaseException as error:
-                failure = error
+                failure = error; original_failure = error
             finally:
                 if process is not None:
                     try: closure = close_group(process, failure is not None)
                     except BaseException as error:
+                        closure_error = error
                         if failure is None: failure = error
                 streams = {}; captured = {}
                 for label, stream, limit in (('stdout', out, out_limit), ('stderr', err, err_limit)):
@@ -148,7 +178,8 @@ class ReviewedDeadlineReadonlyTransport:
                         'observedBytes': before.st_size, 'sha256': sha(raw), 'wholeProven': whole}
                 self.save(prefix + '-raw-private.json', {'streams': streams, 'closure': closure,
                     'returnCode': None if process is None else process.returncode,
-                    'failureType': None if failure is None else type(failure).__name__})
+                    'failureType': None if failure is None else type(failure).__name__,
+                    'originalFailure':safe_error(original_failure),'closureFailure':safe_error(closure_error)})
         need(process is not None and closure and closure['closed'], 'D03_READ_PG_UNPROVEN')
         if failure is not None: raise failure
         need(process.returncode == 0, 'D03_READ_COMMAND_FAILED')

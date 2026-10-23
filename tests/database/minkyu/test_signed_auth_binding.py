@@ -697,6 +697,30 @@ class BindingTests(unittest.TestCase):
             self.assertIsNotNone(shared,'signed cases missing')
             self.assertEqual(dump(shared),dump(extracted),'signed cases/except/finally changed')
             tree.body[tree.body.index(fn)] = copy.deepcopy(reference_main)
+        # 2026-10-23 승인: current 전용 진단/1초 monitor의 정확한 네 메서드 hunk만 허용한다.
+        # 고정 원 HEAD bytes를 확인하고, 전체 unit AST pin 이후 원 unit으로 정상화한다.
+        # 클래스 전체/legacy 함수/그 밖 current 메서드를 제외하는 규칙은 없다.
+        current_raw=subprocess.check_output(['git','show','3ff66dc9d61fe6948e9a5e44eabcaa2322ff488d:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO)
+        self.assertEqual(hashlib.sha256(current_raw).hexdigest(),'0ff3a9bab3b536d405032781143e72b3583fc4d0c367e1e96f75de5111c249cf')
+        current_reference=ast.parse(current_raw)
+        current_hunks={
+            # UNKNOWN 영수증에 safe_error 진단만 추가.
+            '_CurrentAI2223SQL.execute':('6f6747421506965828d0b6a15bb8ac242e94df96b78735efba563c958603df8c','43d339a257db41eb5d2468277f322a58a166da2577d118869bbf59ff8daf4284'),
+            # memory_error 초기값만 추가.
+            '_CurrentAI2223Run.__init__':('5021b46c6e86f82e735b48a22413f010ceea7e05dc162b372771e7ef4fa00611','7113af26f121d593ee6ab124a2aaea631a5fabd80e57f15814c78da34576d4b6'),
+            # 동일 threshold/probe/freshness를 둔 1초 monitor 및 안전 오류 보존.
+            '_CurrentAI2223Run.monitor':('da1e721e0628e5c08438c1a1bff8bb4f6e99415b565e0f56591c42e6d197e056','ad94c6a6de8726d1fe987138cf078481d7bca2787a21b58a272149cc66cbc5c9'),
+            # 원/final/memory 오류의 고정 label 진단만 추가.
+            '_run_current_ai2223':('63c7e289403b8b02d2f686d92e0aa59a4adbd1cd572371c53227ade30fd62ddf','5b15006f964937ab2e651d3c652f73c40e52e4138f208873e4fb688297f81153')}
+        for key,allowed in current_hunks.items():
+            reference=support_unit(current_reference,key)
+            self.assertEqual(hashlib.sha256(dump(reference).encode()).hexdigest(),allowed[0],key)
+            for revision in(before,after):
+                member=support_unit(revision,key)
+                if member is None:continue
+                self.assertIn(hashlib.sha256(dump(member).encode()).hexdigest(),allowed,key)
+                parent=revision if '.'not in key else support_unit(revision,key.rsplit('.',1)[0])
+                parent.body[parent.body.index(member)]=copy.deepcopy(reference)
         current={node.name:node for node in after.body if isinstance(node,(ast.FunctionDef,ast.ClassDef))}
         for node in before.body:
             if isinstance(node,(ast.FunctionDef,ast.ClassDef)):
@@ -736,6 +760,18 @@ class BindingTests(unittest.TestCase):
         fn=next(n for n in changed.body if isinstance(n,ast.FunctionDef)and n.name=='_signed_ai2223_cases')
         selected=next(n for n in fn.body if isinstance(n,ast.Try));selected.finalbody=[]
         with self.assertRaises(AssertionError):self.assert_original_python_preserved(ast.parse(RUNNER.read_text()),changed)
+
+    def test_current_process_diagnostic_allowlist_rejects_unreviewed_hunks_and_methods(self):
+        original=ast.parse(RUNNER.read_text())
+        for key in('_CurrentAI2223SQL.execute','_CurrentAI2223Run.__init__','_CurrentAI2223Run.monitor','_run_current_ai2223','_CurrentAI2223Run.active','SignedRunner.auth_user'):
+            changed=copy.deepcopy(original);member=changed
+            for name in key.split('.'):
+                member=next(n for n in member.body if isinstance(n,(ast.FunctionDef,ast.ClassDef))and n.name==name)
+            member.body.append(ast.Pass())
+            with self.subTest(key=key),self.assertRaises(AssertionError):self.assert_original_python_preserved(copy.deepcopy(original),changed)
+        changed=copy.deepcopy(original);cls=next(n for n in changed.body if isinstance(n,ast.ClassDef)and n.name=='_CurrentAI2223Run')
+        cls.body.append(ast.parse('def unreviewed_skip(self):\n    return True').body[0])
+        with self.assertRaises(AssertionError):self.assert_original_python_preserved(copy.deepcopy(original),changed)
 
     def test_original_python_functions_exact(self):
         old=subprocess.run(['git','show','HEAD:tests/integration/jonghyun/isolated_ai_contracts.py'],cwd=REPO,capture_output=True,text=True,check=True).stdout

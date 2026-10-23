@@ -3374,9 +3374,9 @@ class _CurrentAI2223SQL:
             self.guard();self.inflight=False;self.sticky=False
             self.proofs.append({'command':name,'raw':self.refs[name+'-raw-private.json'],'closure':self.refs[name+'-closed.json']})
             return result.decode().strip()
-        except BaseException:
+        except BaseException as error:
             self.inflight=False;self.sticky=True
-            self.save(name+'-unknown.json',{'status':'UNKNOWN','additionalSqlPermitted':False,'cleanupSqlPermitted':False,'automaticReplay':False})
+            self.save(name+'-unknown.json',{'status':'UNKNOWN','additionalSqlPermitted':False,'cleanupSqlPermitted':False,'automaticReplay':False,'failure':self.pure.safe_error(error)})
             raise
     def verify_evidence(self):
         self.assert_closed_state()
@@ -3393,7 +3393,7 @@ class _CurrentAI2223Run:
         self.observer=_current_ai2223_module(_CURRENT_AI2223_SUPPORT[0],self.value['sourcePins'])
         self.transport=_current_ai2223_module(_CURRENT_AI2223_SUPPORT[4],self.value['sourcePins'])
         self.files=_CurrentAI2223Files(self.private);self.failures=[];self.samples=[];self.done=threading.Event();self.thread=None
-        self.r=None;self.port=None;self.sql_port=None;self.children=[];self.cleaning=False;self.before=None;self.deadline=time.monotonic()+300;self.memory_last=None
+        self.r=None;self.port=None;self.sql_port=None;self.children=[];self.cleaning=False;self.before=None;self.deadline=time.monotonic()+300;self.memory_last=None;self.memory_error=None
         self.raw=self.files.private(self.root/'signed-ai-binding-private.json');self.binding=validate_current_ai2223_approval(reviewed,self.raw)
         receipt_raw=self.files.private(self.value['auth6Receipt']);receipt=signed_exact_json(receipt_raw)
         _current_need(hashlib.sha256(receipt_raw).hexdigest()==self.value['auth6ReceiptSha256']and receipt.get('status')=='PASS_LOCAL_AUTH6_PROVISION_ONLY'
@@ -3441,7 +3441,14 @@ class _CurrentAI2223Run:
     def save(self,name,value):return self.files.save(self.evidence,name,value)
     def memory(self,minimum):
         self.positive.PositiveRun.memory(self,minimum);self.memory_last=time.monotonic()
-    def monitor(self):return self.positive.PositiveRun.monitor(self)
+    def monitor(self):
+        # current 경로만 1초 주기로 관측한다. probe≤3초·freshness≤3초·임계값은 유지한다.
+        while not self.done.is_set():
+            began=time.monotonic()
+            try:self.memory(786432)
+            except BaseException as error:
+                self.memory_error=self.transport.safe_error(error);self.failures.append('CURRENT_AI2223_MEMORY_MONITOR');return
+            self.done.wait(max(0,began+1-time.monotonic()))
     def active(self):
         self.sources()
         _current_need(self.files.private(self.root/'signed-ai-binding-private.json')==self.raw and self.files.private(self.value['auth6Receipt'])==self.receipt_raw,'CURRENT_AI2223_ORIGINAL_BYTES_CHANGED')
@@ -3491,7 +3498,7 @@ def run_current_ai2223(reviewed):
 
 
 def _run_current_ai2223(reviewed):
-    run=_CurrentAI2223Run(reviewed);original=None;result=None;final=None;errors=[];unknown=[]
+    run=_CurrentAI2223Run(reviewed);original=None;result=None;final=None;errors=[];final_details=[];unknown=[]
     try:
         run.memory(1048576);run.thread=threading.Thread(target=run.monitor,daemon=True);run.thread.start();run.active();run.prepare_ports();run.active();run.r.signed_identity()
         _current_need(run.port.settings()=={'jwtExpirySeconds':3600,'anonymousEnabled':False,'signupDisabled':True},'CURRENT_AI2223_AUTH_SETTINGS')
@@ -3504,7 +3511,8 @@ def _run_current_ai2223(reviewed):
     finally:
         for child in run.children:
             try:child.close()
-            except BaseException as error:errors.append('CHILD_'+type(error).__name__)
+            except BaseException as error:
+                errors.append('CHILD_'+type(error).__name__);final_details.append({'stage':'CHILD','failure':run.transport.safe_error(error)})
         run.cleaning=True
         try:
             _current_need(all(x.child is None for x in run.children),'CURRENT_AI2223_CHILD_CLOSURE_UNPROVEN')
@@ -3522,8 +3530,8 @@ def _run_current_ai2223(reviewed):
             if run.before is not None:verify_current_ai2223_state(run.before,final,added)
             if run.sql_port is not None:run.sql_port.verify_evidence()
         except BaseException as error:
-            errors.append('FINAL_'+type(error).__name__)
-            run.save('final-unavailable-private.json',{'status':'NOT_PROVEN','failureType':type(error).__name__,'sqlSticky':bool(run.sql_port is not None and run.sql_port.sticky),'noReplay':True})
+            errors.append('FINAL_'+type(error).__name__);final_details.append({'stage':'FINAL','failure':run.transport.safe_error(error)})
+            run.save('final-unavailable-private.json',{'status':'NOT_PROVEN','failureType':type(error).__name__,'failure':run.transport.safe_error(error),'sqlSticky':bool(run.sql_port is not None and run.sql_port.sticky),'noReplay':True})
         run.done.set()
         if run.thread is not None:run.thread.join(timeout=4)
         if run.thread is not None and run.thread.is_alive():errors.append('MEMORY_THREAD_LIVE')
@@ -3531,7 +3539,7 @@ def _run_current_ai2223(reviewed):
         if time.monotonic()>run.deadline:errors.append('CURRENT_AI2223_OBSERVER_TIME_LIMIT')
         run.save('current-execution-receipt.json',{'status':'PASS'if original is None and not errors and result is not None else'FAIL','purpose':CURRENT_AI2223_PURPOSE,
             'sourceHead':run.value['sourceHead'],'originalBindingSha256':run.value['bindingSha256'],'originalBindingFlagsUnchanged':True,
-            'errorType':None if original is None else type(original).__name__,'finalErrors':errors,'minimumAvailableKiB':min(run.samples)if run.samples else None,
+            'errorType':None if original is None else type(original).__name__,'originalFailure':run.transport.safe_error(original),'finalErrors':errors,'finalFailureDetails':final_details,'memoryFailure':run.memory_error,'minimumAvailableKiB':min(run.samples)if run.samples else None,
             'ownedChildClosed':all(x.child is None for x in run.children),'preservation':'PASS'if not errors and run.before is not None and final is not None else'NOT_PROVEN',
             'observations':34 if original is None and result is not None else'NOT_PROVEN','wholeTableCount':len(final['rows'])if final is not None else None,
             'sqlSticky':bool(run.sql_port is not None and run.sql_port.sticky),'sqlCommands':[]if run.sql_port is None else run.sql_port.proofs,
