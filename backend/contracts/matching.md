@@ -146,3 +146,11 @@ propose/accept는 확정 조건 변경이라는 새 활동이므로 네이버 �
 `accept_match`는 공고/신청 잠금 후 `expire_post_match_consents`를 호출한다. 만료 helper와 독립 worker가 실제 시각으로 상태를 종료할 수 있으므로 최종 비교식만 statement 시각으로 바꾸거나 이미 종료된 상태를 소급 부활시키지 않는다. HTTP 접수 증명을 도입하려면 주체·가입회차·대상·조건버전·요청 digest·한 번 소비와 결합한 서버 신뢰 채널 및 만료 worker의 공통 직렬화가 먼저 필요하다. 원 JWT의 공개 PostgREST 호출이 가능한 현재 경로에서 단순 전달 헤더는 신뢰 채널이 아니다.
 
 새 `tests/integration/minkyu/deadline_lock_evidence.py`는 후기 한 건의 DB-entry 잠금 관측만 순수 판정한다. 실제 실행기는 아니며 수락·변경·worker 경쟁 및 HTTP 최초 접수를 증명하지 않는다. 해당 회귀 통과를 WBS4.5/4.6 또는 D03 정책 전체 완료로 집계하지 않는다.
+
+### DB statement 마감 분리 후보 — 2026-10-23
+
+신규 matching DB-entry migration 후보는 실제 RPC statement 진입의 `statement_timestamp()`를 서버 신뢰 상한으로 봉인한다. 첫 메시지 신청의 모집·시작 상한, 확정 수락의 동의·시작 상한, 일정 변경 수락의 응답 상한을 이 값으로 비교한다. 클라이언트 timestamp와 HTTP ingress의 입증으로 확대하지 않는다. 잠금 뒤 현재 당사자·자격·차단·취소·분쟁·버전·fingerprint·일정 충돌·중복 성공 처리는 유지한다.
+
+확정 수락은 자기 동의만 접수시각으로 만료를 판단하고 다른 동의의 기존 만료 처리를 유지한다. 이미 다른 트랜잭션이 expired/withdrawn/invalidated로 종결한 동의는 되살리지 않는다. 일정 변경의 `requested_at` 하한과 현재 상태는 잠금 후 판단하고, 정확한 마감 정각은 거절한다. 기존 helper와 공개 RPC 인수·ACL은 보존하며 새 private helper는 제품 역할에 직접 부여하지 않는다.
+
+이 절은 구현 후보의 계약이며 실제 migration 적용·SQL 회귀·두 세션/원JWT HTTP·정리 증거는 **NOT_RUN**이다. 해당 증거가 확보되기 전 WBS4.4/4.5의 완료로 집계하지 않는다. 후기만 수정하는125와 별도 범위다.
