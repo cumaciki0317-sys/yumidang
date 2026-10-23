@@ -29,10 +29,11 @@ do $$declare p uuid:='d0312601-0000-4000-8000-000000000001';r uuid:='d0312602-00
  update private.appointment_schedule_changes set old_location_fingerprint='changed'where change_id=c;
  if private.appointment_schedule_response_open(c,t,t)or private.appointment_schedule_response_open(c,t)
  then raise exception 'matching_entry_location_fingerprint';end if;
- update private.appointment_schedule_changes set old_location_fingerprint=null,old_starts_at=old_starts_at-interval '1 second'where change_id=c;
+ -- 만료는 기존/새 시작 및 요청+6시간과 결합된다. 종료만 바꿔 순서 제약을 유지하며 불일치를 만든다.
+ update private.appointment_schedule_changes set old_location_fingerprint=null,old_ends_at=old_ends_at+interval '1 second'where change_id=c;
  if private.appointment_schedule_response_open(c,t,t)or private.appointment_schedule_response_open(c,t)
  then raise exception 'matching_entry_schedule_fingerprint';end if;
- update private.appointment_schedule_changes set old_starts_at=t+interval '1 hour'where change_id=c;
+ update private.appointment_schedule_changes set old_ends_at=t+interval '2 hours'where change_id=c;
  begin
  insert into public.appointment_disputes(appointment_id,raised_by_user_id,reason,review_time_remaining)
  values(a,'d0312600-0000-4000-8000-000000000001','합성 변경 분쟁',interval '7 days');
