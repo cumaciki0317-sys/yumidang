@@ -1,0 +1,25 @@
+{
+  "notes": [
+    "2026-10-25 종현 — Android 설정 검사·격리 빌드 후속\n행사 실제 연동은 서버 선행으로 보류하고 독립 가능한 빌드 준비를 진행했다. 브랜치 jonghyun/android-prep-20261025, 미커밋·미푸시.\n수정: queries에 scheme만 있어도 통과하던 검사 결함을 수정했다. enabled/exported activity 또는 유효한 alias의 동일 VIEW·DEFAULT·BROWSABLE filter를 확인한다. 회귀14/14·타입·린트 통과.\n실제 빌드: 최신 앱 소스의 해시 일치 임시 복사본을 Expo57 prebuild→로컬 Gradle assembleRelease로 컴파일했다. dev.yumidang.validation / yumidang-validation / versionCode1, Android Debug 서명, 예시 모드다. 생성 설정·최종 APK manifest·서명·내장 JS 확인 통과. 운영 package ID/서명은 정하지 않았다. 설치·실제 로그인·스토어는 NOT_RUN.\nAPK SHA256: 1bd4d20faf45aeffb5c0f6089b7bb0927ad3c6674a8cdd75a1e166103b95478a, 44,653,357바이트.\n잔여: 운영 ID/기존 Play 등록·서명 책임, 최소 권한 검토, native 인증 계약. 보안7.7의 Router URL 디코딩 위험이 남아 출시 가능 판정은 아니다.\n근거: docs/collaboration/requests/jonghyun/2026-10-25-android-preparation/README.md · evidence/artifact.json. 기존 TASK 상태/담당/일정/진행률 유지.",
+    "2026-10-25 종현 — 최신 의존성 보안 재검토\n현재 package-lock 기준 npm audit 결과 영향 패키지11개(high5/moderate6). 과거29건을 현재 수치로 사용하지 않는다. 고유 직접 advisory는4개이고 나머지는 의존 관계 영향이다.\n우선 대응: decode-uri-component0.2.2 ← query-string7.1.3 ← Expo Router57.0.28. 최신 실제 APK sourcemap에도 포함됨을 확인했다. 악성 URL 파싱의 CPU 소진 위험이며 공격 입력/실회원 시험은 실행하지 않았다.\n나머지: node-forge1.4.0(확인 경로 CLI·서명 도구, 공식 수정버전 없음), Zod3.25.76(CLI·lint 도구, 수정4.6.6은 요구범위 밖), uuid7.0.3(xcode 도구의 확인 호출은 v4로 권고 조건과 차이).\nnpm의 expo44 하향/router58 상향 자동 수정은 적용하지 않았다. decode0.5.0도 ESM이라 현재 CJS 호출에 무조건 override하지 않는다. 다음은 SDK57 호환 backport 확인→호환 보안 패치 또는 Router 파싱 전 입력 제한 설계→회귀/재빌드다.\n격리 preview APK 빌드는 성공했지만 보안 완료·출시 가능 판정은 아니다. package/lock 변경0, 자동 fix0, 실제 외부 회원 호출0.\n근거: docs/collaboration/requests/jonghyun/2026-10-25-android-preparation/README.md(공식 advisory4개 링크), evidence/npm-audit.json·artifact.json. 기존 상태/담당/일정/진행률 유지.",
+    "2026-10-25 종현 — 최신 소스 내부 APK 빌드 확인\n이전10/06 결과를 재사용하지 않고 최신 회원·행사 앱 변경 사본으로 실제 로컬 release APK를 생성했다. Expo57 prebuild, JDK21·Gradle9.3.1, arm64-v8a, 오프라인 캐시 사용. 2분28초·571작업 BUILD SUCCESSFUL.\n격리 식별자 dev.yumidang.validation / scheme yumidang-validation / versionCode1·versionName1.0.0, Android Debug 서명, 예시 데이터 모드. APK44,653,357바이트, SHA256 1bd4d20faf45aeffb5c0f6089b7bb0927ad3c6674a8cdd75a1e166103b95478a. 내장 JS·최종 manifest·서명 확인.\n이번 실행은 빌드/정적 산출물 검증까지다. 설치·콜드 실행·실기기·실제 네이버/API·스토어 업로드 NOT_RUN. 보안7.7의 Router 디코딩 위험과 운영 식별자/서명·권한 검토가 남아 있어 전체 TASK 완료나 출시 가능으로 표시하지 않는다.\n근거/재현/파일 위치: docs/collaboration/requests/jonghyun/2026-10-25-android-preparation/README.md · evidence/artifact.json·build.log. 브랜치 jonghyun/android-prep-20261025 미커밋·미푸시. 기존 상태/담당/일정/진행률 유지."
+  ],
+  "readback": [
+    {
+      "id": "7.3a",
+      "url": "https://app.notion.com/p/caa44227a4358271bd88813b24487393",
+      "count": 1
+    },
+    {
+      "id": "7.7",
+      "url": "https://app.notion.com/p/62744227a435828999460174705dcfca",
+      "count": 1
+    },
+    {
+      "id": "7.15",
+      "url": "https://app.notion.com/p/fcb44227a43582ad90cb01da2a6d6476",
+      "count": 1
+    }
+  ],
+  "propertiesChanged": false
+}

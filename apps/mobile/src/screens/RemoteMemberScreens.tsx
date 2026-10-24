@@ -16,6 +16,12 @@ import type { MemberService, NoticeDelivery, Wire } from "../member-service";
 import { useApp } from "../state";
 import { Body, Button, Card, Chip, Empty, Field, Row, Screen, TextButton, Title } from "../ui";
 import RemotePlacePicker from "./RemotePlacePicker";
+import { RemoteEventEditor } from "./RemoteEventEditor";
+import { EventDetailContent } from "../presentation/events/EventPresentation";
+import { canSelectEvent } from "../presentation/events/event-selection";
+import { manualEventError } from "../presentation/events/event-draft";
+import type { ManualEvent } from "../types";
+import type { PostEventLink } from "../service";
 import { formatDeadline, formatKoreanDateTime } from "../presentation/ux-time";
 import { useUxFocus } from "../presentation/ux-form";
 import { AppointmentStatusCard, ChangeProposalStatusCard, CompanionStatusCard, mergeNotificationPages, requestsForPost, reviewUnavailableReason } from "../presentation/member-ux";
@@ -26,7 +32,13 @@ import type { FreePostInput } from "../../../../backend/supabase/functions/_shar
 const text = (value: unknown) => typeof value === "string" ? value : "";
 const idOf = (row: Wire, key: string) => text(row[key]);
 const statusLabel = (value: unknown) => ({ pending: "신청 대기", active: "대화 중", confirmed: "동행 확정", matched: "확정 이력", completed: "완료", cancelled: "취소", disputed: "분쟁 검토 중", declined: "거절", rejected: "거절", withdrawn: "철회", expired: "기한 만료", recruiting: "모집 중", closed: "모집 종료", submitted: "신고 접수", received: "신고 접수", reviewing: "신고 검토 중", resolved: "처리 완료", accepted: "수락", awaiting_consent: "확정 응답 대기" } as Record<string, string>)[text(value)] ?? "현재 상태 확인 필요";
-const failure = (error: unknown) => error instanceof ApiError && error.status === 401
+const failure = (error: unknown) => error instanceof ApiError && error.code === "CONTENT_INSPECTION_UNAVAILABLE"
+  ? "공개글 검사를 아직 사용할 수 없어요. 입력은 유지돼요. 나중에 다시 시도하거나 직접 입력 행사를 변경·삭제해 주세요."
+  : error instanceof ApiError && error.code === "CONTENT_BLOCKED"
+  ? "공개할 수 없는 정보가 있어요. 연락처·개인정보와 금지 내용을 확인하고 수정해 주세요."
+  : error instanceof ApiError && error.code === "EVENT_NOT_SELECTABLE"
+  ? "이 행사는 현재 새로 연결할 수 없어요. 입력은 유지했으니 다른 행사로 변경하거나 연결을 삭제해 주세요."
+  : error instanceof ApiError && error.status === 401
   ? "다시 로그인해 주세요."
   : error instanceof ApiError && error.status === 403
   ? "접근 권한이 없거나 이용할 수 없는 항목이에요. 최신 상태를 다시 확인해 주세요."
@@ -73,7 +85,7 @@ export function useMemberAction() {
   }, []));
   useEffect(() => { active.current?.abort(); active.current = null; lock.current = false; }, [session.epoch]);
   const run = async <T,>(task: (s: MemberService, signal: AbortSignal) => Promise<T>, success?: (data: T) => void) => {
-    if (!mounted.current || lock.current || !service || !session.authenticated) return false;
+    if (!mounted.current || lock.current || !service || !session.authenticated || serviceSessionEpoch() !== session.epoch) return false;
     const controller = new AbortController(), epoch = serviceSessionEpoch();
     active.current = controller; lock.current = true; setActionEpoch(epoch); setBusy(true); setError(""); setErrorStatus(null);
     try {
@@ -361,28 +373,140 @@ export function RemoteProfilePhoto({ path }: { path: string | null }) {
 }
 
 export function RemotePostEditor({ id }: { id: string }) { return <Guard><PostEditor key={`${id}:${serviceSessionEpoch()}`} id={id} /></Guard>; }
+type EventSelection = { eventId: string | null; manualEvent: ManualEvent | null };
+function EventLinkContent({ link }: { link: Pick<PostEventLink, "eventId" | "manualEvent" | "linkedEvent" | "eventLinkState"> }) {
+  if (link.eventLinkState === "hidden") return <><Body>연결된 행사 정보를 현재 제공할 수 없어요.</Body><Body small muted>행사 취소를 의미하지는 않아요. 기존 동행 약속은 유지돼요.</Body></>;
+  if (link.eventLinkState === "manual" && link.manualEvent) return <><Title>{link.manualEvent.title}</Title>{link.manualEvent.placeName ? <Body>{link.manualEvent.placeName}</Body> : null}{link.manualEvent.publicAddress ? <Body>공개 행사장 주소 · {link.manualEvent.publicAddress}</Body> : null}<Body small muted>이 공고에만 표시하는 직접 입력 행사예요.</Body></>;
+  if (link.eventLinkState === "linked" && link.linkedEvent) return <EventDetailContent event={link.linkedEvent} />;
+  return <Body muted>연결된 행사가 없어요.</Body>;
+}
+function SelectedSourceEvent({ eventId }: { eventId: string }) {
+  const publicService = useService();
+  const current = useMemberResource(`selected-source-event:${eventId}`, async (_s, signal) => {
+    if (!publicService) throw new ApiError(503, "EVENT_LINK_UNAVAILABLE");
+    return publicService.getEvent(eventId, signal);
+  });
+  return <><Status {...current} />{current.data && <EventDetailContent event={current.data} />}</>;
+}
+function SelectedEventContent({ selection }: { selection: EventSelection }) {
+  return <Card><Title>변경할 행사</Title>{selection.eventId ? <SelectedSourceEvent key={selection.eventId} eventId={selection.eventId} /> : <EventLinkContent link={{ ...selection, linkedEvent: null, eventLinkState: selection.manualEvent ? "manual" : "none" }} />}</Card>;
+}
+const eventReceiptLabel = (status: string) => ({
+  event_change_pending: "행사 변경을 제안했어요. 상대가 수락하기 전까지 기존 약속은 유지돼요.",
+  event_change_accepted: "이 행사 변경은 이미 수락됐어요. 약속에서 현재 내용을 확인해 주세요.",
+  event_change_declined: "이 행사 변경은 거절됐어요.", event_change_expired: "이 행사 변경은 기한이 만료됐어요.",
+  event_change_cancelled: "이 행사 변경은 취소됐어요.", event_change_withdrawn: "이 행사 변경은 철회됐어요.",
+} as Record<string, string>)[status] ?? "공고를 수정했어요.";
 function PostEditor({ id }: { id: string }) {
-  const app = useApp(), publicService = useService(), action = useMemberAction();
+  const app = useApp(), publicService = useService(), action = useMemberAction(), session = useServiceSession();
   const source = useMemberResource(`post-edit:${id}`, async (s, signal) => {
     if (!await s.ownsPost(id, signal) || !publicService) throw new ApiError(403, "POST_OWNERSHIP_NOT_VERIFIED");
-    const post = await publicService.getPost(id, signal);
-    if (!post.privateDetails) throw new ApiError(403, "POST_OWNERSHIP_NOT_VERIFIED");
-    return post;
+    const [post, link, appointments] = await Promise.all([publicService.getPost(id, signal), publicService.getPostEventLink(id, signal), s.appointments(signal)]);
+    if (!post.privateDetails || post.postId !== id || link.postId !== id || link.eventId !== post.eventId) throw new ApiError(409, "POST_STATE_CHANGED");
+    const active = appointments.filter(row => row.post_id === id && row.status === "confirmed");
+    if (active.length > 1 || active.some(row => row.my_role !== "author")) throw new ApiError(409, "POST_STATE_CHANGED");
+    const appointmentId = active.length ? text(active[0].appointment_id) : null;
+    const changeState = appointmentId ? await s.changeState(appointmentId, signal) : null;
+    return { post, link, appointmentId, pending: changeState?.change?.status === "awaiting_response" };
   });
-  const [edited, setForm] = useState<FreePostInput | null>(null), [placeOpen, setPlaceOpen] = useState(false);
-  const p = source.data;
-  const form: FreePostInput | null = edited ?? (p ? { title: p.title, description: p.description, category: p.category, startsAt: p.startsAt, endsAt: p.endsAt, recruitmentEndsAt: p.recruitmentEndsAt, publicArea: p.publicArea, registeredPlaceName: p.privateDetails!.registeredPlaceName, registeredAddress: p.privateDetails!.registeredAddress, meetingDetail: p.privateDetails!.meetingDetail, preferenceNote: p.preferenceNote, tags: p.tags, costType: "free", amount: 0, eventId: p.eventId } : null);
-  return <Screen title="내 공고 수정"><Status {...source} />{form && <>
-    <Field editable={!action.busy} label="제목" value={form.title} onChangeText={title => setForm({ ...form, title })} />
-    <Field editable={!action.busy} label="공고 소개" value={form.description} onChangeText={description => setForm({ ...form, description })} multiline />
-    <Field editable={!action.busy} label="시작 일정" value={form.startsAt} onChangeText={startsAt => setForm({ ...form, startsAt })} />
-    <Field editable={!action.busy} label="종료 일정" value={form.endsAt} onChangeText={endsAt => setForm({ ...form, endsAt })} />
-    <Field editable={!action.busy} label="모집 마감" value={form.recruitmentEndsAt} onChangeText={recruitmentEndsAt => setForm({ ...form, recruitmentEndsAt })} />
-    <Body>{form.registeredPlaceName} · {form.registeredAddress}</Body><Button secondary onPress={() => setPlaceOpen(true)}>장소 변경</Button>
-    <Field editable={!action.busy} label="상세 만남 지점" value={form.meetingDetail} onChangeText={meetingDetail => setForm({ ...form, meetingDetail })} />
-    <Field editable={!action.busy} label="희망 조건 (선택)" value={form.preferenceNote ?? ""} onChangeText={preferenceNote => setForm({ ...form, preferenceNote: preferenceNote || null })} multiline />
-    <Button loading={action.busy} disabled={!source.data} onPress={() => void action.run((s, signal) => s.update(id, form, source.data!.updatedAt, signal), () => { app.showToast("공고를 수정했어요."); app.navigate("S02", id); })}>공고 수정 저장</Button>
-  </>}{placeOpen && form && <RemotePlacePicker onCancel={() => setPlaceOpen(false)} onSelect={place => { setForm({ ...form, publicArea: place.publicArea, registeredPlaceName: place.placeName, registeredAddress: place.address }); setPlaceOpen(false); }} />}<Status error={action.error} errorStatus={action.errorStatus} /></Screen>;
+  const [edited, setEdited] = useState<{ input: FreePostInput; version: string } | null>(null), [placeOpen, setPlaceOpen] = useState(false);
+  const [selection, setSelection] = useState<EventSelection | null>(null), [localError, setLocalError] = useState("");
+  const [receipt, setReceipt] = useState<string | null>(null), [intentRevision, setIntentRevision] = useState(0);
+  const operationId = useIntentId();
+  const dispatchedIntent = useRef<string | null>(null);
+  const p = source.data?.post, link = source.data?.link, confirmed = Boolean(source.data?.appointmentId);
+  const base: FreePostInput | null = p ? { title: p.title, description: p.description, category: p.category, startsAt: p.startsAt, endsAt: p.endsAt, recruitmentEndsAt: p.recruitmentEndsAt, publicArea: p.publicArea, registeredPlaceName: p.privateDetails!.registeredPlaceName, registeredAddress: p.privateDetails!.registeredAddress, meetingDetail: p.privateDetails!.meetingDetail, preferenceNote: p.preferenceNote, tags: p.tags, costType: "free", amount: 0 } : null;
+  const form = edited?.input ?? base;
+  const stale = Boolean(edited && p && edited.version !== p.updatedAt);
+  const locked = action.busy || Boolean(receipt) || Boolean(source.data?.pending) || stale;
+  const edit = (next: FreePostInput) => { if (!action.canInteract() || locked || confirmed || !p) return; setEdited({ input: next, version: edited?.version ?? p.updatedAt }); };
+  const choose = (value: EventSelection) => {
+    if (!action.canInteract() || locked || !p || !form) return;
+    setEdited({ input: form, version: edited?.version ?? p.updatedAt }); setSelection(value); setLocalError("");
+  };
+  const reset = () => { if (!action.canInteract()) return; setEdited(null); setSelection(null); setReceipt(null); setLocalError(""); setIntentRevision(value => value + 1); source.reload(); };
+  const submit = () => {
+    if (!action.canInteract() || locked || !p || !base || !form || !source.data || !publicService) return;
+    if (confirmed && !selection) return;
+    const error = selection?.manualEvent ? manualEventError(selection.manualEvent) : null;
+    if (error) { setLocalError(error); return; }
+    const expectedUpdatedAt = edited?.version ?? p.updatedAt;
+    // Omitted selection keys preserve existing links; a confirmed proposal changes no other fields.
+    const preservedManual = !selection && source.data.link.manualEvent ? { eventId: null, manualEvent: source.data.link.manualEvent } : {};
+    const input: FreePostInput = { ...(confirmed ? base : form), ...(selection ?? preservedManual) };
+    const intent = operationId({ id, expectedUpdatedAt, input, confirmed, intentRevision });
+    if (confirmed) input.eventChangeId = intent;
+    const epoch = session.epoch;
+    void action.run(async (s, signal) => {
+      if (selection?.eventId && dispatchedIntent.current !== intent) {
+        const latest = await publicService.getEvent(selection.eventId, signal);
+        if (!canSelectEvent(latest)) throw new ApiError(409, "EVENT_NOT_SELECTABLE");
+      }
+      if (signal.aborted || serviceSessionEpoch() !== epoch) throw new ApiError(408, "CANCELLED");
+      dispatchedIntent.current = intent;
+      return s.update(id, input, expectedUpdatedAt, signal, intent);
+    }, result => {
+      const status = text(result.status);
+      if (status.startsWith("event_change_")) { setReceipt(status); app.showToast(eventReceiptLabel(status)); }
+      else { app.showToast("공고를 수정했어요."); app.navigate("S02", id); }
+    });
+  };
+  return <Screen title={confirmed ? "확정 동행의 행사 변경" : "내 공고 수정"}><Status {...source} />{form && p && link && <>
+    {confirmed && <Body>확정된 동행은 행사 변경만 제안할 수 있어요. 상대가 수락하기 전까지 기존 약속을 유지해요.</Body>}
+    <Field editable={!locked && !confirmed} label="제목" value={form.title} onChangeText={title => edit({ ...form, title })} />
+    <Field editable={!locked && !confirmed} label="공고 소개" value={form.description} onChangeText={description => edit({ ...form, description })} multiline />
+    <Field editable={!locked && !confirmed} label="시작 일정" value={form.startsAt} onChangeText={startsAt => edit({ ...form, startsAt })} />
+    <Field editable={!locked && !confirmed} label="종료 일정" value={form.endsAt} onChangeText={endsAt => edit({ ...form, endsAt })} />
+    <Field editable={!locked && !confirmed} label="모집 마감" value={form.recruitmentEndsAt} onChangeText={recruitmentEndsAt => edit({ ...form, recruitmentEndsAt })} />
+    <Body>{form.registeredPlaceName} · {form.registeredAddress}</Body>{!confirmed && <Button secondary disabled={locked} onPress={() => { if (action.canInteract() && !locked) setPlaceOpen(true); }}>장소 변경</Button>}
+    <Field editable={!locked && !confirmed} label="상세 만남 지점" value={form.meetingDetail} onChangeText={meetingDetail => edit({ ...form, meetingDetail })} />
+    <Field editable={!locked && !confirmed} label="희망 조건 (선택)" value={form.preferenceNote ?? ""} onChangeText={preferenceNote => edit({ ...form, preferenceNote: preferenceNote || null })} multiline />
+    <Card><Title>{confirmed ? "현재 행사" : "저장된 행사 연결"}</Title><EventLinkContent link={link} /></Card>
+    <RemoteEventEditor value={selection ?? { eventId: link.eventId, manualEvent: link.manualEvent }} onChange={choose} disabled={locked} />
+    {selection && <SelectedEventContent selection={selection} />}
+    {selection && <Body small muted>{confirmed ? "위 선택으로 행사 변경을 제안해요. 아직 약속에는 반영되지 않았어요." : "위 선택은 저장할 때 반영돼요."}</Body>}
+    {localError ? <View accessibilityRole="alert"><Body>{localError}</Body></View> : null}
+    {stale && <Body>공고가 변경됐어요. 입력은 유지했지만 이전 내용으로 덮어쓰지 않아요. 최신 정보로 다시 시작해 주세요.</Body>}
+    {source.data?.pending && <Body>응답을 기다리는 변경 제안이 있어요. 약속에서 먼저 확인해 주세요.</Body>}
+    {receipt && <Card><Body>{eventReceiptLabel(receipt)}</Body></Card>}
+    {source.data?.appointmentId && <Button secondary onPress={() => { if (action.canInteract()) app.navigate("S16", source.data!.appointmentId!); }}>약속의 변경 상태 확인</Button>}
+    <Button loading={action.busy} disabled={locked || (confirmed && !selection)} onPress={submit}>{confirmed ? "행사 변경 제안 보내기" : "공고 수정 저장"}</Button>
+    <TextButton onPress={reset}>입력을 버리고 최신 정보로 다시 시작</TextButton>
+  </>}{placeOpen && form && !locked && !confirmed && <RemotePlacePicker onCancel={() => setPlaceOpen(false)} onSelect={place => { if (!action.canInteract()) return; edit({ ...form, publicArea: place.publicArea, registeredPlaceName: place.placeName, registeredAddress: place.address }); setPlaceOpen(false); }} />}<Status error={action.error} errorStatus={action.errorStatus} /></Screen>;
+}
+
+/** An event change is a separate explicit acceptance, never the legacy date-only action. */
+function AppointmentEventProposal({ appointmentId, postId, proposal, onChanged }: { appointmentId: string; postId: string; proposal: Wire; onChanged: () => void }) {
+  const app = useApp(), publicService = useService(), action = useMemberAction(), session = useServiceSession();
+  const key = `${session.epoch}:${appointmentId}:${text(proposal.changeId)}:${text(proposal.conditionVersion)}:${text(proposal.eventFingerprint)}:${text(proposal.status)}`;
+  const currentKey = useRef(key);
+  useLayoutEffect(() => { currentKey.current = key; return () => { currentKey.current = ""; }; }, [key]);
+  const previous = useMemberResource(`event-change-before:${key}:${postId}`, async (_s, signal) => {
+    if (!publicService || !postId) throw new ApiError(503, "EVENT_LINK_UNAVAILABLE");
+    return publicService.getPostEventLink(postId, signal);
+  });
+  const input = proposal.newEventInput as EventSelection | null;
+  const next: Pick<PostEventLink, "eventId" | "manualEvent" | "linkedEvent" | "eventLinkState"> | null = input ? {
+    eventId: input.eventId, manualEvent: input.manualEvent, linkedEvent: proposal.newLinkedEvent as PostEventLink["linkedEvent"],
+    eventLinkState: input.manualEvent ? "manual" : input.eventId ? proposal.newLinkedEvent ? "linked" : "hidden" : "none",
+  } : null;
+  const pending = proposal.status === "awaiting_response", peer = proposal.requestedByMe === false;
+  const expires = Date.parse(text(proposal.expiresAt));
+  const expired = !Number.isFinite(expires) || expires <= app.now;
+  const canAccept = pending && peer && !expired && Boolean(previous.data) && !previous.busy && !previous.error && Boolean(next) && next?.eventLinkState !== "hidden";
+  const act = (accept: boolean) => {
+    if (!action.canInteract() || currentKey.current !== key || !pending || (accept && !canAccept)) return;
+    void action.run((s, signal) => accept
+      ? s.acceptEventChange(appointmentId, text(proposal.changeId), text(proposal.conditionVersion), text(proposal.eventFingerprint), signal)
+      : s.changeAction(appointmentId, peer ? "decline" : "withdraw", text(proposal.changeId), text(proposal.conditionVersion), signal), onChanged);
+  };
+  return <Card><Title>행사 변경 제안</Title><Body>{formatDeadline(proposal.expiresAt, app.now)}</Body>
+    <Title>변경 전</Title><Status {...previous} />{previous.data && <EventLinkContent link={previous.data} />}
+    <Title>변경 후</Title>{next ? <EventLinkContent link={next} /> : <Body>종료된 제안의 행사 내용은 보관하지 않아요.</Body>}
+    <Body small muted>명시적으로 수락하기 전까지 기존 약속을 유지해요.</Body>
+    {pending && <Row>{peer && <Button disabled={!canAccept} loading={action.busy} onPress={() => act(true)}>이 행사 변경 수락</Button>}<Button secondary loading={action.busy} onPress={() => act(false)}>{peer ? "행사 변경 거절" : "행사 제안 철회"}</Button></Row>}
+    <Status error={action.error} errorStatus={action.errorStatus} />
+  </Card>;
 }
 
 export function RemoteAppointmentScreen({ id }: { id?: string }) { return <Guard><RemoteAppointment key={`${id}:${serviceSessionEpoch()}`} id={id ?? ""} /></Guard>; }
@@ -404,9 +528,11 @@ function RemoteAppointment({ id }: { id: string }) {
       <Button disabled={detail.data.can_confirm_completion !== true} loading={action.busy} onPress={() => void action.run((s, signal) => s.confirmCompletion(id, signal), () => { refresh(); app.showToast("본인 완료 확인을 기록했어요."); })}>본인 동행 완료 확인</Button>
       <Body small muted>예상 종료 후 본인 확인을 하면 후기를 먼저 작성할 수 있어요. 공개는 실제 완료 후 후기 조건에 따라 처리돼요.</Body>
       <Button secondary onPress={() => app.navigate("S17", id)}>후기 작성·공개 상태 확인</Button>
-      {detail.data.status === "confirmed" && <><Button secondary onPress={() => { setStart(schedule.data?.startsAt ?? ""); setEnd(schedule.data?.endsAt ?? ""); setEditing(!editing); }}>일정·장소 변경 제안</Button><Button secondary onPress={() => app.navigate("S18", `appointment:${id}`)}>{cancellationGate === "before_start" ? "시작 전 취소·신고" : cancellationGate === "started" ? "중단·불발 신고" : "취소 가능 상태 확인·신고"}</Button></>}
+      {detail.data.status === "confirmed" && <><Button secondary disabled={pending || action.busy} onPress={() => { if (pending || !action.canInteract()) return; setStart(schedule.data?.startsAt ?? ""); setEnd(schedule.data?.endsAt ?? ""); setEditing(!editing); }}>일정·장소 변경 제안</Button><Button secondary onPress={() => app.navigate("S18", `appointment:${id}`)}>{cancellationGate === "before_start" ? "시작 전 취소·신고" : cancellationGate === "started" ? "중단·불발 신고" : "취소 가능 상태 확인·신고"}</Button></>}
     </>}
-    {pending && <ChangeProposalStatusCard requestedByMe={proposal?.requestedByMe} deadline={proposal?.expiresAt}><Body>{formatDeadline(proposal?.expiresAt, app.now)}</Body><Body>{formatKoreanDateTime((proposal?.newSchedule as Wire | undefined)?.startsAt)} ~ {formatKoreanDateTime((proposal?.newSchedule as Wire | undefined)?.endsAt)}</Body>
+    {!pending && proposal?.changeKind === "event" && <Card><Title>행사 변경 · {statusLabel(proposal.status)}</Title><Body small muted>종료된 제안의 원문은 표시하지 않아요. 현재 공고와 약속을 확인해 주세요.</Body></Card>}
+    {pending && proposal?.changeKind === "event" && <AppointmentEventProposal key={`${text(proposal.changeId)}:${text(proposal.conditionVersion)}:${text(proposal.eventFingerprint)}`} appointmentId={id} postId={text(detail.data?.post_id)} proposal={proposal} onChanged={refresh} />}
+    {pending && proposal?.changeKind === undefined && <ChangeProposalStatusCard requestedByMe={proposal?.requestedByMe} deadline={proposal?.expiresAt}><Body>{formatDeadline(proposal?.expiresAt, app.now)}</Body><Body>{formatKoreanDateTime((proposal?.newSchedule as Wire | undefined)?.startsAt)} ~ {formatKoreanDateTime((proposal?.newSchedule as Wire | undefined)?.endsAt)}</Body>
       {proposal?.locationChanged === true && proposal.newLocation !== null && <Body>{text((proposal.newLocation as Wire).registeredAddress)} · {text((proposal.newLocation as Wire).meetingDetail)}</Body>}
       <Row>{peerProposal && <Button disabled={expired} loading={action.busy} onPress={() => void action.run((s, signal) => s.changeAction(id, "accept", text(proposal?.changeId), text(proposal?.conditionVersion), signal), refresh)}>변경 수락</Button>}<Button secondary loading={action.busy} onPress={() => void action.run((s, signal) => s.changeAction(id, peerProposal ? "decline" : "withdraw", text(proposal?.changeId), text(proposal?.conditionVersion), signal), refresh)}>{peerProposal ? "변경 거절" : "제안 철회"}</Button></Row>
     </ChangeProposalStatusCard>}
@@ -787,5 +913,6 @@ function RemoteAccount({ onLogout, cleanup }: { onLogout?: (port: MemberSessionP
 function ConsentConditions({ conditions }: { conditions: unknown }) {
   if (!conditions || typeof conditions !== "object" || Array.isArray(conditions)) return <Body muted>확정 조건을 확인하지 못했어요. 새로고침해 주세요.</Body>;
   const c = conditions as Wire;
-  return <View style={{ gap: 8 }}><Title>{text(c.title)}</Title><Body>{formatKoreanDateTime(c.startsAt)} ~ {formatKoreanDateTime(c.endsAt)}</Body><Body>{text(c.publicArea)}</Body><Body>{text(c.description)}</Body>{text(c.preferenceNote) && <Body>희망 조건 · {text(c.preferenceNote)}</Body>}<Body>{c.costType === "free" && c.amount === 0 ? "무료 1:1 동행" : "현재 신청할 수 없는 비용 조건이에요"}</Body></View>;
+  const manual = c.manualEvent as ManualEvent | undefined;
+  return <View style={{ gap: 8 }}><Title>{text(c.title)}</Title><Body>{formatKoreanDateTime(c.startsAt)} ~ {formatKoreanDateTime(c.endsAt)}</Body><Body>{text(c.publicArea)}</Body><Body>{text(c.description)}</Body>{manual && <Card><Title>직접 입력 행사 · {manual.title}</Title>{manual.placeName ? <Body>{manual.placeName}</Body> : null}{manual.publicAddress ? <Body>공개 행사장 주소 · {manual.publicAddress}</Body> : null}</Card>}{text(c.preferenceNote) && <Body>희망 조건 · {text(c.preferenceNote)}</Body>}<Body>{c.costType === "free" && c.amount === 0 ? "무료 1:1 동행" : "현재 신청할 수 없는 비용 조건이에요"}</Body></View>;
 }

@@ -11,7 +11,7 @@ function fixture() {
   config.scheme = VALIDATION_SCHEME;
   return {
     mode: 'validation', config,
-    manifest: `<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.INTERNET"/><application android:usesCleartextTraffic="false"><activity><intent-filter><data android:scheme="${VALIDATION_SCHEME}"/></intent-filter></activity></application></manifest>`,
+    manifest: `<manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.INTERNET"/><application android:usesCleartextTraffic="false"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="${VALIDATION_SCHEME}"/></intent-filter></activity></application></manifest>`,
     gradle: `android {\n namespace '${VALIDATION_ID}'\n defaultConfig {\n applicationId '${VALIDATION_ID}'\n versionCode 1\n versionName '1.0.0'\n }\n}`,
   };
 }
@@ -67,4 +67,40 @@ test('production is never approved by static settings or fixture success', () =>
   assert.equal(result.status, 'NOT_APPROVED');
   assert.equal(result.boundaries.productionApproval, 'NOT_APPROVED');
   assert.throws(() => reviewAndroidSettings({ mode: 'release', config: source }), /mode must/);
+});
+
+
+test('callback requires a complete filter on an enabled exported receiver', () => {
+  for (const mutate of [
+    xml => xml.replace('android:exported="true"', 'android:exported="false"'),
+    xml => xml.replace('android:exported="true"', ''),
+    xml => xml.replace('<activity ', '<activity android:enabled="false" '),
+    xml => xml.replace('<application ', '<application android:enabled="false" '),
+    xml => xml.replace('<category android:name="android.intent.category.DEFAULT"/>', ''),
+    xml => xml.replace('<category android:name="android.intent.category.BROWSABLE"/>', ''),
+    xml => xml.replace('<action android:name="android.intent.action.VIEW"/>', ''),
+    xml => xml.replace('<data ', '</intent-filter><intent-filter><data '),
+    xml => xml.replace('<activity ', '<queries ').replace('</activity>', '</queries>'),
+    xml => xml.replace('<activity ', '<!-- <activity ').replace('</activity>', '</activity> -->'),
+    xml => xml.replace('</activity>', '</service>'),
+  ]) { const input = fixture(); input.manifest = mutate(input.manifest); fail(input, 'generated-schemes'); }
+});
+test('exported alias requires a real enabled preceding target activity', () => {
+  const input = fixture();
+  input.manifest = input.manifest.replace('<activity android:name=".MainActivity" android:exported="true">', '<activity android:name=".Target" android:exported="false"/><activity-alias android:name=".MainActivity" android:targetActivity=".Target" android:exported="true">').replace('</activity>', '</activity-alias>');
+  assert.equal(reviewAndroidSettings(input).status, 'PASS');
+  for (const mutate of [
+    xml => xml.replace('android:targetActivity=".Target"', 'android:targetActivity=".Missing"'),
+    xml => xml.replace('<activity android:name=".Target"', '<activity android:enabled="false" android:name=".Target"'),
+    xml => xml.replace('<activity android:name=".Target" android:exported="false"/>', '').replace('</application>', '<activity android:name=".Target"/></application>'),
+  ]) fail({ ...input, manifest: mutate(input.manifest) }, 'generated-schemes');
+});
+
+test('queries-only scheme and filters in another component cannot supply callback evidence', () => {
+  const input = fixture();
+  input.manifest = `<manifest xmlns:android="http://schemas.android.com/apk/res/android"><queries><intent><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="${VALIDATION_SCHEME}"/></intent></queries><application/></manifest>`;
+  fail(input, 'generated-schemes');
+  const second = fixture();
+  second.manifest = second.manifest.replace('<data ', '</intent-filter></activity><activity android:name=".Other" android:exported="true"><intent-filter><data ');
+  fail(second, 'generated-schemes');
 });

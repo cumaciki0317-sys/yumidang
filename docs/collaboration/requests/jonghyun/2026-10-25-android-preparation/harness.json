@@ -1,0 +1,45 @@
+{
+  "actor": "jonghyun",
+  "branch": "jonghyun/android-prep-20261025",
+  "base": "13fa366236a7b21ab517859a19fd11d6d43de243",
+  "incomingSnapshot": "uncommitted event-integration app/test files copied after ownership check; not merged or pushed",
+  "scope": "WBS 7.15 Android settings and isolated preview APK; WBS7.7 fresh dependency review; native login awaits server contract; SDK57 Metro decoder mitigation and rebuilt preview APK",
+  "lanes": [
+    {
+      "agent": "root",
+      "clone": "jonghyun-android-prep-20261025",
+      "paths": [
+        "apps/mobile/scripts/prepare-android-validation.mjs",
+        "docs/collaboration/requests/jonghyun/2026-10-25-android-preparation/",
+        "apps/mobile/package.json",
+        "apps/mobile/package-lock.json",
+        "apps/mobile/metro.config.js",
+        "apps/mobile/src/safe-decode-uri.cjs",
+        "tests/mobile/safe-decode-uri.test.mjs"
+      ]
+    },
+    {
+      "agent": "event_browse_impl",
+      "clone": "jonghyun-event-browse-20261024",
+      "paths": [
+        "apps/mobile/scripts/verify-android-settings.mjs",
+        "tests/mobile/android-settings.test.mjs"
+      ],
+      "integration": "reviewed patch, separate git index"
+    },
+    {
+      "agent": "event_browse_impl",
+      "scope": "read-only official dependency compatibility and compiled Metro module execution",
+      "output": "/private/tmp/router-security-*",
+      "sharedSourceEdits": false
+    }
+  ],
+  "exclusions": [
+    "production package/signing choice",
+    "native auth implementation without contract",
+    "device installation",
+    "backend edits",
+    "store/EAS upload/deployment",
+    "commit/push"
+  ]
+}

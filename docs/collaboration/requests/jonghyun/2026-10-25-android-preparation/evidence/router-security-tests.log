@@ -1,0 +1,11 @@
+✔ actual query-string parser preserves normal URL values and options (1.686292ms)
+✔ malformed values stay contained and decoded output is never decoded again (0.4575ms)
+✔ large malformed percent sequence finishes in a bounded subprocess (109.023584ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 233.914709

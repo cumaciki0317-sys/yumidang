@@ -1,4 +1,6 @@
 import { ApiError, ServiceApiClient } from "./api.ts";
+import { manualEventInput, postWriteInput } from "./event-contract.ts";
+import { readPublicEvent } from "./service.ts";
 import { beginAiConsentChange, finishAiConsentChange } from "./ai-consent-state.ts";
 import type { FreePostInput } from "../../../backend/supabase/functions/_shared/contracts/posts";
 import type { ProfilePreferences, ProfileTraits } from "../../../backend/supabase/functions/_shared/contracts/signup";
@@ -80,6 +82,16 @@ export function change(value: unknown): Wire {
     }
     if (r.status !== "awaiting_response" && r.newLocation !== null) return fail();
   } else if (Object.hasOwn(r, "newLocation")) return fail();
+  if (Object.hasOwn(r, "changeKind")) {
+    if (r.changeKind !== "event" || !/^[0-9a-f]{64}$/.test(string(r.eventFingerprint))) return fail();
+    if (r.status === "awaiting_response") {
+      const input = fields(r.newEventInput, ["eventId","manualEvent"]);
+      if (input.eventId !== null) uuid(input.eventId);
+      if (input.manualEvent !== null) { try { manualEventInput(input.manualEvent); } catch { return fail(); } }
+      if (input.eventId !== null && input.manualEvent !== null) return fail();
+      if (r.newLinkedEvent !== null && readPublicEvent(r.newLinkedEvent).id !== input.eventId) return fail();
+    } else if (r.newEventInput !== null || r.newLinkedEvent !== null) return fail();
+  } else if (["eventFingerprint","newEventInput","newLinkedEvent"].some(k=>Object.hasOwn(r,k))) return fail();
   return r;
 }
 export type HiddenTargetType = MemberReportInput["targetType"];
@@ -177,7 +189,40 @@ function readState(r: Wire): Wire {
 }
 export class MemberService {
   private readonly client: ServiceApiClient;
-  constructor(client: ServiceApiClient) { this.client = client; }
+  private readonly options: { postInspectionRequired?: boolean };
+  private readonly inspections = new WeakMap<object, Map<string, { fingerprint: string; ticketId?: string }>>();
+  private async inspectedPost(path: string, postId: string, input: FreePostInput, operationId: string, expectedUpdatedAt: string | undefined, signal?: AbortSignal): Promise<unknown> {
+    uuid(operationId);
+    const {client,key} = await this.client.bindSession();
+    const args = { p_post_id: postId, p_input: input, ...(expectedUpdatedAt === undefined ? {} : {p_expected_updated_at:expectedUpdatedAt}) };
+    const rpc = expectedUpdatedAt === undefined ? "create_service_post" : "update_service_post";
+    const action = expectedUpdatedAt === undefined ? "post_create" : "post_update";
+    const fingerprint = JSON.stringify(args);
+    let attempts = this.inspections.get(key);
+    if (!attempts) { attempts = new Map(); this.inspections.set(key,attempts); }
+    const existing = attempts.get(operationId);
+    if (existing && existing.fingerprint !== fingerprint) throw new ApiError(409,"STATE_CONFLICT");
+    const attempt = existing ?? {fingerprint}; attempts.set(operationId,attempt);
+    if (!attempt.ticketId) {
+      let response: unknown;
+      try { response = await client.request("/content-inspections", {method:"POST",body:{rpc,operationId,input:args},signal}); }
+      catch (error) {
+        if (error instanceof ApiError && (error.status === 404 || error.status === 408 && error.code !== "CANCELLED" || error.status >= 500)) throw new ApiError(error.status,"CONTENT_INSPECTION_UNAVAILABLE",true);
+        throw error;
+      }
+      const r = fields(response, ["decision","reasons","ticketId","operationId","action","targetId"]);
+      if (r.operationId !== operationId || r.action !== action || r.targetId !== postId || !["allow","block"].includes(string(r.decision)) || !Array.isArray(r.reasons) || new Set(r.reasons).size !== r.reasons.length || r.reasons.some(v=>!["PERSONAL_DATA","PROHIBITED_CONTENT"].includes(String(v)))) return fail();
+      if (r.decision === "block") {
+        if (!r.reasons.length) return fail();
+        uuid(r.ticketId);
+        throw new ApiError(422,"CONTENT_BLOCKED");
+      }
+      if (r.reasons.length) return fail();
+      attempt.ticketId = uuid(r.ticketId);
+    }
+    return client.request(path,{method:"POST",body:{...input,...(expectedUpdatedAt === undefined ? {postId} : {expectedUpdatedAt})},signal,inspection:{operationId,ticketId:attempt.ticketId}});
+  }
+  constructor(client: ServiceApiClient, options: { postInspectionRequired?: boolean } = {}) { this.client = client; this.options = options; }
   private read(path: string, signal?: AbortSignal) { return this.client.request<unknown>(path, { signal }); }
   private send(path: string, body: unknown, signal?: AbortSignal) { return this.client.request<unknown>(path, { method: "POST", body, signal }); }
   async aiConsents(signal?: AbortSignal): Promise<AiConsents> {
@@ -264,7 +309,11 @@ export class MemberService {
     if (r.consent === null && Object.keys(r).length === 1) return null;
     if (r.requestId !== id) return fail(); string(r.conditionVersion);
     if (!["awaiting_consent", "expired", "withdrawn", "declined", "invalidated", "accepted", "renewal_required"].includes(string(r.status))) return fail();
-    const conditions = fields(r.conditions, ["postId", "title", "description", "category", "startsAt", "endsAt", "publicArea", "preferenceNote", "tags", "costType", "amount", "paymentDirection"]);
+    const conditionKeys = ["postId", "title", "description", "category", "startsAt", "endsAt", "publicArea", "preferenceNote", "tags", "costType", "amount", "paymentDirection"];
+    const conditionRaw = wire(r.conditions);
+    if (Object.hasOwn(conditionRaw,"manualEvent")) conditionKeys.push("manualEvent");
+    const conditions = fields(conditionRaw,conditionKeys);
+    if (Object.hasOwn(conditions,"manualEvent")) { try { manualEventInput(conditions.manualEvent); } catch { return fail(); } }
     uuid(conditions.postId); string(conditions.title); string(conditions.description); string(conditions.category); string(conditions.publicArea); nullableString(conditions.preferenceNote);
     if (Date.parse(timestamp(conditions.startsAt)) >= Date.parse(timestamp(conditions.endsAt)) || conditions.costType !== "free" || conditions.amount !== 0 || conditions.paymentDirection !== "none" || !Array.isArray(conditions.tags) || conditions.tags.some(t => typeof t !== "string")) return fail();
     if (r.expiresAt !== null) timestamp(r.expiresAt); return r;
@@ -290,8 +339,34 @@ export class MemberService {
   async reviewState(id: string, signal?: AbortSignal) { const r = one(await this.read(`/appointments/${uuid(id)}/reviews`, signal)); if (r.appointment_id !== id) return fail(); for (const k of ["appointment_completed", "disputed", "can_write", "peer_submitted", "released"]) bool(r[k]); if (r.deadline_at !== null) timestamp(r.deadline_at); if (r.released === false && r.peer_review !== null) return fail(); return r; }
   async review(id: string, input: ReviewSubmission, signal?: AbortSignal) { const r = wire(await this.send(`/appointments/${uuid(id)}/reviews`, input, signal)); uuid(r.reviewId); timestamp(r.submittedAt); bool(r.deduplicated); return r; }
   async praises(signal?: AbortSignal) { const r = fields(await this.read("/reviews/praises", signal), ["items"]); return rows(r.items).map(i => { string(i.code); string(i.label); return i; }); }
-  async create(postId: string, input: FreePostInput, signal?: AbortSignal) { const r = fields(await this.send("/posts", { postId: uuid(postId), ...input }, signal), ["postId", "alreadyCreated"]); if (r.postId !== postId) return fail(); bool(r.alreadyCreated); return r; }
-  async update(postId: string, input: FreePostInput, expectedUpdatedAt: string, signal?: AbortSignal) { const r = wire(await this.send(`/posts/${uuid(postId)}/update`, { ...input, expectedUpdatedAt }, signal)); if (r.postId !== postId) return fail(); string(r.status); timestamp(r.updatedAt); return r; }
+  async acceptEventChange(id: string, changeId: string, conditionVersion: string, eventFingerprint: string, signal?: AbortSignal) {
+    if (!conditionVersion || !/^[0-9a-f]{64}$/.test(eventFingerprint)) throw new ApiError(400,"INVALID_REQUEST");
+    const result = change(await this.send(`/appointments/${uuid(id)}/schedule-change/accept-event`,{changeId:uuid(changeId),conditionVersion,eventFingerprint},signal));
+    if (result.appointmentId !== id || result.changeId !== changeId || result.changeKind !== "event" || result.eventFingerprint !== eventFingerprint) return fail();
+    return result;
+  }
+  async create(postId: string, input: FreePostInput, signal?: AbortSignal) {
+    uuid(postId); const normalized = postWriteInput(input);
+    if (normalized.eventChangeId !== undefined) throw new ApiError(400,"INVALID_REQUEST");
+    const value = this.options.postInspectionRequired || normalized.manualEvent != null
+      ? await this.inspectedPost("/posts",postId,normalized,postId,undefined,signal)
+      : await this.send("/posts",{postId,...normalized},signal);
+    const r = fields(value,["postId","alreadyCreated"]);
+    if (r.postId !== postId) return fail(); bool(r.alreadyCreated); return r;
+  }
+  async update(postId: string, input: FreePostInput, expectedUpdatedAt: string, signal?: AbortSignal, operationId?: string) {
+    uuid(postId); timestamp(expectedUpdatedAt); const normalized = postWriteInput(input);
+    const requiresInspection = this.options.postInspectionRequired || normalized.manualEvent != null || normalized.eventChangeId !== undefined;
+    const op = normalized.eventChangeId ?? operationId;
+    if (requiresInspection && !op) throw new ApiError(400,"INSPECTION_OPERATION_REQUIRED");
+    const value = requiresInspection
+      ? await this.inspectedPost(`/posts/${postId}/update`,postId,normalized,op!,expectedUpdatedAt,signal)
+      : await this.send(`/posts/${postId}/update`,{...normalized,expectedUpdatedAt},signal);
+    const r = fields(value,["postId","status","updatedAt"]);
+    if (r.postId !== postId) return fail(); timestamp(r.updatedAt);
+    const allowed = normalized.eventChangeId ? ["event_change_pending","event_change_accepted","event_change_declined","event_change_expired","event_change_cancelled","event_change_withdrawn"] : ["recruiting","closed","awaiting_consent","confirmed","completed","expired"];
+    if (!allowed.includes(string(r.status))) return fail(); return r;
+  }
   async postAction(id: string, action: "close" | "delete" | "reopen", signal?: AbortSignal) { const r = wire(await this.send(`/posts/${uuid(id)}/${action}`, {}, signal)); if (r.postId !== id) return fail(); string(r.status); timestamp(r.updatedAt); return r; }
   async block(id: string, blocked: boolean, signal?: AbortSignal) { const r = fields(await this.send(`/profiles/${uuid(id)}/${blocked ? "block" : "unblock"}`, {}, signal), ["targetId", "blocked", "alreadyApplied"]); if (r.targetId !== id || r.blocked !== blocked) return fail(); bool(r.alreadyApplied); return r; }
   async blocks(before?: string, signal?: AbortSignal): Promise<MemberPage> { return this.page(`/me/blocks?limit=20${before ? `&before=${uuid(before)}` : ""}`, signal); }

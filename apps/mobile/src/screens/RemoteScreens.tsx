@@ -64,6 +64,8 @@ function useRemotePage<T extends { id: string }>(
     loader.current = load;
   }, [load]);
   const controller = useRef<AbortController | null>(null);
+  const activeQuery = useRef<string | null>(null);
+  const loadingMore = useRef(false);
   const [state, set] = useState<
     {
       key: string;
@@ -75,6 +77,8 @@ function useRemotePage<T extends { id: string }>(
     }
   >({ key, items: [], nextCursor: null, busy: true, error: "", recovery: "retry" as RecoveryKind });
   useFocusEffect(useCallback(() => {
+    activeQuery.current = key;
+    loadingMore.current = false;
     set({ key, items: [], nextCursor: null, busy: true, error: "", recovery: "retry" });
     const active = new AbortController();
     controller.current?.abort();
@@ -95,6 +99,8 @@ function useRemotePage<T extends { id: string }>(
       }
     });
     return () => {
+      activeQuery.current = null;
+      loadingMore.current = false;
       active.abort();
       controller.current?.abort();
       set({ key: "", items: [], nextCursor: null, busy: true, error: "", recovery: "retry" });
@@ -104,7 +110,8 @@ function useRemotePage<T extends { id: string }>(
     ? state
     : { key, items: [], nextCursor: null, busy: true, error: "", recovery: "retry" as RecoveryKind };
   const more = async () => {
-    if (visible.busy || !visible.nextCursor) return;
+    if (visible.busy || !visible.nextCursor || loadingMore.current || activeQuery.current !== key || serviceSessionEpoch() !== epoch) return;
+    loadingMore.current = true;
     const active = new AbortController();
     controller.current?.abort();
     controller.current = active;
@@ -112,7 +119,7 @@ function useRemotePage<T extends { id: string }>(
     set({ ...visible, busy: true, error: "", recovery: "retry" as RecoveryKind });
     try {
       const page = await loader.current(cursor, active.signal);
-      if (active.signal.aborted || serviceSessionEpoch() !== epoch) return;
+      if (active.signal.aborted || serviceSessionEpoch() !== epoch || activeQuery.current !== key) return;
       if (
         page.nextCursor === cursor ||
         page.items.some((item) =>
@@ -131,9 +138,15 @@ function useRemotePage<T extends { id: string }>(
         const blocked = error instanceof ApiError && (error.status === 401 || error.status === 403 || error.code === "AUTH_REQUIRED");
         set({ ...visible, ...(blocked ? { items: [], nextCursor: null } : {}), busy: false, error: errorMessage(error), recovery: recoveryKind(error) });
       }
+    } finally {
+      if (controller.current === active) loadingMore.current = false;
     }
   };
-  return { ...visible, more, retry: () => retry((n) => n + 1) };
+  return { ...visible, more, retry: () => {
+    if (activeQuery.current !== key || serviceSessionEpoch() !== epoch) return;
+    controller.current?.abort();
+    retry((n) => n + 1);
+  } };
 }
 
 export function RemotePostCard({ post }: { post: PublicPostCard }) {
@@ -671,18 +684,62 @@ export function RemotePostDetail({ id }: { id: string }) {
               <Body>{post.privateDetails.meetingDetail}</Body>
             </Card>
           )}
-          {post.linkedEvent && (
-            <Card onPress={() => app.navigate("S09-3", post.linkedEvent!.id)}>
-              <Title>연결된 행사</Title>
-              <Body>{post.linkedEvent.title}</Body>
-            </Card>
-          )}
+          <RemotePostEventLink key={`${post.postId}:${post.updatedAt}:${session.epoch}`} postId={post.postId} />
           {session.authenticated && !owner && <RemoteReport targetId={post.postId} targetType="post" />}
           <TextButton onPress={() => app.navigate("S01")}>둘러보기</TextButton>
         </>
       )}
     </Screen>
   );
+}
+
+/** The extension is authoritative. Never reuse the base detail's cached source values. */
+export function RemotePostEventLink({ postId }: { postId: string }) {
+  const service = useService(), app = useApp();
+  const page = useRemotePage(`post-event-link:${postId}`, async (_cursor, signal) => {
+    if (!service) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
+    const link = await service.getPostEventLink(postId, signal);
+    return { items: [{ ...link, id: link.postId }], nextCursor: null };
+  });
+  const link = page.items[0];
+  if (page.busy) return <Card><Body muted>연결된 행사 정보를 확인하고 있어요…</Body></Card>;
+  if (page.error) return <Card><Title>행사 정보를 확인하지 못했어요</Title><Body muted>공고와 동행 약속은 유지돼요. 이전 행사 정보는 표시하지 않아요.</Body><RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} /></Card>;
+  if (!link || link.eventLinkState === "none") return null;
+  if (link.eventLinkState === "hidden") return <Card><Title>연결된 행사 정보를 현재 제공할 수 없어요</Title><Body muted>행사 취소를 의미하지는 않아요. 공고와 동행 약속은 유지돼요.</Body><TextButton onPress={page.retry}>행사 정보 다시 확인</TextButton></Card>;
+  if (link.eventLinkState === "manual" && link.manualEvent) return <Card>
+    <Badge>직접 입력한 행사</Badge><Title>{link.manualEvent.title}</Title>
+    {link.manualEvent.placeName ? <Body>행사장: {link.manualEvent.placeName}</Body> : null}
+    {link.manualEvent.publicAddress ? <Body>공개 행사장 주소: {link.manualEvent.publicAddress}</Body> : null}
+    <Body small muted>이 공고에만 연결된 행사예요. 상세 만남 지점은 별도로 확인해 주세요.</Body>
+  </Card>;
+  if (link.eventLinkState === "linked" && link.linkedEvent) return <View style={{ gap: 8 }}>
+    <Title>연결된 행사</Title>
+    <EventListCard event={link.linkedEvent} onPress={() => app.navigate("S09-3", link.linkedEvent!.id)} />
+    <TextButton onPress={() => app.navigate("S09-3", link.linkedEvent!.id)}>행사 정보 보기</TextButton>
+  </View>;
+  return null;
+}
+
+/** Exact server relationship only. A missing server filter is an error, never an empty list. */
+export function RemoteEventPosts({ eventId }: { eventId: string }) {
+  const service = useService();
+  const [recruiting, setRecruiting] = useState(false);
+  const page = useRemotePage(`event-posts:${eventId}:${recruiting}`, async (cursor, signal) => {
+    if (!service) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
+    const result = await service.searchEventPosts(eventId, recruiting, cursor, signal);
+    return { items: result.posts, nextCursor: result.nextCursor };
+  });
+  const additionalFailure = Boolean(page.error && page.items.length && page.nextCursor);
+  return <View style={{ gap: 14 }}>
+    <Title>이 행사에 연결된 동행 공고</Title>
+    <Body small muted>등록 최신순 · 10개씩 확인할 수 있어요.</Body>
+    <Row><Chip selected={!recruiting} onPress={() => setRecruiting(false)}>전체 상태</Chip><Chip selected={recruiting} onPress={() => setRecruiting(true)}>모집 중</Chip></Row>
+    {page.items.map(post => <RemotePostCard key={post.id} post={post} />)}
+    {page.busy && <Body muted>{page.items.length ? "추가 공고를 확인하고 있어요…" : "연결된 공고를 확인하고 있어요…"}</Body>}
+    {page.error && <Card><Title>{additionalFailure ? "추가 공고를 불러오지 못했어요" : "연결된 공고를 확인하지 못했어요"}</Title><RecoveryCard message={page.error} kind={page.recovery} onRetry={additionalFailure ? () => void page.more() : page.retry} /></Card>}
+    {!page.busy && !page.error && !page.items.length && <Empty title={recruiting ? "이 행사에 모집 중인 동행 공고가 없어요" : "아직 이 행사에 등록된 동행 공고가 없어요"} />}
+    {page.nextCursor && !page.busy && !page.error && <Button secondary onPress={() => void page.more()}>공고 10개 더 보기</Button>}
+  </View>;
 }
 
 export function useRemoteEventSource(id?: string) {
@@ -703,7 +760,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
   });
   const event = page.items[0];
   return (
-    <Screen title="행사 상세">
+    <Screen title="행사 상세" right={<TextButton onPress={page.retry}>새로고침</TextButton>}>
       {page.busy && <Body muted>행사를 확인하고 있어요…</Body>}
       {page.error && (
         <RecoveryCard message={page.error} kind={page.recovery} onRetry={page.retry} />
@@ -722,7 +779,7 @@ export function RemoteEventDetail({ id }: { id: string }) {
           }}>이 행사로 동행 구하기</Button> : <Body muted>종료·취소 또는 상태를 확인하지 못한 행사는 신규 동행 모집에 연결할 수 없어요.</Body>}
         </Card>
       )}
-      {event && <Card><Title>이 행사에 연결된 동행 공고</Title><Body muted>연결된 공고 조회를 준비하고 있어요. 조회가 연결되면 미리보기와 전체 목록을 확인할 수 있어요.</Body></Card>}
+      {event && <RemoteEventPosts key={`${event.id}:${session.epoch}`} eventId={event.id} />}
     </Screen>
   );
 }

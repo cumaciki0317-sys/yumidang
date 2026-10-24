@@ -1,0 +1,7 @@
+Starting: Intent { cmp=dev.yumidang.validation/.MainActivity }
+Status: ok
+LaunchState: COLD
+Activity: dev.yumidang.validation/.MainActivity
+TotalTime: 941
+WaitTime: 981
+Complete

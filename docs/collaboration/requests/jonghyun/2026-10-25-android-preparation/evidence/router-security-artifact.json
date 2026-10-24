@@ -1,0 +1,28 @@
+{
+  "apk": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-android-validation-Yip0Fn/apps/mobile/android/app/build/outputs/apk/release/app-release.apk",
+  "bytes": 44653809,
+  "sha256": "b58d89d10b27db608a562f2cac258bcad4bab12acabc9e2a1935afcecd74f948",
+  "sourceHashesUnchanged": true,
+  "maps": [
+    {
+      "map": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-android-validation-Yip0Fn/apps/mobile/android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map",
+      "decoderSources": [
+        "/src/safe-decode-uri.cjs",
+        "/../../../../../../../../../Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-android-prep-20261025/apps/mobile/node_modules/safe-decode-uri-component/index.js"
+      ]
+    },
+    {
+      "map": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-android-validation-Yip0Fn/apps/mobile/android/app/build/generated/sourcemaps/react/release/index.android.bundle.map",
+      "decoderSources": [
+        "/src/safe-decode-uri.cjs",
+        "/Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-android-prep-20261025/apps/mobile/node_modules/safe-decode-uri-component/index.js"
+      ]
+    }
+  ],
+  "embeddedBundle": true,
+  "build": "PASS",
+  "finalManifestReview": "PASS",
+  "signingVerification": "PASS_DEBUG_CERT",
+  "install": "NOT_RUN",
+  "nativeAuth": "NOT_CONNECTED"
+}

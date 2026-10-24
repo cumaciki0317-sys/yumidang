@@ -1,0 +1,52 @@
+{
+  "apk": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-android-validation-DnCJg5/apps/mobile/android/app/build/outputs/apk/release/app-release.apk",
+  "bytes": 44653357,
+  "sha256": "1bd4d20faf45aeffb5c0f6089b7bb0927ad3c6674a8cdd75a1e166103b95478a",
+  "embeddedBundle": [
+    "assets/index.android.bundle"
+  ],
+  "nativeLibraries": [
+    "lib/arm64-v8a/libandroidx.graphics.path.so",
+    "lib/arm64-v8a/libappmodules.so",
+    "lib/arm64-v8a/libc++_shared.so",
+    "lib/arm64-v8a/libexpo-modules-core.so",
+    "lib/arm64-v8a/libfbjni.so",
+    "lib/arm64-v8a/libgesturehandler.so",
+    "lib/arm64-v8a/libgifimage.so",
+    "lib/arm64-v8a/libhermestooling.so",
+    "lib/arm64-v8a/libhermesvm.so",
+    "lib/arm64-v8a/libimagepipeline.so",
+    "lib/arm64-v8a/libjsi.so",
+    "lib/arm64-v8a/libnative-filters.so",
+    "lib/arm64-v8a/libnative-imagetranscoder.so",
+    "lib/arm64-v8a/libreact_codegen_rngesturehandler_codegen.so",
+    "lib/arm64-v8a/libreact_codegen_rnscreens.so",
+    "lib/arm64-v8a/libreact_codegen_safeareacontext.so",
+    "lib/arm64-v8a/libreactnative.so",
+    "lib/arm64-v8a/libreanimated.so",
+    "lib/arm64-v8a/librnscreens.so",
+    "lib/arm64-v8a/libstatic-webp.so",
+    "lib/arm64-v8a/libworklets.so",
+    "lib/arm64-v8a/libzstd-kmp.so"
+  ],
+  "runtimeDependencyMapEvidence": [
+    {
+      "map": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-android-validation-DnCJg5/apps/mobile/android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map",
+      "sources": [
+        "/../../../../../../../../../Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-app-foundation-20261021/apps/mobile/node_modules/query-string/index.js",
+        "/../../../../../../../../../Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-app-foundation-20261021/apps/mobile/node_modules/decode-uri-component/index.js"
+      ]
+    },
+    {
+      "map": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-android-validation-DnCJg5/apps/mobile/android/app/build/generated/sourcemaps/react/release/index.android.bundle.map",
+      "sources": [
+        "/Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-app-foundation-20261021/apps/mobile/node_modules/query-string/index.js",
+        "/Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-app-foundation-20261021/apps/mobile/node_modules/decode-uri-component/index.js"
+      ]
+    }
+  ],
+  "productionSigning": false,
+  "installation": "NOT_RUN",
+  "nativeAuth": "NOT_CONNECTED",
+  "sourceHashesUnchanged": true
+}

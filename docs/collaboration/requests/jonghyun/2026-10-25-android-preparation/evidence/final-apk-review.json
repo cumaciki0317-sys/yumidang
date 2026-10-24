@@ -1,0 +1,105 @@
+{
+  "mode": "validation",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "config",
+      "ok": true,
+      "message": "Expo application configuration is present"
+    },
+    {
+      "id": "version",
+      "ok": true,
+      "message": "Display version is a semantic version"
+    },
+    {
+      "id": "version-code",
+      "ok": true,
+      "message": "Configured Android versionCode must be a positive integer"
+    },
+    {
+      "id": "package-format",
+      "ok": true,
+      "message": "Configured package must have a valid application ID shape"
+    },
+    {
+      "id": "schemes",
+      "ok": true,
+      "message": "Explicit valid application URL schemes are required"
+    },
+    {
+      "id": "picker-permission-options",
+      "ok": true,
+      "message": "Image picker explicitly disables camera and microphone permissions"
+    },
+    {
+      "id": "source-sensitive-permissions",
+      "ok": true,
+      "message": "Source does not explicitly enable camera or microphone"
+    },
+    {
+      "id": "source-cleartext",
+      "ok": true,
+      "message": "Source does not explicitly enable cleartext HTTP"
+    },
+    {
+      "id": "validation-identity",
+      "ok": true,
+      "message": "Validation identity is isolated from the production app"
+    },
+    {
+      "id": "validation-version-code",
+      "ok": true,
+      "message": "Validation configuration explicitly sets versionCode"
+    },
+    {
+      "id": "generated-inputs",
+      "ok": true,
+      "message": "Both generated AndroidManifest.xml and app build.gradle are required"
+    },
+    {
+      "id": "generated-identity",
+      "ok": true,
+      "message": "Generated applicationId and namespace match the resolved Expo configuration"
+    },
+    {
+      "id": "generated-version",
+      "ok": true,
+      "message": "Generated versionName and versionCode match the resolved configuration"
+    },
+    {
+      "id": "generated-sensitive-permissions",
+      "ok": true,
+      "message": "Generated manifest does not enable camera or microphone"
+    },
+    {
+      "id": "generated-cleartext",
+      "ok": true,
+      "message": "Generated application does not explicitly allow cleartext HTTP; absence is not a network-security audit"
+    },
+    {
+      "id": "generated-schemes",
+      "ok": true,
+      "message": "Configured schemes have an enabled exported VIEW/DEFAULT/BROWSABLE receiver; URI host/path and actual OAuth return remain unverified"
+    },
+    {
+      "id": "no-production-callback",
+      "ok": true,
+      "message": "Validation manifest cannot receive the production yumidang callback"
+    }
+  ],
+  "boundaries": {
+    "staticReviewOnly": true,
+    "productionApproval": "NOT_APPROVED",
+    "nativeBuildExecuted": false,
+    "installExecuted": false,
+    "credentialsRead": false,
+    "credentialsCreated": false,
+    "externalAccountChanged": false
+  },
+  "remaining": [
+    "Production application ID and prior Play registration history require team confirmation",
+    "Signing/upload-key ownership, custody and rotation require a separate approved process",
+    "Static settings cannot prove signing, installation, OAuth return or store readiness"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "scope": "Next independent Android preparation; event integration explicitly deferred by user",
+  "branch": "jonghyun/android-prep-20261025",
+  "items": [
+    {
+      "requirement": "Related event WBS records",
+      "status": "PASS",
+      "evidence": "evidence/blocked-wbs.json"
+    },
+    {
+      "requirement": "False-positive callback receiver validation corrected",
+      "status": "PASS",
+      "evidence": "evidence/settings-tests.log"
+    },
+    {
+      "requirement": "Isolated preview APK before Router mitigation",
+      "status": "PASS",
+      "evidence": "evidence/artifact.json"
+    },
+    {
+      "requirement": "Typecheck and lint",
+      "status": "PASS",
+      "evidence": "terminal commands npm run typecheck && npm run lint exited 0"
+    },
+    {
+      "requirement": "Fresh dependency security assessment",
+      "status": "RUNTIME_MITIGATION_VERIFIED_TOOLCHAIN_RESIDUAL",
+      "evidence": "evidence/npm-audit.json; evidence/metro-router-decoder-result.json; evidence/router-security-graph.json"
+    },
+    {
+      "requirement": "Android WBS handoff",
+      "status": "PASS",
+      "evidence": "evidence/android-wbs.json"
+    },
+    {
+      "requirement": "Native authentication and production identity/signing",
+      "status": "PENDING_INPUT",
+      "evidence": "Existing native-handoff.md; no new production selection made"
+    },
+    {
+      "requirement": "Device install/runtime and store release",
+      "status": "NOT_RUN",
+      "evidence": "No install, upload or deployment executed"
+    },
+    {
+      "requirement": "Compiled Metro web decoder execution",
+      "status": "PASS",
+      "evidence": "evidence/metro-router-decoder-result.json (19 vectors; Node VM, not full app)"
+    },
+    {
+      "requirement": "APK rebuilt with Router mitigation",
+      "status": "PASS",
+      "evidence": "evidence/router-security-artifact.json; evidence/router-security-final-review.json"
+    },
+    {
+      "requirement": "WBS direct Minkyu dependencies labeled",
+      "status": "PASS",
+      "evidence": "evidence/wbs-minkyu-needed-20261025.json (18 tasks)"
+    },
+    {
+      "requirement": "New isolated emulator APK installation and cold process start",
+      "status": "PASS",
+      "evidence": "emulator-result.md; evidence/emulator/",
+      "limits": "UI not observed; no physical device or member auth"
+    },
+    {
+      "requirement": "Authorized isolated emulator UI smoke and cold relaunch",
+      "status": "PASS",
+      "evidence": "emulator-ui-result.md; evidence/emulator-ui/",
+      "limits": "Preview mode only; not full QA/member flows"
+    }
+  ],
+  "sourceHashes": {
+    "apps/mobile/scripts/prepare-android-validation.mjs": "75d20680da56dfeee22e6fd1c62b26193d7a9b613ff8f45cc4b58a2c336eb805",
+    "apps/mobile/scripts/verify-android-settings.mjs": "831ce5af5f6c0ccb92ea9593f9e78f2df60b411ce636823ae03df0ff3d677223",
+    "tests/mobile/android-settings.test.mjs": "3b18b88d3d285dcf6ae09fbe930e5235e819f826bcff3d31c261604de1e862be"
+  },
+  "remainingWork": "Native contracts; production identity/signing; residual toolchain security; broader Android QA/accessibility; actual service/member flows deferred"
+}

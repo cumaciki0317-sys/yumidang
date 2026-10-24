@@ -1,0 +1,99 @@
+{
+  "status": "PASS",
+  "artifact": "/private/tmp/yumidang-router-security-export/_expo/static/js/web/entry-d7dd40e79d061f61842a77cfb8cfc5fc.js",
+  "sha256": "7bfee1c7a56ef48465fb6046700b12ccb3ea8685bd3e7de9f0801933c627cb7f",
+  "moduleIds": {
+    "/node_modules/query-string/index.js": 328,
+    "/src/safe-decode-uri.cjs": 330,
+    "/node_modules/safe-decode-uri-component/index.js": 331
+  },
+  "registeredModules": 962,
+  "excludedBootstrap": [
+    "__r(428);",
+    "__r(2);",
+    "__r(0);"
+  ],
+  "vectors": [
+    {
+      "input": "q=a+b",
+      "status": "PASS"
+    },
+    {
+      "input": "q=a%2Bb",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%EA%B0%80",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%F0%9F%98%80",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%&x=%GG",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%C2&lower=%c2",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%FE%FF&lower=%fe%ff",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%E2%82",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%E2%28%A1",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%ED%A0%80",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%C0%AF",
+      "status": "PASS"
+    },
+    {
+      "input": "q=%25C2%FF",
+      "status": "PASS"
+    },
+    {
+      "input": "a=1&a=2&empty=&missing",
+      "status": "PASS"
+    },
+    {
+      "input": "a+b=c+d&encoded%2Bkey=x%2By",
+      "status": "PASS"
+    },
+    {
+      "input": "q=a+b%2Bc",
+      "status": "PASS"
+    },
+    {
+      "encodedBytes": 384,
+      "status": "PASS",
+      "elapsedMs": 0.22
+    },
+    {
+      "encodedBytes": 3072,
+      "status": "PASS",
+      "elapsedMs": 0.64
+    },
+    {
+      "encodedBytes": 24576,
+      "status": "PASS",
+      "elapsedMs": 5.78
+    },
+    {
+      "encodedBytes": 98304,
+      "status": "PASS",
+      "elapsedMs": 105.19
+    }
+  ],
+  "scope": "Compiled production Metro web modules in isolated Node VM; no app bootstrap, DOM/browser, Android/Hermes or network flow executed; bounded timing is not a performance guarantee."
+}

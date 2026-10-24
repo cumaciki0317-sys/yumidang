@@ -11,6 +11,62 @@ const FORBIDDEN_PERMISSIONS = ['android.permission.CAMERA', 'android.permission.
 const androidAttribute = (text, name) => text.match(new RegExp(`android:${name}\\s*=\\s*["']([^"']+)["']`))?.[1];
 const gradleValue = (text, name) => text.match(new RegExp(`^\\s*${name}\\s*(?:=\\s*)?["']([^"']+)["']`, 'm'))?.[1];
 
+// Deliberately small parser for generated manifests, not a general XML validator.
+// Reject unsupported declarations, malformed nesting and unresolved attributes rather
+// than treating regex fragments/comments/queries as an Android receiver.
+function manifestTree(xml) {
+  const root = { name: '#document', attrs: {}, children: [] }, stack = [root];
+  const tokens = xml.match(/<!--[\s\S]*?-->|<\?xml[\s\S]*?\?>|<[^>"']*(?:"[^"]*"|'[^']*'|[^>"']*)*>|[^<]+/g) ?? [];
+  if (tokens.join('') !== xml) return null;
+  for (const token of tokens) {
+    if (token.startsWith('<!--') || token.startsWith('<?xml')) continue;
+    if (!token.startsWith('<')) { if (token.trim()) return null; continue; }
+    const end = token.match(/^<\/([\w:.-]+)\s*>$/);
+    if (end) { if (stack.length === 1 || stack.pop().name !== end[1]) return null; continue; }
+    const start = token.match(/^<([\w:.-]+)([\s\S]*?)(\/?)>$/);
+    if (!start) return null;
+    const attrs = {}, body = start[2]; let offset = 0;
+    const re = /\s+([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/gy;
+    while (offset < body.length && body.slice(offset).trim()) {
+      re.lastIndex = offset; const a = re.exec(body);
+      if (!a || Object.hasOwn(attrs, a[1])) return null;
+      attrs[a[1]] = a[2] ?? a[3]; offset = re.lastIndex;
+    }
+    const node = { name: start[1], attrs, children: [] };
+    stack.at(-1).children.push(node); if (!start[3]) stack.push(node);
+  }
+  if (stack.length !== 1 || root.children.length !== 1 || root.children[0].name !== 'manifest') return null;
+  return root.children[0];
+}
+function callbackSchemes(xml, packageId) {
+  const manifest = manifestTree(xml);
+  if (!manifest || manifest.attrs['xmlns:android'] !== 'http://schemas.android.com/apk/res/android') return null;
+  const apps = manifest.children.filter(n => n.name === 'application');
+  if (apps.length !== 1) return null;
+  const app = apps[0], names = new Set();
+  const enabled = n => n.attrs['android:enabled'] === undefined || n.attrs['android:enabled'] === 'true';
+  const fullName = name => !name ? null : name.startsWith('.') ? `${packageId}${name}` : name.includes('.') ? name : `${packageId}.${name}`;
+  const activities = app.children.filter(n => n.name === 'activity');
+  if (!enabled(app)) return [];
+  for (const node of app.children) {
+    if (!['activity', 'activity-alias'].includes(node.name) || !fullName(node.attrs['android:name']) || node.attrs['android:exported'] !== 'true' || !enabled(node)) continue;
+    if (node.name === 'activity-alias') {
+      const target = fullName(node.attrs['android:targetActivity']);
+      const matches = activities.filter(a => fullName(a.attrs['android:name']) === target);
+      if (!target || matches.length !== 1 || !enabled(matches[0]) || app.children.indexOf(matches[0]) >= app.children.indexOf(node)) continue;
+    }
+    for (const filter of node.children.filter(n => n.name === 'intent-filter')) {
+      const has = (tag, value) => filter.children.some(n => n.name === tag && n.attrs['android:name'] === value);
+      if (!has('action', 'android.intent.action.VIEW') || !has('category', 'android.intent.category.DEFAULT') || !has('category', 'android.intent.category.BROWSABLE')) continue;
+      for (const data of filter.children.filter(n => n.name === 'data')) {
+        const scheme = data.attrs['android:scheme'];
+        if (scheme && /^[a-z][a-z0-9+.-]*$/.test(scheme)) names.add(scheme);
+      }
+    }
+  }
+  return [...names];
+}
+
 export function reviewAndroidSettings({ mode = 'source', config, manifest, gradle } = {}) {
   if (!MODES.has(mode)) throw new Error('mode must be source, validation, or production');
   const checks = [];
@@ -48,10 +104,10 @@ export function reviewAndroidSettings({ mode = 'source', config, manifest, gradl
       add('generated-sensitive-permissions', !permissions.some(p => FORBIDDEN_PERMISSIONS.includes(p)), 'Generated manifest does not enable camera or microphone');
       const application = manifest.match(/<application\b[^>]*>/)?.[0];
       add('generated-cleartext', Boolean(application) && androidAttribute(application, 'usesCleartextTraffic') !== 'true', 'Generated application does not explicitly allow cleartext HTTP; absence is not a network-security audit');
-      const nativeSchemes = [...manifest.matchAll(/<data\b[^>]*>/g)].map(m => androidAttribute(m[0], 'scheme')).filter(Boolean);
-      add('generated-schemes', Array.isArray(schemes) && schemes.every(s => nativeSchemes.includes(s)), 'Configured callback schemes are present in the generated manifest');
+      const nativeSchemes = callbackSchemes(manifest, android.package);
+      add('generated-schemes', Array.isArray(schemes) && nativeSchemes !== null && schemes.every(s => nativeSchemes.includes(s)), 'Configured schemes have an enabled exported VIEW/DEFAULT/BROWSABLE receiver; URI host/path and actual OAuth return remain unverified');
       if (mode === 'validation') {
-        add('no-production-callback', !nativeSchemes.includes('yumidang'), 'Validation manifest cannot receive the production yumidang callback');
+        add('no-production-callback', nativeSchemes !== null && !nativeSchemes.includes('yumidang'), 'Validation manifest cannot receive the production yumidang callback');
       }
     }
   }

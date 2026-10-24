@@ -1,0 +1,90 @@
+/** Real Expo web screens with intercepted synthetic HTTP; no real service/member/provider traffic. */
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import http from 'node:http';
+import {createRequire} from 'node:module';
+import {spawn} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const source=path.resolve(process.env.EVENT_MEMBER_SOURCE_ROOT||path.join(import.meta.dirname,'../..'));
+const actual=path.resolve(import.meta.dirname,'../../apps/mobile');
+const require=createRequire(path.join(actual,'package.json'));
+const {chromium}=require('playwright');
+const temp=await fs.mkdtemp(path.join(os.tmpdir(),'yumidang-event-member-browser-'));
+const app=path.join(temp,'apps/mobile'),output=path.join(temp,'web');
+await fs.mkdir(app,{recursive:true});
+await fs.cp(path.join(source,'apps/mobile/src'),path.join(app,'src'),{recursive:true});
+for(const name of ['package.json','app.json','tsconfig.json','metro.config.js'])await fs.copyFile(path.join(source,'apps/mobile',name),path.join(app,name));
+await fs.symlink(path.join(actual,'node_modules'),path.join(app,'node_modules'),'dir');
+await fs.symlink(path.join(actual,'assets'),path.join(app,'assets'),'dir');
+await fs.symlink(path.join(source,'backend'),path.join(temp,'backend'),'dir');
+const sourceHashes={};
+for(const name of ['screens/RemoteScreens.tsx','screens/RemoteMemberScreens.tsx','screens/BrowseScreens.tsx','screens/RemoteEventEditor.tsx','api.ts','service.ts','member-service.ts','event-contract.ts','remote.tsx','state.tsx','storage.ts','presentation/events/EventPresentation.tsx'])sourceHashes[name]=createHash('sha256').update(await fs.readFile(path.join(app,'src',name))).digest('hex');
+await fs.appendFile(path.join(app,'metro.config.js'),`\nmodule.exports.cacheVersion = ${JSON.stringify(temp)};\n`);
+const pid='20000000-0000-4000-8000-000000000001',aid='30000000-0000-4000-8000-000000000001',cid='40000000-0000-4000-8000-000000000001',ticket='50000000-0000-4000-8000-000000000001';
+await fs.writeFile(path.join(app,'src/app/event-member-test.tsx'),`import React from 'react';
+import {View,Text,Pressable} from 'react-native';
+import {useLocalSearchParams} from 'expo-router';
+import {installMemberSessionPort,installMemberSessionDetails} from '../remote';
+import {RemotePostEditor,RemoteAppointmentScreen} from '../screens/RemoteMemberScreens';
+export default function Test(){const {view}=useLocalSearchParams();const install=()=>{installMemberSessionPort({login:async()=>null,restore:async()=>new Promise(()=>{}),logout:async()=>{}} as any);installMemberSessionDetails({userId:'11111111-1111-4111-8111-111111111111',accessToken:'synthetic-member',status:'ready',returnTo:'/'});};return <View style={{flex:1}}><Text>합성 행사 쓰기 화면 검증</Text><Pressable accessibilityRole="button" onPress={install}><Text>합성 회원 설치</Text></Pressable>{view==='accept'?<RemoteAppointmentScreen id="${aid}"/>:<RemotePostEditor id="${pid}"/>}</View>;}`);
+const env={...process.env,EXPO_OFFLINE:'1',CI:'1',EXPO_NO_TELEMETRY:'1',EXPO_PUBLIC_DATA_MODE:'service',EXPO_PUBLIC_POST_CONTENT_INSPECTION:'required',EXPO_PUBLIC_SERVICE_API_URL:'https://api.synthetic.test/service-api',EXPO_PUBLIC_AI_CHAT_URL:'https://api.synthetic.test/ai-chat'};
+const buildLog=path.join(temp,'export.log');
+await new Promise((resolve,reject)=>{const child=spawn(process.execPath,[path.join(actual,'node_modules/expo/bin/cli'),'export','--platform','web','--output-dir',output],{cwd:app,env});let log='';child.stdout.on('data',c=>{log+=c;});child.stderr.on('data',c=>{log+=c;});child.on('error',reject);child.on('close',async code=>{await fs.writeFile(buildLog,log);code===0?resolve():reject(Error('Expo export failed: '+log.slice(-3500)));});});
+const mime={'.js':'application/javascript','.css':'text/css','.html':'text/html','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.ttf':'font/ttf','.woff2':'font/woff2','.ico':'image/x-icon'};
+const server=http.createServer(async(req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);let file=path.resolve(output,'.'+pathname);if(!file.startsWith(output+path.sep)&&file!==output){res.writeHead(403);return res.end();}try{if(!(await fs.stat(file)).isFile())file=path.join(output,'index.html');}catch{file=path.join(output,'index.html');}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(await fs.readFile(file));}catch{res.writeHead(500);res.end();}});
+await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+const base='http://127.0.0.1:'+server.address().port;
+const browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE||'/Users/b/Library/Caches/ms-playwright/chromium-1243/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'});
+const page=await browser.newPage({viewport:{width:390,height:844}});page.setDefaultTimeout(10000);
+const checks=[],errors=[],external=[],calls=[],screenshots=[];
+let mode='edit',inspectionFails=true,accepted=false;
+const fixtureNow=Date.now(), at=hours=>new Date(fixtureNow+hours*3600000).toISOString();
+const startsAt=at(24),endsAt=at(25),updatedAt=at(0);
+const manual={title:'기존 합성 클래스',placeName:'합성 공방',publicAddress:'',publicAddressConfirmed:false};
+const next={...manual,title:'변경 합성 클래스'};
+const detail=()=>({postId:pid,title:'합성 동행 공고',description:'기존 공고 소개',category:'공연',startsAt,endsAt,recruitmentEndsAt:at(23),updatedAt,publicArea:'서울특별시 종로구 사직동',status:'recruiting',costType:'free',amount:0,preferenceNote:null,tags:[],eventId:null,linkedEvent:null,authorDisplayName:'합성 회원',privateDetails:{registeredPlaceName:'합성 만남장소',registeredAddress:'서울특별시 종로구 세종대로',meetingDetail:'합성 입구'}});
+const proposal=()=>({appointmentId:aid,changeId:cid,conditionVersion:'synthetic-v1',status:accepted?'accepted':'awaiting_response',oldSchedule:{startsAt,endsAt},newSchedule:{startsAt,endsAt},requestedByMe:false,requestedAt:updatedAt,expiresAt:at(6),resolvedAt:accepted?updatedAt:null,changeKind:'event',eventFingerprint:'a'.repeat(64),newEventInput:accepted?null:{eventId:null,manualEvent:next},newLinkedEvent:null});
+const check=(name,value)=>{checks.push({name,pass:!!value});console.log(value?'PASS':'FAIL',name);assert.ok(value,name);};
+page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.origin===base)return route.continue();if(u.origin!=='https://api.synthetic.test'){external.push(u.origin);return route.abort();}
+ const pathname=u.pathname.replace('/service-api',''),input=req.postData()?JSON.parse(req.postData()):null;calls.push({path:pathname,input,headers:await req.allHeaders(),method:req.method()});let data,status=200;
+ if(pathname==='/me/posts')data={items:[{postId:pid,title:'합성 동행 공고',createdAt:updatedAt,isOwner:true}],nextCursor:null};
+ else if(pathname===`/posts/${pid}`)data=detail();
+ else if(pathname===`/posts/${pid}/event-link`)data={postId:pid,eventId:null,manualEvent:manual,linkedEvent:null,eventLinkState:'manual'};
+ else if(pathname==='/appointments')data=mode==='edit'?[]:[{appointment_id:aid,post_id:pid,post_title:'합성 동행 공고',status:'confirmed',my_role:'author'}];
+ else if(pathname===`/appointments/${aid}`)data=[{appointment_id:aid,post_id:pid,join_request_id:'60000000-0000-4000-8000-000000000001',my_role:'companion',status:'confirmed',confirmed_at:updatedAt,completed_at:null,completion_method:null,completion_notified_at:null,dispute_deadline_at:null,completed_by_me:false,can_dispute:false,dispute_status:null,counterpart_avatar_url:null,my_completion_at:null,peer_completion_at:null,post_title:'합성 동행 공고',post_starts_at:startsAt,post_ends_at:endsAt,post_public_area:'서울특별시 종로구 사직동',counterpart_masked_name:'합*',can_confirm_completion:false,server_now:updatedAt}];
+ else if(pathname===`/appointments/${aid}/schedule-change`)data={appointmentId:aid,status:'confirmed',startsAt,endsAt,updatedAt,change:mode==='accept'?proposal():null,cancellation:null};
+ else if(pathname==='/content-inspections'){if(inspectionFails)status=503;else data={decision:'allow',reasons:[],ticketId:ticket,operationId:input.operationId,action:'post_update',targetId:pid};}
+ else if(pathname===`/posts/${pid}/update`)data={postId:pid,status:mode==='propose'?'event_change_pending':'recruiting',updatedAt};
+ else if(pathname===`/appointments/${aid}/schedule-change/accept-event`){accepted=true;data=proposal();}
+ else{external.push('UNEXPECTED_API:'+pathname);return route.abort();}
+ await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===200?{data}:{error:{code:'EXTERNAL_UNAVAILABLE'}})});
+});
+const click=name=>page.getByRole('button',{name,exact:true}).last().click();
+const body=()=>page.locator('body').innerText();
+const screenshot=async name=>{const file=path.join(temp,name+'.png');await page.screenshot({path:file,animations:'disabled'});screenshots.push(file);};
+const visit=async view=>{mode=view;await page.goto(base+'/event-member-test?view='+view);await click('합성 회원 설치');};
+const report=process.env.EVENT_MEMBER_BROWSER_RESULT||'/private/tmp/yumidang-event-member-browser-result.json';
+try{
+ await visit('edit');await page.getByText('기존 합성 클래스',{exact:true}).waitFor();await page.getByRole('textbox',{name:'제목',exact:true}).fill('수정된 합성 공고');
+ await click('공고 수정 저장');await page.getByText(/공개글 검사를 아직 사용할 수 없어요/).waitFor();
+ check('검사 실패는 저장하지 않고 제목과 기존 수동 행사 보존',!calls.some(c=>c.path.endsWith('/update'))&&await page.getByRole('textbox',{name:'제목',exact:true}).inputValue()==='수정된 합성 공고');await screenshot('manual-edit-inspection-unavailable');
+ inspectionFails=false;await click('공고 수정 저장');await page.waitForFunction(()=>document.body.innerText.includes('공고를 수정했어요'));
+ const write=calls.find(c=>c.path.endsWith('/update')),inspection=calls.filter(c=>c.path==='/content-inspections').at(-1);
+ check('수동 행사 유지 수정도 검사 뒤 ticket으로 저장',write.input.manualEvent.title===manual.title&&write.input.eventId===null&&write.headers['x-content-inspection-ticket']===ticket&&write.headers['x-content-operation-id']===inspection.input.operationId);
+ check('같은 수정 의도의 검사 재시도 ID 유지',calls.filter(c=>c.path==='/content-inspections')[0].input.operationId===inspection.input.operationId);await screenshot('manual-edit-saved');
+ await visit('propose');await page.getByText('확정 동행의 행사 변경',{exact:true}).waitFor();
+ check('확정 동행 일반 필드는 읽기 전용',await page.getByRole('textbox',{name:'제목',exact:true}).getAttribute('readonly')!==null);
+ await click('직접 입력');await page.getByRole('textbox',{name:'행사명, 필수',exact:true}).fill(next.title);await click('이 공고에 연결');await click('행사 변경 제안 보내기');await page.getByText(/행사 변경을 제안했어요/).first().waitFor();
+ const proposeWrite=calls.filter(c=>c.path.endsWith('/update')).at(-1),proposeInspection=calls.filter(c=>c.path==='/content-inspections').at(-1);
+ check('행사 변경 제안은 원래 공고를 유지하고 별도 변경 ID 전달',proposeWrite.input.title===detail().title&&proposeWrite.input.description===detail().description&&proposeWrite.input.startsAt===startsAt&&proposeWrite.input.manualEvent.title===next.title&&proposeWrite.input.eventChangeId===proposeInspection.input.operationId);await screenshot('confirmed-event-proposed');
+ await visit('accept');await page.getByText('변경 합성 클래스',{exact:true}).waitFor();await page.getByText('기존 합성 클래스',{exact:true}).waitFor();check('수락 전 기존·제안 행사 함께 표시',true);await page.getByRole('button',{name:'이 행사 변경 수락',exact:true}).scrollIntoViewIfNeeded();await screenshot('event-accept-before');
+ await click('이 행사 변경 수락');await page.getByText('종료된 제안의 원문은 표시하지 않아요. 현재 공고와 약속을 확인해 주세요.',{exact:true}).waitFor();
+ const accept=calls.find(c=>c.path.endsWith('/accept-event'));check('행사 전용 수락은 ID·버전·지문을 정확히 전달',accept.input.changeId===cid&&accept.input.conditionVersion==='synthetic-v1'&&accept.input.eventFingerprint==='a'.repeat(64)&&!calls.some(c=>c.path.endsWith('/accept')));await screenshot('event-accepted');
+ check('종료된 행사 제안 원문 제거',!(await body()).includes(next.title));
+ check('모바일 가로 넘침 없음',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));check('실제 외부 요청·런타임 오류 없음',external.length===0&&errors.length===0);
+}catch(error){errors.push(String(error));console.error((await body()).slice(-3500));await screenshot('failure');}
+finally{await browser.close();await new Promise(resolve=>server.close(resolve));await fs.writeFile(report,JSON.stringify({status:checks.every(c=>c.pass)&&checks.length>0&&!errors.length&&!external.length?'PASS':'FAIL',source,sourceHashes,temp,buildLog,screenshots,checks,errors,external,calls,scope:'Actual Expo web render with synthetic intercepted HTTP. Server eventId filtering/DB/provider/member/native operation not verified.'},null,2));console.log('RESULT',report);}
+assert.equal(JSON.parse(await fs.readFile(report,'utf8')).status,'PASS');

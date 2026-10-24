@@ -1,4 +1,5 @@
 import { ApiError, ServiceApiClient, requestSignal } from "./api.ts";
+import { manualEventInput, type ManualEventInput } from "./event-contract.ts";
 import type { Filters } from "./types.ts";
 import type { PlaceLookupResult } from "../../../backend/supabase/functions/_shared/integrations/places/port.ts";
 import { CATEGORIES } from "./domain.ts";
@@ -117,6 +118,13 @@ export interface PostDetails {
   } | null;
   participantNames?: { userId: string; realName: string }[] | null;
 }
+
+export interface PostEventLink {
+  postId: string; eventId: string | null; manualEvent: ManualEventInput | null;
+  linkedEvent: PublicEventItem | null; eventLinkState: "none" | "manual" | "linked" | "hidden";
+}
+/** Shares the exact existing public projection with proposal decoding. */
+export function readPublicEvent(value: unknown): PublicEventItem { return event(value, true); }
 
 const categories: readonly string[] = CATEGORIES;
 const regions: Record<string, PostRegion> = {
@@ -816,6 +824,31 @@ export class YumidangService {
       nextCursor,
     };
   }
+  /** Proposed server filter; unsupported servers surface an error, never an empty/fuzzy substitute. */
+  async searchEventPosts(eventId: string, recruiting = false, next?: string, signal?: AbortSignal): Promise<PublicPostPageResult> {
+    if (!uuid.test(eventId) || typeof recruiting !== "boolean") return invalid();
+    const params = new URLSearchParams({ eventId, availability: recruiting ? "recruiting" : "all", sort: "created_desc", limit: "10" });
+    if (next !== undefined) params.set("cursor", cursor(next)!);
+    const {data, anonymous} = await this.read(`/posts?${params}`, signal);
+    const raw = exact(data, ["status", "posts", "nextCursor"]);
+    if (!Array.isArray(raw.posts) || raw.posts.length > 10 || !["results","no_results"].includes(String(raw.status))) return fail();
+    const posts = raw.posts.map(v => postCard(v,anonymous)), nextCursor = cursor(raw.nextCursor);
+    if ((raw.status === "results") !== (posts.length > 0) || (!posts.length && nextCursor !== null) || new Set(posts.map(p=>p.id)).size !== posts.length) return fail();
+    return { status: raw.status as PublicPostPageResult["status"], posts, nextCursor };
+  }
+  async getPostEventLink(postId: string, signal?: AbortSignal): Promise<PostEventLink> {
+    if (!uuid.test(postId)) return invalid();
+    const { data } = await this.read(`/posts/${postId}/event-link`, signal);
+    const raw = exact(data,["postId","eventId","manualEvent","linkedEvent","eventLinkState"]);
+    if (raw.postId !== postId || !["none","manual","linked","hidden"].includes(String(raw.eventLinkState))) return fail();
+    if (raw.eventId !== null) id(raw.eventId);
+    let manual: ManualEventInput | null = null;
+    if (raw.manualEvent !== null) { try { manual = manualEventInput(raw.manualEvent); } catch { return fail(); } }
+    const linked = raw.linkedEvent === null ? null : event(raw.linkedEvent,true);
+    const expected = raw.eventId === null ? (manual ? "manual" : "none") : (linked ? "linked" : "hidden");
+    if (raw.eventLinkState !== expected || (raw.eventId !== null && manual !== null) || (linked && linked.id !== raw.eventId)) return fail();
+    return { postId, eventId: raw.eventId as string|null, manualEvent: manual, linkedEvent: linked, eventLinkState: expected };
+  }
   async listEvents(
     query: EventPageQuery,
     next?: string,
@@ -1263,7 +1296,7 @@ export class YumidangService {
     if (raw.linkedEvent !== null) {
       const linked = event(raw.linkedEvent, true);
       if (linked.id !== raw.eventId) return fail();
-    } else if (raw.eventId !== null) return fail();
+    }
     if (raw.privateDetails != null) {
       const details = exact(raw.privateDetails, [
         "registeredPlaceName",

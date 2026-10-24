@@ -1,9 +1,11 @@
 import { FormErrors, FormErrorAnchor, FormErrorTarget, useFormErrors, useUxFocus, createUxFocusController } from "../presentation/ux-form";
 import { UxModalSheet } from "../presentation/ux-modal-sheet";
 import RemotePlacePicker from "./RemotePlacePicker";
-import { serviceMode, serviceSessionEpoch, useServiceSession } from "../remote";
+import { serviceMode, serviceSessionEpoch, useService, useServiceSession } from "../remote";
 import { RemoteAccountHeader, RemoteUpcomingAppointments, RemotePostEditor, useMemberAction } from "./RemoteMemberScreens";
 import * as Crypto from "expo-crypto";
+import { ApiError } from "../api";
+import { canSelectEvent, eventSelectionUnavailableLabel } from "../presentation/events/event-selection";
 import { RemotePostResults, RemoteEventResults, RemotePostDetail, RemoteEventDetail, RemoteRankings, RemoteEventListScreen, RemoteEventPicker, useRemoteEventSource } from "./RemoteScreens";
 import React, { useMemo, useRef, useState } from "react";
 import {
@@ -2131,7 +2133,7 @@ function CreateForm({ id }: { id?: string }) {
       <UxModalSheet visible={manualOpen} focusController={manualFocus} onRequestClose={closeManual} onShown={() => restoreShown("manual")} onClosed={afterSheetClosed} overlayStyle={styles.sheetOverlay} sheetStyle={styles.filterSheet}>
           <Title>행사 직접 입력</Title>
           <Body small muted>이 공고에만 표시해요. 공통 행사 목록이나 별도 행사 상세에는 등록하지 않아요.</Body>
-          {serviceMode && <Body small muted>직접 입력 행사 서버 연결은 준비 중이에요. 입력·세션 보관·등록 전 확인은 가능하지만 실제 공고 등록은 아직 할 수 없어요.</Body>}
+          {serviceMode && <Body small muted>등록할 때 행사 정보를 검사해요. 검사가 준비되지 않았거나 통과하지 못하면 입력을 보존하고 등록을 멈춰요.</Body>}
           <Field label="행사명 *" value={manualInput.title} onChangeText={(title) => { setManualInput((value) => ({ ...value, title })); setManualError(""); }} placeholder="예: 주말 취미 합주 공연" />
           <Field label="장소명 (선택)" value={manualInput.placeName} onChangeText={(placeName) => { setManualInput((value) => ({ ...value, placeName })); setManualError(""); }} placeholder="예: 공개된 공연장 또는 공방" />
           <Button secondary focusRef={manualAddressTarget} onPress={() => { setPlaceTarget("event"); setPlaceQuery(manualInput.placeName); queueSheet({ destination: "place" }); setManualOpen(false); }}>공개 행사장 주소 검색 (선택)</Button>
@@ -2234,9 +2236,10 @@ export function PublishScreen() {
 }
 function PublishForm() {
   const app = useApp();
+  const publicService = useService?.();
   const action = useMemberAction();
   const session = useServiceSession();
-  const attempt = useRef<{ fingerprint: string; postId: string } | null>(null);
+  const attempt = useRef<{ fingerprint: string; postId: string; dispatched?: boolean } | null>(null);
   const [draft, setDraft] = useState<Draft>(() => app.draft || blankDraft());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -2267,8 +2270,7 @@ function PublishForm() {
     }
     if (serviceMode) {
       if (app.deviceStorage && (app.deviceStorage.status !== "ready" || app.deviceStorage.draftCleanupPending)) { app.showToast("기기 저장 내용을 먼저 확인해 주세요. 작성한 내용은 유지돼요."); return; }
-      if (draft.manualEvent !== undefined) { setErrors({ event: "직접 입력 행사 서버 연결을 준비 중이에요. 입력은 유지돼요. 다시 시도하거나 수정 화면에서 행사 연결을 삭제해 주세요." }); return; }
-      if (!session.authenticated || draft.serviceDraftEpoch !== session.epoch) { app.showToast("이 계정에서 작성한 초안으로 다시 시작해 주세요."); return; }
+      if (!session.authenticated || draft.serviceDraftEpoch !== session.epoch || serviceSessionEpoch() !== session.epoch) { app.showToast("이 계정에서 작성한 초안으로 다시 시작해 주세요."); return; }
       const input = {
         title: draft.title.trim(), description: draft.introduction.trim(), category: draft.category,
         startsAt: new Date(parseDateInput(draft.startsAt)).toISOString(), endsAt: new Date(parseDateInput(draft.endsAt)).toISOString(),
@@ -2276,11 +2278,39 @@ function PublishForm() {
         publicArea: draft.publicArea, registeredPlaceName: draft.placeName || null, registeredAddress: draft.address,
         meetingDetail: draft.meetingPoint, preferenceNote: [draft.wishes, draft.desiredAgeMin && draft.desiredAgeMax ? `희망 나이: 만 ${draft.desiredAgeMin}~${draft.desiredAgeMax}세` : ""].filter(Boolean).join(" · ") || null,
         tags: [], costType: "free" as const, amount: 0 as const, ...(draft.eventId ? { eventId: draft.eventId } : {}),
+        ...(draft.manualEvent !== undefined ? { manualEvent: manualEventPatch(draft.manualEvent).manualEvent! } : {}),
       };
       const fingerprint = JSON.stringify(input);
       if (!attempt.current || attempt.current.fingerprint !== fingerprint) attempt.current = { fingerprint, postId: Crypto.randomUUID() };
       const postId = attempt.current.postId;
-      void action.run((s, signal) => s.create(postId, input, signal), () => {
+      void action.run(async (s, signal) => {
+        try {
+          // An already-dispatched identical intent may have succeeded. Preserve its ID
+          // so the server resolves the original receipt instead of a newer event state.
+          if (input.eventId && !attempt.current?.dispatched) {
+            if (!publicService) throw new ApiError(503, "EVENT_RECHECK_UNAVAILABLE");
+            const latest = await publicService.getEvent(input.eventId, signal);
+            if (!canSelectEvent(latest)) {
+              if (!signal.aborted && serviceSessionEpoch() === session.epoch) setErrors({ event: `${eventSelectionUnavailableLabel(latest)}. 입력은 유지돼요. 행사 연결을 변경하거나 삭제해 주세요.` });
+              throw new ApiError(409, "EVENT_NOT_SELECTABLE");
+            }
+          }
+          if (signal.aborted || serviceSessionEpoch() !== session.epoch) throw new ApiError(401, "AUTH_REQUIRED");
+          if (attempt.current?.postId === postId) attempt.current.dispatched = true;
+          return await s.create(postId, input, signal);
+        } catch (error) {
+          if (!signal.aborted && serviceSessionEpoch() === session.epoch) {
+            const code = error instanceof ApiError ? error.code : "";
+            if (input.eventId && code !== "EVENT_NOT_SELECTABLE") setErrors({ event: "행사 또는 등록 상태를 확인하지 못했어요. 입력은 유지돼요. 다시 등록을 눌러 확인하거나 행사 연결을 수정해 주세요." });
+            if (input.manualEvent) setErrors({ event: code === "CONTENT_BLOCKED"
+              ? "행사 정보에 개인정보 또는 등록할 수 없는 내용이 있어요. 입력은 유지돼요. 내용을 수정한 뒤 다시 등록해 주세요."
+              : code === "CONTENT_INSPECTION_UNAVAILABLE"
+              ? "검사 서비스를 확인하지 못했어요. 입력은 유지돼요. 잠시 후 다시 시도해 주세요. 검사를 건너뛰어 등록하지 않아요."
+              : "행사 정보 검사 또는 등록을 완료하지 못했어요. 입력은 유지돼요. 내용을 확인하고 다시 시도해 주세요. 검사를 건너뛰어 등록하지 않아요." });
+          }
+          throw error;
+        }
+      }, () => {
         app.showToast("공고를 등록했어요.");
         void app.clearDraft(draft.serviceDraftRevision).catch(() => app.showToast("공고는 등록됐지만 기기 초안 정리를 확인하지 못했어요. 둘러보기에서 다시 정리해 주세요."));
         app.navigate("S02", postId);
@@ -2357,7 +2387,7 @@ function PublishForm() {
       </View>
       <Title>{"입력하신 공고를\n최종 점검해 주세요"}</Title>
       {serviceMode && action.error && <Body style={{ color: colors.red }}>{action.error}</Body>}
-      {serviceMode && draft.manualEvent !== undefined && <Card><Body>직접 입력 행사 서버 연결을 준비 중이에요. 입력은 유지돼요. 실제 등록하려면 수정 화면에서 행사 연결을 변경하거나 삭제해 주세요.</Body><TextButton onPress={() => void edit()}>행사 연결 수정·삭제</TextButton></Card>}
+      {serviceMode && errors.event && <Card><Body style={{ color: colors.red }}>{errors.event}</Body><TextButton onPress={() => void edit()}>행사 연결 수정·삭제</TextButton></Card>}
       <Body muted>함께할 상대와 공개 범위를 확인해 주세요.</Body>
       <Section title="함께할 분의 희망 나이 (선택)">
         <View style={styles.wrap}>

@@ -45,6 +45,8 @@ function harness(kind = "create", existingManual = false) {
       if (id === "react-native") return { View: "View", Text: "Text", Modal: "Modal", ScrollView: "ScrollView", KeyboardAvoidingView: "KeyboardAvoidingView", Pressable: "Pressable", StyleSheet: { create: value => value }, Platform: { OS: "android" }, BackHandler: { addEventListener(event, callback) { listeners.set(event, callback); return { remove: () => listeners.delete(event) }; } } };
       if (id === "expo-router") return { useFocusEffect(callback) { const i = index++; const previous = slots[i]; if (previous?.callback !== callback) { slots[i] = { callback }; effects.push(() => { focusCleanups.get(i)?.(); const cleanup = callback(); if (cleanup) focusCleanups.set(i, cleanup); else focusCleanups.delete(i); }); } } };
       if (id === "react-native-safe-area-context") return { useSafeAreaInsets: () => ({ top: 24, left: 0, right: 0, bottom: 32 }), useSafeAreaFrame: () => ({ x: 0, y: 0, width: 320, height: 685 }) };
+      if (id === "../api") return load("api.ts");
+      if (id === "../presentation/events/event-selection") return load("presentation/events/event-selection.ts");
       if (id === "../state") return { useApp: () => app };
       if (id === "../ui") return { ...Object.fromEntries(names.map(name => [name, name])), colors: {}, dateLabel: () => "날짜", timeLabel: () => "시간" };
       if (id === "../remote") return { serviceMode: false, serviceSessionEpoch: () => 0, useServiceSession: () => ({ epoch: 0 }) };

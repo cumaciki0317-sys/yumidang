@@ -1,0 +1,25 @@
+{
+  "note": "2026-10-25 종현 — 서버 선행 확인 및 실제 연동 보류\n사용자 지시: 이 작업의 실제 연동 검증은 넘어가고 다음 잔여 작업을 진행한다.\n실제 확인: Railway yumidang production의 completion-runner는 Online이나 자동 완료 작업용이며 공개 API 주소가 없다. 연결 브랜치는 minkyu/foundation-harness다. Supabase yumidang(bndguguarijmghnkenvt) main PRODUCTION의 Edge Functions 전체 목록을 새로고침했고 test-institutional-email-auth·test-phone-auth 2개만 있어 service-api 미배포를 확인했다. 다른 배포 대상 존재 여부는 미확인이다.\n종현 앱 구현·로컬/합성 회귀는 기존 인계대로 보존한다. 실제 API 연결 완료나 이 TASK 전체 완료로 표시하지 않는다.\n민규 선행: 앱 API의 배포 대상/시험 환경 확인, 정확 eventId 연결 공고 필터 main 반영, 행사 연결·직접 입력·행사 변경 API 및 콘텐츠 검사→티켓→저장 적용 확인. 준비 후 종현이 실제 왕복을 검증한다. 실회원 HOLD 유지.\n근거: docs/collaboration/requests/jonghyun/2026-10-24-event-integration/minkyu-handoff.md 및 evidence/supabase-functions-20261025.png. 현재 서버·DB·배포·담당·일정·WBS 진행률 변경 없음.",
+  "readback": [
+    {
+      "task": "3.4",
+      "url": "https://app.notion.com/p/6dc44227a43583069c670163aba50f60",
+      "count": 1
+    },
+    {
+      "task": "3.3",
+      "url": "https://app.notion.com/p/74d44227a4358392ad27012cfc5d5e0c",
+      "count": 1
+    },
+    {
+      "task": "3.8",
+      "url": "https://app.notion.com/p/28044227a43582d19007013ceeadd683",
+      "count": 1
+    },
+    {
+      "task": "2.8",
+      "url": "https://app.notion.com/p/94144227a43583ea9684817814079e24",
+      "count": 1
+    }
+  ]
+}

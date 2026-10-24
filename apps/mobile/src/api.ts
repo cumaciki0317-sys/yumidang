@@ -39,10 +39,32 @@ export class ServiceApiClient {
   private readonly baseUrl: string;
   private readonly accessToken: () => Promise<string | null>;
   private readonly fetcher: typeof fetch;
+  private readonly sessionIdentity?: () => unknown;
+  private bindingIdentity: unknown;
+  private bindingKey: object = {};
+  /** Opaque in-memory identity; checked again before every step of a multi-request write. */
+  async bindSession(): Promise<{ client: ServiceApiClient; key: object }> {
+    const initialIdentity = this.sessionIdentity?.();
+    const token = await this.accessToken();
+    if (this.sessionIdentity && this.sessionIdentity() !== initialIdentity) throw new ApiError(401, "AUTH_REQUIRED");
+    if (!token) { this.bindingIdentity = undefined; this.bindingKey = {}; throw new ApiError(401, "AUTH_REQUIRED"); }
+    // A trusted session epoch survives token refresh and changes on logout/account switch.
+    // Without that integration, conservatively bind to the exact token.
+    const identity = this.sessionIdentity ? this.sessionIdentity() : token;
+    if (this.bindingIdentity !== identity) { this.bindingIdentity = identity; this.bindingKey = {}; }
+    const key = this.bindingKey;
+    return { key, client: new ServiceApiClient(this.baseUrl, async () => {
+      const current = await this.accessToken();
+      const currentIdentity = this.sessionIdentity ? this.sessionIdentity() : current;
+      if (!current || currentIdentity !== identity || key !== this.bindingKey) throw new ApiError(401, "AUTH_REQUIRED");
+      return current;
+    }, this.fetcher) };
+  }
   constructor(
     baseUrl: string,
     accessToken: () => Promise<string | null>,
     fetcher: typeof fetch = fetch,
+    sessionIdentity?: () => unknown,
   ) {
     const url = new URL(baseUrl);
     if (
@@ -54,6 +76,7 @@ export class ServiceApiClient {
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.accessToken = accessToken;
     this.fetcher = fetcher.bind(globalThis);
+    this.sessionIdentity = sessionIdentity;
   }
   async request<T>(path: string, options: {
     method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -61,7 +84,13 @@ export class ServiceApiClient {
     auth?: AuthenticationMode;
     authenticated?: boolean;
     signal?: AbortSignal;
+    inspection?: { operationId: string; ticketId: string };
   } = {}): Promise<T> {
+    if (options.inspection) {
+      const valid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (options.method !== "POST" || !valid.test(options.inspection.operationId) || !valid.test(options.inspection.ticketId) ||
+        !/^\/posts(?:\/[0-9a-f-]+\/update)?$/i.test(path)) throw new ApiError(400, "INVALID_REQUEST");
+    }
     const pathname = path.split("?")[0];
     let decoded: string;
     try {
@@ -99,6 +128,7 @@ export class ServiceApiClient {
         method: options.method || "GET",
         headers: {
           "Content-Type": "application/json",
+          ...(options.inspection ? { "x-content-operation-id": options.inspection.operationId, "x-content-inspection-ticket": options.inspection.ticketId } : {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body,

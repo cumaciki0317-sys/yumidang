@@ -1,0 +1,22 @@
+✔ source review does not invent an Android package or production approval (0.895709ms)
+✔ isolated validation identity matches generated settings (1.008917ms)
+✔ validation refuses the production identity and callback (0.325917ms)
+✔ validation requires both generated artifacts (0.086042ms)
+✔ generated application ID or namespace mismatch fails (0.122708ms)
+✔ generated version mismatch and invalid source versionCode fail (0.145417ms)
+✔ generated camera and microphone permissions fail independently (0.596541ms)
+✔ image picker must explicitly disable both camera and microphone (0.23625ms)
+✔ cleartext enablement and missing callback fail (0.157334ms)
+✔ validation refuses a leaked production callback despite valid validation callback (0.133792ms)
+✔ production is never approved by static settings or fixture success (0.271ms)
+✔ callback requires a complete filter on an enabled exported receiver (0.379625ms)
+✔ exported alias requires a real enabled preceding target activity (0.179541ms)
+✔ queries-only scheme and filters in another component cannot supply callback evidence (0.092ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.095916

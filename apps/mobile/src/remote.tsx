@@ -63,7 +63,11 @@ if (serviceMode) {
       aiChatUrl: process.env.EXPO_PUBLIC_AI_CHAT_URL,
       accessToken: serviceAccessToken,
     });
-    memberService = new MemberService(new ServiceApiClient(serviceApiUrl, serviceAccessToken));
+    const inspectionMode = process.env.EXPO_PUBLIC_POST_CONTENT_INSPECTION;
+    if (inspectionMode && inspectionMode !== "required" && inspectionMode !== "legacy") throw new Error("INVALID_INSPECTION_MODE");
+    memberService = new MemberService(new ServiceApiClient(serviceApiUrl, serviceAccessToken, fetch, serviceSessionEpoch), {
+      postInspectionRequired: inspectionMode === "required",
+    });
   } catch {
     serviceConfigurationError = true;
   }

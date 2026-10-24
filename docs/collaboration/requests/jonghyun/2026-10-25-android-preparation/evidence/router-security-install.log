@@ -1,0 +1,21 @@
+› Installing 1 other package using npm
+> npm install
+
+added 1 package, and audited 822 packages in 2s
+
+164 packages are looking for funding
+  run `npm fund` for details
+
+11 vulnerabilities (6 moderate, 5 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   unrs-resolver@1.12.2 (postinstall: node postinstall.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
