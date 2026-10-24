@@ -58,7 +58,7 @@ function Frame() {
         <Stack.Screen name="review" options={{ presentation: "modal" }} />
         <Stack.Screen name="safety" options={{ presentation: "modal" }} />
       </Stack>
-      {app.toast && (
+      {Boolean(app.toast) && (
         <View
           pointerEvents="none"
           accessible
