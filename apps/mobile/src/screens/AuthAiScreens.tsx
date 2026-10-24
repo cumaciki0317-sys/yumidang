@@ -1,18 +1,18 @@
-import { serviceMode, serviceConfigurationError, useMemberPorts, useMemberSessionDetails, useServiceSession, installMemberSessionDetails, serviceSessionEpoch } from "../remote";
+import { serviceMode, serviceConfigurationError, useMemberPorts, useMemberSessionDetails, useServiceSession, installMemberSessionDetails, serviceSessionEpoch, useMemberService, useService } from "../remote";
 import { subscribeWebMemberConnectionStatus, webMemberConnectionStatus } from "../web-member-connection";
 import { createAuthCallbackTask } from "../auth-callback-task";
-import { sessionResult, signupState } from "../member-session";
+import { sessionResult, signupState, internalPath, type SessionResult } from "../member-session";
 import { uploadPhoto, validateOriginalPhoto, type PhotoInput } from "../avatar-service";
 import { ApiError } from "../api";
 import { useUxFocus } from "../presentation/ux-form";
-import { signupDraftStore, observeSignupDraftSession, type SignupDraft, type SignupDraftScope } from "../signup-draft";
+import { signupDraftStore, observeSignupDraftSession, type SignupDraft, type SignupDraftScope, emptySummaryConsents, type SummaryConsentKind, type SummaryConsentSelection } from "../signup-draft";
 import * as Crypto from "expo-crypto";
 import { RemoteAiScreen } from "./RemoteScreens";
 import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Image, Modal, Platform, Pressable, Text, View, type TextInput } from "react-native";
+import { Image, Modal, Platform, Pressable, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { useApp } from "../state";
+import { useApp, routes } from "../state";
 import { TagsEditor } from "./CommunityScreens";
 import {
   art,
@@ -133,7 +133,7 @@ function PreviewLoginScreen() {
   );
 }
 
-export function SignupScreen() { const { epoch } = useServiceSession(); return serviceMode ? <RemoteSignupScreen key={epoch} /> : <PreviewSignupScreen />; }
+export function SignupScreen() { return serviceMode ? <RemoteSignupScreen /> : <PreviewSignupScreen />; }
 function PreviewSignupScreen() {
   const app = useApp();
   const uxFocus = useUxFocus();
@@ -390,31 +390,77 @@ export function RemoteNaverCallback() {
   }, [session]);
   return <Screen title="네이버 로그인 확인"><Body>{issue || (session?.callback ? "네이버 정보를 확인하고 있어요…" : "로그인 연결을 준비하고 있어요.")}</Body><TextButton onPress={() => router.replace("/login")}>로그인으로 돌아가기</TextButton></Screen>;
 }
+const summaryChoices: { kind: SummaryConsentKind; label: string; detail: string }[] = [
+  { kind: "summary_view", label: "후기 요약 열람", detail: "다른 회원의 공개 가능한 후기 AI 요약을 볼 수 있어요." },
+  { kind: "summary_generate", label: "내 프로필 요약 생성·노출", detail: "내 프로필의 후기 AI 요약을 생성하고 공개하는 데 동의해요. 철회하면 요약을 숨기고 새 생성·갱신을 중단해요." },
+  { kind: "summary_source", label: "내가 작성한 후기의 요약 활용", detail: "내가 작성한 기존·향후 공개 후기를 AI 요약 재료로 활용하는 데 동의해요. 철회하면 해당 후기를 재료에서 제외하고 영향을 받은 요약을 먼저 숨겨요." },
+];
+type SignupCompletion = { userId: string; epoch: number; returnTo: string; selection: SummaryConsentSelection | null; confirmed: SummaryConsentSelection | null; busy: boolean; issue: string; returning: boolean; returnIssue: string };
 function RemoteSignupScreen() {
   const uxFocus = useUxFocus();
+  const member = useMemberService(), service = useService();
   const { session, photo: storage } = useMemberPorts(), details = useMemberSessionDetails();
   const { epoch } = useServiceSession();
   const userId = details?.userId;
   const scope: SignupDraftScope | null = session && details && details.status !== "ready" ? { userId: details.userId, epoch, session } : null;
   // The session installer also invalidates this store while auth screens are unmounted.
   observeSignupDraftSession(scope);
-  const [draft, setDraft] = useState<SignupDraft>(() => scope && signupDraftStore.read(scope) || { photo: null, avatarPath: null, interests: [], conversationStyles: [], mbti: "", uploaded: null });
+  const emptyDraft = (): SignupDraft => ({ photo: null, avatarPath: null, interests: [], conversationStyles: [], mbti: "", uploaded: null, summaryConsents: emptySummaryConsents(), summaryConsentsEdited: false });
+  const [draftState, setDraftState] = useState(() => ({ epoch, userId, value: scope && signupDraftStore.read(scope) || emptyDraft() }));
+  const draft = draftState.epoch === epoch && draftState.userId === userId ? draftState.value : scope && signupDraftStore.read(scope) || emptyDraft();
+  const setDraft = (value: SignupDraft) => setDraftState({ epoch, userId, value });
   const [busy, setBusy] = useState(false), [issue, setIssue] = useState("");
   const [loading, setLoading] = useState(false), [loadIssue, setLoadIssue] = useState(""), [loaded, setLoaded] = useState(false);
   const [failureKind, setFailureKind] = useState<SignupRecovery>("retry");
   const [recoveryIssue, setRecoveryIssue] = useState("");
+  const [completion, setCompletion] = useState<SignupCompletion | null>(null);
+  const [consentAttempt, setConsentAttempt] = useState(0);
+  const [consentDetail, setConsentDetail] = useState<SummaryConsentKind | null>(null);
+  const postActive = useRef<AbortController | null>(null);
   const active = useRef<AbortController | null>(null);
   const focused = useRef(false);
   const picker = useRef(0);
-  const photoTarget = useRef<View | null>(null), mbtiTarget = useRef<TextInput | null>(null), issueTarget = useRef<View | null>(null);
+  const photoTarget = useRef<View | null>(null), mbtiTarget = useRef<View | null>(null), issueTarget = useRef<View | null>(null);
   const [errorFocus, setErrorFocus] = useState<{ field: "photo" | "mbti" | "issue" } | null>(null);
   useEffect(() => {
     if (!errorFocus) return;
     const target = errorFocus.field === "photo" ? photoTarget : errorFocus.field === "mbti" ? mbtiTarget : issueTarget;
-    uxFocus.focusTarget(target.current, { input: errorFocus.field === "mbti" });
+    uxFocus.focusTarget(target.current);
   }, [errorFocus, uxFocus]);
   const focusError = (error: unknown) => setErrorFocus({ field: error instanceof ApiError && ["INVALID_PHOTO", "INVALID_PHOTO_PATH"].includes(error.code) ? "photo" : "issue" });
   const current = (controller: AbortController, expected: SignupDraftScope) => focused.current && !controller.signal.aborted && active.current === controller && serviceSessionEpoch() === expected.epoch && signupDraftStore.read(expected) !== null;
+  const completionCurrent = (flow: SignupCompletion, controller: AbortController) => focused.current && !controller.signal.aborted && postActive.current === controller && serviceSessionEpoch() === flow.epoch;
+  const finish = (verified: SessionResult, selection: SummaryConsentSelection | null) => {
+    signupDraftStore.clear();
+    installMemberSessionDetails(verified);
+    setCompletion({ userId: verified.userId, epoch: serviceSessionEpoch(), returnTo: verified.returnTo, selection, confirmed: null, busy: true, issue: "", returning: false, returnIssue: "" });
+    setBusy(false); setLoading(false);
+  };
+  const saveConsents = async (flow: SignupCompletion) => {
+    postActive.current?.abort(); const controller = new AbortController(); postActive.current = controller;
+    setCompletion(previous => previous?.epoch === flow.epoch ? { ...previous, busy: true, issue: "" } : previous);
+    let confirmed: SummaryConsentSelection | null = null;
+    try {
+      if (!member) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
+      let currentConsents = await member.aiConsents(controller.signal);
+      if (!completionCurrent(flow, controller)) return;
+      if (flow.selection) {
+        for (const { kind } of summaryChoices) {
+          if (!completionCurrent(flow, controller)) return;
+          if (currentConsents[kind] === flow.selection[kind]) continue;
+          try { currentConsents = await member.setAiConsent(kind, flow.selection[kind], controller.signal); }
+          catch (error) { if (error instanceof ApiError && (error.status === 401 || error.status === 403)) break; }
+        }
+        if (!completionCurrent(flow, controller)) return;
+        currentConsents = await member.aiConsents(controller.signal);
+      }
+      if (!completionCurrent(flow, controller)) return;
+      confirmed = { summary_view: currentConsents.summary_view, summary_generate: currentConsents.summary_generate, summary_source: currentConsents.summary_source };
+    } catch { /* A failed optional save never changes a successful signup. */ }
+    if (!completionCurrent(flow, controller)) return;
+    const pending = !confirmed || Boolean(flow.selection && summaryChoices.some(({ kind }) => confirmed![kind] !== flow.selection![kind]));
+    setCompletion(previous => previous?.epoch === flow.epoch ? { ...previous, confirmed, busy: false, issue: pending ? "가입은 완료됐어요. 일부 AI 선택 동의의 저장을 확인하지 못했어요. 다시 시도하거나 나중에 계정 관리에서 설정할 수 있어요." : "" } : previous);
+  };
   const load = async () => {
     if (!session || !scope) return;
     active.current?.abort(); const controller = new AbortController(); active.current = controller;
@@ -426,8 +472,8 @@ function RemoteSignupScreen() {
       if (result.status === "ready") {
         // Reuse only the already verified identity/token; this lookup does not issue credentials.
         const verified = sessionResult({ ...details!, status: result.status });
-        signupDraftStore.clear(expected);
-        installMemberSessionDetails(verified); authDestination(verified); return;
+        const saved = signupDraftStore.read(expected);
+        finish(verified, saved?.summaryConsentsEdited ? { ...saved.summaryConsents } : null); return;
       }
       const merged = signupDraftStore.merge(expected, result);
       if (merged) setDraft(merged);
@@ -443,11 +489,12 @@ function RemoteSignupScreen() {
   useFocusEffect(useCallback(() => {
     focused.current = true;
     setBusy(false);
-    void load();
-    return () => { focused.current = false; picker.current++; active.current?.abort(); active.current = null; };
+    if (completion && completion.epoch === epoch && completion.userId === userId) void saveConsents(completion);
+    else { setCompletion(null); void load(); }
+    return () => { focused.current = false; picker.current++; active.current?.abort(); active.current = null; postActive.current?.abort(); postActive.current = null; };
     // The epoch is the authoritative identity/authority boundary, not the details object's token refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, epoch, userId]));
+  }, [session, epoch, userId, completion?.epoch, consentAttempt]));
   const edit = <K extends "photo" | "interests" | "conversationStyles" | "mbti",>(field: K, value: SignupDraft[K]) => {
     if (!scope) return;
     const next = signupDraftStore.edit(scope, field, value);
@@ -469,6 +516,7 @@ function RemoteSignupScreen() {
     active.current?.abort(); const controller = new AbortController(); active.current = controller;
     const expected = scope, input = signupDraftStore.read(expected);
     if (!input) return;
+    if (input.mbti.trim() && !/^[EI][SN][TF][JP]$/.test(input.mbti)) { setIssue("MBTI를 모두 선택하거나 비워 주세요."); setErrorFocus({ field: "mbti" }); return; }
     setBusy(true); setIssue("");
     try {
       let avatarPath = input.avatarPath;
@@ -487,14 +535,67 @@ function RemoteSignupScreen() {
       const result = signupState(await session.complete({ avatarPath, interests: input.interests, conversationStyles: input.conversationStyles, mbti: input.mbti || null }, controller.signal));
       if (!current(controller, expected)) return;
       if (result.status !== "ready") { setIssue("가입 정보를 다시 확인해 주세요. 아직 가입 완료가 확인되지 않았어요."); setErrorFocus({ field: "issue" }); return; }
-      signupDraftStore.clear(expected);
-      const verified = sessionResult({ ...details, status: result.status }); installMemberSessionDetails(verified); authDestination(verified);
+      const verified = sessionResult({ ...details, status: result.status });
+      finish(verified, { ...input.summaryConsents });
     } catch (error) { if (current(controller, expected)) { const failure = signupFailure(error); setFailureKind(failure.kind); setRecoveryIssue(failure.kind === "retry" ? "" : failure.message); setIssue(failure.message); focusError(error); } }
     finally { if (focused.current && !controller.signal.aborted && serviceSessionEpoch() === expected.epoch) { active.current = null; setBusy(false); } }
   };
-  const back = () => { active.current?.abort(); router.push("/login"); };
+  const back = () => { active.current?.abort(); postActive.current?.abort(); router.push("/login"); };
+  const mbtiPairs = [["E", "I"], ["S", "N"], ["T", "F"], ["J", "P"]];
+  const firstIncompletePair = Math.max(0, mbtiPairs.findIndex((pair, index) => !pair.includes(draft.mbti[index] || "")));
+  const chooseConsent = (selection: SummaryConsentSelection) => {
+    if (!scope || busy) return;
+    const next = signupDraftStore.setSummaryConsents(scope, selection); if (next) setDraft(next);
+  };
+  const proceed = async () => {
+    const flow = completion;
+    if (!flow || flow.busy || flow.returning || flow.epoch !== serviceSessionEpoch()) return;
+    postActive.current?.abort(); const controller = new AbortController(); postActive.current = controller;
+    setCompletion(previous => previous?.epoch === flow.epoch ? { ...previous, returning: true, returnIssue: "" } : previous);
+    let target = "/";
+    try {
+      const safe = internalPath(flow.returnTo), parsed = new URL(safe, "https://internal.invalid");
+      if (!Object.values(routes).includes(parsed.pathname) || ["/login", "/signup"].includes(parsed.pathname)) target = "/";
+      else {
+        target = safe;
+        const id = parsed.searchParams.get("id");
+        if (id) {
+          if (!service || !member) throw new ApiError(503, "SERVICE_NOT_CONFIGURED");
+          if (parsed.pathname === "/post") await service.getPost(id, controller.signal);
+          else if (parsed.pathname === "/event") await service.getEvent(id, controller.signal);
+          else if (parsed.pathname === "/profile") await service.getProfile(id, controller.signal);
+          else if (parsed.pathname === "/create" && id.startsWith("event:")) await service.getEvent(id.slice(6), controller.signal);
+          else if (parsed.pathname === "/create" && id.startsWith("edit:")) await service.getPost(id.slice(5), controller.signal);
+          else if (parsed.pathname === "/chat") { if (id.startsWith("request:")) await member.conversation(id.slice(8), controller.signal); else await service.getPost(id, controller.signal); }
+          else if (["/appointment", "/review"].includes(parsed.pathname)) await member.appointment(id, controller.signal);
+          else if (parsed.pathname === "/cancel" && id.startsWith("appointment:")) await member.appointment(id.slice(12), controller.signal);
+        }
+      }
+      if (completionCurrent(flow, controller)) router.replace(target as any);
+    } catch (error) {
+      if (!completionCurrent(flow, controller)) return;
+      if (error instanceof ApiError && [400, 403, 404].includes(error.status)) { router.replace("/"); return; }
+      setCompletion(previous => previous?.epoch === flow.epoch ? { ...previous, returning: false, returnIssue: "가입은 완료됐어요. 돌아갈 화면의 현재 상태를 확인하지 못했어요. 다시 확인하거나 홈으로 이동해 주세요." } : previous);
+    }
+  };
+  if (completion && completion.epoch === epoch && completion.userId === userId) return <Screen title="가입 완료">
+    <Modal visible transparent animationType="fade" onRequestClose={() => { if (!completion.busy) void proceed(); }}>
+      <View style={{ flex: 1, backgroundColor: "#26163B66", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <Card style={{ backgroundColor: colors.lavender, width: "100%", maxWidth: 380 }}>
+          <Title>가입 프로필을 완성했어요</Title><Body>일반 동행 서비스를 이용할 수 있어요.</Body>
+          {completion.busy ? <Body>AI 선택 동의 상태를 확인하고 있어요…</Body> : <>
+            {summaryChoices.map(({ kind, label }) => <Body key={kind}>{label} · {completion.confirmed ? completion.confirmed[kind] ? "동의" : "미동의" : "확인 필요"}</Body>)}
+            {completion.issue && <><Body>{completion.issue}</Body><Button secondary onPress={() => setConsentAttempt(value => value + 1)}>동의 저장 다시 시도</Button></>}
+            {completion.returnIssue && <Body>{completion.returnIssue}</Body>}
+            <Button loading={completion.returning} disabled={completion.returning} onPress={() => void proceed()}>{completion.returnIssue ? "목적 화면 다시 확인" : completion.issue ? "나중에 설정하고 계속" : "확인하고 계속"}</Button>
+            {completion.returnIssue && <TextButton onPress={() => { postActive.current?.abort(); router.replace("/"); }}>홈으로 이동</TextButton>}
+          </>}
+        </Card>
+      </View>
+    </Modal>
+  </Screen>;
   const photoIssue = errorFocus?.field === "photo" ? (issue !== recoveryIssue ? issue : "") || (loadIssue !== recoveryIssue ? loadIssue : "") : "";
-  const neutralIssue = errorFocus?.field === "photo" ? "" : issue;
+  const neutralIssue = errorFocus?.field === "photo" || errorFocus?.field === "mbti" ? "" : issue;
   const neutralLoadIssue = errorFocus?.field === "photo" ? "" : loadIssue;
   const neutralMessages = [...new Set([recoveryIssue, neutralIssue, neutralLoadIssue].filter(Boolean))];
   if (!details) return <Screen title="가입 프로필" backLabel="로그인으로 돌아가기" onBack={back} focusController={uxFocus}><Body>네이버 로그인 후 가입 정보를 입력할 수 있어요.</Body></Screen>;
@@ -511,9 +612,19 @@ function RemoteSignupScreen() {
       <Button focusRef={photoTarget} secondary disabled={!storage || busy} onPress={() => { void select(); }}>프로필 사진 선택</Button>
       {photoIssue && <View accessibilityLiveRegion="polite"><Body style={{ color: colors.red }}>{photoIssue}</Body></View>}
     </View>
-    <TagsEditor title="관심사 · 선택" values={draft.interests} setValues={values => edit("interests", values)} suggestions={[]} />
-    <TagsEditor title="대화 방식 · 선택" values={draft.conversationStyles} setValues={values => edit("conversationStyles", values)} suggestions={[]} />
-    <Field label="MBTI · 선택" inputRef={mbtiTarget} value={draft.mbti} onChangeText={v => edit("mbti", v.toUpperCase())} maxLength={4} />
+    <TagsEditor title="관심사 · 선택" values={draft.interests} setValues={values => edit("interests", values)} suggestions={["전시", "공연", "산책", "카페", "여행", "영화"]} />
+    <TagsEditor title="대화 방식 · 선택" values={draft.conversationStyles} setValues={values => edit("conversationStyles", values)} suggestions={["편안한 대화", "차분한 이야기", "유쾌한 수다", "천천히 알아가기"]} />
+    <Section title="MBTI · 선택">
+      {mbtiPairs.map((pair, index) => <Row key={index}>{pair.map(value => <Chip key={value} focusRef={index === firstIncompletePair && value === pair[0] ? mbtiTarget : undefined} selected={draft.mbti[index] === value} onPress={() => { const next = draft.mbti.padEnd(4, " ").split(""); next[index] = value; edit("mbti", next.join("")); }}>{value}</Chip>)}</Row>)}
+      <TextButton onPress={() => edit("mbti", "")}>MBTI 비우기</TextButton>
+      {errorFocus?.field === "mbti" && issue && <View accessibilityLiveRegion="polite"><Body style={{ color: colors.red }}>{issue}</Body></View>}
+    </Section>
+    <Section title="후기 AI 선택 동의">
+      <Body muted>동의하지 않아도 가입하고 일반 동행을 이용할 수 있어요. 세 항목은 각각 철회할 수 있어요.</Body>
+      <Chip selected={summaryChoices.every(({ kind }) => draft.summaryConsents[kind])} disabled={busy} onPress={() => { const allowed = !summaryChoices.every(({ kind }) => draft.summaryConsents[kind]); chooseConsent({ summary_view: allowed, summary_generate: allowed, summary_source: allowed }); }}>후기 AI 전체 동의</Chip>
+      {summaryChoices.map(({ kind, label, detail }) => <View key={kind}><Chip selected={draft.summaryConsents[kind]} disabled={busy} onPress={() => chooseConsent({ ...draft.summaryConsents, [kind]: !draft.summaryConsents[kind] })}>{label}</Chip><TextButton onPress={() => setConsentDetail(previous => previous === kind ? null : kind)}>{label} 자세히 보기</TextButton>{consentDetail === kind && <Body>{detail}</Body>}</View>)}
+      <Body small muted>AI 탐색 동의는 첫 사용 시 별도로 확인해요.</Body>
+    </Section>
     <Button disabled={!session || !storage || !loaded || busy || loading || failureKind !== "retry" || !draft.photo && !draft.avatarPath} loading={busy} onPress={() => { void complete(); }}>가입 완료</Button>
   </Screen>;
 }

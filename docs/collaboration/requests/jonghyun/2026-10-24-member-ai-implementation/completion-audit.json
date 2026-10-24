@@ -1,0 +1,139 @@
+{
+  "scope": "priorities 1-4 + 7; relevant regression from 5; native preparation only",
+  "requirements": [
+    {
+      "requirement": "1 권한·오류",
+      "status": "verified within approved scope",
+      "source": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "testSources": [
+        "tests/mobile/member-access-retirement.test.mjs",
+        "tests/mobile/member-failure-state.test.mjs"
+      ],
+      "currentEvidence": [
+        "evidence/mobile-tests.log",
+        "evidence/client-contract-tests.log",
+        "evidence/member-ai-browser.json",
+        "evidence/remote-failure-browser.json"
+      ]
+    },
+    {
+      "requirement": "2 가입·탈퇴",
+      "status": "verified within approved scope",
+      "source": "apps/mobile/src/screens/AuthAiScreens.tsx",
+      "testSources": [
+        "tests/mobile/ux-signup.test.mjs",
+        "tests/mobile/member-access-retirement.test.mjs"
+      ],
+      "currentEvidence": [
+        "evidence/mobile-tests.log",
+        "evidence/client-contract-tests.log",
+        "evidence/member-ai-browser.json",
+        "evidence/remote-failure-browser.json"
+      ]
+    },
+    {
+      "requirement": "3 기기 저장",
+      "status": "verified within approved scope",
+      "source": "apps/mobile/src/storage.ts",
+      "testSources": [
+        "tests/mobile/service-storage-state.test.mjs"
+      ],
+      "currentEvidence": [
+        "evidence/mobile-tests.log",
+        "evidence/client-contract-tests.log",
+        "evidence/member-ai-browser.json",
+        "evidence/remote-failure-browser.json"
+      ]
+    },
+    {
+      "requirement": "4 인증 준비",
+      "status": "verified within approved scope",
+      "source": "docs/collaboration/requests/jonghyun/2026-10-24-member-ai-implementation/native-handoff.md",
+      "testSources": [
+        "tests/mobile/client-auth-connection.test.mjs",
+        "tests/functions/jonghyun/mobile-web-session.test.ts"
+      ],
+      "currentEvidence": [
+        "evidence/mobile-tests.log",
+        "evidence/client-contract-tests.log",
+        "evidence/member-ai-browser.json",
+        "evidence/remote-failure-browser.json"
+      ]
+    },
+    {
+      "requirement": "7 AI 동의·상태",
+      "status": "verified within approved scope",
+      "source": "apps/mobile/src/member-service.ts",
+      "testSources": [
+        "tests/mobile/ai-consent-client.test.mjs",
+        "tests/mobile/ai-consent-screen.test.mjs",
+        "tests/mobile/ai-failure-state.test.mjs"
+      ],
+      "currentEvidence": [
+        "evidence/mobile-tests.log",
+        "evidence/client-contract-tests.log",
+        "evidence/member-ai-browser.json",
+        "evidence/remote-failure-browser.json"
+      ]
+    },
+    {
+      "requirement": "5 관련 동행 회귀",
+      "status": "verified within approved scope",
+      "source": "apps/mobile/src/screens/RemoteMemberScreens.tsx",
+      "testSources": [
+        "tests/mobile/ux-member.test.mjs",
+        "tests/mobile/member-failure-state.test.mjs"
+      ],
+      "currentEvidence": [
+        "evidence/mobile-tests.log",
+        "evidence/client-contract-tests.log",
+        "evidence/member-ai-browser.json",
+        "evidence/remote-failure-browser.json"
+      ]
+    }
+  ],
+  "notionReadback": [
+    {
+      "task": "2.7",
+      "pageId": "12e44227a435835d8b2f81bd21a4cc9e",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "3.6",
+      "pageId": "38444227a4358329a32c8153439c1d5f",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "3.7",
+      "pageId": "4d544227a435827e93948195a571ef9f",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "5.4b",
+      "pageId": "ddf44227a435827a87a1817155c676b3",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "3.1",
+      "pageId": "2de44227a4358357bb85817bb25b88d1",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "3.2b",
+      "pageId": "8a344227a435820ca1bf01a4f3071948",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "3.9",
+      "pageId": "b1b44227a43583a08ef301657cf36d6d",
+      "persistedExactCount": 1
+    },
+    {
+      "task": "2.9",
+      "pageId": "b5344227a43583a2a84f0109f6dfc850",
+      "persistedExactCount": 1
+    }
+  ],
+  "newPolicyDecisionsNeeded": [],
+  "existingDependencies": "Actual native handoff/environment inputs remain documented prerequisites, not silently implemented. Real-member HOLD retained."
+}

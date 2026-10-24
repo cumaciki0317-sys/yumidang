@@ -1,0 +1,102 @@
+(node:13916) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/src/api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 본인 조회에는 실제 회원 JWT를 전달하고 익명 호출은 전송 전 중단 (20.845666ms)
+✔ 성향과 소개는 정확 네필드 한 POST이며 빈 값도 보존 (0.674667ms)
+✔ 대표사진은 snake_case 한행 배열만 수용하고 다른 새경로는 거절 (0.70725ms)
+✔ 첫 메시지 신청은 재전송 ID와 본문을 유지하고 다른 요청 ID 응답 거절 (4.97725ms)
+✔ 신청 철회 table DTO와 확정 버전 본문을 구분 (24.724042ms)
+✔ 알림 read 실제 void/null 응답 수용 및 잘못된 객체는 거절 (0.400166ms)
+✔ 마감 timestamp는 6자리 유지하고 존재하지 않는 달력 날짜 거절 (3.539041ms)
+✔ 취소 이력 unknown과 위치권한회수 null 보존 (0.337ms)
+✔ 후기 공개 전 상대 원문 포함 응답은 전부 거절 (0.25ms)
+✔ 신고 캡처 예약 bucket/asset 바인딩과 confirmation 검증 (0.312042ms)
+(node:13917) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/src/domain.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ current categories, praise options and masked identities (0.630875ms)
+✔ Korean dates roll over at UTC15 and Monday boundaries do not depend on machine timezone (15.874792ms)
+✔ monthly Thursday attribution covers month and year boundaries (0.136833ms)
+✔ final consent and changes expire at the earliest applicable limit (0.08625ms)
+✔ early reviews require own confirmation; a stranger or pre-end viewer cannot write (0.173375ms)
+✔ review writing uses exclusive deadlines; one-sided publication uses inclusive deadlines (0.111125ms)
+✔ disputes freeze new publications but preserve already public reviews unless hidden or invalidated (0.097959ms)
+✔ automatic completion boundary excludes cancelled, disputed and previously completed appointments (0.0645ms)
+✔ sweetness sums valid history before clamping, retains hidden contributions and removes invalid ones (0.150417ms)
+✔ post search matches allowed fields and event titles, never introduction or private meeting points (0.280833ms)
+✔ anonymous filters ignore private age/date restrictions and account blocking without excluding older writers by default (1.435291ms)
+✔ event defaults exclude last-week ongoing and ended entries, and sort ongoing before future (10.864541ms)
+✔ privacy preview catches phone/account patterns without treating ordinary dates as private information (1.135ms)
+✔ draft validation preserves valid times and finds bad bounds or private disclosure (0.322542ms)
+✔ search does not match across fields and uses positive overlap and server tie order (8.682708ms)
+✔ review AI withdrawal excludes written sources and owner summary but keeps public reviews intact (0.140125ms)
+(node:13918) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/src/member-session.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 목적 화면은 내부 경로만 허용 (0.669125ms)
+✔ 공식 가입 상태만 설치할 수 있고 테스트 주장/민감 추가필드 거절 (0.265959ms)
+✔ 가입 미완료 상태와 선택 성향 null 보존 (0.182667ms)
+✔ 탈퇴 요청접수와 실제 외부삭제 완료는 서로 다른 상태 (0.097125ms)
+(node:13919) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/src/web-member-session.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 웹 start는실제서버 challenge와 state별 verifier만탭저장하고 token없음 (54.986291ms)
+✔ callback은 state를확인하고쿼리와verifier폐기후서버세션을설치 (30.685ms)
+✔ 상태불일치callback은서버교환없이거절하고재사용불가 (4.3185ms)
+✔ 토큰없는부적격/정보누락 응답은세션을생성하지않음 (6.173375ms)
+✔ refresh동시요청은한번, 동일서버UID확인,logoutlocal뒤메모리비움 (1.763292ms)
+✔ 공식네이버외부호스트·다른callback·다른signup origin구성거절 (0.516083ms)
+✔ 무한/비정수 세션기간은서버성공으로수용하지않음 (0.4705ms)
+✔ 가입 재조회 ready는 포트 내부의 기존 검증 세션에도 반영한다 (1.083417ms)
+✔ 로그아웃 뒤 도착한 가입 상태는 폐기하며 기존 권한을 복원하지 않는다 (0.622833ms)
+(node:13920) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/src/api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 기본 미설치는 retire 없음·승인 literal/HTTPS origin/path 변조 거절 (7.179917ms)
+✔ 최초 POST는 원 회원 JWT·같은 origin 실제 service-api와 canonical ID만 (113.326541ms)
+✔ 응답 유실은 자동 재전송0·새 ID0·같은 ID/원 JWT 수동 조회와 완료 재생 (1.996125ms)
+✔ 틀린 ID·상태·회수 여부·추가 필드 영수증은 정상 세션을 지우지 않음 (46.869125ms)
+✔ 원 JWT 만료 후 같은 ID도 닫힘·refresh/새 요청0 (3.642834ms)
+✔ 미서명/다른 UID/익명·service JWT/만료 JWT는 최초 POST0 (35.33325ms)
+✔ 로그아웃·새 사용자 로그인은 원 token/영수증 폐기·옛 ID를 새 user로 전송0 (4.538458ms)
+✔ 대기 HTTP 중 새 로그인 응답은 옛 영수증을 적용하지 않고 새 세션 유지 (2.931583ms)
+✔ 동시 같은 ID는 HTTP 한 번·포트 폐기 뒤 늦은 응답 버림 (0.721292ms)
+✔ 전송 전 logout 세대 변경은 옛 retire HTTP0 (15.941666ms)
+✔ 취소는 자동 재전송0·같은 ID 수동 조회만 허용 (11.382625ms)
+✔ 완료 영수증은 processing으로 되돌리지 않으며 정상 권한 되살림0 (0.840292ms)
+✔ 새 로그인/포트 폐기 알림은 비밀 없는 신호이며 구독 해제 가능 (0.5185ms)
+✔ 새 로그인은 이전 대기 refresh를 승계하지 않고 늦은 토큰으로 권한 되살림0 (8.96575ms)
+✔ 전송 중 원 토큰 만료는 늦은 성공을 완료로 적용하지 않고 재전송0 (1.775542ms)
+✔ 폐기된 포트의 이전 로그인 callback은 pending verifier를 재사용해 권한 되살림0 (0.455792ms)
+(node:13921) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/src/api.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024/apps/mobile/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13921) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+✔ 미설치 port는 요청0·최소 store도 생성하지 않음 (84.066167ms)
+✔ 응답 유실은 정상 세션 유지·같은 ID 수동 조회 뒤 processing/completed 분리 (11.039959ms)
+✔ 검증되지 않은 영수증은 권한 회수로 만들지 않고 UI에 원문/JWT/UID0 (1.1275ms)
+✔ 확인된 최소 영수증은 일반 세션 밖에서 보존·수정해도 내부 상태 불변 (0.926917ms)
+✔ 처리 중 중복 요청은 전송 한 번이며 완료 전 성공 영수증 없음 (0.800916ms)
+✔ 포트 교체는 이전 adapter 원 토큰 폐기·늦은 영수증으로 새 세션 회수0 (4.565292ms)
+✔ 새 로그인 시작 즉시 이전 최소 영수증/token 폐기·old ID를 새 사용자로 전송0 (13.49675ms)
+✔ 유실 뒤 logout은 store 폐기·같은 ID 수동 호출도 로그인 필요 (6.05275ms)
+✔ 원 토큰 만료는 refresh0·같은 ID metadata 유지·완료로 바꾸지 않음 (16.943292ms)
+✔ 완료 영수증 뒤 후퇴 응답은 기존 완료 metadata 유지·권한 재설치0 (10.338666ms)
+✔ 승인 설정은 배포 service-api와 같은 HTTPS origin/정확 경로일 때만 설치 (2.800083ms)
+✔ store 구독은 최소 상태만 보고 해제 뒤 알림0 (1.224875ms)
+✔ 두 승인 계약을 함께 설치해 본 집합만 읽음 처리·탈퇴 확인 후 일반 요청0 (2.5705ms)
+✔ 기본 미승인 연결은 읽음/탈퇴 모두 미설치·이전 읽음 포트 제거 (0.1885ms)
+ℹ tests 69
+ℹ suites 0
+ℹ pass 69
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 560.08375

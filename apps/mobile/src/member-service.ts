@@ -1,4 +1,5 @@
 import { ApiError, ServiceApiClient } from "./api.ts";
+import { beginAiConsentChange, finishAiConsentChange } from "./ai-consent-state.ts";
 import type { FreePostInput } from "../../../backend/supabase/functions/_shared/contracts/posts";
 import type { ProfilePreferences, ProfileTraits } from "../../../backend/supabase/functions/_shared/contracts/signup";
 import type { MemberDecisionNotice, MemberCancellationNotice, MemberReportInput } from "../../../backend/supabase/functions/_shared/contracts/reports";
@@ -46,6 +47,23 @@ export function traits(value: unknown): ProfileTraits {
 }
 export interface OwnProfile { userId: string; realName: string; avatarUrl: string | null; bio: string | null; sweetness: number; }
 export interface MemberPage { items: Wire[]; nextCursor: string | null; }
+export type AiConsentKind = "exploration" | "summary_view" | "summary_generate" | "summary_source";
+export type AiConsents = Record<AiConsentKind, boolean>;
+export interface AiAvailability {
+  estimatedEligible: boolean;
+  reason: "processing_disabled" | "consent_required" | "concurrent" | "daily_limit" | null;
+  remaining: number;
+  kstDay: string;
+  checkedAt: string;
+  resetsAt: string;
+  requestAuthoritative: true;
+}
+const consentKinds: AiConsentKind[] = ["exploration", "summary_view", "summary_generate", "summary_source"];
+function aiConsents(value: unknown): AiConsents {
+  const r = fields(value, consentKinds);
+  consentKinds.forEach(kind => bool(r[kind]));
+  return r as AiConsents;
+}
 export interface ChangeState { appointmentId: string; status: string; startsAt: string | null; endsAt: string | null; updatedAt: string | null; change: Wire | null; cancellation: Wire | null; scheduleProvenance?: string; }
 export function change(value: unknown): Wire {
   const r = wire(value);
@@ -162,6 +180,25 @@ export class MemberService {
   constructor(client: ServiceApiClient) { this.client = client; }
   private read(path: string, signal?: AbortSignal) { return this.client.request<unknown>(path, { signal }); }
   private send(path: string, body: unknown, signal?: AbortSignal) { return this.client.request<unknown>(path, { method: "POST", body, signal }); }
+  async aiConsents(signal?: AbortSignal): Promise<AiConsents> {
+    return aiConsents(await this.read("/me/ai-consents", signal));
+  }
+  async setAiConsent(kind: AiConsentKind, allowed: boolean, signal?: AbortSignal): Promise<AiConsents> {
+    if (!consentKinds.includes(kind) || typeof allowed !== "boolean") throw new ApiError(400, "INVALID_REQUEST");
+    beginAiConsentChange();
+    try { return aiConsents(await this.send("/me/ai-consents/set", { kind, allowed }, signal)); }
+    finally { finishAiConsentChange(); }
+  }
+  async aiAvailability(signal?: AbortSignal): Promise<AiAvailability> {
+    const r = fields(await this.read("/me/ai-availability", signal), ["estimatedEligible", "reason", "remaining", "kstDay", "checkedAt", "resetsAt", "requestAuthoritative"]);
+    const eligible = bool(r.estimatedEligible);
+    if (!["processing_disabled", "consent_required", "concurrent", "daily_limit", null].includes(r.reason as string | null) || eligible !== (r.reason === null) || !Number.isInteger(r.remaining) || (r.remaining as number) < 0 || (r.remaining as number) > 20 || r.requestAuthoritative !== true) return fail();
+    const day = string(r.kstDay);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return fail();
+    timestamp(`${day}T00:00:00Z`);
+    if (eligible && r.remaining === 0 || r.reason === "daily_limit" && r.remaining !== 0 || Date.parse(timestamp(r.resetsAt)) <= Date.parse(timestamp(r.checkedAt))) return fail();
+    return r as unknown as AiAvailability;
+  }
   async profile(signal?: AbortSignal): Promise<OwnProfile> {
     const r = fields(await this.read("/me", signal), ["userId", "realName", "avatarUrl", "bio", "sweetness"]);
     if (!Number.isInteger(r.sweetness) || (r.sweetness as number) < 0 || (r.sweetness as number) > 100) return fail();

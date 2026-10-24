@@ -1,0 +1,97 @@
+{
+  "baseHead": "efdeba1c2e6e65376a43580889a99b1379ee3d17",
+  "branch": "jonghyun/member-ai-20261024",
+  "actor": "jonghyun",
+  "scope": "priorities 1-4 + 7; relevant regression from 5; native preparation only",
+  "sourceHashes": {
+    "apps/mobile/src/ai-consent-state.ts": "cd29b8aaa2639673bd90f3f31be9b0bb14e351bbd64c7e052a2a123d2801f92a",
+    "apps/mobile/src/member-device-cleanup.ts": "1da0362139178c8f1222ffd2e05e80dfe3250164cbc28fc29286ed231622a885",
+    "apps/mobile/src/presentation/member-ai-consents.tsx": "6a717d3ebf379485928fdfa5ccded3e6476795bbfc383529c9c99c40b900b1ae",
+    "tests/mobile/ai-consent-client.test.mjs": "727d32488e316a2f2e92b482a2476f3aba034439b759d8ff9b584cb4185b189f",
+    "tests/mobile/ai-consent-screen.test.mjs": "58fd4dc4d5d1a4d445c834dc1adb4f025a2e40dc63d93af198b1eb8b625a6647",
+    "tests/mobile/member-access-retirement.test.mjs": "4b118de734e872b9cd4817ab5b45f0d4d32cca262eb0fd10af14a62e2a658280",
+    "tests/mobile/member-ai-browser.mjs": "a2693db95eb2e963f6f593cfa363f8987cd23a75a985b81ea6cff577b49a2933",
+    "tests/mobile/member-device-cleanup.test.mjs": "1867e0460cb4935b01b8ce1515229628e1c41a3dd83f16a5de2777e0450bd748",
+    "tests/mobile/service-storage-state.test.mjs": "b9c172be8cf7c7087e4fa2481e1874398365ec8976ae11648bfaeaa7da674dce",
+    "apps/mobile/src/member-service.ts": "2912d94ef27a2979b3d757cc188e44495821646f1f596cefeb092b5010fa9a4b",
+    "apps/mobile/src/remote.tsx": "ed7206e2751446f28d882e8a67bdbb5840a36a0de05583cd15d79fba3c2513bb",
+    "apps/mobile/src/screens/AuthAiScreens.tsx": "38211e460518b7a575cb7d368c843d90a49e51b7e9ab0402c154b2958de35d64",
+    "apps/mobile/src/screens/BrowseScreens.tsx": "eb8df41050d52b17d085ec2b58ea573a09de5fdb7e169413428c4b4650569e06",
+    "apps/mobile/src/screens/RemoteMemberScreens.tsx": "06f4abdbcc4fdeec006ac653f6ce8e04063288d756e8d2b657b6439a831881dd",
+    "apps/mobile/src/screens/RemoteScreens.tsx": "c550f1f10418f1eee7749737a9f9ca7381af9eebdb81f0c3ed97a0bb72c629aa",
+    "apps/mobile/src/signup-draft.ts": "df7680776fcbaae31013c8bc1162242641eff660b041cfdc12c163295814a63a",
+    "apps/mobile/src/state.tsx": "d914a499709968171d323c56d996491adf333aaa1053855801f50df14b197fd2",
+    "apps/mobile/src/storage.ts": "0f1af7405143649653b1cfbae26a883899847d23b91fb53d564f55694adcc71d",
+    "apps/mobile/src/types.ts": "649ded75123fb35478432825d9bdbd2c04841dff73fa565c79b8fc9c82ea7885",
+    "tests/mobile/ai-failure-state.test.mjs": "4c73292010d5ce16f9a216d79ac720ff2e4ac541af182f37fad64c8ba81487d5",
+    "tests/mobile/member-failure-state.test.mjs": "d3147cd0295da1ad62162345bde3b15c0396cb96398414afff2f122172a54297",
+    "tests/mobile/remote-failure-browser.mjs": "b6b5b93ca4edc679e666828f14848679d1c451a4384c373b8f0a9a8fb763992f",
+    "tests/mobile/ux-member.test.mjs": "1b95adee48d4ffe276a159b0b6dacff4fc4b6998a8a25c2aca730ef3017c7627",
+    "tests/mobile/ux-signup.test.mjs": "a91fc7c3a426ea32a5bd074bb41078c6ed1d2d63000cb0f6754a0723664e82e1"
+  },
+  "checks": [
+    {
+      "name": "mobile-tests",
+      "passed": 274,
+      "failed": 0,
+      "log": "evidence/mobile-tests.log"
+    },
+    {
+      "name": "client-contract-tests",
+      "passed": 69,
+      "failed": 0,
+      "log": "evidence/client-contract-tests.log"
+    },
+    {
+      "name": "member-ai-browser",
+      "status": "PASS",
+      "passed": 10,
+      "total": 10,
+      "log": "evidence/member-ai-browser.json"
+    },
+    {
+      "name": "remote-failure-browser",
+      "status": "PASS",
+      "passed": 37,
+      "total": 37,
+      "log": "evidence/remote-failure-browser.json"
+    },
+    {
+      "name": "typecheck",
+      "status": "PASS",
+      "log": "evidence/typecheck.log"
+    },
+    {
+      "name": "expo-lint",
+      "status": "PASS",
+      "errors": 0,
+      "warnings": 0,
+      "evidence": "npm run lint final PTY session 99448 exited 0"
+    },
+    {
+      "name": "notion-handoff",
+      "status": "PASS",
+      "taskCount": 8,
+      "readback": "evidence/notion-readback.json",
+      "statusPropertiesChanged": false
+    },
+    {
+      "name": "ownership",
+      "status": "PASS",
+      "log": "evidence/ownership.log"
+    },
+    {
+      "name": "diff-whitespace",
+      "status": "PASS"
+    }
+  ],
+  "notRun": [
+    "real member/provider/operating server",
+    "Android native authentication or device restart",
+    "APK/store/deployment"
+  ],
+  "committed": false,
+  "pushed": false,
+  "deployed": false,
+  "completionScope": "Approved app implementation/synthetic verification and native preparation; actual runtime/native/member/store remain outside this completion claim."
+}

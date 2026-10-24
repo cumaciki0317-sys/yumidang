@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { observeSignupDraftSession } from "./signup-draft";
 import { YumidangService } from "./service";
 import { ApiError, ServiceApiClient } from "./api";
+import { requestMemberDeviceCleanup } from "./member-device-cleanup";
 import { MemberService, uuid } from "./member-service";
 import type { MemberSessionPort, SessionResult } from "./member-session";
 import { retirementResult, sessionResult } from "./member-session";
@@ -111,6 +112,8 @@ export function useMemberPorts() {
   return { session: sessionPort, photo: photoPort, reportCapture: memberReportCapture };
 }
 export function useMemberSessionDetails() { useServiceSession(); return sessionDetails; }
+/** Internal snapshot for consumers already subscribed to the authoritative session epoch. */
+export const memberSessionDetailsSnapshot = () => sessionDetails;
 export type MemberRetirementReceipt = ReturnType<typeof retirementResult>;
 /** JWT·UID·프로필은 공개 상태에 넣지 않는다. receipt:null은 응답 미확정이며 탈퇴 완료가 아니다. */
 export interface MemberRetirementState {
@@ -164,6 +167,7 @@ export async function requestMemberRetirement(withdrawalId: string, signal: Abor
     if (retirementState?.receipt?.status === "completed" && receipt.status !== "completed") throw new ApiError(502, "INVALID_SERVICE_RESPONSE");
     publishRetirement({ withdrawalId: id, receipt, busy: false, errorCode: null });
     clearNormalMemberSession();
+    void requestMemberDeviceCleanup(binding.userId).catch(() => undefined);
     return { ...receipt };
   } catch (error) {
     if (created && error instanceof ApiError && error.code === "SESSION_CHANGED" && retirementBinding === binding) { clearRetirementBinding(false); throw error; }

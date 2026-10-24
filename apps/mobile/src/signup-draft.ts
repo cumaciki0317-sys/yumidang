@@ -2,6 +2,9 @@ import type { PhotoInput } from "./avatar-service";
 
 /** Process memory only. The trusted session installer must observe every epoch change. */
 export interface SignupDraftScope { userId: string; epoch: number; session: object; }
+export type SummaryConsentKind = "summary_view" | "summary_generate" | "summary_source";
+export type SummaryConsentSelection = Record<SummaryConsentKind, boolean>;
+export const emptySummaryConsents = (): SummaryConsentSelection => ({ summary_view: false, summary_generate: false, summary_source: false });
 export interface SignupDraft {
   photo: PhotoInput | null;
   avatarPath: string | null;
@@ -9,11 +12,13 @@ export interface SignupDraft {
   conversationStyles: string[];
   mbti: string;
   uploaded: { path: string; ready: boolean } | null;
+  summaryConsents: SummaryConsentSelection;
+  summaryConsentsEdited: boolean;
 }
 type Editable = "photo" | "interests" | "conversationStyles" | "mbti";
 type ServerSignup = { avatarPath: string | null; interests: string[]; conversationStyles: string[]; mbti: string | null };
-const empty = (): SignupDraft => ({ photo: null, avatarPath: null, interests: [], conversationStyles: [], mbti: "", uploaded: null });
-const copy = (draft: SignupDraft): SignupDraft => ({ ...draft, photo: draft.photo ? { ...draft.photo } : null, interests: [...draft.interests], conversationStyles: [...draft.conversationStyles], uploaded: draft.uploaded ? { ...draft.uploaded } : null });
+const empty = (): SignupDraft => ({ photo: null, avatarPath: null, interests: [], conversationStyles: [], mbti: "", uploaded: null, summaryConsents: emptySummaryConsents(), summaryConsentsEdited: false });
+const copy = (draft: SignupDraft): SignupDraft => ({ ...draft, summaryConsents: { ...draft.summaryConsents }, photo: draft.photo ? { ...draft.photo } : null, interests: [...draft.interests], conversationStyles: [...draft.conversationStyles], uploaded: draft.uploaded ? { ...draft.uploaded } : null });
 const same = (a: SignupDraftScope | null, b: SignupDraftScope | null) => !!a && !!b && a.userId === b.userId && a.epoch === b.epoch && a.session === b.session;
 
 export function createSignupDraftStore() {
@@ -31,6 +36,11 @@ export function createSignupDraftStore() {
       if (field === "photo") { draft.photo = value ? { ...(value as PhotoInput) } : null; draft.avatarPath = null; draft.uploaded = null; }
       else if (field === "mbti") draft.mbti = value as string;
       else draft[field] = [...value as string[]];
+      return copy(draft);
+    },
+    setSummaryConsents(expected: SignupDraftScope, selection: SummaryConsentSelection): SignupDraft | null {
+      if (!same(scope, expected)) return null;
+      draft.summaryConsents = { ...selection }; draft.summaryConsentsEdited = true;
       return copy(draft);
     },
     merge(expected: SignupDraftScope, server: ServerSignup): SignupDraft | null {

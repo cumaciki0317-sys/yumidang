@@ -15,9 +15,13 @@ const words = v => Array.isArray(v) ? v.map(words).join('') : typeof v === 'stri
 function fixture(signupState = async () => server()) {
   let epoch = 1, details = { userId: uid, status: 'completion_required', returnTo: '/', accessToken: 'synthetic' };
   let component, dirty = false, pickerResult = Promise.resolve({ canceled: true });
-  const routes = [], focusCalls = [], focusKinds = [], counts = { upload: 0, complete: 0, login: 0 }; 
+  const routes = [], focusCalls = [], focusKinds = [], counts = { upload: 0, complete: 0, login: 0 };
   const session = { signupState, complete: async () => { counts.complete++; return server({ status: 'ready' }); }, login: () => { counts.login++; } };
   const storage = {};
+  const consents = { exploration: false, summary_view: false, summary_generate: false, summary_source: false };
+  const consentCalls = [];
+  const member = { aiConsents: async () => ({ ...consents }), setAiConsent: async (kind, allowed) => { consentCalls.push({ kind, allowed }); consents[kind] = allowed; return { ...consents }; }, appointment: async () => ({}), conversation: async () => ({}) };
+  const service = { getPost: async () => ({}), getEvent: async () => ({}), getProfile: async () => ({}) };
   const same = (a, b) => a && b && a.length === b.length && a.every((v, i) => v === b[i]);
   const React = {
     createElement: (type, props, ...children) => ({ type, props: { ...props, children } }),
@@ -26,7 +30,7 @@ function fixture(signupState = async () => server()) {
     useCallback(fn, deps) { const i = component.cursor++, prev = component.slots[i]; if (!prev || !same(prev.deps, deps)) component.slots[i] = { fn, deps }; return component.slots[i].fn; },
     useEffect(fn, deps) { const c = component, i = c.cursor++, prev = c.slots[i]; if (!prev || !same(prev.deps, deps)) c.effects.push(() => { prev?.cleanup?.(); c.slots[i] = { deps, create: fn, cleanup: fn() }; }); },
   };
-  const remote = { serviceMode: true, serviceSessionEpoch: () => epoch, useServiceSession: () => ({ epoch }), useMemberPorts: () => ({ session, photo: storage }), useMemberSessionDetails: () => details, installMemberSessionDetails(v) { details = v; epoch++; lifecycle(); } };
+  const remote = { useMemberService: () => member, useService: () => service, serviceMode: true, serviceSessionEpoch: () => epoch, useServiceSession: () => ({ epoch }), useMemberPorts: () => ({ session, photo: storage }), useMemberSessionDetails: () => details, installMemberSessionDetails(v) { details = v; epoch++; lifecycle(); } };
   const focusController = { focusTarget(target, options) { focusKinds.push(options?.input === true ? "input" : "non-input"); target?.focus(); } };
   const ui = new Proxy({ colors: {}, art: {} }, { get: (o, k) => o[k] ?? k });
   const cache = new Map();
@@ -44,7 +48,7 @@ function fixture(signupState = async () => server()) {
       if (id === '../remote') return remote;
       if (id === '../ui' || id === './CommunityScreens') return ui;
       if (id === '../presentation/ux-form') return { useUxFocus: () => focusController };
-      if (id === '../state') return { useApp: () => ({ member: null, login() {}, updateMember() {} }) };
+      if (id === '../state') return { routes: { S00: '/', S01: '/explore', S02: '/post', S03: '/create', S05: '/login', S06: '/signup', S09: '/event', S11: '/chat', S14: '/profile', S16: '/appointment', S17: '/review', S18: '/cancel' }, useApp: () => ({ member: null, login() {}, updateMember() {} }) };
       if (id === './RemoteScreens' || id === '../web-member-connection' || id === '../auth-callback-task') return {};
       if (id === '../avatar-service') return { validateOriginalPhoto: load(path.join(root, 'src/avatar-service.ts')).validateOriginalPhoto, async uploadPhoto() { counts.upload++; } };
       if (id === 'expo-image-picker') return { launchImageLibraryAsync: () => pickerResult };
@@ -69,7 +73,7 @@ function fixture(signupState = async () => server()) {
   async function flush() { for (let i = 0; i < 16; i++) { await new Promise(r => setImmediate(r)); if (!dirty) return; dirty = false; components.forEach(render); } throw new Error('Did not settle'); }
   const all = c => nodes(c.tree);
   const button = (c, text) => all(c).find(n => n.type === 'Button' && words(n) === text);
-  return { drafts, mount, unmount, flush, routes, counts, all, button, session, focusCalls, focusKinds, focusController, signupFailure: auth.signupFailure, authMessage: auth.authMessage, ApiError: load(path.join(root, "src/api.ts")).ApiError,
+  return { member, service, consents, consentCalls, drafts, mount, unmount, flush, routes, counts, all, button, session, focusCalls, focusKinds, focusController, signupFailure: auth.signupFailure, authMessage: auth.authMessage, ApiError: load(path.join(root, "src/api.ts")).ApiError,
     blur(c) { c.slots.forEach(v => { if (v?.cleanup) { v.cleanup(); v.cleanup = undefined; } }); },
     focus(c) { c.slots.forEach(v => { if (v?.create) v.cleanup = v.create(); }); },
     text: c => words(c.tree),
@@ -77,7 +81,10 @@ function fixture(signupState = async () => server()) {
     sessionSnapshot: () => details ? { ...details } : null,
     picker(value) { pickerResult = Promise.resolve({ canceled: false, assets: [value] }); },
     change(next) { epoch++; details = next; lifecycle(); dirty = true; },
-    edit(c, label, value) { const n = all(c).find(n => n.props?.title === label || n.props?.label === label); (n.props.setValues || n.props.onChangeText)(value); },
+    edit(c, label, value) {
+      if (label === 'MBTI · 선택') { if (!value) all(c).find(n => n.type === 'TextButton' && words(n) === 'MBTI 비우기').props.onPress(); else for (const letter of value.toUpperCase()) { all(c).find(n => n.type === 'Chip' && words(n) === letter)?.props.onPress(); render(c); } return; }
+      const n = all(c).find(n => n.props?.title === label || n.props?.label === label); (n.props.setValues || n.props.onChangeText)(value);
+    },
   };
 }
 test('draft returns only to the same verified identity, epoch and port; completion/logout revoke access even unmounted', () => {
@@ -124,7 +131,7 @@ test('actual retry preserves edits made before/during fetch and header return re
   assert.equal(c.tree.props.backLabel, '로그인으로 돌아가기'); c.tree.props.onBack(); h.unmount(c);
   assert.deepEqual(h.routes, [['push', '/login']]);
   const returned = h.mount(); await h.flush();
-  assert.equal(h.all(returned).find(n => n.props?.label === 'MBTI · 선택').props.value, 'ENFP'); assert.equal(h.counts.upload, 0); assert.equal(h.counts.login, 0);
+  assert.equal(h.drafts.signupDraftStore.read(h.scope()).mbti, 'ENFP'); assert.equal(h.counts.upload, 0); assert.equal(h.counts.login, 0);
 });
 test('late requests from an old session cannot replace or clear the new account draft', async () => {
   const request = deferred(); const h = fixture(() => request.promise), c = h.mount();
@@ -168,6 +175,9 @@ test('a verified ready recheck synchronizes the existing session and clears its 
   h.button(c, '다시 불러오기').props.onPress(); await h.flush();
   assert.deepEqual(h.sessionSnapshot(), { ...before, status: 'ready' });
   assert.equal(h.drafts.signupDraftStore.read(scope), null);
+  assert.deepEqual(h.routes, []);
+  assert.match(h.text(c), /가입 프로필을 완성/);
+  h.button(c, '확인하고 계속').props.onPress(); await h.flush();
   assert.deepEqual(h.routes, [['replace', '/']]);
   assert.equal(h.counts.login, 0); assert.equal(h.counts.upload, 0); assert.equal(h.counts.complete, 0);
 });
@@ -211,7 +221,7 @@ test('remote S06 focuses a confirmed photo fault on its actual action and keeps 
   h.button(c, '가입 완료').props.onPress(); await h.flush();
   assert.match(h.focusCalls.at(-1), /^가입 정보 확인 안내[.] 연결하지 못했어요/);
   assert.equal(h.focusKinds.at(-1), 'non-input');
-  assert.equal(h.all(c).find(n => n.props?.label === 'MBTI · 선택').props.value, 'ISTJ');
+  assert.equal(h.drafts.signupDraftStore.read(h.scope()).mbti, 'ISTJ');
 });
 
 test('signup recovery classifies explicit auth, unavailable and network errors without replacing known eligibility semantics', () => {
@@ -251,7 +261,7 @@ test('auth/unavailable completion failures retain input but require recovery bef
     h.session.complete = async () => { throw new h.ApiError(status, 'AUTHORITY_FAILURE'); };
     h.button(c, '가입 완료').props.onPress(); await h.flush();
     assert.equal(h.button(c, '가입 완료').props.disabled, true);
-    assert.equal(h.all(c).find(n => n.props?.label === 'MBTI · 선택').props.value, 'ENFP');
+    assert.equal(h.drafts.signupDraftStore.read(h.scope()).mbti, 'ENFP');
     assert.equal(h.button(c, '다시 불러오기'), undefined);
   }
 });
@@ -281,4 +291,102 @@ test('a later local photo error cannot hide the pending authentication recovery 
   assert.match(h.text(c), /상단 뒤로가기/); assert.match(h.text(c), /원본 10MB 이하/);
   assert.equal(h.button(c, '가입 완료').props.disabled, true);
   assert.equal(h.all(c).filter(n => n.type === 'Body' && /상단 뒤로가기/.test(words(n))).length, 1);
+});
+
+
+test('service signup uses paired optional MBTI choices and blocks partial selection before upload or complete', async () => {
+  const h = fixture(async () => server({ mbti: null, avatarPath: uid + '/' + uid + '.jpg' })), c = h.mount(); await h.flush();
+  h.all(c).find(n => n.type === 'Chip' && words(n) === 'E').props.onPress(); await h.flush();
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.match(h.text(c), /MBTI를 모두 선택하거나 비워/); assert.equal(h.focusCalls.at(-1), 'S');
+  assert.equal(h.counts.complete, 0); assert.equal(h.counts.upload, 0);
+  h.all(c).find(n => n.type === 'TextButton' && words(n) === 'MBTI 비우기').props.onPress(); await h.flush();
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.equal(h.counts.complete, 1); assert.match(h.text(c), /가입 프로필을 완성/);
+});
+
+test('three signup consent choices default false, bulk selection excludes exploration, and survive same-session reentry', async () => {
+  const h = fixture(), c = h.mount(); await h.flush();
+  const chip = (screen, text) => h.all(screen).find(n => n.type === 'Chip' && words(n) === text);
+  assert.equal(chip(c, '후기 AI 전체 동의').props.selected, false);
+  chip(c, '후기 AI 전체 동의').props.onPress(); await h.flush();
+  assert.equal(chip(c, '후기 AI 전체 동의').props.selected, true);
+  chip(c, '내 프로필 요약 생성·노출').props.onPress(); await h.flush();
+  assert.equal(chip(c, '후기 AI 전체 동의').props.selected, false);
+  assert.equal(chip(c, '후기 요약 열람').props.selected, true);
+  assert.equal(chip(c, '내가 작성한 후기의 요약 활용').props.selected, true);
+  h.unmount(c); const returned = h.mount(); await h.flush();
+  assert.equal(chip(returned, '후기 요약 열람').props.selected, true);
+  assert.equal(chip(returned, '내 프로필 요약 생성·노출').props.selected, false);
+  assert.equal(h.consentCalls.length, 0); assert.equal(h.consents.exploration, false);
+  const snapshot = h.drafts.signupDraftStore.read(h.scope()); snapshot.summaryConsents.summary_view = false;
+  assert.equal(h.drafts.signupDraftStore.read(h.scope()).summaryConsents.summary_view, true);
+});
+
+test('successful signup and partial consent save remain separate; manual retry only saves missing choices', async () => {
+  const h = fixture(async () => server({ avatarPath: uid + '/' + uid + '.jpg' })), c = h.mount(); await h.flush();
+  h.all(c).find(n => n.type === 'Chip' && words(n) === '후기 AI 전체 동의').props.onPress(); await h.flush();
+  const setter = h.member.setAiConsent; let failed = false;
+  h.member.setAiConsent = async (kind, allowed) => { if (kind === 'summary_generate' && !failed) { failed = true; throw new Error('synthetic partial network failure'); } return setter(kind, allowed); };
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.equal(h.sessionSnapshot().status, 'ready'); assert.equal(h.counts.complete, 1);
+  assert.match(h.text(c), /가입 프로필을 완성/); assert.match(h.text(c), /내 프로필 요약 생성·노출 · 미동의/);
+  assert.ok(h.button(c, '나중에 설정하고 계속')); assert.equal(h.routes.length, 0);
+  assert.deepEqual(h.consentCalls.map(x => x.kind), ['summary_view', 'summary_source']);
+  h.button(c, '동의 저장 다시 시도').props.onPress(); await h.flush();
+  assert.equal(h.counts.complete, 1); assert.equal(h.counts.upload, 0);
+  assert.deepEqual(h.consentCalls.map(x => x.kind), ['summary_view', 'summary_source', 'summary_generate']);
+  assert.equal(h.consents.exploration, false); assert.ok(h.button(c, '확인하고 계속'));
+  h.button(c, '확인하고 계속').props.onPress(); await h.flush(); assert.deepEqual(h.routes, [['replace', '/']]);
+});
+
+test('failed consent readback shows unknown and still permits continuation without repeating signup', async () => {
+  const h = fixture(async () => server({ avatarPath: uid + '/' + uid + '.jpg' })), c = h.mount(); await h.flush();
+  h.member.aiConsents = async () => { throw new Error('synthetic read failure'); };
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.equal(h.sessionSnapshot().status, 'ready'); assert.match(h.text(c), /후기 요약 열람 · 확인 필요/);
+  assert.doesNotMatch(h.text(c), /후기 요약 열람 · 미동의/);
+  h.button(c, '나중에 설정하고 계속').props.onPress(); await h.flush();
+  assert.equal(h.counts.complete, 1); assert.deepEqual(h.routes, [['replace', '/']]);
+});
+
+test('late post-signup consent responses cannot affect a replacement account or show the old completion', async () => {
+  const pending = deferred(), h = fixture(async () => server({ avatarPath: uid + '/' + uid + '.jpg' })), c = h.mount(); await h.flush();
+  h.member.aiConsents = () => pending.promise;
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.match(h.text(c), /AI 선택 동의 상태를 확인/);
+  h.change({ userId: '22222222-2222-4222-8222-222222222222', status: 'completion_required', returnTo: '/', accessToken: 'replacement' }); await h.flush();
+  assert.doesNotMatch(h.text(c), /가입 프로필을 완성/);
+  pending.resolve({ exploration: false, summary_view: true, summary_generate: true, summary_source: true }); await h.flush();
+  assert.doesNotMatch(h.text(c), /가입 프로필을 완성/); assert.equal(h.consentCalls.length, 0); assert.deepEqual(h.routes, []);
+});
+
+test('completion popup preserves a failed return target for manual recheck and falls home on confirmed denial', async () => {
+  for (const denied of [false, true]) {
+    const h = fixture(async () => server({ avatarPath: uid + '/' + uid + '.jpg' }));
+    h.change({ ...h.sessionSnapshot(), returnTo: '/post?id=' + uid });
+    const c = h.mount(); await h.flush(); let attempts = 0;
+    h.service.getPost = async () => { attempts++; if (attempts === 1) throw denied ? new h.ApiError(404, 'NOT_FOUND') : new Error('network'); return {}; };
+    h.button(c, '가입 완료').props.onPress(); await h.flush();
+    assert.equal(h.routes.length, 0);
+    h.button(c, '확인하고 계속').props.onPress(); await h.flush();
+    if (denied) assert.deepEqual(h.routes, [['replace', '/']]);
+    else { assert.equal(h.routes.length, 0); assert.match(h.text(c), /돌아갈 화면의 현재 상태를 확인하지 못/); h.button(c, '목적 화면 다시 확인').props.onPress(); await h.flush(); assert.deepEqual(h.routes, [['replace', '/post?id=' + uid]]); }
+    assert.equal(h.counts.complete, 1);
+  }
+});
+
+
+test('a lost signup response reuses its uploaded photo on manual completion retry and preserves selected optional consents', async () => {
+  const h = fixture(), c = h.mount(); await h.flush();
+  h.picker({ uri: photo.uri, mimeType: photo.mimeType, fileSize: photo.originalBytes });
+  await h.button(c, '프로필 사진 선택').props.onPress(); await h.flush();
+  h.all(c).find(n => n.type === 'Chip' && words(n) === '후기 요약 열람').props.onPress(); await h.flush();
+  h.session.complete = async () => { h.counts.complete++; if (h.counts.complete === 1) throw new Error('synthetic response loss'); return server({ status: 'ready' }); };
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.equal(h.counts.upload, 1); assert.equal(h.counts.complete, 1);
+  h.button(c, '가입 완료').props.onPress(); await h.flush();
+  assert.equal(h.counts.upload, 1); assert.equal(h.counts.complete, 2);
+  assert.deepEqual(h.consentCalls, [{ kind: 'summary_view', allowed: true }]);
+  assert.match(h.text(c), /후기 요약 열람 · 동의/);
 });

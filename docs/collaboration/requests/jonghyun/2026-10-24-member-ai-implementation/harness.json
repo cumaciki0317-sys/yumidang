@@ -1,0 +1,51 @@
+{
+  "actor": "jonghyun",
+  "baseHead": "efdeba1c2e6e65376a43580889a99b1379ee3d17",
+  "integrationClone": "/Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024",
+  "integrationBranch": "jonghyun/member-ai-20261024",
+  "lanes": [
+    {
+      "agent": "jonghyun_remaining_audit",
+      "clone": "../jonghyun-member-ai-storage-20261024",
+      "exclusive": [
+        "storage.ts",
+        "state.tsx",
+        "types.ts",
+        "screens/BrowseScreens.tsx",
+        "tests/mobile/service-storage-state.test.mjs"
+      ]
+    },
+    {
+      "agent": "signup_implementation",
+      "clone": "../jonghyun-member-ai-signup-20261024",
+      "exclusive": [
+        "screens/AuthAiScreens.tsx",
+        "signup-draft.ts",
+        "tests/mobile/ux-signup.test.mjs"
+      ]
+    },
+    {
+      "agent": "repo_integration_audit",
+      "clone": "../jonghyun-member-ai-access-20261024",
+      "exclusive": [
+        "screens/RemoteMemberScreens.tsx",
+        "tests/mobile/member-access-retirement.test.mjs",
+        "native-handoff.md"
+      ]
+    },
+    {
+      "agent": "root",
+      "exclusive": [
+        "member-service.ts",
+        "remote.tsx",
+        "screens/RemoteScreens.tsx",
+        "ai-consent-state.ts",
+        "member-device-cleanup.ts",
+        "presentation/member-ai-consents.tsx",
+        "AI tests",
+        "integration evidence"
+      ]
+    }
+  ],
+  "integration": "Uncommitted patches applied after ownership checks. Root performed final TTL and cross-account race fixes after lane handoff. No shared Git index, no commits/push."
+}

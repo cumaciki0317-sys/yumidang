@@ -145,6 +145,8 @@ export type Notification = {
 export type Draft = {
   serviceExpectedUpdatedAt?: string;
   serviceDraftEpoch?: number;
+  /** Device revision, never an API operation or authority token. */
+  serviceDraftRevision?: string;
   editingPostId?: string;
   category: string;
   title: string;
@@ -201,6 +203,11 @@ export type AppState = {
   reviews: Review[];
   notifications: Notification[];
   draft: Draft | null;
+  deviceStorage?: {
+    status: 'loading' | 'ready' | 'error' | 'cleanup-required';
+    error: string;
+    draftCleanupPending: boolean;
+  };
   recentSearches: { text: string; at: number }[];
   blockedIds: string[];
   aiMessages: AiMessage[];
@@ -225,7 +232,9 @@ export interface AppContextValue extends AppState {
   logout: () => Promise<void>;
   updateMember: (patch: Partial<Member>) => void;
   saveDraft: (draft: Draft) => Promise<void>;
-  clearDraft: () => Promise<void>;
+  clearDraft: (expectedRevision?: string) => Promise<void>;
+  retryDeviceStorage?: () => Promise<void>;
+  retryDraftCleanup?: () => Promise<void>;
   publish: (draft: Draft) => OperationResult;
   sendMessage: (
     postId: string,

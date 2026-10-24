@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "source": "/Users/b/Documents/Antigravity/yumidang/.worktrees/jonghyun-member-ai-20261024",
+  "sourceHashes": {
+    "screens/RemoteMemberScreens.tsx": "06f4abdbcc4fdeec006ac653f6ce8e04063288d756e8d2b657b6439a831881dd",
+    "screens/RemoteScreens.tsx": "c550f1f10418f1eee7749737a9f9ca7381af9eebdb81f0c3ed97a0bb72c629aa",
+    "screens/AuthAiScreens.tsx": "38211e460518b7a575cb7d368c843d90a49e51b7e9ab0402c154b2958de35d64",
+    "state.tsx": "d914a499709968171d323c56d996491adf333aaa1053855801f50df14b197fd2",
+    "storage.ts": "0f1af7405143649653b1cfbae26a883899847d23b91fb53d564f55694adcc71d",
+    "member-service.ts": "2912d94ef27a2979b3d757cc188e44495821646f1f596cefeb092b5010fa9a4b",
+    "remote.tsx": "ed7206e2751446f28d882e8a67bdbb5840a36a0de05583cd15d79fba3c2513bb",
+    "ai-consent-state.ts": "cd29b8aaa2639673bd90f3f31be9b0bb14e351bbd64c7e052a2a123d2801f92a",
+    "member-device-cleanup.ts": "1da0362139178c8f1222ffd2e05e80dfe3250164cbc28fc29286ed231622a885",
+    "presentation/member-ai-consents.tsx": "6a717d3ebf379485928fdfa5ccded3e6476795bbfc383529c9c99c40b900b1ae"
+  },
+  "temp": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-member-ai-browser-b3dPr7",
+  "buildLog": "/var/folders/h7/6qzd7cp553q1qwhk592yhvs80000gn/T/yumidang-member-ai-browser-b3dPr7/export.log",
+  "checks": [
+    {
+      "name": "가입 기본 3동의 미선택",
+      "pass": true
+    },
+    {
+      "name": "가입 성공과 동의 일부 실패 안내 분리",
+      "pass": true
+    },
+    {
+      "name": "실패한 동의만 수동 저장",
+      "pass": true
+    },
+    {
+      "name": "AI 열람 철회는 다른 두 동의를 유지",
+      "pass": true
+    },
+    {
+      "name": "설정 화면은 재조회한 실제 동의 상태를 표시",
+      "pass": true
+    },
+    {
+      "name": "일반 회원 권한 밖에서 처리 중 영수증 유지",
+      "pass": true
+    },
+    {
+      "name": "같은 요청 수동 확인 후 완료 구분",
+      "pass": true
+    },
+    {
+      "name": "회원 UUID·JWT 원문 UI 노출 없음",
+      "pass": true
+    },
+    {
+      "name": "모바일 가로 넘침 없음",
+      "pass": true
+    },
+    {
+      "name": "런타임 오류·실제 외부 요청 없음",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "scope": "Actual Expo web rendering with synthetic member ports/HTTP. No provider, real server, real member or native-device verification."
+}

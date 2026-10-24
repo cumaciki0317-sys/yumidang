@@ -26,10 +26,17 @@ function text(value) {
   if (typeof value === "string") return value;
   return isNode(value) ? text(value.props.children) : "";
 }
-function harness(answer = async () => response()) {
+function harness(answer = async () => response(), options = {}) {
   let slots = [], effects = [], index = 0, dirty = false, tree;
   let session = { epoch: 0, authenticated: true };
-  const calls = [], routes = [];
+  const calls = [], routes = [], availabilityCalls = [], consentCalls = [];
+  let consentRevision = 0, stoppedEpoch = null;
+  const consentListeners = new Set();
+  const consentChange = () => { consentRevision++; consentListeners.forEach(listener => listener()); };
+  const member = {
+    async aiAvailability(signal) { availabilityCalls.push(signal); return options.availability ? options.availability(signal) : { estimatedEligible: true, reason: null, remaining: 20, kstDay: '2026-10-24', checkedAt: '2026-10-24T00:00:00Z', resetsAt: '2026-10-24T15:00:00Z', requestAuthoritative: true }; },
+    async setAiConsent(kind, allowed, signal) { consentCalls.push({kind, allowed}); consentChange(); if(options.saveConsent) await options.saveConsent(kind,allowed,signal); consentChange(); },
+  };
   const react = {
     createElement(type, props, ...children) { return { type, props: { ...props, children } }; },
     useState(initial) {
@@ -58,8 +65,10 @@ function harness(answer = async () => response()) {
       if (name === "react-native") return { View: "View", Linking: {} };
       if (name === "expo-router") return { router: {}, useFocusEffect(callback) { react.useEffect(callback, [callback]); } };
       if (name === "../api") return { ApiError };
+      if (name === "../ai-consent-state") return { aiRequiresManualCheck: epoch => stoppedEpoch === epoch, markAiManualCheck(epoch, required) { stoppedEpoch = required ? epoch : stoppedEpoch === epoch ? null : stoppedEpoch; }, aiConsentRevision: () => consentRevision, aiConsentMutationPending: () => false, subscribeAiConsentChange(listener) { consentListeners.add(listener); return () => consentListeners.delete(listener); } };
       if (name === "../ui") return ui;
-      if (name === "../remote") return { useServiceSession: () => session, serviceSessionEpoch: () => session.epoch,
+      if (name === "../presentation/ux-time") return {formatKoreanDateTime: () => "합성 기준 시각"};
+      if (name === "../remote") return { useMemberService: () => member, useServiceSession: () => session, serviceSessionEpoch: () => session.epoch,
         useService: () => ({ askAi(input, signal) { calls.push({ input: structuredClone(input), signal }); return answer(input, signal); } }) };
       if (name === "../service") return { normalizeMobileRegion(value) { if (!value.trim()) return undefined; if (value === "서울") return "서울"; throw new Error("invalid region"); } };
       if (name === "../state") return { useApp: () => ({ navigate: route => routes.push(route), showToast() {} }) };
@@ -72,11 +81,12 @@ function harness(answer = async () => response()) {
   const find = (type, label) => nodes(tree).find(node => node.type === type && (label === undefined || text(node) === label));
   function cleanup() { for (const slot of slots) slot?.cleanup?.(); effects = []; }
   render();
-  return { calls, routes, ApiError, flush, find, get tree() { return tree; }, get text() { return nodes(tree).filter(node => node.type === "Body").map(text).join("\n"); },
+  return { calls, routes, availabilityCalls, consentCalls, consentChange, ApiError, flush, find, get tree() { return tree; }, get text() { return nodes(tree).filter(node => node.type === "Body").map(text).join("\n"); },
     input() { return nodes(tree).find(node => node.type === "Field" && node.props.placeholder === "찾고 싶은 동행과 지역을 알려 주세요"); },
     async enter(value) { this.input().props.onChangeText(value); await flush(); },
     async send() { find("Button", "보내기").props.onPress(); await flush(); },
     async leave() { cleanup(); await flush(); },
+    async remount() { cleanup(); slots = []; render(); await flush(); },
     async session(next) { cleanup(); slots = []; session = next; render(); await flush(); },
   };
 }
@@ -177,4 +187,55 @@ test("a transport failure preserves the draft and does not automatically retry",
   await h.enter("보존할 질문"); await h.send();
   assert.equal(h.input().props.value, "보존할 질문"); assert.equal(h.calls.length, 1);
   assert.ok(h.text.includes("입력한 조건을 유지"));
+});
+
+
+test("initial unknown availability disables sending until a successful server read", async () => {
+  const late = deferred(), h = harness(undefined, {availability: () => late.promise});
+  await h.enter("질문"); await h.send();
+  assert.equal(h.calls.length, 0); assert.equal(h.find("Button", "보내기").props.disabled, true);
+  late.resolve({estimatedEligible:true,reason:null,remaining:17}); await h.flush();
+  await h.send(); assert.equal(h.calls.length,1);
+});
+test("a server stop requires explicit state checking and never resends a preserved draft", async () => {
+  const h=harness(async()=>response({status:'unavailable',notice:'오늘 한도',recovery:{reason:'daily_limit',retryAllowed:false}}));
+  await h.enter('보존할 질문'); await h.send();
+  assert.equal(h.availabilityCalls.length,1); assert.equal(h.find('Button','보내기').props.disabled,true);
+  await h.send(); assert.equal(h.calls.length,1);
+  h.find('Button','이용 상태 다시 확인').props.onPress(); await h.flush();
+  assert.equal(h.availabilityCalls.length,2); assert.equal(h.calls.length,1); assert.equal(h.input().props.value,'보존할 질문');
+});
+test("consent-required state sends no model input; grant only saves consent and rechecks", async()=>{
+  let allowed=false;
+  const h=harness(undefined,{availability:async()=>({estimatedEligible:allowed,reason:allowed?null:'consent_required',remaining:20}),saveConsent:async()=>{allowed=true;}});
+  await h.enter('미전송 질문'); await h.send(); assert.equal(h.calls.length,0);
+  h.find('Button','AI 탐색 동의하기').props.onPress(); await h.flush();
+  assert.deepEqual(h.consentCalls,[{kind:'exploration',allowed:true}]); assert.equal(h.calls.length,0);
+  assert.equal(h.input().props.value,'미전송 질문'); assert.equal(h.find('Button','보내기').props.disabled,false);
+});
+test("consent invalidation aborts a pending model response and blocks stale availability", async()=>{
+  const late=deferred(),h=harness(()=>late.promise);
+  await h.enter('질문'); await h.send(); h.consentChange(); await h.flush();
+  assert.equal(h.calls[0].signal.aborted,true);
+  late.resolve(response({notice:'철회 뒤 늦은 답변'})); await h.flush();
+  assert.ok(!h.text.includes('철회 뒤 늦은 답변')); assert.equal(h.find('Button','보내기').props.disabled,true);
+  assert.equal(h.input().props.value,'질문');
+});
+test("failed availability recheck keeps input and the stopped state", async()=>{
+  let count=0;
+  const h=harness(undefined,{availability:async()=>{if(++count>1)throw Error('offline');return {estimatedEligible:false,reason:'daily_limit',remaining:0};}});
+  await h.enter('보존할 질문'); h.find('Button','이용 상태 다시 확인').props.onPress(); await h.flush();
+  assert.equal(h.find('Button','보내기').props.disabled,true); assert.equal(h.input().props.value,'보존할 질문'); assert.equal(h.calls.length,0);
+});
+
+test("reentering a stopped screen does not silently refresh or enable sending", async()=>{
+ const h=harness(async()=>response({status:'unavailable',notice:'중단',recovery:{reason:'concurrent',retryAllowed:false}}));
+ await h.enter('질문');await h.send();await h.remount();
+ assert.equal(h.availabilityCalls.length,1);assert.equal(h.find('Button','보내기').props.disabled,true);
+ h.find('Button','이용 상태 다시 확인').props.onPress();await h.flush();assert.equal(h.availabilityCalls.length,2);assert.equal(h.calls.length,1);
+});
+test("a captured output retry cannot send after consent invalidation",async()=>{
+ const h=harness(async()=>response({status:'unavailable',notice:'숨김',recovery:{reason:'output_privacy',retryAllowed:true}}));
+ await h.enter('질문');await h.send();const stale=h.find('Button','답변 다시 확인하기').props.onPress;
+ h.consentChange();await h.flush();stale();await h.flush();assert.equal(h.calls.length,1);
 });

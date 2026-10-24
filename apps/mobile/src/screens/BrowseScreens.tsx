@@ -70,6 +70,16 @@ const BASE_FILTERS: Filters = {
   recruiting: false,
   sort: "created_desc",
 };
+
+function DeviceStorageNotice({ app }: { app: AppContextValue }) {
+  const state = app.deviceStorage;
+  if (!serviceMode || !state) return null;
+  if (state.status === "loading") return <Body small muted>이 기기의 저장 내용을 확인하고 있어요.</Body>;
+  if (state.status === "cleanup-required") return <Card><Body>{state.error}</Body><Button secondary onPress={() => { void app.retryDeviceStorage?.().catch(() => app.showToast("기기 저장 내용을 삭제하지 못했어요. 다시 시도해 주세요.")); }}>기기 저장 내용 다시 삭제</Button></Card>;
+  if (state.status === "error") return <Card><Body>{state.error}</Body><Button secondary onPress={() => { void app.retryDeviceStorage?.(); }}>저장 내용 다시 확인</Button></Card>;
+  if (state.draftCleanupPending) return <Card><Body>{state.error || "등록한 공고의 기기 초안을 정리하고 있어요."}</Body><Button secondary onPress={() => { void app.retryDraftCleanup?.().catch(() => app.showToast("기기 초안을 정리하지 못했어요. 다시 시도해 주세요.")); }}>기기 초안 정리 다시 시도</Button></Card>;
+  return null;
+}
 const REGIONS = [
   "전체",
   "서울",
@@ -594,6 +604,7 @@ function BrowseList({ category }: { category?: string }) {
         tab={!category}
         right={<AccountHeader />}
       >
+        <DeviceStorageNotice app={app} />
         <View style={{ gap: 12 }}>
           <Row>
             <View style={{ flex: 1 }}>
@@ -1729,11 +1740,21 @@ function CreateForm({ id }: { id?: string }) {
   const [placeOpen, setPlaceOpen] = useState(false);
   const [placeQuery, setPlaceQuery] = useState("");
   const [placeMode, setPlaceMode] = useState<"장소명" | "주소">("장소명");
-  const [restoredDraft, setRestoredDraft] = useState(continuing);
+  const [restoredDraft, setRestoredDraft] = useState(Boolean(continuing && app.draft));
+  const [edited, setEdited] = useState(false), [hydrationApplied, setHydrationApplied] = useState(!serviceMode || app.deviceStorage?.status === "ready");
+  // Reconcile the first device read once, before committing this render; never replace typed values.
+  if (serviceMode && app.deviceStorage?.status === "ready" && !hydrationApplied) {
+    setHydrationApplied(true);
+    if (app.draft && continuing && !edited) {
+      setDraft({ ...app.draft, ...(eventId ? { ...selectedEventPatch(eventId), eventSectionPosition: "top" as const } : {}) });
+      setRestoredDraft(true);
+    } else if (app.draft && !continuing) setRestore(true);
+  }
   const [saving, setSaving] = useState(false);
   const eventSource = useRemoteEventSource(serviceMode ? draft.eventId : undefined);
   const event = serviceMode ? (liveEvent?.id === draft.eventId ? liveEvent : eventSource.event) : app.events.find((e) => e.id === draft.eventId);
   const change = (patch: Partial<Draft>) => {
+    setEdited(true);
     setDraft((prev) => ({ ...prev, ...patch }));
     setErrors({});
   };
@@ -1759,7 +1780,7 @@ function CreateForm({ id }: { id?: string }) {
       else if (action === "exit") app.back();
       else
         app.showToast(
-          serviceMode ? "현재 로그인 세션에 초안을 보관했어요. 앱을 다시 시작하면 유지되지 않을 수 있어요." : "이 기기에 초안을 임시저장했어요. 마지막 수정 후 7일간 보관해요.",
+          "이 기기에 초안을 임시저장했어요. 마지막 수정 후 7일간 보관해요.",
         );
     } catch {
       app.showToast("임시저장하지 못했어요. 작성 내용은 화면에 남아 있어요.");
@@ -1870,6 +1891,7 @@ function CreateForm({ id }: { id?: string }) {
         </Button>
       }
     >
+      <DeviceStorageNotice app={app} />
       <View style={styles.stepTrack}>
         <View style={[styles.stepFill, { width: "50%" }]} />
       </View>
@@ -1879,7 +1901,7 @@ function CreateForm({ id }: { id?: string }) {
             작성 중인 초안을 이어서 보고 있어요.
           </Body>
           <Body small muted>
-            {serviceMode ? "현재 로그인 세션에서만 이어서 작성할 수 있어요. 앱 재시작 후 보관은 보장하지 않아요." : `만료 · ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}`}
+            {`만료 · ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}`}
           </Body>
         </Card>
       )}
@@ -2053,7 +2075,7 @@ function CreateForm({ id }: { id?: string }) {
       {restore && app.draft && (
         <ConfirmCard
           title="작성 중이던 공고가 있어요"
-          description={serviceMode ? "현재 로그인 세션에 보관한 초안이에요. 앱 재시작 후 보관은 보장하지 않아요. 이어서 작성할까요?" : `마지막 수정 후 7일간 보관해요. 만료 시각은 ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}예요. 이어서 작성할까요?`}
+          description={`마지막 수정 후 7일간 보관해요. 만료 시각은 ${dateLabel(app.draft.updatedAt + 7 * DAY)} ${timeLabel(app.draft.updatedAt + 7 * DAY)}예요. 이어서 작성할까요?`}
           confirm="불러오기"
           cancel="새로 작성"
           onConfirm={() => {
@@ -2069,7 +2091,7 @@ function CreateForm({ id }: { id?: string }) {
       {overwrite && (
         <ConfirmCard
           title="저장된 초안을 대체할까요?"
-          description={serviceMode ? "현재 로그인 세션의 초안 1개를 새 내용으로 바꿔요. 앱 재시작 후 보관은 보장하지 않아요." : "이 기기에는 최근 초안 1개만 저장해요. 새 내용으로 저장하면 이전 초안을 불러올 수 없어요."}
+          description="이 기기에는 최근 초안 1개만 저장해요. 새 내용으로 저장하면 이전 초안을 불러올 수 없어요."
           confirm="새 초안으로 저장"
           onCancel={() => setOverwrite(null)}
           onConfirm={() => {
@@ -2082,7 +2104,7 @@ function CreateForm({ id }: { id?: string }) {
       {exit && (
         <ConfirmCard
           title="작성을 나갈까요?"
-          description={serviceMode ? "현재 로그인 세션에 초안을 보관해요. 앱 재시작 후 보관은 보장하지 않아요." : "작성 중인 내용을 이 기기에 임시저장해요. 마지막 수정 후 7일간 보관하고, 등록 성공·로그아웃 시 삭제해요."}
+          description="작성 중인 내용을 이 기기에 임시저장해요. 마지막 수정 후 7일간 보관하고, 등록 성공·로그아웃 시 삭제해요."
           confirm="저장하고 나가기"
           cancel="계속 작성"
           onCancel={() => setExit(false)}
@@ -2244,6 +2266,7 @@ function PublishForm() {
       return;
     }
     if (serviceMode) {
+      if (app.deviceStorage && (app.deviceStorage.status !== "ready" || app.deviceStorage.draftCleanupPending)) { app.showToast("기기 저장 내용을 먼저 확인해 주세요. 작성한 내용은 유지돼요."); return; }
       if (draft.manualEvent !== undefined) { setErrors({ event: "직접 입력 행사 서버 연결을 준비 중이에요. 입력은 유지돼요. 다시 시도하거나 수정 화면에서 행사 연결을 삭제해 주세요." }); return; }
       if (!session.authenticated || draft.serviceDraftEpoch !== session.epoch) { app.showToast("이 계정에서 작성한 초안으로 다시 시작해 주세요."); return; }
       const input = {
@@ -2257,7 +2280,11 @@ function PublishForm() {
       const fingerprint = JSON.stringify(input);
       if (!attempt.current || attempt.current.fingerprint !== fingerprint) attempt.current = { fingerprint, postId: Crypto.randomUUID() };
       const postId = attempt.current.postId;
-      void action.run((s, signal) => s.create(postId, input, signal), () => { app.showToast("공고를 등록했어요."); app.navigate("S02", postId); });
+      void action.run((s, signal) => s.create(postId, input, signal), () => {
+        app.showToast("공고를 등록했어요.");
+        void app.clearDraft(draft.serviceDraftRevision).catch(() => app.showToast("공고는 등록됐지만 기기 초안 정리를 확인하지 못했어요. 둘러보기에서 다시 정리해 주세요."));
+        app.navigate("S02", postId);
+      });
       return;
     }
     setSubmitting(true);
@@ -2324,6 +2351,7 @@ function PublishForm() {
         </Row>
       }
     >
+      <DeviceStorageNotice app={app} />
       <View style={styles.stepTrack}>
         <View style={[styles.stepFill, { width: "100%" }]} />
       </View>

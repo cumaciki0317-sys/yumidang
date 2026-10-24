@@ -6,8 +6,10 @@ import { router, useFocusEffect } from "expo-router";
 import { ApiError } from "../api";
 import { RemoteAiFeedback } from "./RemoteAiFeedback";
 import { RemoteBlockControls, RemotePostManagement, RemoteProfilePhoto, RemoteReport, useMemberResource } from "./RemoteMemberScreens";
-import { serviceSessionEpoch, useService, useServiceSession } from "../remote";
+import { serviceSessionEpoch, useMemberService, useService, useServiceSession } from "../remote";
 import { normalizeMobileRegion } from "../service";
+import { aiConsentRevision, aiConsentMutationPending, aiRequiresManualCheck, markAiManualCheck, subscribeAiConsentChange } from "../ai-consent-state";
+import type { AiAvailability } from "../member-service";
 import { useApp } from "../state";
 import {
   Badge,
@@ -266,6 +268,7 @@ export function RemoteAiScreen() {
 }
 function RemoteAiSession() {
   const service = useService();
+  const member = useMemberService();
   const session = useServiceSession();
   const app = useApp();
   const [input, setInput] = useState("");
@@ -274,12 +277,60 @@ function RemoteAiSession() {
   const [fixedFilters, setFixedFilters] = useState<Filters | null>(null);
   const [messageEpoch, setMessageEpoch] = useState(session.epoch);
   const [result, setResult] = useState<AiChatResult | null>(null);
+  const resultConsentVersion = useRef<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const filters = useRef<AiFilters>({ target: "posts" });
   const active = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const lock = useRef(false);
+  const [availability, setAvailability] = useState<{ value: AiAvailability; revision: number } | null>(null);
+  const [availabilityBusy, setAvailabilityBusy] = useState(false), [availabilityIssue, setAvailabilityIssue] = useState("");
+  const availabilityRequest = useRef<AbortController | null>(null), consentWrite = useRef<AbortController | null>(null);
+  const [consentBusy, setConsentBusy] = useState(false);
+  const manualCheckRequired = useRef(aiRequiresManualCheck(session.epoch));
+  const checkAvailability = useCallback(async () => {
+    if (!member || !session.authenticated || serviceSessionEpoch() !== session.epoch || lock.current || availabilityRequest.current || consentWrite.current || aiConsentMutationPending()) return;
+    const controller = new AbortController(), expectedEpoch = session.epoch, expectedRevision = aiConsentRevision();
+    availabilityRequest.current = controller;
+    setAvailabilityBusy(true); setAvailabilityIssue(""); setAvailability(null);
+    const current = () => !controller.signal.aborted && availabilityRequest.current === controller && serviceSessionEpoch() === expectedEpoch && aiConsentRevision() === expectedRevision;
+    try {
+      const value = await member.aiAvailability(controller.signal);
+      if (!current()) return;
+      manualCheckRequired.current = false;
+      markAiManualCheck(expectedEpoch, !value.estimatedEligible);
+      setAvailability({ value, revision: expectedRevision });
+    } catch {
+      if (current()) { manualCheckRequired.current = true; markAiManualCheck(expectedEpoch, true); setAvailabilityIssue("이용 상태를 확인하지 못했어요. 입력을 유지했으니 다시 확인해 주세요."); }
+    } finally {
+      if (availabilityRequest.current === controller) { availabilityRequest.current = null; setAvailabilityBusy(false); }
+    }
+  }, [member, session.authenticated, session.epoch]);
+  useEffect(() => {
+    if (!manualCheckRequired.current) void checkAvailability();
+    return subscribeAiConsentChange(() => {
+      generation.current++; active.current?.abort(); lock.current = false; setBusy(false); setResult(null); resultConsentVersion.current = null;
+      availabilityRequest.current?.abort(); availabilityRequest.current = null; setAvailabilityBusy(false);
+      manualCheckRequired.current = true; setAvailability(null);
+      markAiManualCheck(session.epoch, true);
+      setAvailabilityIssue("AI 동의가 변경됐어요. 이용 상태를 다시 확인해 주세요.");
+    });
+  }, [checkAvailability, session.epoch]);
+  useEffect(() => () => { availabilityRequest.current?.abort(); consentWrite.current?.abort(); }, []);
+  const grantExploration = async () => {
+    if (!member || serviceSessionEpoch() !== session.epoch || consentWrite.current || lock.current) return;
+    const controller = new AbortController(), expectedEpoch = session.epoch;
+    consentWrite.current = controller; setConsentBusy(true);
+    try {
+      await member.setAiConsent("exploration", true, controller.signal);
+      if (controller.signal.aborted || serviceSessionEpoch() !== expectedEpoch) return;
+      consentWrite.current = null;
+      await checkAvailability();
+    } catch {
+      if (!controller.signal.aborted && serviceSessionEpoch() === expectedEpoch) setAvailabilityIssue("동의 저장 결과를 확인하지 못했어요. 이용 상태를 다시 확인해 주세요.");
+    } finally { if (consentWrite.current === controller) consentWrite.current = null; if (!controller.signal.aborted) setConsentBusy(false); }
+  };
   const clear = useCallback(() => {
     generation.current++;
     active.current?.abort();
@@ -288,14 +339,21 @@ function RemoteAiSession() {
     setInput("");
     setError("");
     setResult(null);
+    resultConsentVersion.current = null;
     setFixedFilters(null);
     setBusy(false);
     filters.current = { target: "posts" };
   }, []);
-  useFocusEffect(useCallback(() => () => clear(), [clear]));
+  useFocusEffect(useCallback(() => () => {
+    clear(); availabilityRequest.current?.abort(); availabilityRequest.current = null;
+    consentWrite.current?.abort(); consentWrite.current = null;
+    manualCheckRequired.current = true; setAvailability(null); setAvailabilityBusy(false); setConsentBusy(false);
+  }, [clear]));
   const send = async (outputRetryOf?: string) => {
     const text = input.trim();
-    if (!service || !text || lock.current) return;
+    const outputRetry = Boolean(outputRetryOf && result?.requestId === outputRetryOf && result.recovery?.reason === "output_privacy" && result.recovery.retryAllowed && resultConsentVersion.current === aiConsentRevision() && !aiConsentMutationPending());
+    if (outputRetryOf && !outputRetry) return;
+    if (!service || !text || serviceSessionEpoch() !== session.epoch || lock.current || (!outputRetry && (manualCheckRequired.current || !availability?.value.estimatedEligible || availability.revision !== aiConsentRevision()))) return;
     if (
       [...text].length > 500 || messages.length + 2 > 20 ||
       messages.reduce(
@@ -325,6 +383,7 @@ function RemoteAiSession() {
     active.current = controller;
     lock.current = true;
     setBusy(true);
+    setAvailability(null);
     setResult(null);
     setFixedFilters(null);
     setError("");
@@ -344,13 +403,17 @@ function RemoteAiSession() {
       ) return;
       setMessageEpoch(session.epoch);
       setResult(response);
+      resultConsentVersion.current = aiConsentRevision();
       filters.current = response.interpretedFilters;
       if (response.status === "unavailable") {
+        manualCheckRequired.current = true;
+        markAiManualCheck(session.epoch, true);
         setError(
           response.notice ??
             "답변을 확인하지 못했어요. 입력을 유지했으니 다시 시도해 주세요.",
         );
       } else {
+        manualCheckRequired.current = false;
         const answer = response.clarificationQuestion ?? response.notice ??
           (response.cards.length
             ? "확인된 동행을 살펴보세요."
@@ -373,12 +436,13 @@ function RemoteAiSession() {
       }
     } catch (error) {
       if (
-        !controller.signal.aborted && generation.current === currentGeneration
-      ) setError(errorMessage(error));
+        !controller.signal.aborted && generation.current === currentGeneration && sentEpoch === serviceSessionEpoch()
+      ) { manualCheckRequired.current = true; markAiManualCheck(session.epoch, true); setError(errorMessage(error)); }
     } finally {
-      if (generation.current === currentGeneration) {
+      if (generation.current === currentGeneration && sentEpoch === serviceSessionEpoch()) {
         lock.current = false;
         setBusy(false);
+        if (!manualCheckRequired.current) void checkAvailability();
       }
     }
   };
@@ -409,7 +473,7 @@ function RemoteAiSession() {
             multiline
           />
           <Button
-            disabled={busy}
+            disabled={busy || availabilityBusy || !availability?.value.estimatedEligible || availability.revision !== aiConsentRevision()}
             onPress={() => void send()}
           >
             보내기
@@ -418,6 +482,19 @@ function RemoteAiSession() {
         </View>
       }
     >
+      <Card>
+        {availabilityBusy && <Body>AI 이용 상태를 확인하고 있어요…</Body>}
+        {availabilityIssue && <Body>{availabilityIssue}</Body>}
+        {availability && <Body>{availability.value.estimatedEligible ? `현재 AI 탐색 이용 가능 · 오늘 남은 횟수 ${availability.value.remaining}회` : ({ processing_disabled: "현재 AI 탐색 제공이 중단돼 있어요.", consent_required: "AI 탐색을 사용하려면 먼저 선택 동의가 필요해요.", concurrent: "진행 중인 AI 요청이 있어요. 잠시 후 상태를 확인해 주세요.", daily_limit: "오늘의 AI 탐색 한도를 사용했어요." })[availability.value.reason!]}</Body>}
+        {availability?.value.reason === "daily_limit" && <Body small muted>다음 기준 시각 · {formatKoreanDateTime(availability.value.resetsAt)}</Body>}
+        {availability?.value.reason === "consent_required" && <>
+          <Body>입력한 질문을 AI로 처리해 동행을 탐색해요. 동의하지 않아도 일반 검색과 동행은 이용할 수 있어요.</Body>
+          <Button disabled={consentBusy} loading={consentBusy} onPress={() => { void grantExploration(); }}>AI 탐색 동의하기</Button>
+          <TextButton onPress={() => app.navigate("S01")}>동의하지 않고 일반 검색</TextButton>
+        </>}
+        <Button secondary disabled={busy || availabilityBusy || consentBusy || !member} onPress={() => { void checkAvailability(); }}>이용 상태 다시 확인</Button>
+        <Body small muted>이용 가능 안내 후에도 실제 요청의 서버 판단에 따라 중단될 수 있어요.</Body>
+      </Card>
       <Card>
         <Body small muted>
           공개된 카드로 추천을 안내해요. 실명·전화번호·상세 만남 위치는 입력하지
@@ -701,30 +778,36 @@ export function RemoteProfileSummary({ id }: { id: string }) {
   const session = useServiceSession();
   const [expanded, setExpanded] = useState(false);
   const [version, recheck] = useState(0);
-  const key = `${session.epoch}:${id}:${version}`;
+  const focused = useRef(false), activeSummary = useRef<AbortController | null>(null);
+  const [consentVersion, setConsentVersion] = useState(aiConsentRevision);
+  useEffect(() => subscribeAiConsentChange(() => setConsentVersion(aiConsentRevision())), []);
+  const key = `${session.epoch}:${id}:${version}:${consentVersion}`;
   const [result, set] = useState<
     { key: string; text: string | null; error: string; notice?: string }
   >({ key, text: null, error: "" });
   useFocusEffect(useCallback(() => {
+    focused.current = true;
     recheck((n) => n + 1);
     return () => {
+      focused.current = false; activeSummary.current?.abort(); activeSummary.current = null;
       setExpanded(false);
       set({ key: "", text: null, error: "" });
     };
   }, []));
   useEffect(() => {
-    const controller = new AbortController();
-    if (service && session.authenticated) {
+    const controller = new AbortController(), expectedConsent = aiConsentRevision();
+    activeSummary.current = controller;
+    if (focused.current && service && session.authenticated && !aiConsentMutationPending()) {
       void service.profileSummary(id, controller.signal).then((response) => {
         if (
-          !controller.signal.aborted && serviceSessionEpoch() === session.epoch
+          focused.current && !controller.signal.aborted && serviceSessionEpoch() === session.epoch && aiConsentRevision() === expectedConsent
         ) {
           set({ key, text: response.summary?.text ?? null, error: "",
             notice: "현재 표시할 수 있는 후기 요약이 없어요. 공개 후기는 아래에서 확인할 수 있어요." });
         }
       }).catch((error) => {
         if (
-          !controller.signal.aborted && serviceSessionEpoch() === session.epoch
+          focused.current && !controller.signal.aborted && serviceSessionEpoch() === session.epoch && aiConsentRevision() === expectedConsent
         ) set({ key, text: null, error: errorMessage(error) });
       });
     }

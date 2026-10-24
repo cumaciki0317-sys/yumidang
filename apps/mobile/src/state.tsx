@@ -33,7 +33,8 @@ import {
 } from "./domain";
 import * as storage from "./storage";
 import { previewEventError } from "./presentation/events/event-draft";
-import { serviceMode, installServiceSession, serviceSessionEpoch, useServiceSession } from "./remote";
+import { serviceMode, installServiceSession, serviceSessionEpoch, useServiceSession, memberSessionDetailsSnapshot } from "./remote";
+import { requestMemberDeviceCleanup } from "./member-device-cleanup";
 
 export const routes: Record<ScreenId, string> = {
   S00: "/",
@@ -85,6 +86,8 @@ function conflicts(
 /** Local scenario adapter. No OAuth, member data or model calls leave this preview. */
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const serviceSession = useServiceSession();
+  const serviceDetails = serviceMode ? memberSessionDetailsSnapshot() : null;
+  const rememberedServiceOwner = useRef<string | null>(serviceDetails?.userId ?? null);
   const defaultMemberId = useRef("me");
   const pathname = usePathname();
   const params = useGlobalSearchParams();
@@ -236,13 +239,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     commit({ aiMessages: [], aiBusy: false });
   }, [commit]);
   useEffect(() => {
-    const t = setInterval(() => refresh({ now: ref.current.now + 1000 }), 1000);
+    const t = setInterval(() => refresh({ now: serviceMode ? Date.now() : ref.current.now + 1000 }), 1000);
     return () => {
       clearInterval(t);
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, [refresh]);
   useEffect(() => {
+    if (serviceMode) return;
     let active = true;
     const id = state.viewerId || "anonymous";
     Promise.all([
@@ -260,6 +264,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       active = false;
     };
   }, [state.viewerId, commit, showToast]);
+  useEffect(() => {
+    if (!serviceMode) return;
+    if (serviceDetails?.userId) rememberedServiceOwner.current = serviceDetails.userId;
+    const update = () => {
+      const snapshot = storage.serviceDeviceStore.snapshot();
+      commit({ draft: snapshot.draft, recentSearches: snapshot.recentSearches, deviceStorage: { status: snapshot.status, error: snapshot.error, draftCleanupPending: snapshot.draftCleanupPending } });
+    };
+    const unsubscribe = storage.serviceDeviceStore.subscribe(update);
+    storage.serviceDeviceStore.activate(serviceDetails?.userId ?? null, serviceSession.epoch);
+    update();
+    return unsubscribe;
+  }, [serviceDetails?.userId, serviceSession.epoch, commit]);
 
   const value: AppContextValue = {
     ...state,
@@ -1199,17 +1215,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     for (const action of ["login", "updateMember", "unblock", "leaveChat", "markNotificationsRead", "withdrawAi", "setPreview", "editPost"] as const) {
       value[action] = () => showToast(unavailable().message!);
     }
-    // Device-memory draft only. It is not a published post or a server save receipt.
-    value.draft = state.draft?.serviceDraftEpoch === serviceSession.epoch ? state.draft : null;
+    const lease = storage.serviceDeviceStore.lease();
+    const sameOwner = lease?.userId === (serviceDetails?.userId?.toLowerCase() ?? null) && lease?.epoch === serviceSession.epoch;
+    const readyLease = () => {
+      if (!lease || !sameOwner || serviceSessionEpoch() !== lease.epoch) throw new Error("SERVICE_DRAFT_SESSION_CHANGED");
+      return lease;
+    };
+    // Restored form values receive current authority only after the verified owner is known.
+    const deviceNow = state.now;
+    value.draft = sameOwner && state.draft?.serviceDraftEpoch === serviceSession.epoch && Number.isFinite(state.draft.updatedAt) && state.draft.updatedAt <= deviceNow && deviceNow < state.draft.updatedAt + 7 * DAY ? state.draft : null;
+    value.recentSearches = sameOwner ? storage.cleanSearches(state.recentSearches, deviceNow) : [];
+    value.deviceStorage = sameOwner ? state.deviceStorage : { status: 'loading', error: '', draftCleanupPending: false };
     value.saveDraft = async (draft) => {
       if (!serviceSession.authenticated || draft.serviceDraftEpoch !== serviceSessionEpoch()) throw new Error("SERVICE_DRAFT_SESSION_CHANGED");
-      commit({ draft: { ...draft, updatedAt: Date.now() } });
+      await storage.serviceDeviceStore.saveDraft(readyLease(), draft);
     };
-    value.clearDraft = async () => { commit({ draft: null }); };
+    value.clearDraft = async (expectedRevision) => { await storage.serviceDeviceStore.clearDraft(readyLease(), expectedRevision); };
+    value.addSearch = (text) => { try { void storage.serviceDeviceStore.addSearch(readyLease(), text).catch(() => showToast("최근 검색어를 기기에 저장하지 못했어요.")); } catch { showToast("최근 검색어를 기기에 저장하지 못했어요."); } };
+    value.clearSearches = async () => { try { await storage.serviceDeviceStore.clearSearches(readyLease()); } catch { showToast("최근 검색어를 삭제하지 못했어요. 다시 시도해 주세요."); } };
+    value.retryDeviceStorage = async () => {
+      const current = readyLease();
+      if (storage.serviceDeviceStore.snapshot().status === 'cleanup-required' && current.userId) await requestMemberDeviceCleanup(current.userId);
+      await storage.serviceDeviceStore.retryLoad();
+    };
+    value.retryDraftCleanup = () => storage.serviceDeviceStore.retryDraftCleanup(readyLease());
     value.deleteAccount = async () => unavailable();
     value.reset = async () => { showToast(unavailable().message!); };
     value.sendAi = async () => unavailable();
-    value.logout = async () => { installServiceSession(null); clearAi(); commit({ viewerId: null, members: {}, posts: [], events: [], recentSearches: [], draft: null }); };
+    value.logout = async () => {
+      const userId = rememberedServiceOwner.current;
+      rememberedServiceOwner.current = null;
+      const cleanup = userId ? requestMemberDeviceCleanup(userId) : Promise.resolve();
+      installServiceSession(null); clearAi();
+      commit({ viewerId: null, members: {}, posts: [], events: [], recentSearches: [], draft: null });
+      await cleanup;
+    };
   }
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

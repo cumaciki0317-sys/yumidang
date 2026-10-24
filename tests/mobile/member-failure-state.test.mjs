@@ -33,13 +33,13 @@ function harness(kind = 'action', supplied = {}) {
   function loadPresentation(file) {
     const out = {};
     const js = ts.transpileModule(readFileSync(path.join(appRoot, 'src/presentation', file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2022 } }).outputText;
-    vm.runInNewContext(js, { exports: out, Date, Intl, require(id) { if(id==='react')return React;if(id==='react-native')return {View:'View'};if(id==='../ui')return ui;if(id==='./ux-time')return loadPresentation('ux-time.ts');return {}; } });
+    vm.runInNewContext(js, { exports: out, Date, Intl, require(id) { if(id==='react')return Object.assign(React,{useLayoutEffect:React.useEffect});if(id==='react-native')return {View:'View'};if(id==='../ui')return ui;if(id==='./ux-time')return loadPresentation('ux-time.ts');return {}; } });
     return out;
   }
   const exports = {};
   const compiled = ts.transpileModule(readFileSync(sourcePath, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true, target: ts.ScriptTarget.ES2022 } }).outputText;
   vm.runInNewContext(`${compiled}\nexports.testRemoteChat = RemoteChat;`, { exports, Date, Intl, AbortController, console, require(id) {
-    if (id === 'react') return React;
+    if (id === 'react') return Object.assign(React,{useLayoutEffect:React.useEffect});
     if (id === 'react-native') return { FlatList: 'FlatList', Image: 'Image', View: 'View', Modal:'Modal', ScrollView:'ScrollView',Pressable:'Pressable' };
     if (id === 'expo-router') return { useFocusEffect(callback) { effect(callback, [callback], true); },useNavigation:()=>({dispatch(){}}) };
     if(id==='expo-router/react-navigation')return {usePreventRemove(){}};

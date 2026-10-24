@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { FlatList, Image, Modal, Pressable, ScrollView, View, type TextInput } from "react-native";
 import { useFocusEffect, useNavigation } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -6,9 +6,11 @@ import * as Crypto from "expo-crypto";
 import * as ImagePicker from "expo-image-picker";
 import { bodyIntersectsViewport, dispatchVisibleMessages } from "../chat-read-state";
 import { ApiError } from "../api";
-import { installMemberSessionDetails, useMessageReadPort, serviceSessionEpoch, useMemberPorts, useMemberService, useService, useServiceSession } from "../remote";
+import { installMemberSessionDetails, requestMemberRetirement, useMemberRetirement, useMessageReadPort, serviceSessionEpoch, useMemberPorts, useMemberService, useService, useServiceSession, type MemberRetirementState } from "../remote";
 import { reconcilePhoto, replacePhoto, type PhotoInput, validateOriginalPhoto } from "../avatar-service";
-import { retirementResult } from "../member-session";
+import type { MemberSessionPort } from "../member-session";
+import { memberDeviceCleanupSnapshot, retryMemberDeviceCleanup, subscribeMemberDeviceCleanup } from "../member-device-cleanup";
+import { MemberAiConsentSettings } from "../presentation/member-ai-consents";
 import { appointmentCancellationGate, observedServerTime } from "../member-service";
 import type { MemberService, NoticeDelivery, Wire } from "../member-service";
 import { useApp } from "../state";
@@ -157,39 +159,53 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
   const viewport = useRef<View | null>(null), messageBodies = useRef(new Map<string, View>()), measurementGeneration = useRef(0);
   const [readError, setReadError] = useState("");
   const flushRead = useRef<() => void>(() => {}), readFailed = useRef(false);
-  const cancelRead = useCallback(() => { readGeneration.current++; readController.current?.abort(); readController.current = null; }, []);
+  const readScope = useRef<{ allowed: boolean; requestId: string; epoch: number; port: typeof readPort } | null>(null);
+  const readAllowed = canDisplayMessages && readSession.authenticated && Boolean(readPort);
+  const cancelRead = useCallback(() => {
+    readGeneration.current++; measurementGeneration.current++;
+    readController.current?.abort(); readController.current = null; visibleIds.current.clear();
+  }, []);
+  // Invalidate at commit, before passive effects or late layout/transport callbacks.
+  // Abandoned renders never revoke the currently committed observer.
+  useLayoutEffect(() => {
+    cancelRead();
+    readScope.current = { allowed: readAllowed, requestId, epoch: readSession.epoch, port: readPort };
+    acknowledgedIds.current.clear(); readFailed.current = false;
+    return cancelRead;
+  }, [readAllowed, requestId, readSession.epoch, readPort, cancelRead]);
   useEffect(() => {
+    const eligible = () => focused.current && readScope.current?.allowed && readScope.current.requestId === requestId && readScope.current.epoch === readSession.epoch && readScope.current.port === readPort && serviceSessionEpoch() === readSession.epoch;
     flushRead.current = () => {
-      const targets = [...visibleIds.current].filter(id => !acknowledgedIds.current.has(id)), generation = readGeneration.current;
-      if (readFailed.current || !focused.current || targets.length === 0 || !requestId || !readPort || readController.current) return;
+      const targets = [...visibleIds.current].filter(id => !acknowledgedIds.current.has(id)).slice(0, 100), generation = readGeneration.current;
+      if (!eligible() || readFailed.current || targets.length === 0 || !requestId || !readPort || readController.current) return;
       const controller = new AbortController(); readController.current = controller;
       void dispatchVisibleMessages(readPort, requestId, targets, controller.signal).then(receipt => {
-        if (!receipt || controller.signal.aborted || generation !== readGeneration.current || serviceSessionEpoch() !== readSession.epoch) return;
+        if (!receipt || controller.signal.aborted || generation !== readGeneration.current || !eligible()) return;
         receipt.confirmedMessageIds.forEach(id => acknowledgedIds.current.add(id)); setReadError("");
       }).catch(() => {
-        if (!controller.signal.aborted && generation === readGeneration.current && serviceSessionEpoch() === readSession.epoch) { readFailed.current = true; setReadError("읽음 상태를 저장하지 못했어요. 다시 시도해 주세요."); }
+        if (!controller.signal.aborted && generation === readGeneration.current && eligible()) { readFailed.current = true; setReadError("읽음 상태를 저장하지 못했어요. 다시 시도해 주세요."); }
       }).finally(() => {
         if (readController.current !== controller) return;
         readController.current = null;
-        if (targets.every(id => acknowledgedIds.current.has(id))) flushRead.current();
+        if (eligible() && targets.every(id => acknowledgedIds.current.has(id))) flushRead.current();
       });
     };
     flushRead.current();
     return cancelRead;
-  }, [readPort, requestId, readSession.epoch, cancelRead]);
+  }, [readPort, requestId, readSession.epoch, readAllowed, cancelRead]);
   useFocusEffect(useCallback(() => {
     if (!requestId || !readSession.authenticated || serviceSessionEpoch() !== readSession.epoch) return;
     readGeneration.current++; readFailed.current = false; focused.current = true; acknowledgedIds.current.clear(); visibleIds.current.clear();
     return () => { focused.current = false; readGeneration.current++; measurementGeneration.current++; readController.current?.abort(); readController.current = null; visibleIds.current.clear(); };
   }, [requestId, readSession.authenticated, readSession.epoch]));
   const measureVisibleBodies = useCallback(() => {
-    if (!focused.current) return;
+    if (!focused.current || !readScope.current?.allowed) return;
     const scan = ++measurementGeneration.current, generation = readGeneration.current;
     viewport.current?.measureInWindow((x, y, width, height) => {
-      if (!focused.current || scan !== measurementGeneration.current || generation !== readGeneration.current) return;
+      if (!focused.current || !readScope.current?.allowed || scan !== measurementGeneration.current || generation !== readGeneration.current) return;
       const bounds = { x, y, width, height };
       for (const [id, body] of messageBodies.current) body.measureInWindow((bx, by, bw, bh) => {
-        if (!focused.current || scan !== measurementGeneration.current || generation !== readGeneration.current || messageBodies.current.get(id) !== body) return;
+        if (!focused.current || !readScope.current?.allowed || scan !== measurementGeneration.current || generation !== readGeneration.current || messageBodies.current.get(id) !== body) return;
         if (bodyIntersectsViewport({ x: bx, y: by, width: bw, height: bh }, bounds)) { visibleIds.current.add(id); flushRead.current(); }
       });
     });
@@ -197,7 +213,7 @@ function RemoteChat({ postId, conversationId }: { postId?: string; conversationI
   useEffect(() => {
     readFailed.current = false; visibleIds.current.clear(); acknowledgedIds.current.clear();
     measureVisibleBodies();
-  }, [readPort, measureVisibleBodies]);
+  }, [readPort, readAllowed, measureVisibleBodies]);
   const send = () => {
     const content = input.trim(); if (!content || [...content].length > 1000) { app.showToast("메시지는 1~1000자로 입력해 주세요."); return; }
     if (!message.current || message.current.content !== content) message.current = { content, id: Crypto.randomUUID() };
@@ -674,8 +690,60 @@ function RemoteNotices({ kind }: { kind: "decision" | "cancellation" }) {
   </>;
 }
 
-export function RemoteAccountScreen() { return <Guard><RemoteAccount key={serviceSessionEpoch()} /></Guard>; }
-function RemoteAccount() {
+function DeviceCleanupNotice({ cleanup }: { cleanup: ReturnType<typeof memberDeviceCleanupSnapshot> }) {
+  if (!cleanup) return null;
+  return <>{cleanup.busy && <Body muted>이 기기에 남은 검색어와 임시저장을 정리하고 있어요.</Body>}
+    {cleanup.failed && <Card><Title>기기 정보 정리를 확인해 주세요</Title><Body>로그인 권한은 종료했지만 기기에 남은 검색어와 임시저장을 모두 지우지 못했어요.</Body><Button secondary disabled={cleanup.busy} onPress={() => { void retryMemberDeviceCleanup().catch(() => {}); }}>기기 정보 정리 다시 시도</Button></Card>}</>;
+}
+
+function RemoteRetirementStatus({ state, cleanup }: { state: Readonly<MemberRetirementState>; cleanup: ReturnType<typeof memberDeviceCleanupSnapshot> }) {
+  const app = useApp(), status = state.receipt?.status;
+  return <Screen title="회원 탈퇴 확인">
+    <Title>{status === "completed" ? "회원 탈퇴 처리가 완료됐어요" : status === "processing" ? "회원 탈퇴를 처리하고 있어요" : state.busy ? "회원 탈퇴 요청을 확인하고 있어요" : "회원 탈퇴 상태를 확인하지 못했어요"}</Title>
+    <Body>{status === "completed" ? "서버가 탈퇴 완료를 확인했어요. 기기 정보 정리 결과는 아래 안내를 확인해 주세요." : status === "processing" ? "회원 이용 권한은 종료됐어요. 남은 삭제 처리가 완료됐는지는 다시 확인해 주세요." : "요청이 처리됐는지 아직 확인되지 않았어요. 완료로 표시하지 않고 같은 요청의 상태를 확인해요."}</Body>
+    {state.errorCode === "AUTH_REQUIRED" && <Body>이 요청을 확인할 로그인 권한이 만료됐거나 변경됐어요. 탈퇴 완료로 확인된 것은 아니에요.</Body>}
+    {status !== "completed" && <Button loading={state.busy} disabled={state.busy || state.errorCode === "AUTH_REQUIRED"} onPress={() => { void requestMemberRetirement(state.withdrawalId).catch(() => {}); }}>탈퇴 상태 다시 확인</Button>}
+    <DeviceCleanupNotice cleanup={cleanup} />
+    <Button secondary disabled={state.busy} onPress={() => app.navigate("S05")}>로그인으로 이동</Button>
+  </Screen>;
+}
+
+export function RemoteAccountScreen() {
+  const retirement = useMemberRetirement(), session = useServiceSession(), ports = useMemberPorts(), app = useApp();
+  const cleanup = useSyncExternalStore(subscribeMemberDeviceCleanup, memberDeviceCleanupSnapshot, () => null);
+  const [logout, setLogout] = useState<{ busy: boolean; serverFailed: boolean } | null>(null);
+  if (session.authenticated && logout) setLogout(null);
+  const logoutGeneration = useRef(0), logoutLock = useRef(false);
+  useEffect(() => {
+    if (session.authenticated) { logoutGeneration.current++; logoutLock.current = false; }
+  }, [session.authenticated, session.epoch]);
+  const leaveAccount = (port: MemberSessionPort) => {
+    if (logoutLock.current || !session.authenticated || serviceSessionEpoch() !== session.epoch || ports.session !== port) return;
+    logoutLock.current = true;
+    const generation = ++logoutGeneration.current;
+    setLogout({ busy: true, serverFailed: false });
+    let server: Promise<void>, local: Promise<void>;
+    // Capture the server request before local disposal destroys the adapter token.
+    // Device cleanup retains its owner privately; no UID/token enters screen state.
+    try { server = Promise.resolve(port.logout(new AbortController().signal)); } catch { server = Promise.reject(new Error("LOGOUT_UNCONFIRMED")); }
+    try { local = Promise.resolve(app.logout()); } catch { local = Promise.reject(new Error("DEVICE_CLEANUP_UNCONFIRMED")); }
+    finally { installMemberSessionDetails(null); }
+    void Promise.allSettled([server, local]).then(([serverResult]) => {
+      if (generation !== logoutGeneration.current) return;
+      logoutLock.current = false; setLogout({ busy: false, serverFailed: serverResult.status === "rejected" });
+    });
+  };
+  if (retirement) return <RemoteRetirementStatus state={retirement} cleanup={cleanup} />;
+  if (logout || !session.authenticated && (cleanup?.busy || cleanup?.failed)) return <Screen title="로그아웃">
+    <Title>기기에서 로그아웃했어요</Title>
+    {logout?.busy && <Body muted>세션 종료와 기기 정보 정리 결과를 확인하고 있어요.</Body>}
+    {logout?.serverFailed && <Body>서버의 세션 종료를 확인하지 못했어요. 이 기기의 로그인 권한은 종료했어요.</Body>}
+    <DeviceCleanupNotice cleanup={cleanup} />
+    <TextButton onPress={() => app.navigate("S05")}>로그인으로 이동</TextButton>
+  </Screen>;
+  return <Guard><RemoteAccount key={serviceSessionEpoch()} onLogout={leaveAccount} cleanup={cleanup} /></Guard>;
+}
+function RemoteAccount({ onLogout, cleanup }: { onLogout?: (port: MemberSessionPort) => void; cleanup?: ReturnType<typeof memberDeviceCleanupSnapshot> } = {}) {
   const [section, setSection] = useState<"account" | "ai" | "visibility" | "reports" | "retirement" | null>(null);
   const app = useApp(), action = useMemberAction(), ports = useMemberPorts();
   const [blocksCursor, setBlocksCursor] = useState<string | undefined>(), [reportsCursor, setReportsCursor] = useState<string | undefined>(), [reportId, setReportId] = useState("");
@@ -683,16 +751,15 @@ function RemoteAccount() {
   const [hiddenCursor, setHiddenCursor] = useState<string | undefined>();
   const hidden = useMemberResource(`hidden:${hiddenCursor ?? ""}`, (s, signal) => s.hiddenTargets(hiddenCursor, signal));
   const report = useMemberResource(`report:${reportId}`, (s, signal) => reportId ? s.getReport(reportId, signal) : Promise.resolve(null));
-  const [withdraw, setWithdraw] = useState<"exploration" | "review_summary" | null>(null);
   const [retiring, setRetiring] = useState(false);
+  const [retirementIssue, setRetirementIssue] = useState("");
   const withdrawalId = useRef(Crypto.randomUUID());
-  return <Screen title={section === "account" ? "계정 이용" : section === "ai" ? "AI 동의" : section === "visibility" ? "차단·숨김" : section === "reports" ? "신고·판정" : section === "retirement" ? "회원 탈퇴" : "계정 관리"} onBack={section ? () => { setSection(null); setWithdraw(null); setRetiring(false); setReportId(""); action.clearError(); } : undefined}>
+  return <Screen title={section === "account" ? "계정 이용" : section === "ai" ? "AI 동의" : section === "visibility" ? "차단·숨김" : section === "reports" ? "신고·판정" : section === "retirement" ? "회원 탈퇴" : "계정 관리"} onBack={section ? () => { setSection(null); setRetiring(false); setRetirementIssue(""); setReportId(""); action.clearError(); } : undefined}>
+    <DeviceCleanupNotice cleanup={cleanup ?? null} />
     {!section && <><Body muted>확인하거나 변경할 항목을 선택해 주세요.</Body>{([['account', '계정 이용'], ['ai', 'AI 동의'], ['visibility', '차단·숨김'], ['reports', '신고·판정'], ['retirement', '회원 탈퇴']] as const).map(([value, label]) => <Button key={value} secondary onPress={() => setSection(value)}>{label}</Button>)}</>}
     {section === "account" && <><Status {...safety} />{safety.data && <Card><Title>계정 이용 상태</Title><Body>{safety.data.permanent === true ? "영구 이용 제한" : safety.data.restrictedUntil ? `제한 종료 · ${formatKoreanDateTime(safety.data.restrictedUntil)}` : "이용 가능"}</Body><Body>{safety.data.hasWarning === true ? "운영 안내가 있어요" : "현재 경고 없음"}</Body></Card>}
-    <Button secondary disabled={!ports.session} loading={action.busy} onPress={() => void action.run(async (_s, signal) => { if (!ports.session) throw new ApiError(503, "SESSION_NOT_CONFIGURED"); await ports.session.logout(signal); }, () => { installMemberSessionDetails(null); app.navigate("S05"); })}>로그아웃</Button></>}
-    {section === "ai" && <><Body muted>AI 동의는 선택 사항이에요. 철회해도 계정과 일반 동행은 유지돼요.</Body><Title>AI 탐색</Title><Button secondary onPress={() => setWithdraw("exploration")}>AI 탐색 처리 철회</Button>
-      {withdraw === "exploration" && <Card><Title>AI 탐색 처리를 철회할까요?</Title><Body>새 AI 탐색 처리를 중단해요. 일반 검색은 계속 사용할 수 있어요.</Body><Button loading={action.busy} onPress={() => void action.run((s, signal) => s.withdrawAi("exploration", signal), () => { setWithdraw(null); app.showToast("AI 탐색 처리 철회를 요청했어요."); })}>철회 요청</Button><TextButton onPress={() => setWithdraw(null)}>취소</TextButton></Card>}
-      <Title>후기 AI 선택 동의</Title>{["후기 요약 열람", "내 프로필 요약 생성·노출", "내가 작성한 후기의 요약 활용"].map(label => <Card key={label}><Title>{label}</Title><Body muted>현재 동의 상태와 개별 변경 연결을 준비 중이에요.</Body></Card>)}<Body small muted>세 동의는 각각 독립적으로 관리해요. 확인되지 않은 동의 상태를 표시하거나, 한 항목 선택으로 전체 철회를 요청하지 않아요.</Body></>}
+    <Button secondary disabled={!ports.session || !onLogout} onPress={() => { if (ports.session) onLogout?.(ports.session); }}>로그아웃</Button></>}
+    {section === "ai" && <MemberAiConsentSettings />}
     {section === "visibility" && <>
     <Title>차단한 회원</Title><Status {...blocks} />{blocks.data?.items.map(row => <Card key={text(row.targetId ?? row.target_id)}><Body>{text(row.displayName ?? row.display_name) || "차단한 회원"}</Body><TextButton onPress={() => void action.run((s, signal) => s.block(text(row.targetId ?? row.target_id), false, signal), blocks.reload)}>차단 해제</TextButton></Card>)}
     {blocks.data?.nextCursor && <Button secondary onPress={() => setBlocksCursor(blocks.data!.nextCursor!)}>다음 차단 목록</Button>}
@@ -710,7 +777,8 @@ function RemoteAccount() {
     </>}
     {section === "retirement" && <>
     {!ports.session?.retire && <Body muted>탈퇴 서버 연결을 준비 중이에요. 연결되기 전에는 계정을 삭제하지 않아요.</Body>}<Button secondary disabled={!ports.session?.retire} onPress={() => setRetiring(true)}>회원 탈퇴</Button>
-    {retiring && <Card><Title>회원 탈퇴를 요청할까요?</Title><Body>진행 중인 확정 동행은 먼저 정리해야 해요. 프로필·사진은 삭제하며 재가입해도 기존 후기는 복구하지 않아요.</Body><Button loading={action.busy} onPress={() => void action.run(async (_s, signal) => { if (!ports.session?.retire) throw new ApiError(503, "RETIREMENT_NOT_CONFIGURED"); return retirementResult(await ports.session.retire(withdrawalId.current, signal), withdrawalId.current); }, () => { installMemberSessionDetails(null); app.navigate("S05"); })}>탈퇴 요청 확인</Button><TextButton onPress={() => setRetiring(false)}>계정 유지하기</TextButton></Card>}
+    {retiring && <Card><Title>회원 탈퇴를 요청할까요?</Title><Body>진행 중인 확정 동행은 먼저 정리해야 해요. 프로필·사진은 삭제하며 재가입해도 기존 후기는 복구하지 않아요.</Body><Button onPress={() => { if (!action.canInteract() || !ports.session?.retire) return; setRetirementIssue(""); void requestMemberRetirement(withdrawalId.current).catch(error => { if (action.canInteract()) setRetirementIssue(failure(error)); }); }}>탈퇴 요청 확인</Button><TextButton onPress={() => setRetiring(false)}>계정 유지하기</TextButton></Card>}
+    {retirementIssue && <Body>{retirementIssue}</Body>}
     </>}
     <Status error={action.error} errorStatus={action.errorStatus} />
   </Screen>;
